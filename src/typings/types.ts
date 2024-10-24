@@ -1,0 +1,88 @@
+export interface IStorageFactors {
+  erasureCode: string
+  storageFactor: number
+  maxCapacity: string
+  maxFailureTolerations: number
+}
+
+export interface IErasureCodeCalc {
+  error: number
+  maxEC: string
+  erasureCodeSet: number
+  rawCapacity: string
+  defaultEC: string
+  storageFactors: IStorageFactors[]
+}
+
+export interface ErrorResponseHandler {
+  errorMessage: string
+  detailedError: string
+  statusCode?: number
+}
+
+export interface IBytesCalc {
+  total: number
+  unit: string
+}
+
+export interface IEmbeddedCustomButton {
+  backgroundColor: string
+  textColor: string
+  hoverColor: string
+  hoverText: string
+  activeColor: string
+  activeText: string
+  disabledColor: string
+  disabledText: string
+}
+
+export interface IEmbeddedCustomTable {
+  border: string
+  disabledBorder: string
+  disabledBG: string
+  selected: string
+  deletedDisabled: string
+  hoverColor: string
+}
+
+export interface IEmbeddedInputBox {
+  border: string
+  hoverBorder: string
+  textColor: string
+  backgroundColor: string
+}
+
+export interface IEmbeddedSwitch {
+  switchBackground: string
+  bulletBorderColor: string
+  bulletBGColor: string
+  disabledBackground: string
+  disabledBulletBorderColor: string
+  disabledBulletBGColor: string
+}
+
+export interface IEmbeddedCustomStyles {
+  backgroundColor: string
+  fontColor: string
+  secondaryFontColor: string
+  borderColor: string
+  loaderColor: string
+  boxBackground: string
+  okColor: string
+  errorColor: string
+  warnColor: string
+  linkColor: string
+  disabledLinkColor: string
+  hoverLinkColor: string
+  tableColors: IEmbeddedCustomTable
+  buttonStyles: IEmbeddedCustomButton
+  secondaryButtonStyles: IEmbeddedCustomButton
+  regularButtonStyles: IEmbeddedCustomButton
+  inputBox: IEmbeddedInputBox
+  switch: IEmbeddedSwitch
+}
+
+export interface SelectorTypes {
+  label: any
+  value: string
+}

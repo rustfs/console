@@ -1,8 +1,7 @@
 import { router } from '@/router'
-import { fetchLogin, fetchLoginGet, fetchSession } from '@/service'
+import { fetchLogin, fetchLoginGet, fetchLogout, fetchSession } from '@/service'
 import { local } from '@/utils'
 import { useRouteStore } from './router'
-import { useTabStore } from './tab'
 
 export interface PermissionResource {
   resource?: string
@@ -42,16 +41,17 @@ export const useAuthStore = defineStore('auth-store', {
     /* 登录退出，重置用户信息等 */
     async logout() {
       const route = unref(router.currentRoute)
-      // 清除本地缓存
       this.clearAuthStorage()
+      await fetchLogout({ state: null })
+      // 清除本地缓存
       // 清空路由、菜单等数据
-      const routeStore = useRouteStore()
-      routeStore.resetRouteStore()
-      // 清空标签栏数据
-      const tabStore = useTabStore()
-      tabStore.clearAllTabs()
+      // const routeStore = useRouteStore()
+      // routeStore.resetRouteStore()
+      // // 清空标签栏数据
+      // const tabStore = useTabStore()
+      // tabStore.clearAllTabs()
       // 重置当前存储库
-      this.$reset()
+      // this.$reset()
       // 重定向到登录页
       if (route.meta.requiresAuth) {
         router.push({
@@ -64,6 +64,8 @@ export const useAuthStore = defineStore('auth-store', {
     },
     clearAuthStorage() {
       local.remove('sessionInfo')
+      // 删除cookie
+      // Cookies.remove('token', { domain: 'localhost', path: '/' })
     },
 
     /* 用户登录 */
@@ -94,7 +96,11 @@ export const useAuthStore = defineStore('auth-store', {
     },
 
     /* 处理登录返回的数据 */
-    async handleLoginInfo(data: Api.Login.Info) {
+    async handleLoginInfo(data: any) {
+      if (!data.isSuccess) {
+        return
+      }
+
       local.set('sessionInfo', data)
       this.sessionInfo = data
 

@@ -1822,9 +1822,7 @@ export class HttpClient<SecurityDataType = unknown> {
  * @version 0.1.0
  * @baseUrl /api/v1
  */
-export class Api<
-  SecurityDataType extends unknown,
-> extends HttpClient<SecurityDataType> {
+export class Api<SecurityDataType > extends HttpClient<SecurityDataType> {
   login = {
     /**
      * No description

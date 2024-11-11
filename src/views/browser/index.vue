@@ -7,20 +7,41 @@ const searchForm = reactive({
   name: '',
 })
 
-const columns: DataTableColumns<Entity.User> = [
+const columns: DataTableColumns<Entity.Bucket> = [
   {
-    title: '姓名',
+    title: '名称',
     align: 'center',
-    key: 'userName',
+    key: 'name',
+    filter(value, row) {
+      return ~row.name.indexOf(value)
+    },
+
   },
   {
-    title: '年龄',
+    title: '对象数量',
     align: 'center',
-    key: 'age',
+    key: 'objectCount',
+  },
+  {
+    title: '大小',
+    align: 'center',
+    key: 'size',
+  },
+  {
+    title: '权限',
+    align: 'center',
+    key: 'permission',
   },
 ]
 
-const listData = ref<Entity.User[]>([])
+// 搜索过滤
+const tableRef = ref(null)
+function filterName(value: string) {
+  tableRef.value?.filter({
+    name: [value],
+  })
+}
+const listData = ref<Entity.Bucket[]>([])
 
 const { bool: loading, setTrue: startLoading, setFalse: endLoading } = useBoolean(false)
 
@@ -30,10 +51,19 @@ onMounted(() => {
 // 获取数据
 function getDataList() {
   startLoading()
-  await fetchUserPage().then((res: any) => {
-    listData.value = res.data.list
-    endLoading()
-  })
+  // await fetchUserPage().then((res: any) => {
+  //   listData.value = res.data.list
+  //   endLoading()
+  // })
+  listData.value = [
+    {
+      name: 'test',
+      objectCount: 1,
+      size: 223993,
+      permission: 'private',
+    },
+  ]
+  endLoading()
 }
 </script>
 
@@ -43,8 +73,8 @@ function getDataList() {
       <template #header>
         <n-form ref="formRef" :model="searchForm" label-placement="left" inline :show-feedback="false">
           <n-flex>
-            <n-form-item label="对象名" path="name">
-              <n-input v-model:value="searchForm.name" placeholder="请输入" />
+            <n-form-item label="" path="name">
+              <n-input v-model:value="searchForm.name" placeholder="请输入对象名" @change="filterName" />
             </n-form-item>
           </n-flex>
         </n-form>
@@ -60,6 +90,7 @@ function getDataList() {
         </NFlex>
       </template>
       <n-data-table
+        ref="table"
         :columns="columns" :data="listData" :loading="loading" :pagination="false"
         :bordered="false"
       />

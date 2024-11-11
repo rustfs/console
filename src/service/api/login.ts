@@ -7,17 +7,24 @@ interface Ilogin {
 
 // 用户登录 获取cookie
 export function fetchLogin(data: Ilogin) {
-  const methodInstance = request.Post<Service.ResponseResult<Api.Login.Info>>('/login', data)
+  const methodInstance = request.Post('/login', data)
   return methodInstance
 }
 
 // 用户登录之后回调get请求
 export function fetchLoginGet() {
-  const methodInstance = request.Get<Service.ResponseResult<Api.Login.Info>>('/login')
+  const methodInstance = request.Get('/login')
   return methodInstance
 }
 
+// 获取用户信息
 export function fetchSession() {
-  const methodInstance = request.Get<Service.ResponseResult<Api.Login.Info>>('/session')
+  const methodInstance = request.Get('/session')
+  return methodInstance
+}
+
+// 退出
+export function fetchLogout(body: object) {
+  const methodInstance = request.Post('/logout', body)
   return methodInstance
 }

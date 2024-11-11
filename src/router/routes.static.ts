@@ -27,7 +27,7 @@ export const staticRoutes: AppRoute.RowRoute[] = [
     requiresAuth: true,
     icon: 'icon-park-outline:ad-product',
     menuType: 'page',
-    componentPath: '/dashboard/workbench/index.vue',
+    componentPath: '/browser/index.vue',
     id: 1,
     pid: null,
   },

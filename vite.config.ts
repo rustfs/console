@@ -31,7 +31,7 @@ export default defineConfig(({ mode }) => {
     },
     // 强制预构建的包
     optimizeDeps: {
-      include: ['echarts', 'md-editor-v3', 'quill'],
+      include: ['echarts'],
     },
     css: {
       // 配置预处理器

@@ -154,5 +154,9 @@
     "about": "关于",
     "cascader": "省市区联动",
     "dict": "字典示例"
+  },
+  "buckets": {
+    "read": "读",
+    "write": "写"
   }
 }

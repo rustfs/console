@@ -28,3 +28,12 @@ export function fetchLogout(body: object) {
   const methodInstance = request.Post('/logout', body)
   return methodInstance
 }
+
+export interface LoginOauth2AuthRequest {
+  state: string
+  code: string
+}
+export function loginOauth2Auth(body: LoginOauth2AuthRequest) {
+  const methodInstance = request.Post('/login/oauth2/auth', body)
+  return methodInstance
+}

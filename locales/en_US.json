@@ -143,16 +143,8 @@
     "505": "HTTP version not supported for this request",
     "defaultTip": "Request error"
   },
-  "components": {
-    "iconSelector": {
-      "inputPlaceholder": "Select target icon",
-      "searchPlaceholder": "Search icon",
-      "clearIcon": "Clear icon",
-      "selectorTitle": "Icon selection"
-    },
-    "copyText": {
-      "message": "Copied successfully",
-      "tooltip": "Copy"
-    }
+  "buckets": {
+    "read": "read",
+    "write": "write"
   }
 }

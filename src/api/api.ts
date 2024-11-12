@@ -4,7 +4,7 @@ export interface AccountChangePasswordRequest {
   new_secret_key: string
 }
 
-// 修改秘钥的返回数据类型
+// 修改用户秘钥数据类型
 export interface ChangeUserPasswordRequest {
   selectedUser: string
   newSecretKey: string

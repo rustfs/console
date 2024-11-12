@@ -1,7 +1,8 @@
 /** 不同请求服务的环境配置 */
 export const serviceConfig: Record<ServiceEnvType, Record<string, string>> = {
   dev: {
-    url: 'http://220.181.1.138:9001',
+    // url: 'http://220.181.1.138:9001',
+    url: 'https://play.minio.org.cn',
   },
   test: {
     url: 'http://220.181.1.138:9001',

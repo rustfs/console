@@ -1,25 +1,25 @@
 <script lang="ts" setup>
-import type { DataTableColumns } from 'naive-ui'
+import type { DataTableColumns, DataTableInst } from 'naive-ui'
 import { useBoolean } from '@/hooks'
 import { type Bucket, listBuckets } from '@/service'
 import { niceBytes } from '@/utils/tools'
 import { reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const { t } = useI18n()
-
+const router = useRouter()
 const searchForm = reactive({
   name: '',
 })
 
-const columns: DataTableColumns<Bucket> = [
+const columns = reactive<DataTableColumns<Bucket>>([
   {
     title: '名称',
     align: 'center',
     key: 'name',
-    filter(value: string, row: Bucket) {
+    filter(value: any, row: Bucket) {
       return row.name.includes(value)
     },
-
   },
   {
     title: '对象数量',
@@ -52,12 +52,28 @@ const columns: DataTableColumns<Bucket> = [
         : '')
     },
   },
-]
+])
+
+// 点击行
+function goDetail(row: Bucket) {
+  return {
+    style: 'cursor: pointer;',
+    onClick: () => {
+      // console.log('row---', row)
+      router.push({
+        name: 'path',
+        params: {
+          path: row.name,
+        },
+      })
+    },
+  }
+}
 
 // 搜索过滤
-const tableRef = ref(null)
+const tableRef = ref<DataTableInst>()
 function filterName(value: string) {
-  tableRef.value?.filter({
+  tableRef.value && tableRef.value.filter({
     name: [value],
   })
 }
@@ -72,7 +88,7 @@ onMounted(() => {
 function getDataList() {
   startLoading()
   listBuckets().then((res: any) => {
-    listData.value = res.buckets
+    listData.value = res.data.buckets
   }).finally(() => {
     endLoading()
   })
@@ -105,6 +121,8 @@ function getDataList() {
         ref="tableRef"
         :columns="columns" :data="listData" :loading="loading" :pagination="false"
         :bordered="false"
+        max-height="calc(100vh - 320px)"
+        :row-props="goDetail"
       />
     </n-card>
   </div>

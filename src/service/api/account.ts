@@ -30,3 +30,23 @@ export function changeUserPassword(data: ChangeUserPasswordRequest) {
   const methodInstance = request.Post('/account/change-user-password', data)
   return methodInstance
 }
+
+/** **********************************ServiceAccounts */
+
+export interface ServiceAccount {
+  accountStatus?: string
+  name?: string
+  description?: string
+  expiration?: string
+  accessKey?: string
+}
+
+/**
+ * 获取访问秘钥
+ * @param params
+ * @returns 秘钥列表
+ */
+export function listUserServiceAccounts(params: object) {
+  const methodInstance = request.Get('/service-accounts', { params })
+  return methodInstance
+}

@@ -101,8 +101,8 @@ export const useAuthStore = defineStore('auth-store', {
         return
       }
 
-      local.set('sessionInfo', data)
-      this.sessionInfo = data
+      local.set('sessionInfo', data.data)
+      this.sessionInfo = data.data
 
       // 添加路由和菜单
       const routeStore = useRouteStore()

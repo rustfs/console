@@ -14,7 +14,6 @@ export default defineNuxtPlugin((nuxtApp) => {
       console.log('[API] response', response)
     },
     async onResponseError({ response }: { response: { status: number } }) {
-      console.error(response);
       if (response.status === 401) {
         token.value = undefined
         await nuxtApp.runWithContext(() => navigateTo('/auth/login'))

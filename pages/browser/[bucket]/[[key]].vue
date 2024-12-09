@@ -1,5 +1,5 @@
 <template>
   <div>
-    key
+    {{ $route.params }}
   </div>
 </template>

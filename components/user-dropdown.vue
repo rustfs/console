@@ -1,6 +1,6 @@
 <template>
   <n-dropdown :options="options" placement="right-end">
-    <div class="flex items-center border-t dark:border-gray-600 py-4">
+    <div class="flex items-center border-t dark:border-neutral-800 py-4">
       <n-avatar round size="small" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
       <template v-if="!isCollapsed">
         <span class="px-2">RustFS</span>

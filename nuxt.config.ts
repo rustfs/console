@@ -17,13 +17,20 @@ export default defineNuxtConfig({
     'nuxtjs-naive-ui',
     '@vueuse/nuxt'
   ],
-  plugins: ['~/plugins/api.ts'],
+  plugins: ['~/plugins/api.ts', '~/plugins/s3.ts'],
   runtimeConfig: {
     public: {
       api: {
         baseURL: process.env.API_BASE_URL || ''
+      },
+      s3: {
+        region: process.env.S3_REGION || 'us-east-1',
+        endpoint: process.env.S3_ENDPOINT || process.env.API_BASE_URL || '',
+        accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
+        sessionToken: process.env.S3_SESSION_TOKEN || ''
       }
-    }
+    },
   },
   i18n: {
     vueI18n: './i18n.config.ts'

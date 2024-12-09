@@ -4,6 +4,7 @@
 .nuxt
 .nitro
 .cache
+.vscode
 dist
 
 # Node dependencies
@@ -12,6 +13,8 @@ node_modules
 # Logs
 logs
 *.log
+
+*-lock.*
 
 # Misc
 .DS_Store

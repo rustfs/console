@@ -23,6 +23,7 @@ export default defineNuxtConfig({
       api: {
         baseURL: process.env.API_BASE_URL || ''
       },
+      // 临时配置，后续登录后从本地存储中获取
       s3: {
         region: process.env.S3_REGION || 'us-east-1',
         endpoint: process.env.S3_ENDPOINT || process.env.API_BASE_URL || '',

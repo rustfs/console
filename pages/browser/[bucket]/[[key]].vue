@@ -82,7 +82,7 @@ const prefixSegements = computed(() => prefix.value.split('/').filter(Boolean))
 const columns = [
   {
     key: 'Key', title: 'Name', render: (row: { Key: string, type: 'prefix' | 'object' }) => {
-      const displayKey = row.Key.substring(prefix.value.length + 1)
+      const displayKey = prefix.value ? row.Key.substring(prefix.value.length + 1) : row.Key
       let label: string | VNode = displayKey || '根目录'
 
       if (row.type === 'prefix') {
@@ -107,8 +107,6 @@ interface ListObjectsResponse {
 
 // 在服务端获取数据
 const { data, refresh } = await useAsyncData<ListObjectsResponse>(`objectsData&${continuationToken}`, async () => {
-  // 只在服务端执行 S3 请求（useAsyncData 初始渲染在服务端执行）
-  // 创建 S3 客户端
   const params = {
     Bucket: bucketName.value,
     MaxKeys: pageSize.value || 25,
@@ -117,8 +115,7 @@ const { data, refresh } = await useAsyncData<ListObjectsResponse>(`objectsData&$
     ContinuationToken: continuationToken.value
   }
 
-  const command = new ListObjectsV2Command(params)
-  const result = await $s3Client.send(command)
+  const result = await $s3Client.send(new ListObjectsV2Command(params))
 
   return {
     contents: result.Contents || [],

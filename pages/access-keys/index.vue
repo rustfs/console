@@ -6,7 +6,11 @@
       </template>
       <template #actions>
         <NFlex>
-          <NButton type="primary" secondary @click="deleteByList">
+          <NButton
+            type="primary"
+            :disabled="!checkedKeys.length"
+            secondary
+            @click="deleteByList">
             <template #icon>
               <Icon name="ri:delete-bin-5-line"></Icon>
             </template>
@@ -27,6 +31,7 @@
         </NFlex>
       </template>
     </page-header>
+
     <page-content>
       <n-data-table
         ref="tableRef"
@@ -59,6 +64,8 @@ import {
   NPopconfirm,
   NSpace
 } from 'naive-ui'
+import { Icon } from '#components'
+import { ChangePassword, EditItem, NewItem } from './components'
 
 const { $api } = useNuxtApp()
 const dialog = useDialog()
@@ -114,42 +121,47 @@ const columns: DataTableColumns<RowData> = [
   {
     title: '操作',
     key: 'actions',
-    width: 150,
+    width: 180,
     render: (row: any) => {
       return h(
-        NButton,
+        NSpace,
         {
-          strong: true,
-          tertiary: true,
-          size: 'small',
-          onClick: () => editItem(row)
+          justify: 'center'
         },
-        { default: () => 'Play' }
+        {
+          default: () => [
+            h(
+              NButton,
+              {
+                type: 'info',
+                size: 'small',
+                secondary: true,
+                onClick: () => openEditItem(row)
+              },
+              {
+                default: () => '编辑',
+                icon: () => h(Icon, { name: 'ri:edit-2-line' })
+              }
+            ),
+            h(
+              NPopconfirm,
+              { onPositiveClick: () => deleteItem(row) },
+              {
+                default: () => '确认删除',
+                trigger: () =>
+                  h(
+                    NButton,
+                    { type: 'error', size: 'small', secondary: true },
+                    {
+                      default: () => '删除',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' })
+                    }
+                  )
+              }
+            )
+          ]
+        }
       )
-
-      // return (
-      // <NSpace justify="center">
-      //   <NButton
-      //     type="info"
-      //     size="small"
-      //     secondary
-      //     onClick={() => editItem(row)}>
-      //     <n-icon>{/* <Icon name="ri:edit-2-line"></Icon> */}</n-icon>
-      //   </NButton>
-      //   <NPopconfirm onPositiveClick={() => deleteItem(row)}>
-      //     {{
-      //       default: () => '确认删除',
-      //       trigger: () => (
-      //         <NButton type="error" size="small" secondary>
-      //           <n-icon>
-      //             {/* <Icon name="ri:delete-bin-5-line"></Icon> */}
-      //           </n-icon>
-      //         </NButton>
-      //       )
-      //     }}
-      //   </NPopconfirm>
-      // </NSpace>
-      // )
     }
   }
 ]
@@ -170,16 +182,21 @@ onMounted(() => {
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await $api.get('/service-accounts')
-    console.log(res)
+    // const res = await $api.get('/service-accounts')
+    listData.value = [
+      {
+        accessKey: 'jdObGQ9dlQLGyAUa2fx8',
+        accountStatus: 'on',
+        expiration: '2024-12-10T16:00:00Z',
+        name: 'access key'
+      },
+      {
+        accessKey: 'rq46IRNXmumeGqcPgUjt',
+        accountStatus: 'on',
+        expiration: '1970-01-01T00:00:00Z'
+      }
+    ]
   } catch (error) {}
-  // listUserServiceAccounts({})
-  //   .then((res: any) => {
-  //     listData.value = res.data
-  //   })
-  //   .finally(() => {
-  //     endLoading()
-  //   })
 }
 
 /** **********************************添加 */
@@ -192,7 +209,7 @@ function addItem() {
 
 /** **********************************修改 */
 const editItemRef = ref()
-function editItem(row: any) {
+function openEditItem(row: any) {
   editItemRef.value.openDialog(row.accessKey)
 }
 /** **********************************修改密码 */

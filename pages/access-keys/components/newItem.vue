@@ -60,7 +60,7 @@ function submitForm() {
     :mask-closable="false"
     preset="card"
     title="添加Access Key"
-    class="w-700px"
+    class="w-1/2"
     :segmented="{
       content: true,
       action: true

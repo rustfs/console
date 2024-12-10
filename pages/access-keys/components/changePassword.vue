@@ -101,7 +101,7 @@ function closeModal(visible = false) {
     :mask-closable="false"
     preset="card"
     title="修改当前账号的密码"
-    class="w-700px"
+    class="w-1/2"
     :segmented="{
       content: true,
       action: true

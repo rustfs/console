@@ -36,9 +36,9 @@ const options = computed(() => {
 <template>
   <n-layout-sider bordered collapse-mode="width" :collapsed-width="64" :width="240" :native-scrollbar="false" :collapsed="isCollapsed">
     <div class="flex flex-col min-h-screen gap-4">
-      <div class="border-b dark:border-neutral-800 flex flex-wrap items-center p-4" :class="isCollapsed ? 'justify-center' : 'justify-between'">
+      <div class="border-b dark:border-neutral-800 flex flex-wrap max-h-16 items-center p-4" :class="isCollapsed ? 'justify-center' : 'justify-between'">
         <div>
-          <n-avatar v-if="isCollapsed" class="text-center text-2xl">{{ appConfig.name.substring(0, 1) }}</n-avatar>
+          <n-avatar v-if="isCollapsed" class="text-center text-2xl leading-none">{{ appConfig.name.substring(0, 1) }}</n-avatar>
           <h2 v-else class="text-center text-2xl">{{ appConfig.name }}</h2>
         </div>
         <div v-if="!isCollapsed" class="px-4 flex items-center -mr-4">

@@ -2,7 +2,7 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">Browser</h1>
+        <h1 class="text-2xl font-bold">对象浏览器</h1>
       </template>
       <template #actions>
         <n-button>

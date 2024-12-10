@@ -1,4 +1,4 @@
-import ApiClient from "~/lib/api-client"
+import ApiClient from '~/lib/api-client'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const token = useCookie('token')

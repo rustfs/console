@@ -31,7 +31,7 @@ export default defineNuxtConfig({
         secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
         sessionToken: process.env.S3_SESSION_TOKEN || ''
       }
-    },
+    }
   },
   i18n: {
     vueI18n: './i18n.config.ts'

@@ -44,7 +44,7 @@ const columns = [
     dataIndex: 'name',
     key: 'Name',
     render: (row: { Name: string }) => {
-      return h(NuxtLink, { href: `/browser/${encodeURIComponent(row.Name)}` }, row.Name);
+      return h(NuxtLink, { href: `/browser/${encodeURIComponent(row.Name)}`, class: 'flex items-center gap-2' }, [icon('ri:archive-line'), row.Name]);
     }
   },
   { title: '创建时间', dataIndex: 'creationDate', key: 'CreationDate' },

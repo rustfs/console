@@ -38,7 +38,7 @@
             </n-button>
           </div>
         </div>
-        <n-data-table :columns="columns" :data="objects" :pagination="false" :bordered="false" />
+        <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="objects" :pagination="false" :bordered="false" />
       </page-content>
     </content>
     <footer />
@@ -81,7 +81,7 @@ const prefixSegements = computed(() => prefix.value.split('/').filter(Boolean))
 
 const columns = [
   {
-    key: 'Key', title: 'Name', render: (row: { Key: string, type: 'prefix' | 'object' }) => {
+    key: 'Key', title: '对象', render: (row: { Key: string, type: 'prefix' | 'object' }) => {
       const displayKey = prefix.value ? row.Key.substring(prefix.value.length + 1) : row.Key
       let label: string | VNode = displayKey || '根目录'
 
@@ -94,8 +94,8 @@ const columns = [
       return h(NuxtLink, { href: bucketPath(keyInUri) }, label)
     }
   },
-  { key: 'Size', title: 'Size' },
-  { key: 'LastModified', title: 'Last Modified' }
+  { key: 'Size', title: '大小' },
+  { key: 'LastModified', title: '更新时间' }
 ]
 
 interface ListObjectsResponse {

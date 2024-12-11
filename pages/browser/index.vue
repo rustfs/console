@@ -27,7 +27,7 @@
           </n-button>
         </div>
       </div>
-      <n-data-table :columns="columns" :data="data" :pagination="false" :bordered="false" />
+      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="data" :pagination="false" :bordered="false" />
     </page-content>
   </div>
 </template>
@@ -40,7 +40,7 @@ const { $s3Client } = useNuxtApp();
 
 const columns = [
   {
-    title: '桶名称',
+    title: '桶',
     dataIndex: 'name',
     key: 'Name',
     render: (row: { Name: string }) => {

@@ -38,12 +38,15 @@
           ref="formRef"
           :model="searchForm"
           label-placement="left"
-          inline
           :show-feedback="false">
-          <n-flex>
+          <n-flex justify="space-between">
             <n-form-item class="!w-64" label="" path="name">
               <n-input placeholder="搜索访问秘钥" @input="filterName" />
             </n-form-item>
+            <n-button @click="() => refresh()">
+              <Icon name="ri:refresh-line" class="mr-2" />
+              <span>刷新</span>
+            </n-button>
           </n-flex>
         </n-form>
       </n-card>
@@ -202,6 +205,11 @@ const getDataList = async () => {
   } catch (error) {
     message.error('获取数据失败')
   }
+}
+
+// 刷新
+const refresh = () => {
+  getDataList()
 }
 
 /** **********************************添加 */

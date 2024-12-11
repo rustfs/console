@@ -6,6 +6,8 @@ interface Props {
   visible: boolean
 }
 const { visible } = defineProps<Props>()
+const message = useMessage()
+const { $api } = useNuxtApp()
 
 const emit = defineEmits<Emits>()
 const defaultFormModal = {
@@ -42,15 +44,17 @@ function dateDisabled(ts: number) {
   return date < new Date()
 }
 
-function submitForm() {
-  // createServiceAccountCreds(formModel.value).then((res: any) => {
-  //   const { isSuccess } = res
-  //   if (isSuccess) {
-  //     window.$message.success('添加成功')
-  //     closeModal()
-  //     emit('search')
-  //   }
-  // })
+async function submitForm() {
+  try {
+    const res = await $api.post('/service-account-credentials', {
+      body: formModel.value
+    })
+    message.success('添加成功')
+    closeModal()
+    emit('search')
+  } catch (error) {
+    message.error('添加失败')
+  }
 }
 </script>
 

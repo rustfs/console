@@ -25,7 +25,7 @@ function openDialog(accKey: string) {
   //   const { isSuccess } = res
   //   if (isSuccess) {
   //     formModel.value = res.data
-  //     visible.value = true
+  visible.value = true
   //   }
   // })
 }

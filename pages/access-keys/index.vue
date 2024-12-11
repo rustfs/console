@@ -33,6 +33,21 @@
     </page-header>
 
     <page-content>
+      <n-card>
+        <n-form
+          ref="formRef"
+          :model="searchForm"
+          label-placement="left"
+          inline
+          :show-feedback="false">
+          <n-flex>
+            <n-form-item class="!w-64" label="" path="name">
+              <n-input placeholder="搜索访问秘钥" @input="filterName" />
+            </n-form-item>
+          </n-flex>
+        </n-form>
+      </n-card>
+
       <n-data-table
         ref="tableRef"
         :columns="columns"

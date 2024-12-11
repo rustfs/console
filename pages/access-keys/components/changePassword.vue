@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { FormItemRule } from 'naive-ui'
-// import { accountChangePassword } from '@/service'
 
 interface Props {
   visible: boolean
@@ -58,23 +57,25 @@ function handlePasswordInput() {
 
 // 提交确认
 const formRef = ref()
+const { $api } = useNuxtApp()
+const message = useMessage()
 function submitForm(e: MouseEvent) {
   e.preventDefault()
-  formRef.value?.validate((errors: any) => {
+  formRef.value?.validate(async (errors: any) => {
     if (errors) {
       return
     }
-    // accountChangePassword({
-    //   current_secret_key: formModel.value.current_secret_key,
-    //   new_secret_key: formModel.value.new_secret_key
-    // }).then((res: any) => {
-    //   const { isSuccess } = res
-    //   if (isSuccess) {
-    //     window.$message.success('操作成功')
-    //   } else {
-    //     window.$message.error('修改失败')
-    //   }
-    // })
+
+    try {
+      const res = await $api.post('/account/change-password', {
+        current_secret_key: formModel.value.current_secret_key,
+        new_secret_key: formModel.value.new_secret_key
+      })
+      message.success('修改成功')
+      closeModal()
+    } catch (error) {
+      message.error('修改失败')
+    }
   })
 }
 

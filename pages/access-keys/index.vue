@@ -2,7 +2,7 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">AccessKey</h1>
+        <h1 class="text-2xl font-bold">访问密钥</h1>
       </template>
       <template #actions>
         <NFlex>
@@ -197,21 +197,11 @@ onMounted(() => {
 // 获取数据
 const getDataList = async () => {
   try {
-    // const res = await $api.get('/service-accounts')
-    listData.value = [
-      {
-        accessKey: 'jdObGQ9dlQLGyAUa2fx8',
-        accountStatus: 'on',
-        expiration: '2024-12-10T16:00:00Z',
-        name: 'access key'
-      },
-      {
-        accessKey: 'rq46IRNXmumeGqcPgUjt',
-        accountStatus: 'on',
-        expiration: '1970-01-01T00:00:00Z'
-      }
-    ]
-  } catch (error) {}
+    const res = await $api.get('service-accounts')
+    listData.value = res || []
+  } catch (error) {
+    message.error('获取数据失败')
+  }
 }
 
 /** **********************************添加 */
@@ -236,16 +226,16 @@ function changePassword() {
 }
 
 /** ***********************************删除 */
-function deleteItem(row: any) {
-  // deleteMultipleServiceAccounts([row.accessKey]).then((res: any) => {
-  //   const { isSuccess } = res
-  //   if (isSuccess) {
-  //     message.success('删除成功')
-  //     getDataList()
-  //   } else {
-  //     message.error('删除失败')
-  //   }
-  // })
+async function deleteItem(row: any) {
+  try {
+    const res = await $api.delete('/service-accounts/delete-multi', {
+      body: [row.accessKey]
+    })
+    message.success('删除成功')
+    getDataList()
+  } catch (error) {
+    message.error('删除失败')
+  }
 }
 
 /** ************************************批量删除 */
@@ -264,21 +254,20 @@ function deleteByList() {
     content: '你确定要删除所有选中的秘钥吗？',
     positiveText: '确定',
     negativeText: '取消',
-    onPositiveClick: () => {
-      // if (!checkedKeys.value.length) {
-      //   message.error('请至少选择一项')
-      //   return
-      // }
-      // deleteMultipleServiceAccounts(checkedKeys.value).then((res: any) => {
-      //   const { isSuccess } = res
-      //   if (isSuccess) {
-      //     checkedKeys.value = []
-      //     message.success('确定')
-      //     // getDataList()
-      //   } else {
-      //     message.error('删除失败')
-      //   }
-      // })
+    onPositiveClick: async () => {
+      if (!checkedKeys.value.length) {
+        message.error('请至少选择一项')
+        return
+      }
+      try {
+        const res = await $api.delete('/service-accounts/delete-multi', {
+          body: checkedKeys.value
+        })
+        message.success('删除成功')
+        getDataList()
+      } catch (error) {
+        message.error('删除失败')
+      }
     }
   })
 }

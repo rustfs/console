@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // import { getServiceAccount, updateServiceAccount } from '@/service'
 import { ref } from 'vue'
-
+const { $api } = useNuxtApp()
+const message = useMessage()
 const emit = defineEmits<Emits>()
 
 const visible = ref(false)
@@ -19,15 +20,17 @@ const defaultFormModal = {
 const formModel = ref({ ...defaultFormModal })
 
 const accessKey = ref<string>('')
-function openDialog(accKey: string) {
+async function openDialog(accKey: string) {
   accessKey.value = accKey
-  // getServiceAccount(btoa(unescape(encodeURIComponent(accKey)))).then((res: any) => {
-  //   const { isSuccess } = res
-  //   if (isSuccess) {
-  //     formModel.value = res.data
-  visible.value = true
-  //   }
-  // })
+
+  try {
+    // btoa(unescape(encodeURIComponent(accKey)))
+    const res = await $api.get(`service-accounts/${accKey}`)
+    formModel.value = res
+    visible.value = true
+  } catch (error) {
+    message.error('获取数据失败')
+  }
 }
 
 defineExpose({ openDialog })
@@ -45,17 +48,18 @@ function dateDisabled(ts: number) {
   return date < new Date()
 }
 
-function submitForm() {
-  // updateServiceAccount(accessKey.value, {
-  //   policy: formModel.value.policy
-  // }).then((res: any) => {
-  //   const { isSuccess } = res
-  //   if (isSuccess) {
-  //     window.$message.success('添加成功')
-  //     closeModal()
-  //     emit('search')
-  //   }
-  // })
+async function submitForm() {
+  try {
+    const res = await $api.put(`/service-accounts/${accessKey.value}`, {
+      ...formModel.value,
+      policy: formModel.value.policy || '{}'
+    })
+    message.success('修改成功')
+    closeModal()
+    emit('search')
+  } catch (error) {
+    message.error('修改失败')
+  }
 }
 </script>
 

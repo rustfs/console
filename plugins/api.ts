@@ -7,7 +7,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     baseURL: '/api',
     onRequest({ request, options }) {
       if (token) {
-        options.headers.set('Authorization', `Bearer ${token}`)
+        // options.headers.set('Authorization', `Bearer ${token}`)
       }
     },
     onResponse({ response }) {

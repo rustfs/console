@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 px-6 border-b dark:border-neutral-800 flex justify-between bg-gray-100 dark:bg-neutral-900">
+  <div class="p-4 px-6 min-h-16 border-b dark:border-neutral-800 flex justify-between bg-gray-100 dark:bg-neutral-900">
     <slot name="title"></slot>
     <slot name="actions"></slot>
   </div>

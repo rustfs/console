@@ -1,74 +1,73 @@
-
 // icons: https://icones.js.org/collection/ri
 export default [
   {
-    label: 'Home',
+    label: '首页',
     to: '/',
     icon: 'ri:home-2-line',
   },
   {
-    label: 'Data',
+    label: '数据',
     icon: 'ri:file-user-line',
     children: [
       {
-        label: 'Object Browser',
+        label: '对象浏览器',
         to: '/browser',
         icon: 'ri:box-3-line',
       },
       {
-        label: 'Buckets',
+        label: '存储桶',
         to: '/buckets',
         icon: 'ri:archive-drawer-line',
       },
     ],
   },
   {
-    label: 'Authentication',
+    label: '认证',
     icon: 'ri:door-lock-box-line',
     children: [
       {
-        label: 'Access keys',
+        label: '访问密钥',
         to: '/access-keys',
         icon: 'ri:door-lock-line',
       },
       {
-        label: 'Policies',
+        label: '策略',
         to: '/policies',
         icon: 'ri:shield-check-fill',
       },
       {
-        label: 'Users',
+        label: '用户',
         to: '/users',
         icon: 'ri:file-user-line',
       },
       {
-        label: 'Events',
+        label: '事件',
         to: '/events',
         icon: 'ri:broadcast-line',
       },
       {
-        label: 'Configuration',
+        label: '配置',
         to: '/configuration',
         icon: 'ri:settings-2-line',
       },
     ]
   },
   {
-    label: 'Info',
+    label: '信息',
     icon: 'ri:settings-2-line',
     children: [
       {
-        label: 'Performance',
+        label: '性能',
         to: '/performance',
         icon: 'ri:bar-chart-box-line'
       },
       {
-        label: 'License',
+        label: '许可证',
         to: '/license',
         icon: 'ri:copyright-line'
       },
       {
-        label: 'Documentation',
+        label: '文档',
         to: '/docs',
         icon: 'ri:file-list-3-line'
       }

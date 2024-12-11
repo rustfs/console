@@ -1,6 +1,9 @@
 <template>
   <div :class="theme.name === darkTheme.name ? 'dark' : ''">
-    <n-config-provider :theme="theme">
+    <n-config-provider
+      :theme="theme"
+      :locale="locale"
+      :date-locale="dateLocale">
       <n-dialog-provider>
         <n-notification-provider>
           <n-message-provider>
@@ -14,8 +17,16 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { darkTheme, type GlobalTheme } from 'naive-ui'
+import {
+  darkTheme,
+  type GlobalTheme,
+  type NDateLocale,
+  type NLocale
+} from 'naive-ui'
+import { dateZhCN, zhCN } from 'naive-ui'
 import { ref } from 'vue'
 
 const theme = ref<GlobalTheme | null>(darkTheme)
+const locale = ref<NLocale | null>(zhCN)
+const dateLocale = ref<NDateLocale | null>(dateZhCN)
 </script>

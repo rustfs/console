@@ -94,7 +94,7 @@ const columns = [
       return h(NuxtLink, { href: bucketPath(keyInUri) }, label)
     }
   },
-  { key: 'Size', title: '大小' },
+  { key: 'Size', title: '大小', render: (row: { Size: number }) => row.Size ? formatBytes(row.Size) : '' },
   { key: 'LastModified', title: '更新时间' }
 ]
 

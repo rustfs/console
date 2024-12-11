@@ -22,6 +22,14 @@
             </n-input>
           </div>
           <div class="flex items-center gap-4">
+            <n-button>
+              <Icon name="ri:add-line" class="mr-2" />
+              <span>新建目录</span>
+            </n-button>
+            <n-button>
+              <Icon name="ri:file-add-line" class="mr-2" />
+              <span>上传文件/文件夹</span>
+            </n-button>
             <n-button-group>
               <n-button @click="goToPreviousPage" :disabled="!previousToken">
                 <Icon name="ri:arrow-left-s-line" class="mr-2" />

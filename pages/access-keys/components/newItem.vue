@@ -87,6 +87,7 @@ async function submitForm() {
         <!-- TODO: 时间格式有问题 -->
         <n-form-item-grid-item :span="24" label="有效期" path="expiry">
           <n-date-picker
+            class="!w-full"
             v-model:value="formModel.expiry"
             :is-date-disabled="dateDisabled"
             type="datetime"
@@ -125,8 +126,4 @@ async function submitForm() {
   </n-modal>
 </template>
 
-<style scoped>
-.n-date-picker {
-  width: 100%;
-}
-</style>
+<style scoped></style>

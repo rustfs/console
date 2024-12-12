@@ -77,10 +77,10 @@ async function submitForm() {
     <n-form
       label-placement="left"
       :model="formModel"
-      label-align="left"
-      :label-width="130">
+      label-align="right"
+      :label-width="90">
       <n-grid :cols="24" :x-gap="18">
-        <n-form-item-grid-item :span="24" label="Access Key策略" path="policy">
+        <n-form-item-grid-item :span="24" label="Access Key" path="policy">
           <n-input
             v-model:value="formModel.policy"
             type="textarea"

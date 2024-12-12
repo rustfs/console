@@ -48,19 +48,19 @@ async function submitForm() {
     v-model:show="visible"
     :mask-closable="false"
     preset="card"
-    title="修改策略"
+    title="策略原文"
     class="w-1/2"
     :segmented="{
       content: true,
       action: true
     }">
     <n-form
-      label-placement="left"
+      label-placement="top"
       :model="formModel"
       label-align="left"
-      :label-width="130">
+      :label-width="100">
       <n-grid :cols="24" :x-gap="18">
-        <n-form-item-grid-item :span="24" label="策略原文" path="policy">
+        <n-form-item-grid-item :span="24" path="policy">
           <JsonEditorVue v-model="formModel.policy" />
         </n-form-item-grid-item>
       </n-grid>

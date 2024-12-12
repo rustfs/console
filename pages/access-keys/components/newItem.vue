@@ -72,7 +72,7 @@ async function submitForm() {
     <n-form
       label-placement="left"
       :model="formModel"
-      label-align="left"
+      label-align="right"
       :label-width="130">
       <n-grid :cols="24" :x-gap="18">
         <n-form-item-grid-item :span="24" label="Access Key" path="accesskey">

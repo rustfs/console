@@ -13,7 +13,7 @@
       label-placement="left"
       :model="formModel"
       label-align="left"
-      :label-width="130">
+      :label-width="100">
       <n-grid :cols="24" :x-gap="18">
         <n-form-item-grid-item :span="24" label="策略名称" path="name">
           <n-input v-model:value="formModel.name" />

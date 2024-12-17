@@ -6,7 +6,7 @@
       </template>
     </page-header>
     <page-content>
-      <n-tabs type="card" :size="size">
+      <n-tabs type="card">
         <n-tab-pane name="users" tab="用户">
           <userTab></userTab>
         </n-tab-pane>

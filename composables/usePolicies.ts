@@ -1,0 +1,57 @@
+const { $api } = useNuxtApp();
+export const usePolicies = () => {
+  /**
+   * 获取策略列表
+   * @returns
+   */
+  const ListPolicies = async () => {
+    return await $api.get('/policies');
+  };
+
+  /**
+   * 添加策略
+   * @param data
+   * @returns
+   */
+  const addPolicy = async (data: any) => {
+    return await $api.post('/policies', data);
+  };
+
+  /**
+   * 获取策略详情
+   * @param policyName
+   * @returns
+   */
+  const getPolicyInfo = async (policyName: string) => {
+    return await $api.get(`/policy/${encodeURIComponent(policyName)}`);
+  };
+
+  /**
+   * 获取策略用户列表
+   * @param policyName
+   * @returns
+   */
+  const listUsersForPolicy = async (policyName: string) => {
+    return await $api.get(`/policy/${encodeURIComponent(policyName)}/users`);
+  };
+
+  /**
+   * 获取策略组列表
+   * @param policyName
+   * @returns
+   */
+  const listGroupsForPolicy = async (policyName: string) => {
+    return await $api.get(`/policy/${encodeURIComponent(policyName)}/groups`);
+  };
+
+  /**
+   * 删除策略
+   * @param policyName
+   * @returns
+   */
+  const deletePolicy = async (policyName: string) => {
+    return await $api.delete(`/policy/${encodeURIComponent(policyName)}`, {});
+  };
+
+  return { ListPolicies, getPolicyInfo, addPolicy, deletePolicy, listUsersForPolicy, listGroupsForPolicy };
+};

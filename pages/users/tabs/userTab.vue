@@ -31,24 +31,40 @@
         </n-flex>
       </n-form>
     </n-card>
-    <n-data-table ref="tableRef" :columns="columns" :data="listData" :pagination="false" :bordered="false" max-height="calc(100vh - 320px)" :row-key="rowKey" @update:checked-row-keys="handleCheck" />
+    <n-data-table
+      ref="tableRef"
+      :columns="columns"
+      :data="listData"
+      :pagination="false"
+      :bordered="false"
+      max-height="calc(100vh - 320px)"
+      :row-key="rowKey"
+      @update:checked-row-keys="handleCheck" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NPopconfirm, NSpace } from 'naive-ui';
+import {
+  type DataTableColumns,
+  type DataTableInst,
+  type DataTableRowKey,
+  NButton,
+  NPopconfirm,
+  NSpace,
+} from 'naive-ui';
 import { Icon } from '#components';
 // import { ChangePassword, EditItem, NewItem } from './components';
 
 const { $api } = useNuxtApp();
+const user = useUsers();
 const dialog = useDialog();
 const message = useMessage();
 
 const searchForm = reactive({
-  name: '',
+  accessKey: '',
 });
 interface RowData {
-  name: string;
+  accessKey: string;
 }
 
 const columns: DataTableColumns<RowData> = [
@@ -58,7 +74,7 @@ const columns: DataTableColumns<RowData> = [
   {
     title: '名称',
     align: 'left',
-    key: 'name',
+    key: 'accessKey',
   },
   {
     title: '操作',
@@ -113,7 +129,7 @@ const tableRef = ref<DataTableInst>();
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
-      name: [value],
+      accessKey: [value],
     });
 }
 const listData = ref<any[]>([]);
@@ -124,8 +140,9 @@ onMounted(() => {
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await $api.get('service-accounts');
-    listData.value = res || [];
+    const res = await $api.get('/users');
+    // const res = await user.ListUsers();
+    listData.value = res.users || [];
   } catch (error) {
     message.error('获取数据失败');
   }
@@ -147,14 +164,6 @@ const editItemRef = ref();
 function openEditItem(row: any) {
   editItemRef.value.openDialog(row.accessKey);
 }
-/** **********************************修改密码 */
-const changePasswordModalRef = ref();
-const changePasswordVisible = ref(false);
-
-function changePassword() {
-  changePasswordVisible.value = true;
-}
-
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {

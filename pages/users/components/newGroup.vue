@@ -7,6 +7,8 @@ interface Props {
 const { visible } = defineProps<Props>();
 const message = useMessage();
 const { $api } = useNuxtApp();
+const group = useGroups();
+const user = useUsers();
 
 const emit = defineEmits<Emits>();
 const defaultFormModal = {
@@ -20,7 +22,20 @@ interface Emits {
   (e: 'search'): void;
 }
 
+// 用户列表
 const users = ref([]);
+const getUserList = async () => {
+  // const res = await user.ListUsers();
+  const res = await $api.get('/users');
+
+  users.value = res.users.map((item: any) => {
+    return {
+      label: item.accessKey,
+      value: item.accessKey,
+    };
+  });
+};
+getUserList();
 
 const modalVisible = computed({
   get() {
@@ -35,10 +50,13 @@ function closeModal(visible = false) {
 }
 
 async function submitForm() {
+  if (formModel.value.group.trim() === '') {
+    message.error('请输入用户组名称');
+    return;
+  }
   try {
-    const res = await $api.post('/group', {
-      body: formModel.value,
-    });
+    const res = await group.groupAdd({ ...formModel.value });
+
     message.success('添加成功');
     closeModal();
     emit('search');
@@ -61,7 +79,7 @@ async function submitForm() {
     }">
     <n-form label-placement="left" :model="formModel" label-align="right" :label-width="130">
       <n-grid :cols="24" :x-gap="18">
-        <n-form-item-grid-item :span="24" label="名称" path="group">
+        <n-form-item-grid-item :span="24" label="名称" path="group" required>
           <n-input v-model:value="formModel.group" />
         </n-form-item-grid-item>
         <n-form-item-grid-item :span="24" label="用户" path="members">

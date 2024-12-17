@@ -31,18 +31,35 @@
         </n-flex>
       </n-form>
     </n-card>
-    <n-data-table ref="tableRef" :columns="columns" :data="listData" :pagination="false" :bordered="false" max-height="calc(100vh - 320px)" :row-key="rowKey" @update:checked-row-keys="handleCheck" />
+    <n-data-table
+      ref="tableRef"
+      :columns="columns"
+      :data="listData"
+      :pagination="false"
+      :bordered="false"
+      max-height="calc(100vh - 320px)"
+      :row-key="rowKey"
+      @update:checked-row-keys="handleCheck" />
+    <newGroup v-model:visible="newItemVisible" @search="getDataList" ref="newItemRef"></newGroup>
   </div>
 </template>
 
 <script setup lang="ts">
-import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NPopconfirm, NSpace } from 'naive-ui';
+import {
+  type DataTableColumns,
+  type DataTableInst,
+  type DataTableRowKey,
+  NButton,
+  NPopconfirm,
+  NSpace,
+} from 'naive-ui';
 import { Icon } from '#components';
-// import { ChangePassword, EditItem, NewItem } from './components';
+import { newGroup } from '../components';
 
 const { $api } = useNuxtApp();
 const dialog = useDialog();
 const message = useMessage();
+const group = useGroups();
 
 const searchForm = reactive({
   name: '',
@@ -66,7 +83,7 @@ const columns: DataTableColumns<RowData> = [
   {
     title: '操作',
     key: 'actions',
-    width: 180,
+    width: 320,
     render: (row: any) => {
       return h(
         NSpace,
@@ -84,7 +101,20 @@ const columns: DataTableColumns<RowData> = [
                 onClick: () => openEditItem(row),
               },
               {
-                default: () => '编辑',
+                default: () => '分配策略',
+                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
+              }
+            ),
+            h(
+              NButton,
+              {
+                type: 'info',
+                size: 'small',
+                secondary: true,
+                onClick: () => openEditItem(row),
+              },
+              {
+                default: () => '成员管理',
                 icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
@@ -127,6 +157,7 @@ onMounted(() => {
 // 获取数据
 const getDataList = async () => {
   try {
+    // const res = await group.groupList();
     const res = await $api.get('/groups');
     listData.value =
       res.groups.map((item: string) => {
@@ -159,6 +190,7 @@ function openEditItem(row: any) {
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
+    // const res = await group.groupDelete(row.name);
     const res = await $api.delete(`/group/${encodeURIComponent(row.name)}`, {});
     message.success('删除成功');
     getDataList();
@@ -189,7 +221,8 @@ function deleteByList() {
         return;
       }
       checkedKeys.value.forEach(async (element: any) => {
-        const res = await $api.delete(`/group/${encodeURIComponent(element)}`, {});
+        // const res = await group.groupDelete(element);
+        const res = $api.delete(`/group/${encodeURIComponent(element)}`, {});
       });
 
       getDataList();

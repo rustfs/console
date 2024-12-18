@@ -33,6 +33,8 @@
       <n-descriptions-item label="对象名称">{{ key }}</n-descriptions-item>
       <n-descriptions-item label="对象大小">{{ object?.ContentLength }}</n-descriptions-item>
       <n-descriptions-item label="对象类型">{{ object?.ContentType }}</n-descriptions-item>
+      <!-- <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
+      <n-descriptions-item label="ETag">{{ object?.ETag }}</n-descriptions-item>
       <n-descriptions-item label="最后修改时间">{{ object?.LastModified }}</n-descriptions-item>
     </n-descriptions>
   </n-card>

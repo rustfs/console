@@ -1,5 +1,6 @@
-const { $api } = useNuxtApp();
 export const useGroups = () => {
+  const { $api } = useNuxtApp();
+
   /**
    * Get all groups
    *

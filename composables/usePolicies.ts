@@ -1,5 +1,6 @@
-const { $api } = useNuxtApp();
 export const usePolicies = () => {
+  const { $api } = useNuxtApp();
+
   /**
    * 获取策略列表
    * @returns
@@ -53,5 +54,22 @@ export const usePolicies = () => {
     return await $api.delete(`/policy/${encodeURIComponent(policyName)}`, {});
   };
 
-  return { ListPolicies, getPolicyInfo, addPolicy, deletePolicy, listUsersForPolicy, listGroupsForPolicy };
+  /**
+   * 批量设置策略
+   * @param data
+   * @returns
+   */
+  const setPolicyMultiple = async (data: any) => {
+    return await $api.put(`/set-policy-multi`, data);
+  };
+
+  return {
+    ListPolicies,
+    getPolicyInfo,
+    addPolicy,
+    deletePolicy,
+    listUsersForPolicy,
+    listGroupsForPolicy,
+    setPolicyMultiple,
+  };
 };

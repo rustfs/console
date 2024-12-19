@@ -39,7 +39,10 @@ const options = computed(() => {
       <div class="border-b dark:border-neutral-800 flex flex-wrap max-h-16 items-center p-4" :class="isCollapsed ? 'justify-center' : 'justify-between'">
         <div>
           <n-avatar v-if="isCollapsed" class="text-center text-2xl leading-none">{{ appConfig.name.substring(0, 1) }}</n-avatar>
-          <h2 v-else class="text-center text-2xl">{{ appConfig.name }}</h2>
+          <h2 v-else class="text-center text-2xl">
+            <img src="~/assets/logo.svg" class="max-w-28" alt="">
+            <span class="sr-only">{{ appConfig.name }}</span>
+          </h2>
         </div>
         <div v-if="!isCollapsed" class="px-4 flex items-center -mr-4">
           <Icon name="ri:menu-fold-fill" class="cursor-pointer text-xl" @click="toggleSidebar" />

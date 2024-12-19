@@ -1,0 +1,135 @@
+<template>
+  <n-modal :show="show" @update:show="val => $emit('update:show', val)" size="huge">
+    <template #header>
+      <div style="display:flex; justify-content: space-between; align-items:center;">
+        <span>对象预览: {{ objectKey }}</span>
+        <n-button size="small" ghost @click="closeModal">关闭</n-button>
+      </div>
+    </template>
+    <n-card class="max-w-screen-md">
+      <template #header>
+        <div class="flex items-center justify-between gap-4 truncate">
+          <div>
+            预览内容 <small class="text-gray-300">{{ objectKey }}</small>
+          </div>
+          <n-button type="default" size="small" ghost @click="closeModal">
+            <Icon name="ri:close-line" class="mr-2" />
+            <span>关闭</span>
+          </n-button>
+        </div>
+      </template>
+      <n-spin v-if="loading" size="large"></n-spin>
+      <div v-else class="min-h-64 max-h-[80vh] overflow-y-auto flex-1 flex flex-col justify-center items-center">
+        <template v-if="canPreview">
+          <img v-if="isImage" :src="previewUrl" alt="preview" />
+          <iframe v-else-if="isPdf" :src="previewUrl" class="w-full min-h-[70vh]" frameborder="0"></iframe>
+          <pre v-else-if="isText" class="w-full">{{ fileContent }}</pre>
+          <video v-else-if="isVideo" controls class="w-full">
+            <source :src="previewUrl" type="video/mp4" />
+            您的浏览器不支持 video 标签
+          </video>
+          <audio v-else-if="isAudio" controls class="w-full">
+            <source :src="previewUrl" type="audio/mpeg" />
+            您的浏览器不支持 audio 标签
+          </audio>
+        </template>
+        <div v-else class="text-center text-gray-500">
+          无法预览该对象的内容（MIME类型：{{ contentType }}），请下载查看
+        </div>
+      </div>
+    </n-card>
+  </n-modal>
+</template>
+
+<script setup lang="ts">
+import { useMessage } from 'naive-ui'
+import { computed, ref, watch } from 'vue'
+
+const props = defineProps<{
+  show: boolean
+  bucketName: string
+  objectKey: string
+}>()
+
+const emit = defineEmits(['update:show'])
+const { getSignedUrl, headObject } = useObject({ bucket: props.bucketName })
+
+// 内部状态
+const previewUrl = ref<string | undefined>(undefined)
+const contentType = ref<string | undefined>(undefined)
+const fileContent = ref<string | undefined>(undefined)
+const loading = ref<boolean>(false)
+
+const message = useMessage()
+
+// MIME 类型判断逻辑
+const isImage = computed(() => contentType.value?.startsWith('image/') || false)
+const isVideo = computed(() => contentType.value?.startsWith('video/') || false)
+const isAudio = computed(() => contentType.value?.startsWith('audio/') || false)
+const isPdf = computed(() => contentType.value === 'application/pdf')
+const isText = computed(() => {
+  // 常见文本类型，可按需扩展
+  return contentType.value?.startsWith('text/') ||
+    contentType.value === 'application/json' ||
+    contentType.value === 'application/xml' || false
+})
+
+const canPreview = computed(() => isImage.value || isPdf.value || isText.value || isVideo.value || isAudio.value)
+
+// 当 show 为 true 时触发加载逻辑
+watch(() => props.show, async (newVal) => {
+  if (newVal) {
+    await loadPreview()
+  } else {
+    resetState()
+  }
+})
+
+async function loadPreview() {
+  loading.value = true
+  previewUrl.value = undefined
+  fileContent.value = undefined
+  contentType.value = undefined
+
+  try {
+    // 获取预签名URL
+    const url = await getSignedUrl(objectKey.value)
+
+    previewUrl.value = url
+
+    // 先使用 HEAD 请求获取 Content-Type
+    const response = await headObject(objectKey.value)
+
+    const ctype = response?.ContentType
+    contentType.value = ctype || 'application/octet-stream'
+
+    // 根据 MIME 类型决定是否加载内容
+    if (isText.value) {
+      // 加载文本内容
+      const response = await fetch(url)
+      const text = await response.text()
+      fileContent.value = text
+    }
+
+  } catch (err) {
+    console.error(err)
+    message.error('获取对象预览失败')
+    closeModal()
+  } finally {
+    loading.value = false
+  }
+}
+
+function resetState() {
+  previewUrl.value = undefined
+  fileContent.value = undefined
+  contentType.value = undefined
+  loading.value = false
+}
+
+function closeModal() {
+  emit('update:show', false)
+}
+
+const objectKey = computed(() => props.objectKey)
+</script>

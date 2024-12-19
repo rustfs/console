@@ -25,8 +25,8 @@ interface Emits {
 // 用户列表
 const users = ref([]);
 const getUserList = async () => {
-  // const res = await user.ListUsers();
-  const res = await $api.get('/users');
+  const res = await user.ListUsers();
+  // const res = await $api.get('/users');
 
   users.value = res.users.map((item: any) => {
     return {
@@ -46,6 +46,7 @@ const modalVisible = computed({
   },
 });
 function closeModal(visible = false) {
+  formModel.value = { ...defaultFormModal };
   emit('update:visible', visible);
 }
 
@@ -83,7 +84,7 @@ async function submitForm() {
           <n-input v-model:value="formModel.group" />
         </n-form-item-grid-item>
         <n-form-item-grid-item :span="24" label="用户" path="members">
-          <n-select v-model:value="formModel.members" multiple :options="users" />
+          <n-select v-model:value="formModel.members" filterable multiple :options="users" />
         </n-form-item-grid-item>
       </n-grid>
     </n-form>

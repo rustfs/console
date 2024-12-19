@@ -6,7 +6,7 @@ const isDev = process.env.NODE_ENV === 'development'
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: false,
-  css: ['~/assets/css/tailwind.css'],
+  css: ['~/assets/css/tailwind.css', '~/assets/css/overrides.css'],
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
   modules: [

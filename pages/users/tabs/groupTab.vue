@@ -41,7 +41,7 @@
       :row-key="rowKey"
       @update:checked-row-keys="handleCheck" />
     <groupEdit ref="editItemRef"></groupEdit>
-    <!-- <newGroup v-model:visible="newItemVisible" @search="getDataList" ref="newItemRef"></newGroup> -->
+    <newGroup v-model:visible="newItemVisible" @search="getDataList" ref="newItemRef"></newGroup>
     <setPoliciesMutiple :checkedKeys="checkedKeys" ref="policiesRef"></setPoliciesMutiple>
   </div>
 </template>

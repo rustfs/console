@@ -38,7 +38,7 @@
       :row-key="rowKey"
       @update:checked-row-keys="handleCheck" />
     <newUser @search="getDataList" ref="newItemRef"></newUser>
-    <userEdit @search="getDataList" :checkedKeys="checkedKeys" ref="policiesRef"></userEdit>
+    <userEdit @search="getDataList" :checkedKeys="checkedKeys" ref="editItemRef"></userEdit>
   </div>
 </template>
 
@@ -162,7 +162,7 @@ const addToGroup = () => {};
 /** **********************************修改 */
 const editItemRef = ref();
 function openEditItem(row: any) {
-  editItemRef.value.openDialog(row.accessKey);
+  editItemRef.value.openDialog(row);
 }
 /** ***********************************删除 */
 async function deleteItem(row: any) {

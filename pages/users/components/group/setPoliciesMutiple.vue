@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NSpace } from 'naive-ui';
-const { ListPolicies, setPolicyMultiple } = usePolicies();
+const { listPolicies, setPolicyMultiple } = usePolicies();
 
 const props = defineProps({
   checkedKeys: {
@@ -94,7 +94,7 @@ function filterName(value: string) {
 }
 const listData = ref([]);
 const getPoliciesList = async () => {
-  const res = await ListPolicies();
+  const res = await listPolicies();
   listData.value = res.policies || [];
 };
 getPoliciesList();

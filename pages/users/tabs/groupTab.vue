@@ -144,7 +144,7 @@ onMounted(() => {
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await group.groupList();
+    const res = await group.listGroup();
     listData.value =
       res.groups.map((item: string) => {
         return {
@@ -180,7 +180,7 @@ function openEditItem(row: any) {
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
-    const res = await group.groupDelete(row.name);
+    const res = await group.removeGroup(row.name);
     message.success('删除成功');
     getDataList();
   } catch (error) {
@@ -210,7 +210,7 @@ function deleteByList() {
         return;
       }
       checkedKeys.value.forEach(async (element: any) => {
-        const res = await group.groupDelete(element);
+        const res = await group.removeGroup(element);
       });
 
       getDataList();

@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { userPolicies, userAccount, userGroups } from './';
 const visible = ref(false);
-const { getUserInfo } = useUsers();
+const { getUser } = useUsers();
 interface UserInfo {
   accessKey: string;
   memberOf: string[];
@@ -65,7 +65,7 @@ async function openDialog(row: any) {
 
 // 获取用户信息
 async function getUserData(name: string) {
-  user.value = await getUserInfo(name);
+  user.value = await getUser(name);
 }
 
 defineExpose({

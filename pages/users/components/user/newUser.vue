@@ -31,8 +31,8 @@
 </template>
 
 <script setup lang="ts">
-const { ListPolicies } = usePolicies();
-const { groupList } = useGroups();
+const { listPolicies } = usePolicies();
+const { listGroup } = useGroups();
 const messge = useMessage();
 const visible = ref(false);
 
@@ -55,7 +55,7 @@ defineExpose({
 // 获取策略列表
 const policiesList = ref([]);
 const getPoliciesList = async () => {
-  const res = await ListPolicies();
+  const res = await listPolicies();
   policiesList.value =
     res.policies.map((item: any) => {
       return {
@@ -68,7 +68,7 @@ const getPoliciesList = async () => {
 // 获取用户组列表
 const groupsList = ref([]);
 const getGroupsList = async () => {
-  const res = await groupList();
+  const res = await listGroup();
   groupsList.value =
     res.groups.map((item: any) => {
       return {

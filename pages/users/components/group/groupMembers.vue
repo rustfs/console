@@ -42,8 +42,8 @@
 
 <script setup lang="ts">
 import { type DataTableColumns, type DataTableInst, NButton, NSpace } from 'naive-ui';
-const { ListUsers } = useUsers();
-const { groupUpdate, getGroupInfo } = useGroups();
+const { listUsers } = useUsers();
+const { updateGroup } = useGroups();
 
 const messge = useMessage();
 const props = defineProps({
@@ -98,7 +98,7 @@ const emit = defineEmits<{
   (e: 'search'): void;
 }>();
 const getUserList = async () => {
-  const res = await ListUsers();
+  const res = await listUsers();
   users.value = res.users.map((item: any) => {
     return {
       label: item.accessKey,
@@ -111,7 +111,7 @@ getUserList();
 const members = ref(props.group.members);
 const changeMebers = async () => {
   try {
-    await groupUpdate(props.group.name, {
+    await updateGroup(props.group.name, {
       ...props.group,
       members: members.value,
     });

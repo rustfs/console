@@ -5,7 +5,7 @@ export const usePolicies = () => {
    * 获取策略列表
    * @returns
    */
-  const ListPolicies = async () => {
+  const listPolicies = async () => {
     return await $api.get('/policies');
   };
 
@@ -23,7 +23,7 @@ export const usePolicies = () => {
    * @param policyName
    * @returns
    */
-  const getPolicyInfo = async (policyName: string) => {
+  const getPolicy = async (policyName: string) => {
     return await $api.get(`/policy/${encodeURIComponent(policyName)}`);
   };
 
@@ -50,7 +50,7 @@ export const usePolicies = () => {
    * @param policyName
    * @returns
    */
-  const deletePolicy = async (policyName: string) => {
+  const removePolicy = async (policyName: string) => {
     return await $api.delete(`/policy/${encodeURIComponent(policyName)}`, {});
   };
 
@@ -64,10 +64,10 @@ export const usePolicies = () => {
   };
 
   return {
-    ListPolicies,
-    getPolicyInfo,
+    listPolicies,
+    getPolicy,
     addPolicy,
-    deletePolicy,
+    removePolicy,
     listUsersForPolicy,
     listGroupsForPolicy,
     setPolicyMultiple,

@@ -10,13 +10,13 @@
       action: true,
     }">
     <n-card>
-      <n-form label-placement="left" :model="formModel" label-align="left" :label-width="100">
+      <n-form label-placement="top" :model="formModel" label-align="left" :label-width="100">
         <n-grid :cols="24" :x-gap="18">
           <n-form-item-grid-item :span="24" label="策略名称" path="name">
             <n-input v-model:value="formModel.name" />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" label="策略原文" path="policy">
-            <JsonEditorVue
+            <json-editor
               v-model="formModel.policy"
               v-bind="{
                 /* 局部 props & attrs */

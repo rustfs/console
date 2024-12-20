@@ -41,9 +41,9 @@
 </template>
 <script lang="ts" setup>
 import { useNuxtApp } from 'nuxt/app';
-import { Icon } from '#components';
-import { EditItem, NewItem } from './components';
+import { EditItem, NewItem } from '~/components/policies';
 import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from 'naive-ui';
+import { Icon } from '#components';
 const { $api } = useNuxtApp();
 const message = useMessage();
 

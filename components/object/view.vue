@@ -5,15 +5,15 @@
     </template>
     <template #extra>
       <div class="flex items-center gap-4 ml-auto">
-        <n-button>
+        <n-button @click="() => download()">
           <Icon name="ri:download-line" class="mr-2" />
           <span>下载</span>
         </n-button>
-        <n-button>
+        <n-button @click="() => copySignedUrl()">
           <Icon name="ri:file-copy-line" class="mr-2" />
           <span>复制临时链接</span>
         </n-button>
-        <n-button>
+        <n-button @click="() => showPreview = true">
           <Icon name="ri:eye-line" class="mr-2" />
           <span>预览</span>
         </n-button>
@@ -29,6 +29,9 @@
     </template>
   </n-page-header>
   <n-card title="对象信息">
+    <div v-if="status === 'pending'" class="flex items-center justify-center">
+      <n-spin size="small" />
+    </div>
     <n-descriptions :column="1">
       <n-descriptions-item label="对象名称">{{ key }}</n-descriptions-item>
       <n-descriptions-item label="对象大小">{{ object?.ContentLength }}</n-descriptions-item>
@@ -37,18 +40,19 @@
       <n-descriptions-item label="ETag">{{ object?.ETag }}</n-descriptions-item>
       <n-descriptions-item label="最后修改时间">{{ object?.LastModified }}</n-descriptions-item>
     </n-descriptions>
+
+    <object-preview-modal v-model:show="showPreview" :bucketName="bucketName" :objectKey="key" />
   </n-card>
 </template>
 
 <script setup lang="ts">
 
 
-import { useAsyncData } from '#app'
-import { HeadObjectCommand, type HeadObjectCommandOutput } from '@aws-sdk/client-s3'
 import { computed } from 'vue'
 
 const router = useRouter()
 const { $s3Client } = useNuxtApp();
+const message = useMessage();
 const props = defineProps<{ bucket: string; objectKey: string }>()
 
 const bucketName = computed(() => props.bucket as string)
@@ -56,18 +60,28 @@ const bucketName = computed(() => props.bucket as string)
 // 当前路径的前缀, example: '/folder1/folder2/'
 const key = computed(() => decodeURIComponent(props.objectKey as string))
 
+// 预览内容
+const showPreview = ref(false)
+
+const objectApi = useObject({ bucket: bucketName.value });
+
 // 在服务端获取数据
-const { data: object, refresh } = await useAsyncData<HeadObjectCommandOutput>(`object-detail&${key}`, async () => {
-  const params = {
-    Bucket: bucketName.value,
-    Key: key.value
-  }
+const { data: object, status, refresh } = useAsyncData(`head-object&${key}`, () => objectApi.headObject(key.value))
 
-  return await $s3Client.send(new HeadObjectCommand(params))
-})
+const download = async () => {
+  const msg = message.loading('正在获取下载链接...');
+  const url = await objectApi.getSignedUrl(key.value);
+  msg.destroy();
+  window.open(url, '_blank')
+}
 
-console.log(object);
-
+const copySignedUrl = async () => {
+  const msg = message.loading('正在获取下载链接...');
+  const url = await objectApi.getSignedUrl(key.value);
+  await navigator.clipboard.writeText(url);
+  msg.destroy();
+  message.success('链接已复制到剪贴板');
+}
 
 
 </script>

@@ -25,7 +25,7 @@ interface Emits {
 // 用户列表
 const users = ref([]);
 const getUserList = async () => {
-  const res = await user.ListUsers();
+  const res = await user.listUsers();
   // const res = await $api.get('/users');
 
   users.value = res.users.map((item: any) => {
@@ -56,7 +56,7 @@ async function submitForm() {
     return;
   }
   try {
-    const res = await group.groupAdd({ ...formModel.value });
+    const res = await group.createGroup({ ...formModel.value });
 
     message.success('添加成功');
     closeModal();

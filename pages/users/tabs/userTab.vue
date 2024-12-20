@@ -55,7 +55,7 @@ import { Icon } from '#components';
 import { newUser, userEdit } from '../components';
 
 const { $api } = useNuxtApp();
-const { ListUsers } = useUsers();
+const { listUsers } = useUsers();
 const dialog = useDialog();
 const message = useMessage();
 
@@ -142,7 +142,7 @@ onMounted(() => {
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await ListUsers();
+    const res = await listUsers();
     listData.value = res.users || [];
   } catch (error) {
     message.error('获取数据失败');

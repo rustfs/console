@@ -6,7 +6,7 @@ export const useGroups = () => {
    *
    * @returns
    */
-  const groupList = async () => {
+  const listGroup = async () => {
     return await $api.get('/groups');
   };
 
@@ -15,7 +15,7 @@ export const useGroups = () => {
    * @param name
    * @returns
    */
-  const getGroupInfo = async (name: string) => {
+  const getGroup = async (name: string) => {
     return await $api.get(`/group/${encodeURIComponent(name)}`);
   };
 
@@ -24,7 +24,7 @@ export const useGroups = () => {
    * @param data
    * @returns
    */
-  const groupAdd = async (data: any) => {
+  const createGroup = async (data: any) => {
     return await $api.post('/groups', data);
   };
 
@@ -33,7 +33,7 @@ export const useGroups = () => {
    * @param name
    * @returns
    */
-  const groupDelete = async (name: string) => {
+  const removeGroup = async (name: string) => {
     return await $api.delete(`/group/${encodeURIComponent(name)}`, {});
   };
 
@@ -43,15 +43,15 @@ export const useGroups = () => {
    * @param data
    * @returns
    */
-  const groupUpdate = async (name: string, data: any) => {
+  const updateGroup = async (name: string, data: any) => {
     return await $api.put(`/group/${encodeURIComponent(name)}`, data);
   };
 
   return {
-    groupList,
-    getGroupInfo,
-    groupAdd,
-    groupDelete,
-    groupUpdate,
+    listGroup,
+    getGroup,
+    createGroup,
+    removeGroup,
+    updateGroup,
   };
 };

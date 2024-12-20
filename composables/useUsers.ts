@@ -6,7 +6,7 @@ export const useUsers = () => {
    *
    * @returns
    */
-  const ListUsers = async () => {
+  const listUsers = async () => {
     return await $api.get('/users');
   };
 
@@ -14,11 +14,11 @@ export const useUsers = () => {
     return await $api.post('/users', data);
   };
 
-  const getUserInfo = async (name: string) => {
+  const getUser = async (name: string) => {
     return await $api.get(`/user/${encodeURIComponent(name)}`);
   };
 
-  const updateUserInfo = async (name: string, data: any) => {
+  const updateUser = async (name: string, data: any) => {
     return await $api.put(`/user/${encodeURIComponent(name)}`, data);
   };
 
@@ -51,11 +51,11 @@ export const useUsers = () => {
   };
 
   return {
-    ListUsers,
+    listUsers,
     addUser,
-    getUserInfo,
+    getUser,
     deleteUser,
-    updateUserInfo,
+    updateUser,
     updateUserGroups,
     getUserPolicy,
     getSaUserPolicy,

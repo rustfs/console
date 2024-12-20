@@ -36,7 +36,7 @@
 <script setup lang="ts">
 import { groupMembers, groupPolicies } from './';
 const visible = ref(false);
-const { getGroupInfo, groupUpdate } = useGroups();
+const { getGroup, updateGroup } = useGroups();
 
 interface GroupInfo {
   name: string;
@@ -52,7 +52,7 @@ const group = ref<GroupInfo>({
 
 // 用户组的状态发生变化
 const handerGroupStatusChange = async (val: string) => {
-  await groupUpdate(group.value.name, { ...group.value, status: val });
+  await updateGroup(group.value.name, { ...group.value, status: val });
   await getGroupData(group.value.name);
 };
 async function openDialog(row: any) {
@@ -62,7 +62,7 @@ async function openDialog(row: any) {
 
 // 获取用户信息
 async function getGroupData(name: string) {
-  group.value = await getGroupInfo(name);
+  group.value = await getGroup(name);
 }
 
 defineExpose({

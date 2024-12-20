@@ -42,7 +42,7 @@
 
 <script setup lang="ts">
 import { type DataTableColumns, type DataTableInst, NButton, NSpace } from 'naive-ui';
-const { ListPolicies, setPolicyMultiple } = usePolicies();
+const { listPolicies, setPolicyMultiple } = usePolicies();
 
 const messge = useMessage();
 const props = defineProps({
@@ -97,7 +97,7 @@ const emit = defineEmits<{
   (e: 'search'): void;
 }>();
 const getPoliciesList = async () => {
-  const res = await ListPolicies();
+  const res = await listPolicies();
   polices.value = res.policies.map((item: any) => {
     return {
       label: item.name,

@@ -35,37 +35,28 @@
         :pagination="false"
         :bordered="false" />
     </page-content>
-    <NewItem
-      ref="newItemRef"
-      v-model:visible="newItemVisible"
-      @search="getDataList" />
+    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" />
     <EditItem ref="editItemRef" @search="getDataList" />
   </div>
 </template>
 <script lang="ts" setup>
-import { useNuxtApp } from 'nuxt/app'
-import { Icon } from '#components'
-import { EditItem, NewItem } from './components'
-import {
-  type DataTableColumns,
-  type DataTableInst,
-  NButton,
-  NPopconfirm,
-  NSpace
-} from 'naive-ui'
-const { $api } = useNuxtApp()
-const message = useMessage()
+import { useNuxtApp } from 'nuxt/app';
+import { Icon } from '#components';
+import { EditItem, NewItem } from './components';
+import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from 'naive-ui';
+const { $api } = useNuxtApp();
+const message = useMessage();
 
 interface RowData {
-  name: string
+  name: string;
 }
 const columns: DataTableColumns<RowData> = [
   {
     title: '名称',
     key: 'name',
     filter(value, row) {
-      return !!row.name.includes(value.toString())
-    }
+      return !!row.name.includes(value.toString());
+    },
   },
 
   {
@@ -77,21 +68,20 @@ const columns: DataTableColumns<RowData> = [
       return h(
         NSpace,
         {
-          justify: 'center'
+          justify: 'center',
         },
         {
           default: () => [
             h(
               NButton,
               {
-                type: 'info',
                 size: 'small',
                 secondary: true,
-                onClick: () => openEditItem(row)
+                onClick: () => openEditItem(row),
               },
               {
-                default: () => '编辑',
-                icon: () => h(Icon, { name: 'ri:edit-2-line' })
+                default: () => '',
+                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
             h(
@@ -102,69 +92,69 @@ const columns: DataTableColumns<RowData> = [
                 trigger: () =>
                   h(
                     NButton,
-                    { type: 'error', size: 'small', secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => '删除',
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' })
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
-                  )
+                  ),
               }
-            )
-          ]
+            ),
+          ],
         }
-      )
-    }
-  }
-]
+      );
+    },
+  },
+];
 
 /*************************************搜索过滤***/
 
-const tableRef = ref<DataTableInst>()
+const tableRef = ref<DataTableInst>();
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
-      name: [value]
-    })
+      name: [value],
+    });
 }
 
 /*************************************获取数据***/
-const listData = ref<any[]>([])
+const listData = ref<any[]>([]);
 const getDataList = async () => {
   try {
-    const res = await $api.get('policies')
-    listData.value = res.policies || []
+    const res = await $api.get('policies');
+    listData.value = res.policies || [];
   } catch (error) {
-    message.error('获取数据失败')
+    message.error('获取数据失败');
   }
-}
+};
 
 onMounted(() => {
-  getDataList()
-})
+  getDataList();
+});
 /*************************************刷新***/
-const refresh = () => {}
+const refresh = () => {};
 
 /*************************************新增***/
-const newItemRef = ref()
-const newItemVisible = ref(false)
+const newItemRef = ref();
+const newItemVisible = ref(false);
 
 function addItem() {
-  newItemVisible.value = true
+  newItemVisible.value = true;
 }
 
 /** **********************************修改 */
-const editItemRef = ref()
+const editItemRef = ref();
 function openEditItem(row: any) {
-  editItemRef.value.openDialog(row)
+  editItemRef.value.openDialog(row);
 }
 /*************************************删除***/
 async function deleteItem(row: any) {
   try {
-    const res = await $api.delete(`/policy/${encodeURIComponent(row.name)}`)
-    message.success('删除成功')
-    getDataList()
+    const res = await $api.delete(`/policy/${encodeURIComponent(row.name)}`);
+    message.success('删除成功');
+    getDataList();
   } catch (error) {
-    message.error('删除失败')
+    message.error('删除失败');
   }
 }
 </script>

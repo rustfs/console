@@ -6,23 +6,19 @@
       </template>
       <template #actions>
         <NFlex>
-          <NButton
-            type="primary"
-            :disabled="!checkedKeys.length"
-            secondary
-            @click="deleteByList">
+          <NButton :disabled="!checkedKeys.length" secondary @click="deleteByList">
             <template #icon>
               <Icon name="ri:delete-bin-5-line"></Icon>
             </template>
             删除选中项
           </NButton>
-          <NButton type="info" secondary @click="changePassword">
+          <NButton secondary @click="changePassword">
             <template #icon>
               <Icon name="ri:key-2-line"></Icon>
             </template>
             修改秘钥
           </NButton>
-          <NButton type="info" secondary @click="addItem">
+          <NButton secondary @click="addItem">
             <template #icon>
               <Icon name="ri:add-line"></Icon>
             </template>
@@ -33,43 +29,30 @@
     </page-header>
 
     <page-content>
-      <n-card>
-        <n-form
-          ref="formRef"
-          :model="searchForm"
-          label-placement="left"
-          :show-feedback="false">
-          <n-flex justify="space-between">
-            <n-form-item class="!w-64" label="" path="name">
-              <n-input placeholder="搜索访问秘钥" @input="filterName" />
-            </n-form-item>
-            <n-button @click="() => refresh()">
-              <Icon name="ri:refresh-line" class="mr-2" />
-              <span>刷新</span>
-            </n-button>
-          </n-flex>
-        </n-form>
-      </n-card>
+      <n-form class="mb-4" ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
+        <n-flex justify="space-between">
+          <n-form-item label="" path="name">
+            <n-input placeholder="搜索访问秘钥" @input="filterName" />
+          </n-form-item>
+          <n-button @click="() => refresh()">
+            <Icon name="ri:refresh-line" class="mr-2" />
+            <span>刷新</span>
+          </n-button>
+        </n-flex>
+      </n-form>
 
       <n-data-table
         ref="tableRef"
         :columns="columns"
         :data="listData"
         :pagination="false"
-        :bordered="false"
-        max-height="calc(100vh - 320px)"
+        :bordered="true"
         :row-key="rowKey"
         @update:checked-row-keys="handleCheck" />
     </page-content>
-    <NewItem
-      ref="newItemRef"
-      v-model:visible="newItemVisible"
-      @search="getDataList" />
+    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" />
     <EditItem ref="editItemRef" @search="getDataList" />
-    <ChangePassword
-      ref="changePasswordModalRef"
-      v-model:visible="changePasswordVisible"
-      @search="getDataList" />
+    <ChangePassword ref="changePasswordModalRef" v-model:visible="changePasswordVisible" @search="getDataList" />
   </div>
 </template>
 
@@ -80,85 +63,85 @@ import {
   type DataTableRowKey,
   NButton,
   NPopconfirm,
-  NSpace
-} from 'naive-ui'
-import { Icon } from '#components'
-import { ChangePassword, EditItem, NewItem } from './components'
+  NSpace,
+} from 'naive-ui';
+import { Icon } from '#components';
+import { ChangePassword, EditItem, NewItem } from './components';
 
-const { $api } = useNuxtApp()
-const dialog = useDialog()
-const message = useMessage()
+const { $api } = useNuxtApp();
+const dialog = useDialog();
+const message = useMessage();
 
 const searchForm = reactive({
-  name: ''
-})
+  name: '',
+});
 interface RowData {
-  accessKey: string
-  expiration: string
-  name: string
-  description: string
-  accountStatus: string
-  actions: string
+  accessKey: string;
+  expiration: string;
+  name: string;
+  description: string;
+  accountStatus: string;
+  actions: string;
 }
 
 const columns: DataTableColumns<RowData> = [
   {
-    type: 'selection'
+    type: 'selection',
   },
   {
     title: 'Access Key',
     align: 'center',
     key: 'accessKey',
     filter(value, row) {
-      return !!row.accessKey.includes(value.toString())
-    }
+      return !!row.accessKey.includes(value.toString());
+    },
   },
   {
     title: '有效期',
     align: 'center',
-    key: 'expiration'
+    key: 'expiration',
   },
   {
     title: '状态',
     align: 'center',
     key: 'accountStatus',
     render: (row: any) => {
-      return row.accountStatus === 'on' ? '可用' : '禁用'
-    }
+      return row.accountStatus === 'on' ? '可用' : '禁用';
+    },
   },
   {
     title: '名称',
     align: 'center',
-    key: 'name'
+    key: 'name',
   },
   {
     title: '描述',
     align: 'center',
-    key: 'description'
+    key: 'description',
   },
   {
     title: '操作',
     key: 'actions',
+    align: 'center',
     width: 180,
     render: (row: any) => {
       return h(
         NSpace,
         {
-          justify: 'center'
+          justify: 'center',
         },
         {
           default: () => [
             h(
               NButton,
               {
-                type: 'info',
                 size: 'small',
                 secondary: true,
-                onClick: () => openEditItem(row)
+                onClick: () => openEditItem(row),
               },
               {
-                default: () => '编辑',
-                icon: () => h(Icon, { name: 'ri:edit-2-line' })
+                default: () => '',
+                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
             h(
@@ -169,92 +152,92 @@ const columns: DataTableColumns<RowData> = [
                 trigger: () =>
                   h(
                     NButton,
-                    { type: 'error', size: 'small', secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => '删除',
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' })
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
-                  )
+                  ),
               }
-            )
-          ]
+            ),
+          ],
         }
-      )
-    }
-  }
-]
+      );
+    },
+  },
+];
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>()
+const tableRef = ref<DataTableInst>();
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
-      name: [value]
-    })
+      name: [value],
+    });
 }
-const listData = ref<any[]>([])
+const listData = ref<any[]>([]);
 
 onMounted(() => {
-  getDataList()
-})
+  getDataList();
+});
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await $api.get('service-accounts')
-    listData.value = res || []
+    const res = await $api.get('service-accounts');
+    listData.value = res || [];
   } catch (error) {
-    message.error('获取数据失败')
+    message.error('获取数据失败');
   }
-}
+};
 
 // 刷新
 const refresh = () => {
-  getDataList()
-}
+  getDataList();
+};
 
 /** **********************************添加 */
-const newItemRef = ref()
-const newItemVisible = ref(false)
+const newItemRef = ref();
+const newItemVisible = ref(false);
 
 function addItem() {
-  newItemVisible.value = true
+  newItemVisible.value = true;
 }
 
 /** **********************************修改 */
-const editItemRef = ref()
+const editItemRef = ref();
 function openEditItem(row: any) {
-  editItemRef.value.openDialog(row.accessKey)
+  editItemRef.value.openDialog(row.accessKey);
 }
 /** **********************************修改密码 */
-const changePasswordModalRef = ref()
-const changePasswordVisible = ref(false)
+const changePasswordModalRef = ref();
+const changePasswordVisible = ref(false);
 
 function changePassword() {
-  changePasswordVisible.value = true
+  changePasswordVisible.value = true;
 }
 
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
     const res = await $api.delete('/service-accounts/delete-multi', {
-      body: [row.accessKey]
-    })
-    message.success('删除成功')
-    getDataList()
+      body: [row.accessKey],
+    });
+    message.success('删除成功');
+    getDataList();
   } catch (error) {
-    message.error('删除失败')
+    message.error('删除失败');
   }
 }
 
 /** ************************************批量删除 */
 function rowKey(row: any): string {
-  return row.accessKey
+  return row.accessKey;
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([])
+const checkedKeys = ref<DataTableRowKey[]>([]);
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys
-  return checkedKeys
+  checkedKeys.value = keys;
+  return checkedKeys;
 }
 function deleteByList() {
   dialog.error({
@@ -264,19 +247,19 @@ function deleteByList() {
     negativeText: '取消',
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error('请至少选择一项')
-        return
+        message.error('请至少选择一项');
+        return;
       }
       try {
         const res = await $api.delete('/service-accounts/delete-multi', {
-          body: checkedKeys.value
-        })
-        message.success('删除成功')
-        getDataList()
+          body: checkedKeys.value,
+        });
+        message.success('删除成功');
+        getDataList();
       } catch (error) {
-        message.error('删除失败')
+        message.error('删除失败');
       }
-    }
-  })
+    },
+  });
 }
 </script>

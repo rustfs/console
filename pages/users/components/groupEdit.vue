@@ -5,28 +5,30 @@
       :mask-closable="false"
       preset="card"
       :title="group.name"
-      class="w-1/2"
+      class="max-w-screen-md"
       :segmented="{
         content: true,
         action: true,
       }">
-      <n-tabs type="card">
-        <n-tab-pane name="users" tab="成员">
-          <groupMembers :group="group" @search="getGroupData(group.name)"></groupMembers>
-        </n-tab-pane>
-        <n-tab-pane name="policy" tab="策略">
-          <groupPolicies :group="group" @search="getGroupData(group.name)"></groupPolicies>
-        </n-tab-pane>
-        <template #suffix>
-          状态
-          <n-switch
-            class="ml-2"
-            checked-value="enabled"
-            unchecked-value="disabled"
-            v-model:value="group.status"
-            :on-update:value="handerGroupStatusChange"></n-switch>
-        </template>
-      </n-tabs>
+      <n-card>
+        <n-tabs type="card">
+          <n-tab-pane name="users" tab="成员">
+            <groupMembers :group="group" @search="getGroupData(group.name)"></groupMembers>
+          </n-tab-pane>
+          <n-tab-pane name="policy" tab="策略">
+            <groupPolicies :group="group" @search="getGroupData(group.name)"></groupPolicies>
+          </n-tab-pane>
+          <template #suffix>
+            状态
+            <n-switch
+              class="ml-2"
+              checked-value="enabled"
+              unchecked-value="disabled"
+              v-model:value="group.status"
+              :on-update:value="handerGroupStatusChange"></n-switch>
+          </template>
+        </n-tabs>
+      </n-card>
     </n-modal>
   </div>
 </template>

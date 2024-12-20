@@ -5,7 +5,7 @@
       :mask-closable="false"
       preset="card"
       title="创建用户"
-      class="w-1/2"
+      class="max-w-screen-md"
       :segmented="{
         content: true,
         action: true,

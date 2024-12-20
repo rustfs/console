@@ -1,43 +1,40 @@
 <template>
   <div>
-    <n-card>
-      <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
-        <n-flex justify="space-between">
-          <n-form-item class="!w-64" label="" path="name">
-            <n-input placeholder="搜索访问用户" @input="filterName" />
-          </n-form-item>
-          <n-space>
-            <NFlex>
-              <NButton type="error" :disabled="true" secondary @click="deleteByList">
-                <template #icon>
-                  <Icon name="ri:delete-bin-5-line"></Icon>
-                </template>
-                删除选中项
-              </NButton>
-              <NButton type="info" :disabled="true" secondary @click="addToGroup">
-                <template #icon>
-                  <Icon name="ri:group-2-fill"></Icon>
-                </template>
-                添加到分组
-              </NButton>
-              <NButton type="info" secondary @click="addUserItem">
-                <template #icon>
-                  <Icon name="ri:add-line"></Icon>
-                </template>
-                新增用户
-              </NButton>
-            </NFlex>
-          </n-space>
-        </n-flex>
-      </n-form>
-    </n-card>
+    <n-form class="mb-4 mt-2" ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
+      <n-flex justify="space-between">
+        <n-form-item label="" path="name">
+          <n-input placeholder="搜索访问用户" @input="filterName" />
+        </n-form-item>
+        <n-space>
+          <NFlex>
+            <NButton :disabled="true" secondary @click="deleteByList">
+              <template #icon>
+                <Icon name="ri:delete-bin-5-line"></Icon>
+              </template>
+              删除选中项
+            </NButton>
+            <NButton :disabled="true" secondary @click="addToGroup">
+              <template #icon>
+                <Icon name="ri:group-2-fill"></Icon>
+              </template>
+              添加到分组
+            </NButton>
+            <NButton secondary @click="addUserItem">
+              <template #icon>
+                <Icon name="ri:add-line"></Icon>
+              </template>
+              新增用户
+            </NButton>
+          </NFlex>
+        </n-space>
+      </n-flex>
+    </n-form>
     <n-data-table
       ref="tableRef"
       :columns="columns"
       :data="listData"
       :pagination="false"
-      :bordered="false"
-      max-height="calc(100vh - 320px)"
+      :bordered="true"
       :row-key="rowKey"
       @update:checked-row-keys="handleCheck" />
     <newUser @search="getDataList" ref="newItemRef"></newUser>
@@ -84,6 +81,7 @@ const columns: DataTableColumns<RowData> = [
   {
     title: '操作',
     key: 'actions',
+    align: 'center',
     width: 180,
     render: (row: any) => {
       return h(
@@ -96,13 +94,12 @@ const columns: DataTableColumns<RowData> = [
             h(
               NButton,
               {
-                type: 'info',
                 size: 'small',
                 secondary: true,
                 onClick: () => openEditItem(row),
               },
               {
-                default: () => '编辑',
+                default: () => '',
                 icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
@@ -114,9 +111,9 @@ const columns: DataTableColumns<RowData> = [
                 trigger: () =>
                   h(
                     NButton,
-                    { type: 'error', size: 'small', secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => '删除',
+                      default: () => '',
                       icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),

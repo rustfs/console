@@ -1,11 +1,11 @@
 <script setup lang="ts">
 // import { getServiceAccount, updateServiceAccount } from '@/service'
-import { ref } from 'vue'
-const { $api } = useNuxtApp()
-const message = useMessage()
-const emit = defineEmits<Emits>()
+import { ref } from 'vue';
+const { $api } = useNuxtApp();
+const message = useMessage();
+const emit = defineEmits<Emits>();
 
-const visible = ref(false)
+const visible = ref(false);
 
 const defaultFormModal = {
   accesskey: '',
@@ -15,50 +15,50 @@ const defaultFormModal = {
   comment: '',
   expiry: null,
   policy: '',
-  status: false
-}
-const formModel = ref({ ...defaultFormModal })
+  status: false,
+};
+const formModel = ref({ ...defaultFormModal });
 
-const accessKey = ref<string>('')
+const accessKey = ref<string>('');
 async function openDialog(accKey: string) {
-  accessKey.value = accKey
+  accessKey.value = accKey;
 
   try {
     // btoa(unescape(encodeURIComponent(accKey)))
-    const res = await $api.get(`service-accounts/${accKey}`)
-    formModel.value = res
-    visible.value = true
+    const res = await $api.get(`service-accounts/${accKey}`);
+    formModel.value = res;
+    visible.value = true;
   } catch (error) {
-    message.error('获取数据失败')
+    message.error('获取数据失败');
   }
 }
 
-defineExpose({ openDialog })
+defineExpose({ openDialog });
 
 interface Emits {
-  (e: 'search'): void
+  (e: 'search'): void;
 }
 
 function closeModal() {
-  visible.value = false
+  visible.value = false;
 }
 
 function dateDisabled(ts: number) {
-  const date = new Date(ts)
-  return date < new Date()
+  const date = new Date(ts);
+  return date < new Date();
 }
 
 async function submitForm() {
   try {
     const res = await $api.put(`/service-accounts/${accessKey.value}`, {
       ...formModel.value,
-      policy: formModel.value.policy || '{}'
-    })
-    message.success('修改成功')
-    closeModal()
-    emit('search')
+      policy: formModel.value.policy || '{}',
+    });
+    message.success('修改成功');
+    closeModal();
+    emit('search');
   } catch (error) {
-    message.error('修改失败')
+    message.error('修改失败');
   }
 }
 </script>
@@ -68,43 +68,38 @@ async function submitForm() {
     v-model:show="visible"
     :mask-closable="false"
     preset="card"
-    title="修改Access Key"
-    class="w-1/2"
+    title="修改秘钥"
+    class="max-w-screen-md"
     :segmented="{
       content: true,
-      action: true
+      action: true,
     }">
-    <n-form
-      label-placement="left"
-      :model="formModel"
-      label-align="right"
-      :label-width="90">
-      <n-grid :cols="24" :x-gap="18">
-        <n-form-item-grid-item :span="24" label="Access Key" path="policy">
-          <n-input
-            v-model:value="formModel.policy"
-            type="textarea"
-            placeholder="" />
-        </n-form-item-grid-item>
-        <!-- TODO: 时间格式有问题 -->
-        <n-form-item-grid-item :span="24" label="有效期" path="expiry">
-          <n-date-picker
-            v-model:value="formModel.expiry"
-            :is-date-disabled="dateDisabled"
-            type="datetime"
-            clearable />
-        </n-form-item-grid-item>
-        <n-form-item-grid-item :span="24" label="名称" path="name">
-          <n-input v-model:value="formModel.name" />
-        </n-form-item-grid-item>
-        <n-form-item-grid-item :span="24" label="描述" path="comment">
-          <n-input v-model:value="formModel.comment" />
-        </n-form-item-grid-item>
-        <n-form-item-grid-item :span="24" label="状态" path="status">
-          <n-switch v-model:value="formModel.status" />
-        </n-form-item-grid-item>
-      </n-grid>
-    </n-form>
+    <n-card>
+      <n-form label-placement="left" :model="formModel" label-align="right" :label-width="90">
+        <n-grid :cols="24" :x-gap="18">
+          <n-form-item-grid-item :span="24" label="Access Key" path="policy">
+            <n-input v-model:value="formModel.policy" type="textarea" placeholder="" />
+          </n-form-item-grid-item>
+          <!-- TODO: 时间格式有问题 -->
+          <n-form-item-grid-item :span="24" label="有效期" path="expiry">
+            <n-date-picker
+              v-model:value="formModel.expiry"
+              :is-date-disabled="dateDisabled"
+              type="datetime"
+              clearable />
+          </n-form-item-grid-item>
+          <n-form-item-grid-item :span="24" label="名称" path="name">
+            <n-input v-model:value="formModel.name" />
+          </n-form-item-grid-item>
+          <n-form-item-grid-item :span="24" label="描述" path="comment">
+            <n-input v-model:value="formModel.comment" />
+          </n-form-item-grid-item>
+          <n-form-item-grid-item :span="24" label="状态" path="status">
+            <n-switch v-model:value="formModel.status" />
+          </n-form-item-grid-item>
+        </n-grid>
+      </n-form>
+    </n-card>
     <template #action>
       <n-space justify="center">
         <n-button @click="closeModal()">取消</n-button>

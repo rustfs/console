@@ -5,31 +5,33 @@
       :mask-closable="false"
       preset="card"
       :title="user.accessKey"
-      class="w-1/2"
+      class="max-w-screen-md"
       :segmented="{
         content: true,
         action: true,
       }">
-      <n-tabs type="card">
-        <n-tab-pane name="groups" tab="分组">
-          <userGroups :user="user" @search="getUserData(user.accessKey)"></userGroups>
-        </n-tab-pane>
-        <n-tab-pane name="policy" tab="策略">
-          <userPolicies :user="user" @search="getUserData(user.accessKey)"></userPolicies>
-        </n-tab-pane>
-        <n-tab-pane name="accesskey" tab="账号">
-          <userAccount :user="user" @search="getUserData(user.accessKey)"></userAccount>
-        </n-tab-pane>
-        <template #suffix>
-          状态
-          <n-switch
-            class="ml-2"
-            checked-value="enabled"
-            unchecked-value="disabled"
-            v-model:value="user.status"
-            :on-update:value="handerUserStatusChange"></n-switch>
-        </template>
-      </n-tabs>
+      <n-card>
+        <n-tabs type="card">
+          <n-tab-pane name="groups" tab="分组">
+            <userGroups :user="user" @search="getUserData(user.accessKey)"></userGroups>
+          </n-tab-pane>
+          <n-tab-pane name="policy" tab="策略">
+            <userPolicies :user="user" @search="getUserData(user.accessKey)"></userPolicies>
+          </n-tab-pane>
+          <n-tab-pane name="accesskey" tab="账号">
+            <userAccount :user="user" @search="getUserData(user.accessKey)"></userAccount>
+          </n-tab-pane>
+          <template #suffix>
+            状态
+            <n-switch
+              class="ml-2"
+              checked-value="enabled"
+              unchecked-value="disabled"
+              v-model:value="user.status"
+              :on-update:value="handerUserStatusChange"></n-switch>
+          </template>
+        </n-tabs>
+      </n-card>
     </n-modal>
   </div>
 </template>

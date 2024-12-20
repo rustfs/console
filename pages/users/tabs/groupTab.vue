@@ -1,42 +1,40 @@
 <template>
   <div>
-    <n-card>
-      <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
-        <n-flex justify="space-between">
-          <n-form-item class="!w-64" label="" path="name">
-            <n-input placeholder="搜索用户组" @input="filterName" />
-          </n-form-item>
-          <n-space>
-            <NFlex>
-              <NButton type="error" :disabled="!checkedKeys.length" secondary @click="deleteByList">
-                <template #icon>
-                  <Icon name="ri:delete-bin-5-line"></Icon>
-                </template>
-                删除选中项
-              </NButton>
-              <NButton type="info" :disabled="!checkedKeys.length" secondary @click="allocationPolicy">
-                <template #icon>
-                  <Icon name="ri:group-2-fill"></Icon>
-                </template>
-                分配策略
-              </NButton>
-              <NButton type="info" secondary @click="addUserGroup">
-                <template #icon>
-                  <Icon name="ri:add-line"></Icon>
-                </template>
-                新增用户组
-              </NButton>
-            </NFlex>
-          </n-space>
-        </n-flex>
-      </n-form>
-    </n-card>
+    <n-form class="mb-4 mt-2" ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
+      <n-flex justify="space-between">
+        <n-form-item label="" path="name">
+          <n-input placeholder="搜索用户组" @input="filterName" />
+        </n-form-item>
+        <n-space>
+          <NFlex>
+            <NButton :disabled="!checkedKeys.length" secondary @click="deleteByList">
+              <template #icon>
+                <Icon name="ri:delete-bin-5-line"></Icon>
+              </template>
+              删除选中项
+            </NButton>
+            <NButton :disabled="!checkedKeys.length" secondary @click="allocationPolicy">
+              <template #icon>
+                <Icon name="ri:group-2-fill"></Icon>
+              </template>
+              分配策略
+            </NButton>
+            <NButton secondary @click="addUserGroup">
+              <template #icon>
+                <Icon name="ri:add-line"></Icon>
+              </template>
+              新增用户组
+            </NButton>
+          </NFlex>
+        </n-space>
+      </n-flex>
+    </n-form>
     <n-data-table
       ref="tableRef"
       :columns="columns"
       :data="listData"
       :pagination="false"
-      :bordered="false"
+      :bordered="true"
       max-height="calc(100vh - 320px)"
       :row-key="rowKey"
       @update:checked-row-keys="handleCheck" />
@@ -85,6 +83,7 @@ const columns: DataTableColumns<RowData> = [
   {
     title: '操作',
     key: 'actions',
+    align: 'center',
     width: 180,
     render: (row: any) => {
       return h(
@@ -97,13 +96,12 @@ const columns: DataTableColumns<RowData> = [
             h(
               NButton,
               {
-                type: 'info',
                 size: 'small',
                 secondary: true,
                 onClick: () => openEditItem(row),
               },
               {
-                default: () => '编辑',
+                default: () => '',
                 icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
@@ -115,9 +113,9 @@ const columns: DataTableColumns<RowData> = [
                 trigger: () =>
                   h(
                     NButton,
-                    { type: 'error', size: 'small', secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => '删除',
+                      default: () => '',
                       icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),

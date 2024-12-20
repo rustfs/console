@@ -73,21 +73,23 @@ async function submitForm() {
     :mask-closable="false"
     preset="card"
     title="添加用户组"
-    class="w-1/2"
+    class="max-w-screen-md"
     :segmented="{
       content: true,
       action: true,
     }">
-    <n-form label-placement="left" :model="formModel" label-align="right" :label-width="130">
-      <n-grid :cols="24" :x-gap="18">
-        <n-form-item-grid-item :span="24" label="名称" path="group" required>
-          <n-input v-model:value="formModel.group" />
-        </n-form-item-grid-item>
-        <n-form-item-grid-item :span="24" label="用户" path="members">
-          <n-select v-model:value="formModel.members" filterable multiple :options="users" />
-        </n-form-item-grid-item>
-      </n-grid>
-    </n-form>
+    <n-card>
+      <n-form label-placement="left" :model="formModel" label-align="right" :label-width="130">
+        <n-grid :cols="24" :x-gap="18">
+          <n-form-item-grid-item :span="24" label="名称" path="group" required>
+            <n-input v-model:value="formModel.group" />
+          </n-form-item-grid-item>
+          <n-form-item-grid-item :span="24" label="用户" path="members">
+            <n-select v-model:value="formModel.members" filterable multiple :options="users" />
+          </n-form-item-grid-item>
+        </n-grid>
+      </n-form>
+    </n-card>
     <template #action>
       <n-space justify="center">
         <n-button @click="closeModal()">取消</n-button>

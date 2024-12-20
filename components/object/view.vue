@@ -1,5 +1,5 @@
 <template>
-  <n-page-header :subtitle="key" @back="router.back()">
+  <n-page-header @back="router.back()">
     <template #title>
       对象详情
     </template>
@@ -33,11 +33,11 @@
       <n-spin size="small" />
     </div>
     <n-descriptions :column="1">
-      <n-descriptions-item label="对象名称">{{ key }}</n-descriptions-item>
+      <n-descriptions-item label="对象名称"><span class="select-all">{{ key }}</span></n-descriptions-item>
       <n-descriptions-item label="对象大小">{{ object?.ContentLength }}</n-descriptions-item>
       <n-descriptions-item label="对象类型">{{ object?.ContentType }}</n-descriptions-item>
       <!-- <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
-      <n-descriptions-item label="ETag">{{ object?.ETag }}</n-descriptions-item>
+      <n-descriptions-item label="ETag"><span class="select-all">{{ object?.ETag }}</span></n-descriptions-item>
       <n-descriptions-item label="最后修改时间">{{ object?.LastModified }}</n-descriptions-item>
     </n-descriptions>
 

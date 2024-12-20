@@ -1,17 +1,14 @@
 <template>
-  <!-- 全局化配置设置内部组件的主题、语言。 -->
-  <n-config-provider class="wh-full" inline-theme-disabled>
-    <n-space vertical>
-      <n-layout class="h-full">
-        <n-layout has-sider>
-          <Sidebar />
-          <div class="min-h-screen flex flex-col flex-1">
-            <div class="flex-1">
-              <slot />
-            </div>
+  <n-space vertical>
+    <n-layout class="h-full">
+      <n-layout has-sider class="h-full">
+        <sidebar />
+        <div class="h-screen overflow-y-auto flex flex-col flex-1">
+          <div class="flex-1">
+            <slot />
           </div>
-        </n-layout>
+        </div>
       </n-layout>
-    </n-space>
-  </n-config-provider>
+    </n-layout>
+  </n-space>
 </template>

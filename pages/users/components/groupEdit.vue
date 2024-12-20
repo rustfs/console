@@ -14,7 +14,7 @@
         <n-tab-pane name="users" tab="成员">
           <groupMembers :group="group" @search="getGroupData(group.name)"></groupMembers>
         </n-tab-pane>
-        <n-tab-pane name="userGroup" tab="策略">
+        <n-tab-pane name="policy" tab="策略">
           <groupPolicies :group="group" @search="getGroupData(group.name)"></groupPolicies>
         </n-tab-pane>
         <template #suffix>
@@ -42,9 +42,6 @@ interface GroupInfo {
   status: string;
 }
 
-const groupStatus = computed<boolean>(() => {
-  return group.value.status == 'enabled' ? true : false;
-});
 const group = ref<GroupInfo>({
   name: '',
   members: [],
@@ -64,9 +61,6 @@ async function openDialog(row: any) {
 // 获取用户信息
 async function getGroupData(name: string) {
   group.value = await getGroupInfo(name);
-}
-function closeModal() {
-  visible.value = false;
 }
 
 defineExpose({

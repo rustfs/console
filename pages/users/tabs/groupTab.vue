@@ -147,7 +147,6 @@ onMounted(() => {
 const getDataList = async () => {
   try {
     const res = await group.groupList();
-    // const res = await $api.get('/groups');
     listData.value =
       res.groups.map((item: string) => {
         return {
@@ -184,7 +183,6 @@ function openEditItem(row: any) {
 async function deleteItem(row: any) {
   try {
     const res = await group.groupDelete(row.name);
-    // const res = await $api.delete(`/group/${encodeURIComponent(row.name)}`, {});
     message.success('删除成功');
     getDataList();
   } catch (error) {

@@ -40,6 +40,8 @@
       max-height="calc(100vh - 320px)"
       :row-key="rowKey"
       @update:checked-row-keys="handleCheck" />
+    <newUser @search="getDataList" ref="newItemRef"></newUser>
+    <userEdit @search="getDataList" :checkedKeys="checkedKeys" ref="policiesRef"></userEdit>
   </div>
 </template>
 
@@ -53,10 +55,10 @@ import {
   NSpace,
 } from 'naive-ui';
 import { Icon } from '#components';
-// import { ChangePassword, EditItem, NewItem } from './components';
+import { newUser, userEdit } from '../components';
 
 const { $api } = useNuxtApp();
-const user = useUsers();
+const { ListUsers } = useUsers();
 const dialog = useDialog();
 const message = useMessage();
 
@@ -75,6 +77,9 @@ const columns: DataTableColumns<RowData> = [
     title: '名称',
     align: 'left',
     key: 'accessKey',
+    filter(value, row) {
+      return !!row.accessKey.includes(value.toString());
+    },
   },
   {
     title: '操作',
@@ -140,8 +145,7 @@ onMounted(() => {
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await $api.get('/users');
-    // const res = await user.ListUsers();
+    const res = await ListUsers();
     listData.value = res.users || [];
   } catch (error) {
     message.error('获取数据失败');
@@ -150,10 +154,9 @@ const getDataList = async () => {
 
 /** **********************************添加 */
 const newItemRef = ref();
-const newItemVisible = ref(false);
 
 function addUserItem() {
-  newItemVisible.value = true;
+  newItemRef.value.openDialog();
 }
 
 /** **********************************添加到的分组 */
@@ -167,7 +170,7 @@ function openEditItem(row: any) {
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
-    const res = await $api.delete('/service-accounts/delete-multi', {
+    const res = await $api.delete('/', {
       body: [row.accessKey],
     });
     message.success('删除成功');
@@ -190,7 +193,7 @@ function handleCheck(keys: DataTableRowKey[]) {
 function deleteByList() {
   dialog.error({
     title: '警告',
-    content: '你确定要删除所有选中的秘钥吗？',
+    content: '你确定要删除所有选中的用户吗？',
     positiveText: '确定',
     negativeText: '取消',
     onPositiveClick: async () => {
@@ -199,7 +202,7 @@ function deleteByList() {
         return;
       }
       try {
-        const res = await $api.delete('/service-accounts/delete-multi', {
+        const res = await $api.delete('/', {
           body: checkedKeys.value,
         });
         message.success('删除成功');

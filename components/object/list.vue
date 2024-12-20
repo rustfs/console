@@ -98,7 +98,7 @@ interface ListObjectsResponse {
 }
 
 // 在服务端获取数据
-const { data, refresh } = await useAsyncData<ListObjectsResponse>(`objectsData&${continuationToken}`, async () => {
+const { data, refresh } = await useAsyncData<ListObjectsResponse>(`objectsData&${prefix.value}&${pageSize.value}&${continuationToken.value}`, async () => {
   const params = {
     Bucket: bucketName.value,
     MaxKeys: pageSize.value || 25,

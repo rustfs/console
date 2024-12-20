@@ -19,11 +19,11 @@
         </div>
       </template>
       <n-spin v-if="loading" size="large"></n-spin>
-      <div v-else class="min-h-64 max-h-[80vh] overflow-y-auto flex-1 flex flex-col justify-center items-center">
+      <div v-else class="min-h-64 max-h-[80vh] overflow-y-auto flex-1 flex flex-col items-center">
         <template v-if="canPreview">
           <img v-if="isImage" :src="previewUrl" alt="preview" />
           <iframe v-else-if="isPdf" :src="previewUrl" class="w-full min-h-[70vh]" frameborder="0"></iframe>
-          <pre v-else-if="isText" class="w-full">{{ fileContent }}</pre>
+          <pre v-else-if="isText" class="w-full selea">{{ fileContent }}</pre>
           <video v-else-if="isVideo" controls class="w-full">
             <source :src="previewUrl" type="video/mp4" />
             您的浏览器不支持 video 标签

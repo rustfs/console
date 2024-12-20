@@ -66,7 +66,7 @@ import {
   NSpace,
 } from 'naive-ui';
 import { Icon } from '#components';
-import { ChangePassword, EditItem, NewItem } from './components';
+import { ChangePassword, EditItem, NewItem } from '~/components/access-keys';
 
 const { $api } = useNuxtApp();
 const dialog = useDialog();

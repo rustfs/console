@@ -1,10 +1,10 @@
 <script setup>
-import JsonEditorVue from 'json-editor-vue'
-import 'vanilla-jsoneditor/themes/jse-theme-dark.css'
+import JsonEditorVue from 'json-editor-vue';
+import 'vanilla-jsoneditor/themes/jse-theme-dark.css';
 // import { createAjvValidator } from 'svelte-jsoneditor'
 
 // const validator = createAjvValidator({ schema, schemaDefinitions })
-const attrs = useAttrs()
+const attrs = useAttrs();
 </script>
 
 <template>

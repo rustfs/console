@@ -57,7 +57,7 @@ async function submitForm() {
     <n-form label-placement="top" :model="formModel" label-align="left" :label-width="100">
       <n-grid :cols="24" :x-gap="18">
         <n-form-item-grid-item :span="24" path="policy">
-          <JsonEditorVue v-model="formModel.policy" />
+          <json-editor v-model="formModel.policy" />
         </n-form-item-grid-item>
       </n-grid>
     </n-form>

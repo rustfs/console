@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { groupTab, userTab } from './tabs';
+import { groupTab, userTab } from '~/components/users/tabs';
 </script>
 
 <style lang="scss" scoped></style>

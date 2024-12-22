@@ -12,11 +12,12 @@
     <template #extra>
 
       <div class="flex items-center gap-4">
+        <object-upload-stats />
         <n-button>
           <Icon name="ri:add-line" class="mr-2" />
           <span>新建目录</span>
         </n-button>
-        <n-button>
+        <n-button @click="() => uploadPickerVisible = true">
           <Icon name="ri:file-add-line" class="mr-2" />
           <span>上传文件/文件夹</span>
         </n-button>
@@ -38,6 +39,7 @@
     </template>
   </n-page-header>
   <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="objects" :pagination="false" :bordered="false" />
+  <object-upload-picker :show="uploadPickerVisible" @update:show="val => (uploadPickerVisible = val)" :bucketName="bucketName" :prefix="prefix" />
 </template>
 
 <script setup lang="ts">
@@ -48,11 +50,23 @@ import { NuxtLink } from '#components'
 import { ListObjectsV2Command, type _Object, type CommonPrefix } from '@aws-sdk/client-s3'
 import { joinRelativeURL } from 'ufo'
 import { computed, ref, type VNode } from 'vue'
+import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
 const route = useRoute()
 const router = useRouter()
 
 const props = defineProps<{ bucket: string; path: string }>()
+
+const uploadPickerVisible = ref(false)
+
+// 上传任务
+const uploadTaskStore = useUploadTaskManagerStore()
+const tasks = computed(() => uploadTaskStore.tasks)
+
+// 当任务变化时，刷新数据
+watch(() => tasks, () => {
+  setTimeout(refresh, 500);
+}, { deep: true })
 
 // bucketName
 const bucketName = computed(() => props.bucket as string)

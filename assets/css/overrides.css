@@ -1,0 +1,8 @@
+/* 实现列表头滚动固定 */
+.n-list.sticky-header {
+  @apply relative;
+}
+
+.n-list.sticky-header .n-list__header {
+  @apply bg-neutral-900/60 sticky top-0 z-10;
+}

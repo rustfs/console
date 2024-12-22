@@ -17,7 +17,10 @@ export default defineNuxtConfig({
     'nuxtjs-naive-ui',
     '@vueuse/nuxt'
   ],
-  plugins: ['~/plugins/api.ts', '~/plugins/s3.ts'],
+  plugins: [
+    '~/plugins/api.ts',
+    '~/plugins/s3.ts',
+  ],
   runtimeConfig: {
     public: {
       api: {

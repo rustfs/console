@@ -1,11 +1,5 @@
 <template>
   <n-modal :show="show" @update:show="val => $emit('update:show', val)" size="huge">
-    <template #header>
-      <div style="display:flex; justify-content: space-between; align-items:center;">
-        <span>对象预览: {{ objectKey }}</span>
-        <n-button size="small" ghost @click="closeModal">关闭</n-button>
-      </div>
-    </template>
     <n-card class="max-w-screen-md">
       <template #header>
         <div class="flex items-center justify-between gap-4 truncate">

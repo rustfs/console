@@ -1,7 +1,7 @@
 <template>
   <n-button text v-if="total > 0" @click="toggleDrawer">
-    <div v-if="pending.length">
-      <n-spin size="small" />
+    <div v-if="pending.length" class="flex items-center gap-2">
+      <n-spin :size="14" />
       <span>{{ total }} 任务进行中（进行中 {{ uploading.length }} 个，已成功 {{ completed.length }} 个）</span>
     </div>
     <div v-else>上传完成（成功 {{ completed.length }} 个，失败 {{ failed.length }} 个）</div>

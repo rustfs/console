@@ -11,12 +11,18 @@
         action: true,
       }">
       <n-card>
-        <n-form ref="newformRef" :model="editForm" label-placement="left" label-align="right" :label-width="130">
+        <n-form
+          ref="newformRef"
+          :model="editForm"
+          label-placement="left"
+          :rules="rules"
+          label-align="right"
+          :label-width="130">
           <n-grid :cols="24" :x-gap="18">
-            <n-form-item-grid-item :span="24" label="用户名" path="accessKey" required>
+            <n-form-item-grid-item :span="24" label="用户名" path="accessKey">
               <n-input v-model:value="editForm.accessKey" />
             </n-form-item-grid-item>
-            <n-form-item-grid-item :span="24" label="秘钥" path="secretKey" required>
+            <n-form-item-grid-item :span="24" label="秘钥" path="secretKey">
               <n-input v-model:value="editForm.secretKey" type="password" />
             </n-form-item-grid-item>
             <n-form-item-grid-item :span="24" label="分组" path="groups">
@@ -39,9 +45,11 @@
 </template>
 
 <script setup lang="ts">
+import { type FormRules } from 'naive-ui';
 const { listPolicies } = usePolicies();
 const { listGroup } = useGroups();
-const messge = useMessage();
+const message = useMessage();
+const { createUser } = useUsers();
 const visible = ref(false);
 
 const editForm = reactive({
@@ -50,21 +58,65 @@ const editForm = reactive({
   groups: [],
   policies: [],
 });
+
+const rules: FormRules = {
+  accessKey: [
+    {
+      required: true,
+      message: '请输入用户名',
+    },
+  ],
+  secretKey: [
+    {
+      required: true,
+      message: '请输入秘钥',
+    },
+    // length>=8
+    {
+      type: 'string',
+      pattern: /^.{8,}$/,
+      message: '秘钥长度不能小于8位',
+    },
+  ],
+};
+
 function openDialog() {
-  // getPoliciesList();
-  // getGroupsList();
+  getPoliciesList();
+  getGroupsList();
   visible.value = true;
-  console.log(1111);
 }
 
 function closeModal() {
   visible.value = false;
+  editForm.accessKey = '';
+  editForm.secretKey = '';
+  editForm.groups = [];
+  editForm.policies = [];
 }
 
 defineExpose({
   openDialog,
 });
-function submitForm() {}
+
+const newformRef = ref();
+const emit = defineEmits(['search']);
+function submitForm(e: MouseEvent) {
+  e.preventDefault();
+  newformRef.value?.validate(async (errors: any) => {
+    if (errors) {
+      return;
+    }
+
+    try {
+      const res = await createUser(editForm);
+      message.success('添加成功');
+      emit('search');
+      closeModal();
+    } catch (error) {
+      message.error('添加失败');
+    }
+  });
+}
 
 // 获取策略列表
 const policiesList = ref([]);

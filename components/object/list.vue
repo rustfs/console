@@ -10,19 +10,22 @@
       </div>
     </template>
     <template #extra>
-
       <div class="flex items-center gap-4">
         <object-upload-stats />
-        <n-button>
+        <n-button @click="() => handleNewObject(true)">
           <Icon name="ri:add-line" class="mr-2" />
           <span>新建目录</span>
+        </n-button>
+        <n-button @click="() => handleNewObject(false)">
+          <Icon name="ri:add-line" class="mr-2" />
+          <span>新建文件</span>
         </n-button>
         <n-button @click="() => uploadPickerVisible = true">
           <Icon name="ri:file-add-line" class="mr-2" />
           <span>上传文件/文件夹</span>
         </n-button>
         <n-button-group>
-          <n-button @click="goToPreviousPage" :disabled="!previousToken">
+          <n-button @click="goToPreviousPage" :disabled="!continuationToken">
             <Icon name="ri:arrow-left-s-line" class="mr-2" />
             <span>上一页</span>
           </n-button>
@@ -39,17 +42,18 @@
     </template>
   </n-page-header>
   <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="objects" :pagination="false" :bordered="false" />
-  <object-upload-picker :show="uploadPickerVisible" @update:show="val => (uploadPickerVisible = val)" :bucketName="bucketName" :prefix="prefix" />
+  <object-upload-picker :show="uploadPickerVisible" @update:show="val => (uploadPickerVisible = val && refresh())" :bucketName="bucketName" :prefix="prefix" />
+  <object-new-form :show="newObjectFormVisible" :asPrefix="newObjectAsPrefix" @update:show="val => (newObjectFormVisible = val && refresh())" :bucketName="bucketName"
+    :prefix="prefix" />
 </template>
 
 <script setup lang="ts">
 const { $s3Client } = useNuxtApp();
-
 import { useAsyncData, useRoute, useRouter } from '#app'
 import { NuxtLink } from '#components'
 import { ListObjectsV2Command, type _Object, type CommonPrefix } from '@aws-sdk/client-s3'
 import { joinRelativeURL } from 'ufo'
-import { computed, ref, type VNode } from 'vue'
+import { computed, ref, watch, type VNode } from 'vue'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
 const route = useRoute()
@@ -58,6 +62,8 @@ const router = useRouter()
 const props = defineProps<{ bucket: string; path: string }>()
 
 const uploadPickerVisible = ref(false)
+const newObjectFormVisible = ref(false)
+const newObjectAsPrefix = ref(false)
 
 // 上传任务
 const uploadTaskStore = useUploadTaskManagerStore()
@@ -76,6 +82,12 @@ const prefix = computed(() => decodeURIComponent(props.path as string))
 // query 参数
 const pageSize = computed(() => parseInt(route.query.pageSize as string, 10))
 const continuationToken = computed(() => route.query.continuationToken as string)
+
+// 新建文件夹
+const handleNewObject = (asPrefix: boolean) => {
+  newObjectFormVisible.value = true
+  newObjectAsPrefix.value = asPrefix
+}
 
 const bucketPath = (path?: string | Array<string>) => {
   if (Array.isArray(path)) {
@@ -131,6 +143,10 @@ const { data, refresh } = await useAsyncData<ListObjectsResponse>(`objectsData&$
   }
 })
 
+watch(continuationToken, () => {
+  refresh()
+}, { deep: true })
+
 const contents = computed(() => data.value?.contents || [])
 const commonPrefixes = computed(() => data.value?.commonPrefixes || [])
 const nextToken = computed(() => data.value?.nextContinuationToken || null)
@@ -179,13 +195,15 @@ const previousToken = computed(() => {
 function goToNextPage() {
   if (nextToken.value) {
     // 导航到新路由
-    router.push(`?continuationToken=${nextToken.value}`)
+    router.push({ query: { ...route.query, continuationToken: nextToken.value } })
+    // 将当前 token 添加到历史中
+    tokenHistory.value.push(nextToken.value)
   }
 }
 
 function goToPreviousPage() {
   if (previousToken.value) {
-    router.push(`?continuationToken=${previousToken.value}`)
+    router.push({ query: { ...route.query, continuationToken: previousToken.value } })
     // 将上一页 token 之后的 tokenHistory 中的 token 删除，以表示回退
     const prevIndex = tokenHistory.value.indexOf(previousToken.value)
     tokenHistory.value.splice(prevIndex + 1)
@@ -193,7 +211,7 @@ function goToPreviousPage() {
     // 如果没有 previousToken，表示已经在第一页
     // 导航到没有 token 的路由（第一页）
     if (continuationToken.value) {
-      router.push(``)
+      router.push({ query: { ...route.query, continuationToken: undefined } })
       tokenHistory.value.length = 0
     }
   }

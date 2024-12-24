@@ -56,7 +56,7 @@ const handerGroupStatusChange = async (val: string) => {
   await getGroupData(group.value.name);
 };
 async function openDialog(row: any) {
-  await getGroupData(row.accessKey);
+  await getGroupData(row.name);
   visible.value = true;
 }
 

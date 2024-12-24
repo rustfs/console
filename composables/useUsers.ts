@@ -10,7 +10,7 @@ export const useUsers = () => {
     return await $api.get('/users');
   };
 
-  const addUser = async (data: any) => {
+  const createUser = async (data: any) => {
     return await $api.post('/users', data);
   };
 
@@ -38,6 +38,17 @@ export const useUsers = () => {
     return await $api.get(`/user/${encodeURIComponent(name)}/policies`);
   };
 
+  /**
+    data{
+    name: string[]; //policy name
+    entityType: PolicyEntity; //user or group
+    entityName: string; //user name or group name
+  }
+   * @returns
+   */
+  const setPolicy = async (data: any) => {
+    return await $api.put(`/set-policy`, data);
+  };
   const listAUserServiceAccounts = async (name: string) => {
     return await $api.get(`/user/${encodeURIComponent(name)}/service-accounts`);
   };
@@ -52,12 +63,13 @@ export const useUsers = () => {
 
   return {
     listUsers,
-    addUser,
+    createUser,
     getUser,
     deleteUser,
     updateUser,
     updateUserGroups,
     getUserPolicy,
+    setPolicy,
     getSaUserPolicy,
     listAUserServiceAccounts,
     createAUserServiceAccount,

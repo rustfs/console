@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { userPolicies, userAccount, userGroups } from './';
 const visible = ref(false);
-const { getUser } = useUsers();
+const { getUser, updateUser } = useUsers();
 interface UserInfo {
   accessKey: string;
   memberOf: string[];
@@ -56,6 +56,7 @@ const user = ref<UserInfo>({
 
 // 用户的状态发生变化
 const handerUserStatusChange = async (val: string) => {
+  await updateUser(user.value.accessKey, { ...user.value, groups: user.value.memberOf, status: val });
   await getUserData(user.value.accessKey);
 };
 async function openDialog(row: any) {

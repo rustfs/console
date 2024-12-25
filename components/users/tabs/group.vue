@@ -38,9 +38,9 @@
       max-height="calc(100vh - 320px)"
       :row-key="rowKey"
       @update:checked-row-keys="handleCheck" />
-    <groupEdit ref="editItemRef"></groupEdit>
-    <newGroup v-model:visible="newItemVisible" @search="getDataList" ref="newItemRef"></newGroup>
-    <setPoliciesMutiple :checkedKeys="checkedKeys" ref="policiesRef"></setPoliciesMutiple>
+    <users-group-edit ref="editItemRef"></users-group-edit>
+    <users-group-new v-model:visible="newItemVisible" @search="getDataList" ref="newItemRef"></users-group-new>
+    <users-group-set-policies-mutiple :checkedKeys="checkedKeys" ref="policiesRef"></users-group-set-policies-mutiple>
   </div>
 </template>
 
@@ -54,7 +54,7 @@ import {
   NSpace,
 } from 'naive-ui';
 import { Icon } from '#components';
-import { groupEdit, newGroup, setPoliciesMutiple } from '../components';
+// import { groupEdit, newGroup, setPoliciesMutiple } from '../components';
 
 const { $api } = useNuxtApp();
 const dialog = useDialog();

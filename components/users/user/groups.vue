@@ -80,7 +80,7 @@ function filterName(value: string) {
 }
 const listData = computed(() => {
   return (
-    props.user.memberOf.map((item: string) => {
+    props.user.memberOf?.map((item: string) => {
       return {
         name: item,
       };

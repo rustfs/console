@@ -37,8 +37,8 @@
       :bordered="true"
       :row-key="rowKey"
       @update:checked-row-keys="handleCheck" />
-    <newUser @search="getDataList" ref="newItemRef"></newUser>
-    <userEdit @search="getDataList" :checkedKeys="checkedKeys" ref="editItemRef"></userEdit>
+    <users-user-new @search="getDataList" ref="newItemRef"></users-user-new>
+    <users-user-edit @search="getDataList" :checkedKeys="checkedKeys" ref="editItemRef"></users-user-edit>
   </div>
 </template>
 
@@ -52,7 +52,7 @@ import {
   NSpace,
 } from 'naive-ui';
 import { Icon } from '#components';
-import { newUser, userEdit } from '../components';
+// import { newUser, userEdit } from '../components';
 
 const { $api } = useNuxtApp();
 const { listUsers } = useUsers();

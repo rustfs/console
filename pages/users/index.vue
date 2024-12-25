@@ -8,18 +8,16 @@
     <page-content>
       <n-tabs type="card">
         <n-tab-pane name="users" tab="用户">
-          <userTab></userTab>
+          <users-tabs-user></users-tabs-user>
         </n-tab-pane>
         <n-tab-pane name="userGroup" tab="用户组">
-          <groupTab></groupTab>
+          <users-tabs-group></users-tabs-group>
         </n-tab-pane>
       </n-tabs>
     </page-content>
   </div>
 </template>
 
-<script setup>
-import { groupTab, userTab } from '~/components/users/tabs';
-</script>
+<script setup></script>
 
 <style lang="scss" scoped></style>

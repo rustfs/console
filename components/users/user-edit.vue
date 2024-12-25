@@ -13,13 +13,13 @@
       <n-card>
         <n-tabs type="card">
           <n-tab-pane name="groups" tab="分组">
-            <userGroups :user="user" @search="getUserData(user.accessKey)"></userGroups>
+            <users-user-groups :user="user" @search="getUserData(user.accessKey)"></users-user-groups>
           </n-tab-pane>
           <n-tab-pane name="policy" tab="策略">
-            <userPolicies :user="user" @search="getUserData(user.accessKey)"></userPolicies>
+            <users-user-policies :user="user" @search="getUserData(user.accessKey)"></users-user-policies>
           </n-tab-pane>
           <n-tab-pane name="accesskey" tab="账号">
-            <userAccount :user="user" @search="getUserData(user.accessKey)"></userAccount>
+            <users-user-account :user="user" @search="getUserData(user.accessKey)"></users-user-account>
           </n-tab-pane>
           <template #suffix>
             状态
@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { userPolicies, userAccount, userGroups } from './';
+// import { userPolicies, userAccount, userGroups } from './components';
 const visible = ref(false);
 const { getUser, updateUser } = useUsers();
 interface UserInfo {

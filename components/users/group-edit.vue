@@ -13,10 +13,10 @@
       <n-card>
         <n-tabs type="card">
           <n-tab-pane name="users" tab="成员">
-            <groupMembers :group="group" @search="getGroupData(group.name)"></groupMembers>
+            <users-user-group-members :group="group" @search="getGroupData(group.name)"></users-user-group-members>
           </n-tab-pane>
           <n-tab-pane name="policy" tab="策略">
-            <groupPolicies :group="group" @search="getGroupData(group.name)"></groupPolicies>
+            <users-user-group-policies :group="group" @search="getGroupData(group.name)"></users-user-group-policies>
           </n-tab-pane>
           <template #suffix>
             状态
@@ -34,7 +34,7 @@
 </template>
 
 <script setup lang="ts">
-import { groupMembers, groupPolicies } from './';
+// import { groupMembers, groupPolicies } from './';
 const visible = ref(false);
 const { getGroup, updateGroup } = useGroups();
 

@@ -50,9 +50,10 @@
         :row-key="rowKey"
         @update:checked-row-keys="handleCheck" />
     </page-content>
-    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" />
+    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" @notice="noticeDialog" />
     <EditItem ref="editItemRef" @search="getDataList" />
     <ChangePassword ref="changePasswordModalRef" v-model:visible="changePasswordVisible" @search="getDataList" />
+    <users-user-notice ref="noticeRef"></users-user-notice>
   </div>
 </template>
 
@@ -172,7 +173,7 @@ const tableRef = ref<DataTableInst>();
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
-      name: [value],
+      accessKey: [value],
     });
 }
 const listData = ref<any[]>([]);
@@ -203,10 +204,17 @@ function addItem() {
   newItemVisible.value = true;
 }
 
+// 添加之后的反馈弹窗
+const noticeRef = ref();
+function noticeDialog(data: any) {
+  console.log(data);
+  noticeRef.value.openDialog(data);
+}
+
 /** **********************************修改 */
 const editItemRef = ref();
 function openEditItem(row: any) {
-  editItemRef.value.openDialog(row.accessKey);
+  editItemRef.value.openDialog(row);
 }
 /** **********************************修改密码 */
 const changePasswordModalRef = ref();

@@ -1,6 +1,6 @@
 // 定义单位
-const UNITS = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
-const K8S_UNITS = ['B', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi']
+const UNITS = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+const K8S_UNITS = ['B', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'];
 
 /**
  * 将字节数转换为可读格式
@@ -9,8 +9,8 @@ const K8S_UNITS = ['B', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi']
  * @returns {string} - 可读格式的字节数
  */
 export function niceBytes(x: string, isK8sUnits: boolean = false): string {
-  const n = Number.parseInt(x, 10) || 0
-  return formatBytes(n, isK8sUnits)
+  const n = Number.parseInt(x, 10) || 0;
+  return formatBytes(n, isK8sUnits);
 }
 
 /**
@@ -20,13 +20,13 @@ export function niceBytes(x: string, isK8sUnits: boolean = false): string {
  * @returns {string} - 可读格式的字节数
  */
 export function formatBytes(n: number, isK8sUnits: boolean = false): string {
-  const l = Math.floor(Math.log(n) / Math.log(1024)) || 0
+  const l = Math.floor(Math.log(n) / Math.log(1024)) || 0;
 
   if (l < 0) {
-    return '0 B'
+    return '0 B';
   }
-  const value = n / 1024 ** l
-  return `${value.toFixed(1)} ${isK8sUnits ? K8S_UNITS[l] : UNITS[l]}`
+  const value = n / 1024 ** l;
+  return `${value.toFixed(1)} ${isK8sUnits ? K8S_UNITS[l] : UNITS[l]}`;
 }
 
 /**
@@ -37,7 +37,7 @@ export function formatBytes(n: number, isK8sUnits: boolean = false): string {
  * @returns {string} - 字节数的字符串表示
  */
 export function getBytes(value: string, unit: string, fromK8s: boolean = false): string {
-  return convertToBytes(value, unit, fromK8s).toString(10)
+  return convertToBytes(value, unit, fromK8s).toString(10);
 }
 
 /**
@@ -48,13 +48,35 @@ export function getBytes(value: string, unit: string, fromK8s: boolean = false):
  * @returns {number} - 字节数
  */
 function convertToBytes(value: string, unit: string, fromK8s: boolean = false): number {
-  const vl: number = Number.parseFloat(value)
-  const unitsTake = fromK8s ? K8S_UNITS : UNITS
-  const powFactor = unitsTake.findIndex(element => element === unit)
+  const vl: number = Number.parseFloat(value);
+  const unitsTake = fromK8s ? K8S_UNITS : UNITS;
+  const powFactor = unitsTake.findIndex((element) => element === unit);
 
   if (powFactor === -1) {
-    return 0
+    return 0;
   }
 
-  return vl * 1024 ** powFactor
+  return vl * 1024 ** powFactor;
+}
+
+/**
+ * 生成随机长度的字符串
+ * @param length
+ * @returns
+ */
+export function makeRandomString(length = 20): string {
+  let initstr = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+  // 将字符串转换为数组
+  const arr = initstr.split('');
+
+  // 打乱数组
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+
+  // 将数组转换回字符串
+  initstr = arr.join('');
+
+  return initstr.slice(0, length);
 }

@@ -19,7 +19,10 @@
             <users-user-policies :user="user" @search="getUserData(user.accessKey)"></users-user-policies>
           </n-tab-pane>
           <n-tab-pane name="accesskey" tab="账号">
-            <users-user-account :user="user" @search="getUserData(user.accessKey)"></users-user-account>
+            <users-user-account
+              :user="user"
+              @search="getUserData(user.accessKey)"
+              @notice="noticeDialog"></users-user-account>
           </n-tab-pane>
           <template #suffix>
             状态
@@ -31,6 +34,7 @@
               :on-update:value="handerUserStatusChange"></n-switch>
           </template>
         </n-tabs>
+        <users-user-notice ref="noticeRef"></users-user-notice>
       </n-card>
     </n-modal>
   </div>
@@ -67,6 +71,11 @@ async function openDialog(row: any) {
 // 获取用户信息
 async function getUserData(name: string) {
   user.value = await getUser(name);
+}
+// 添加之后的反馈弹窗
+const noticeRef = ref();
+function noticeDialog(data: any) {
+  noticeRef.value.openDialog(data);
 }
 
 defineExpose({

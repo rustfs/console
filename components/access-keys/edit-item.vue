@@ -1,9 +1,8 @@
 <script setup lang="ts">
-// import { getServiceAccount, updateServiceAccount } from '@/service'
 import { ref } from 'vue';
-const { $api } = useNuxtApp();
 const message = useMessage();
 const emit = defineEmits<Emits>();
+const { getServiceAccount, updateServiceAccount } = useAccessKeys();
 
 const visible = ref(false);
 
@@ -12,21 +11,22 @@ const defaultFormModal = {
   secretkey: '',
   name: '',
   description: '',
-  comment: '',
   expiry: null,
   policy: '',
-  status: false,
+  status: 'on',
 };
 const formModel = ref({ ...defaultFormModal });
 
 const accessKey = ref<string>('');
-async function openDialog(accKey: string) {
-  accessKey.value = accKey;
+async function openDialog(row: any) {
+  accessKey.value = row.accessKey;
 
   try {
-    // btoa(unescape(encodeURIComponent(accKey)))
-    const res = await $api.get(`service-accounts/${accKey}`);
+    const res = await getServiceAccount(row.accessKey);
     formModel.value = res;
+    formModel.value.accesskey = row.accessKey;
+    formModel.value.expiry = res.expiration;
+    formModel.value.status = res.accountStatus;
     visible.value = true;
   } catch (error) {
     message.error('获取数据失败');
@@ -50,9 +50,10 @@ function dateDisabled(ts: number) {
 
 async function submitForm() {
   try {
-    const res = await $api.put(`/service-accounts/${accessKey.value}`, {
+    const res = await updateServiceAccount(accessKey.value, {
       ...formModel.value,
       policy: formModel.value.policy || '{}',
+      expiry: new Date(formModel.value.expiry || '').toISOString(),
     });
     message.success('修改成功');
     closeModal();
@@ -78,7 +79,7 @@ async function submitForm() {
       <n-form label-placement="left" :model="formModel" label-align="right" :label-width="90">
         <n-grid :cols="24" :x-gap="18">
           <n-form-item-grid-item :span="24" label="Access Key" path="policy">
-            <n-input v-model:value="formModel.policy" type="textarea" placeholder="" />
+            <json-editor v-model="formModel.policy" />
           </n-form-item-grid-item>
           <!-- TODO: 时间格式有问题 -->
           <n-form-item-grid-item :span="24" label="有效期" path="expiry">
@@ -91,11 +92,11 @@ async function submitForm() {
           <n-form-item-grid-item :span="24" label="名称" path="name">
             <n-input v-model:value="formModel.name" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="描述" path="comment">
-            <n-input v-model:value="formModel.comment" />
+          <n-form-item-grid-item :span="24" label="描述" path="description">
+            <n-input v-model:value="formModel.description" />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" label="状态" path="status">
-            <n-switch v-model:value="formModel.status" />
+            <n-switch v-model:value="formModel.status" checked-value="on" unchecked-value="off" />
           </n-form-item-grid-item>
         </n-grid>
       </n-form>

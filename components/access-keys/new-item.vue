@@ -1,6 +1,6 @@
 <script setup lang="ts">
-// import { createServiceAccountCreds } from '@/service'
 import { computed, ref } from 'vue';
+import { makeRandomString } from '~/utils/functions';
 
 interface Props {
   visible: boolean;
@@ -8,11 +8,12 @@ interface Props {
 const { visible } = defineProps<Props>();
 const message = useMessage();
 const { $api } = useNuxtApp();
+const { createServiceAccountCreds } = useAccessKeys();
 
 const emit = defineEmits<Emits>();
 const defaultFormModal = {
-  accesskey: '',
-  secretkey: '',
+  accesskey: makeRandomString(20),
+  secretkey: makeRandomString(40),
   name: '',
   description: '',
   comment: '',
@@ -25,6 +26,7 @@ const formModel = ref({ ...defaultFormModal });
 interface Emits {
   (e: 'update:visible', visible: boolean): void;
   (e: 'search'): void;
+  (e: 'notice', data: object): void;
 }
 
 const modalVisible = computed({
@@ -46,10 +48,12 @@ function dateDisabled(ts: number) {
 
 async function submitForm() {
   try {
-    const res = await $api.post('/service-account-credentials', {
-      body: formModel.value,
+    const res = await createServiceAccountCreds({
+      ...formModel.value,
+      expiry: new Date(formModel.value.expiry || '').toISOString(),
     });
     message.success('添加成功');
+    emit('notice', res);
     closeModal();
     emit('search');
   } catch (error) {
@@ -70,7 +74,7 @@ async function submitForm() {
       action: true,
     }">
     <n-card>
-      <n-form label-placement="left" :model="formModel" label-align="right" :label-width="130">
+      <n-form label-placement="left" :model="formModel" label-align="center" :label-width="130">
         <n-grid :cols="24" :x-gap="18">
           <n-form-item-grid-item :span="24" label="Access Key" path="accesskey">
             <n-input v-model:value="formModel.accesskey" />
@@ -84,6 +88,7 @@ async function submitForm() {
               class="!w-full"
               v-model:value="formModel.expiry"
               :is-date-disabled="dateDisabled"
+              value-format="yyyy-MM-ddTkk:mm:SSS"
               type="datetime"
               clearable />
           </n-form-item-grid-item>
@@ -99,8 +104,8 @@ async function submitForm() {
           <n-form-item-grid-item :span="24" label="限制超出用户策略" path="flag">
             <n-switch v-model:value="formModel.flag" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item v-if="formModel.flag" :span="24" label="限制超出用户策略" path="policy">
-            <n-input v-model:value="formModel.policy" type="textarea" placeholder="" />
+          <n-form-item-grid-item v-if="formModel.flag" :span="24" label="策略详情" path="policy">
+            <json-editor v-model="formModel.policy" />
           </n-form-item-grid-item>
         </n-grid>
       </n-form>

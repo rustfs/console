@@ -49,7 +49,7 @@ export const useUsers = () => {
   const setPolicy = async (data: any) => {
     return await $api.put(`/set-policy`, data);
   };
-  const listAUserServiceAccounts = async (name: string) => {
+  const listAllUserServiceAccounts = async (name: string) => {
     return await $api.get(`/user/${encodeURIComponent(name)}/service-accounts`);
   };
 
@@ -71,7 +71,7 @@ export const useUsers = () => {
     getUserPolicy,
     setPolicy,
     getSaUserPolicy,
-    listAUserServiceAccounts,
+    listAllUserServiceAccounts,
     createAUserServiceAccount,
     createServiceAccountCredentials,
   };

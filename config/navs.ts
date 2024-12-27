@@ -10,14 +10,9 @@ export default [
     icon: 'ri:file-user-line',
     children: [
       {
-        label: '对象浏览器',
+        label: '存储桶',
         to: '/browser',
         icon: 'ri:box-3-line',
-      },
-      {
-        label: '存储桶',
-        to: '/buckets',
-        icon: 'ri:archive-drawer-line',
       },
       {
         label: '访问密钥',

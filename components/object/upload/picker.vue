@@ -65,16 +65,22 @@
 </template>
 
 <script setup lang="ts">
+import { prefix } from 'naive-ui/es/_utils/cssr'
 import { computed, defineEmits, defineProps, ref } from 'vue'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
 const uploadTaskManagerStore = useUploadTaskManagerStore()
 
+interface FileItem {
+  file: File,
+  prefix: string
+}
+
 interface SelectedItem {
   type: 'file' | 'folder'
   name: string
   size: number
-  files?: File[]
+  files?: FileItem[]
 }
 
 const emit = defineEmits(['update:show'])
@@ -95,7 +101,9 @@ const handleFileSelect = (e: Event) => {
   const input = e.target as HTMLInputElement
   if (input.files) {
     // 更新展示列表
-    Array.from(input.files).forEach(f => selectedItems.value.push({ type: 'file', name: f.name, size: f.size, files: [f] }))
+    Array.from(input.files).forEach(f => selectedItems.value.push(
+      { type: 'file', name: f.name, size: f.size, files: [{ file: f, prefix: props.prefix }] }
+    ))
   }
 }
 
@@ -104,24 +112,29 @@ const handleFolderSelect = (e: Event) => {
 
   if (input.files) {
     const folderFiles = Array.from(input.files)
-
-    // 找到每一个文件的 top-level 文件夹
     const folderMap = new Map<string, File[]>()
+
     for (const file of folderFiles) {
-      const parts = file.webkitRelativePath.split('/')
-      const folderName = parts[0] || '未知文件夹'
+      // 保留完整目录路径（去掉最后的文件名）
+      const pathParts = file.webkitRelativePath.split('/')
+      pathParts.pop() // 移除文件名
+      const folderPath = pathParts.join('/') || '未知文件夹'
 
-      if (!folderMap.has(folderName)) {
-        folderMap.set(folderName, [])
+      if (!folderMap.has(folderPath)) {
+        folderMap.set(folderPath, [])
       }
-
-      folderMap.get(folderName)?.push(file)
+      folderMap.get(folderPath)?.push(file)
     }
 
-    // 只展示文件夹名称，实际上传依然包含 folderFiles
-    for (const [folderName, files] of folderMap.entries()) {
+    // 将每个完整路径和对应文件放到 selectedItems
+    for (const [folderPath, files] of folderMap.entries()) {
       const totalSize = files.reduce((acc, file) => acc + file.size, 0)
-      selectedItems.value.push({ type: 'folder', name: folderName, size: totalSize, files })
+      selectedItems.value.push({
+        type: 'folder',
+        name: folderPath,
+        size: totalSize,
+        files: files.map(file => ({ file, prefix: `${props.prefix}${folderPath}/` }))
+      })
     }
   }
 }
@@ -129,7 +142,9 @@ const handleFolderSelect = (e: Event) => {
 const handleDrop = (e: DragEvent) => {
   if (e.dataTransfer?.files) {
     const droppedFiles = Array.from(e.dataTransfer.files)
-    droppedFiles.forEach(file => selectedItems.value.push({ type: 'file', name: file.name, size: file.size, files: [file] }))
+    droppedFiles.forEach(file => selectedItems.value.push({
+      type: 'file', name: file.name, size: file.size, files: [{ file, prefix: props.prefix }]
+    }))
   }
 }
 
@@ -141,7 +156,9 @@ function removeItem(index: number) {
 }
 
 function handleUpload() {
-  uploadTaskManagerStore.addFiles(allFiles.value, props.bucketName, props.prefix)
+  allFiles.value.forEach(fileItem => {
+    uploadTaskManagerStore.addFiles([fileItem.file], props.bucketName, fileItem.prefix)
+  })
   selectedItems.value = []
   closeModal()
 }

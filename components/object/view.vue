@@ -9,18 +9,32 @@
           <Icon name="ri:download-line" class="mr-2" />
           <span>下载</span>
         </n-button>
+
         <n-button @click="() => copySignedUrl()">
           <Icon name="ri:file-copy-line" class="mr-2" />
           <span>复制临时链接</span>
         </n-button>
+
         <n-button @click="() => showPreview = true">
           <Icon name="ri:eye-line" class="mr-2" />
           <span>预览</span>
         </n-button>
+
         <n-button>
           <Icon name="ri:price-tag-3-line" class="mr-2" />
           <span>标签</span>
         </n-button>
+
+        <n-popconfirm @positive-click="deleteObject">
+          <template #trigger>
+            <n-button ghost type="error">
+              <Icon name="ri:delete-bin-7-line" class="mr-2" />
+              <span>删除</span>
+            </n-button>
+          </template>
+          删除对象 <span class="select-all">{{ key }}</span> ?
+        </n-popconfirm>
+
         <n-button @click="() => refresh()">
           <Icon name="ri:refresh-line" class="mr-2" />
           <span>刷新</span>
@@ -81,6 +95,11 @@ const copySignedUrl = async () => {
   await navigator.clipboard.writeText(url);
   msg.destroy();
   message.success('链接已复制到剪贴板');
+}
+const deleteObject = async () => {
+  await objectApi.deleteObject(key.value);
+  message.success('删除成功');
+  router.back();
 }
 
 

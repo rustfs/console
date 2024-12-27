@@ -57,7 +57,7 @@ const options = computed(() => {
         <Icon name="ri:menu-unfold-fill" class="cursor-pointer text-xl" @click="toggleSidebar" />
       </div>
 
-      <div class="flex flex-col p-4 text-gray-500">
+      <div v-if="!isCollapsed" class="flex flex-col p-4 text-gray-500">
         <div class="flex items-center gap-2">
           <Icon name="ri-server-line" />
           <span>当前版本: v0.0.1</span>

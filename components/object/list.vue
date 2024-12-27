@@ -81,7 +81,8 @@ const prefix = computed(() => decodeURIComponent(props.path as string))
 
 // query 参数
 const pageSize = computed(() => parseInt(route.query.pageSize as string, 10))
-const continuationToken = computed(() => route.query.continuationToken as string)
+// 将 continuationToken 改为 ref
+const continuationToken = ref<string | undefined>(undefined)
 
 // 新建文件夹
 const handleNewObject = (asPrefix: boolean) => {
@@ -192,28 +193,26 @@ const previousToken = computed(() => {
   return tokenHistory.value[tokenHistory.value.length - 2]
 })
 
+// 修改分页方法
 function goToNextPage() {
   if (nextToken.value) {
-    // 导航到新路由
-    router.push({ query: { ...route.query, continuationToken: nextToken.value } })
-    // 将当前 token 添加到历史中
+    continuationToken.value = nextToken.value
     tokenHistory.value.push(nextToken.value)
   }
 }
 
 function goToPreviousPage() {
   if (previousToken.value) {
-    router.push({ query: { ...route.query, continuationToken: previousToken.value } })
-    // 将上一页 token 之后的 tokenHistory 中的 token 删除，以表示回退
+    continuationToken.value = previousToken.value
+    // 将上一页 token 之后的记录删除
     const prevIndex = tokenHistory.value.indexOf(previousToken.value)
     tokenHistory.value.splice(prevIndex + 1)
   } else {
-    // 如果没有 previousToken，表示已经在第一页
-    // 导航到没有 token 的路由（第一页）
-    if (continuationToken.value) {
-      router.push({ query: { ...route.query, continuationToken: undefined } })
-      tokenHistory.value.length = 0
-    }
+    // 回到第一页
+    continuationToken.value = undefined
+    tokenHistory.value = []
   }
 }
+
+
 </script>

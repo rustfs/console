@@ -10,7 +10,7 @@ const toggleSidebar = () => {
 };
 
 const options = computed(() => {
-  return appConfig.navs.map((nav) => {
+  return appConfig.navs.map((nav: { label: string; to?: string; icon?: string; children?: { label: string; to: string; icon?: string }[] }) => {
     let item: { key: string; label: () => string | VNode; icon?: () => VNode; children?: any[] } = {
       key: nav.label,
       label: () => nav.to ? h(RouterLink, { to: nav.to }, { default: () => nav.label }) : nav.label,
@@ -55,6 +55,21 @@ const options = computed(() => {
 
       <div v-if="isCollapsed" class="w-full flex items-center justify-center py-4">
         <Icon name="ri:menu-unfold-fill" class="cursor-pointer text-xl" @click="toggleSidebar" />
+      </div>
+
+      <div class="flex flex-col p-4 text-gray-500">
+        <div class="flex items-center gap-2">
+          <Icon name="ri-server-line" />
+          <span>当前版本: v0.0.1</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <Icon name="ri-calendar-line" />
+          <span>构建日期：2024-12-01</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <Icon name="ri-verified-badge-line" />
+          <span>授权协议：商业初级版</span>
+        </div>
       </div>
 
       <div class="p-4 sticky bottom-0 left-0 right-0">

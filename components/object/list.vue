@@ -101,7 +101,7 @@ const columns = [
   {
     key: 'Key', title: '对象', render: (row: { Key: string, type: 'prefix' | 'object' }) => {
       const displayKey = prefix.value ? row.Key.substring(prefix.value.length) : row.Key
-      let label: string | VNode = displayKey || '根目录'
+      let label: string | VNode = displayKey || '/'
 
       if (row.type === 'prefix') {
         label = h('span', { class: 'inline-flex items-center gap-2' }, [icon('ri:folder-line'), label])
@@ -109,7 +109,7 @@ const columns = [
 
       const keyInUri = row.Key
 
-      return h(NuxtLink, { href: bucketPath(keyInUri) }, label)
+      return h(NuxtLink, { href: bucketPath(keyInUri), class: 'block text-cyan-400' }, label)
     }
   },
   { key: 'Size', title: '大小', render: (row: { Size: number }) => row.Size ? formatBytes(row.Size) : '' },

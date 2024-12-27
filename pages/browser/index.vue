@@ -2,10 +2,10 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">对象浏览器</h1>
+        <h1 class="text-2xl font-bold">桶</h1>
       </template>
       <template #actions>
-        <n-button>
+        <n-button @click="() => formVisible = true">
           <Icon name="ri:add-line" class="mr-2" />
           <span>创建桶</span>
         </n-button>
@@ -29,14 +29,16 @@
       </div>
       <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="data" :pagination="false" :bordered="false" />
     </page-content>
+
+    <buckets-new-form :show="formVisible" @update:show="handleFormClosed"></buckets-new-form>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { NuxtLink } from "#components"
-import { ListBucketsCommand } from "@aws-sdk/client-s3"
 
-const { $s3Client } = useNuxtApp();
+const { listBuckets } = useBucket({})
+const formVisible = ref(false);
 
 const columns = [
   {
@@ -51,7 +53,12 @@ const columns = [
 ]
 
 const { data, refresh } = await useAsyncData('buckets', async () => {
-  const response = await $s3Client.send(new ListBucketsCommand({}));
+  const response = await listBuckets()
   return response.Buckets || [];
 }, { default: () => [] });
+
+const handleFormClosed = (show: boolean) => {
+  formVisible.value = show;
+  refresh();
+}
 </script>

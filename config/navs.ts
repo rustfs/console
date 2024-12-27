@@ -19,12 +19,6 @@ export default [
         to: '/buckets',
         icon: 'ri:archive-drawer-line',
       },
-    ],
-  },
-  {
-    label: '认证',
-    icon: 'ri:door-lock-box-line',
-    children: [
       {
         label: '访问密钥',
         to: '/access-keys',

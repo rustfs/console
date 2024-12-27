@@ -40,16 +40,16 @@ export default [
         to: '/users',
         icon: 'ri:file-user-line',
       },
-      {
-        label: '事件',
-        to: '/events',
-        icon: 'ri:broadcast-line',
-      },
-      {
-        label: '配置',
-        to: '/configuration',
-        icon: 'ri:settings-2-line',
-      },
+      // {
+      //   label: '事件',
+      //   to: '/events',
+      //   icon: 'ri:broadcast-line',
+      // },
+      // {
+      //   label: '配置',
+      //   to: '/configuration',
+      //   icon: 'ri:settings-2-line',
+      // },
     ]
   },
   {
@@ -63,12 +63,12 @@ export default [
       },
       {
         label: '许可证',
-        to: '/license',
+        to: 'https://github.com/rustfs/rustfs?tab=Apache-2.0-1-ov-file#readme',
         icon: 'ri:copyright-line'
       },
       {
         label: '文档',
-        to: '/docs',
+        to: 'https://rustfs.com/docs/',
         icon: 'ri:file-list-3-line'
       }
     ]

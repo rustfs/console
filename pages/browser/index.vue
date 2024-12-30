@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold">桶</h1>
       </template>
       <template #actions>
-        <n-button @click="() => formVisible = true">
+        <n-button @click="() => (formVisible = true)">
           <Icon name="ri:add-line" class="mr-2" />
           <span>创建桶</span>
         </n-button>
@@ -27,38 +27,98 @@
           </n-button>
         </div>
       </div>
-      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="data" :pagination="false" :bordered="false" />
+      <n-data-table
+        class="border dark:border-neutral-700 rounded overflow-hidden"
+        :columns="columns"
+        :data="data"
+        :pagination="false"
+        :bordered="false" />
     </page-content>
 
-    <buckets-new-form :show="formVisible" @update:show="handleFormClosed"></buckets-new-form>
+    <buckets-new-form
+      :show="formVisible"
+      @update:show="handleFormClosed"></buckets-new-form>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { NuxtLink } from "#components"
+import { NSpace, NButton, type DataTableColumns } from 'naive-ui'
+import { NuxtLink, Icon } from '#components'
 
 const { listBuckets } = useBucket({})
-const formVisible = ref(false);
+const formVisible = ref(false)
 
-const columns = [
+interface RowData {
+  Name: string
+  creationDate: string
+}
+const columns: DataTableColumns<RowData> = [
   {
     title: '桶',
-    dataIndex: 'name',
+    // dataIndex: 'name',
     key: 'Name',
     render: (row: { Name: string }) => {
-      return h(NuxtLink, { href: `/browser/${encodeURIComponent(row.Name)}`, class: 'flex items-center gap-2' }, [icon('ri:archive-line'), row.Name]);
+      return h(
+        NuxtLink,
+        {
+          href: `/browser/${encodeURIComponent(row.Name)}`,
+          class: 'flex items-center gap-2'
+        },
+        [icon('ri:archive-line'), row.Name]
+      )
     }
   },
-  { title: '创建时间', dataIndex: 'creationDate', key: 'CreationDate' },
+  {
+    title: '创建时间',
+    // dataIndex: 'creationDate',
+    key: 'CreationDate'
+  },
+  {
+    title: '操作',
+    key: 'actions',
+    align: 'center',
+    width: 180,
+    render: (row: RowData) => {
+      return h(
+        NSpace,
+        {
+          justify: 'center'
+        },
+        {
+          default: () => [
+            h(
+              NButton,
+              {
+                size: 'small',
+                secondary: true,
+                onClick: () => handleRowClick(row)
+              },
+              {
+                default: () => '',
+                icon: () => h(Icon, { name: 'ri:edit-2-line' })
+              }
+            )
+          ]
+        }
+      )
+    }
+  }
 ]
 
-const { data, refresh } = await useAsyncData('buckets', async () => {
-  const response = await listBuckets()
-  return response.Buckets || [];
-}, { default: () => [] });
+const { data, refresh } = await useAsyncData(
+  'buckets',
+  async () => {
+    const response = await listBuckets()
+    return response.Buckets || []
+  },
+  { default: () => [] }
+)
 
+const handleRowClick = (row: RowData) => {
+  console.log(row)
+}
 const handleFormClosed = (show: boolean) => {
-  formVisible.value = show;
-  refresh();
+  formVisible.value = show
+  refresh()
 }
 </script>

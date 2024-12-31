@@ -35,22 +35,21 @@
         :bordered="false" />
     </page-content>
 
-    <buckets-new-form
-      :show="formVisible"
-      @update:show="handleFormClosed"></buckets-new-form>
+    <buckets-new-form :show="formVisible" @update:show="handleFormClosed"></buckets-new-form>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { NSpace, NButton, type DataTableColumns } from 'naive-ui'
-import { NuxtLink, Icon } from '#components'
+import { NSpace, NButton, type DataTableColumns } from 'naive-ui';
+import { NuxtLink, Icon } from '#components';
+import { useRouter } from 'vue-router';
 
-const { listBuckets } = useBucket({})
-const formVisible = ref(false)
+const { listBuckets } = useBucket({});
+const formVisible = ref(false);
 
 interface RowData {
-  Name: string
-  creationDate: string
+  Name: string;
+  creationDate: string;
 }
 const columns: DataTableColumns<RowData> = [
   {
@@ -62,27 +61,27 @@ const columns: DataTableColumns<RowData> = [
         NuxtLink,
         {
           href: `/browser/${encodeURIComponent(row.Name)}`,
-          class: 'flex items-center gap-2'
+          class: 'flex items-center gap-2',
         },
         [icon('ri:archive-line'), row.Name]
-      )
-    }
+      );
+    },
   },
   {
     title: '创建时间',
     // dataIndex: 'creationDate',
-    key: 'CreationDate'
+    key: 'CreationDate',
   },
   {
     title: '操作',
     key: 'actions',
     align: 'center',
-    width: 180,
+    width: 100,
     render: (row: RowData) => {
       return h(
         NSpace,
         {
-          justify: 'center'
+          justify: 'center',
         },
         {
           default: () => [
@@ -91,34 +90,37 @@ const columns: DataTableColumns<RowData> = [
               {
                 size: 'small',
                 secondary: true,
-                onClick: () => handleRowClick(row)
+                onClick: () => handleRowClick(row),
               },
               {
                 default: () => '',
-                icon: () => h(Icon, { name: 'ri:edit-2-line' })
+                icon: () => h(Icon, { name: 'ri:settings-5-line' }),
               }
-            )
-          ]
+            ),
+          ],
         }
-      )
-    }
-  }
-]
+      );
+    },
+  },
+];
 
 const { data, refresh } = await useAsyncData(
   'buckets',
   async () => {
-    const response = await listBuckets()
-    return response.Buckets || []
+    const response = await listBuckets();
+    return response.Buckets || [];
   },
   { default: () => [] }
-)
+);
 
+const router = useRouter();
 const handleRowClick = (row: RowData) => {
-  console.log(row)
-}
+  router.push({
+    path: `/bucket/${encodeURIComponent(row.Name)}`,
+  });
+};
 const handleFormClosed = (show: boolean) => {
-  formVisible.value = show
-  refresh()
-}
+  formVisible.value = show;
+  refresh();
+};
 </script>

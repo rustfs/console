@@ -80,7 +80,7 @@
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
-        {{ object?.ContentType }}
+        todo
       </n-descriptions-item>
       <n-descriptions-item>
         <template #label>
@@ -89,7 +89,7 @@
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
-        {{ object?.ContentType }}
+        todo
       </n-descriptions-item>
       <n-descriptions-item>
         <template #label>
@@ -98,7 +98,7 @@
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
-        {{ object?.ContentType }}
+        todo
       </n-descriptions-item>
       <n-descriptions-item>
         <template #label>
@@ -107,7 +107,7 @@
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
-        {{ object?.ContentType }}
+        todo
       </n-descriptions-item>
       <n-descriptions-item>
         <template #label>
@@ -116,10 +116,10 @@
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
-        {{ object?.ContentType }}
+        todo
       </n-descriptions-item>
       <n-descriptions-item label="标签">
-        <span class="select-all">{{ object?.ETag }}</span>
+        <span class="select-all">todo</span>
       </n-descriptions-item>
       <n-descriptions-item>
         <template #label>
@@ -128,7 +128,7 @@
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
-        {{ object?.LastModified }}
+        todo
       </n-descriptions-item>
     </n-descriptions>
   </n-card>
@@ -144,12 +144,12 @@ const props = defineProps<{ bucket: string }>();
 
 const bucketName = computed(() => props.bucket as string);
 
-const bucketApi = useBucket({});
+const { headBucket } = useBucket({});
 
 // 在服务端获取数据
 const {
-  data: object,
+  data: bucket,
   status,
   refresh,
-} = useAsyncData(`head-object&${bucketName.value}`, () => bucketApi.headObject(bucketName.value));
+} = useAsyncData(`head-bucket&${bucketName.value}`, () => headBucket(bucketName.value));
 </script>

@@ -158,7 +158,6 @@ const objects = computed(() => {
       Key: prefix.Prefix,
       type: 'prefix',
       Size: 0,
-      LastModified: new Date(0)
     }
   }).concat(contents.value.map((object) => {
     return {

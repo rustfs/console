@@ -56,6 +56,28 @@ const loading = ref<boolean>(false)
 
 const message = useMessage()
 
+const textMimes = [
+  'application/json', 'application/xml',
+  'application/javascript', 'application/x-sh',
+  'application/x-csh', 'application/x-python',
+  'application/x-php', 'application/x-perl',
+  'application/x-shellscript', 'application/x-ruby',
+  'application/x-java', 'application/x-cpp',
+]
+
+const textExtensions = [
+  '.txt', '.json', '.xml', '.js', '.sh', '.csh',
+  '.py', '.php', '.pl', '.sh', '.rb', '.java',
+  '.cpp', '.h', '.hpp', '.c', '.cc', '.hh',
+  '.hxx', '.cxx', '.java', '.kt', '.scala',
+  '.groovy', '.rs', '.go', '.dart', '.swift',
+  '.m', '.mm', '.cs', '.ts', '.jsx', '.tsx',
+  '.html', '.htm', '.css', '.scss', '.sass',
+  '.less', '.styl', '.yaml', '.yml', '.toml',
+  '.ini', '.cfg', '.conf', '.properties', '.md',
+  '.markdown', '.rst', '.r',
+]
+
 // MIME 类型判断逻辑
 const isImage = computed(() => contentType.value?.startsWith('image/') || false)
 const isVideo = computed(() => contentType.value?.startsWith('video/') || false)
@@ -63,9 +85,8 @@ const isAudio = computed(() => contentType.value?.startsWith('audio/') || false)
 const isPdf = computed(() => contentType.value === 'application/pdf')
 const isText = computed(() => {
   // 常见文本类型，可按需扩展
-  return contentType.value?.startsWith('text/') ||
-    contentType.value === 'application/json' ||
-    contentType.value === 'application/xml' || false
+  return contentType.value?.startsWith('text/') || textMimes.some(mime => contentType.value?.includes(mime)) ||
+    textExtensions.some(ext => props.objectKey.endsWith(ext))
 })
 
 const canPreview = computed(() => isImage.value || isPdf.value || isText.value || isVideo.value || isAudio.value)

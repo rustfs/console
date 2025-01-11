@@ -23,16 +23,20 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
+      session: {
+        // 临时凭证有效期
+        durationSeconds: Number(process.env.SESSION_DURATION_SECONDS) || 3600 * 12
+      },
+
+      // API 请求基础 URL
       api: {
         baseURL: process.env.API_BASE_URL || ''
       },
+
       // 临时配置，后续登录后从本地存储中获取
       s3: {
         region: process.env.S3_REGION || 'us-east-1',
-        endpoint: process.env.S3_ENDPOINT || process.env.API_BASE_URL || '',
-        accessKeyId: process.env.S3_ACCESS_KEY_ID || '',
-        secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || '',
-        sessionToken: process.env.S3_SESSION_TOKEN || ''
+        endpoint: process.env.S3_ENDPOINT || process.env.API_BASE_URL || ''
       }
     }
   },

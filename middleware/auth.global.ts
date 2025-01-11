@@ -1,17 +1,19 @@
+
+
 export default defineNuxtRouteMiddleware((to, from) => {
-  // const token = useLocalStorage('auth.token', undefined)
+  const isAuthenticated = useAuth().isAuthenticated.value
 
-  // console.log('Auth middleware', to.path, token.value);
+  console.debug('Auth middleware', to.path, isAuthenticated);
 
-  // if (to.path === '/auth/login') {
-  //   if (token.value) {
-  //     return navigateTo('/')
-  //   }
+  if (to.path === '/auth/login') {
+    if (isAuthenticated) {
+      return navigateTo('/')
+    }
 
-  //   return
-  // }
+    return
+  }
 
-  // if (!token.value) {
-  //   return navigateTo('/auth/login')
-  // }
+  if (!isAuthenticated) {
+    return navigateTo('/auth/login')
+  }
 })

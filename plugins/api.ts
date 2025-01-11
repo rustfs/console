@@ -1,31 +1,38 @@
-import ApiClient from '~/lib/api-client'
+import { AwsClient } from 'aws4fetch';
+import ApiClient from '~/lib/api-client';
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const token = useCookie('token')
+  const runtimeConfig = useRuntimeConfig().public;
+  const { isAuthenticated, credentials } = useAuth()
 
-  const fetch = $fetch.create({
-    baseURL: '/api',
-    onRequest({ request, options }) {
-      if (token) {
-        // options.headers.set('Authorization', `Bearer ${token}`)
-      }
-    },
-    onResponse({ response }) {
-      console.log('[API] response', response)
-    },
-    async onResponseError({ response }: { response: { status: number } }) {
-      if (response.status === 401) {
-        token.value = undefined
-        await nuxtApp.runWithContext(() => navigateTo('/auth/login'))
-      }
-    }
+  console.log('credentials', credentials.value);
+
+  if (!isAuthenticated.value) {
+    return
+  }
+
+  const accessKeyId = credentials.value?.AccessKeyId || ''
+  const secretAccessKey = credentials.value?.SecretAccessKey || ''
+  const sessionToken = credentials.value?.SessionToken || ''
+  const region = runtimeConfig.s3.region || 'us-east-1'
+  const service = 's3'
+
+  const adminApiClient = new AwsClient({
+    accessKeyId,
+    secretAccessKey,
+    sessionToken,
+    region,
+    service,
   })
 
-  // Expose to useNuxtApp().$api, useNuxtApp().$apiFetch
   return {
     provide: {
-      api: new ApiClient(fetch),
-      apiFetch: fetch
+      api: new ApiClient(adminApiClient, {
+        baseUrl: runtimeConfig.api.baseURL,
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }),
     }
   }
 })

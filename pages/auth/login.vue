@@ -1,34 +1,32 @@
 <script lang="ts" setup>
 setPageLayout('plain')
 
-const { $api } = useNuxtApp()
 import { ref } from 'vue'
-const method = ref('credentials')
-const credentials = ref({
-  accessKey: '',
-  secretKey: '',
+const method = ref('accessKeyAndSecretKey')
+const accessKeyAndSecretKey = ref({
+  accessKeyId: '',
+  secretAccessKey: '',
 })
 
 const sts = ref({
-  accessKey: '',
-  secretKey: '',
+  accessKeyId: '',
+  secretAccessKey: '',
   sessionToken: '',
 })
 
 const options = ref([
-  { label: 'Login with credentials', value: 'credentials' },
-  { label: 'Login with STS', value: 'sts' },
+  { label: 'Login with accessKeyAndSecretKey', value: 'accessKeyAndSecretKey' },
+  { label: 'Login with sts', value: 'sts' },
 ])
 
 const message = useMessage()
+const auth = useAuth()
 
 const handleLogin = async () => {
-  console.log('login', method.value, credentials.value, sts.value)
-
-  const body = method.value === 'credentials' ? credentials.value : sts.value
+  const credentials = method.value === 'accessKeyAndSecretKey' ? accessKeyAndSecretKey.value : sts.value
 
   try {
-    await $api.post('login', body)
+    await auth.login(credentials)
     message.success('Login success')
     window.location.href = '/'
   } catch (error) {
@@ -57,31 +55,31 @@ const handleLogin = async () => {
           <!-- Form -->
           <form @submit.prevent="handleLogin">
             <div class="grid gap-y-6">
-              <template v-if="method == 'credentials'">
+              <template v-if="method == 'accessKeyAndSecretKey'">
                 <div>
-                  <label for="accessKey" class="block text-sm mb-2 dark:text-white">Access Key</label>
-                  <n-input v-model:value="credentials.accessKey" type="text" placeholder="Please input you access key" />
+                  <label for="accessKey" class="block text-sm mb-2 dark:text-white">Access Key Id</label>
+                  <n-input v-model:value="accessKeyAndSecretKey.accessKeyId" type="text" placeholder="Please input you access key id" />
                 </div>
                 <div>
                   <div class="flex justify-between items-center">
-                    <label for="secretKey" class="block text-sm mb-2 dark:text-white">Access Secret</label>
+                    <label for="secretKey" class="block text-sm mb-2 dark:text-white">Secret Access Key</label>
                   </div>
-                  <n-input v-model:value="credentials.secretKey" type="password" placeholder="Please input you access secret" />
+                  <n-input v-model:value="accessKeyAndSecretKey.secretAccessKey" type="password" placeholder="Please input you secret access key" />
                 </div>
               </template>
 
               <template v-else>
                 <div>
-                  <label for="accessKey" class="block text-sm mb-2 dark:text-white">STS Access Key</label>
-                  <n-input v-model:value="sts.accessKey" type="text" placeholder="Please input you STS access key" />
+                  <label for="accessKey" class="block text-sm mb-2 dark:text-white">STS Access Key Id</label>
+                  <n-input v-model:value="sts.accessKeyId" type="text" placeholder="Please input you STS access key id" />
                 </div>
                 <div>
-                  <label for="sts.secretKey" class="block text-sm mb-2 dark:text-white">STS Access Secret</label>
-                  <n-input v-model:value="sts.secretKey" type="password" placeholder="Please input you STS access key" />
+                  <label for="sts.secretAccessKey" class="block text-sm mb-2 dark:text-white">STS Secret Access Key</label>
+                  <n-input v-model:value="sts.secretAccessKey" type="password" placeholder="Please input you STS secret access key" />
                 </div>
                 <div>
                   <label for="sessionToken" class="block text-sm mb-2 dark:text-white">STS sessionToken</label>
-                  <n-input v-model:value="sts.sessionToken" type="text" placeholder="Please input you STS access key" />
+                  <n-input v-model:value="sts.sessionToken" type="text" placeholder="Please input you STS sessionToken" />
                 </div>
               </template>
 

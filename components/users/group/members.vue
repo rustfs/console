@@ -99,6 +99,7 @@ const emit = defineEmits<{
 }>();
 const getUserList = async () => {
   const res = await listUsers();
+
   users.value = res.users.map((item: any) => {
     return {
       label: item.accessKey,

@@ -1,21 +1,21 @@
-import { AwsClient } from 'aws4fetch';
-import ApiClient from '~/lib/api-client';
+import { AwsClient } from "aws4fetch"
+import ApiClient from "~/lib/api-client"
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const runtimeConfig = useRuntimeConfig().public;
+  const runtimeConfig = useRuntimeConfig().public
   const { isAuthenticated, credentials } = useAuth()
 
-  console.log('credentials', credentials.value);
+  console.log("credentials", credentials.value)
 
   if (!isAuthenticated.value) {
     return
   }
 
-  const accessKeyId = credentials.value?.AccessKeyId || ''
-  const secretAccessKey = credentials.value?.SecretAccessKey || ''
-  const sessionToken = credentials.value?.SessionToken || ''
-  const region = runtimeConfig.s3.region || 'us-east-1'
-  const service = 's3'
+  const accessKeyId = credentials.value?.AccessKeyId || ""
+  const secretAccessKey = credentials.value?.SecretAccessKey || ""
+  const sessionToken = credentials.value?.SessionToken || ""
+  const region = runtimeConfig.s3.region || "us-east-1"
+  const service = "s3"
 
   const adminApiClient = new AwsClient({
     accessKeyId,
@@ -30,9 +30,9 @@ export default defineNuxtPlugin((nuxtApp) => {
       api: new ApiClient(adminApiClient, {
         baseUrl: runtimeConfig.api.baseURL,
         headers: {
-          'Content-Type': 'application/json',
-        }
+          "Content-Type": "application/json",
+        },
       }),
-    }
+    },
   }
 })

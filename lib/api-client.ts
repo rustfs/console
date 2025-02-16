@@ -1,5 +1,5 @@
-import type { AwsClient } from "aws4fetch"
-import { joinURL } from "ufo"
+import type { AwsClient } from "aws4fetch";
+import { joinURL } from "ufo";
 
 class ApiClient {
   private $api: any
@@ -18,6 +18,11 @@ class ApiClient {
 
     const response = await this.$api.fetch(url, options)
     console.log("🚀 ~ ApiClient ~ request ~ options:", options)
+
+    // 204 or body length is 0
+    if (response.status === 204 || response.headers.get("content-length") === "0") {
+      return null
+    }
 
     if (!response.ok) {
       console.error(await response.text())

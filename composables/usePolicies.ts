@@ -6,7 +6,7 @@ export const usePolicies = () => {
    * @returns
    */
   const listPolicies = async () => {
-    return await $api.get('/policies');
+    return await $api.get('/list-canned-policies');
   };
 
   /**
@@ -15,7 +15,7 @@ export const usePolicies = () => {
    * @returns
    */
   const addPolicy = async (data: any) => {
-    return await $api.post('/policies', data);
+    return await $api.post('/add-canned-policy', data);
   };
 
   /**
@@ -24,7 +24,7 @@ export const usePolicies = () => {
    * @returns
    */
   const getPolicy = async (policyName: string) => {
-    return await $api.get(`/policy/${encodeURIComponent(policyName)}`);
+    return await $api.get(`/info-canned-policy?name=${encodeURIComponent(policyName)}`);
   };
 
   /**
@@ -42,7 +42,7 @@ export const usePolicies = () => {
    * @returns
    */
   const listGroupsForPolicy = async (policyName: string) => {
-    return await $api.get(`/policy/${encodeURIComponent(policyName)}/groups`);
+    return await $api.get(`/groups`);
   };
 
   /**
@@ -51,7 +51,7 @@ export const usePolicies = () => {
    * @returns
    */
   const removePolicy = async (policyName: string) => {
-    return await $api.delete(`/policy/${encodeURIComponent(policyName)}`, {});
+    return await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(policyName)}`, {});
   };
 
   /**

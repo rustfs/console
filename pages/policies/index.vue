@@ -27,23 +27,17 @@
           </n-button>
         </div>
       </div>
-      <n-data-table
-        ref="tableRef"
-        class="border dark:border-neutral-700 rounded overflow-hidden"
-        :columns="columns"
-        :data="listData"
-        :pagination="false"
-        :bordered="false" />
+      <n-data-table ref="tableRef" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="listData" :pagination="false" :bordered="false" />
     </page-content>
     <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" />
     <EditItem ref="editItemRef" @search="getDataList" />
   </div>
 </template>
 <script lang="ts" setup>
-import { useNuxtApp } from 'nuxt/app';
-import { EditItem, NewItem } from '~/components/policies';
-import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from 'naive-ui';
-import { Icon } from '#components';
+import { Icon } from '#components'
+import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from 'naive-ui'
+import { useNuxtApp } from 'nuxt/app'
+import { EditItem, NewItem } from '~/components/policies'
 const { $api } = useNuxtApp();
 const message = useMessage();
 
@@ -121,7 +115,7 @@ function filterName(value: string) {
 const listData = ref<any[]>([]);
 const getDataList = async () => {
   try {
-    const res = await $api.get('policies');
+    const res = await $api.get('/list-canned-policies');
     listData.value = res.policies || [];
   } catch (error) {
     message.error('获取数据失败');
@@ -132,7 +126,7 @@ onMounted(() => {
   getDataList();
 });
 /*************************************刷新***/
-const refresh = () => {};
+const refresh = () => { };
 
 /*************************************新增***/
 const newItemRef = ref();
@@ -150,7 +144,7 @@ function openEditItem(row: any) {
 /*************************************删除***/
 async function deleteItem(row: any) {
   try {
-    const res = await $api.delete(`/policy/${encodeURIComponent(row.name)}`);
+    const res = await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(row.name)}`);
     message.success('删除成功');
     getDataList();
   } catch (error) {

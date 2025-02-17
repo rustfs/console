@@ -27,10 +27,10 @@
           </n-button>
         </div>
       </div>
-      <n-data-table ref="tableRef" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="listData" :pagination="false" :bordered="false" />
+      <n-data-table ref="tableRef" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pilices" :pagination="false" :bordered="false" />
     </page-content>
-    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" />
-    <EditItem ref="editItemRef" @search="getDataList" />
+    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @created="fetchPolices" />
+    <EditItem ref="editItemRef" @saved="fetchPolices" />
   </div>
 </template>
 <script lang="ts" setup>
@@ -112,18 +112,23 @@ function filterName(value: string) {
 }
 
 /*************************************获取数据***/
-const listData = ref<any[]>([]);
-const getDataList = async () => {
+const pilices = ref<any[]>([]);
+const fetchPolices = async () => {
   try {
     const res = await $api.get('/list-canned-policies');
-    listData.value = res.policies || [];
+    pilices.value = Object.keys(res).map((key) => {
+      return {
+        name: key,
+        content: res[key],
+      };
+    });
   } catch (error) {
     message.error('获取数据失败');
   }
 };
 
 onMounted(() => {
-  getDataList();
+  fetchPolices();
 });
 /*************************************刷新***/
 const refresh = () => { };
@@ -146,7 +151,7 @@ async function deleteItem(row: any) {
   try {
     const res = await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(row.name)}`);
     message.success('删除成功');
-    getDataList();
+    fetchPolices();
   } catch (error) {
     message.error('删除失败');
   }

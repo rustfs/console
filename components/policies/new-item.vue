@@ -27,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-import stripJsonComments from 'strip-json-comments'
 import { computed, ref } from 'vue'
 
 interface Props {
@@ -46,7 +45,7 @@ const formModel = ref({ ...defaultFormModal });
 const emit = defineEmits<Emits>();
 interface Emits {
   (e: 'update:visible', visible: boolean): void;
-  (e: 'search'): void;
+  (e: 'created'): void;
 }
 
 const modalVisible = computed({
@@ -63,14 +62,14 @@ function closeModal(visible = false) {
 
 async function submitForm() {
   try {
-    const res = await $api.post('/add-canned-policy', {
-      name: formModel.value.name,
-      policy: stripJsonComments(formModel.value.policy),
-    });
+    const res = await $api.put(
+      `/add-canned-policy?name=${encodeURIComponent(formModel.value.name)}`,
+      JSON.parse(formModel.value.policy)
+    );
 
     message.success('添加成功');
     closeModal();
-    emit('search');
+    emit('created');
   } catch (error) {
     message.error('添加失败');
   }

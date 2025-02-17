@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from 'vue'
 const { $api } = useNuxtApp();
 const message = useMessage();
 const emit = defineEmits<Emits>();
@@ -21,7 +21,7 @@ async function openDialog(row: any) {
 defineExpose({ openDialog });
 
 interface Emits {
-  (e: 'search'): void;
+  (e: 'saved'): void;
 }
 
 function closeModal() {
@@ -30,13 +30,10 @@ function closeModal() {
 
 async function submitForm() {
   try {
-    const res = await $api.post(`/policies`, {
-      ...formModel.value,
-      policy: formModel.value.policy || '{}',
-    });
+    const res = await $api.put(`/add-canned-policy?name=${formModel.value.name}`, JSON.parse(formModel.value.policy));
     message.success('修改成功');
     closeModal();
-    emit('search');
+    emit('saved');
   } catch (error) {
     message.error('修改失败');
   }
@@ -44,16 +41,10 @@ async function submitForm() {
 </script>
 
 <template>
-  <n-modal
-    v-model:show="visible"
-    :mask-closable="false"
-    preset="card"
-    title="策略原文"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }">
+  <n-modal v-model:show="visible" :mask-closable="false" preset="card" title="策略原文" class="max-w-screen-md" :segmented="{
+    content: true,
+    action: true,
+  }">
     <n-form label-placement="top" :model="formModel" label-align="left" :label-width="100">
       <n-grid :cols="24" :x-gap="18">
         <n-form-item-grid-item :span="24" path="policy">

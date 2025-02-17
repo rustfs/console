@@ -18,15 +18,15 @@ class ApiClient {
 
     const response = await this.$api.fetch(url, options)
     console.log("🚀 ~ ApiClient ~ request ~ options:", options)
+    console.log(response);
+
+    if (!response.ok) {
+      throw new Error(response.statusText)
+    }
 
     // 204 or body length is 0
     if (response.status === 204 || response.headers.get("content-length") === "0") {
       return null
-    }
-
-    if (!response.ok) {
-      console.error(await response.text())
-      return Response.json({ error: `API returned ${response.status}` }, { status: 500 })
     }
 
     return await response.json()

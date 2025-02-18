@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold">IAM 策略</h1>
       </template>
       <template #actions>
-        <n-button @click="addItem">
+        <n-button @click="handleNew">
           <Icon name="ri:add-line" class="mr-2" />
           <span>创建策略</span>
         </n-button>
@@ -27,23 +27,38 @@
           </n-button>
         </div>
       </div>
-      <n-data-table ref="tableRef" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pilices" :pagination="false" :bordered="false" />
+      <n-data-table ref="tableRef" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pilicies" :pagination="false" :bordered="false" />
     </page-content>
-    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @created="fetchPolices" />
-    <EditItem ref="editItemRef" @saved="fetchPolices" />
+    <policies-form-item v-model:show="current" :policy="current" @saved="fetchPolicies" />
   </div>
 </template>
 <script lang="ts" setup>
 import { Icon } from '#components'
 import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from 'naive-ui'
 import { useNuxtApp } from 'nuxt/app'
-import { EditItem, NewItem } from '~/components/policies'
 const { $api } = useNuxtApp();
 const message = useMessage();
 
+const pilicies = ref<any[]>([]);
+const tableRef = ref<DataTableInst>();
+const current = ref();
+
+const handleEdit = (item: any) => {
+  current.value = item;
+}
+
+const handleNew = () => {
+  current.value = {
+    name: '',
+    content: '',
+  };
+};
+
 interface RowData {
   name: string;
+  content: string;
 }
+
 const columns: DataTableColumns<RowData> = [
   {
     title: '名称',
@@ -71,7 +86,7 @@ const columns: DataTableColumns<RowData> = [
               {
                 size: 'small',
                 secondary: true,
-                onClick: () => openEditItem(row),
+                onClick: () => handleEdit(row),
               },
               {
                 default: () => '',
@@ -101,9 +116,6 @@ const columns: DataTableColumns<RowData> = [
   },
 ];
 
-/*************************************搜索过滤***/
-
-const tableRef = ref<DataTableInst>();
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
@@ -111,12 +123,10 @@ function filterName(value: string) {
     });
 }
 
-/*************************************获取数据***/
-const pilices = ref<any[]>([]);
-const fetchPolices = async () => {
+const fetchPolicies = async () => {
   try {
     const res = await $api.get('/list-canned-policies');
-    pilices.value = Object.keys(res).map((key) => {
+    pilicies.value = Object.keys(res).map((key) => {
       return {
         name: key,
         content: res[key],
@@ -128,30 +138,18 @@ const fetchPolices = async () => {
 };
 
 onMounted(() => {
-  fetchPolices();
+  fetchPolicies();
 });
-/*************************************刷新***/
-const refresh = () => { };
 
-/*************************************新增***/
-const newItemRef = ref();
-const newItemVisible = ref(false);
+const refresh = () => {
+  fetchPolicies();
+};
 
-function addItem() {
-  newItemVisible.value = true;
-}
-
-/** **********************************修改 */
-const editItemRef = ref();
-function openEditItem(row: any) {
-  editItemRef.value.openDialog(row);
-}
-/*************************************删除***/
 async function deleteItem(row: any) {
   try {
-    const res = await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(row.name)}`);
+    await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(row.name)}`);
     message.success('删除成功');
-    fetchPolices();
+    fetchPolicies();
   } catch (error) {
     message.error('删除失败');
   }

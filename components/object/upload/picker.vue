@@ -83,7 +83,7 @@ interface SelectedItem {
   files?: FileItem[]
 }
 
-const emit = defineEmits(['update:show'])
+const emit = defineEmits(['update:show', 'submit'])
 
 const props = defineProps<{ show: boolean; bucketName: string; prefix: string }>()
 
@@ -160,6 +160,7 @@ function handleUpload() {
     uploadTaskManagerStore.addFiles([fileItem.file], props.bucketName, fileItem.prefix)
   })
   selectedItems.value = []
+  emit('submit')
   closeModal()
 }
 </script>

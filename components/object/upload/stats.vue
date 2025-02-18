@@ -21,7 +21,7 @@
           </div>
           <n-progress type="line" :height="2" :percentage="percentage" :show-indicator="false" :processing="percentage < 100" />
         </div>
-        <n-tabs type="line" animated :value="tab">
+        <n-tabs type="line" animated v-model:value="tab">
           <n-tab-pane :tab="`待处理(${pending.length})`" name="pending">
             <object-upload-task-list :tasks="pending" />
           </n-tab-pane>
@@ -40,14 +40,14 @@
   </n-drawer>
 </template>
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
 const showDrawer = ref(false)
 
 const store = useUploadTaskManagerStore()
-
 const tasks = computed(() => store.tasks)
+
 const total = computed(() => tasks.value.length)
 const percentage = computed(() => total.value === 0 ? 100 : Math.floor((completed.value.length / total.value) * 100))
 
@@ -59,11 +59,20 @@ const failed = computed(() => tasks.value.filter(task => task.status === 'failed
 const tab = ref('pending')
 
 // 根据任务执行状态切换任务列表，如果有进行中的任务则默认展示进行中，否则展示已完成
-watch([pending, uploading], () => {
+watch(percentage, () => {
   if (uploading.value.length > 0) {
     tab.value = 'uploading'
   } else {
     tab.value = 'completed'
+  }
+})
+
+// 第一次加入任务时自动打开抽屉
+const autoOpened = ref(false)
+watch(total, (newVal, oldVal) => {
+  if (!autoOpened.value && !showDrawer.value && oldVal === 0 && newVal > 0) {
+    showDrawer.value = true
+    autoOpened.value = true
   }
 })
 

@@ -78,11 +78,29 @@ const textExtensions = [
   '.markdown', '.rst', '.r',
 ]
 
+const imageExtensions = [
+  '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
+]
+
+const audioExtensions = [
+  '.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma',
+]
+
+const pdfExtensions = [
+  '.pdf',
+]
+
 // MIME 类型判断逻辑
-const isImage = computed(() => contentType.value?.startsWith('image/') || false)
+const isImage = computed(() => {
+  return contentType.value?.startsWith('image/') || imageExtensions.some(ext => props.objectKey.endsWith(ext))
+})
 const isVideo = computed(() => contentType.value?.startsWith('video/') || false)
-const isAudio = computed(() => contentType.value?.startsWith('audio/') || false)
-const isPdf = computed(() => contentType.value === 'application/pdf')
+const isAudio = computed(() => {
+  return contentType.value?.startsWith('audio/') || audioExtensions.some(ext => props.objectKey.endsWith(ext))
+})
+const isPdf = computed(() => {
+  return contentType.value === 'application/pdf' || pdfExtensions.some(ext => props.objectKey.endsWith(ext))
+})
 const isText = computed(() => {
   // 常见文本类型，可按需扩展
   return contentType.value?.startsWith('text/') || textMimes.some(mime => contentType.value?.includes(mime)) ||

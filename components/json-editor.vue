@@ -1,10 +1,10 @@
 <script setup>
-import JsonEditorVue from 'json-editor-vue';
-import 'vanilla-jsoneditor/themes/jse-theme-dark.css';
+import JsonEditorVue from "json-editor-vue"
+import "vanilla-jsoneditor/themes/jse-theme-dark.css"
 // import { createAjvValidator } from 'svelte-jsoneditor'
 
 // const validator = createAjvValidator({ schema, schemaDefinitions })
-const attrs = useAttrs();
+const attrs = useAttrs()
 </script>
 
 <template>
@@ -15,12 +15,15 @@ const attrs = useAttrs();
       mode="text"
       :mainMenuBar="false"
       selection="TextSelection"
-      class="w-full jse-theme-dark" />
+      class="editor w-full jse-theme-dark" />
   </div>
 </template>
 <style scoped>
 :deep(.jse-main) {
   max-height: 800px;
   min-height: 300px;
+}
+.editor {
+  overflow: hidden;
 }
 </style>

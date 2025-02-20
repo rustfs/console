@@ -1,5 +1,5 @@
-import type { AwsClient } from "aws4fetch";
-import { joinURL } from "ufo";
+import type { AwsClient } from "aws4fetch"
+import { joinURL } from "ufo"
 
 class ApiClient {
   private $api: any
@@ -17,8 +17,6 @@ class ApiClient {
     options.body ? (options.body = JSON.stringify(options.body)) : null
 
     const response = await this.$api.fetch(url, options)
-    console.log("🚀 ~ ApiClient ~ request ~ options:", options)
-    console.log(response);
 
     if (!response.ok) {
       throw new Error(response.statusText)

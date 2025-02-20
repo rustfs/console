@@ -28,9 +28,10 @@
             <!-- <n-form-item-grid-item :span="24" label="分组" path="groups">
               <n-select v-model:value="editForm.groups" filterable multiple :options="groupsList" />
             </n-form-item-grid-item>
+            -->
             <n-form-item-grid-item :span="24" label="策略" path="policies">
               <n-select v-model:value="editForm.policies" filterable multiple :options="policiesList" />
-            </n-form-item-grid-item> -->
+            </n-form-item-grid-item>
           </n-grid>
         </n-form>
       </n-card>
@@ -82,7 +83,7 @@ const rules: FormRules = {
 
 function openDialog() {
   // 获取策略列表
-  // getPoliciesList()
+  getPoliciesList()
   // 获取分组列表
   // getGroupsList()
   visible.value = true
@@ -126,16 +127,16 @@ function submitForm(e: MouseEvent) {
 }
 
 // 获取策略列表
-const policiesList = ref([])
+const policiesList = ref<any[]>([])
+
 const getPoliciesList = async () => {
   const res = await listPolicies()
-  policiesList.value =
-    res.policies.map((item: any) => {
-      return {
-        label: item.name,
-        value: item.name,
-      }
-    }) || []
+  policiesList.value = Object.keys(res).map((key) => {
+    return {
+      label: key,
+      value: key,
+    }
+  })
 }
 
 // 获取用户组列表

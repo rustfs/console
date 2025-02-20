@@ -7,13 +7,13 @@
         </n-form-item>
         <n-space>
           <NFlex>
-            <NButton :disabled="true" secondary @click="deleteByList">
+            <NButton :disabled="!checkedKeys.length" secondary @click="deleteByList">
               <template #icon>
                 <Icon name="ri:delete-bin-5-line"></Icon>
               </template>
               删除选中项
             </NButton>
-            <NButton :disabled="true" secondary @click="addToGroup">
+            <NButton :disabled="!checkedKeys.length" secondary @click="addToGroup">
               <template #icon>
                 <Icon name="ri:group-2-fill"></Icon>
               </template>
@@ -47,7 +47,7 @@ import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButto
 import { Icon } from "#components"
 
 const { $api } = useNuxtApp()
-const { listUsers } = useUsers()
+const { listUsers, deleteUser } = useUsers()
 const dialog = useDialog()
 const message = useMessage()
 
@@ -164,9 +164,7 @@ function openEditItem(row: any) {
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
-    const res = await $api.delete("/", {
-      body: [row.accessKey],
-    })
+    const res = await deleteUser(row.accessKey)
     message.success("删除成功")
     getDataList()
   } catch (error) {
@@ -196,11 +194,15 @@ function deleteByList() {
         return
       }
       try {
-        const res = await $api.delete("/", {
-          body: checkedKeys.value,
+        // 循环遍历删除
+        checkedKeys.value.map(async (item) => {
+          const res = await deleteUser(item as string)
         })
         message.success("删除成功")
-        getDataList()
+        checkedKeys.value = []
+        nextTick(() => {
+          getDataList()
+        })
       } catch (error) {
         message.error("删除失败")
       }

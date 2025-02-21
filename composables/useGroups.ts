@@ -60,7 +60,7 @@ export const useGroups = () => {
   /**
    * #desc 修改用户组的成员
    * @param name
-   * @param data
+   * @param data  isRemove true 移除
    * @returns
    */
   const updateGroupMembers = async (data: any) => {

@@ -10,11 +10,18 @@ class ApiClient {
     this.config = options
   }
 
-  async request(url: string, options?: any) {
+  async request(url: string, options: any = {}) {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url
     options.headers = { ...this.config?.headers, ...options.headers }
     // 处理body的数据格式
     options.body ? (options.body = JSON.stringify(options.body)) : null
+    console.log("🚀 ~ ApiClient ~ request ~ options:", options)
+
+    if (options.params) {
+      const queryString = new URLSearchParams(options.params).toString()
+      url += `?${queryString}` // 拼接查询字符串到URL
+      delete options.params // 删除params，以免影响fetch的options
+    }
 
     const response = await this.$api.fetch(url, options)
 

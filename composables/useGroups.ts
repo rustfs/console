@@ -63,8 +63,8 @@ export const useGroups = () => {
    * @param data
    * @returns
    */
-  const updateGroupMembers = async (name: string, data: any) => {
-    return await $api.put(`/group/update-group-members`, data)
+  const updateGroupMembers = async (data: any) => {
+    return await $api.put(`/update-group-members`, data)
   }
 
   return {

@@ -7,12 +7,12 @@
         </n-form-item>
         <n-space>
           <NFlex>
-            <NButton :disabled="!checkedKeys.length" secondary @click="deleteByList">
+            <!-- <NButton :disabled="!checkedKeys.length" secondary @click="deleteByList">
               <template #icon>
                 <Icon name="ri:delete-bin-5-line"></Icon>
               </template>
               删除选中项
-            </NButton>
+            </NButton> -->
             <NButton :disabled="!checkedKeys.length" secondary @click="allocationPolicy">
               <template #icon>
                 <Icon name="ri:group-2-fill"></Icon>
@@ -173,7 +173,12 @@ function openEditItem(row: any) {
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
-    const res = await group.removeGroup(row.name)
+    const res = await group.updateGroupMembers({
+      group: row.name,
+      members: [],
+      isRemove: true,
+      groupStatus: "enabled",
+    })
     message.success("删除成功")
     getDataList()
   } catch (error) {

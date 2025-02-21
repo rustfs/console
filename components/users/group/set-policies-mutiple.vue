@@ -39,89 +39,98 @@
 </template>
 
 <script setup lang="ts">
-import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NSpace } from 'naive-ui';
-const { listPolicies, setPolicyMultiple } = usePolicies();
+import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NSpace } from "naive-ui"
+const { listPolicies, setUserOrGroupPolicy } = usePolicies()
 
 const props = defineProps({
   checkedKeys: {
     type: Array,
     required: true,
   },
-});
-const messge = useMessage();
+})
+const messge = useMessage()
 
-const visible = ref(false);
+const visible = ref(false)
 async function openDialog() {
-  visible.value = true;
+  visible.value = true
 }
 
 function closeModal() {
-  visible.value = false;
+  visible.value = false
 }
 
 defineExpose({
   openDialog,
-});
+})
 
 const searchForm = reactive({
-  name: '',
-});
+  name: "",
+})
 interface RowData {
-  name: string;
+  name: string
 }
 
 const columns: DataTableColumns<RowData> = [
   {
-    type: 'selection',
+    type: "selection",
   },
   {
-    title: '策略',
-    align: 'left',
-    key: 'name',
+    title: "策略",
+    align: "left",
+    key: "name",
     filter(value, row) {
-      return !!row.name.includes(value.toString());
+      return !!row.name.includes(value.toString())
     },
   },
-];
+]
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>();
+const tableRef = ref<DataTableInst>()
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
       name: [value],
-    });
+    })
 }
-const listData = ref([]);
+const listData = ref<any[]>([])
 const getPoliciesList = async () => {
-  const res = await listPolicies();
-  listData.value = res.policies || [];
-};
-getPoliciesList();
+  const res = await listPolicies()
+  listData.value = Object.keys(res).map((key) => {
+    return {
+      name: key,
+      content: res[key],
+    }
+  })
+}
+getPoliciesList()
 
 /********************编辑****************/
 function rowKey(row: any): string {
-  return row.name;
+  return row.name
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([]);
+const checkedKeys = ref<DataTableRowKey[]>([])
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys;
-  return checkedKeys;
+  checkedKeys.value = keys
+  return checkedKeys
 }
 
 const changePolicies = async () => {
   try {
-    await setPolicyMultiple({
-      groups: props.checkedKeys,
-      name: checkedKeys.value,
-    });
-    visible.value = false;
-    messge.success('修改成功');
+    props.checkedKeys.map((item) => {
+      setUserOrGroupPolicy({
+        policyName: checkedKeys.value,
+        userOrGroup: item,
+        isGroup: true,
+      })
+    })
+
+    visible.value = false
+    messge.success("修改成功")
   } catch {
-    messge.error('修改失败');
+    messge.error("修改失败")
   }
-};
+}
 </script>
 
 <style lang="scss" scoped></style>

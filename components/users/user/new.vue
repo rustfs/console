@@ -25,10 +25,10 @@
             <n-form-item-grid-item :span="24" label="秘钥" path="secretKey">
               <n-input v-model:value="editForm.secretKey" type="password" />
             </n-form-item-grid-item>
-            <!-- <n-form-item-grid-item :span="24" label="分组" path="groups">
+            <n-form-item-grid-item :span="24" label="分组" path="groups">
               <n-select v-model:value="editForm.groups" filterable multiple :options="groupsList" />
             </n-form-item-grid-item>
-            -->
+
             <n-form-item-grid-item :span="24" label="策略" path="policies">
               <n-select v-model:value="editForm.policies" filterable multiple :options="policiesList" />
             </n-form-item-grid-item>
@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import { type FormRules } from "naive-ui"
-const { listPolicies } = usePolicies()
+const { listPolicies, setUserOrGroupPolicy } = usePolicies()
 const { listGroup } = useGroups()
 const message = useMessage()
 const { createUser } = useUsers()
@@ -85,7 +85,7 @@ function openDialog() {
   // 获取策略列表
   getPoliciesList()
   // 获取分组列表
-  // getGroupsList()
+  getGroupsList()
   visible.value = true
 }
 
@@ -114,9 +114,18 @@ function submitForm(e: MouseEvent) {
       const res = await createUser({
         accessKey: editForm.accessKey,
         secretKey: editForm.secretKey,
-        policy: "",
         status: "enabled",
       })
+
+      // 添加完成之后设置policy
+      setUserOrGroupPolicy({
+        policyName: editForm.policies,
+        userOrGroup: editForm.accessKey,
+        isGroup: false,
+      })
+
+      // 添加完成之后设置Group
+
       message.success("添加成功")
       emit("search")
       closeModal()

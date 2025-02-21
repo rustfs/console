@@ -18,7 +18,7 @@ export const useUsers = () => {
   }
 
   const getUser = async (name: string) => {
-    return await $api.get(`/user-info/${encodeURIComponent(name)}`)
+    return await $api.get(`/user-info?accessKey=${encodeURIComponent(name)}`)
   }
 
   const updateUser = async (name: string, data: any) => {

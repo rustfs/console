@@ -1,68 +1,65 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref } from "vue"
 
 interface Props {
-  visible: boolean;
+  visible: boolean
 }
-const { visible } = defineProps<Props>();
-const message = useMessage();
-const { $api } = useNuxtApp();
-const group = useGroups();
-const user = useUsers();
+const { visible } = defineProps<Props>()
+const message = useMessage()
+const { $api } = useNuxtApp()
+const group = useGroups()
+const user = useUsers()
 
-const emit = defineEmits<Emits>();
+const emit = defineEmits<Emits>()
 const defaultFormModal = {
-  group: '',
+  group: "",
   members: [],
-};
-const formModel = ref({ ...defaultFormModal });
+}
+const formModel = ref({ ...defaultFormModal })
 
 interface Emits {
-  (e: 'update:visible', visible: boolean): void;
-  (e: 'search'): void;
+  (e: "update:visible", visible: boolean): void
+  (e: "search"): void
 }
 
 // 用户列表
-const users = ref([]);
+const users = ref<any[]>([])
 const getUserList = async () => {
-  const res = await user.listUsers();
-  // const res = await $api.get('/users');
+  const res = await user.listUsers()
 
-  users.value = res.users.map((item: any) => {
-    return {
-      label: item.accessKey,
-      value: item.accessKey,
-    };
-  });
-};
-getUserList();
+  users.value = Object.entries(res).map(([username, info]) => ({
+    label: username, // 添加用户名
+    value: username, // 添加用户名
+  }))
+}
+getUserList()
 
 const modalVisible = computed({
   get() {
-    return visible;
+    return visible
   },
   set(visible) {
-    closeModal(visible);
+    closeModal(visible)
   },
-});
+})
 function closeModal(visible = false) {
-  formModel.value = { ...defaultFormModal };
-  emit('update:visible', visible);
+  formModel.value = { ...defaultFormModal }
+  emit("update:visible", visible)
 }
 
 async function submitForm() {
-  if (formModel.value.group.trim() === '') {
-    message.error('请输入用户组名称');
-    return;
+  if (formModel.value.group.trim() === "") {
+    message.error("请输入用户组名称")
+    return
   }
   try {
-    const res = await group.createGroup({ ...formModel.value });
+    const res = await group.updateGroupMembers({ ...formModel.value, groupStatus: "enabled", isRemove: false })
 
-    message.success('添加成功');
-    closeModal();
-    emit('search');
+    message.success("添加成功")
+    closeModal()
+    emit("search")
   } catch (error) {
-    message.error('添加失败');
+    message.error("添加失败")
   }
 }
 </script>

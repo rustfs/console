@@ -1,13 +1,13 @@
 export const usePolicies = () => {
-  const { $api } = useNuxtApp();
+  const { $api } = useNuxtApp()
 
   /**
    * 获取策略列表
    * @returns
    */
   const listPolicies = async () => {
-    return await $api.get('/list-canned-policies');
-  };
+    return await $api.get("/list-canned-policies")
+  }
 
   /**
    * 添加策略
@@ -15,8 +15,8 @@ export const usePolicies = () => {
    * @returns
    */
   const addPolicy = async (data: any) => {
-    return await $api.post('/add-canned-policy', data);
-  };
+    return await $api.post("/add-canned-policy", data)
+  }
 
   /**
    * 获取策略详情
@@ -24,8 +24,8 @@ export const usePolicies = () => {
    * @returns
    */
   const getPolicy = async (policyName: string) => {
-    return await $api.get(`/info-canned-policy?name=${encodeURIComponent(policyName)}`);
-  };
+    return await $api.get(`/info-canned-policy?name=${encodeURIComponent(policyName)}`)
+  }
 
   /**
    * 获取策略用户列表
@@ -33,8 +33,8 @@ export const usePolicies = () => {
    * @returns
    */
   const listUsersForPolicy = async (policyName: string) => {
-    return await $api.get(`/policy/${encodeURIComponent(policyName)}/users`);
-  };
+    return await $api.get(`/policy/${encodeURIComponent(policyName)}/users`)
+  }
 
   /**
    * 获取策略组列表
@@ -42,8 +42,8 @@ export const usePolicies = () => {
    * @returns
    */
   const listGroupsForPolicy = async (policyName: string) => {
-    return await $api.get(`/groups`);
-  };
+    return await $api.get(`/groups`)
+  }
 
   /**
    * 删除策略
@@ -51,8 +51,8 @@ export const usePolicies = () => {
    * @returns
    */
   const removePolicy = async (policyName: string) => {
-    return await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(policyName)}`, {});
-  };
+    return await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(policyName)}`, {})
+  }
 
   /**
    * 批量设置策略
@@ -60,8 +60,17 @@ export const usePolicies = () => {
    * @returns
    */
   const setPolicyMultiple = async (data: any) => {
-    return await $api.put(`/set-policy-multi`, data);
-  };
+    return await $api.put(`/set-policy-multi`, data)
+  }
+
+  /**
+   * 设置用户或者用户组的策略
+   * @param data
+   * @returns
+   */
+  const setUserOrGroupPolicy = async (data: any) => {
+    return await $api.put(`/set-user-or-group-policy`, {}, { params: data })
+  }
 
   return {
     listPolicies,
@@ -71,5 +80,6 @@ export const usePolicies = () => {
     listUsersForPolicy,
     listGroupsForPolicy,
     setPolicyMultiple,
-  };
-};
+    setUserOrGroupPolicy,
+  }
+}

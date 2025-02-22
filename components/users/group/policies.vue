@@ -92,6 +92,7 @@ function filterName(value: string) {
     })
 }
 const listData = computed(() => {
+  if (!props.group?.policy) return []
   return (
     props.group?.policy?.split(',').map((item: string) => {
       return {
@@ -124,7 +125,7 @@ const name = ref(props.group?.policy?.split(',') || [])
 const changePolicies = async () => {
   try {
     await setUserOrGroupPolicy({
-      policyName: name.value,
+      policyName: name.value || '',
       userOrGroup: encodeURIComponent(props.group.name),
       isGroup: true
     })

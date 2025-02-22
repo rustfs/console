@@ -121,7 +121,8 @@ const getPoliciesList = async () => {
 }
 getPoliciesList()
 
-const name = ref(props.group?.policy?.split(',') || [])
+// const name = ref(props.group?.policy?.split(',') || [])
+const name = ref(props.group?.policy ? props.group?.policy?.split(',') : [])
 const changePolicies = async () => {
   try {
     await setUserOrGroupPolicy({

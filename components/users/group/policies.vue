@@ -1,7 +1,11 @@
 <template>
   <div>
     <n-card>
-      <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
+      <n-form
+        ref="formRef"
+        :model="searchForm"
+        label-placement="left"
+        :show-feedback="false">
         <n-flex justify="space-between" v-if="!editStatus">
           <n-form-item class="!w-64" label="" path="name">
             <n-input placeholder="搜索策略" @input="filterName" />
@@ -20,7 +24,11 @@
         </n-flex>
         <n-flex justify="space-between" v-else>
           <n-form-item class="!w-96" label="选择用户组的策略" path="policies">
-            <n-select v-model:value="name" filterable multiple :options="polices" />
+            <n-select
+              v-model:value="name"
+              filterable
+              multiple
+              :options="polices" />
           </n-form-item>
           <n-space>
             <NFlex>
@@ -41,22 +49,27 @@
 </template>
 
 <script setup lang="ts">
-import { type DataTableColumns, type DataTableInst, NButton, NSpace } from 'naive-ui';
-const { listPolicies, setPolicyMultiple } = usePolicies();
+import {
+  type DataTableColumns,
+  type DataTableInst,
+  NButton,
+  NSpace
+} from 'naive-ui'
+const { listPolicies, setUserOrGroupPolicy } = usePolicies()
 
-const messge = useMessage();
+const messge = useMessage()
 const props = defineProps({
   group: {
     type: Object,
-    required: true,
-  },
-});
+    required: true
+  }
+})
 
 const searchForm = reactive({
-  name: '',
-});
+  name: ''
+})
 interface RowData {
-  name: string;
+  name: string
 }
 
 const columns: DataTableColumns<RowData> = [
@@ -65,62 +78,64 @@ const columns: DataTableColumns<RowData> = [
     align: 'left',
     key: 'name',
     filter(value, row) {
-      return !!row.name.includes(value.toString());
-    },
-  },
-];
+      return !!row.name.includes(value.toString())
+    }
+  }
+]
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>();
+const tableRef = ref<DataTableInst>()
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
-      name: [value],
-    });
+      name: [value]
+    })
 }
 const listData = computed(() => {
   return (
     props.group?.policy?.split(',').map((item: string) => {
       return {
-        name: item,
-      };
+        name: item
+      }
     }) || []
-  );
-});
+  )
+})
 
 /********************编辑****************/
-const editStatus = ref(false);
+const editStatus = ref(false)
 // 策略列表
-const polices = ref([]);
+const polices = ref<any[]>([])
 
 const emit = defineEmits<{
-  (e: 'search'): void;
-}>();
+  (e: 'search'): void
+}>()
 const getPoliciesList = async () => {
-  const res = await listPolicies();
-  polices.value = res.policies.map((item: any) => {
+  const res = await listPolicies()
+  polices.value = Object.keys(res).map((key) => {
     return {
-      label: item.name,
-      value: item.name,
-    };
-  });
-};
-getPoliciesList();
+      label: key,
+      value: key
+    }
+  })
+}
+getPoliciesList()
 
-const name = ref(props.group?.policy?.split(',') || []);
+const name = ref(props.group?.policy?.split(',') || [])
 const changePolicies = async () => {
   try {
-    await setPolicyMultiple({
-      groups: [encodeURIComponent(props.group.name)],
-      name: name.value,
-    });
-    messge.success('修改成功');
-    editStatus.value = false;
-    emit('search');
+    await setUserOrGroupPolicy({
+      policyName: name.value,
+      userOrGroup: encodeURIComponent(props.group.name),
+      isGroup: true
+    })
+
+    messge.success('修改成功')
+    editStatus.value = false
+    emit('search')
   } catch {
-    messge.error('修改失败');
+    messge.error('修改失败')
   }
-};
+}
 </script>
 
 <style lang="scss" scoped></style>

@@ -1,7 +1,12 @@
 <template>
   <div>
     <n-card>
-      <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false" v-if="!editStatus">
+      <n-form
+        ref="formRef"
+        :model="searchForm"
+        label-placement="left"
+        :show-feedback="false"
+        v-if="!editStatus">
         <n-flex justify="space-between">
           <n-form-item class="!w-64" label="" path="name">
             <n-input placeholder="搜索账号" @input="filterName" />
@@ -9,12 +14,12 @@
 
           <n-space>
             <NFlex>
-              <NButton secondary @click="deleteByList" :disabled="checkedKeys.length == 0">
+              <!-- <NButton secondary @click="deleteByList" :disabled="checkedKeys.length == 0">
                 <template #icon>
                   <Icon name="ri:delete-bin-5-line"></Icon>
                 </template>
                 删除所选
-              </NButton>
+              </NButton> -->
               <NButton secondary @click="addItem">
                 <template #icon>
                   <Icon name="ri:add-line"></Icon>
@@ -25,13 +30,29 @@
           </n-space>
         </n-flex>
       </n-form>
-      <n-form v-else label-placement="left" :model="formModel" label-align="right" :label-width="130">
+      <n-form
+        v-else
+        label-placement="left"
+        :model="formModel"
+        label-align="right"
+        :label-width="130">
         <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item :span="24" label="Access Key" path="accesskey" v-if="editType == 'add'">
+          <n-form-item-grid-item
+            :span="24"
+            label="Access Key"
+            path="accesskey"
+            v-if="editType == 'add'">
             <n-input v-model:value="formModel.accesskey" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="Secret Key" path="secretkey" v-if="editType == 'add'">
-            <n-input v-model:value="formModel.secretkey" show-password-on="mousedown" type="password" />
+          <n-form-item-grid-item
+            :span="24"
+            label="Secret Key"
+            path="secretkey"
+            v-if="editType == 'add'">
+            <n-input
+              v-model:value="formModel.secretkey"
+              show-password-on="mousedown"
+              type="password" />
           </n-form-item-grid-item>
           <!-- TODO: 时间格式有问题 -->
           <n-form-item-grid-item :span="24" label="有效期" path="expiry">
@@ -46,20 +67,39 @@
           <n-form-item-grid-item :span="24" label="名称" path="name">
             <n-input v-model:value="formModel.name" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="描述" path="comment" v-if="editType == 'add'">
+          <n-form-item-grid-item
+            :span="24"
+            label="描述"
+            path="comment"
+            v-if="editType == 'add'">
             <n-input v-model:value="formModel.comment" />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" label="注释" path="description">
             <n-input v-model:value="formModel.description" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="限制超出用户策略" path="flag" v-if="editType == 'add'">
+          <n-form-item-grid-item
+            :span="24"
+            label="限制超出用户策略"
+            path="flag"
+            v-if="editType == 'add'">
             <n-switch v-model:value="formModel.flag" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item v-if="formModel.flag || editType == 'edit'" :span="24" label="策略详情" path="policy">
+          <n-form-item-grid-item
+            v-if="formModel.flag || editType == 'edit'"
+            :span="24"
+            label="策略详情"
+            path="policy">
             <json-editor v-model="formModel.policy" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="状态" v-if="editType == 'edit'" path="status">
-            <n-switch v-model:value="formModel.status" checked-value="on" unchecked-value="off" />
+          <n-form-item-grid-item
+            :span="24"
+            label="状态"
+            v-if="editType == 'edit'"
+            path="status">
+            <n-switch
+              v-model:value="formModel.status"
+              checked-value="on"
+              unchecked-value="off" />
           </n-form-item-grid-item>
         </n-grid>
         <n-space>
@@ -90,69 +130,74 @@ import {
   type DataTableRowKey,
   NButton,
   NPopconfirm,
-  NSpace,
-} from 'naive-ui';
-import { Icon } from '#components';
+  NSpace
+} from 'naive-ui'
+import { Icon } from '#components'
 // 随机字符串函数
-import { makeRandomString } from '~/utils/functions';
-const { listAllUserServiceAccounts, createServiceAccountCredentials } = useUsers();
-const { getServiceAccount, updateServiceAccount, deleteServiceAccount, deleteMultipleServiceAccounts } =
-  useAccessKeys();
+import { makeRandomString } from '~/utils/functions'
+const { listUserServiceAccounts, createServiceAccount } = useAccessKeys()
 
-const dialog = useDialog();
-const message = useMessage();
+const {
+  getServiceAccount,
+  updateServiceAccount,
+  deleteServiceAccount
+  // deleteMultipleServiceAccounts
+} = useAccessKeys()
+
+const dialog = useDialog()
+const message = useMessage()
 const props = defineProps({
   user: {
     type: Object,
-    required: true,
-  },
-});
+    required: true
+  }
+})
 
 const searchForm = reactive({
-  name: '',
-});
+  name: ''
+})
 interface RowData {
-  accessKey: string;
-  expiration: string;
-  name: string;
-  description: string;
-  accountStatus: string;
-  actions: string;
+  accessKey: string
+  expiration: string
+  name: string
+  description: string
+  accountStatus: string
+  actions: string
 }
 const columns: DataTableColumns<RowData> = [
   {
-    type: 'selection',
+    type: 'selection'
   },
   {
     title: 'Access Key',
     align: 'center',
     key: 'accessKey',
     filter(value, row) {
-      return !!row.accessKey.includes(value.toString());
-    },
+      return !!row.accessKey.includes(value.toString())
+    }
   },
   {
     title: '有效期',
     align: 'center',
-    key: 'expiration',
+    key: 'expiration'
   },
   {
     title: '状态',
     align: 'center',
     key: 'accountStatus',
     render: (row: any) => {
-      return row.accountStatus === 'on' ? '可用' : '禁用';
-    },
+      return row.accountStatus === 'on' ? '可用' : '禁用'
+    }
   },
   {
     title: '名称',
     align: 'center',
-    key: 'name',
+    key: 'name'
   },
   {
     title: '描述',
     align: 'center',
-    key: 'description',
+    key: 'description'
   },
   {
     title: '操作',
@@ -163,7 +208,7 @@ const columns: DataTableColumns<RowData> = [
       return h(
         NSpace,
         {
-          justify: 'center',
+          justify: 'center'
         },
         {
           default: () => [
@@ -172,11 +217,11 @@ const columns: DataTableColumns<RowData> = [
               {
                 size: 'small',
                 secondary: true,
-                onClick: () => openEditItem(row),
+                onClick: () => openEditItem(row)
               },
               {
                 default: () => '',
-                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
+                icon: () => h(Icon, { name: 'ri:edit-2-line' })
               }
             ),
             h(
@@ -190,36 +235,36 @@ const columns: DataTableColumns<RowData> = [
                     { size: 'small', secondary: true },
                     {
                       default: () => '',
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' })
                     }
-                  ),
+                  )
               }
-            ),
-          ],
+            )
+          ]
         }
-      );
-    },
-  },
-];
+      )
+    }
+  }
+]
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>();
+const tableRef = ref<DataTableInst>()
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
-      name: [value],
-    });
+      name: [value]
+    })
 }
-const listData = ref([]);
+const listData = ref([])
 const getUserList = async () => {
-  const res = await listAllUserServiceAccounts(props.user.accessKey);
-  listData.value = res;
-};
-getUserList();
+  const res = await listUserServiceAccounts(props.user.accessKey)
+  listData.value = res
+}
+getUserList()
 
 /** ***********************************编辑、新增 */
-const editStatus = ref(false);
-const editType = ref('add');
+const editStatus = ref(false)
+const editType = ref('add')
 
 const formModel = ref({
   accesskey: makeRandomString(20),
@@ -230,13 +275,13 @@ const formModel = ref({
   expiry: null,
   policy: '',
   flag: false,
-  status: 'on',
-});
+  status: 'on'
+})
 
 // 新增
 function addItem() {
-  editType.value = 'add';
-  editStatus.value = true;
+  editType.value = 'add'
+  editStatus.value = true
   formModel.value = {
     accesskey: makeRandomString(20),
     secretkey: makeRandomString(40),
@@ -246,25 +291,25 @@ function addItem() {
     expiry: null,
     policy: '',
     flag: false,
-    status: 'on',
-  };
+    status: 'on'
+  }
 }
 // 编辑
 async function openEditItem(row: any) {
-  editType.value = 'edit';
-  editStatus.value = true;
-  const res = await getServiceAccount(row.accessKey);
+  editType.value = 'edit'
+  editStatus.value = true
+  const res = await getServiceAccount(row.accessKey)
   formModel.value = {
-    ...res,
-  };
-  formModel.value.accesskey = row.accessKey;
-  formModel.value.expiry = res.expiration;
-  formModel.value.status = res.accountStatus;
+    ...res
+  }
+  formModel.value.accesskey = row.accessKey
+  formModel.value.expiry = res.expiration
+  formModel.value.status = res.accountStatus
 }
 
 function cancelAdd() {
-  editStatus.value = false;
-  editType.value === 'add';
+  editStatus.value = false
+  editType.value === 'add'
   formModel.value = {
     accesskey: makeRandomString(20),
     secretkey: makeRandomString(40),
@@ -274,71 +319,72 @@ function cancelAdd() {
     expiry: null,
     policy: '',
     flag: false,
-    status: 'on',
-  };
+    status: 'on'
+  }
 }
 
 interface Emits {
-  (e: 'search'): void;
-  (e: 'notice', data: object): void;
+  (e: 'search'): void
+  (e: 'notice', data: object): void
 }
-const emit = defineEmits<Emits>();
+const emit = defineEmits<Emits>()
 async function submitForm() {
   if (editType.value === 'add') {
     try {
-      console.log(formModel.value);
-      const res = await createServiceAccountCredentials(props.user.accessKey, {
+      console.log(formModel.value)
+      const res = await createServiceAccount({
         ...formModel.value,
-        expiry: new Date(formModel.value.expiry || 0).toISOString() || '',
-      });
+        targetUser: props.user.accessKey,
+        expiry: new Date(formModel.value.expiry || 0).toISOString() || ''
+      })
 
-      message.success('添加成功');
-      cancelAdd();
-      emit('notice', res);
-      getUserList();
+      message.success('添加成功')
+      cancelAdd()
+      emit('notice', res)
+      getUserList()
     } catch (error) {
-      console.log(error);
-      message.error('添加失败');
+      console.log(error)
+      message.error('添加失败')
     }
   } else {
     try {
       const res = await updateServiceAccount(formModel.value.accesskey, {
         ...formModel.value,
         policy: formModel.value.policy || '{}',
-        expiry: new Date(formModel.value.expiry || 0).toISOString(),
-      });
-      message.success('修改成功');
-      cancelAdd();
-      getUserList();
+        expiry: new Date(formModel.value.expiry || 0).toISOString()
+      })
+      message.success('修改成功')
+      cancelAdd()
+      getUserList()
     } catch (error) {
-      message.error('修改失败');
+      message.error('修改失败')
     }
   }
 }
 function dateDisabled(ts: number) {
-  const date = new Date(ts);
-  return date < new Date();
+  const date = new Date(ts)
+  return date < new Date()
 }
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
-    const res = await deleteServiceAccount(row.accessKey);
-    message.success('删除成功');
-    getUserList();
+    const res = await deleteServiceAccount(row.accessKey)
+    message.success('删除成功')
+    getUserList()
   } catch (error) {
-    message.error('删除失败');
+    message.error('删除失败')
   }
 }
 
 /** ************************************批量删除 */
 function rowKey(row: any): string {
-  return row.accessKey;
+  return row.accessKey
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([]);
+const checkedKeys = ref<DataTableRowKey[]>([])
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys;
-  return checkedKeys;
+  checkedKeys.value = keys
+  return checkedKeys
 }
 function deleteByList() {
   dialog.error({
@@ -348,21 +394,21 @@ function deleteByList() {
     negativeText: '取消',
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error('请至少选择一项');
-        return;
+        message.error('请至少选择一项')
+        return
       }
       try {
-        const res = await deleteMultipleServiceAccounts({
-          body: checkedKeys.value,
-        });
-        checkedKeys.value = [];
-        getUserList();
-        message.success('删除成功');
+        // const res = await deleteMultipleServiceAccounts({
+        //   body: checkedKeys.value
+        // })
+        checkedKeys.value = []
+        getUserList()
+        message.success('删除成功')
       } catch (error) {
-        message.error('删除失败');
+        message.error('删除失败')
       }
-    },
-  });
+    }
+  })
 }
 </script>
 

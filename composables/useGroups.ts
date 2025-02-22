@@ -54,7 +54,12 @@ export const useGroups = () => {
    * @returns
    */
   const updateGroupStatus = async (name: string, data: any) => {
-    return await $api.put(`/group/set-group-status`, data)
+    return await $api.put(
+      `/set-group-status?group=${encodeURIComponent(name)}&status=${
+        data.status
+      }`,
+      data
+    )
   }
 
   /**

@@ -1,4 +1,4 @@
-import { AccessKeys } from "./../.nuxt/components.d"
+import { AccessKeys } from './../.nuxt/components.d'
 export const useUsers = () => {
   const { $api } = useNuxtApp()
 
@@ -8,13 +8,16 @@ export const useUsers = () => {
    * @returns
    */
   const listUsers = async () => {
-    return await $api.get("/list-users")
+    return await $api.get('/list-users')
   }
 
   const createUser = async (data: any) => {
     const { accessKey } = data
     delete data.accessKey
-    return await $api.put("/add-user" + `?accessKey=${encodeURIComponent(accessKey)}`, data)
+    return await $api.put(
+      '/add-user' + `?accessKey=${encodeURIComponent(accessKey)}`,
+      data
+    )
   }
 
   const getUser = async (name: string) => {
@@ -25,8 +28,26 @@ export const useUsers = () => {
     return await $api.put(`/user/${encodeURIComponent(name)}`, data)
   }
 
+  /**
+   * 修改用户状态
+   * @param name
+   * @param data
+   * @returns
+   */
+  const changeUserStatus = async (name: string, data: any) => {
+    return await $api.put(
+      `/set-user-status?accessKey=${encodeURIComponent(name)}&status=${
+        data.status
+      }`,
+      data
+    )
+  }
+
   const deleteUser = async (name: string) => {
-    return await $api.delete(`/remove-user?accessKey=${encodeURIComponent(name)}`, {})
+    return await $api.delete(
+      `/remove-user?accessKey=${encodeURIComponent(name)}`,
+      {}
+    )
   }
 
   const updateUserGroups = async (name: string, data: any) => {
@@ -57,11 +78,17 @@ export const useUsers = () => {
   }
 
   const createAUserServiceAccount = async (name: string, data: any) => {
-    return await $api.post(`/user/${encodeURIComponent(name)}/service-accounts`, data)
+    return await $api.post(
+      `/user/${encodeURIComponent(name)}/service-accounts`,
+      data
+    )
   }
 
   const createServiceAccountCredentials = async (name: string, data: any) => {
-    return await $api.post(`/user/${encodeURIComponent(name)}/service-account-credentials`, data)
+    return await $api.post(
+      `/user/${encodeURIComponent(name)}/service-account-credentials`,
+      data
+    )
   }
 
   return {
@@ -69,6 +96,7 @@ export const useUsers = () => {
     createUser,
     getUser,
     deleteUser,
+    changeUserStatus,
     updateUser,
     updateUserGroups,
     getUserPolicy,
@@ -76,6 +104,6 @@ export const useUsers = () => {
     getSaUserPolicy,
     listAllUserServiceAccounts,
     createAUserServiceAccount,
-    createServiceAccountCredentials,
+    createServiceAccountCredentials
   }
 }

@@ -8,15 +8,19 @@
       class="max-w-screen-md"
       :segmented="{
         content: true,
-        action: true,
+        action: true
       }">
       <n-card>
         <n-tabs type="card">
           <n-tab-pane name="groups" tab="分组">
-            <users-user-groups :user="user" @search="getUserData(user.accessKey)"></users-user-groups>
+            <users-user-groups
+              :user="user"
+              @search="getUserData(user.accessKey)"></users-user-groups>
           </n-tab-pane>
           <n-tab-pane name="policy" tab="策略">
-            <users-user-policies :user="user" @search="getUserData(user.accessKey)"></users-user-policies>
+            <users-user-policies
+              :user="user"
+              @search="getUserData(user.accessKey)"></users-user-policies>
           </n-tab-pane>
           <n-tab-pane name="accesskey" tab="账号">
             <users-user-account
@@ -42,45 +46,51 @@
 
 <script setup lang="ts">
 // import { userPolicies, userAccount, userGroups } from './components';
-const visible = ref(false);
-const { getUser, updateUser } = useUsers();
+const visible = ref(false)
+const { getUser, updateUser, changeUserStatus } = useUsers()
 interface UserInfo {
-  accessKey: string;
-  memberOf: string[];
-  policy: string[];
-  status: string;
+  accessKey: string
+  memberOf: string[]
+  policy: string[]
+  status: string
 }
 
 const user = ref<UserInfo>({
   accessKey: '',
   memberOf: [],
   policy: [],
-  status: 'enabled',
-});
+  status: 'enabled'
+})
 
 // 用户的状态发生变化
 const handerUserStatusChange = async (val: string) => {
-  await updateUser(user.value.accessKey, { ...user.value, groups: user.value.memberOf, status: val });
-  await getUserData(user.value.accessKey);
-};
+  await changeUserStatus(user.value.accessKey, {
+    accessKey: user.value.accessKey,
+    status: val
+  })
+  await getUserData(user.value.accessKey)
+}
 async function openDialog(row: any) {
-  await getUserData(row.accessKey);
-  visible.value = true;
+  await getUserData(row.accessKey)
+  visible.value = true
 }
 
 // 获取用户信息
 async function getUserData(name: string) {
-  user.value = await getUser(name);
+  setTimeout(async () => {
+    user.value = await getUser(name)
+    user.value.accessKey = name
+  }, 200)
 }
 // 添加之后的反馈弹窗
-const noticeRef = ref();
+const noticeRef = ref()
 function noticeDialog(data: any) {
-  noticeRef.value.openDialog(data);
+  noticeRef.value.openDialog(data)
 }
 
 defineExpose({
-  openDialog,
-});
+  openDialog
+})
 </script>
 
 <style lang="scss" scoped></style>

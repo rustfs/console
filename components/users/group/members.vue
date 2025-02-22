@@ -123,6 +123,16 @@ getUserList()
 const members = ref(props.group.members)
 const changeMebers = async () => {
   try {
+    // 删除不存在的
+
+    await updateGroupMembers({
+      group: props.group.name,
+      members: props.group.members.filter((item: string) => {
+        return !members.value.includes(item)
+      }),
+      isRemove: true,
+      groupStatus: 'enabled'
+    })
     // 修改组的成员
     await updateGroupMembers({
       group: props.group.name,

@@ -8,15 +8,19 @@
       class="max-w-screen-md"
       :segmented="{
         content: true,
-        action: true,
+        action: true
       }">
       <n-card>
         <n-tabs type="card">
           <n-tab-pane name="users" tab="成员">
-            <users-user-group-members :group="group" @search="getGroupData(group.name)"></users-user-group-members>
+            <users-group-members
+              :group="group"
+              @search="getGroupData(group.name)"></users-group-members>
           </n-tab-pane>
           <n-tab-pane name="policy" tab="策略">
-            <users-user-group-policies :group="group" @search="getGroupData(group.name)"></users-user-group-policies>
+            <users-group-policies
+              :group="group"
+              @search="getGroupData(group.name)"></users-group-policies>
           </n-tab-pane>
           <template #suffix>
             状态
@@ -35,39 +39,39 @@
 
 <script setup lang="ts">
 // import { groupMembers, groupPolicies } from './';
-const visible = ref(false);
-const { getGroup, updateGroup } = useGroups();
+const visible = ref(false)
+const { getGroup, updateGroup } = useGroups()
 
 interface GroupInfo {
-  name: string;
-  members: string[];
-  status: string;
+  name: string
+  members: string[]
+  status: string
 }
 
 const group = ref<GroupInfo>({
   name: '',
   members: [],
-  status: 'enabled',
-});
+  status: 'enabled'
+})
 
 // 用户组的状态发生变化
 const handerGroupStatusChange = async (val: string) => {
-  await updateGroup(group.value.name, { ...group.value, status: val });
-  await getGroupData(group.value.name);
-};
+  await updateGroup(group.value.name, { ...group.value, status: val })
+  await getGroupData(group.value.name)
+}
 async function openDialog(row: any) {
-  await getGroupData(row.name);
-  visible.value = true;
+  getGroupData(row.name)
+  visible.value = true
 }
 
 // 获取用户信息
 async function getGroupData(name: string) {
-  group.value = await getGroup(name);
+  group.value = await getGroup(name)
 }
 
 defineExpose({
-  openDialog,
-});
+  openDialog
+})
 </script>
 
 <style lang="scss" scoped></style>

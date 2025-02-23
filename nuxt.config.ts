@@ -17,10 +17,8 @@ export default defineNuxtConfig({
     'nuxtjs-naive-ui',
     '@vueuse/nuxt'
   ],
-  plugins: [
-    '~/plugins/api.ts',
-    '~/plugins/s3.ts',
-  ],
+  // Nuxt automatically reads the files in the plugins/ directory
+  plugins: [],
   runtimeConfig: {
     public: {
       session: {
@@ -28,15 +26,28 @@ export default defineNuxtConfig({
         durationSeconds: Number(process.env.SESSION_DURATION_SECONDS) || 3600 * 12
       },
 
-      // API 请求基础 URL
+      // 下面部分修改的时候记得同步修改 public/config.json
+      // admin API 请求基础 URL
       api: {
         baseURL: process.env.API_BASE_URL || ''
       },
 
-      // 临时配置，后续登录后从本地存储中获取
+      // 对象存储配置
       s3: {
         region: process.env.S3_REGION || 'us-east-1',
         endpoint: process.env.S3_ENDPOINT || process.env.API_BASE_URL || ''
+      },
+
+      // 版本信息
+      release: {
+        version: process.env.VERSION || 'dev-0.0.0',
+        date: process.env.RELEASE_DATE || new Date().toISOString().slice(0, 10)
+      },
+
+      // 授权信息
+      license: {
+        "name": "Apache-2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0"
       }
     }
   },

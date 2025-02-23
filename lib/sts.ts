@@ -1,5 +1,6 @@
 import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@aws-sdk/types";
+import type { SiteConfig } from "~/types/config";
 
 /**
  * 获取 STS 临时凭证并返回
@@ -9,13 +10,14 @@ import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@aws-
  * @returns {Promise<Credentials>}
  */
 export async function getStsToken(credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider, roleArn: string) {
-  const runtimeConfig = useRuntimeConfig().public;
-  console.log('S3 runtimeConfig', runtimeConfig);
+  const siteConfig = useNuxtApp().$siteConfig as SiteConfig;
+
+  console.log('S3 siteConfig', siteConfig);
 
   // 1. 创建 STS 客户端
   const stsClient = new STSClient({
-    endpoint: runtimeConfig.s3.endpoint,
-    region: runtimeConfig.s3.region || 'us-east-1',
+    endpoint: siteConfig.s3.endpoint,
+    region: siteConfig.s3.region || 'us-east-1',
     credentials: credentials
   });
 
@@ -24,7 +26,7 @@ export async function getStsToken(credentials: AwsCredentialIdentity | AwsCreden
   const command = new AssumeRoleCommand({
     RoleArn: roleArn,
     RoleSessionName: "console", // 自定义角色会话名称
-    DurationSeconds: runtimeConfig.session.durationSeconds || 3600 * 12, // 临时凭证有效期
+    DurationSeconds: siteConfig.session?.durationSeconds || 3600 * 12, // 临时凭证有效期
   });
 
   const response = await stsClient.send(command);

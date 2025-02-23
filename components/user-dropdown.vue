@@ -1,7 +1,7 @@
 <template>
-  <n-dropdown :options="options" placement="right-end">
+  <n-dropdown :options="options" placement="right-end" @select="handleDropdownClick">
     <div class="flex items-center border-t dark:border-neutral-800 py-4">
-      <n-avatar round size="small" src="https://07akioni.oss-cn-beijing.aliyuncs.com/07akioni.jpeg" />
+      <n-avatar round size="small" src="/img/rustfs.png" />
       <template v-if="!isCollapsed">
         <span class="px-2">RustFS</span>
         <Icon name="ri:more-2-line" class="ml-auto text-xl" />
@@ -13,6 +13,21 @@
 <script lang="ts" setup>
 import { Icon } from '#components'
 import { defineProps, withDefaults } from 'vue'
+
+const { logout } = useAuth()
+const router = useRouter()
+
+
+const handleLogout = async () => {
+  await logout()
+  router.push('/auth/login')
+}
+
+const handleDropdownClick = (key: string) => {
+  if (key === 'logout') {
+    handleLogout()
+  }
+}
 
 const props = withDefaults(defineProps<{
   isCollapsed?: boolean
@@ -29,7 +44,7 @@ const options = [
   {
     label: '退出登录',
     key: 'logout',
-    icon: () => icon('ri:logout-box-r-line')
+    icon: () => icon('ri:logout-box-r-line'),
   },
 ]
 </script>

@@ -90,21 +90,11 @@ jobs:
             ./artifacts/**:/console/
       - name: Upload release asset for `latest`
         if: ${{ github.event_name == 'release' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./artifacts/latest.tar.gz
-          asset_name: console.latest.tar.gz
-          asset_content_type: application/gzip
+          files: ./artifacts/latest.tar.gz
       - name: Upload release asset `versioned`
         if: ${{ github.event_name == 'release' }}
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./artifacts/${{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}.tar.gz
-          asset_name: console.${{ github.event.release.tag_name }}.tar.gz
-          asset_content_type: application/gzip
+          files: ./artifacts/${{ github.event.release.tag_name }}/${{ github.event.release.tag_name }}.tar.gz

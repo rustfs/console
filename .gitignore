@@ -27,3 +27,5 @@ logs
 !.env.example
 
 pages/test
+
+public/config.json

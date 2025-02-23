@@ -29,7 +29,7 @@
       </div>
       <n-data-table ref="tableRef" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pilicies" :pagination="false" :bordered="false" />
     </page-content>
-    <policies-form-item v-model:show="current" :policy="current" @saved="fetchPolicies" />
+    <policies-form-item v-model:show="showPolicyForm" :policy="current" @saved="fetchPolicies" />
   </div>
 </template>
 <script lang="ts" setup>
@@ -42,6 +42,12 @@ const message = useMessage();
 const pilicies = ref<any[]>([]);
 const tableRef = ref<DataTableInst>();
 const current = ref();
+const showPolicyForm = computed({
+  get: () => !!current.value,
+  set: (val) => {
+    if (!val) current.value = null;
+  }
+});
 
 const handleEdit = (item: any) => {
   current.value = item;

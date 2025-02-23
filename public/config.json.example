@@ -1,0 +1,17 @@
+{
+  "api": {
+    "baseURL": "http://localhost:9000/rustfs/admin/v3"
+  },
+  "s3": {
+    "endpoint": "http://localhost:9000",
+    "region": "us-east-1"
+  },
+  "release": {
+    "version": "v0.0.1",
+    "date": "2025-02-25"
+  },
+  "license": {
+    "name": "Apache-2.0",
+    "url": "https://www.apache.org/licenses/LICENSE-2.0"
+  }
+}

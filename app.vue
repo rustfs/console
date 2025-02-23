@@ -24,7 +24,7 @@ import {
 import { ref } from 'vue'
 import { themeOverrides } from '~/config/theme'
 
-const theme = ref<GlobalTheme | null>(darkTheme)
+const theme = ref<GlobalTheme>(darkTheme)
 const locale = ref<NLocale | null>(zhCN)
 const dateLocale = ref<NDateLocale | null>(dateZhCN)
 </script>

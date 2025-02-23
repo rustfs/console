@@ -1,6 +1,6 @@
 <template>
   <div>
-    <content>
+    <div>
       <page-header>
         <template #title>
           <div class="flex items-center gap-4">
@@ -13,7 +13,7 @@
         <object-list v-if="isObjectList" :bucket="bucketName" :path="key" />
         <object-view v-else :bucket="bucketName" :object-key="key" />
       </page-content>
-    </content>
+    </div>
     <footer />
   </div>
 </template>

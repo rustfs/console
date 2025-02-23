@@ -8,6 +8,8 @@ on:
   # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
+  release:
+    types: [published]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -68,6 +70,9 @@ jobs:
         run: |
           ls -al ./dist
           tar -cvzf console.latest.tar.gz -C ./dist .
+          if [ "${{ github.event_name }}" = "release" ]; then
+            tar -cvzf console.${{ github.event.release.tag_name }}.tar.gz -C ./dist .
+          fi
       - uses: actions/upload-artifact@v4
         name: Upload artifacts
         with:
@@ -81,3 +86,23 @@ jobs:
           bucket: rustfs-artifacts
           assets: |
             ./*.tar.gz:/console/
+      - name: Upload release asset `latest`
+        if: ${{ github.event_name == 'release' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./console.latest.tar.gz
+          asset_name: console.latest.tar.gz
+          asset_content_type: application/gzip
+      - name: Upload release asset `versioned`
+        if: ${{ github.event_name == 'release' }}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./console.${{ github.event.release.tag_name }}.tar.gz
+          asset_name: console.${{ github.event.release.tag_name }}.tar.gz
+          asset_content_type: application/gzip

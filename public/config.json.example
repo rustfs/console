@@ -1,14 +1,14 @@
 {
   "api": {
-    "baseURL": "http://localhost:9000/rustfs/admin/v3"
+    "baseURL": "<PROTOCOL>://<HOST>:<PORT>/rustfs/admin/v3"
   },
   "s3": {
-    "endpoint": "http://localhost:9000",
-    "region": "us-east-1"
+    "endpoint": "<PROTOCOL>://<HOST>:<PORT>",
+    "region": "<REGION>"
   },
   "release": {
-    "version": "v0.0.1",
-    "date": "2025-02-25"
+    "version": "<RELEASE_VERSION>",
+    "date": "<RELEASE_DATE>"
   },
   "license": {
     "name": "Apache-2.0",

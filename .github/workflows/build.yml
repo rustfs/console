@@ -65,9 +65,9 @@ jobs:
       - name: Static HTML export with Nuxt
         run: ${{ steps.detect-package-manager.outputs.manager }} run generate
       - name: Tar files
-        run:
-          - ls -al ./dist
-          - tar -cvzf console.latest.tar.gz -C ./dist .
+        run: |
+          ls -al ./dist
+          tar -cvzf console.latest.tar.gz -C ./dist .
       - uses: actions/upload-artifact@v4
         name: Upload artifacts
         with:

@@ -200,7 +200,7 @@ onMounted(() => {
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await listUserServiceAccounts('')
+    const res = await listUserServiceAccounts({})
     listData.value =
       res.accounts.map((item: string) => {
         return {

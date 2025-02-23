@@ -26,14 +26,14 @@
     "json-editor-vue": "^0.17.3",
     "lodash": "^4.17.21",
     "minio": "^8.0.2",
-    "nuxt": "^3.14.1592",
+    "nuxt": "^3.6.0",
     "nuxtjs-naive-ui": "^1.0.2",
     "pinia": "^2.3.0",
     "strip-json-comments": "^5.0.1",
     "ufo": "^1.5.4",
     "universal-cookie": "^7.2.2",
-    "vue": "latest",
-    "vue-router": "latest"
+    "vue": "^3.5.11",
+    "vue-router": "^4.0.12"
   },
   "devDependencies": {
     "@iconify-json/ri": "^1.2.3",

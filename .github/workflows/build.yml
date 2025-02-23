@@ -94,7 +94,7 @@ jobs:
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v2
         with:
-          files: ./artifacts/latest.tar.gz
+          files: ./artifacts/rustfs-console-latest.tar.gz
       - name: Upload release asset `versioned`
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v2

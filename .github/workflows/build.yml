@@ -29,6 +29,8 @@ concurrency:
 jobs:
   # Build job
   build:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

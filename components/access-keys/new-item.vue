@@ -86,7 +86,7 @@ interface Props {
 const { visible } = defineProps<Props>()
 const message = useMessage()
 const { $api } = useNuxtApp()
-const { createServiceAccountCreds } = useAccessKeys()
+const { createServiceAccount } = useAccessKeys()
 const { listPolicies } = usePolicies()
 const { credentials } = useAuth()
 
@@ -98,7 +98,7 @@ const defaultFormModal = {
   description: '',
   comment: '',
   expiry: null,
-  policy: '',
+  policy: [],
   flag: false
 }
 const formModel = ref({ ...defaultFormModal })
@@ -127,17 +127,18 @@ function dateDisabled(ts: number) {
 }
 async function submitForm() {
   try {
-    const res = await createServiceAccountCreds({
+    const res = await createServiceAccount({
       ...formModel.value,
-      targetUser: credentials.value?.AccessKeyId,
-      status: 'enabled'
-      // expiry: new Date(formModel.value.expiry || '').toISOString()
+      status: 'enabled',
+      policy: formModel.value.policy.join(','),
+      expiration: new Date(formModel.value.expiry || '').toISOString()
     })
     message.success('添加成功')
     emit('notice', res)
     closeModal()
     emit('search')
   } catch (error) {
+    console.log('🚀 ~ submitForm ~ error:', error)
     message.error('添加失败')
   }
 }

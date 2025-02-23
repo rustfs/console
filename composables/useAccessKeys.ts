@@ -2,8 +2,8 @@ import { name } from './../node_modules/@jsep-plugin/regex/types/tsd.d'
 export const useAccessKeys = () => {
   const { $api } = useNuxtApp()
 
-  const listUserServiceAccounts = async (name: string) => {
-    return await $api.get('/list-service-accounts?user=' + name)
+  const listUserServiceAccounts = async (params: object) => {
+    return await $api.get('/list-service-accounts', { params })
   }
 
   const createServiceAccount = async (data: any) => {

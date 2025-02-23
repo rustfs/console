@@ -1,6 +1,10 @@
 <template>
   <div :class="theme.name === darkTheme.name ? 'dark' : ''">
-    <n-config-provider :theme="theme" :locale="locale" :theme-overrides="themeOverrides" :date-locale="dateLocale">
+    <n-config-provider
+      :theme="theme"
+      :locale="locale"
+      :theme-overrides="themeOverrides"
+      :date-locale="dateLocale">
       <n-dialog-provider>
         <n-notification-provider>
           <n-message-provider>
@@ -16,7 +20,8 @@
 <script lang="ts" setup>
 import {
   darkTheme,
-  dateZhCN, zhCN,
+  dateZhCN,
+  zhCN,
   type GlobalTheme,
   type NDateLocale,
   type NLocale

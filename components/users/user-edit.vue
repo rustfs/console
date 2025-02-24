@@ -38,7 +38,9 @@
               :on-update:value="handerUserStatusChange"></n-switch>
           </template>
         </n-tabs>
-        <users-user-notice ref="noticeRef"></users-user-notice>
+        <users-user-notice
+          ref="noticeRef"
+          @search="getUserData"></users-user-notice>
       </n-card>
     </n-modal>
   </div>

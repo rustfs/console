@@ -68,7 +68,9 @@
       ref="changePasswordModalRef"
       v-model:visible="changePasswordVisible"
       @search="getDataList" />
-    <users-user-notice ref="noticeRef"></users-user-notice>
+    <users-user-notice
+      ref="noticeRef"
+      @search="getDataList"></users-user-notice>
   </div>
 </template>
 

@@ -16,12 +16,12 @@
         label-align="center"
         :label-width="130">
         <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item :span="24" label="Access Key" path="accesskey">
-            <n-input v-model:value="formModel.accesskey" />
+          <n-form-item-grid-item :span="24" label="Access Key" path="accessKey">
+            <n-input v-model:value="formModel.accessKey" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="Secret Key" path="secretkey">
+          <n-form-item-grid-item :span="24" label="Secret Key" path="secretKey">
             <n-input
-              v-model:value="formModel.secretkey"
+              v-model:value="formModel.secretKey"
               show-password-on="mousedown"
               type="password" />
           </n-form-item-grid-item>
@@ -92,8 +92,8 @@ const { credentials } = useAuth()
 
 const emit = defineEmits<Emits>()
 const defaultFormModal = {
-  accesskey: makeRandomString(20),
-  secretkey: makeRandomString(40),
+  accessKey: makeRandomString(20),
+  secretKey: makeRandomString(40),
   name: '',
   description: '',
   comment: '',
@@ -131,7 +131,9 @@ async function submitForm() {
       ...formModel.value,
       status: 'enabled',
       policy: formModel.value.policy.join(','),
-      expiration: new Date(formModel.value.expiry || '').toISOString()
+      expiration: formModel.value.expiry
+        ? new Date(formModel.value.expiry).toISOString()
+        : null
     })
     message.success('添加成功')
     emit('notice', res)

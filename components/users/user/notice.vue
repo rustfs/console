@@ -8,16 +8,24 @@
       class="max-w-screen-md"
       :segmented="{
         content: true,
-        action: true,
+        action: true
       }">
       <n-card>
         <n-form label-placement="left" label-align="right" :label-width="130">
           <n-grid :cols="24" :x-gap="18">
             <n-form-item-grid-item :span="24" label="Access Key">
-              <copy-input class="w-full" v-model="accessKey" :readonly="true" :copy-icon="true"></copy-input>
+              <copy-input
+                class="w-full"
+                v-model="accessKey"
+                :readonly="true"
+                :copy-icon="true"></copy-input>
             </n-form-item-grid-item>
             <n-form-item-grid-item :span="24" label="secretkey">
-              <copy-input class="w-full" v-model="secretkey" :readonly="true" :copy-icon="true"></copy-input>
+              <copy-input
+                class="w-full"
+                v-model="secretkey"
+                :readonly="true"
+                :copy-icon="true"></copy-input>
             </n-form-item-grid-item>
           </n-grid>
         </n-form>
@@ -33,28 +41,29 @@
 </template>
 
 <script setup lang="ts">
-import { download } from '@/utils/exportFile';
-const visible = ref(false);
+import { download } from '@/utils/exportFile'
+const visible = ref(false)
 
-const accessKey = ref('');
-const secretkey = ref('');
-const url = ref('');
+const accessKey = ref('')
+const secretkey = ref('')
+const url = ref('')
 function openDialog(data: any) {
-  accessKey.value = data.accessKey;
-  secretkey.value = data.secretKey;
-  url.value = data.url;
-  visible.value = true;
+  accessKey.value = data.credentials.accessKey
+  secretkey.value = data.credentials.secretKey
+  url.value = data.url
+  visible.value = true
 }
-
+const emit = defineEmits(['search'])
 function closeModal() {
-  visible.value = false;
-  accessKey.value = '';
-  secretkey.value = '';
+  visible.value = false
+  accessKey.value = ''
+  secretkey.value = ''
+  emit('search')
 }
 
 defineExpose({
-  openDialog,
-});
+  openDialog
+})
 
 function exportFile() {
   download(
@@ -64,9 +73,9 @@ function exportFile() {
       accessKey: accessKey.value,
       secretKey: secretkey.value,
       api: 's3v4',
-      path: 'auto',
+      path: 'auto'
     })
-  );
+  )
 }
 </script>
 

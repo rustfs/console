@@ -11,7 +11,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: [
     '@nuxtjs/tailwindcss',
-    '@nuxtjs/i18n',
+    // '@nuxtjs/i18n',
     '@pinia/nuxt',
     '@nuxt/icon',
     'nuxtjs-naive-ui',
@@ -51,9 +51,9 @@ export default defineNuxtConfig({
       }
     }
   },
-  i18n: {
-    vueI18n: './i18n.config.ts'
-  },
+  // i18n: {
+  //   vueI18n: './i18n.config.ts'
+  // },
   typescript: {
     typeCheck: true
   },

@@ -65,7 +65,6 @@
 </template>
 
 <script setup lang="ts">
-import { prefix } from 'naive-ui/es/_utils/cssr'
 import { computed, defineEmits, defineProps, ref } from 'vue'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
@@ -156,6 +155,7 @@ function removeItem(index: number) {
 }
 
 function handleUpload() {
+  console.log('uploading', allFiles.value);
   allFiles.value.forEach(fileItem => {
     uploadTaskManagerStore.addFiles([fileItem.file], props.bucketName, fileItem.prefix)
   })

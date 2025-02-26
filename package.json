@@ -10,7 +10,8 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.705.0",
+    "@aws-sdk/client-s3": "^3.750.0",
+    "@aws-sdk/protocol-http": "^3.374.0",
     "@aws-sdk/s3-request-presigner": "^3.715.0",
     "@nuxt/icon": "^1.9.1",
     "@nuxtjs/i18n": "^9.1.1",
@@ -26,7 +27,7 @@
     "json-editor-vue": "^0.17.3",
     "lodash": "^4.17.21",
     "rustfs": "^8.0.2",
-    "nuxt": "^3.6.0",
+    "nuxt": "^3.15.4",
     "nuxtjs-naive-ui": "^1.0.2",
     "pinia": "^2.3.0",
     "strip-json-comments": "^5.0.1",

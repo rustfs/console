@@ -91,7 +91,7 @@ const options = computed(() => {
         <Icon name="ri:menu-unfold-fill" class="cursor-pointer text-xl" @click="toggleSidebar" />
       </div>
 
-      <div v-if="!isCollapsed" class="flex flex-col p-4 text-gray-500">
+      <!-- <div v-if="!isCollapsed" class="flex flex-col p-4 text-gray-500">
         <div class="flex items-center gap-2">
           <Icon name="ri-server-line" />
           <span>当前版本: {{ siteConfig.release.version }}</span>
@@ -104,7 +104,7 @@ const options = computed(() => {
           <Icon name="ri-verified-badge-line" />
           <span>授权协议：{{ siteConfig.license.name }}</span>
         </div>
-      </div>
+      </div> -->
 
       <div class="p-4 sticky bottom-0 left-0 right-0">
         <UserDropdown :isCollapsed="isCollapsed" />

@@ -109,11 +109,16 @@ class UploadTaskManager {
     const { file, bucketName, prefix } = task;
     const abortController = new AbortController();
     task.abortController = abortController;
+    console.log('putObject', task);
 
+    const fileBuffer = await file.arrayBuffer();
     const command = new PutObjectCommand({
       Bucket: bucketName,
       Key: prefix + task.file.name,
-      Body: file,
+      // Body: file,
+      // https://github.com/aws/aws-sdk-js-v3/issues/6834
+      Body: new Uint8Array(fileBuffer),
+      ContentType: file.type,
     });
 
     await this.s3Client.send(command, { abortSignal: abortController.signal });

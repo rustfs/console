@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia'
-import UploadTaskManager from '~/lib/upload-task-manager'
+import { defineStore } from 'pinia';
+import UploadTaskManager from '~/lib/upload-task-manager';
 
 export const useUploadTaskManagerStore = defineStore('uploadTaskManager', {
   state: () => ({
@@ -13,6 +13,8 @@ export const useUploadTaskManagerStore = defineStore('uploadTaskManager', {
   },
   actions: {
     addFiles(files: File[], bucketName: string, prefix?: string) {
+      console.log('addFiles', files, bucketName, prefix);
+
       this.taskManager.addFiles(files, bucketName, prefix)
       this.taskManager.start()
     },

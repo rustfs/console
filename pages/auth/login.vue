@@ -36,9 +36,19 @@ const handleLogin = async () => {
 
 </script>
 
+<style>
+.bg {
+  background-color: #191919;
+  opacity: 1;
+  background-image: linear-gradient(#090909 1.6px, transparent 1.6px),
+    linear-gradient(to right, #090909 1.6px, #191919 1.6px);
+  background-size: 32px 32px;
+}
+</style>
+
+
 <template>
-  <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100 relative">
-    <img src="~/assets/backgrounds/gradient-waves.svg" class="absolute z-0 top-0 left-0 w-full h-full object-cover" />
+  <div class="flex flex-col items-center justify-center min-h-screen bg relative">
     <div class="mt-7 w-full max-w-sm z-10 bg-white shadow-sm dark:bg-neutral-900 dark:border-neutral-700">
       <div class="p-4 sm:p-7">
         <div class="text-center">

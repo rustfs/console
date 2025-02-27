@@ -3,12 +3,25 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 const isDev = process.env.NODE_ENV === 'development'
 
+const appName = process.env.APP_NAME || 'RustFS'
+const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: false,
   css: ['~/assets/css/tailwind.css', '~/assets/css/overrides.css'],
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
+  app: {
+    head: {
+      title: appName,
+      meta: [
+        { name: 'description', content: appDescription },
+      ],
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1',
+    }
+  },
   modules: [
     '@nuxtjs/tailwindcss',
     // '@nuxtjs/i18n',

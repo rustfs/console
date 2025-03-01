@@ -68,14 +68,16 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - name: Static HTML export with Nuxt
         run: ${{ steps.detect-package-manager.outputs.manager }} run generate
-      - name: Tar files
+      - name: Zip files
         run: |
           mkdir -p artifacts
           ls -al ./dist
-          cd ./dist && zip -r ../artifacts/rustfs-console-latest.zip .
+          ZIP_SRC=$(realpath dist)
+          cd "$ZIP_SRC"
+          zip -r ../../artifacts/rustfs-console-latest.zip .
           if [ "${{ github.event_name }}" = "release" ]; then
-            mkdir -p ../artifacts/${{ github.event.release.tag_name }}
-            cd ./dist && zip -r ../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
+            mkdir -p ../../artifacts/${{ github.event.release.tag_name }}
+            zip -r ../../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
           fi
       - uses: actions/upload-artifact@v4
         name: Upload artifacts

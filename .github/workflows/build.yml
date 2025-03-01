@@ -55,15 +55,15 @@ jobs:
         with:
           node-version: "22"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            dist
-            .nuxt
-          key: ${{ runner.os }}-nuxt-build-${{ hashFiles('dist') }}
-          restore-keys: |
-            ${{ runner.os }}-nuxt-build-
+      # - name: Restore cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       dist
+      #       .nuxt
+      #     key: ${{ runner.os }}-nuxt-build-${{ hashFiles('dist') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-nuxt-build-
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
       - name: Static HTML export with Nuxt
@@ -72,15 +72,15 @@ jobs:
         run: |
           mkdir -p artifacts
           ls -al ./dist
-          tar -cvzf artifacts/rustfs-console-latest.tar.gz -C ./dist .
+          cd ./dist && zip -r ../artifacts/rustfs-console-latest.zip .
           if [ "${{ github.event_name }}" = "release" ]; then
-            mkdir -p artifacts/${{ github.event.release.tag_name }}
-            tar -cvzf artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.tar.gz -C ./dist .
+            mkdir -p ../artifacts/${{ github.event.release.tag_name }}
+            cd ./dist && zip -r ../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
           fi
       - uses: actions/upload-artifact@v4
         name: Upload artifacts
         with:
-          path: ./artifacts/rustfs-console-latest.tar.gz
+          path: ./artifacts/rustfs-console-latest.zip
       - name: Upload to Bucket for `latest`
         uses: JohnGuan/oss-upload-action@main
         with:
@@ -94,9 +94,9 @@ jobs:
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v2
         with:
-          files: ./artifacts/rustfs-console-latest.tar.gz
+          files: ./artifacts/rustfs-console-latest.zip
       - name: Upload release asset `versioned`
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v2
         with:
-          files: ./artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.tar.gz
+          files: ./artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip

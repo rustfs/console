@@ -115,9 +115,7 @@ class UploadTaskManager {
     const command = new PutObjectCommand({
       Bucket: bucketName,
       Key: prefix + task.file.name,
-      // Body: file,
-      // https://github.com/aws/aws-sdk-js-v3/issues/6834
-      Body: new Uint8Array(fileBuffer),
+      Body: file,
       ContentType: file.type,
     });
 

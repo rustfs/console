@@ -1,13 +1,13 @@
-import { name } from './../node_modules/@jsep-plugin/regex/types/tsd.d'
+import { name } from "./../node_modules/@jsep-plugin/regex/types/tsd.d"
 export const useAccessKeys = () => {
   const { $api } = useNuxtApp()
 
   const listUserServiceAccounts = async (params: object) => {
-    return await $api.get('/list-service-accounts', { params })
+    return await $api.get("/list-service-accounts", { params })
   }
 
   const createServiceAccount = async (data: any) => {
-    return await $api.put('/add-service-accounts', data)
+    return await $api.put("/add-service-accounts", data)
   }
 
   // const deleteMultipleServiceAccounts = async (data: any) => {
@@ -15,20 +15,15 @@ export const useAccessKeys = () => {
   // }
 
   const getServiceAccount = async (name: string) => {
-    return await $api.get(
-      `/info-service-account?accessKey=${encodeURIComponent(name)}`
-    )
+    return await $api.get(`/info-service-account?accessKey=${encodeURIComponent(name)}`)
   }
 
   const updateServiceAccount = async (name: string, data: any) => {
-    return await $api.post(`/update-service-account`, data)
+    return await $api.post(`/update-service-account?accessKey=${encodeURIComponent(name)}`, data)
   }
 
   const deleteServiceAccount = async (name: string) => {
-    return await $api.delete(
-      `/delete-service-accounts?accessKey==${encodeURIComponent(name)}`,
-      {}
-    )
+    return await $api.delete(`/delete-service-accounts?accessKey=${encodeURIComponent(name)}`, {})
   }
 
   const createServiceAccountCreds = async (data: any) => {
@@ -41,7 +36,7 @@ export const useAccessKeys = () => {
     deleteServiceAccount,
     createServiceAccountCreds,
     updateServiceAccount,
-    getServiceAccount
+    getServiceAccount,
     // deleteMultipleServiceAccounts
   }
 }

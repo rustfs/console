@@ -84,7 +84,6 @@ const defaultFormModal = {
   description: "",
   // comment: "",
   expiry: null,
-  datetimeValue: null,
   policy: "",
   impliedPolicy: true,
 }

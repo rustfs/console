@@ -195,11 +195,9 @@ function deleteByList() {
       }
       try {
         // 循环遍历删除
-        checkedKeys.value.map(async (item) => {
-          const res = await deleteUser(item as string)
-        })
-        message.success("删除成功")
+        await Promise.all(checkedKeys.value.map((item) => deleteUser(item as string)))
         checkedKeys.value = []
+        message.success("删除成功")
         nextTick(() => {
           getDataList()
         })

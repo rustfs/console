@@ -221,7 +221,7 @@ function changePassword() {
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
-    const res = deleteServiceAccount(row.accessKey)
+    const res = await deleteServiceAccount(row.accessKey)
 
     message.success("删除成功")
     getDataList()
@@ -240,6 +240,7 @@ function handleCheck(keys: DataTableRowKey[]) {
   checkedKeys.value = keys
   return checkedKeys
 }
+// 批量删除
 function deleteByList() {
   dialog.error({
     title: "警告",
@@ -252,9 +253,7 @@ function deleteByList() {
         return
       }
       try {
-        const res = await $api.delete("/service-accounts/delete-multi", {
-          body: checkedKeys.value,
-        })
+        await Promise.all(checkedKeys.value.map((item) => deleteServiceAccount(item as string)))
         message.success("删除成功")
         getDataList()
       } catch (error) {

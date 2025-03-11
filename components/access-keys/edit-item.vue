@@ -3,6 +3,7 @@ import { ref } from "vue"
 const message = useMessage()
 const emit = defineEmits<Emits>()
 const { getServiceAccount, updateServiceAccount } = useAccessKeys()
+const { $api } = useNuxtApp()
 
 const visible = ref(false)
 
@@ -27,6 +28,8 @@ async function openDialog(row: any) {
     formModel.value.accesskey = row.accessKey
     formModel.value.expiry = res.expiration
     formModel.value.status = res.accountStatus
+    // const userInfo = await $api.get(`/accountinfo`)
+    // formModel.value.policy = userInfo.Policy
     visible.value = true
   } catch (error) {
     message.error("获取数据失败")

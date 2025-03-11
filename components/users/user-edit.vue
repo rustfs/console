@@ -8,19 +8,15 @@
       class="max-w-screen-md"
       :segmented="{
         content: true,
-        action: true
+        action: true,
       }">
       <n-card>
         <n-tabs type="card">
           <n-tab-pane name="groups" tab="分组">
-            <users-user-groups
-              :user="user"
-              @search="getUserData(user.accessKey)"></users-user-groups>
+            <users-user-groups :user="user" @search="getUserData(user.accessKey)"></users-user-groups>
           </n-tab-pane>
           <n-tab-pane name="policy" tab="策略">
-            <users-user-policies
-              :user="user"
-              @search="getUserData(user.accessKey)"></users-user-policies>
+            <users-user-policies :user="user" @search="getUserData(user.accessKey)"></users-user-policies>
           </n-tab-pane>
           <n-tab-pane name="accesskey" tab="账号">
             <users-user-account
@@ -38,9 +34,7 @@
               :on-update:value="handerUserStatusChange"></n-switch>
           </template>
         </n-tabs>
-        <users-user-notice
-          ref="noticeRef"
-          @search="getUserData"></users-user-notice>
+        <users-user-notice ref="noticeRef" @search="getUserData(user.accessKey)"></users-user-notice>
       </n-card>
     </n-modal>
   </div>
@@ -58,17 +52,17 @@ interface UserInfo {
 }
 
 const user = ref<UserInfo>({
-  accessKey: '',
+  accessKey: "",
   memberOf: [],
   policy: [],
-  status: 'enabled'
+  status: "enabled",
 })
 
 // 用户的状态发生变化
 const handerUserStatusChange = async (val: string) => {
   await changeUserStatus(user.value.accessKey, {
     accessKey: user.value.accessKey,
-    status: val
+    status: val,
   })
   await getUserData(user.value.accessKey)
 }
@@ -91,7 +85,7 @@ function noticeDialog(data: any) {
 }
 
 defineExpose({
-  openDialog
+  openDialog,
 })
 </script>
 

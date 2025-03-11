@@ -1,12 +1,7 @@
 <template>
   <div>
     <n-card>
-      <n-form
-        ref="formRef"
-        :model="searchForm"
-        label-placement="left"
-        :show-feedback="false"
-        v-if="!editStatus">
+      <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false" v-if="!editStatus">
         <n-flex justify="space-between">
           <n-form-item class="!w-64" label="" path="name">
             <n-input placeholder="搜索账号" @input="filterName" />
@@ -31,30 +26,20 @@
         </n-flex>
       </n-form>
       <n-form
+        ref="subFormRef"
         v-else
         label-placement="left"
         :model="formModel"
+        :rules="rules"
         label-align="right"
         :label-width="130">
         <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item
-            :span="24"
-            label="Access Key"
-            path="accesskey"
-            v-if="editType == 'add'">
-            <n-input v-model:value="formModel.accesskey" />
+          <n-form-item-grid-item :span="24" label="Access Key" path="accessKey" v-if="editType == 'add'">
+            <n-input v-model:value="formModel.accessKey" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item
-            :span="24"
-            label="Secret Key"
-            path="secretkey"
-            v-if="editType == 'add'">
-            <n-input
-              v-model:value="formModel.secretkey"
-              show-password-on="mousedown"
-              type="password" />
+          <n-form-item-grid-item :span="24" label="Secret Key" path="secretKey" v-if="editType == 'add'">
+            <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
           </n-form-item-grid-item>
-          <!-- TODO: 时间格式有问题 -->
           <n-form-item-grid-item :span="24" label="有效期" path="expiry">
             <n-date-picker
               class="!w-full"
@@ -67,39 +52,20 @@
           <n-form-item-grid-item :span="24" label="名称" path="name">
             <n-input v-model:value="formModel.name" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item
-            :span="24"
-            label="描述"
-            path="comment"
-            v-if="editType == 'add'">
+          <!-- <n-form-item-grid-item :span="24" label="描述" path="comment" v-if="editType == 'add'">
             <n-input v-model:value="formModel.comment" />
-          </n-form-item-grid-item>
+          </n-form-item-grid-item> -->
           <n-form-item-grid-item :span="24" label="注释" path="description">
             <n-input v-model:value="formModel.description" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item
-            :span="24"
-            label="限制超出用户策略"
-            path="flag"
-            v-if="editType == 'add'">
-            <n-switch v-model:value="formModel.flag" />
-          </n-form-item-grid-item>
-          <n-form-item-grid-item
-            v-if="formModel.flag || editType == 'edit'"
-            :span="24"
-            label="策略详情"
-            path="policy">
+          <n-form-item-gi :span="24" label="使用主账户策略" path="impliedPolicy">
+            <n-switch v-model:value="formModel.impliedPolicy" />
+          </n-form-item-gi>
+          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" label="当前用户策略" path="policy">
             <json-editor v-model="formModel.policy" />
-          </n-form-item-grid-item>
-          <n-form-item-grid-item
-            :span="24"
-            label="状态"
-            v-if="editType == 'edit'"
-            path="status">
-            <n-switch
-              v-model:value="formModel.status"
-              checked-value="on"
-              unchecked-value="off" />
+          </n-form-item-gi>
+          <n-form-item-grid-item :span="24" label="状态" v-if="editType == 'edit'" path="accountStatus">
+            <n-switch v-model:value="formModel.accountStatus" checked-value="on" unchecked-value="off" />
           </n-form-item-grid-item>
         </n-grid>
         <n-space>
@@ -128,33 +94,61 @@ import {
   type DataTableColumns,
   type DataTableInst,
   type DataTableRowKey,
+  type FormItemRule,
+  type FormInst,
   NButton,
   NPopconfirm,
-  NSpace
-} from 'naive-ui'
-import { Icon } from '#components'
+  NSpace,
+} from "naive-ui"
+import { Icon } from "#components"
 // 随机字符串函数
-import { makeRandomString } from '~/utils/functions'
+import { makeRandomString } from "~/utils/functions"
 const { listUserServiceAccounts, createServiceAccount } = useAccessKeys()
+const { $api } = useNuxtApp()
 
 const {
   getServiceAccount,
   updateServiceAccount,
-  deleteServiceAccount
+  deleteServiceAccount,
   // deleteMultipleServiceAccounts
 } = useAccessKeys()
 
+const { getPolicyByUserName } = usePolicies()
+// 验证
+const rules = ref({
+  accessKey: {
+    required: true,
+    trigger: ["blur", "input"],
+    message: "请输入Access Key",
+  },
+  secretKey: {
+    required: true,
+    trigger: ["blur", "input"],
+    message: "请输入Secret Key",
+  },
+  expiry: {
+    required: true,
+    trigger: ["blur", "change"],
+    // message: "请选择有效期",
+    validator(rule: FormItemRule, value: string) {
+      if (!value) {
+        return new Error("请选择有效期")
+      }
+      return true
+    },
+  },
+})
 const dialog = useDialog()
 const message = useMessage()
 const props = defineProps({
   user: {
     type: Object,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const searchForm = reactive({
-  name: ''
+  name: "",
 })
 interface RowData {
   accessKey: string
@@ -166,85 +160,85 @@ interface RowData {
 }
 const columns: DataTableColumns<RowData> = [
   {
-    type: 'selection'
+    type: "selection",
   },
   {
-    title: 'Access Key',
-    align: 'center',
-    key: 'accessKey',
+    title: "Access Key",
+    align: "center",
+    key: "accessKey",
     filter(value, row) {
       return !!row.accessKey.includes(value.toString())
-    }
+    },
   },
   {
-    title: '有效期',
-    align: 'center',
-    key: 'expiration'
+    title: "有效期",
+    align: "center",
+    key: "expiration",
   },
   {
-    title: '状态',
-    align: 'center',
-    key: 'accountStatus',
+    title: "状态",
+    align: "center",
+    key: "accountStatus",
     render: (row: any) => {
-      return row.accountStatus === 'on' ? '可用' : '禁用'
-    }
+      return row.accountStatus === "on" ? "可用" : "禁用"
+    },
   },
   {
-    title: '名称',
-    align: 'center',
-    key: 'name'
+    title: "名称",
+    align: "center",
+    key: "name",
   },
+  // {
+  //   title: "描述",
+  //   align: "center",
+  //   key: "description",
+  // },
   {
-    title: '描述',
-    align: 'center',
-    key: 'description'
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    align: 'center',
+    title: "操作",
+    key: "actions",
+    align: "center",
     width: 125,
     render: (row: any) => {
       return h(
         NSpace,
         {
-          justify: 'center'
+          justify: "center",
         },
         {
           default: () => [
             h(
               NButton,
               {
-                size: 'small',
+                size: "small",
                 secondary: true,
-                onClick: () => openEditItem(row)
+                onClick: () => openEditItem(row),
               },
               {
-                default: () => '',
-                icon: () => h(Icon, { name: 'ri:edit-2-line' })
+                default: () => "",
+                icon: () => h(Icon, { name: "ri:edit-2-line" }),
               }
             ),
             h(
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => '确认删除',
+                default: () => "确认删除",
                 trigger: () =>
                   h(
                     NButton,
-                    { size: 'small', secondary: true },
+                    { size: "small", secondary: true },
                     {
-                      default: () => '',
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' })
+                      default: () => "",
+                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
                     }
-                  )
+                  ),
               }
-            )
-          ]
+            ),
+          ],
         }
       )
-    }
-  }
+    },
+  },
 ]
 
 // 搜索过滤
@@ -252,112 +246,124 @@ const tableRef = ref<DataTableInst>()
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
-      name: [value]
+      name: [value],
     })
 }
 const listData = ref([])
 const getUserList = async () => {
-  const res = await listUserServiceAccounts(props.user.accessKey)
-  listData.value = res
+  const res = await listUserServiceAccounts({ user: props.user.accessKey })
+  listData.value = res.accounts
+  console.log("🚀 ~ getUserList ~ listData.value:", listData.value)
 }
 getUserList()
 
 /** ***********************************编辑、新增 */
 const editStatus = ref(false)
-const editType = ref('add')
+const editType = ref("add")
 
 const formModel = ref({
-  accesskey: makeRandomString(20),
-  secretkey: makeRandomString(40),
-  name: '',
-  description: '',
-  comment: '',
+  accessKey: makeRandomString(20),
+  secretKey: makeRandomString(40),
+  name: "",
+  description: "",
+  impliedPolicy: true,
   expiry: null,
-  policy: '',
-  flag: false,
-  status: 'on'
+  policy: "",
+  accountStatus: "on",
 })
 
+const parentPolicy = ref("")
+// 默认策略原文
+const getPolicie = async () => {
+  parentPolicy.value = JSON.stringify(await getPolicyByUserName(props.user.accessKey))
+}
+getPolicie()
 // 新增
 function addItem() {
-  editType.value = 'add'
+  editType.value = "add"
   editStatus.value = true
   formModel.value = {
-    accesskey: makeRandomString(20),
-    secretkey: makeRandomString(40),
-    name: '',
-    description: '',
-    comment: '',
+    accessKey: makeRandomString(20),
+    secretKey: makeRandomString(40),
+    name: "",
+    description: "",
+    impliedPolicy: true,
     expiry: null,
-    policy: '',
-    flag: false,
-    status: 'on'
+    accountStatus: "on",
+    policy: parentPolicy.value,
   }
 }
 // 编辑
 async function openEditItem(row: any) {
-  editType.value = 'edit'
+  editType.value = "edit"
   editStatus.value = true
   const res = await getServiceAccount(row.accessKey)
   formModel.value = {
-    ...res
+    ...res,
   }
-  formModel.value.accesskey = row.accessKey
+  formModel.value.accessKey = row.accessKey
   formModel.value.expiry = res.expiration
-  formModel.value.status = res.accountStatus
+  formModel.value.accountStatus = res.accountStatus
 }
 
 function cancelAdd() {
   editStatus.value = false
-  editType.value === 'add'
+  editType.value === "add"
   formModel.value = {
-    accesskey: makeRandomString(20),
-    secretkey: makeRandomString(40),
-    name: '',
-    description: '',
-    comment: '',
+    accessKey: makeRandomString(20),
+    secretKey: makeRandomString(40),
+    name: "",
+    description: "",
+    impliedPolicy: true,
     expiry: null,
-    policy: '',
-    flag: false,
-    status: 'on'
+    policy: "",
+    accountStatus: "on",
   }
 }
 
 interface Emits {
-  (e: 'search'): void
-  (e: 'notice', data: object): void
+  (e: "search"): void
+  (e: "notice", data: object): void
 }
 const emit = defineEmits<Emits>()
+const subFormRef = ref<FormInst | null>(null)
 async function submitForm() {
-  if (editType.value === 'add') {
-    try {
-      console.log(formModel.value)
-      const res = await createServiceAccount({
-        ...formModel.value,
-        targetUser: props.user.accessKey,
-        expiry: new Date(formModel.value.expiry || 0).toISOString() || ''
-      })
+  if (editType.value === "add") {
+    subFormRef.value?.validate(async (errors) => {
+      if (!errors) {
+        try {
+          const res = await createServiceAccount({
+            ...formModel.value,
+            targetUser: props.user.accessKey,
+            policy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
+            expiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
+          })
 
-      message.success('添加成功')
-      cancelAdd()
-      emit('notice', res)
-      getUserList()
-    } catch (error) {
-      console.log(error)
-      message.error('添加失败')
-    }
+          message.success("添加成功")
+          cancelAdd()
+          emit("notice", res)
+          getUserList()
+        } catch (error) {
+          console.log(error)
+          message.error("添加失败")
+        }
+      } else {
+        console.log(errors)
+        message.error("请填写正确的格式")
+      }
+    })
   } else {
     try {
-      const res = await updateServiceAccount(formModel.value.accesskey, {
+      const res = await updateServiceAccount(formModel.value.secretKey, {
         ...formModel.value,
-        policy: formModel.value.policy || '{}',
-        expiry: new Date(formModel.value.expiry || 0).toISOString()
+        policy: formModel.value.policy || "{}",
+        expiry: new Date(formModel.value.expiry || 0).toISOString(),
       })
-      message.success('修改成功')
+      message.success("修改成功")
       cancelAdd()
       getUserList()
     } catch (error) {
-      message.error('修改失败')
+      message.error("修改失败")
     }
   }
 }
@@ -369,10 +375,10 @@ function dateDisabled(ts: number) {
 async function deleteItem(row: any) {
   try {
     const res = await deleteServiceAccount(row.accessKey)
-    message.success('删除成功')
+    message.success("删除成功")
     getUserList()
   } catch (error) {
-    message.error('删除失败')
+    message.error("删除失败")
   }
 }
 
@@ -388,13 +394,13 @@ function handleCheck(keys: DataTableRowKey[]) {
 }
 function deleteByList() {
   dialog.error({
-    title: '警告',
-    content: '你确定要删除所有选中的秘钥吗？',
-    positiveText: '确定',
-    negativeText: '取消',
+    title: "警告",
+    content: "你确定要删除所有选中的秘钥吗？",
+    positiveText: "确定",
+    negativeText: "取消",
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error('请至少选择一项')
+        message.error("请至少选择一项")
         return
       }
       try {
@@ -403,11 +409,11 @@ function deleteByList() {
         // })
         checkedKeys.value = []
         getUserList()
-        message.success('删除成功')
+        message.success("删除成功")
       } catch (error) {
-        message.error('删除失败')
+        message.error("删除失败")
       }
-    }
+    },
   })
 }
 </script>

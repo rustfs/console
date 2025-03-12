@@ -27,17 +27,17 @@
       </n-form>
       <n-form
         ref="subFormRef"
-        v-else
+        v-if="editStatus && editType == 'add'"
         label-placement="left"
         :model="formModel"
         :rules="rules"
         label-align="right"
         :label-width="130">
         <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item :span="24" label="Access Key" path="accessKey" v-if="editType == 'add'">
+          <n-form-item-grid-item :span="24" label="Access Key" path="accessKey">
             <n-input v-model:value="formModel.accessKey" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="Secret Key" path="secretKey" v-if="editType == 'add'">
+          <n-form-item-grid-item :span="24" label="Secret Key" path="secretKey">
             <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" label="有效期" path="expiry">
@@ -64,9 +64,9 @@
           <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" label="当前用户策略" path="policy">
             <json-editor v-model="formModel.policy" />
           </n-form-item-gi>
-          <n-form-item-grid-item :span="24" label="状态" v-if="editType == 'edit'" path="accountStatus">
+          <!-- <n-form-item-grid-item :span="24" label="状态" v-if="editType == 'edit'" path="accountStatus">
             <n-switch v-model:value="formModel.accountStatus" checked-value="on" unchecked-value="off" />
-          </n-form-item-grid-item>
+          </n-form-item-grid-item> -->
         </n-grid>
         <n-space>
           <NFlex justify="center">
@@ -86,6 +86,11 @@
       @update:checked-row-keys="handleCheck"
       :pagination="false"
       :bordered="false" />
+    <!-- 引入account-edit -->
+    <users-user-acedit
+      v-if="editStatus && editType === 'edit'"
+      :user="editData"
+      @search="cancelAdd"></users-user-acedit>
   </div>
 </template>
 
@@ -278,6 +283,7 @@ const getPolicie = async () => {
   parentPolicy.value = JSON.stringify(await getPolicyByUserName(props.user.accessKey))
 }
 getPolicie()
+
 // 新增
 function addItem() {
   editType.value = "add"
@@ -294,16 +300,12 @@ function addItem() {
   }
 }
 // 编辑
+const editData = ref({})
 async function openEditItem(row: any) {
   editType.value = "edit"
   editStatus.value = true
   const res = await getServiceAccount(row.accessKey)
-  formModel.value = {
-    ...res,
-  }
-  formModel.value.accessKey = row.accessKey
-  formModel.value.expiry = res.expiration
-  formModel.value.accountStatus = res.accountStatus
+  editData.value = { ...res, accessKey: row.accessKey }
 }
 
 function cancelAdd() {
@@ -319,6 +321,7 @@ function cancelAdd() {
     policy: "",
     accountStatus: "on",
   }
+  getUserList()
 }
 
 interface Emits {

@@ -91,7 +91,7 @@ jobs:
           region: oss-cn-beijing
           bucket: rustfs-artifacts
           assets: |
-            ./artifacts/**:/console/
+            ./artifacts/**:/artifacts/console/
       - name: Upload release asset for `latest`
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v2

@@ -92,11 +92,11 @@ jobs:
           bucket: rustfs-artifacts
           assets: |
             ./artifacts/**:/artifacts/console/
-      - name: Upload release asset for `latest`
-        if: ${{ github.event_name == 'release' }}
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ./artifacts/rustfs-console-latest.zip
+      # - name: Upload release asset for `latest`
+      #   if: ${{ github.event_name == 'release' }}
+      #   uses: softprops/action-gh-release@v2
+      #   with:
+      #     files: ./artifacts/rustfs-console-latest.zip
       - name: Upload release asset `versioned`
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v2

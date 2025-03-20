@@ -24,6 +24,7 @@
     "aws4-axios": "^3.3.14",
     "aws4fetch": "^1.0.20",
     "axios": "^1.7.9",
+    "dayjs": "^1.11.13",
     "json-editor-vue": "^0.17.3",
     "lodash": "^4.17.21",
     "rustfs": "^8.0.2",

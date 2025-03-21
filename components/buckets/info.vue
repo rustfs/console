@@ -173,9 +173,25 @@ const props = defineProps<{ bucket: string }>()
 
 const bucketName = computed(() => props.bucket as string)
 
-const { headBucket, getBucketTagging, putBucketTagging, deleteBucketTagging } = useBucket({})
+const { headBucket, getBucketTagging, putBucketTagging, putBucketVersioning, getBucketVersioning } = useBucket({})
 
-/********tag */
+/********versioning ***********************/
+const versioningStatus: any = ref("")
+// 获取版本控制状态
+const getVersioningStatus = async () => {
+  try {
+    const resp = await getBucketVersioning(bucketName.value)
+    console.log(1111, resp)
+    versioningStatus.value = resp.Status
+  } catch (error) {
+    console.error("获取版本控制状态失败:", error)
+  }
+}
+getVersioningStatus()
+
+/********versioning ***********************/
+
+/********tag ***********************/
 // 定义标签的类型
 interface Tag {
   Key: string
@@ -241,7 +257,7 @@ const handledeleteTag = (index: number) => {
       message.error("删除标签失败: " + error.message)
     })
 }
-/********tag */
+/********tag ***********************/
 
 // 在服务端获取数据
 const {

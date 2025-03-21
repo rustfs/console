@@ -5,6 +5,10 @@ import {
   GetBucketTaggingCommand,
   PutBucketTaggingCommand,
   DeleteBucketTaggingCommand,
+  PutBucketVersioningCommand,
+  GetBucketVersioningCommand,
+  MFADelete,
+  BucketVersioningStatus,
 } from "@aws-sdk/client-s3"
 
 export function useBucket({ region }: { region?: string }) {
@@ -55,5 +59,34 @@ export function useBucket({ region }: { region?: string }) {
     return await $client.send(new DeleteBucketTaggingCommand(params))
   }
 
-  return { listBuckets, createBucket, headBucket, getBucketTagging, putBucketTagging, deleteBucketTagging }
+  const putBucketVersioning = async (bucket: string, status: string) => {
+    const params = {
+      Bucket: bucket,
+      VersioningConfiguration: {
+        Status: status == "on" ? BucketVersioningStatus.Enabled : BucketVersioningStatus.Suspended,
+        MFADelete: MFADelete.Enabled,
+      },
+    }
+
+    return await $client.send(new PutBucketVersioningCommand(params))
+  }
+
+  const getBucketVersioning = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    }
+
+    return await $client.send(new GetBucketVersioningCommand(params))
+  }
+
+  return {
+    listBuckets,
+    createBucket,
+    headBucket,
+    getBucketTagging,
+    putBucketTagging,
+    deleteBucketTagging,
+    putBucketVersioning,
+    getBucketVersioning,
+  }
 }

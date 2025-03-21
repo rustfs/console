@@ -126,27 +126,27 @@
       <n-list-item class="basis-1/3 mx-2" style="background-color: var(--n-color)">
         <n-thing class="px-2">
           <template #avatar>
-            <Icon name="ri:signal-wifi-line" />
+            <Icon name="ri:archive-drawer-fill" />
           </template>
-          <template #header>距离上次 正常运行</template>
+          <template #header>后端类型</template>
+          <template #header-extra>{{ systemInfo?.backend?.backendType }}</template>
+        </n-thing>
+      </n-list-item>
+      <n-list-item class="basis-1/3 mx-2" style="background-color: var(--n-color)">
+        <n-thing class="px-2">
+          <template #avatar>
+            <div><Icon name="ri:secure-payment-fill" /></div>
+          </template>
+          <template #header>标准存储类奇偶校验</template>
           <template #header-extra>n/a</template>
         </n-thing>
       </n-list-item>
       <n-list-item class="basis-1/3 mx-2" style="background-color: var(--n-color)">
         <n-thing class="px-2">
           <template #avatar>
-            <div><Icon name="ri:scan-line" /></div>
+            <Icon name="ri:list-settings-fill" />
           </template>
-          <template #header>距离上次 扫描活动</template>
-          <template #header-extra>n/a</template>
-        </n-thing>
-      </n-list-item>
-      <n-list-item class="basis-1/3 mx-2" style="background-color: var(--n-color)">
-        <n-thing class="px-2">
-          <template #avatar>
-            <Icon name="ri:time-line" />
-          </template>
-          <template #header>运行时间</template>
+          <template #header>减少冗余存储类奇偶校验</template>
           <template #header-extra>n/a</template>
         </n-thing>
       </n-list-item>
@@ -180,7 +180,8 @@
               :show-dots="false"
               :show-arrow="true"
               :autoplay="false"
-              slides-per-view="auto"
+              :slides-per-view="3"
+              ref="driveCarouselRef"
               draggable
               class="drive-carousel"
               :space-between="20">
@@ -188,7 +189,7 @@
                 v-for="drive in server.drives"
                 :key="drive.uuid"
                 style="width: 350px"
-                class="flex flex-col items-center p-4 border rounded mx-2 ml-0">
+                class="flex flex-col justify-start items-center p-4 border rounded mx-2 ml-0">
                 <div class="self-start ps-6">{{ drive.drive_path }}</div>
                 <div class="flex w-full justify-around items-center my-8">
                   <n-progress

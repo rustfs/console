@@ -165,19 +165,26 @@
             <template #header>
               <div class="flex justify-between align-items-center">
                 <n-space>
-                  <n-badge type="success" dot />
-                  <span class="font-bold">{{ server.endpoint }}</span>
+                  <n-badge v-if="server.state == 'online'" type="success" dot />
+                  <n-badge v-else dot />
+                  <span class="font-bold align-middle me-4">{{ server.endpoint }}</span>
                   <span>
                     <n-badge type="success" dot />
-                    磁盘:{{ countOnlineDrives(server, "ok") }} / {{ server.drives.length }}
+                    <span class="align-middle ms-1 me-4">
+                      磁盘:{{ countOnlineDrives(server, "ok") }} / {{ server.drives.length }}
+                    </span>
                   </span>
                   <span>
                     <n-badge type="success" dot />
-                    网络: {{ countOnlineNetworks(server, "online") }} / {{ Object.keys(server.network).length }}
+                    <span class="align-middle ms-1 me-4">
+                      网络: {{ countOnlineNetworks(server, "online") }} / {{ Object.keys(server.network).length }}
+                    </span>
                   </span>
                   <span>
                     <n-badge type="success" dot />
-                    运行时间: {{ dayjs(server.uptime).format("YYYY-MM-DD HH:mm:ss") }}
+                    <span class="align-middle ms-1">
+                      运行时间: {{ dayjs(server.uptime).format("YYYY-MM-DD HH:mm:ss") }}
+                    </span>
                   </span>
                 </n-space>
               </div>

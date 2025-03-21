@@ -78,11 +78,11 @@
       <n-flex vertical :size="20" class="basis-1/3">
         <n-card title="用户情况报告" :bordered="false" class="report-card">
           <n-flex :size="20" justify="space-between" align="center">
-            <span class="text-3xl font-bold">292 MiB</span>
+            <span class="text-3xl font-bold">{{ niceBytes(datausageinfo.total_used_capacity) }}</span>
             <n-progress
               style="margin: 0 8px 12px 0; width: 90px"
               type="circle"
-              :percentage="20"
+              :percentage="datausageinfo.total_used_capacity / datausageinfo.total_capacity"
               :color="themeVars.infoColor"
               :rail-color="changeColor(themeVars.infoColor, { alpha: 0.2 })"
               :indicator-text-color="themeVars.infoColor">
@@ -138,7 +138,11 @@
             <div><Icon name="ri:secure-payment-fill" /></div>
           </template>
           <template #header>标准存储类奇偶校验</template>
-          <template #header-extra>n/a</template>
+          <template #header-extra>
+            <!-- {{ stroageinfo.backend.StandardSCParity }}/{{ stroageinfo.backend.StandardSCParity }} -->
+            <!-- n/a -->
+            {{ stroageinfo.backend?.StandardSCParity }}
+          </template>
         </n-thing>
       </n-list-item>
       <n-list-item class="basis-1/3 mx-2" style="background-color: var(--n-color)">
@@ -147,7 +151,10 @@
             <Icon name="ri:list-settings-fill" />
           </template>
           <template #header>减少冗余存储类奇偶校验</template>
-          <template #header-extra>n/a</template>
+          <template #header-extra>
+            {{ stroageinfo.backend?.RRSCParity }}
+            <!-- n/a -->
+          </template>
         </n-thing>
       </n-list-item>
     </n-list>
@@ -229,13 +236,27 @@ import { niceBytes } from "../../utils/functions"
 
 const systemInfo: any = ref({})
 const getSystemInfo = async () => {
-  const res = await systemApi.getSystemInfo()
+  const res: any = await systemApi.getSystemInfo()
   systemInfo.value = res
+}
+
+const datausageinfo: any = ref({})
+const getdatausageinfo = async () => {
+  const res = await systemApi.getDataUsageInfo()
+  datausageinfo.value = res
+}
+
+const stroageinfo: any = ref({})
+const getstroageinfo = async () => {
+  const res = await systemApi.getStorageInfo()
+  stroageinfo.value = res
 }
 
 const getPageData = async () => {
   await getSystemInfo()
   await getServerInfo()
+  await getdatausageinfo()
+  await getstroageinfo()
 }
 getPageData()
 

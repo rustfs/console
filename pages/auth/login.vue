@@ -49,6 +49,7 @@ const handleLogin = async () => {
 
 <template>
   <div class="flex flex-col items-center justify-center min-h-screen bg relative">
+    <img src="~/assets/logo.svg" class="max-w-28" alt="" />
     <div class="mt-7 w-full max-w-sm z-10 bg-white shadow-sm dark:bg-neutral-900 dark:border-neutral-700">
       <div class="p-4 sm:p-7">
         <div class="text-center">

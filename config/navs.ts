@@ -1,12 +1,6 @@
 // icons: https://icones.js.org/collection/ri
 export default [
   {
-    label: '首页',
-    to: '/',
-    icon: 'ri:home-2-line'
-  },
-
-  {
     label: '存储桶',
     to: '/browser',
     icon: 'ri:box-3-line'

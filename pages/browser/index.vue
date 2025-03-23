@@ -21,18 +21,13 @@
           </n-input>
         </div>
         <div class="flex items-center gap-4">
-          <n-button @click="() => refresh()">
+          <n-button @click="async () => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
             <span>刷新</span>
           </n-button>
         </div>
       </div>
-      <n-data-table
-        class="border dark:border-neutral-700 rounded overflow-hidden"
-        :columns="columns"
-        :data="data"
-        :pagination="false"
-        :bordered="false" />
+      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="data" :pagination="false" :bordered="false" />
     </page-content>
 
     <buckets-new-form :show="formVisible" @update:show="handleFormClosed"></buckets-new-form>
@@ -40,9 +35,9 @@
 </template>
 
 <script lang="ts" setup>
-import { NSpace, NButton, type DataTableColumns } from 'naive-ui';
-import { NuxtLink, Icon } from '#components';
-import { useRouter } from 'vue-router';
+import { Icon, NuxtLink } from '#components'
+import { NButton, NSpace, type DataTableColumns } from 'naive-ui'
+import { useRouter } from 'vue-router'
 
 const { listBuckets } = useBucket({});
 const formVisible = ref(false);
@@ -63,7 +58,9 @@ const columns: DataTableColumns<RowData> = [
           href: `/browser/${encodeURIComponent(row.Name)}`,
           class: 'flex items-center gap-2',
         },
-        [icon('ri:archive-line'), row.Name]
+        {
+          default: () => [icon('ri:archive-line'), row.Name]
+        }
       );
     },
   },

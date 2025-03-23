@@ -1,6 +1,6 @@
 <template>
   <div>
-    <content>
+    <page-content>
       <page-header>
         <template #title>
           <div class="flex items-center gap-4">
@@ -11,14 +11,14 @@
       <page-content class="flex flex-col gap-4">
         <buckets-info :bucket="bucketName" />
       </page-content>
-    </content>
+    </page-content>
     <footer />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { useRoute } from '#app';
-import { computed } from 'vue';
+import { useRoute } from '#app'
+import { computed } from 'vue'
 
 // 从路由参数中获取 bucketName, pageSize, continuationToken
 const route = useRoute();

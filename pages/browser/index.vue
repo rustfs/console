@@ -113,7 +113,7 @@ const { data, refresh } = await useAsyncData(
 const router = useRouter();
 const handleRowClick = (row: RowData) => {
   router.push({
-    path: `/bucket/${encodeURIComponent(row.Name)}`,
+    path: `/buckets/${encodeURIComponent(row.Name)}`,
   });
 };
 const handleFormClosed = (show: boolean) => {

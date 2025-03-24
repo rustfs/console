@@ -63,7 +63,7 @@ export function useBucket({ region }: { region?: string }) {
     const params = {
       Bucket: bucket,
       VersioningConfiguration: {
-        Status: status == "on" ? BucketVersioningStatus.Enabled : BucketVersioningStatus.Suspended,
+        Status: status == "Enabled" ? BucketVersioningStatus.Enabled : BucketVersioningStatus.Suspended,
         MFADelete: MFADelete.Enabled,
       },
     }

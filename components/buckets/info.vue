@@ -138,11 +138,16 @@
       <n-descriptions-item>
         <template #label>
           版本控制
-          <n-button quaternary round type="primary">
+          <!-- <n-button quaternary round type="primary">
             <Icon name="ri:edit-2-line" class="mr-2" />
-          </n-button>
+          </n-button> -->
         </template>
-        todo
+        <n-switch
+          v-model:value="versioningStatus"
+          checked-value="Enabled"
+          unchecked-value="Suspended"
+          :loading="statusLoading"
+          @update:value="handleChangeVersionStatus" />
       </n-descriptions-item>
     </n-descriptions>
   </n-card>
@@ -177,17 +182,31 @@ const { headBucket, getBucketTagging, putBucketTagging, putBucketVersioning, get
 
 /********versioning ***********************/
 const versioningStatus: any = ref("")
+const versionStatus = ref("Suspended")
+const statusLoading = ref(false)
 // 获取版本控制状态
 const getVersioningStatus = async () => {
   try {
     const resp = await getBucketVersioning(bucketName.value)
-    console.log(1111, resp)
     versioningStatus.value = resp.Status
   } catch (error) {
     console.error("获取版本控制状态失败:", error)
   }
 }
 getVersioningStatus()
+
+const handleChangeVersionStatus = async (value: string) => {
+  statusLoading.value = true
+  putBucketVersioning(bucketName.value, value)
+    .then(() => {
+      message.success("修改成功")
+      getVersioningStatus()
+    })
+    .finally(() => {
+      statusLoading.value = false
+      versioningStatus.value = versioningStatus.value == "Suspended" ? "Enabled" : "Suspended"
+    })
+}
 
 /********versioning ***********************/
 

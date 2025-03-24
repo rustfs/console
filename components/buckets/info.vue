@@ -18,10 +18,10 @@
           <span>生命周期</span>
         </n-button>
 
-        <n-button>
+        <!-- <n-button>
           <Icon name="ri:key-2-line" class="mr-2" />
           <span>访问权限</span>
-        </n-button>
+        </n-button> -->
 
         <n-button>
           <Icon name=" ri:surgical-mask-line" class="mr-2" />
@@ -58,7 +58,7 @@
       <n-descriptions-item class="font-bold">
         <template #label>
           当前状态
-          <n-button quaternary round type="primary">
+          <n-button class="align-middle" quaternary round type="primary">
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
@@ -67,7 +67,7 @@
       <n-descriptions-item>
         <template #label>
           访问策略
-          <n-button quaternary round type="primary">
+          <n-button class="align-middle" quaternary round type="primary">
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
@@ -75,17 +75,17 @@
       </n-descriptions-item>
       <n-descriptions-item>
         <template #label>
-          加密
-          <n-button quaternary round type="primary">
+          加密类型
+          <n-button class="align-middle" quaternary round type="primary" @click="editEncript">
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
-        todo
+        禁用
       </n-descriptions-item>
       <n-descriptions-item>
         <template #label>
           使用情况报告
-          <n-button quaternary round type="primary">
+          <n-button class="align-middle" quaternary round type="primary">
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
@@ -94,7 +94,7 @@
       <n-descriptions-item>
         <template #label>
           副本
-          <n-button quaternary round type="primary">
+          <n-button class="align-middle" quaternary round type="primary">
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
@@ -112,8 +112,8 @@
       <n-descriptions-item>
         <template #label>
           配额
-          <n-button quaternary round type="primary">
-            <Icon name="ri:edit-2-line" class="mr-2" />
+          <n-button class="align-middle" quaternary round type="primary">
+            <Icon name="ri:edit-2-line" />
           </n-button>
         </template>
         todo
@@ -121,8 +121,8 @@
       <n-descriptions-item class="w-1/2">
         <template #label>
           标签
-          <n-button quaternary round type="primary" @click="addTag">
-            <Icon name="ri:edit-2-line" class="mr-2" />
+          <n-button class="align-middle" round quaternary type="primary" @click="addTag">
+            <Icon name="ri:add-line" size="16" class="mr-2" />
           </n-button>
         </template>
         <n-tag
@@ -154,15 +154,32 @@
   <!-- tag -->
   <n-modal v-model:show="showTagModal" title="设置tag" preset="card" draggable :style="{ width: '550px' }">
     <n-form ref="formRef" inline :label-width="80" :model="tagFormValue">
-      <n-form-item label="标签key" path="user.name">
+      <n-form-item label="标签key" path="name">
         <n-input v-model:value="tagFormValue.name" placeholder="输入标签key" />
       </n-form-item>
-      <n-form-item label="标签值" path="phone">
+      <n-form-item label="标签值" path="value">
         <n-input v-model:value="tagFormValue.value" placeholder="输入标签值" />
       </n-form-item>
       <n-form-item>
         <n-button type="primary" @click="submitTagForm">确认</n-button>
         <n-button class="mx-4" @click="showTagModal = false">取消</n-button>
+      </n-form-item>
+    </n-form>
+  </n-modal>
+
+  <!-- Encrypt -->
+  <n-modal v-model:show="showEncryptModal" title="启用存储空间加密" preset="card" draggable :style="{ width: '550px' }">
+    <n-form ref="encryptFormRef" label-placemen="left" label-width="auto" inline :model="encryptFormValue">
+      <n-form-item label="加密类型" path="encrypt" class="flex-auto">
+        <n-select v-model:value="encryptFormValue.encrypt" placeholder="请选择加密类型" :options="encryptOptions" />
+      </n-form-item>
+      <n-form-item v-if="encryptFormValue.encrypt == 'SSE-KMS'" label="KMS Key ID" path="kmsKeyId" class="flex-auto">
+        <n-select v-model:value="encryptFormValue.kmsKeyId" placeholder="" :options="[]" />
+      </n-form-item>
+
+      <n-form-item>
+        <n-button type="primary" @click="submitEncryptForm">确认</n-button>
+        <n-button class="mx-4" @click="showEncryptModal = false">取消</n-button>
       </n-form-item>
     </n-form>
   </n-modal>
@@ -179,6 +196,47 @@ const props = defineProps<{ bucket: string }>()
 const bucketName = computed(() => props.bucket as string)
 
 const { headBucket, getBucketTagging, putBucketTagging, putBucketVersioning, getBucketVersioning } = useBucket({})
+
+/********Encrypt ***********************/
+const showEncryptModal = ref(false)
+const encryptFormValue = ref({
+  encrypt: "disabled",
+  kmsKeyId: "",
+})
+
+const encryptOptions = [
+  {
+    label: "禁用",
+    value: "disabled",
+  },
+  {
+    label: "SSE-KMS",
+    value: "SSE-KMS",
+  },
+  {
+    label: "SSE-S3",
+    value: "SSE-S3",
+  },
+]
+
+const editEncript = () => {
+  showEncryptModal.value = true
+}
+const submitEncryptForm = () => {
+  // 处理表单提交逻辑
+  // console.log("提交表单数据:", encryptFormValue.value)
+  // showEncryptModal.value = false
+  if (encryptFormValue.value.encrypt == "SSE-KMS") {
+    message.error("您提供的 XML 格式不正确，或者未根据我们发布的架构进行验证。 (MasterKeyID 未找到 aws:kms)。")
+  } else if (encryptFormValue.value.encrypt == "SSE-S3") {
+    message.error("指定了服务器端加密，但S3未配置。")
+  } else {
+    message.success("修改成功")
+    showEncryptModal.value = false
+  }
+}
+
+/********Encrypt ***********************/
 
 /********versioning ***********************/
 const versioningStatus: any = ref("")

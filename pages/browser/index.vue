@@ -8,7 +8,7 @@
     <page-content class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center justify-between">
-          <n-input placeholder="搜索">
+          <n-input placeholder="搜索" @input="filterBucketName">
             <template #prefix>
               <Icon name="ri:search-2-line" />
             </template>
@@ -26,6 +26,7 @@
         </div>
       </div>
       <n-data-table
+        ref="tableRef"
         class="border dark:border-neutral-700 rounded overflow-hidden"
         :columns="columns"
         :data="data"
@@ -39,7 +40,7 @@
 
 <script lang="ts" setup>
 import { Icon, NuxtLink } from "#components";
-import { NButton, NSpace, type DataTableColumns } from "naive-ui";
+import { NButton, NSpace, type DataTableColumns, type DataTableInst } from "naive-ui";
 import { useRouter } from "vue-router";
 
 const { listBuckets } = useBucket({});
@@ -54,6 +55,9 @@ const columns: DataTableColumns<RowData> = [
     title: "桶",
     // dataIndex: 'name',
     key: "Name",
+    filter(value, row) {
+      return !!row.Name.includes(value.toString());
+    },
     render: (row: { Name: string }) => {
       return h(
         NuxtLink,
@@ -114,6 +118,15 @@ const { data, refresh } = await useAsyncData(
   },
   { default: () => [] }
 );
+
+const tableRef = ref<DataTableInst>();
+
+function filterBucketName(value: string) {
+  tableRef.value &&
+    tableRef.value.filter({
+      Name: [value],
+    });
+}
 
 const router = useRouter();
 const handleRowClick = (row: RowData) => {

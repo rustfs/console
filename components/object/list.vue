@@ -35,7 +35,7 @@
             <Icon name="ri:arrow-right-s-line" class="ml-2" />
           </n-button>
         </n-button-group> -->
-        <n-button :disabled="!checkedKeys.length" secondary @click="deleteByList">
+        <n-button :disabled="!checkedKeys.length" secondary @click="handleBatchDelete">
           <template #icon>
             <Icon name="ri:delete-bin-5-line"></Icon>
           </template>
@@ -247,7 +247,7 @@ function handleCheck(keys: DataTableRowKey[]) {
 const objectApi = useObject({ bucket: bucketName.value });
 
 // 批量删除
-function deleteByList() {
+function handleBatchDelete() {
   dialog.error({
     title: "警告",
     content: "你确定要删除所有选中的对象吗？",

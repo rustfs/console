@@ -6,3 +6,7 @@
 .n-list.sticky-header .n-list__header {
   @apply bg-neutral-900/60 sticky top-0 z-10;
 }
+
+.n-page-header {
+  @apply flex-wrap flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between;
+}

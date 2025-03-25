@@ -13,7 +13,7 @@
         </div>
       </template>
       <n-spin v-if="loading" size="large"></n-spin>
-      <div v-else class="min-h-64 max-h-[80vh] overflow-y-auto flex-1 flex flex-col items-center">
+      <div v-else class="min-h-64 max-h-[80vh] overflow-y-auto flex-1 flex flex-col items-center" :class="{ 'justify-center': !canPreview }">
         <template v-if="canPreview">
           <img v-if="isImage" :src="previewUrl" alt="preview" />
           <iframe v-else-if="isPdf" :src="previewUrl" class="w-full min-h-[70vh]" frameborder="0"></iframe>
@@ -27,7 +27,7 @@
             您的浏览器不支持 audio 标签
           </audio>
         </template>
-        <div v-else class="text-center text-gray-500">
+        <div v-else class="text-center text-gray-500 min-h-full">
           无法预览该对象的内容（MIME类型：{{ contentType }}），请下载查看
         </div>
       </div>

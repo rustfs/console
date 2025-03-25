@@ -34,6 +34,12 @@
             <Icon name="ri:arrow-right-s-line" class="ml-2" />
           </n-button>
         </n-button-group> -->
+         <n-button :disabled="!checkedKeys.length" secondary @click="deleteByList">
+              <template #icon>
+                <Icon name="ri:delete-bin-5-line"></Icon>
+              </template>
+              删除选中项
+            </n-button>
         <n-button @click="() => refresh()">
           <Icon name="ri:refresh-line" class="mr-2" />
           <span>刷新</span>
@@ -45,6 +51,8 @@
     class="border dark:border-neutral-700 rounded overflow-hidden"
     :columns="columns"
     :data="objects"
+    :row-key="rowKey"
+     @update:checked-row-keys="handleCheck"
     :pagination="false"
     :bordered="false" />
   <object-upload-picker
@@ -73,6 +81,7 @@
 <script setup lang="ts">
 const { $s3Client } = useNuxtApp();
 import { useAsyncData, useRoute, useRouter } from "#app";
+import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
 import { NuxtLink } from "#components";
 import { ListObjectsV2Command, type _Object, type CommonPrefix } from "@aws-sdk/client-s3";
 import { joinRelativeURL } from "ufo";
@@ -81,7 +90,8 @@ import { useUploadTaskManagerStore } from "~/store/upload-tasks";
 
 const route = useRoute();
 const router = useRouter();
-
+const dialog = useDialog();
+const message = useMessage();
 const props = defineProps<{ bucket: string; path: string }>();
 
 const uploadPickerVisible = ref(false);
@@ -125,7 +135,18 @@ const bucketPath = (path?: string | Array<string>) => {
   return joinRelativeURL("/browser", encodeURIComponent(bucketName.value), path ? encodeURIComponent(path) : "");
 };
 
-const columns = [
+interface RowData {
+  Key: string;
+  type: "prefix" | "object";
+  Size: number;
+  LastModified: string;
+
+}
+
+const columns:DataTableColumns<RowData> =  [
+   {
+    type: "selection",
+  },
   {
     key: "Key",
     title: "对象",
@@ -147,7 +168,7 @@ const columns = [
     key: "LastModified",
     title: "更新时间",
     render: (row: { LastModified: string }) => {
-      return new Date(row.LastModified).toLocaleString();
+      return row.LastModified? new Date(row.LastModified).toLocaleString() : "";
     },
   },
 ];
@@ -158,10 +179,18 @@ interface ListObjectsResponse {
   nextContinuationToken: string | null;
   isTruncated: boolean;
 }
-
+const randomString= () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+const salt = ref(randomString())
 // 在服务端获取数据
 const { data, refresh } = await useAsyncData<ListObjectsResponse>(
-  `objectsData&${prefix.value}&${pageSize.value}&${continuationToken.value}`,
+  `objectsData-${salt.value}&${prefix.value}&${pageSize.value}&${continuationToken.value}`,
   async () => {
     const params = {
       Bucket: bucketName.value,
@@ -214,6 +243,51 @@ const objects = computed(() => {
       })
     );
 });
+
+
+
+/** ************************************批量删除 */
+function rowKey(row: any): string {
+  return row.Key;
+}
+
+const checkedKeys = ref<DataTableRowKey[]>([]);
+function handleCheck(keys: DataTableRowKey[]) {
+  checkedKeys.value = keys;
+  return checkedKeys;
+}
+const objectApi = useObject({ bucket: bucketName.value });
+
+// 批量删除
+function deleteByList() {
+  dialog.error({
+    title: "警告",
+    content: "你确定要删除所有选中的对象吗？",
+    positiveText: "确定",
+    negativeText: "取消",
+    onPositiveClick: async () => {
+      if (!checkedKeys.value.length) {
+        message.error("请至少选择一项");
+        return;
+      }
+      try {
+        await Promise.all(checkedKeys.value.map((item) => {
+          const findOne = objects.value.find((obj) => obj.Key === item);
+          // 目录删除
+          // if (findOne?.type === "prefix") {
+          //   return objectApi.deletePrefix(item as string)
+          // }
+          objectApi.deleteObject(item as string)
+        }));
+        message.success("删除成功");
+        salt.value = randomString()
+        refresh();
+      } catch (error) {
+        message.error("删除失败");
+      }
+    },
+  });
+}
 
 // 为了实现 “Previous” 功能，需要记录访问过的 token 列表。
 // 因为我们是通过路由导航，每次下一页时会改变 URL，从而 SSR 获取新数据。

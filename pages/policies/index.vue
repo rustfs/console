@@ -20,22 +20,28 @@
             </template>
           </n-input>
         </div>
-        <div class="flex items-center gap-4">
+        <!-- <div class="flex items-center gap-4">
           <n-button @click="() => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
             <span>刷新</span>
           </n-button>
-        </div>
+        </div> -->
       </div>
-      <n-data-table ref="tableRef" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pilicies" :pagination="false" :bordered="false" />
+      <n-data-table
+        ref="tableRef"
+        class="border dark:border-neutral-700 rounded overflow-hidden"
+        :columns="columns"
+        :data="pilicies"
+        :pagination="false"
+        :bordered="false" />
     </page-content>
     <policies-form-item v-model:show="showPolicyForm" :policy="current" @saved="fetchPolicies" />
   </div>
 </template>
 <script lang="ts" setup>
-import { Icon } from '#components'
-import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from 'naive-ui'
-import { useNuxtApp } from 'nuxt/app'
+import { Icon } from "#components";
+import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from "naive-ui";
+import { useNuxtApp } from "nuxt/app";
 const { $api } = useNuxtApp();
 const message = useMessage();
 
@@ -46,17 +52,17 @@ const showPolicyForm = computed({
   get: () => !!current.value,
   set: (val) => {
     if (!val) current.value = null;
-  }
+  },
 });
 
 const handleEdit = (item: any) => {
   current.value = item;
-}
+};
 
 const handleNew = () => {
   current.value = {
-    name: '',
-    content: '',
+    name: "",
+    content: "{}",
   };
 };
 
@@ -67,50 +73,50 @@ interface RowData {
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: '名称',
-    key: 'name',
+    title: "名称",
+    key: "name",
     filter(value, row) {
       return !!row.name.includes(value.toString());
     },
   },
 
   {
-    title: '操作',
-    key: 'actions',
-    align: 'center',
+    title: "操作",
+    key: "actions",
+    align: "center",
     width: 180,
     render: (row: any) => {
       return h(
         NSpace,
         {
-          justify: 'center',
+          justify: "center",
         },
         {
           default: () => [
             h(
               NButton,
               {
-                size: 'small',
+                size: "small",
                 secondary: true,
                 onClick: () => handleEdit(row),
               },
               {
-                default: () => '',
-                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
+                default: () => "",
+                icon: () => h(Icon, { name: "ri:edit-2-line" }),
               }
             ),
             h(
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => '确认删除',
+                default: () => "确认删除",
                 trigger: () =>
                   h(
                     NButton,
-                    { size: 'small', secondary: true },
+                    { size: "small", secondary: true },
                     {
-                      default: () => '',
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
+                      default: () => "",
+                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
                     }
                   ),
               }
@@ -131,7 +137,7 @@ function filterName(value: string) {
 
 const fetchPolicies = async () => {
   try {
-    const res = await $api.get('/list-canned-policies');
+    const res = await $api.get("/list-canned-policies");
     pilicies.value = Object.keys(res).map((key) => {
       return {
         name: key,
@@ -139,7 +145,7 @@ const fetchPolicies = async () => {
       };
     });
   } catch (error) {
-    message.error('获取数据失败');
+    message.error("获取数据失败");
   }
 };
 
@@ -154,10 +160,10 @@ const refresh = () => {
 async function deleteItem(row: any) {
   try {
     await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(row.name)}`);
-    message.success('删除成功');
+    message.success("删除成功");
     fetchPolicies();
   } catch (error) {
-    message.error('删除失败');
+    message.error("删除失败");
   }
 }
 </script>

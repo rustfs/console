@@ -34,10 +34,10 @@
           <n-form-item label="" path="name">
             <n-input placeholder="搜索访问秘钥" @input="filterName" />
           </n-form-item>
-          <n-button @click="() => refresh()">
+          <!-- <n-button @click="() => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
             <span>刷新</span>
-          </n-button>
+          </n-button> -->
         </n-flex>
       </n-form>
 
@@ -58,25 +58,32 @@
 </template>
 
 <script lang="ts" setup>
-import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NPopconfirm, NSpace } from "naive-ui"
-import { Icon } from "#components"
-import { ChangePassword, EditItem, NewItem } from "~/components/access-keys"
+import {
+  type DataTableColumns,
+  type DataTableInst,
+  type DataTableRowKey,
+  NButton,
+  NPopconfirm,
+  NSpace,
+} from "naive-ui";
+import { Icon } from "#components";
+import { ChangePassword, EditItem, NewItem } from "~/components/access-keys";
 
-const { $api } = useNuxtApp()
-const dialog = useDialog()
-const message = useMessage()
-const { listUserServiceAccounts, deleteServiceAccount } = useAccessKeys()
+const { $api } = useNuxtApp();
+const dialog = useDialog();
+const message = useMessage();
+const { listUserServiceAccounts, deleteServiceAccount } = useAccessKeys();
 
 const searchForm = reactive({
   name: "",
-})
+});
 interface RowData {
-  accessKey: string
-  expiration: string
-  name: string
-  description: string
-  accountStatus: string
-  actions: string
+  accessKey: string;
+  expiration: string;
+  name: string;
+  description: string;
+  accountStatus: string;
+  actions: string;
 }
 
 const columns: DataTableColumns<RowData> = [
@@ -88,7 +95,7 @@ const columns: DataTableColumns<RowData> = [
     align: "center",
     key: "accessKey",
     filter(value, row) {
-      return !!row.accessKey.includes(value.toString())
+      return !!row.accessKey.includes(value.toString());
     },
   },
   {
@@ -101,7 +108,7 @@ const columns: DataTableColumns<RowData> = [
     align: "center",
     key: "accountStatus",
     render: (row: any) => {
-      return row.accountStatus === "on" ? "可用" : "禁用"
+      return row.accountStatus === "on" ? "可用" : "禁用";
     },
   },
   {
@@ -157,88 +164,88 @@ const columns: DataTableColumns<RowData> = [
             ),
           ],
         }
-      )
+      );
     },
   },
-]
+];
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>()
+const tableRef = ref<DataTableInst>();
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
       accessKey: [value],
-    })
+    });
 }
-const listData = ref<any[]>([])
+const listData = ref<any[]>([]);
 
 onMounted(() => {
-  getDataList()
-})
+  getDataList();
+});
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await listUserServiceAccounts({})
-    listData.value = res.accounts || []
+    const res = await listUserServiceAccounts({});
+    listData.value = res.accounts || [];
   } catch (error) {
-    message.error("获取数据失败")
+    message.error("获取数据失败");
   }
-}
+};
 
 // 刷新
 const refresh = () => {
-  getDataList()
-}
+  getDataList();
+};
 
 /** **********************************添加 */
-const newItemRef = ref()
-const newItemVisible = ref(false)
+const newItemRef = ref();
+const newItemVisible = ref(false);
 
 function addItem() {
-  newItemVisible.value = true
+  newItemVisible.value = true;
 }
 
 // 添加之后的反馈弹窗
-const noticeRef = ref()
+const noticeRef = ref();
 function noticeDialog(data: any) {
-  console.log(data)
-  noticeRef.value.openDialog(data)
+  console.log(data);
+  noticeRef.value.openDialog(data);
 }
 
 /** **********************************修改 */
-const editItemRef = ref()
+const editItemRef = ref();
 function openEditItem(row: any) {
-  editItemRef.value.openDialog(row)
+  editItemRef.value.openDialog(row);
 }
 /** **********************************修改密码 */
-const changePasswordModalRef = ref()
-const changePasswordVisible = ref(false)
+const changePasswordModalRef = ref();
+const changePasswordVisible = ref(false);
 
 function changePassword() {
-  changePasswordVisible.value = true
+  changePasswordVisible.value = true;
 }
 
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
-    const res = await deleteServiceAccount(row.accessKey)
+    const res = await deleteServiceAccount(row.accessKey);
 
-    message.success("删除成功")
-    getDataList()
+    message.success("删除成功");
+    getDataList();
   } catch (error) {
-    message.error("删除失败")
+    message.error("删除失败");
   }
 }
 
 /** ************************************批量删除 */
 function rowKey(row: any): string {
-  return row.accessKey
+  return row.accessKey;
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([])
+const checkedKeys = ref<DataTableRowKey[]>([]);
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys
-  return checkedKeys
+  checkedKeys.value = keys;
+  return checkedKeys;
 }
 // 批量删除
 function deleteByList() {
@@ -249,17 +256,17 @@ function deleteByList() {
     negativeText: "取消",
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error("请至少选择一项")
-        return
+        message.error("请至少选择一项");
+        return;
       }
       try {
-        await Promise.all(checkedKeys.value.map((item) => deleteServiceAccount(item as string)))
-        message.success("删除成功")
-        getDataList()
+        await Promise.all(checkedKeys.value.map((item) => deleteServiceAccount(item as string)));
+        message.success("删除成功");
+        getDataList();
       } catch (error) {
-        message.error("删除失败")
+        message.error("删除失败");
       }
     },
-  })
+  });
 }
 </script>

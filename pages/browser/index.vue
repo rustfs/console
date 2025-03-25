@@ -20,14 +20,19 @@
             </template>
           </n-input>
         </div>
-        <div class="flex items-center gap-4">
+        <!-- <div class="flex items-center gap-4">
           <n-button @click="async () => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
             <span>刷新</span>
           </n-button>
-        </div>
+        </div> -->
       </div>
-      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="data" :pagination="false" :bordered="false" />
+      <n-data-table
+        class="border dark:border-neutral-700 rounded overflow-hidden"
+        :columns="columns"
+        :data="data"
+        :pagination="false"
+        :bordered="false" />
     </page-content>
 
     <buckets-new-form :show="formVisible" @update:show="handleFormClosed"></buckets-new-form>
@@ -35,9 +40,9 @@
 </template>
 
 <script lang="ts" setup>
-import { Icon, NuxtLink } from '#components'
-import { NButton, NSpace, type DataTableColumns } from 'naive-ui'
-import { useRouter } from 'vue-router'
+import { Icon, NuxtLink } from "#components";
+import { NButton, NSpace, type DataTableColumns } from "naive-ui";
+import { useRouter } from "vue-router";
 
 const { listBuckets } = useBucket({});
 const formVisible = ref(false);
@@ -48,50 +53,50 @@ interface RowData {
 }
 const columns: DataTableColumns<RowData> = [
   {
-    title: '桶',
+    title: "桶",
     // dataIndex: 'name',
-    key: 'Name',
+    key: "Name",
     render: (row: { Name: string }) => {
       return h(
         NuxtLink,
         {
           href: `/browser/${encodeURIComponent(row.Name)}`,
-          class: 'flex items-center gap-2',
+          class: "flex items-center gap-2",
         },
         {
-          default: () => [icon('ri:archive-line'), row.Name]
+          default: () => [icon("ri:archive-line"), row.Name],
         }
       );
     },
   },
   {
-    title: '创建时间',
+    title: "创建时间",
     // dataIndex: 'creationDate',
-    key: 'CreationDate',
+    key: "CreationDate",
   },
   {
-    title: '操作',
-    key: 'actions',
-    align: 'center',
+    title: "操作",
+    key: "actions",
+    align: "center",
     width: 100,
     render: (row: RowData) => {
       return h(
         NSpace,
         {
-          justify: 'center',
+          justify: "center",
         },
         {
           default: () => [
             h(
               NButton,
               {
-                size: 'small',
+                size: "small",
                 secondary: true,
                 onClick: () => handleRowClick(row),
               },
               {
-                default: () => '',
-                icon: () => h(Icon, { name: 'ri:settings-5-line' }),
+                default: () => "",
+                icon: () => h(Icon, { name: "ri:settings-5-line" }),
               }
             ),
           ],
@@ -102,7 +107,7 @@ const columns: DataTableColumns<RowData> = [
 ];
 
 const { data, refresh } = await useAsyncData(
-  'buckets',
+  "buckets",
   async () => {
     const response = await listBuckets();
     return response.Buckets || [];

@@ -36,11 +36,11 @@ const props = withDefaults(defineProps<{
 })
 
 const options = [
-  {
-    label: '用户资料',
-    key: 'profile',
-    icon: () => icon('ri:account-box-line')
-  },
+  // {
+  //   label: '用户资料',
+  //   key: 'profile',
+  //   icon: () => icon('ri:account-box-line')
+  // },
   {
     label: '退出登录',
     key: 'logout',

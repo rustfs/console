@@ -12,6 +12,7 @@
     <template #extra>
       <div class="flex items-center gap-4">
         <object-upload-stats />
+        <object-delete-stats />
         <n-button @click="() => handleNewObject(true)">
           <Icon name="ri:add-line" class="mr-2" />
           <span>新建目录</span>
@@ -73,6 +74,7 @@ import dayjs from "dayjs"
 import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
 import { joinRelativeURL } from "ufo"
 import { computed, ref, watch, type VNode } from "vue"
+import { useDeleteTaskManagerStore } from "~/store/delete-tasks"
 import { useUploadTaskManagerStore } from "~/store/upload-tasks"
 
 const route = useRoute();
@@ -87,16 +89,15 @@ const newObjectAsPrefix = ref(false);
 
 // 上传任务
 const uploadTaskStore = useUploadTaskManagerStore();
-const tasks = computed(() => uploadTaskStore.tasks);
+const uploadTasks = computed(() => uploadTaskStore.tasks);
+
+// 删除任务
+const deleteTaskStore = useDeleteTaskManagerStore();
+const deleteTasks = computed(() => deleteTaskStore.tasks);
 
 // 当任务变化时，刷新数据
-watch(
-  () => tasks,
-  () => {
-    setTimeout(refresh, 500);
-  },
-  { deep: true }
-);
+watch(() => uploadTasks, () => setTimeout(refresh, 500), { deep: true });
+watch(() => deleteTasks, () => setTimeout(refresh, 500), { deep: true });
 
 // bucketName
 const bucketName = computed(() => props.bucket as string);
@@ -258,15 +259,19 @@ function deleteByList() {
         return;
       }
       try {
-        await Promise.all(checkedKeys.value.map((item) => {
+        await Promise.all(checkedKeys.value.map(async (item) => {
           const findOne = objects.value.find((obj) => obj.Key === item);
           // 目录删除
-          // if (findOne?.type === "prefix") {
-          //   return objectApi.deletePrefix(item as string)
-          // }
-          objectApi.deleteObject(item as string)
+          // 递归查询目录下的所有文件，然后删除
+          if (findOne?.type === "prefix" && findOne?.Key) {
+            return await objectApi.mapAllFiles(bucketName.value, findOne.Key, (fileKey: string) => {
+              deleteTaskStore.addKeys([fileKey], bucketName.value);
+            });
+          }
+
+          return deleteTaskStore.addKeys([String(item)], bucketName.value);
         }));
-        message.success("删除成功");
+        message.success("删除中");
         salt.value = randomString()
         refresh();
       } catch (error) {

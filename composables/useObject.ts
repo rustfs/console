@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 export function useObject({ bucket, region }: { bucket: string, region?: string }) {
@@ -41,5 +41,37 @@ export function useObject({ bucket, region }: { bucket: string, region?: string 
     return await $client.send(new DeleteObjectCommand(params))
   }
 
-  return { headObject, putObject, deleteObject, getSignedUrl }
+  async function mapAllFiles(bucketName: string, prefix: string, callback: (fileKey: string) => void) {
+    let isTruncated = true;
+    let continuationToken: string | undefined = undefined;
+
+    while (isTruncated) {
+      const params: {
+        Bucket: string;
+        Prefix: string;
+        ContinuationToken?: string;
+      } = {
+        Bucket: bucketName,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      };
+
+      try {
+        const data = await $client.send(new ListObjectsV2Command(params));
+        data.Contents?.forEach((item) => {
+          if (item.Key) {
+            callback(item.Key);
+          }
+        });
+
+        isTruncated = data.IsTruncated || false;
+        continuationToken = data.NextContinuationToken;
+      } catch (error) {
+        console.error("Error listing files: ", error);
+        throw error;
+      }
+    }
+  }
+
+  return { headObject, putObject, deleteObject, getSignedUrl, mapAllFiles }
 }

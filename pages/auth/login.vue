@@ -15,8 +15,8 @@ const sts = ref({
 })
 
 const options = ref([
-  { label: 'Login with accessKeyAndSecretKey', value: 'accessKeyAndSecretKey' },
-  { label: 'Login with sts', value: 'sts' },
+  { label: '秘钥登录', value: 'accessKeyAndSecretKey' },
+  { label: 'STS 登录', value: 'sts' },
 ])
 
 const message = useMessage()
@@ -27,10 +27,10 @@ const handleLogin = async () => {
 
   try {
     await auth.login(credentials)
-    message.success('Login success')
+    message.success('登录成功')
     window.location.href = '/'
   } catch (error) {
-    message.error('Login failed')
+    message.error('登录失败')
   }
 }
 
@@ -53,10 +53,10 @@ const handleLogin = async () => {
     <div class="mt-7 w-full max-w-sm z-10 bg-white shadow-sm dark:bg-neutral-900 dark:border-neutral-700">
       <div class="p-4 sm:p-7">
         <div class="text-center">
-          <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">Sign in</h1>
+          <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">登录</h1>
           <p class="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-            Welcome back! <br>
-            please sign in to your account
+            欢迎回来! <br>
+            <!-- 请登录账号 -->
           </p>
         </div>
 
@@ -68,35 +68,34 @@ const handleLogin = async () => {
             <div class="grid gap-y-6">
               <template v-if="method == 'accessKeyAndSecretKey'">
                 <div>
-                  <label for="accessKey" class="block text-sm mb-2 dark:text-white">Access Key Id</label>
-                  <n-input v-model:value="accessKeyAndSecretKey.accessKeyId" type="text" placeholder="Please input you access key id" />
+                  <label for="accessKey" class="block text-sm mb-2 dark:text-white">账号</label>
+                  <n-input v-model:value="accessKeyAndSecretKey.accessKeyId" type="text" placeholder="请输入账号" />
                 </div>
                 <div>
                   <div class="flex justify-between items-center">
-                    <label for="secretKey" class="block text-sm mb-2 dark:text-white">Secret Access Key</label>
+                    <label for="secretKey" class="block text-sm mb-2 dark:text-white">秘钥</label>
                   </div>
-                  <n-input v-model:value="accessKeyAndSecretKey.secretAccessKey" type="password" placeholder="Please input you secret access key" />
+                  <n-input v-model:value="accessKeyAndSecretKey.secretAccessKey" type="password" placeholder="请输入秘钥" />
                 </div>
               </template>
 
               <template v-else>
                 <div>
-                  <label for="accessKey" class="block text-sm mb-2 dark:text-white">STS Access Key Id</label>
-                  <n-input v-model:value="sts.accessKeyId" type="text" placeholder="Please input you STS access key id" />
+                  <label for="accessKey" class="block text-sm mb-2 dark:text-white">STS 用户名</label>
+                  <n-input v-model:value="sts.accessKeyId" type="text" placeholder="请输入STS 用户名" />
                 </div>
                 <div>
-                  <label for="sts.secretAccessKey" class="block text-sm mb-2 dark:text-white">STS Secret Access Key</label>
-                  <n-input v-model:value="sts.secretAccessKey" type="password" placeholder="Please input you STS secret access key" />
+                  <label for="sts.secretAccessKey" class="block text-sm mb-2 dark:text-white">STS 秘钥</label>
+                  <n-input v-model:value="sts.secretAccessKey" type="password" placeholder="请输入STS 秘钥" />
                 </div>
                 <div>
                   <label for="sessionToken" class="block text-sm mb-2 dark:text-white">STS sessionToken</label>
-                  <n-input v-model:value="sts.sessionToken" type="text" placeholder="Please input you STS sessionToken" />
+                  <n-input v-model:value="sts.sessionToken" type="text" placeholder="请输入 STS sessionToken" />
                 </div>
               </template>
 
               <button type="submit"
-                class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">Sign
-                in</button>
+                class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none">登 录</button>
             </div>
           </form>
           <!-- End Form -->

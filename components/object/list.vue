@@ -20,7 +20,7 @@
           <Icon name="ri:add-line" class="mr-2" />
           <span>新建文件</span>
         </n-button>
-        <n-button @click="() => uploadPickerVisible = true">
+        <n-button @click="() => (uploadPickerVisible = true)">
           <Icon name="ri:file-add-line" class="mr-2" />
           <span>上传文件/文件夹</span>
         </n-button>
@@ -41,133 +41,169 @@
       </div>
     </template>
   </n-page-header>
-  <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="objects" :pagination="false" :bordered="false" />
-  <object-upload-picker :show="uploadPickerVisible" @update:show="val => (uploadPickerVisible = val && refresh())" :bucketName="bucketName" :prefix="prefix" />
-  <object-new-form :show="newObjectFormVisible" :asPrefix="newObjectAsPrefix" @update:show="val => (newObjectFormVisible = val && refresh())" :bucketName="bucketName"
+  <n-data-table
+    class="border dark:border-neutral-700 rounded overflow-hidden"
+    :columns="columns"
+    :data="objects"
+    :pagination="false"
+    :bordered="false" />
+  <object-upload-picker
+    :show="uploadPickerVisible"
+    @update:show="(val) => (uploadPickerVisible = val && refresh())"
+    :bucketName="bucketName"
+    :prefix="prefix" />
+  <object-new-form
+    :show="newObjectFormVisible"
+    :asPrefix="newObjectAsPrefix"
+    @update:show="(val) => (newObjectFormVisible = val && refresh())"
+    :bucketName="bucketName"
     :prefix="prefix" />
 </template>
 
 <script setup lang="ts">
 const { $s3Client } = useNuxtApp();
-import { useAsyncData, useRoute, useRouter } from '#app'
-import { NuxtLink } from '#components'
-import { ListObjectsV2Command, type _Object, type CommonPrefix } from '@aws-sdk/client-s3'
-import { joinRelativeURL } from 'ufo'
-import { computed, ref, watch, type VNode } from 'vue'
-import { useUploadTaskManagerStore } from '~/store/upload-tasks'
+import { useAsyncData, useRoute, useRouter } from "#app";
+import { NuxtLink } from "#components";
+import { ListObjectsV2Command, type _Object, type CommonPrefix } from "@aws-sdk/client-s3";
+import { joinRelativeURL } from "ufo";
+import { computed, ref, watch, type VNode } from "vue";
+import { useUploadTaskManagerStore } from "~/store/upload-tasks";
 
-const route = useRoute()
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
 
-const props = defineProps<{ bucket: string; path: string }>()
+const props = defineProps<{ bucket: string; path: string }>();
 
-const uploadPickerVisible = ref(false)
-const newObjectFormVisible = ref(false)
-const newObjectAsPrefix = ref(false)
+const uploadPickerVisible = ref(false);
+const newObjectFormVisible = ref(false);
+const newObjectAsPrefix = ref(false);
 
 // 上传任务
-const uploadTaskStore = useUploadTaskManagerStore()
-const tasks = computed(() => uploadTaskStore.tasks)
+const uploadTaskStore = useUploadTaskManagerStore();
+const tasks = computed(() => uploadTaskStore.tasks);
 
 // 当任务变化时，刷新数据
-watch(() => tasks, () => {
-  setTimeout(refresh, 500);
-}, { deep: true })
+watch(
+  () => tasks,
+  () => {
+    setTimeout(refresh, 500);
+  },
+  { deep: true }
+);
 
 // bucketName
-const bucketName = computed(() => props.bucket as string)
+const bucketName = computed(() => props.bucket as string);
 // 当前路径的前缀, example: '/folder1/folder2/'
-const prefix = computed(() => decodeURIComponent(props.path as string))
+const prefix = computed(() => decodeURIComponent(props.path as string));
 
 // query 参数
-const pageSize = computed(() => parseInt(route.query.pageSize as string, 10))
+const pageSize = computed(() => parseInt(route.query.pageSize as string, 10));
 // 将 continuationToken 改为 ref
-const continuationToken = ref<string | undefined>(undefined)
+const continuationToken = ref<string | undefined>(undefined);
 
 // 新建文件夹
 const handleNewObject = (asPrefix: boolean) => {
-  newObjectFormVisible.value = true
-  newObjectAsPrefix.value = asPrefix
-}
+  newObjectFormVisible.value = true;
+  newObjectAsPrefix.value = asPrefix;
+};
 
 const bucketPath = (path?: string | Array<string>) => {
   if (Array.isArray(path)) {
-    path = path.join('/')
+    path = path.join("/");
   }
 
-  return joinRelativeURL('/browser', encodeURIComponent(bucketName.value), path ? encodeURIComponent(path) : '')
-}
+  return joinRelativeURL("/browser", encodeURIComponent(bucketName.value), path ? encodeURIComponent(path) : "");
+};
 
 const columns = [
   {
-    key: 'Key', title: '对象', render: (row: { Key: string, type: 'prefix' | 'object' }) => {
-      const displayKey = prefix.value ? row.Key.substring(prefix.value.length) : row.Key
-      let label: string | VNode = displayKey || '/'
+    key: "Key",
+    title: "对象",
+    render: (row: { Key: string; type: "prefix" | "object" }) => {
+      const displayKey = prefix.value ? row.Key.substring(prefix.value.length) : row.Key;
+      let label: string | VNode = displayKey || "/";
 
-      if (row.type === 'prefix') {
-        label = h('span', { class: 'inline-flex items-center gap-2' }, [icon('ri:folder-line'), label])
+      if (row.type === "prefix") {
+        label = h("span", { class: "inline-flex items-center gap-2" }, [icon("ri:folder-line"), label]);
       }
 
-      const keyInUri = row.Key
+      const keyInUri = row.Key;
 
-      return h(NuxtLink, { href: bucketPath(keyInUri), class: 'block text-cyan-400' }, label)
-    }
+      return h(NuxtLink, { href: bucketPath(keyInUri), class: "block text-cyan-400" }, label);
+    },
   },
-  { key: 'Size', title: '大小', render: (row: { Size: number }) => row.Size ? formatBytes(row.Size) : '' },
-  { key: 'LastModified', title: '更新时间' }
-]
+  { key: "Size", title: "大小", render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },
+  {
+    key: "LastModified",
+    title: "更新时间",
+    render: (row: { LastModified: string }) => {
+      return new Date(row.LastModified).toLocaleString();
+    },
+  },
+];
 
 interface ListObjectsResponse {
-  contents: _Object[]
-  commonPrefixes: CommonPrefix[]
-  nextContinuationToken: string | null
-  isTruncated: boolean
+  contents: _Object[];
+  commonPrefixes: CommonPrefix[];
+  nextContinuationToken: string | null;
+  isTruncated: boolean;
 }
 
 // 在服务端获取数据
-const { data, refresh } = await useAsyncData<ListObjectsResponse>(`objectsData&${prefix.value}&${pageSize.value}&${continuationToken.value}`, async () => {
-  const params = {
-    Bucket: bucketName.value,
-    MaxKeys: pageSize.value || 25,
-    Delimiter: '/',
-    Prefix: prefix.value || undefined,
-    ContinuationToken: continuationToken.value
+const { data, refresh } = await useAsyncData<ListObjectsResponse>(
+  `objectsData&${prefix.value}&${pageSize.value}&${continuationToken.value}`,
+  async () => {
+    const params = {
+      Bucket: bucketName.value,
+      MaxKeys: pageSize.value || 25,
+      Delimiter: "/",
+      Prefix: prefix.value || undefined,
+      ContinuationToken: continuationToken.value,
+    };
+
+    const result = await $s3Client.send(new ListObjectsV2Command(params));
+
+    return {
+      contents: result.Contents || [],
+      commonPrefixes: result.CommonPrefixes || [],
+      nextContinuationToken: result.NextContinuationToken || null,
+      isTruncated: result.IsTruncated ?? false,
+    };
   }
+);
 
-  const result = await $s3Client.send(new ListObjectsV2Command(params))
+watch(
+  continuationToken,
+  () => {
+    refresh();
+  },
+  { deep: true }
+);
 
-  return {
-    contents: result.Contents || [],
-    commonPrefixes: result.CommonPrefixes || [],
-    nextContinuationToken: result.NextContinuationToken || null,
-    isTruncated: result.IsTruncated ?? false
-  }
-})
-
-watch(continuationToken, () => {
-  refresh()
-}, { deep: true })
-
-const contents = computed(() => data.value?.contents || [])
-const commonPrefixes = computed(() => data.value?.commonPrefixes || [])
-const nextToken = computed(() => data.value?.nextContinuationToken || null)
+const contents = computed(() => data.value?.contents || []);
+const commonPrefixes = computed(() => data.value?.commonPrefixes || []);
+const nextToken = computed(() => data.value?.nextContinuationToken || null);
 
 const objects = computed(() => {
-  return commonPrefixes.value.map((prefix) => {
-    return {
-      Key: prefix.Prefix,
-      type: 'prefix',
-      Size: 0,
-    }
-  }).concat(contents.value.map((object) => {
-    return {
-      Key: object.Key,
-      type: 'object',
-      Size: object.Size ?? 0,
-      LastModified: object.LastModified ?? new Date(0)
-    }
-  }))
-})
+  return commonPrefixes.value
+    .map((prefix) => {
+      return {
+        Key: prefix.Prefix,
+        type: "prefix",
+        Size: 0,
+      };
+    })
+    .concat(
+      contents.value.map((object) => {
+        return {
+          Key: object.Key,
+          type: "object",
+          Size: object.Size ?? 0,
+          LastModified: object.LastModified ?? new Date(0),
+        };
+      })
+    );
+});
 
 // 为了实现 “Previous” 功能，需要记录访问过的 token 列表。
 // 因为我们是通过路由导航，每次下一页时会改变 URL，从而 SSR 获取新数据。
@@ -176,42 +212,40 @@ const objects = computed(() => {
 // 因此“上一页”可以通过浏览器后退实现，也可以在数据中保存 token 来人工实现。
 // 这里演示一个简化版本——在客户端保存 tokenHistory。
 // 请注意：刷新后 tokenHistory 会丢失，因为它是前端状态。
-const tokenHistory = ref<string[]>([])
+const tokenHistory = ref<string[]>([]);
 
 // 当页面加载后，如果 continuationToken 有值，就表示不是第一页
 // 将当前 continuationToken 添加到历史中
 if (continuationToken.value && !tokenHistory.value.includes(continuationToken.value)) {
-  tokenHistory.value.push(continuationToken.value)
+  tokenHistory.value.push(continuationToken.value);
 }
 
 // previousToken 根据 tokenHistory 来确定
 // tokenHistory 中最后一个是当前页的 token，上一个则是 previousToken
 const previousToken = computed(() => {
-  if (tokenHistory.value.length < 2) return null
+  if (tokenHistory.value.length < 2) return null;
   // 倒数第二个是上一页的 token
-  return tokenHistory.value[tokenHistory.value.length - 2]
-})
+  return tokenHistory.value[tokenHistory.value.length - 2];
+});
 
 // 修改分页方法
 function goToNextPage() {
   if (nextToken.value) {
-    continuationToken.value = nextToken.value
-    tokenHistory.value.push(nextToken.value)
+    continuationToken.value = nextToken.value;
+    tokenHistory.value.push(nextToken.value);
   }
 }
 
 function goToPreviousPage() {
   if (previousToken.value) {
-    continuationToken.value = previousToken.value
+    continuationToken.value = previousToken.value;
     // 将上一页 token 之后的记录删除
-    const prevIndex = tokenHistory.value.indexOf(previousToken.value)
-    tokenHistory.value.splice(prevIndex + 1)
+    const prevIndex = tokenHistory.value.indexOf(previousToken.value);
+    tokenHistory.value.splice(prevIndex + 1);
   } else {
     // 回到第一页
-    continuationToken.value = undefined
-    tokenHistory.value = []
+    continuationToken.value = undefined;
+    tokenHistory.value = [];
   }
 }
-
-
 </script>

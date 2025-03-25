@@ -49,7 +49,7 @@ const formVisible = ref(false);
 
 interface RowData {
   Name: string;
-  creationDate: string;
+  CreationDate: string;
 }
 const columns: DataTableColumns<RowData> = [
   {
@@ -71,8 +71,10 @@ const columns: DataTableColumns<RowData> = [
   },
   {
     title: "创建时间",
-    // dataIndex: 'creationDate',
     key: "CreationDate",
+    render: (row: { CreationDate: string }) => {
+      return new Date(row.CreationDate).toLocaleString();
+    },
   },
   {
     title: "操作",

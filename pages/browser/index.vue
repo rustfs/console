@@ -35,6 +35,7 @@
 
 <script lang="ts" setup>
 import { Icon, NuxtLink } from '#components'
+import dayjs from 'dayjs'
 import { NButton, NSpace, type DataTableColumns } from 'naive-ui'
 import { useRouter } from 'vue-router'
 
@@ -44,8 +45,9 @@ const searchTerm = ref('');
 
 interface RowData {
   Name: string;
-  creationDate: string;
+  CreationDate: string;
 }
+
 const columns: DataTableColumns<RowData> = [
   {
     title: '桶',
@@ -68,6 +70,9 @@ const columns: DataTableColumns<RowData> = [
     title: '创建时间',
     // dataIndex: 'creationDate',
     key: 'CreationDate',
+    render: (row: RowData) => {
+      return dayjs(row.CreationDate).format('YYYY-MM-DD HH:mm:ss');
+    },
   },
   {
     title: '操作',

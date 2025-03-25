@@ -34,12 +34,12 @@
             <Icon name="ri:arrow-right-s-line" class="ml-2" />
           </n-button>
         </n-button-group> -->
-         <n-button :disabled="!checkedKeys.length" secondary @click="deleteByList">
-              <template #icon>
-                <Icon name="ri:delete-bin-5-line"></Icon>
-              </template>
-              删除选中项
-            </n-button>
+        <n-button :disabled="!checkedKeys.length" secondary @click="deleteByList">
+          <template #icon>
+            <Icon name="ri:delete-bin-5-line"></Icon>
+          </template>
+          删除选中项
+        </n-button>
         <n-button @click="() => refresh()">
           <Icon name="ri:refresh-line" class="mr-2" />
           <span>刷新</span>
@@ -47,46 +47,33 @@
       </div>
     </template>
   </n-page-header>
-  <n-data-table
-    class="border dark:border-neutral-700 rounded overflow-hidden"
-    :columns="columns"
-    :data="objects"
-    :row-key="rowKey"
-     @update:checked-row-keys="handleCheck"
-    :pagination="false"
-    :bordered="false" />
-  <object-upload-picker
-    :show="uploadPickerVisible"
-    @update:show="(val) => (uploadPickerVisible = val && refresh())"
-    :bucketName="bucketName"
+  <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="objects" :row-key="rowKey" @update:checked-row-keys="handleCheck"
+    :pagination="false" :bordered="false" />
+  <object-upload-picker :show="uploadPickerVisible" @update:show="(val) => (uploadPickerVisible = val && refresh())" :bucketName="bucketName" :prefix="prefix" />
+  <object-new-form :show="newObjectFormVisible" :asPrefix="newObjectAsPrefix" @update:show="(val) => (newObjectFormVisible = val && refresh())" :bucketName="bucketName"
     :prefix="prefix" />
-  <object-new-form
-    :show="newObjectFormVisible"
-    :asPrefix="newObjectAsPrefix"
-    @update:show="(val) => (newObjectFormVisible = val && refresh())"
-    :bucketName="bucketName"
-    :prefix="prefix" />
-       <n-button-group class="ml-auto">
-          <n-button @click="goToPreviousPage" :disabled="!continuationToken">
-            <Icon name="ri:arrow-left-s-line" class="mr-2" />
-            <span>上一页</span>
-          </n-button>
-          <n-button @click="goToNextPage" :disabled="!nextToken">
-            <span>下一页</span>
-            <Icon name="ri:arrow-right-s-line" class="ml-2" />
-          </n-button>
-        </n-button-group>
+  <n-button-group class="ml-auto">
+    <n-button @click="goToPreviousPage" :disabled="!continuationToken">
+      <Icon name="ri:arrow-left-s-line" class="mr-2" />
+      <span>上一页</span>
+    </n-button>
+    <n-button @click="goToNextPage" :disabled="!nextToken">
+      <span>下一页</span>
+      <Icon name="ri:arrow-right-s-line" class="ml-2" />
+    </n-button>
+  </n-button-group>
 </template>
 
 <script setup lang="ts">
 const { $s3Client } = useNuxtApp();
-import { useAsyncData, useRoute, useRouter } from "#app";
+import { useAsyncData, useRoute, useRouter } from "#app"
+import { NuxtLink } from "#components"
+import { ListObjectsV2Command, type _Object, type CommonPrefix } from "@aws-sdk/client-s3"
+import dayjs from "dayjs"
 import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
-import { NuxtLink } from "#components";
-import { ListObjectsV2Command, type _Object, type CommonPrefix } from "@aws-sdk/client-s3";
-import { joinRelativeURL } from "ufo";
-import { computed, ref, watch, type VNode } from "vue";
-import { useUploadTaskManagerStore } from "~/store/upload-tasks";
+import { joinRelativeURL } from "ufo"
+import { computed, ref, watch, type VNode } from "vue"
+import { useUploadTaskManagerStore } from "~/store/upload-tasks"
 
 const route = useRoute();
 const router = useRouter();
@@ -143,8 +130,8 @@ interface RowData {
 
 }
 
-const columns:DataTableColumns<RowData> =  [
-   {
+const columns: DataTableColumns<RowData> = [
+  {
     type: "selection",
   },
   {
@@ -160,7 +147,7 @@ const columns:DataTableColumns<RowData> =  [
 
       const keyInUri = row.Key;
 
-      return h(NuxtLink, { href: bucketPath(keyInUri), class: "block text-cyan-400" }, ()=>label);
+      return h(NuxtLink, { href: bucketPath(keyInUri), class: "block text-cyan-400" }, () => label);
     },
   },
   { key: "Size", title: "大小", render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },
@@ -168,7 +155,7 @@ const columns:DataTableColumns<RowData> =  [
     key: "LastModified",
     title: "更新时间",
     render: (row: { LastModified: string }) => {
-      return row.LastModified? new Date(row.LastModified).toLocaleString() : "";
+      return row.LastModified ? dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss') : "";
     },
   },
 ];
@@ -179,7 +166,7 @@ interface ListObjectsResponse {
   nextContinuationToken: string | null;
   isTruncated: boolean;
 }
-const randomString= () => {
+const randomString = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
   for (let i = 0; i < 8; i++) {

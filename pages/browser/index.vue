@@ -4,12 +4,6 @@
       <template #title>
         <h1 class="text-2xl font-bold">桶</h1>
       </template>
-      <template #actions>
-        <n-button @click="() => (formVisible = true)">
-          <Icon name="ri:add-line" class="mr-2" />
-          <span>创建桶</span>
-        </n-button>
-      </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
@@ -20,12 +14,16 @@
             </template>
           </n-input>
         </div>
-        <!-- <div class="flex items-center gap-4">
-          <n-button @click="async () => refresh()">
+        <div class="flex items-center gap-4">
+          <!-- <n-button @click="async () => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
             <span>刷新</span>
+          </n-button> -->
+          <n-button @click="() => (formVisible = true)">
+            <Icon name="ri:add-line" class="mr-2" />
+            <span>创建桶</span>
           </n-button>
-        </div> -->
+        </div>
       </div>
       <n-data-table
         class="border dark:border-neutral-700 rounded overflow-hidden"

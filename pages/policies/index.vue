@@ -4,12 +4,6 @@
       <template #title>
         <h1 class="text-2xl font-bold">IAM 策略</h1>
       </template>
-      <template #actions>
-        <n-button @click="handleNew">
-          <Icon name="ri:add-line" class="mr-2" />
-          <span>创建策略</span>
-        </n-button>
-      </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
@@ -20,12 +14,16 @@
             </template>
           </n-input>
         </div>
-        <!-- <div class="flex items-center gap-4">
-          <n-button @click="() => refresh()">
+        <div class="flex items-center gap-4">
+          <!-- <n-button @click="() => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
             <span>刷新</span>
+          </n-button> -->
+          <n-button @click="handleNew">
+            <Icon name="ri:add-line" class="mr-2" />
+            <span>新建策略</span>
           </n-button>
-        </div> -->
+        </div>
       </div>
       <n-data-table
         ref="tableRef"

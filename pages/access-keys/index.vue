@@ -4,28 +4,7 @@
       <template #title>
         <h1 class="text-2xl font-bold">访问密钥</h1>
       </template>
-      <template #actions>
-        <NFlex>
-          <NButton :disabled="!checkedKeys.length" secondary @click="deleteByList">
-            <template #icon>
-              <Icon name="ri:delete-bin-5-line"></Icon>
-            </template>
-            删除选中项
-          </NButton>
-          <!-- <NButton secondary @click="changePassword">
-            <template #icon>
-              <Icon name="ri:key-2-line"></Icon>
-            </template>
-            修改秘钥
-          </NButton> -->
-          <NButton secondary @click="addItem">
-            <template #icon>
-              <Icon name="ri:add-line"></Icon>
-            </template>
-            新增访问秘钥
-          </NButton>
-        </NFlex>
-      </template>
+      <template #actions></template>
     </page-header>
 
     <page-content>
@@ -38,6 +17,26 @@
             <Icon name="ri:refresh-line" class="mr-2" />
             <span>刷新</span>
           </n-button> -->
+          <NFlex>
+            <NButton :disabled="!checkedKeys.length" secondary @click="deleteByList">
+              <template #icon>
+                <Icon name="ri:delete-bin-5-line"></Icon>
+              </template>
+              删除选中项
+            </NButton>
+            <!-- <NButton secondary @click="changePassword">
+            <template #icon>
+              <Icon name="ri:key-2-line"></Icon>
+            </template>
+            修改秘钥
+          </NButton> -->
+            <NButton secondary @click="addItem">
+              <template #icon>
+                <Icon name="ri:add-line"></Icon>
+              </template>
+              新增访问秘钥
+            </NButton>
+          </NFlex>
         </n-flex>
       </n-form>
 

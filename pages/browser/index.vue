@@ -4,30 +4,29 @@
       <template #title>
         <h1 class="text-2xl font-bold">桶</h1>
       </template>
-      <template #actions>
-        <n-button @click="() => (formVisible = true)">
-          <Icon name="ri:add-line" class="mr-2" />
-          <span>创建桶</span>
-        </n-button>
-      </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center justify-between">
-          <n-input placeholder="搜索">
+          <n-input v-model:value="searchTerm" placeholder="搜索">
             <template #prefix>
               <Icon name="ri:search-2-line" />
             </template>
           </n-input>
         </div>
+
         <div class="flex items-center gap-4">
+          <n-button @click="() => (formVisible = true)">
+            <Icon name="ri:add-line" class="mr-2" />
+            <span>创建桶</span>
+          </n-button>
           <n-button @click="async () => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
             <span>刷新</span>
           </n-button>
         </div>
       </div>
-      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="data" :pagination="false" :bordered="false" />
+      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredData" :pagination="false" :bordered="false" />
     </page-content>
 
     <buckets-new-form :show="formVisible" @update:show="handleFormClosed"></buckets-new-form>
@@ -41,6 +40,7 @@ import { useRouter } from 'vue-router'
 
 const { listBuckets } = useBucket({});
 const formVisible = ref(false);
+const searchTerm = ref('');
 
 interface RowData {
   Name: string;
@@ -109,6 +109,17 @@ const { data, refresh } = await useAsyncData(
   },
   { default: () => [] }
 );
+
+const filteredData = computed(() => {
+  if (!searchTerm.value) {
+    return data.value;
+  }
+
+  const term = searchTerm.value.toLowerCase();
+  return data.value.filter(bucket =>
+    bucket.Name?.toLowerCase().includes(term)
+  );
+});
 
 const router = useRouter();
 const handleRowClick = (row: RowData) => {

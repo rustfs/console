@@ -24,7 +24,7 @@
           <Icon name="ri:file-add-line" class="mr-2" />
           <span>上传文件/文件夹</span>
         </n-button>
-        <n-button-group>
+        <!-- <n-button-group>
           <n-button @click="goToPreviousPage" :disabled="!continuationToken">
             <Icon name="ri:arrow-left-s-line" class="mr-2" />
             <span>上一页</span>
@@ -33,7 +33,7 @@
             <span>下一页</span>
             <Icon name="ri:arrow-right-s-line" class="ml-2" />
           </n-button>
-        </n-button-group>
+        </n-button-group> -->
         <n-button @click="() => refresh()">
           <Icon name="ri:refresh-line" class="mr-2" />
           <span>刷新</span>
@@ -58,6 +58,16 @@
     @update:show="(val) => (newObjectFormVisible = val && refresh())"
     :bucketName="bucketName"
     :prefix="prefix" />
+       <n-button-group class="ml-auto">
+          <n-button @click="goToPreviousPage" :disabled="!continuationToken">
+            <Icon name="ri:arrow-left-s-line" class="mr-2" />
+            <span>上一页</span>
+          </n-button>
+          <n-button @click="goToNextPage" :disabled="!nextToken">
+            <span>下一页</span>
+            <Icon name="ri:arrow-right-s-line" class="ml-2" />
+          </n-button>
+        </n-button-group>
 </template>
 
 <script setup lang="ts">
@@ -129,7 +139,7 @@ const columns = [
 
       const keyInUri = row.Key;
 
-      return h(NuxtLink, { href: bucketPath(keyInUri), class: "block text-cyan-400" }, label);
+      return h(NuxtLink, { href: bucketPath(keyInUri), class: "block text-cyan-400" }, ()=>label);
     },
   },
   { key: "Size", title: "大小", render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },

@@ -2,7 +2,7 @@
   <n-page-header subtitle="" @back="router.back()">
     <template #title>
       <div class="flex items-center justify-between">
-        <n-input placeholder="搜索">
+        <n-input placeholder="搜索" v-model:value="searchTerm" @update:value="handleSearch">
           <template #prefix>
             <Icon name="ri:search-2-line" />
           </template>
@@ -48,7 +48,7 @@
       </div>
     </template>
   </n-page-header>
-  <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="objects" :row-key="rowKey" @update:checked-row-keys="handleCheck"
+  <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredObjects" :row-key="rowKey" @update:checked-row-keys="handleCheck"
     :pagination="false" :bordered="false" />
   <object-upload-picker :show="uploadPickerVisible" @update:show="(val) => (uploadPickerVisible = val && refresh())" :bucketName="bucketName" :prefix="prefix" />
   <object-new-form :show="newObjectFormVisible" :asPrefix="newObjectAsPrefix" @update:show="(val) => (newObjectFormVisible = val && refresh())" :bucketName="bucketName"
@@ -86,6 +86,26 @@ const props = defineProps<{ bucket: string; path: string }>();
 const uploadPickerVisible = ref(false);
 const newObjectFormVisible = ref(false);
 const newObjectAsPrefix = ref(false);
+const searchTerm = ref('');
+
+// Add debounce function for search
+const debounce = (fn: Function, delay: number) => {
+  let timer: NodeJS.Timeout | null = null;
+  return (...args: any[]) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn(...args);
+    }, delay);
+  };
+};
+
+const handleSearch = debounce(() => {
+  // Reset pagination when searching
+  if (continuationToken.value) {
+    continuationToken.value = undefined;
+    tokenHistory.value = [];
+  }
+}, 300);
 
 // 上传任务
 const uploadTaskStore = useUploadTaskManagerStore();
@@ -232,7 +252,18 @@ const objects = computed(() => {
     );
 });
 
+// New computed property to filter objects based on search term
+const filteredObjects = computed(() => {
+  if (!searchTerm.value.trim()) {
+    return objects.value;
+  }
 
+  const term = searchTerm.value.toLowerCase();
+  return objects.value.filter(obj => {
+    const displayKey = prefix.value ? obj.Key?.substring(prefix.value.length) : obj.Key;
+    return displayKey?.toLowerCase().includes(term);
+  });
+});
 
 /** ************************************批量删除 */
 function rowKey(row: any): string {

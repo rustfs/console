@@ -37,9 +37,9 @@
 <script lang="ts" setup>
 import { Icon, NuxtLink } from '#components'
 import dayjs from 'dayjs'
-import { NButton, NSpace, type DataTableColumns } from 'naive-ui'
+import { NButton, NSpace, type DataTableColumns ,NPopconfirm} from 'naive-ui'
 
-const { listBuckets } = useBucket({});
+const { listBuckets ,deleteBucket} = useBucket({});
 const formVisible = ref(false);
 const searchTerm = ref('');
 
@@ -78,7 +78,7 @@ const columns: DataTableColumns<RowData> = [
     title: '操作',
     key: 'actions',
     align: 'center',
-    width: 100,
+    width: 140,
     render: (row: RowData) => {
       return h(
         NSpace,
@@ -87,6 +87,22 @@ const columns: DataTableColumns<RowData> = [
         },
         {
           default: () => [
+             h(
+              NPopconfirm,
+              { onPositiveClick: () => deleteItem(row) },
+              {
+                default: () => "确认删除",
+                trigger: () =>
+                  h(
+                    NButton,
+                    { size: "small", secondary: true },
+                    {
+                      default: () => "",
+                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
+                    }
+                  ),
+              }
+            ),
             h(
               NButton,
               {
@@ -99,6 +115,7 @@ const columns: DataTableColumns<RowData> = [
                 icon: () => h(Icon, { name: 'ri:settings-5-line' }),
               }
             ),
+           
           ],
         }
       );
@@ -130,6 +147,18 @@ const infoRef = ref();
 const handleRowClick = (row: RowData,e: Event) => {
   e.stopPropagation();
   infoRef.value.openDrawer(row.Name);
+};
+
+const message = useMessage();
+const deleteItem = async (row: RowData) => {
+   deleteBucket(row.Name).then(()=>{
+    message.success("删除成功")
+       refresh();
+
+  }).catch((error)=>{
+    message.error("删除失败")
+  })
+ 
 };
 const handleFormClosed = (show: boolean) => {
   formVisible.value = show;

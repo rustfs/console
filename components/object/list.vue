@@ -53,6 +53,7 @@
       <Icon name="ri:arrow-right-s-line" class="ml-2" />
     </n-button>
   </n-button-group>
+  <object-info ref="infoRef" />
 </template>
 
 <script setup lang="ts">
@@ -141,6 +142,7 @@ interface RowData {
 
 }
 
+const infoRef = ref();
 const columns: DataTableColumns<RowData> = [
   {
     type: "selection",
@@ -157,13 +159,11 @@ const columns: DataTableColumns<RowData> = [
       }
 
       const keyInUri = row.Key;
-
-      return h(NuxtLink, {  href: 'javascript:;' , class: "block text-cyan-400" ,onClick:(e:MouseEvent)=>{
-        // 阻止跳转
-        
-        e.preventDefault();
-        alert(1)
-      }}, () => label);
+      return h(NuxtLink, { href: row.type === "prefix"? bucketPath(keyInUri) : '', class: "block text-cyan-400" , onClick : (e:MouseEvent)=>{
+        if(row.type === "prefix") return
+        infoRef.value.openDrawer(bucketName.value,row.Key)
+        return
+}} ,() => label); 
     },
   },
   { key: "Size", title: "大小", render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },

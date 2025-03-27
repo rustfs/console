@@ -1,6 +1,7 @@
 import {
   CreateBucketCommand,
   HeadBucketCommand,
+  DeleteBucketCommand,
   ListBucketsCommand,
   GetBucketTaggingCommand,
   PutBucketTaggingCommand,
@@ -36,6 +37,14 @@ export function useBucket({ region }: { region?: string }) {
     }
 
     return await $client.send(new HeadBucketCommand(params))
+  }
+    
+  const deleteBucket = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    }
+
+    return await $client.send(new DeleteBucketCommand(params))
   }
 
   const getBucketTagging = async (bucket: string) => {
@@ -112,6 +121,7 @@ export function useBucket({ region }: { region?: string }) {
     listBuckets,
     createBucket,
     headBucket,
+    deleteBucket,
     getBucketTagging,
     putBucketTagging,
     deleteBucketTagging,

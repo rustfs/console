@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand } from '@aws-sdk/client-s3'
+import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, ListObjectsV2Command, PutObjectCommand,GetObjectTaggingCommand, PutObjectTaggingCommand,DeleteObjectTaggingCommand} from '@aws-sdk/client-s3'
 import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 export function useObject({ bucket, region }: { bucket: string, region?: string }) {
@@ -73,5 +73,33 @@ export function useObject({ bucket, region }: { bucket: string, region?: string 
     }
   }
 
-  return { headObject, putObject, deleteObject, getSignedUrl, mapAllFiles }
+  async function getObjectTagging(key: string) {
+    const params = {
+      Bucket: bucket,
+      Key: key,
+    }
+
+    return await $client.send(new GetObjectTaggingCommand(params))
+  }
+
+  async function putObjectTagging(key: string, tagging: any) {
+    const params = {
+      Bucket: bucket,
+      Key: key,
+      Tagging: tagging
+    }
+
+    return await $client.send(new PutObjectTaggingCommand(params))
+  }
+
+  async function deleteObjectTagging(key: string) {
+    const params = {
+      Bucket: bucket,
+      Key: key,
+    }
+
+    return await $client.send(new DeleteObjectTaggingCommand(params))
+  }
+
+  return { headObject, putObject, deleteObject, getSignedUrl, mapAllFiles,getObjectTagging ,putObjectTagging,deleteObjectTagging}
 }

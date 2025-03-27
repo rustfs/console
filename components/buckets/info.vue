@@ -28,7 +28,7 @@
           <span>匿名访问</span>
         </n-button>
 
-        <n-popconfirm @positive-click="">
+        <n-popconfirm @positive-click="handleDelteBucket">
           <template #trigger>
             <n-button ghost type="error">
               <Icon name="ri:delete-bin-7-line" class="mr-2" />
@@ -55,7 +55,7 @@
       <n-descriptions-item label="桶名称">
         <span class="select-all">{{ bucketName }}</span>
       </n-descriptions-item>
-      <n-descriptions-item class="font-bold">
+      <!-- <n-descriptions-item class="font-bold">
         <template #label>
           当前状态
           <n-button class="align-middle" quaternary round type="primary">
@@ -63,15 +63,15 @@
           </n-button>
         </template>
         {{ 111 }}
-      </n-descriptions-item>
+      </n-descriptions-item> -->
       <n-descriptions-item>
         <template #label>
           访问策略
-          <n-button class="align-middle" quaternary round type="primary">
+          <n-button class="align-middle" quaternary round type="primary" @click="editPolicy">
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
-        {{ 111 }}
+        {{ policyOptions.find(item => item.value === bucketPolicy)?.label }}
       </n-descriptions-item>
       <n-descriptions-item>
         <template #label>
@@ -82,7 +82,7 @@
         </template>
         禁用
       </n-descriptions-item>
-      <n-descriptions-item>
+      <!-- <n-descriptions-item>
         <template #label>
           使用情况报告
           <n-button class="align-middle" quaternary round type="primary">
@@ -90,7 +90,7 @@
           </n-button>
         </template>
         todo
-      </n-descriptions-item>
+      </n-descriptions-item> -->
       <n-descriptions-item>
         <template #label>
           副本
@@ -98,18 +98,10 @@
             <Icon name="ri:edit-2-line" class="mr-2" />
           </n-button>
         </template>
-        todo
+        关闭
       </n-descriptions-item>
-      <n-descriptions-item>
-        <template #label>
-          对象锁
-          <n-button quaternary round type="primary">
-            <Icon name="ri:edit-2-line" class="mr-2" />
-          </n-button>
-        </template>
-        todo
-      </n-descriptions-item>
-      <n-descriptions-item>
+      
+      <!-- <n-descriptions-item>
         <template #label>
           配额
           <n-button class="align-middle" quaternary round type="primary">
@@ -117,7 +109,7 @@
           </n-button>
         </template>
         todo
-      </n-descriptions-item>
+      </n-descriptions-item> -->
       <n-descriptions-item class="w-1/2">
         <template #label>
           标签
@@ -135,6 +127,17 @@
           {{ tag.Key }}:{{ tag.Value }}
         </n-tag>
       </n-descriptions-item>
+
+      <n-descriptions-item>
+        <template #label>
+          对象锁
+          <n-button quaternary round type="primary">
+            <Icon name="ri:edit-2-line" class="mr-2" />
+          </n-button>
+        </template>
+        关闭
+      </n-descriptions-item>
+
       <n-descriptions-item>
         <template #label>
           版本控制
@@ -151,6 +154,23 @@
       </n-descriptions-item>
     </n-descriptions>
   </n-card>
+
+  <!-- policy -->
+<n-modal v-model:show="showPolicyModal" title="设置策略" preset="card" draggable :style="{ width: '750px' }">
+    <n-form ref="policyFormRef" :inline="policyFormValue.policy !=='custom'"  :label-width="80" :model="policyFormValue">
+       <n-form-item label="策略" path="" class="flex-auto">
+        <n-select v-model:value="policyFormValue.policy" placeholder="请选择策略" :options="policyOptions" />
+      </n-form-item>
+      <n-form-item :span="24" v-if="policyFormValue.policy =='custom'" label="策略原文" path="content">
+        <json-editor v-model="policyFormValue.content" class="max-h-[60vh] overflow-y-auto" />
+      </n-form-item>
+      <n-form-item>
+        <n-button type="primary" @click="submitTagForm">确认</n-button>
+        <n-button class="mx-4" @click="showPolicyModal = false">取消</n-button>
+      </n-form-item>
+    </n-form>
+  </n-modal>
+
   <!-- tag -->
   <n-modal v-model:show="showTagModal" title="设置tag" preset="card" draggable :style="{ width: '550px' }">
     <n-form ref="formRef" inline :label-width="80" :model="tagFormValue">
@@ -195,7 +215,56 @@ const props = defineProps<{ bucket: string }>()
 
 const bucketName = computed(() => props.bucket as string)
 
-const { headBucket, getBucketTagging, putBucketTagging, putBucketVersioning, getBucketVersioning } = useBucket({})
+const { headBucket, getBucketTagging, deleteBucket, putBucketTagging, putBucketVersioning, getBucketVersioning , getBucketPolicy,
+    putBucketPolicy,} = useBucket({})
+
+/******** policy ***********************/
+import {setPolicy,getPolicy,getPolicies} from '~/utils/bucketPolicy'
+
+const policys = setPolicy([],'readonly',bucketName.value,'')
+console.log("🚀 ~ policys:", policys)
+const  po = getPolicy(policys,bucketName.value,'')
+console.log(111,po)
+
+const bucketPolicy = ref("private")
+const getbucketPolicy = async () => {
+  try {
+    const res = await getBucketPolicy( bucketName.value )
+    console.log("🚀 ~ getbucketPolicy ~ res:", res)
+    // bucketPolicy.value = res.Policy
+  } catch (error) {
+    // console.error("Error fetching bucket policy:", error)
+  }
+}
+getbucketPolicy()
+
+const policyFormValue = ref({
+  policy: "private",
+  content:'{}'
+})
+const showPolicyModal = ref(false)
+const editPolicy = () => {
+  showPolicyModal.value = true
+}
+const policyOptions = [
+  {
+    label: "公有",
+    value: "public",
+  },
+  {
+    label: "私有",
+    value: "private",
+  },
+  {
+    label: "自定义",
+    value: "custom",
+  },
+]
+
+
+/******** policy ***********************/
+
+
 
 /********Encrypt ***********************/
 const showEncryptModal = ref(false)
@@ -321,18 +390,27 @@ const editTag = (index: number) => {
   tagFormValue.value = { name: nowTag.Key, value: nowTag.Value } // 填充表单
   showTagModal.value = true // 打开模态框
 }
+const dialog = useDialog()
 const handledeleteTag = (index: number) => {
-  nowTagIndex.value = index
-  tags.value.splice(index, 1) // 从标签列表中删除
+   dialog.error({
+    title: "警告",
+    content: "你确定要删除这个标签吗？",
+    positiveText: "确定",
+    negativeText: "取消",
+    onPositiveClick: async () => {
+      nowTagIndex.value = index
+      tags.value.splice(index, 1) // 从标签列表中删除
 
-  // 调用 putBucketTagging 接口
-  putBucketTagging(bucketName.value, { TagSet: tags.value })
-    .then(() => {
-      message.success("标签更新成功")
-    })
-    .catch((error) => {
-      message.error("删除标签失败: " + error.message)
-    })
+      // 调用 putBucketTagging 接口
+      putBucketTagging(bucketName.value, { TagSet: tags.value })
+        .then(() => {
+          message.success("标签更新成功")
+        })
+        .catch((error) => {
+          message.error("删除标签失败: " + error.message)
+        })
+      },
+  });
 }
 /********tag ***********************/
 
@@ -342,4 +420,13 @@ const {
   status,
   refresh,
 } = useAsyncData(`head-bucket&${bucketName.value}`, () => headBucket(bucketName.value))
+
+const  handleDelteBucket = ()=>{
+  deleteBucket(bucketName.value).then(()=>{
+    message.success("删除成功")
+    router.push("/browser")
+  }).catch((error)=>{
+    message.error("删除失败")
+  })
+}
 </script>

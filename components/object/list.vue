@@ -25,16 +25,6 @@
           <Icon name="ri:file-add-line" class="mr-2" />
           <span>上传文件/文件夹</span>
         </n-button>
-        <!-- <n-button-group>
-          <n-button @click="goToPreviousPage" :disabled="!continuationToken">
-            <Icon name="ri:arrow-left-s-line" class="mr-2" />
-            <span>上一页</span>
-          </n-button>
-          <n-button @click="goToNextPage" :disabled="!nextToken">
-            <span>下一页</span>
-            <Icon name="ri:arrow-right-s-line" class="ml-2" />
-          </n-button>
-        </n-button-group> -->
         <n-button :disabled="!checkedKeys.length" secondary @click="handleBatchDelete">
           <template #icon>
             <Icon name="ri:delete-bin-5-line"></Icon>

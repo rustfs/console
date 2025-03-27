@@ -20,7 +20,7 @@
           <span>预览</span>
         </n-button>
 
-        <n-button>
+        <n-button @click="() => showTagView = true">
           <Icon name="ri:price-tag-3-line" class="mr-2" />
           <span>标签</span>
         </n-button>
@@ -56,10 +56,39 @@
     </n-descriptions>
 
     <object-preview-modal v-model:show="showPreview" :bucketName="bucketName" :objectKey="key" />
+
+    <!-- tagview -->
+    <n-modal v-model:show="showTagView"  preset="card" title="设置tag"  draggable class="max-w-screen-md">
+      <n-card class="max-w-screen-md">
+        <n-space class="my-4">
+            <n-tag
+          class="m-2 align-middle"
+          v-for="(tag, index) in tags"
+          type="info"
+          closable
+          @close="handledeleteTag(index)">
+          {{ tag.Key }}:{{ tag.Value }}
+        </n-tag>
+        </n-space>
+        <n-form ref="formRef" inline class="flex" :label-width="80" :model="tagFormValue">
+          <n-form-item label="标签key" path="Key">
+            <n-input v-model:value="tagFormValue.Key" placeholder="输入标签key" />
+          </n-form-item>
+          <n-form-item label="标签值" path="Value">
+            <n-input v-model:value="tagFormValue.Value" placeholder="输入标签值" />
+          </n-form-item>
+          <n-form-item>
+            <n-button type="primary" @click="submitTagForm">添加</n-button>
+            <n-button class="mx-4" @click="showTagView = false">取消</n-button>
+          </n-form-item>
+        </n-form>
+      </n-card>
+  </n-modal>
   </n-card>
 </template>
 
 <script setup lang="ts">
+import { get } from 'lodash';
 import { computed } from 'vue'
 
 const router = useRouter()
@@ -68,12 +97,68 @@ const message = useMessage();
 const props = defineProps<{ bucket: string; objectKey: string }>()
 
 const bucketName = computed(() => props.bucket as string)
+const {getObjectTagging ,putObjectTagging,deleteObjectTagging} = useObject({bucket:bucketName.value})
 
 // 当前路径的前缀, example: '/folder1/folder2/'
 const key = computed(() => decodeURIComponent(props.objectKey as string))
 
 // 预览内容
 const showPreview = ref(false)
+//  标签
+const showTagView = ref(false)
+const tagFormValue = ref({
+  Key: '',
+  Value: ''
+})
+interface Tag {
+  Key: string
+  Value: string
+}
+// 获取tags
+const tags = ref<Tag[]>([])
+const getTags = async()=>{
+  const resp: any = await getObjectTagging(key.value)
+  tags.value = resp.TagSet || []
+
+}
+getTags()
+
+const dialog = useDialog()
+// 删除标签
+const handledeleteTag = async (index: number) => {
+   dialog.error({
+    title: "警告",
+    content: "你确定要删除这个标签吗？",
+    positiveText: "确定",
+    negativeText: "取消",
+    onPositiveClick: async () => {
+      putObjectTagging(key.value, { TagSet: tags.value.filter((item,keyIndex)=> keyIndex!==index) })
+      .then(() => {
+        message.success("标签更新成功")
+        getTags()
+      })
+      .catch((error) => {
+        message.error("删除标签失败: " + error.message)
+      })
+      },
+  });
+ 
+ 
+}
+
+const submitTagForm = async () => {
+  const tag = {
+    Key: tagFormValue.value.Key,
+    Value: tagFormValue.value.Value
+  }
+   putObjectTagging( key.value, {
+    TagSet: [...tags.value,tag]
+  }).then(() => {
+     message.success('标签设置成功')
+     getTags()
+  })
+ 
+}
 
 const objectApi = useObject({ bucket: bucketName.value });
 

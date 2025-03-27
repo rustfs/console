@@ -30,6 +30,7 @@
     </page-content>
 
     <buckets-new-form :show="formVisible" @update:show="handleFormClosed"></buckets-new-form>
+    <buckets-info ref="infoRef"></buckets-info>
   </div>
 </template>
 
@@ -37,7 +38,6 @@
 import { Icon, NuxtLink } from '#components'
 import dayjs from 'dayjs'
 import { NButton, NSpace, type DataTableColumns } from 'naive-ui'
-import { useRouter } from 'vue-router'
 
 const { listBuckets } = useBucket({});
 const formVisible = ref(false);
@@ -92,7 +92,7 @@ const columns: DataTableColumns<RowData> = [
               {
                 size: 'small',
                 secondary: true,
-                onClick: () => handleRowClick(row),
+                onClick: (e) => handleRowClick(row,e),
               },
               {
                 default: () => '',
@@ -126,11 +126,10 @@ const filteredData = computed(() => {
   );
 });
 
-const router = useRouter();
-const handleRowClick = (row: RowData) => {
-  router.push({
-    path: `/buckets/${encodeURIComponent(row.Name)}`,
-  });
+const infoRef = ref();
+const handleRowClick = (row: RowData,e: Event) => {
+  e.stopPropagation();
+  infoRef.value.openDrawer(row.Name);
 };
 const handleFormClosed = (show: boolean) => {
   formVisible.value = show;

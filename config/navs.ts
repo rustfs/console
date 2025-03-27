@@ -20,11 +20,21 @@ export default [
     to: '/users',
     icon: 'ri:file-user-line'
   },
-  // {
-  //   label: '事件',
-  //   to: '/events',
-  //   icon: 'ri:broadcast-line',
-  // },
+  {
+    label: '事件',
+    to: '/events',
+    icon: 'ri:broadcast-line',
+  },
+  {
+    label: '副本',
+    to: '/replication',
+    icon: 'ri:file-copy-line',
+  },
+  {
+    label: '生命周期',
+    to: '/lifecycle',
+    icon: 'ri:exchange-2-line',
+  },
   // {
   //   label: '配置',
   //   to: '/configuration',

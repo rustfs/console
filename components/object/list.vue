@@ -158,7 +158,12 @@ const columns: DataTableColumns<RowData> = [
 
       const keyInUri = row.Key;
 
-      return h(NuxtLink, { href: bucketPath(keyInUri), class: "block text-cyan-400" }, () => label);
+      return h(NuxtLink, {  href: 'javascript:;' , class: "block text-cyan-400" ,onClick:(e:MouseEvent)=>{
+        // 阻止跳转
+        
+        e.preventDefault();
+        alert(1)
+      }}, () => label);
     },
   },
   { key: "Size", title: "大小", render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },

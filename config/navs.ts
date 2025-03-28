@@ -47,8 +47,8 @@ export default [
   },
   {
     label: '许可证',
-    to: 'https://github.com/rustfs/rustfs?tab=Apache-2.0-1-ov-file#readme',
-    target: '_blank',
+    // to: 'https://github.com/rustfs/rustfs?tab=Apache-2.0-1-ov-file#readme',
+    to: '/license',
     icon: 'ri:copyright-line'
   },
   {

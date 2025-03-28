@@ -14,7 +14,7 @@
         </div>
 
         <div class="flex items-center gap-4">
-          <n-button @click="() => (formVisible = true)">
+          <n-button @click="() => openForm()">
             <Icon name="ri:add-line" class="mr-2" />
             <span>添加生命周期规则</span>
           </n-button>
@@ -27,7 +27,7 @@
       <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false" :bordered="false" />
     </page-content>
 
-    <buckets-info ref="infoRef"></buckets-info>
+    <lifecycle-new-form ref="formRef"></lifecycle-new-form>
   </div>
 </template>
 
@@ -36,7 +36,6 @@ import { Icon } from '#components'
 import { NButton, NSpace, type DataTableColumns } from 'naive-ui'
 
 const { listBuckets } = useBucket({});
-const formVisible = ref(false);
 const searchTerm = ref('');
 
 interface RowData {
@@ -128,6 +127,11 @@ const bucketName = ref<string>(
 );
 
 const pageData = ref([])
+
+const formRef = ref()
+const openForm = ()=>{
+  formRef.value.open()
+}
 
 const handleRowDelete = (row: RowData, e: Event) => {
   e.stopPropagation();

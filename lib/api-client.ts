@@ -1,5 +1,5 @@
-import type { AwsClient } from "aws4fetch"
-import { joinURL } from "ufo"
+import type { AwsClient } from "aws4fetch";
+import { joinURL } from "ufo";
 
 class ApiClient {
   private $api: any
@@ -15,7 +15,6 @@ class ApiClient {
     options.headers = { ...this.config?.headers, ...options.headers }
     // 处理body的数据格式
     options.body ? (options.body = JSON.stringify(options.body)) : null
-    console.log("🚀 ~ ApiClient ~ request ~ options:", options)
 
     if (options.params) {
       const queryString = new URLSearchParams(options.params).toString()
@@ -23,7 +22,12 @@ class ApiClient {
       delete options.params // 删除params，以免影响fetch的options
     }
 
+    console.log("[request] url:", url)
+    console.log("[request] options:", options)
+
     const response = await this.$api.fetch(url, options)
+
+    console.log("[request] response:", response);
 
     if (!response.ok) {
       throw new Error(response.statusText)

@@ -1,5 +1,5 @@
-import { AwsClient } from 'aws4fetch';
 import ApiClient from '~/lib/api-client';
+import { AwsClient } from '~/lib/aws4fetch';
 import type { SiteConfig } from '~/types/config'; // Updated import
 
 export default defineNuxtPlugin({

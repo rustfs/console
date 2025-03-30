@@ -1,5 +1,5 @@
-import type { AwsClient } from "aws4fetch";
 import { joinURL } from "ufo";
+import type { AwsClient } from "./aws4fetch";
 
 class ApiClient {
   private $api: any

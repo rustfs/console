@@ -41,6 +41,18 @@ export function useObject({ bucket, region }: { bucket: string, region?: string 
     return await $client.send(new DeleteObjectCommand(params))
   }
 
+  const listObject = async (bucket:string,prefix :string| undefined = undefined,pageSize :number = 25) => {
+    const params = {
+      Bucket: bucket,
+      Prefix: prefix,
+      MaxKeys: pageSize ,
+      Delimiter: "/",
+    }
+
+    return await $client.send(new ListObjectsV2Command(params))
+  }
+
+
   async function mapAllFiles(bucketName: string, prefix: string, callback: (fileKey: string) => void) {
     let isTruncated = true;
     let continuationToken: string | undefined = undefined;
@@ -101,5 +113,5 @@ export function useObject({ bucket, region }: { bucket: string, region?: string 
     return await $client.send(new DeleteObjectTaggingCommand(params))
   }
 
-  return { headObject, putObject, deleteObject, getSignedUrl, mapAllFiles,getObjectTagging ,putObjectTagging,deleteObjectTagging}
+  return { headObject, putObject, deleteObject, getSignedUrl, mapAllFiles,listObject,getObjectTagging ,putObjectTagging,deleteObjectTagging}
 }

@@ -154,6 +154,14 @@ const handleRowClick = (row: RowData,e: Event) => {
 
 const message = useMessage();
 const deleteItem = async (row: RowData) => {
+const objectApi = useObject({ bucket: row.Name});
+
+  const files = await objectApi.listObject(row.Name);
+
+  if(files.KeyCount){
+    message.error("当前桶不为空，请先删除桶内容")
+    return 
+  }
    deleteBucket(row.Name).then(()=>{
     message.success("删除成功")
        refresh();

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { useClipboard } from '@vueuse/core';
 const props = defineProps({
   readonly: {
     type: Boolean,
@@ -13,23 +12,40 @@ const props = defineProps({
 
 const model = defineModel<string>();
 
-const { copy, isSupported } = useClipboard();
 const message = useMessage();
-
-async function handleCopy() {
-  if (!isSupported) {
-    message.error('您的浏览器不支持Clipboard API');
-    return;
-  }
+ function handleCopy() {
   const value = model.value;
-
   if (!value) {
     message.error('当前无内容');
     return;
   }
 
-  await copy(value);
-  message.success(`复制成功：${value}`);
+ // 首先检查Clipboard API是否可用
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(value).then(() => {
+       message.success(`复制成功：${value}`);
+    }).catch(err => {
+      message.error(`复制失败：${err}`);
+    });
+  } else {
+    // Clipboard API不可用，尝试使用document.execCommand
+    // 创建一个临时的textarea元素来选中文本，以便复制
+    let textarea = document.createElement('textarea');
+    textarea.value = value;
+    document.body.appendChild(textarea);
+    textarea.focus({preventScroll:true});
+    textarea.select();
+    try {
+      // 执行复制操作
+      document.execCommand('copy');
+      message.success(`复制成功：${value}`);
+    } catch (err) {
+      message.error(`复制失败：${err}`);
+    }
+    // 清理临时创建的textarea
+    document.body.removeChild(textarea);
+  }
+
 }
 </script>
 

@@ -2,16 +2,11 @@
  <n-drawer v-model:show="visibel"  :width="450">
     <n-drawer-content title="对象信息">
       <div class="flex items-center gap-4 ml-auto">
-        <n-button @click="() => download()">
+        <n-button @click="download">
           <Icon name="ri:download-line" class="mr-2" />
           <span>下载</span>
         </n-button>
-
-        <n-button @click="() => copySignedUrl()">
-          <Icon name="ri:file-copy-line" class="mr-2" />
-          <span>复制临时链接</span>
-        </n-button>
-
+       
         <n-button @click="() => showPreview = true">
           <Icon name="ri:eye-line" class="mr-2" />
           <span>预览</span>
@@ -22,20 +17,11 @@
           <span>标签</span>
         </n-button>
 
-        <!-- <n-popconfirm @positive-click="deleteObject">
-          <template #trigger>
-            <n-button ghost type="error">
-              <Icon name="ri:delete-bin-7-line" class="mr-2" />
-              <span>删除</span>
-            </n-button>
-          </template>
-          删除对象 <span class="select-all">{{ key }}</span> ?
-        </n-popconfirm> -->
+         <n-button id="copyTag" ref="copyRef"  @click="copySignedUrl">
+          <Icon name="ri:file-copy-line" class="mr-2" />
+          <span>复制临时链接</span>
+        </n-button>
 
-        <!-- <n-button @click="() => refresh()">
-          <Icon name="ri:refresh-line" class="mr-2" />
-          <span>刷新</span>
-        </n-button> -->
       </div>
       <n-card title="对象信息" class="mt-4">
     <div v-if="loading === 'pending'" class="flex items-center justify-center">
@@ -179,9 +165,6 @@ const getObject =  () => {
   })
 }
 
-// 在服务端获取数据
-
-
 const download = async () => {
   const msg = message.loading('正在获取下载链接...');
   const url = await objectApi.getSignedUrl(key.value);
@@ -191,17 +174,31 @@ const download = async () => {
 
 const copySignedUrl = async () => {
   const msg = message.loading('正在获取下载链接...');
-  const url = await objectApi.getSignedUrl(key.value);
-  await navigator.clipboard.writeText(url);
+  let value = await objectApi.getSignedUrl(key.value)
+ if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(value).then(() => {
+      message.success('链接已复制到剪贴板');
+    }).catch(err => {
+      message.error(`复制失败：${err}`);
+    });
+  } else {
+    let textarea = document.createElement('textarea');
+    textarea.value = value;
+    console.log(1)
+    document.body.appendChild(textarea);
+    textarea.focus({preventScroll:true});
+    textarea.select();
+    try {
+      let s = document.execCommand('copy');
+       console.log("🚀 ~ copySignedUrl ~ s:", s)
+       message.success('链接已复制到剪贴板');
+    } catch (err) {
+      message.error(`复制失败：${err}`);
+    }
+    document.body.removeChild(textarea);
+  }
   msg.destroy();
-  message.success('链接已复制到剪贴板');
 }
-const deleteObject = async () => {
-  await objectApi.deleteObject(key.value);
-  message.success('删除成功');
-  router.back();
-}
-
 </script>
 
 <style lang="scss" scoped>

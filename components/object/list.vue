@@ -159,7 +159,7 @@ const columns: DataTableColumns<RowData> = [
       }
 
       const keyInUri = row.Key;
-      return h(NuxtLink, { href: row.type === "prefix"? bucketPath(keyInUri) : '', class: "block text-cyan-400" , onClick : (e:MouseEvent)=>{
+      return h(NuxtLink, { href: row.type === "prefix"? bucketPath(keyInUri) : '', class: "block text-cyan-400 cursor-pointer" , onClick : (e:MouseEvent)=>{
         if(row.type === "prefix") return
         infoRef.value.openDrawer(bucketName.value,row.Key)
         return

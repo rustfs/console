@@ -127,7 +127,10 @@ const { data, refresh } = await useAsyncData(
   'buckets',
   async () => {
     const response = await listBuckets();
-    return response.Buckets || [];
+    // sort by creation date
+    // return response.Buckets?.sort((a:any, b:any) => {return new Date(b.CreationDate).getTime() -  new Date(a.CreationDate).getTime()  }) || [];
+    // sort  by name
+    return response.Buckets?.sort((a:any, b:any) => {return a.Name.localeCompare(b.Name)  }) || [];
   },
   { default: () => [] }
 );

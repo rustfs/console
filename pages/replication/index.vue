@@ -9,7 +9,7 @@
       <div class="flex items-center justify-between">
         <div style="width:300px">
           <n-form-item label="存储桶：" path="" class="flex-auto" label-placement="left">
-            <n-select v-model:value="bucketName" placeholder="请选择桶" :options="bucketList" />
+            <n-select filterable v-model:value="bucketName" placeholder="请选择桶" :options="bucketList" />
           </n-form-item>
         </div>
 

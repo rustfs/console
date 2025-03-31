@@ -14,7 +14,7 @@
         </div>
 
         <div class="flex items-center gap-4">
-          <n-button @click="() => (formVisible = true)">
+          <n-button @click="() => handleNew()">
             <Icon name="ri:add-line" class="mr-2" />
             <span>添加订阅事件</span>
           </n-button>
@@ -29,6 +29,7 @@
         <n-empty description="空空如也" ></n-empty>
       </n-card>
       <!-- <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false" :bordered="false" /> -->
+       <events-new-form ref="newRef"></events-new-form>
     </page-content>
 
   </div>
@@ -136,4 +137,9 @@ const handleRowDelete = (row: RowData, e: Event) => {
   e.stopPropagation();
   console.log(row);
 };
+
+const newRef= ref()
+const handleNew = () => {
+  newRef.value.open()
+}
 </script>

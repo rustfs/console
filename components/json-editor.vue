@@ -35,7 +35,6 @@ watch(
 </template>
 <style scoped>
 :deep(.jse-main) {
-  max-height: 800px;
   min-height: 300px;
 }
 .editor {

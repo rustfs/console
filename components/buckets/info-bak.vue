@@ -162,7 +162,7 @@
         <n-select v-model:value="policyFormValue.policy" placeholder="请选择策略" :options="policyOptions" />
       </n-form-item>
       <n-form-item :span="24" v-if="policyFormValue.policy =='custom'" label="策略原文" path="content">
-        <json-editor v-model="policyFormValue.content" class="max-h-[60vh] overflow-y-auto" />
+        <json-editor v-model="policyFormValue.content" class=" overflow-y-auto" />
       </n-form-item>
       <n-form-item>
         <n-button type="primary" @click="submitTagForm">确认</n-button>

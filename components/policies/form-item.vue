@@ -62,8 +62,8 @@ async function submitForm() {
         <n-form-item-grid-item :span="24" label="策略名称" path="name">
           <n-input v-model:value="name" />
         </n-form-item-grid-item>
-        <n-form-item-grid-item :span="24" label="策略原文" path="content">
-          <json-editor v-model="content" class="max-h-[60vh] overflow-y-auto" />
+        <n-form-item-grid-item :span="24" label="策略原文" path="content" >
+          <n-scrollbar  class="w-full max-h-[60vh] "> <json-editor v-model="content"  /></n-scrollbar>
         </n-form-item-grid-item>
       </n-grid>
     </n-form>

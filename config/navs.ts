@@ -26,7 +26,7 @@ export default [
     icon: 'ri:broadcast-line',
   },
   {
-    label: '副本',
+    label: '桶复制',
     to: '/replication',
     icon: 'ri:file-copy-line',
   },

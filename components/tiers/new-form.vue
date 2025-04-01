@@ -1,0 +1,110 @@
+<template>
+   <n-modal
+    v-model:show="visible"
+    :mask-closable="false"
+    preset="card"
+    title="添加分层"
+    class="max-w-screen-md"
+    :segmented="{
+      content: true,
+      action: true,
+    }">
+    <n-card>
+  <n-form ref="formRef" :model="formData" :rules="rules">
+    <!-- 规则类型 -->
+    <n-form-item label="分层类型" path="type">
+      <n-select
+        v-model:value="formData.type"
+        :options="typeOptions"
+        placeholder="选择规则类型"
+      />
+    </n-form-item>
+   
+    <n-form-item label="名称">
+      <n-input v-model="formData.name" placeholder="请输入名称" />
+    </n-form-item>
+     <n-form-item label="Endpoint">
+      <n-input v-model="formData.endpoint" placeholder="请输入资endpoint" />
+    </n-form-item>
+     <n-form-item label="Access Key ">
+      <n-input v-model="formData.accesskey" placeholder="请输入Access Key" />
+    </n-form-item>
+     <n-form-item label="Secret Key ">
+      <n-input v-model="formData.secretkey" placeholder="请输入Secret Key" />
+    </n-form-item>
+     <n-form-item label="存储空间">
+      <n-input v-model="formData.bucket" placeholder="请输入存储空间" />
+    </n-form-item>
+     <n-form-item label="前缀">
+      <n-input v-model="formData.prefix" placeholder="请输入前缀" />
+    </n-form-item>
+     <n-form-item label="地区">
+      <n-input v-model="formData.regio" placeholder="请输入地区" />
+    </n-form-item>
+    <n-space justify="center">
+      <n-button @click="handleCancel">取消</n-button>
+      <n-button type="primary" @click="handleSave">保存</n-button>
+    </n-space>
+  </n-form>
+  </n-card>
+  </n-modal>
+</template>
+
+<script setup>
+import { ref } from 'vue'
+import {
+  NForm,
+  NFormItem,
+  NInput,
+  NSelect,
+  NButton,
+} from 'naive-ui'
+
+const formRef = ref(null)
+const formData = ref({
+  type:'',
+  name: '',
+  endpoint: '',
+  accesskey: '',
+  secretkey: '',
+  bucket: '',
+  prefix: '',
+  regio: '',
+})
+const typeOptions = [
+  { label: 'Minio', value: 'rustfs' },
+  { label: 'Google Cloue Storage', value: 'google' },
+  { label: 'AWS S3', value: 'AWS' },
+  { label: 'Azure', value: 'azure' },
+]
+
+
+const rules = {
+  ruleName: { required: true, message: '请输入规则名称' },
+  type: { required: true, message: '请选择规则类型' },
+  versionType: { required: true, message: '请选择版本类型' }
+}
+
+
+const visible = ref(false)
+
+const open = () => {
+  visible.value = true
+}
+
+defineExpose({
+  open
+})
+const handleSave = () => {
+  formRef.value?.validate((errors) => {
+    if (!errors) {
+      console.log('提交数据:', formData.value)
+      // 调用保存接口
+    }
+  })
+}
+
+const handleCancel = () => {
+  // 取消逻辑
+}
+</script>

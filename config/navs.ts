@@ -21,7 +21,7 @@ export default [
     icon: 'ri:file-user-line'
   },
   {
-    label: '事件',
+    label: '桶事件',
     to: '/events',
     icon: 'ri:broadcast-line',
   },
@@ -31,9 +31,19 @@ export default [
     icon: 'ri:file-copy-line',
   },
   {
+    label: '分层存储',
+    to: '/tiers',
+    icon: 'ri:stack-line',
+  },
+  {
     label: '生命周期',
     to: '/lifecycle',
     icon: 'ri:exchange-2-line',
+  },
+   {
+    label: '站点复制',
+    to: '/site-replication',
+    icon: 'ri:upload-cloud-2-line',
   },
   // {
   //   label: '配置',

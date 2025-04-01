@@ -66,7 +66,7 @@
      
 
     <!-- 高级设置 -->
-    <n-card class="mt-4">
+    <n-card class="my-4">
       <n-collapse >
         <n-collapse-item title="高级设置" name="advanced">
           <n-form-item label="删除标记处理">

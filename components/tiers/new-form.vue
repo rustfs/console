@@ -9,44 +9,61 @@
       content: true,
       action: true,
     }">
-    <n-card>
-  <n-form ref="formRef" :model="formData" :rules="rules">
-    <!-- 规则类型 -->
-    <n-form-item label="分层类型" path="type">
-      <n-select
-        v-model:value="formData.type"
-        :options="typeOptions"
-        placeholder="选择规则类型"
-      />
-    </n-form-item>
-   
-    <n-form-item label="名称">
-      <n-input v-model="formData.name" placeholder="请输入名称" />
-    </n-form-item>
-     <n-form-item label="Endpoint">
-      <n-input v-model="formData.endpoint" placeholder="请输入资endpoint" />
-    </n-form-item>
-     <n-form-item label="Access Key ">
-      <n-input v-model="formData.accesskey" placeholder="请输入Access Key" />
-    </n-form-item>
-     <n-form-item label="Secret Key ">
-      <n-input v-model="formData.secretkey" placeholder="请输入Secret Key" />
-    </n-form-item>
-     <n-form-item label="存储空间">
-      <n-input v-model="formData.bucket" placeholder="请输入存储空间" />
-    </n-form-item>
-     <n-form-item label="前缀">
-      <n-input v-model="formData.prefix" placeholder="请输入前缀" />
-    </n-form-item>
-     <n-form-item label="地区">
-      <n-input v-model="formData.regio" placeholder="请输入地区" />
-    </n-form-item>
-    <n-space justify="center">
-      <n-button @click="handleCancel">取消</n-button>
-      <n-button type="primary" @click="handleSave">保存</n-button>
-    </n-space>
-  </n-form>
-  </n-card>
+    <n-card v-if="!formData.type">  
+      <n-grid  x-gap="12" y-gap="12" :cols="2">
+        <n-gi>
+          <n-card class="cursor-pointer" @click="formData.type='rustfs'">Minio</n-card>
+        </n-gi>
+         <n-gi>
+          <n-card class="cursor-pointer" @click="formData.type='google'">Google Cloue Storage</n-card>
+        </n-gi>
+         <n-gi>
+          <n-card class="cursor-pointer" @click="formData.type='AWS'">AWS S3</n-card>
+        </n-gi>
+         <n-gi>
+          <n-card class="cursor-pointer" @click="formData.type='azure'">Azure</n-card>
+        </n-gi>
+      </n-grid>
+    </n-card>
+    <n-card v-else>
+      <n-card class="mb-4">{{ formData.type }}</n-card>
+      <n-form ref="formRef" :model="formData" :rules="rules">
+        <!-- 规则类型 -->
+        <!-- <n-form-item label="分层类型" path="type">
+          <n-select
+            v-model:value="formData.type"
+            :options="typeOptions"
+            placeholder="选择规则类型"
+          />
+        </n-form-item> -->
+      
+        <n-form-item label="名称">
+          <n-input v-model="formData.name" placeholder="请输入名称" />
+        </n-form-item>
+        <n-form-item label="Endpoint">
+          <n-input v-model="formData.endpoint" placeholder="请输入资endpoint" />
+        </n-form-item>
+        <n-form-item label="Access Key ">
+          <n-input v-model="formData.accesskey" placeholder="请输入Access Key" />
+        </n-form-item>
+        <n-form-item label="Secret Key ">
+          <n-input v-model="formData.secretkey" placeholder="请输入Secret Key" />
+        </n-form-item>
+        <n-form-item label="存储空间">
+          <n-input v-model="formData.bucket" placeholder="请输入存储空间" />
+        </n-form-item>
+        <n-form-item label="前缀">
+          <n-input v-model="formData.prefix" placeholder="请输入前缀" />
+        </n-form-item>
+        <n-form-item label="地区">
+          <n-input v-model="formData.regio" placeholder="请输入地区" />
+        </n-form-item>
+        <n-space justify="center">
+          <n-button @click="handleCancel">取消</n-button>
+          <n-button type="primary" @click="handleSave">保存</n-button>
+        </n-space>
+      </n-form>
+    </n-card>
   </n-modal>
 </template>
 
@@ -105,6 +122,8 @@ const handleSave = () => {
 }
 
 const handleCancel = () => {
+  visible.value = false
   // 取消逻辑
+  formData.value.type = ''
 }
 </script>

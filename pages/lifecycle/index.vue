@@ -110,7 +110,8 @@ const { data } = await useAsyncData(
   'buckets',
   async () => {
     const response = await listBuckets();
-    return response.Buckets || [];
+    return response.Buckets?.sort((a:any, b:any) => {return a.Name.localeCompare(b.Name)  }) || [];
+
   },
   { default: () => [] }
 );

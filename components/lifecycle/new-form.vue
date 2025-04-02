@@ -10,93 +10,165 @@
       action: true,
     }">
     <n-card>
-  <n-form ref="formRef" :model="formData">
-    <!-- 规则类型 -->
-    <n-form-item label="类型" path="type">
-      <n-select
-        v-model:value="formData.type"
-        :options="typeOptions"
-        placeholder="选择规则类型"
-      />
-    </n-form-item>
-    <n-form-item label="对象版本" path="versionType">
-      <n-select
-        v-model:value="formData.versionType"
-        :options="versionOptions"
-      />
-    </n-form-item>
-    <n-form-item label="" path="type">
-      <div class="w-full flex items-center justify-between" >
-        <span>在</span>
-        <n-input-number
-          class="flex-auto mx-4"
-          v-model:value="formData.days"
-          :min="1"
-          placeholder="天数"
-          style="width: 100px"
-        />
-        <span>天后执行</span>
-        <n-select
-          class="flex-auto mx-4"
-          v-model:value="formData.action"
-          :options="actionOptions"
-          style="width: 120px"
-        />
-      </div>
-    </n-form-item>
-
-    <!-- 生命周期 -->
-    <n-card>  
-      <n-collapse>
-        <n-collapse-item title="搜索生命周期" name="advanced">
-            <n-form-item label="前缀">
-              <n-input v-model="formData.prefix" placeholder="请输入前缀" />
-            </n-form-item>
-            <n-form-item label="标签">
-              <n-dynamic-input
-                v-model:value="formData.tags"
-                preset="pair"
-                key-placeholder="标签名"
-                value-placeholder="标签值"
+      <n-tabs default-value="expire" justify-content="space-evenly" type="line">
+      <n-tab-pane name="expire" tab="到期">
+        <n-form class="my-4" ref="formRef" :model="formData">
+          <n-form-item label="对象版本" path="versionType">
+            <n-select
+              v-model:value="formData.versionType"
+              :options="versionOptions"
+            />
+          </n-form-item>
+          <n-form-item label="" path="type">
+            <div class="w-full flex items-center justify-between" >
+              <span>在</span>
+              <n-input-number
+                class="flex-auto mx-4"
+                v-model:value="formData.days"
+                :min="1"
+                placeholder="天数"
+                style="width: 100px"
               />
-            </n-form-item>
-        </n-collapse-item>
-      </n-collapse>
-    </n-card>
-     
-
-    <!-- 高级设置 -->
-    <n-card class="my-4">
-      <n-collapse >
-        <n-collapse-item title="高级设置" name="advanced">
-          <n-form-item label="删除标记处理">
-            <n-space vertical>
-              <n-switch
-                v-model:value="formData.expiredDeleteMark"
-                :round="false"
-              />
-              <span class="ml-4 text-gray-500">如果没有留下任何版本，请删除对该对象的引用</span>
-            </n-space>
+              <span>天后执行</span>
+              <!-- <n-select
+                class="flex-auto mx-4"
+                v-model:value="formData.action"
+                :options="actionOptions"
+                style="width: 120px"
+              /> -->
+            </div>
           </n-form-item>
 
-          <n-form-item label="版本清理">
-            <n-space vertical>
-              <n-switch
-                v-model:value="formData.deleteAllExpired"
-                :round="false"
-              />
-              <span class="ml-4 text-gray-500">删除所有过期版本</span>
-            </n-space>
+          <!-- 生命周期 -->
+          <n-card>  
+            <n-collapse>
+              <n-collapse-item title="搜索生命周期" name="advanced">
+                  <n-form-item label="前缀">
+                    <n-input v-model="formData.prefix" placeholder="请输入前缀" />
+                  </n-form-item>
+                  <n-form-item label="标签">
+                    <n-dynamic-input
+                      v-model:value="formData.tags"
+                      preset="pair"
+                      key-placeholder="标签名"
+                      value-placeholder="标签值"
+                    />
+                  </n-form-item>
+              </n-collapse-item>
+            </n-collapse>
+          </n-card>
+
+          <!-- 高级设置 -->
+          <n-card class="my-4">
+            <n-collapse >
+              <n-collapse-item title="高级设置" name="advanced">
+                <n-form-item label="删除标记处理">
+                  <n-space vertical>
+                    <n-switch
+                      v-model:value="formData.expiredDeleteMark"
+                      :round="false"
+                    />
+                    <span class="ml-4 text-gray-500">如果没有留下任何版本，请删除对该对象的引用</span>
+                  </n-space>
+                </n-form-item>
+
+                <n-form-item label="版本清理">
+                  <n-space vertical>
+                    <n-switch
+                      v-model:value="formData.deleteAllExpired"
+                      :round="false"
+                    />
+                    <span class="ml-4 text-gray-500">删除所有过期版本</span>
+                  </n-space>
+                </n-form-item>
+              </n-collapse-item>
+            </n-collapse>
+          </n-card> 
+        </n-form>
+      </n-tab-pane>
+      <n-tab-pane name="transition" tab="过渡">
+        <n-form class="my-4" ref="formRef" :model="formData">
+          <n-form-item label="对象版本" path="versionType">
+            <n-select
+              v-model:value="formData.versionType"
+              :options="versionOptions"
+            />
           </n-form-item>
-        </n-collapse-item>
-      </n-collapse>
-    </n-card> 
+          <n-form-item label="" path="type">
+            <div class="w-full flex items-center justify-between" >
+              <span>在</span>
+              <n-input-number
+                class="flex-auto mx-4"
+                v-model:value="formData.days"
+                :min="1"
+                placeholder="天数"
+                style="width: 100px"
+              />
+              <span>天后执行</span>
+              <n-select
+                class="flex-auto mx-4"
+                v-model:value="formData.action"
+                :options="actionOptions"
+                style="width: 120px"
+              />
+            </div>
+          </n-form-item>
+
+          <!-- 生命周期 -->
+          <n-card>  
+            <n-collapse>
+              <n-collapse-item title="搜索生命周期" name="advanced">
+                  <n-form-item label="前缀">
+                    <n-input v-model="formData.prefix" placeholder="请输入前缀" />
+                  </n-form-item>
+                  <n-form-item label="标签">
+                    <n-dynamic-input
+                      v-model:value="formData.tags"
+                      preset="pair"
+                      key-placeholder="标签名"
+                      value-placeholder="标签值"
+                    />
+                  </n-form-item>
+              </n-collapse-item>
+            </n-collapse>
+          </n-card>
+          
+
+          <!-- 高级设置 -->
+          <n-card class="my-4">
+            <n-collapse >
+              <n-collapse-item title="高级设置" name="advanced">
+                <n-form-item label="删除标记处理">
+                  <n-space vertical>
+                    <n-switch
+                      v-model:value="formData.expiredDeleteMark"
+                      :round="false"
+                    />
+                    <span class="ml-4 text-gray-500">如果没有留下任何版本，请删除对该对象的引用</span>
+                  </n-space>
+                </n-form-item>
+
+                <n-form-item label="版本清理">
+                  <n-space vertical>
+                    <n-switch
+                      v-model:value="formData.deleteAllExpired"
+                      :round="false"
+                    />
+                    <span class="ml-4 text-gray-500">删除所有过期版本</span>
+                  </n-space>
+                </n-form-item>
+              </n-collapse-item>
+            </n-collapse>
+          </n-card> 
+        </n-form>
+      </n-tab-pane>
+    </n-tabs>
+  
 
     <n-space justify="center">
       <n-button @click="handleCancel">取消</n-button>
       <n-button type="primary" @click="handleSave">保存</n-button>
     </n-space>
-  </n-form>
   </n-card>
   </n-modal>
 </template>

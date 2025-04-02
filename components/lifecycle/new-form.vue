@@ -3,7 +3,7 @@
     v-model:show="visible"
     :mask-closable="false"
     preset="card"
-    title="添加生命周期规则"
+    :title="`添加生命周期规则（桶：${bucketName}）`"
     class="max-w-screen-md"
     :segmented="{
       content: true,
@@ -146,8 +146,15 @@ const actionOptions = [
   { label: '转储', value: 'transition' },
   { label: '删除', value: 'delete' }
 ]
-const visible = ref(false)
 
+const props = defineProps({
+  bucketName: {
+    type: String,
+    required: true
+  }
+})
+
+const visible = ref(false)
 const open = () => {
   visible.value = true
 }

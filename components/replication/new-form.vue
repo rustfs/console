@@ -3,7 +3,7 @@
     v-model:show="visible"
     :mask-closable="false"
     preset="card"
-    title="添加桶复制规则"
+    :title="`添加桶复制规则（桶：${bucketName}）`"
     class="max-w-screen-md"
     :segmented="{
       content: true,
@@ -149,8 +149,14 @@ const formData = ref({
   deleteAllExpired: false
 })
 
-const visible = ref(false)
+const props = defineProps({
+  bucketName: {
+    type: String,
+    required: true
+  }
+})
 
+const visible = ref(false)
 const open = () => {
   visible.value = true
 }

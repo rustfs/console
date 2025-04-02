@@ -3,7 +3,7 @@
     v-model:show="visible"
     :mask-closable="false"
     preset="card"
-    title="订阅事件通知"
+    :title="`订阅事件通知（桶：${bucketName}）`"
     class="max-w-screen-md"
     :segmented="{
       content: true,
@@ -24,17 +24,16 @@
     </n-form-item>
  
     <n-form-item label="Select 事件">
-      <n-layout content-style="padding: 24px;" class="max-h-64 overflow-y-scroll" :native-scrollbar="false">
-        <n-checkbox-group v-model="formData.events" class="flex flex-wrap flex-col ">
-          <n-checkbox value="PUT" label="PUT - 对象上传" />
-          <n-checkbox  value="GET" label="GET - 对象访问" />
-          <n-checkbox value="DELETE" label="DELETE - 对象删除" />
-          <n-checkbox value="REPLICA" label="REPLICA - 对象迁移" />
-          <n-checkbox value="RESTORE" label="ILM - 对象已转换" />
-          <n-checkbox value="SCANNER" label="SCANNER - 对象有太多版本/前缀有太多子文件夹" />
+       <n-scrollbar  class="w-full max-h-64"> 
+        <n-checkbox-group v-model="formData.events" class="flex  flex-col ">
+          <n-checkbox class="mt-2" value="PUT" label="PUT - 对象上传" />
+          <n-checkbox class="mt-2"  value="GET" label="GET - 对象访问" />
+          <n-checkbox class="mt-2" value="DELETE" label="DELETE - 对象删除" />
+          <n-checkbox class="mt-2" value="REPLICA" label="REPLICA - 对象迁移" />
+          <n-checkbox class="mt-2" value="RESTORE" label="ILM - 对象已转换" />
+          <n-checkbox class="mt-2" value="SCANNER" label="SCANNER - 对象有太多版本/前缀有太多子文件夹" />
         </n-checkbox-group>
-       </n-layout>
-     
+       </n-scrollbar>
     </n-form-item>
  
     <n-space justify="center">
@@ -63,8 +62,14 @@ const formData = ref({
   events: []
 })
 
-const visible = ref(false)
+const props = defineProps({
+  bucketName: {
+    type: String,
+    required: true
+  }
+})
 
+const visible = ref(false)
 const open = () => {
   visible.value = true
 }

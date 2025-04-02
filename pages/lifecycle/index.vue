@@ -27,7 +27,7 @@
       <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false" :bordered="false" />
     </page-content>
 
-    <lifecycle-new-form ref="formRef"></lifecycle-new-form>
+    <lifecycle-new-form :bucketName="bucketName" ref="formRef"></lifecycle-new-form>
   </div>
 </template>
 

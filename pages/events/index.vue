@@ -29,7 +29,7 @@
         <n-empty description="空空如也" ></n-empty>
       </n-card>
       <!-- <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false" :bordered="false" /> -->
-       <events-new-form ref="newRef"></events-new-form>
+       <events-new-form ref="newRef" :bucketName="bucketName"></events-new-form>
     </page-content>
 
   </div>

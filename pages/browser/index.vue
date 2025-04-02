@@ -157,8 +157,9 @@ const deleteItem = async (row: RowData) => {
 const objectApi = useObject({ bucket: row.Name});
 
   const files = await objectApi.listObject(row.Name);
+  console.log("🚀 ~ deleteItem ~ files:", files)
 
-  if(files.KeyCount){
+  if(files.KeyCount || files.CommonPrefixes?.length){
     message.error("当前桶不为空，请先删除桶内容")
     return 
   }

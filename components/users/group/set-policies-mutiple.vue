@@ -95,7 +95,7 @@ function filterName(value: string) {
 const listData = ref<any[]>([])
 const getPoliciesList = async () => {
   const res = await listPolicies()
-  listData.value = Object.keys(res).map((key) => {
+  listData.value = Object.keys(res).sort((a,b)=>a.localeCompare(b)).map((key) => {
     return {
       name: key,
       content: res[key],

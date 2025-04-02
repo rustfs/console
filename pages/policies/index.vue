@@ -136,7 +136,7 @@ function filterName(value: string) {
 const fetchPolicies = async () => {
   try {
     const res = await $api.get("/list-canned-policies");
-    pilicies.value = Object.keys(res).map((key) => {
+    pilicies.value = Object.keys(res).sort((a,b)=>a.localeCompare(b)).map((key) => {
       return {
         name: key,
         content: res[key],

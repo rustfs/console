@@ -99,7 +99,7 @@ const emit = defineEmits<{
 }>()
 const getPoliciesList = async () => {
   const res = await listPolicies()
-  policyList.value = Object.keys(res).map((key) => {
+  policyList.value = Object.keys(res).sort((a,b)=>a.localeCompare(b)).map((key) => {
     return {
       label: key,
       value: key,

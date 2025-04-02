@@ -11,11 +11,11 @@
     }">
     <n-card>
   <n-form label-placement="left" :label-width='100' ref="formRef" :model="formData">
-    <n-form-item label="优先级" path="type">
-       <n-input v-model="formData.level"/>
+    <n-form-item label="优先级" path="level">
+       <n-input v-model="formData.level" placeholder="请输入优先级"/>
     </n-form-item>
     <n-form-item label="目标地址" path="type">
-       <n-input v-model="formData.endpoint"/>
+       <n-input v-model="formData.endpoint" placeholder="请输入目标地址"/>
     </n-form-item>
     <n-form-item label="使用TLS" path="tls">
       <n-switch
@@ -24,29 +24,29 @@
       />
     </n-form-item>
     <n-form-item label="Access Key" path="type">
-       <n-input v-model="formData.accesskey"/>
+       <n-input v-model="formData.accesskey" placeholder="请输入Access Key"/>
     </n-form-item>
     <n-form-item label="Secret Key" path="type">
-       <n-input v-model="formData.secrretkey"/>
+       <n-input v-model="formData.secrretkey" placeholder="请输入Secret Key"/>
     </n-form-item>
     <n-form-item label="目标存储空间" path="type">
-       <n-input v-model="formData.bucket"/>
+       <n-input v-model="formData.bucket" placeholder="请输入目标存储空间"/>
     </n-form-item>
     <n-form-item label="地区" path="type">
-       <n-input v-model="formData.region"/>
+       <n-input v-model="formData.region" placeholder="请输入地区"/>
     </n-form-item>
     <n-form-item label="复制模式" path="type">
-       <n-input v-model="formData.mode"/>
+       <n-input v-model="formData.mode" placeholder="请输入复制模式"/>
     </n-form-item>
 
     <n-form-item label="带宽" path="type">
-       <n-input v-model="formData.daikuan"/>
+       <n-input v-model="formData.daikuan" placeholder="请输入带宽"/>
     </n-form-item>
     <n-form-item label="健康检查时长" path="type">
-       <n-input v-model="formData.timelong"/>
+       <n-input v-model="formData.timelong" placeholder="请输入健康检查时长"/>
     </n-form-item>
     <n-form-item label="存储类型" path="type">
-       <n-input v-model="formData.storageType"/>
+       <n-input v-model="formData.storageType" placeholder="请输入存储类型"/>
     </n-form-item>
 
     <!-- 对象搜索 -->

@@ -62,6 +62,12 @@ export default [
     icon: 'ri:copyright-line'
   },
   {
+    label:'企业授权',
+    // to: 'https://github.com/rustfs/rustfs?tab=Apache-2.0-1-ov-file#readme',
+    to: '/license2',
+    icon: 'ri:copyright-line'
+  },
+  {
     label: '文档',
     to: 'https://rustfs.com/docs/',
     target: '_blank',

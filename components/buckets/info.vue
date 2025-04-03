@@ -20,7 +20,7 @@
         </template>
         禁用
       </n-descriptions-item>
-      <n-descriptions-item>
+      <!-- <n-descriptions-item>
         <template #label>
           副本
           <n-button class="align-middle" quaternary round type="primary">
@@ -28,7 +28,7 @@
           </n-button>
         </template>
         关闭
-      </n-descriptions-item>
+      </n-descriptions-item> -->
       <n-descriptions-item class="w-1/2">
         <template #label>
           标签
@@ -133,6 +133,9 @@
     bucketName.value = bucket
     // 在服务端获取数据
     getData()
+    // putObjectLockConfig()
+    // getObjectLockConfig()
+
   }
   defineExpose({
   openDrawer
@@ -140,13 +143,47 @@
 
   const getData = ()=>{
     getbucketPolicy()
-    getVersioningStatus()
     getTags()
+    getVersioningStatus()
   }
 
 const message = useMessage()
 const { getBucketTagging, deleteBucket, putBucketTagging, putBucketVersioning, getBucketVersioning , getBucketPolicy,
-    putBucketPolicy,} = useBucket({})
+    putBucketPolicy,getObjectLockConfiguration,putObjectLockConfiguration} = useBucket({})
+
+/**********object lock ***********************/
+
+const lockStatus = ref('')
+const getObjectLockConfig = async () => {
+  try {
+    const res = await getObjectLockConfiguration( bucketName.value )
+    console.log("🚀 ~ getObjectLockConfiguration ~ res:", res)
+    // lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled
+  } catch (error) {
+    // console.error("Error fetching bucket policy:", error)
+  }
+}
+
+const putObjectLockConfig = async () => {
+  try {
+    const res = await putObjectLockConfiguration( bucketName.value ,{
+      ObjectLockEnabled: "Enabled",
+      Rule: { // ObjectLockRule
+        DefaultRetention: { // DefaultRetention
+          // Mode: "GOVERNANCE" || "COMPLIANCE",
+          // Days: Number("int"),
+          // Years: Number("int"),
+          Mode: "COMPLIANCE" ,
+          Days: 7,
+        },
+      },
+    })
+    console.log("🚀 ~ putObjectLockConfig ~ res:", res)
+  } catch (error) {
+    // console.error("Error fetching bucket policy:", error)
+  }
+}
+/**********object lock ***********************/
 
 
 /******** policy ***********************/

@@ -13,6 +13,8 @@ import {
   GetBucketPolicyCommand,
   PutBucketPolicyCommand,
   GetBucketPolicyStatusCommand,
+  GetObjectLockConfigurationCommand,
+  PutObjectLockConfigurationCommand
   // GetBucketEncryptionCommand,
 } from "@aws-sdk/client-s3"
 
@@ -117,6 +119,23 @@ export function useBucket({ region }: { region?: string }) {
     return await $client.send(new PutBucketPolicyCommand(params))
   }
 
+  const getObjectLockConfiguration = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    }
+
+    return await $client.send(new GetObjectLockConfigurationCommand(params))
+  }
+
+  const putObjectLockConfiguration = async (bucket: string, objectLockConfiguration: any) => {
+    const params = {
+      Bucket: bucket,
+      ObjectLockConfiguration: objectLockConfiguration,
+    }
+
+    return await $client.send(new PutObjectLockConfigurationCommand(params))
+  }
+
   return {
     listBuckets,
     createBucket,
@@ -130,5 +149,7 @@ export function useBucket({ region }: { region?: string }) {
     getBucketPolicyStatus,
     getBucketPolicy,
     putBucketPolicy,
+    getObjectLockConfiguration,
+    putObjectLockConfiguration
   }
 }

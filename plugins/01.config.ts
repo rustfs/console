@@ -10,7 +10,7 @@ export default defineNuxtPlugin({
       const response = await fetch('/config.json')
       const remoteConfig = await response.json()
       // 获取license
-      const licenseResponse = await fetch('/license.json')
+      const licenseResponse = await fetch('/license')
       const licenseConfig = await licenseResponse.json()
       if (licenseConfig !== null) {
         remoteConfig.license = licenseConfig

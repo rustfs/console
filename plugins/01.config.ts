@@ -12,10 +12,10 @@ export default defineNuxtPlugin({
       // 获取license
       const licenseResponse = await fetch('/license')
       const licenseConfig = await licenseResponse.json()
-      if (licenseConfig !== null) {
-        remoteConfig.license = licenseConfig
-      } else {
+      if(licenseConfig==null ||  (licenseConfig.name==''&& licenseConfig.expired==0)){
          remoteConfig.license = false
+      }else {
+        remoteConfig.license = licenseConfig
       }
 
       // 合并 public/runtimeConfig 与 remote 配置，remote 的优先

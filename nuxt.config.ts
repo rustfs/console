@@ -70,7 +70,7 @@ export default defineNuxtConfig({
       // 授权信息
       license: {
         "name": "Apache-2.0",
-        "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        "expired": ""
       }
     }
   },

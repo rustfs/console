@@ -20,5 +20,9 @@ export const useSystem = () => {
     async getSystemMetrics() {
       return await $api.get("/metrics")
     },
+    // 获取license
+    async getLicense() {
+      return await $api.get("/license")
+    },
   }
 }

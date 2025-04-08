@@ -9,6 +9,15 @@ export default defineNuxtPlugin({
     try {
       const response = await fetch('/config.json')
       const remoteConfig = await response.json()
+      // 获取license
+      const licenseResponse = await fetch('/license.json')
+      const licenseConfig = await licenseResponse.json()
+      if (licenseConfig !== null) {
+        remoteConfig.license = licenseConfig
+      } else {
+         remoteConfig.license = false
+      }
+
       // 合并 public/runtimeConfig 与 remote 配置，remote 的优先
       finalConfig = { ...useRuntimeConfig().public, ...remoteConfig }
       console.log('加载 public/config.json 成功:', remoteConfig)

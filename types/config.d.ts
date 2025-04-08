@@ -16,7 +16,7 @@ export type ReleaseConfig = {
 
 export type LicenseConfig = {
   name: string;
-  url: string;
+  expired: string;
 }
 
 export type SessionConfig = {
@@ -27,6 +27,6 @@ export interface SiteConfig {
   api: ApiConfig;
   s3: S3Config;
   release: ReleaseConfig;
-  license: LicenseConfig;
+  license: LicenseConfig | boolean;
   session?: SessionConfig;
 }

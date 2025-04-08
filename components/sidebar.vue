@@ -73,8 +73,11 @@ const options = computed(() => {
           <n-avatar v-if="isCollapsed" class="text-center text-2xl leading-none">
             {{ appConfig.name.substring(0, 1) }}
           </n-avatar>
-          <h2 v-else class="text-center text-2xl">
+          <h2 v-else class="text-center text-2xl flex">
             <img src="~/assets/logo.svg" class="max-w-28" alt="" />
+            <img src="~/assets/pro.svg" v-if="siteConfig.license" class="ms-1">
+            <img src="~/assets/OSS.svg" v-else class="ms-1">
+
             <span class="sr-only">{{ appConfig.name }}</span>
           </h2>
         </div>

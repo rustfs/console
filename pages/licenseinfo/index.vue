@@ -9,9 +9,13 @@
       <!-- 顶部信息 -->
     <n-card>
       <n-flex justify="space-between" class="top-info py-4 px-2">
-        <n-space vertical>
+        <n-space vertical v-if="new Date().getTime() - siteConfig.license.expired*1000<0">
           <n-space><n-tag type="success">企业版许可证</n-tag> <n-text style="line-height: 28px;" type="success">状态：正常</n-text></n-space>
-          <n-space>许可证有效期：2025-01-01 至 2026-01-01</n-space>
+          <n-space>许可证有效期至：{{ endDate }}</n-space>
+        </n-space>
+        <n-space vertical v-else>
+          <n-space><n-tag type="error">企业版许可证</n-tag> <n-text style="line-height: 28px;" type="error">状态：过期</n-text></n-space>
+          <n-space>许可证有效期：{{ endDate }}</n-space>
         </n-space>
         <n-space >
           <n-button type="primary"  @click="updateLicense">
@@ -24,10 +28,9 @@
       </n-flex>
 
       <!-- 许可证有效期进度条 -->
-      <div class="progress-bar px-2" >
-        <!-- <n-space>许可证有效期</n-space> -->
+      <!-- <div class="progress-bar px-2" >
         <n-progress :percentage="calculateProgressPercentage(startDate,endDate)" indicator-placement="outside" :height="4"> <span style="text-align: center">剩余{{100-calculateProgressPercentage(startDate,endDate)}}%</span></n-progress>
-      </div>
+      </div> -->
     </n-card>
     <!-- 存储使用统计和带宽使用统计 -->
     <!-- <n-flex class="flex my-4">
@@ -41,7 +44,7 @@
     <!-- 许可证详情 -->
     <n-card title="许可证详情" class="license-details mt-4">
       <n-descriptions :columns="2" :bordered="true">
-        <n-descriptions-item label="授权公司">{{ enterprise }}</n-descriptions-item>
+        <n-descriptions-item label="授权公司">{{ siteConfig.license?.name }}</n-descriptions-item>
         <n-descriptions-item label="许可证密钥">{{ licenseKey }}</n-descriptions-item>
         <n-descriptions-item label="授权用户数">无限制</n-descriptions-item>
         <n-descriptions-item label="技术支持级别">企业级（7x24x365）</n-descriptions-item>
@@ -130,6 +133,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import dayjs from 'dayjs';
 import { Icon } from '#components'
 import {NButton} from 'naive-ui'
 import articleL from './article.vue'
@@ -140,10 +144,9 @@ const hasLicense = siteConfig.license
 // 服务开始
 const startDate = new Date('2025-01-01');
 // 服务结束
-const endDate = new Date('2026-01-01');
+const endDate = dayjs(siteConfig.license.expired*1000).format('YYYY-MM-DD');
 
 // 数据
-const enterprise = ref('xxxxx科技有限公司');
 const licenseKey = ref('RUSTFS-ENTERPRISE-127-183');
 const permissions = ref([
   { name: '单机多盘', description: '支持在同一台服务器上管理多个存储盘，提高存储资源利用率并简化管理与维护工作', status: '已启用' },

@@ -75,7 +75,7 @@ const options = computed(() => {
           </n-avatar>
           <h2 v-else class="text-center text-2xl flex">
             <img src="~/assets/logo.svg" class="max-w-28" alt="" />
-            <img src="~/assets/pro.svg" v-if="siteConfig.license" class="ms-1">
+            <img src="~/assets/pro.svg" v-if="siteConfig.license.name &&siteConfig.license.expired !=0 " class="ms-1">
             <img src="~/assets/OSS.svg" v-else class="ms-1">
 
             <span class="sr-only">{{ appConfig.name }}</span>

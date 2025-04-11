@@ -5,8 +5,6 @@ import type { SiteConfig } from '~/types/config'; // Updated import
 export default defineNuxtPlugin({
   name: 'admin-api-client',
   setup(nuxtApp) {
-    console.log('admin-api-client setup');
-
     const siteConfig = nuxtApp.$siteConfig as SiteConfig
     const { isAuthenticated, credentials } = useAuth()
 

@@ -4,7 +4,6 @@ import type { SiteConfig } from "~/types/config";
 export default defineNuxtPlugin({
   name: 's3-client',
   setup(nuxtApp) {
-    console.log('s3-client setup');
     const { credentials, isAuthenticated } = useAuth();
     const siteConfig = nuxtApp.$siteConfig as SiteConfig;
 
@@ -12,7 +11,6 @@ export default defineNuxtPlugin({
       return;
     }
 
-    console.log('s3-client setup', siteConfig);
 
     const client = new S3Client({
       endpoint: siteConfig.s3.endpoint,

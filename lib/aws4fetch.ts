@@ -138,6 +138,17 @@ export class AwsClient {
         return fetched // No need to await if we're returning anyway
       }
       const res = await fetched
+
+      if(res.status === 401) {
+          // 处理 401 错误
+          console.error('Unauthorized: 401 status code received')
+          const message = useMessage()
+          message.error('登录信息已过期，请重新登录')
+          // 你可以在这里添加重定向到登录页面或其他处理逻辑
+          navigateTo('/auth/login')
+          return res
+      }
+
       if (res.status < 500 && res.status !== 429) {
         return res
       }

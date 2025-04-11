@@ -38,6 +38,16 @@ class ApiClient {
       return null
     }
 
+    // 处理401
+    if (response.status === 401) {
+      console.log(1111)
+      const message = useMessage()
+      message.error('登录信息已过期，请重新登录')
+      // 清除登录信息
+      await useAuth().logout()
+      return
+    }
+
     return await response.json()
   }
 

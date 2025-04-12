@@ -79,13 +79,8 @@
         <n-card title="用户情况报告" :bordered="false" class="report-card">
           <n-flex :size="20" justify="space-between" align="center">
             <span class="text-3xl font-bold">{{ niceBytes(datausageinfo.total_used_capacity) }}</span>
-            <n-progress
-              style="margin: 0 8px 12px 0; width: 90px"
-              type="circle"
-              :percentage="datausageinfo.total_used_capacity / datausageinfo.total_capacity"
-              :color="themeVars.infoColor"
-              :rail-color="changeColor(themeVars.infoColor, { alpha: 0.2 })"
-              :indicator-text-color="themeVars.infoColor">
+            <n-progress style="margin: 0 8px 12px 0; width: 90px" type="circle" :percentage="datausageinfo.total_used_capacity / datausageinfo.total_capacity"
+              :color="themeVars.infoColor" :rail-color="changeColor(themeVars.infoColor, { alpha: 0.2 })" :indicator-text-color="themeVars.infoColor">
               <span style="text-align: center"></span>
             </n-progress>
           </n-flex>
@@ -135,7 +130,9 @@
       <n-list-item class="basis-1/3 mx-2" style="background-color: var(--n-color)">
         <n-thing class="px-2">
           <template #avatar>
-            <div><Icon name="ri:secure-payment-fill" /></div>
+            <div>
+              <Icon name="ri:secure-payment-fill" />
+            </div>
           </template>
           <template #header>标准存储类奇偶校验</template>
           <template #header-extra>
@@ -160,8 +157,8 @@
     </n-list>
     <n-space vertical :size="20">
       <n-card :title="`服务器列表(${serverInfo.count})`" :bordered="false" class="server-list-card">
-        <n-collapse>
-          <n-collapse-item v-for="server in systemInfo?.servers" :key="server.endpoint" :title="server.endpoint">
+        <n-collapse :accordion="true" :default-expanded-names="1" class="server-list">
+          <n-collapse-item v-for="(server, index) in systemInfo?.servers" :name="index + 1" :key="server.endpoint" :title="server.endpoint">
             <template #header>
               <div class="flex justify-between align-items-center">
                 <n-space>
@@ -190,27 +187,11 @@
               </div>
             </template>
             <template #header-extra>版本: 2024-03-24T03:47</template>
-            <n-carousel
-              :show-dots="false"
-              :show-arrow="true"
-              :autoplay="false"
-              :slides-per-view="3"
-              ref="driveCarouselRef"
-              draggable
-              class="drive-carousel"
-              :space-between="20">
-              <n-carousel-item
-                v-for="drive in server.drives"
-                :key="drive.uuid"
-                style="width: 350px"
-                class="flex flex-col justify-start items-center p-4 border rounded mx-2 ml-0">
+            <n-carousel :show-dots="false" :show-arrow="true" :autoplay="false" :slides-per-view="3" ref="driveCarouselRef" draggable class="drive-carousel" :space-between="20">
+              <n-carousel-item v-for="drive in server.drives" :key="drive.uuid" style="width: 350px" class="flex flex-col justify-start items-center p-4 border rounded mx-2 ml-0">
                 <div class="self-start ps-6">{{ drive.drive_path }}</div>
                 <div class="flex w-full justify-around items-center my-8">
-                  <n-progress
-                    type="circle"
-                    style="width: 140px"
-                    :percentage="Math.round((drive.used_space / drive.total_space) * 100)"
-                    size="small">
+                  <n-progress type="circle" style="width: 140px" :percentage="Math.round((drive.used_space / drive.total_space) * 100)" size="small">
                     <span class="text-center">{{ niceBytes(drive.used_space) }}</span>
                   </n-progress>
                   <div class="flex flex-col justify-between text-center">
@@ -232,14 +213,13 @@
 </template>
 
 <script lang="ts" setup>
-import { useThemeVars } from "naive-ui"
+import dayjs from "dayjs"
+import { NButton, NCard, NCol, NProgress, NRow, NSpace, useThemeVars } from "naive-ui"
 import { changeColor } from "seemly"
-import { NButton, NCard, NCol, NProgress, NRow, NSpace, NTag, NDivider } from "naive-ui"
+import { niceBytes } from "../../utils/functions"
 const themeVars = useThemeVars()
 const systemApi = useSystem()
 const poolsApi = usePools()
-import dayjs from "dayjs"
-import { niceBytes } from "../../utils/functions"
 
 const systemInfo: any = ref({})
 const getSystemInfo = async () => {

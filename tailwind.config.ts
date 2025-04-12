@@ -1,3 +1,6 @@
+import { setupInspiraUI } from "@inspira-ui/plugins";
+import animate from "tailwindcss-animate";
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -8,7 +11,7 @@ export default {
     './nuxt.config.{js,ts}',
     './app.vue'
   ],
-  darkMode: 'class', // or 'media' or 'class'
+  darkMode: ['class'], // or 'media' or 'class'
   theme: {
     extend: {
       colors: {
@@ -45,19 +48,29 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))'
         },
-
-        // overwrite the naive-ui primary color
         'primary-1': 'rgba(var(--n-primary-color-1))',
         'primary-2': 'rgba(var(--n-primary-color-2))',
         'primary-3': 'rgba(var(--n-primary-color-3))',
-        // ...
         'primary-10': 'rgba(var(--n-primary-color-10))',
         'primary-hover': 'rgba(var(--n-primary-color-hover))',
         'primary-pressed': 'rgba(var(--n-primary-color-pressed))',
         'primary-focus': 'rgba(var(--n-primary-color-focus))',
-        'primary-disabled': 'rgba(var(--n-primary-color-disabled))'
+        'primary-disabled': 'rgba(var(--n-primary-color-disabled))',
+        chart: {
+          '1': 'hsl(var(--chart-1))',
+          '2': 'hsl(var(--chart-2))',
+          '3': 'hsl(var(--chart-3))',
+          '4': 'hsl(var(--chart-4))',
+          '5': 'hsl(var(--chart-5))'
+        }
+      },
+      borderRadius: {
+        xl: 'calc(var(--radius) + 4px)',
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)'
       }
     }
   },
-  plugins: []
+  plugins: [animate, setupInspiraUI, require("tailwindcss-animate")],
 }

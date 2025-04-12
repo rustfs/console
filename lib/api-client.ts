@@ -33,19 +33,19 @@ class ApiClient {
       throw new Error(response.statusText)
     }
 
-    // 204 or body length is 0
-    if (response.status === 204 || response.headers.get("content-length") === "0") {
-      return null
-    }
-
     // 处理401
     if (response.status === 401) {
-      console.log(1111)
       const message = useMessage()
       message.error('登录信息已过期，请重新登录')
       // 清除登录信息
       await useAuth().logout()
+      window.location.href = '/login'
       return
+    }
+
+    // 204 or body length is 0
+    if (response.status === 204 || response.headers.get("content-length") === "0") {
+      return null
     }
 
     return await response.json()

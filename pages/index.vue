@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 const router = useRouter()
-router.push('/browser')
-
 watchEffect(() => {
+  router.push('/browser')
   console.log('Navigated to buckets')
 })
 

@@ -40,7 +40,7 @@ export default [
     to: '/lifecycle',
     icon: 'ri:exchange-2-line',
   },
-   {
+  {
     label: '站点复制',
     to: '/site-replication',
     icon: 'ri:upload-cloud-2-line',
@@ -50,11 +50,11 @@ export default [
   //   to: '/configuration',
   //   icon: 'ri:settings-2-line',
   // },
-  // {
-  //   label: '性能',
-  //   to: '/performance',
-  //   icon: 'ri:bar-chart-box-line'
-  // },
+  {
+    label: '性能',
+    to: '/performance',
+    icon: 'ri:bar-chart-box-line'
+  },
   {
     label: '许可证',
     // to: 'https://github.com/rustfs/rustfs?tab=Apache-2.0-1-ov-file#readme',

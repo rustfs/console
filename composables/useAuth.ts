@@ -44,9 +44,15 @@ export function useAuth() {
     store.value = {}
   }
 
+  const logoutAndRedirect = () => {
+    logout()
+    window.location.href = '/auth/login'
+  }
+
   return {
     login,
     logout,
+    logoutAndRedirect,
     credentials: ref<Credentials | undefined>(getCredentials()),
     isAuthenticated: ref(isValiedCredentials(store.value)),
   }

@@ -32,14 +32,8 @@ export default defineNuxtConfig({
       viewport: 'width=device-width, initial-scale=1',
     }
   },
-  modules: [
-    '@nuxtjs/tailwindcss',
-    // '@nuxtjs/i18n',
-    '@pinia/nuxt',
-    '@nuxt/icon',
-    'nuxtjs-naive-ui',
-    '@vueuse/nuxt'
-  ],
+  modules: ['@nuxtjs/tailwindcss', // '@nuxtjs/i18n',
+  '@pinia/nuxt', '@nuxt/icon', 'nuxtjs-naive-ui', '@vueuse/nuxt', '@nuxt/image'],
   // Nuxt automatically reads the files in the plugins/ directory
   plugins: [],
   runtimeConfig: {

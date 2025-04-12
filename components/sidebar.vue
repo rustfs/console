@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink } from 'vue-router'
 import { useSidebarStore } from '~/store/sidebar'
 import type { SiteConfig } from '~/types/config'
 const appConfig = useAppConfig()
 const siteConfig = useNuxtApp().$siteConfig as unknown as SiteConfig
-const router = useRouter()
+const route = useRoute()
 const sidebarStore = useSidebarStore()
 const isCollapsed = computed(() => sidebarStore.isCollapsed)
 
@@ -66,7 +66,8 @@ const options = computed(() => {
 })
 </script>
 <template>
-  <n-layout-sider bordered class="min-h-full" collapse-mode="width" :collapsed-width="64" :width="240" :native-scrollbar="false" :collapsed="isCollapsed">
+  <n-layout-sider bordered class="min-h-full" collapse-mode="width" :collapsed-width="64" :width="240" :native-scrollbar="false" :collapsed="isCollapsed"
+    v-if="route.path.startsWith('/auth') === false">
     <div class="flex flex-col h-screen overflow-hidden gap-4 relative">
       <div class="border-b dark:border-neutral-800 flex flex-wrap h-16 items-center p-4" :class="isCollapsed ? 'justify-center' : 'justify-between'">
         <div>
@@ -75,8 +76,13 @@ const options = computed(() => {
           </n-avatar>
           <h2 v-else class="text-center text-2xl flex">
             <img src="~/assets/logo.svg" class="max-w-28" alt="" />
-            <img src="~/assets/pro.svg" v-if="siteConfig.license.name &&siteConfig.license.expired !=0 " class="ms-1">
-            <img src="~/assets/OSS.svg" v-else class="ms-1">
+            <span v-if="siteConfig.license.name && siteConfig.license.expired != 0"
+              class="flex items-center justify-center text-[9px] leading-[9px] ml-1 p-1 bg-orange-600 text-white rounded rounded-bl-none">
+              PRO
+            </span>
+            <span v-else class="flex items-center justify-center text-[9px] leading-[9px] ml-1 p-1 bg-green-600 text-white rounded rounded-bl-none">
+              OSS
+            </span>
 
             <span class="sr-only">{{ appConfig.name }}</span>
           </h2>

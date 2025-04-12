@@ -17,6 +17,11 @@ export default defineNuxtPlugin({
     } catch (error) {
       finalConfig = useRuntimeConfig().public
     }
+
+    if (!finalConfig.api.baseURL) {
+      throw new Error('API URL is not defined in the configuration.')
+    }
+
     return {
       provide: {
         siteConfig: finalConfig

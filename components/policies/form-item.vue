@@ -53,7 +53,7 @@ async function submitForm() {
 </script>
 
 <template>
-  <n-modal :show="show" @update:show="val => $emit('update:show', val)" :mask-closable="false" preset="card" title="策略原文" class="max-w-screen-md" :segmented="{
+  <n-modal :show="show" @update:show="(val: boolean) => $emit('update:show', val)" :mask-closable="false" preset="card" title="策略原文" class="max-w-screen-md" :segmented="{
     content: true,
     action: true,
   }">
@@ -62,8 +62,8 @@ async function submitForm() {
         <n-form-item-grid-item :span="24" label="策略名称" path="name">
           <n-input v-model:value="name" />
         </n-form-item-grid-item>
-        <n-form-item-grid-item :span="24" label="策略原文" path="content" >
-          <n-scrollbar  class="w-full max-h-[60vh] "> <json-editor v-model="content"  /></n-scrollbar>
+        <n-form-item-grid-item :span="24" label="策略原文" path="content">
+          <n-scrollbar class="w-full max-h-[60vh] "> <json-editor v-model="content" /></n-scrollbar>
         </n-form-item-grid-item>
       </n-grid>
     </n-form>

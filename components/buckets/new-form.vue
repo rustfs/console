@@ -1,5 +1,5 @@
 <template>
-  <n-modal :show="show" @update:show="val => $emit('update:show', val)" size="huge">
+  <n-modal :show="show" @update:show="(val: boolean) => $emit('update:show', val)" size="huge">
     <n-card class="max-w-screen-sm">
       <template #header>
         <div style="display:flex; justify-content: space-between; align-items:center;">

@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full bg-gray-50 dark:bg-black h-full p-16 flex flex-col justify-center gap-8 overflow-hidden relative">
+  <div class="w-full bg-gray-50 dark:bg-black h-full p-16 flex flex-col justify-center gap-8 overflow-hidden relative border-r dark:border-none">
     <div class="max-w-7xl flex flex-col z-10">
       <img src="~/assets/logo.svg" class="max-w-28" alt="" />
       <div class="text-4xl my-6 font-semibold !text-primary px-0">

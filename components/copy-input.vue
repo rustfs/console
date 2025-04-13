@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import ClipboardJS from 'clipboard'
+
 const props = defineProps({
   readonly: {
     type: Boolean,
@@ -8,51 +10,41 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  id: {
+    type: String,
+    required: false,
+    default: () => {
+      return `copy-input-${Math.random().toString(36).substring(2, 15)}`;
+    },
+  },
 });
 
 const model = defineModel<string>();
 
 const message = useMessage();
- function handleCopy() {
+function handleCopy() {
   const value = model.value;
   if (!value) {
     message.error('当前无内容');
     return;
   }
 
- // 首先检查Clipboard API是否可用
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(value).then(() => {
-       message.success(`复制成功：${value}`);
-    }).catch(err => {
-      message.error(`复制失败：${err}`);
+  try {
+    // @ts-ignore
+    ClipboardJS.copy(document.querySelector(`#${props.id}`)).then(() => {
+      message.success('复制成功');
     });
-  } else {
-    // Clipboard API不可用，尝试使用document.execCommand
-    // 创建一个临时的textarea元素来选中文本，以便复制
-    let textarea = document.createElement('textarea');
-    textarea.value = value;
-    document.body.appendChild(textarea);
-    textarea.focus({preventScroll:true});
-    textarea.select();
-    try {
-      // 执行复制操作
-      document.execCommand('copy');
-      message.success(`复制成功：${value}`);
-    } catch (err) {
-      message.error(`复制失败：${err}`);
-    }
-    // 清理临时创建的textarea
-    document.body.removeChild(textarea);
+  } catch (error) {
+    message.error('复制失败')
+    console.error('复制失败', error);
   }
-
 }
 </script>
 
 <template>
   <div class="h-full">
     <NInputGroup>
-      <n-input v-model:value="model" :readonly="props.readonly" />
+      <n-input v-model:value="model" :readonly="props.readonly" :id="props.id" />
       <n-input-group-label v-if="props.copyIcon" class="flex items-center" @click="handleCopy">
         <Icon :size="25" name="ri:file-copy-line"></Icon>
       </n-input-group-label>

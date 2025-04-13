@@ -6,6 +6,7 @@ import type {
   RadarSeriesOption,
 } from 'echarts/charts'
 // 组件类型的定义后缀都为 ComponentOption
+import { BarChart, LineChart, PieChart, RadarChart } from 'echarts/charts'
 import type {
   DatasetComponentOption,
   GridComponentOption,
@@ -14,7 +15,6 @@ import type {
   ToolboxComponentOption,
   TooltipComponentOption,
 } from 'echarts/components'
-import { BarChart, LineChart, PieChart, RadarChart } from 'echarts/charts'
 
 import {
   DatasetComponent, // 数据集组件
@@ -30,7 +30,6 @@ import * as echarts from 'echarts/core'
 import { LabelLayout, UniversalTransition } from 'echarts/features'
 import { CanvasRenderer } from 'echarts/renderers'
 import { useTemplateRef } from 'vue'
-import { useThemeStore } from '~/store/theme'
 
 // 通过 ComposeOption 来组合出一个只有必须组件和图表的 Option 类型
 export type ECOption = echarts.ComposeOption<
@@ -71,7 +70,7 @@ echarts.use([
 export function useEcharts(ref: string, chartOptions: Ref<ECOption>) {
   const el = useTemplateRef<HTMLLIElement>(ref)
 
-  const themeStore = useThemeStore()
+  const { system, store } = useColorMode()
   let chart: echarts.ECharts | null = null
 
   const { width, height } = useElementSize(el)
@@ -83,7 +82,7 @@ export function useEcharts(ref: string, chartOptions: Ref<ECOption>) {
     if (!width || !height)
       return
 
-    const chartTheme = themeStore.appTheme ? 'dark' : 'light'
+    const chartTheme = store.value == 'auto' ? system.value : store.value
     await nextTick()
     if (el) {
       chart = echarts.init(el.value, chartTheme)

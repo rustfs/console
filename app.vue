@@ -1,10 +1,6 @@
 <template>
-  <div :class="theme.name === darkTheme.name ? 'dark' : ''">
-    <n-config-provider
-      :theme="theme"
-      :locale="locale"
-      :theme-overrides="themeOverrides"
-      :date-locale="dateLocale">
+  <div :class="isDark ? 'dark' : ''">
+    <n-config-provider :theme="theme" :locale="locale" :theme-overrides="themeOverrides" :date-locale="dateLocale">
       <n-dialog-provider>
         <n-notification-provider>
           <n-message-provider>
@@ -18,18 +14,35 @@
   </div>
 </template>
 <script lang="ts" setup>
+import { useColorMode } from '@vueuse/core'
 import {
   darkTheme,
   dateZhCN,
   zhCN,
-  type GlobalTheme,
   type NDateLocale,
   type NLocale
 } from 'naive-ui'
 import { ref } from 'vue'
 import { themeOverrides } from '~/config/theme'
 
-const theme = ref<GlobalTheme>(darkTheme)
+const { system, store } = useColorMode()
+
+const isDark = computed(() => {
+  return store.value === 'dark' || (store.value === 'auto' && system.value === 'dark')
+})
+
+const themeName = computed(() => {
+  return store.value === 'auto' ? system.value : store.value
+})
+
+const theme = computed(() => {
+  if (isDark.value) {
+    return darkTheme
+  }
+
+  return { name: themeName.value }
+})
+
 const locale = ref<NLocale | null>(zhCN)
 const dateLocale = ref<NDateLocale | null>(dateZhCN)
 </script>

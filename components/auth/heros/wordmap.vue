@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full bg-white dark:bg-black h-full p-16 flex flex-col justify-center gap-8">
+  <div class="w-full bg-gray-50 dark:bg-black h-full p-16 flex flex-col justify-center gap-8">
     <div class="max-w-7xl flex flex-col">
       <img src="~/assets/logo.svg" class="max-w-28" alt="" />
       <div class="text-4xl my-6 font-semibold !text-primary px-0">
@@ -10,8 +10,8 @@
         </div>
       </div>
     </div>
-    <WorldMap class="absolute inset-0" :dots="dots" :map-color="isDark ? '#FFFFFF40' : '#00000040'" :map-bg-color="isDark ? 'black' : 'white'" />
-    <a href="https://www.rustfs.com" class="text-primary-500 inline-flex w-min items-center gap-2 leading-none p-2 px-5 border rounded-full border-blue-500">
+    <WorldMap class="absolute inset-0" :dots="dots" :map-color="isDark ? '#FFFFFF40' : '#00000040'" :map-bg-color="isDark ? 'black' : '#f9fafb'" />
+    <a href=" https://www.rustfs.com" class="text-primary-500 inline-flex w-min items-center gap-2 leading-none p-2 px-5 border rounded-full border-blue-500">
       <span>www.rustfs.com</span>
       <Icon name="ri:arrow-right-long-fill" class="mr-2" />
     </a>
@@ -55,5 +55,6 @@ const dots = [
   },
 ];
 
-const isDark = computed(() => useColorMode().value == "dark");
+const mode = useColorMode();
+const isDark = computed(() => mode.value == "dark");
 </script>

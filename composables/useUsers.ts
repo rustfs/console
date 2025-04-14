@@ -1,4 +1,3 @@
-import { AccessKeys } from './../.nuxt/components.d'
 export const useUsers = () => {
   const { $api } = useNuxtApp()
 
@@ -36,8 +35,7 @@ export const useUsers = () => {
    */
   const changeUserStatus = async (name: string, data: any) => {
     return await $api.put(
-      `/set-user-status?accessKey=${encodeURIComponent(name)}&status=${
-        data.status
+      `/set-user-status?accessKey=${encodeURIComponent(name)}&status=${data.status
       }`,
       data
     )

@@ -1,4 +1,3 @@
-import { name } from "./../node_modules/@jsep-plugin/regex/types/tsd.d"
 export const useAccessKeys = () => {
   const { $api } = useNuxtApp()
 

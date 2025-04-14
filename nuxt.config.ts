@@ -10,7 +10,7 @@ const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed f
 export default defineNuxtConfig({
   ssr: false,
   css: ['~/assets/css/tailwind.css', '~/assets/css/overrides.css'],
-  compatibilityDate: '2024-11-01',
+  compatibilityDate: '2025-04-13',
   devtools: { enabled: true },
   app: {
     head: {
@@ -94,5 +94,5 @@ export default defineNuxtConfig({
         resolvers: [NaiveUiResolver()]
       })
     ]
-  }
+  },
 })

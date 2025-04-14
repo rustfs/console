@@ -28,7 +28,6 @@
     "dayjs": "^1.11.13",
     "dotted-map": "^2.2.3",
     "echarts": "^5.6.0",
-    "ipx": "^3.0.3",
     "json-editor-vue": "^0.18.1",
     "lodash": "^4.17.21",
     "lucide-vue-next": "^0.487.0",

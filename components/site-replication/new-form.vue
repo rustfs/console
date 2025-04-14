@@ -80,8 +80,8 @@ import { ref } from 'vue';
 
 const currentSite = ref({
   name: '',
-  endpoint: 'http://127.0.0.1:9000',
-  accessKey: 'rustfsadmin',
+  endpoint: 'http://127.0.0.1:7000',
+  accessKey: 'rusyfsadmin',
   secretKey: ''
 });
 

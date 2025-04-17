@@ -12,10 +12,10 @@
     <n-card>
   <n-form label-placement="left" :label-width='100' ref="formRef" :model="formData">
     <n-form-item label="优先级" path="level">
-       <n-input v-model="formData.level" placeholder="请输入优先级"/>
+       <n-input v-model:value="formData.level" placeholder="请输入优先级"/>
     </n-form-item>
     <n-form-item label="目标地址" path="type">
-       <n-input v-model="formData.endpoint" placeholder="请输入目标地址"/>
+       <n-input v-model:value="formData.endpoint" placeholder="请输入目标地址"/>
     </n-form-item>
     <n-form-item label="使用TLS" path="tls">
       <n-switch
@@ -24,29 +24,32 @@
       />
     </n-form-item>
     <n-form-item label="Access Key" path="type">
-       <n-input v-model="formData.accesskey" placeholder="请输入Access Key"/>
+       <n-input v-model:value="formData.accesskey" placeholder="请输入Access Key"/>
     </n-form-item>
     <n-form-item label="Secret Key" path="type">
-       <n-input v-model="formData.secrretkey" placeholder="请输入Secret Key"/>
+       <n-input v-model:value="formData.secrretkey" placeholder="请输入Secret Key"/>
     </n-form-item>
     <n-form-item label="目标存储空间" path="type">
-       <n-input v-model="formData.bucket" placeholder="请输入目标存储空间"/>
+       <n-input v-model:value="formData.bucket" placeholder="请输入目标存储空间"/>
     </n-form-item>
     <n-form-item label="地区" path="type">
-       <n-input v-model="formData.region" placeholder="请输入地区"/>
+       <n-input v-model:value="formData.region" placeholder="请输入地区"/>
     </n-form-item>
-    <n-form-item label="复制模式" path="type">
-       <n-input v-model="formData.mode" placeholder="请输入复制模式"/>
+    <n-form-item label="复制模式" path="modeType">
+        <n-select v-model:value="formData.modeType"  placeholder="请选择复制模式" filterable  :options="modes" />
     </n-form-item>
 
     <n-form-item label="带宽" path="type">
+      <n-input-group>
        <n-input v-model="formData.daikuan" placeholder="请输入带宽"/>
+        <n-select v-model:value="formData.unit"  placeholder="请选择单位" filterable  :options="units" />
+      </n-input-group>
     </n-form-item>
-    <n-form-item label="健康检查时长" path="type">
-       <n-input v-model="formData.timelong" placeholder="请输入健康检查时长"/>
+    <n-form-item label="健康检查时长" path="timecheck">
+       <n-input v-model:value="formData.timecheck" placeholder="请输入健康检查时长"/>
     </n-form-item>
     <n-form-item label="存储类型" path="type">
-       <n-input v-model="formData.storageType" placeholder="请输入存储类型"/>
+       <n-input v-model:value="formData.storageType" placeholder="请输入存储类型"/>
     </n-form-item>
 
     <!-- 对象搜索 -->
@@ -134,19 +137,55 @@ import {
   NButton,
 } from 'naive-ui'
 
+const modes = [
+  {
+    label: '同步',
+    value: 'sync',
+  },
+  {
+    label: '异步',
+    value: 'async',
+  },
+]
+
+const units = [
+  {
+    label: 'Mi',
+    value: 'Mi',
+  },
+  {
+    label: 'Gi',
+    value: 'Gi',
+  },
+  {
+    label: 'Ti',
+    value: 'Ti',
+  },
+  {
+    label: 'Pi',
+    value: 'Pi',
+  },
+  {
+    label: 'Ei',
+    value: 'Ei',
+  },
+]
+
 const formRef = ref(null)
 const formData = ref({
-  ruleName: '',
+  level:'1',
+  timecheck:'60',
+  modeType: 'sync',
   type: null,
-  versionType: 'current',
-  days: null,
-  action: 'transition',
+  unit: 'Mi',
   tags:[{
     key:'',
     value:''
   }],
   expiredDeleteMark: false,
-  deleteAllExpired: false
+  deleteAllExpired: false,
+  delete:false,
+  deleteforever: false,
 })
 
 const props = defineProps({

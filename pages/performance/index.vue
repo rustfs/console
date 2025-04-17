@@ -180,7 +180,7 @@
                   <span>
                     <n-badge type="success" dot />
                     <span class="align-middle ms-1">
-                      运行时间: {{ dayjs(server.uptime).format("YYYY-MM-DD HH:mm:ss") }}
+                      运行时间: {{ dayjs(server.uptime*1000).format("YYYY-MM-DD HH:mm:ss") }}
                     </span>
                   </span>
                 </n-space>

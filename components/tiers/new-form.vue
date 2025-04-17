@@ -11,17 +11,12 @@
     }">
     <n-card v-if="!formData.type">  
       <n-grid  x-gap="12" y-gap="12" :cols="2">
-        <n-gi>
-          <n-card class="cursor-pointer" @click="formData.type='rustfs'">Minio</n-card>
-        </n-gi>
-         <n-gi>
-          <n-card class="cursor-pointer" @click="formData.type='google'">Google Cloue Storage</n-card>
-        </n-gi>
-         <n-gi>
-          <n-card class="cursor-pointer" @click="formData.type='AWS'">AWS S3</n-card>
-        </n-gi>
-         <n-gi>
-          <n-card class="cursor-pointer" @click="formData.type='azure'">Azure</n-card>
+        <n-gi v-for="item in typeOptions">
+          <n-card class="cursor-pointer " @click="formData.type=item.value" >
+            <div class="flex flex-center leading-8">
+              <img :src="item.iconUrl" class="w-8 h-8" /> <span class="ms-2">{{ item.label }}</span>
+            </div>
+          </n-card>
         </n-gi>
       </n-grid>
     </n-card>
@@ -69,6 +64,14 @@
 
 <script setup>
 import { ref } from 'vue'
+import MinioIcon from '~/assets/svg/rustfs.svg'
+import GoogleIcon from '~/assets/svg/google.svg'
+import AWSIcon from '~/assets/svg/aws.svg'
+import AzureIcon from '~/assets/svg/azure.svg'
+import AliyunIcon from '~/assets/svg/aliyun.svg'
+import TqyunIcon from '~/assets/svg/tenxunyun.svg'
+import HwcloudIcon from '~/assets/svg/huaweiyun.svg'
+import BaiduIcon from '~/assets/svg/baiduyun.svg'
 import {
   NForm,
   NFormItem,
@@ -89,10 +92,14 @@ const formData = ref({
   regio: '',
 })
 const typeOptions = [
-  { label: 'Minio', value: 'rustfs' },
-  { label: 'Google Cloue Storage', value: 'google' },
-  { label: 'AWS S3', value: 'AWS' },
-  { label: 'Azure', value: 'azure' },
+  { label: 'Minio', value: 'rustfs' ,iconUrl: MinioIcon},
+  { label: 'Google Cloue Storage', value: 'google',iconUrl: GoogleIcon },
+  { label: 'AWS S3', value: 'AWS' ,iconUrl: AWSIcon},
+  { label: 'Azure', value: 'azure' ,iconUrl: AzureIcon},
+  { label: '阿里云', value: 'aliyun' ,iconUrl:AliyunIcon},
+  { label: '腾讯云', value: 'tqyun',iconUrl: TqyunIcon },
+  { label: '华为云', value: 'hwyun',iconUrl: HwcloudIcon },
+  { label: '百度云', value: 'bdyun' ,iconUrl: BaiduIcon},
 ]
 
 

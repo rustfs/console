@@ -10,7 +10,7 @@ class ApiClient {
     this.config = options
   }
 
-  async request(url: string, options: any = {}) {
+  async request(url: string, options: any = {}, parseJson: boolean = true) {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url
     options.headers = { ...this.config?.headers, ...options.headers }
     // 处理body的数据格式
@@ -48,9 +48,35 @@ class ApiClient {
       return null
     }
 
-    return await response.json()
+    if (parseJson) {
+      return await response.json();
+    } else {
+      return response;
+    }
   }
 
+  async *streamRequest(url: string, options: any = {}) {
+    const response = await this.request(url, options, false);
+
+    if (!response.body) {
+      throw new Error('No response body');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder('utf-8');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value, { stream: true });
+      try {
+        const data = JSON.parse(chunk);
+        yield data; // 使用 yield 返回数据
+      } catch (error) {
+        console.error("Failed to parse chunk:", error);
+      }
+    }
+  }
   async get(url: string, options?: any) {
     return this.request(url, { method: "GET", ...options })
   }

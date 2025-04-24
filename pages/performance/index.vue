@@ -91,7 +91,7 @@
                   <Icon name="ri:signal-wifi-line" />
                 </template>
                 <template #header>距离上次 正常运行</template>
-                <template #header-extra>n/a</template>
+                <template #header-extra>{{ fromLsatStartTime }}</template>
               </n-thing>
             </n-list-item>
             <n-list-item>
@@ -100,7 +100,7 @@
                   <Icon name="ri:scan-line" />
                 </template>
                 <template #header>距离上次 扫描活动</template>
-                <template #header-extra>n/a</template>
+                <template #header-extra>{{ fromLastScanTime }}</template>
               </n-thing>
             </n-list-item>
             <n-list-item>
@@ -109,7 +109,7 @@
                   <Icon name="ri:time-line" />
                 </template>
                 <template #header>运行时间</template>
-                <template #header-extra>n/a</template>
+                <template #header-extra>{{lastScanTime}}</template>
               </n-thing>
             </n-list-item>
           </n-list>
@@ -214,12 +214,60 @@
 
 <script lang="ts" setup>
 import dayjs from "dayjs"
+import zhCn from 'dayjs/locale/zh-cn'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import { NButton, NCard, NCol, NProgress, NRow, NSpace, useThemeVars } from "naive-ui"
 import { changeColor } from "seemly"
 import { niceBytes } from "../../utils/functions"
+import { last } from "lodash"
 const themeVars = useThemeVars()
 const systemApi = useSystem()
 const poolsApi = usePools()
+const { $api } = useNuxtApp()
+dayjs.extend(relativeTime)
+dayjs.locale(zhCn)
+
+
+const metricsInfo:any = ref({})
+const getMetricsInfo = async () => {
+  const url = '/metrics';
+  const options = { method: "GET" };
+
+  for await (const data of $api.streamRequest(url, options)) {
+    // 更新metricsInfo.value
+    metricsInfo.value = { ...metricsInfo.value, ...data };
+    console.log(metricsInfo.value )
+  }
+};
+
+
+
+// 距离上次正常运行
+const fromLsatStartTime = computed(() => {
+  const  start= dayjs(metricsInfo.value?.aggregated?.scanner?.cycle_complete_times[metricsInfo.value?.aggregated?.scanner?.cycle_complete_times.length-1])
+  const end = dayjs()
+  return end.from(start)
+})
+
+
+
+// 距离上次扫描活动
+const fromLastScanTime = computed(() => {
+  const start = dayjs(metricsInfo.value?.aggregated?.scanner?.current_started)
+  const end = dayjs()
+  return end.from(start)
+})
+
+// 运行时间
+const lastScanTime = computed(() => {
+    const start = dayjs(metricsInfo.value?.aggregated?.scanner?.current_started)
+  const end  = dayjs(metricsInfo.value?.aggregated?.scanner?.cycle_complete_times[metricsInfo.value?.aggregated?.scanner?.cycle_complete_times.length-1])
+  if(start<end){
+      return end.from(start)
+  }else{
+    return dayjs().from(start)
+  }
+})
 
 const systemInfo: any = ref({})
 const getSystemInfo = async () => {
@@ -244,6 +292,7 @@ const getPageData = async () => {
   await getServerInfo()
   await getdatausageinfo()
   await getstroageinfo()
+  await getMetricsInfo()
 }
 getPageData()
 

@@ -186,7 +186,7 @@
                 </n-space>
               </div>
             </template>
-            <template #header-extra>版本: 2024-03-24T03:47</template>
+            <template #header-extra>版本: {{ server.version }}</template>
             <n-carousel :show-dots="false" :show-arrow="true" :autoplay="false" :slides-per-view="3" ref="driveCarouselRef" draggable class="drive-carousel" :space-between="20">
               <n-carousel-item v-for="drive in server.drives" :key="drive.uuid" style="width: 350px" class="flex flex-col justify-start items-center p-4 border rounded mx-2 ml-0">
                 <div class="self-start ps-6">{{ drive.drive_path }}</div>

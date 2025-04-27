@@ -1,193 +1,144 @@
 <template>
-   <n-modal
-    v-model:show="visible"
-    :mask-closable="false"
-    preset="card"
-    :title="`添加生命周期规则（桶：${bucketName}）`"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }">
+  <n-modal v-model:show="visible" :mask-closable="false" preset="card" :title="t('Add Lifecycle Rule') + ` (${t('Bucket')}: ${bucketName})`" class="max-w-screen-md" :segmented="{
+    content: true,
+    action: true,
+  }">
     <n-card>
       <n-tabs default-value="expire" justify-content="space-evenly" type="line">
-      <n-tab-pane name="expire" tab="到期">
-        <n-form class="my-4" ref="formRef" :model="formData">
-          <n-form-item label="对象版本" path="versionType">
-            <n-select
-              v-model:value="formData.versionType"
-              :options="versionOptions"
-            />
-          </n-form-item>
-          <n-form-item label="" path="type">
-            <div class="w-full flex items-center justify-between" >
-              <span>在</span>
-              <n-input-number
-                class="flex-auto mx-4"
-                v-model:value="formData.days"
-                :min="1"
-                placeholder="天数"
-                style="width: 100px"
-              />
-              <span>天后执行</span>
-              <!-- <n-select
+        <n-tab-pane name="expire" :tab="t('Expiration')">
+          <n-form class="my-4" ref="formRef" :model="formData">
+            <n-form-item :label="t('Object Version')" path="versionType">
+              <n-select v-model:value="formData.versionType" :options="versionOptions" />
+            </n-form-item>
+            <n-form-item label="" path="type">
+              <div class="w-full flex items-center justify-between">
+                <span>{{ t('After') }}</span>
+                <n-input-number class="flex-auto mx-4" v-model:value="formData.days" :min="1" :placeholder="t('Days')" style="width: 100px" />
+                <span>{{ t('days execute') }}</span>
+                <!-- <n-select
                 class="flex-auto mx-4"
                 v-model:value="formData.action"
                 :options="actionOptions"
                 style="width: 120px"
               /> -->
-            </div>
-          </n-form-item>
+              </div>
+            </n-form-item>
 
-          <!-- 生命周期 -->
-          <n-card>  
-            <n-collapse>
-              <n-collapse-item title="搜索生命周期" name="advanced">
-                  <n-form-item label="前缀">
-                    <n-input v-model="formData.prefix" placeholder="请输入前缀" />
+            <!-- 生命周期 -->
+            <n-card>
+              <n-collapse>
+                <n-collapse-item :title="t('Search Lifecycle')" name="advanced">
+                  <n-form-item :label="t('Prefix')">
+                    <n-input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
                   </n-form-item>
-                  <n-form-item label="标签">
-                    <n-dynamic-input
-                      v-model:value="formData.tags"
-                      preset="pair"
-                      key-placeholder="标签名"
-                      value-placeholder="标签值"
-                    />
+                  <n-form-item :label="t('Tags')">
+                    <n-dynamic-input v-model:value="formData.tags" preset="pair" :key-placeholder="t('Tag Name')" :value-placeholder="t('Tag Value')" />
                   </n-form-item>
-              </n-collapse-item>
-            </n-collapse>
-          </n-card>
+                </n-collapse-item>
+              </n-collapse>
+            </n-card>
 
-          <!-- 高级设置 -->
-          <n-card class="my-4">
-            <n-collapse >
-              <n-collapse-item title="高级设置" name="advanced">
-                <n-form-item label="删除标记处理">
-                  <n-space vertical>
-                    <n-switch
-                      v-model:value="formData.expiredDeleteMark"
-                      :round="false"
-                    />
-                    <span class="ml-4 text-gray-500">如果没有留下任何版本，请删除对该对象的引用</span>
-                  </n-space>
-                </n-form-item>
-
-                <n-form-item label="版本清理">
-                  <n-space vertical>
-                    <n-switch
-                      v-model:value="formData.deleteAllExpired"
-                      :round="false"
-                    />
-                    <span class="ml-4 text-gray-500">删除所有过期版本</span>
-                  </n-space>
-                </n-form-item>
-              </n-collapse-item>
-            </n-collapse>
-          </n-card> 
-        </n-form>
-      </n-tab-pane>
-      <n-tab-pane name="transition" tab="过渡">
-        <n-form class="my-4" ref="formRef" :model="formData">
-          <n-form-item label="对象版本" path="versionType">
-            <n-select
-              v-model:value="formData.versionType"
-              :options="versionOptions"
-            />
-          </n-form-item>
-          <n-form-item label="" path="type">
-            <div class="w-full flex items-center justify-between" >
-              <span>在</span>
-              <n-input-number
-                class="flex-auto mx-4"
-                v-model:value="formData.days"
-                :min="1"
-                placeholder="天数"
-                style="width: 100px"
-              />
-              <span>天后执行</span>
-              <n-select
-                class="flex-auto mx-4"
-                v-model:value="formData.action"
-                :options="actionOptions"
-                style="width: 120px"
-              />
-            </div>
-          </n-form-item>
-
-          <!-- 生命周期 -->
-          <n-card>  
-            <n-collapse>
-              <n-collapse-item title="搜索生命周期" name="advanced">
-                  <n-form-item label="前缀">
-                    <n-input v-model="formData.prefix" placeholder="请输入前缀" />
+            <!-- 高级设置 -->
+            <n-card class="my-4">
+              <n-collapse>
+                <n-collapse-item :title="t('Advanced Settings')" name="advanced">
+                  <n-form-item :label="t('Delete Marker Handling')">
+                    <n-space vertical>
+                      <n-switch v-model:value="formData.expiredDeleteMark" :round="false" />
+                      <span class="ml-4 text-gray-500">{{ t('If no versions remain, delete references to this object') }}</span>
+                    </n-space>
                   </n-form-item>
-                  <n-form-item label="标签">
-                    <n-dynamic-input
-                      v-model:value="formData.tags"
-                      preset="pair"
-                      key-placeholder="标签名"
-                      value-placeholder="标签值"
-                    />
+
+                  <n-form-item :label="t('Version Cleanup')">
+                    <n-space vertical>
+                      <n-switch v-model:value="formData.deleteAllExpired" :round="false" />
+                      <span class="ml-4 text-gray-500">{{ t('Delete all expired versions') }}</span>
+                    </n-space>
                   </n-form-item>
-              </n-collapse-item>
-            </n-collapse>
-          </n-card>
-          
+                </n-collapse-item>
+              </n-collapse>
+            </n-card>
+          </n-form>
+        </n-tab-pane>
+        <n-tab-pane name="transition" :tab="t('Transition')">
+          <n-form class="my-4" ref="formRef" :model="formData">
+            <n-form-item :label="t('Object Version')" path="versionType">
+              <n-select v-model:value="formData.versionType" :options="versionOptions" />
+            </n-form-item>
+            <n-form-item label="" path="type">
+              <div class="w-full flex items-center justify-between">
+                <span>{{ t('After') }}</span>
+                <n-input-number class="flex-auto mx-4" v-model:value="formData.days" :min="1" :placeholder="t('Days')" style="width: 100px" />
+                <span>{{ t('days execute') }}</span>
+                <n-select class="flex-auto mx-4" v-model:value="formData.action" :options="actionOptions" style="width: 120px" />
+              </div>
+            </n-form-item>
 
-          <!-- 高级设置 -->
-          <n-card class="my-4">
-            <n-collapse >
-              <n-collapse-item title="高级设置" name="advanced">
-                <n-form-item label="删除标记处理">
-                  <n-space vertical>
-                    <n-switch
-                      v-model:value="formData.expiredDeleteMark"
-                      :round="false"
-                    />
-                    <span class="ml-4 text-gray-500">如果没有留下任何版本，请删除对该对象的引用</span>
-                  </n-space>
-                </n-form-item>
+            <!-- 生命周期 -->
+            <n-card>
+              <n-collapse>
+                <n-collapse-item :title="t('Search Lifecycle')" name="advanced">
+                  <n-form-item :label="t('Prefix')">
+                    <n-input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+                  </n-form-item>
+                  <n-form-item :label="t('Tags')">
+                    <n-dynamic-input v-model:value="formData.tags" preset="pair" :key-placeholder="t('Tag Name')" :value-placeholder="t('Tag Value')" />
+                  </n-form-item>
+                </n-collapse-item>
+              </n-collapse>
+            </n-card>
 
-                <n-form-item label="版本清理">
-                  <n-space vertical>
-                    <n-switch
-                      v-model:value="formData.deleteAllExpired"
-                      :round="false"
-                    />
-                    <span class="ml-4 text-gray-500">删除所有过期版本</span>
-                  </n-space>
-                </n-form-item>
-              </n-collapse-item>
-            </n-collapse>
-          </n-card> 
-        </n-form>
-      </n-tab-pane>
-    </n-tabs>
-  
 
-    <n-space justify="center">
-      <n-button @click="handleCancel">取消</n-button>
-      <n-button type="primary" @click="handleSave">保存</n-button>
-    </n-space>
-  </n-card>
+            <!-- 高级设置 -->
+            <n-card class="my-4">
+              <n-collapse>
+                <n-collapse-item :title="t('Advanced Settings')" name="advanced">
+                  <n-form-item :label="t('Delete Marker Handling')">
+                    <n-space vertical>
+                      <n-switch v-model:value="formData.expiredDeleteMark" :round="false" />
+                      <span class="ml-4 text-gray-500">{{ t('If no versions remain, delete references to this object') }}</span>
+                    </n-space>
+                  </n-form-item>
+
+                  <n-form-item :label="t('Version Cleanup')">
+                    <n-space vertical>
+                      <n-switch v-model:value="formData.deleteAllExpired" :round="false" />
+                      <span class="ml-4 text-gray-500">{{ t('Delete all expired versions') }}</span>
+                    </n-space>
+                  </n-form-item>
+                </n-collapse-item>
+              </n-collapse>
+            </n-card>
+          </n-form>
+        </n-tab-pane>
+      </n-tabs>
+
+
+      <n-space justify="center">
+        <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
+        <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
+      </n-space>
+    </n-card>
   </n-modal>
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import {
+  NButton,
+  NCollapse,
+  NCollapseItem,
+  NDynamicInput,
   NForm,
   NFormItem,
   NInput,
+  NInputNumber,
   NSelect,
-  NDynamicInput,
-  NCollapse,
-  NCollapseItem,
-  NSwitch,
-  NButton,
-  NInputNumber
+  NSwitch
 } from 'naive-ui'
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const formRef = ref(null)
 const formData = ref({
   ruleName: '',
@@ -195,9 +146,9 @@ const formData = ref({
   versionType: 'current',
   days: null,
   action: 'transition',
-  tags:[{
-    key:'',
-    value:''
+  tags: [{
+    key: '',
+    value: ''
   }],
   expiredDeleteMark: false,
   deleteAllExpired: false
@@ -205,18 +156,18 @@ const formData = ref({
 
 
 const typeOptions = [
-  { label: '到期', value: 'expire' },
-  { label: '过渡', value: 'transition' }
+  { label: t('Expiration'), value: 'expire' },
+  { label: t('Transition'), value: 'transition' }
 ]
 
 const versionOptions = [
-  { label: '当前版本', value: 'current' },
-  { label: '非当前版本', value: 'non-current' }
+  { label: t('Current Version'), value: 'current' },
+  { label: t('Non-current Version'), value: 'non-current' }
 ]
 
 const actionOptions = [
-  { label: '转储', value: 'transition' },
-  { label: '删除', value: 'delete' }
+  { label: t('Transition'), value: 'transition' },
+  { label: t('Delete'), value: 'delete' }
 ]
 
 const props = defineProps({
@@ -245,5 +196,6 @@ const handleSave = () => {
 
 const handleCancel = () => {
   // 取消逻辑
+  visible.value = false
 }
 </script>

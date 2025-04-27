@@ -12,18 +12,18 @@
       }">
       <n-card>
         <n-tabs type="card">
-          <n-tab-pane name="users" tab="成员">
+          <n-tab-pane name="users" :tab="t('Members')">
             <users-group-members
               :group="group"
               @search="getGroupData(group.name)"></users-group-members>
           </n-tab-pane>
-          <n-tab-pane name="policy" tab="策略">
+          <n-tab-pane name="policy" :tab="t('Policies')">
             <users-group-policies
               :group="group"
               @search="getGroupData(group.name)"></users-group-policies>
           </n-tab-pane>
           <template #suffix>
-            状态
+            {{ t('Status') }}
             <n-switch
               class="ml-2"
               checked-value="enabled"
@@ -38,7 +38,9 @@
 </template>
 
 <script setup lang="ts">
-// import { groupMembers, groupPolicies } from './';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const visible = ref(false)
 const { getGroup, updateGroupStatus } = useGroups()
 

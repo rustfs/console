@@ -2,7 +2,7 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">访问密钥</h1>
+        <h1 class="text-2xl font-bold">{{ t('Access Keys') }}</h1>
       </template>
       <template #actions></template>
     </page-header>
@@ -11,7 +11,7 @@
       <n-form class="mb-4" ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
         <n-flex justify="space-between">
           <n-form-item label="" path="name">
-            <n-input placeholder="搜索访问秘钥" @input="filterName" />
+            <n-input :placeholder="t('Search Access Key')" @input="filterName" />
           </n-form-item>
           <!-- <n-button @click="() => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
@@ -22,7 +22,7 @@
               <template #icon>
                 <Icon name="ri:delete-bin-5-line"></Icon>
               </template>
-              删除选中项
+              {{ t('Delete Selected') }}
             </NButton>
             <!-- <NButton secondary @click="changePassword">
             <template #icon>
@@ -34,7 +34,7 @@
               <template #icon>
                 <Icon name="ri:add-line"></Icon>
               </template>
-              新增访问秘钥
+              {{ t('Add Access Key') }}
             </NButton>
           </NFlex>
         </n-flex>
@@ -67,7 +67,9 @@ import {
 } from "naive-ui";
 import { Icon } from "#components";
 import { ChangePassword, EditItem, NewItem } from "~/components/access-keys";
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { $api } = useNuxtApp();
 const dialog = useDialog();
 const message = useMessage();
@@ -90,7 +92,7 @@ const columns: DataTableColumns<RowData> = [
     type: "selection",
   },
   {
-    title: "Access Key",
+    title: t('Access Key'),
     align: "center",
     key: "accessKey",
     filter(value, row) {
@@ -98,30 +100,30 @@ const columns: DataTableColumns<RowData> = [
     },
   },
   {
-    title: "有效期",
+    title: t('Expiration'),
     align: "center",
     key: "expiration",
   },
   {
-    title: "状态",
+    title: t('Status'),
     align: "center",
     key: "accountStatus",
     render: (row: any) => {
-      return row.accountStatus === "on" ? "可用" : "禁用";
+      return row.accountStatus === "on" ? t('Available') : t('Disabled');
     },
   },
   {
-    title: "名称",
+    title: t('Name'),
     align: "center",
     key: "name",
   },
   {
-    title: "描述",
+    title: t('Description'),
     align: "center",
     key: "description",
   },
   {
-    title: "操作",
+    title: t('Actions'),
     key: "actions",
     align: "center",
     width: 180,
@@ -149,7 +151,7 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => "确认删除",
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,
@@ -187,7 +189,7 @@ const getDataList = async () => {
     const res = await listUserServiceAccounts({});
     listData.value = res.accounts || [];
   } catch (error) {
-    message.error("获取数据失败");
+    message.error(t('Get Data Failed'));
   }
 };
 
@@ -229,10 +231,10 @@ async function deleteItem(row: any) {
   try {
     const res = await deleteServiceAccount(row.accessKey);
 
-    message.success("删除成功");
+    message.success(t('Delete Success'));
     getDataList();
   } catch (error) {
-    message.error("删除失败");
+    message.error(t('Delete Failed'));
   }
 }
 
@@ -249,21 +251,24 @@ function handleCheck(keys: DataTableRowKey[]) {
 // 批量删除
 function deleteByList() {
   dialog.error({
-    title: "警告",
-    content: "你确定要删除所有选中的秘钥吗？",
-    positiveText: "确定",
-    negativeText: "取消",
+    title: t('Warning'),
+    content: t('Are you sure you want to delete all selected keys?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error("请至少选择一项");
+        message.error(t('Please select at least one item'));
         return;
       }
       try {
-        await Promise.all(checkedKeys.value.map((item) => deleteServiceAccount(item as string)));
-        message.success("删除成功");
+        // const res = await deleteMultipleServiceAccounts({
+        //   body: checkedKeys.value
+        // })
+        checkedKeys.value = [];
         getDataList();
+        message.success(t('Delete Success'));
       } catch (error) {
-        message.error("删除失败");
+        message.error(t('Delete Failed'));
       }
     },
   });

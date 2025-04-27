@@ -3,8 +3,8 @@
     <n-card class="max-w-screen-sm">
       <template #header>
         <div style="display:flex; justify-content: space-between; align-items:center;">
-          <span>新建存储桶</span>
-          <n-button size="small" ghost @click="closeModal">关闭</n-button>
+          <span>{{ t('Create Bucket') }}</span>
+          <n-button size="small" ghost @click="closeModal">{{ t('Close') }}</n-button>
         </div>
       </template>
       <div class="flex flex-col gap-4">
@@ -18,11 +18,11 @@
         </n-alert> -->
 
         <div class="flex items-center gap-4">
-          <n-input :placeholder="`请输入名称`" v-model:value="objectKey" />
+          <n-input :placeholder="t('Please enter name')" v-model:value="objectKey" />
         </div>
 
         <div class="flex justify-center gap-4">
-          <n-button type="primary" :disabled="objectKey.trim().length < 1" @click="handlePutObject">创建</n-button>
+          <n-button type="primary" :disabled="objectKey.trim().length < 1" @click="handlePutObject">{{ t('Create') }}</n-button>
         </div>
       </div>
     </n-card>
@@ -30,7 +30,10 @@
 </template>
 
 <script setup lang="ts">
-import { defineEmits, defineProps } from 'vue'
+import { defineEmits, defineProps } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n()
 const emit = defineEmits(['update:show'])
 
 const props = defineProps<{ show: boolean; }>()
@@ -47,7 +50,7 @@ const handlePutObject = () => {
   createBucket(objectKey.value).then(() => {
     emit('update:show', false)
     objectKey.value = ''
-    $message.success('创建成功')
+    $message.success(t('Create Success'))
   }).catch((e) => {
     $message.error(e.message)
   })

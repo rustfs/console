@@ -2,13 +2,13 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">IAM 策略</h1>
+        <h1 class="text-2xl font-bold">{{ t('IAM Policies') }}</h1>
       </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center justify-between">
-          <n-input placeholder="搜索" @input="filterName">
+          <n-input :placeholder="t('Search')" @input="filterName">
             <template #prefix>
               <Icon name="ri:search-2-line" />
             </template>
@@ -17,11 +17,11 @@
         <div class="flex items-center gap-4">
           <!-- <n-button @click="() => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
-            <span>刷新</span>
+            <span>{{ t('Refresh') }}</span>
           </n-button> -->
           <n-button @click="handleNew">
             <Icon name="ri:add-line" class="mr-2" />
-            <span>新建策略</span>
+            <span>{{ t('New Policy') }}</span>
           </n-button>
         </div>
       </div>
@@ -40,6 +40,9 @@
 import { Icon } from "#components";
 import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from "naive-ui";
 import { useNuxtApp } from "nuxt/app";
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 const { $api } = useNuxtApp();
 const message = useMessage();
 
@@ -71,7 +74,7 @@ interface RowData {
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: "名称",
+    title: t('Name'),
     key: "name",
     filter(value, row) {
       return !!row.name.includes(value.toString());
@@ -79,7 +82,7 @@ const columns: DataTableColumns<RowData> = [
   },
 
   {
-    title: "操作",
+    title: t('Actions'),
     key: "actions",
     align: "center",
     width: 180,
@@ -107,7 +110,7 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => "确认删除",
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,
@@ -143,7 +146,7 @@ const fetchPolicies = async () => {
       };
     });
   } catch (error) {
-    message.error("获取数据失败");
+    message.error(t('Failed to fetch data'));
   }
 };
 
@@ -158,10 +161,10 @@ const refresh = () => {
 async function deleteItem(row: any) {
   try {
     await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(row.name)}`);
-    message.success("删除成功");
+    message.success(t('Delete Success'));
     fetchPolicies();
   } catch (error) {
-    message.error("删除失败");
+    message.error(t('Delete Failed'));
   }
 }
 </script>

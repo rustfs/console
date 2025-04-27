@@ -4,11 +4,11 @@
       <template #header>
         <div class="flex items-center justify-between gap-4 truncate">
           <div>
-            预览内容 <small class="text-gray-300">{{ objectKey }}</small>
+            {{ t('Preview Content') }} <small class="text-gray-300">{{ objectKey }}</small>
           </div>
           <n-button type="default" size="small" ghost @click="closeModal">
             <Icon name="ri:close-line" class="mr-2" />
-            <span>关闭</span>
+            <span>{{ t('Close') }}</span>
           </n-button>
         </div>
       </template>
@@ -20,15 +20,15 @@
           <pre v-else-if="isText" class="w-full selea">{{ fileContent }}</pre>
           <video v-else-if="isVideo" controls class="w-full">
             <source :src="previewUrl" type="video/mp4" />
-            您的浏览器不支持 video 标签
+            {{ t('Your browser does not support the video tag') }}
           </video>
           <audio v-else-if="isAudio" controls class="w-full">
             <source :src="previewUrl" type="audio/mpeg" />
-            您的浏览器不支持 audio 标签
+            {{ t('Your browser does not support the audio tag') }}
           </audio>
         </template>
         <div v-else class="text-center text-gray-500 min-h-full">
-          无法预览该对象的内容（MIME类型：{{ contentType }}），请下载查看
+          {{ t('Cannot Preview', { contentType: contentType }) }}
         </div>
       </div>
     </n-card>
@@ -36,9 +36,11 @@
 </template>
 
 <script setup lang="ts">
-import { useMessage } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { useMessage } from 'naive-ui';
+import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n()
 const props = defineProps<{
   show: boolean
   bucketName: string
@@ -146,7 +148,7 @@ async function loadPreview() {
 
   } catch (err) {
     console.error(err)
-    message.error('获取对象预览失败')
+    message.error(t('Preview Failed'))
     closeModal()
   } finally {
     loading.value = false

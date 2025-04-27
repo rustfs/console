@@ -1,5 +1,8 @@
 <script lang="ts" setup>
 import ClipboardJS from 'clipboard'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   readonly: {
@@ -25,18 +28,18 @@ const message = useMessage();
 function handleCopy() {
   const value = model.value;
   if (!value) {
-    message.error('当前无内容');
+    message.error(t('No content'));
     return;
   }
 
   try {
     // @ts-ignore
     ClipboardJS.copy(document.querySelector(`#${props.id}`)).then(() => {
-      message.success('复制成功');
+      message.success(t('Copy Success'));
     });
   } catch (error) {
-    message.error('复制失败')
-    console.error('复制失败', error);
+    message.error(t('Copy Failed'))
+    console.error(t('Copy Failed'), error);
   }
 }
 </script>
@@ -48,7 +51,7 @@ function handleCopy() {
       <n-input-group-label v-if="props.copyIcon" class="flex items-center" @click="handleCopy">
         <Icon :size="25" name="ri:file-copy-line"></Icon>
       </n-input-group-label>
-      <NButton type="primary" @click="handleCopy" v-else>复制</NButton>
+      <NButton type="primary" @click="handleCopy" v-else>{{ t('Copy') }}</NButton>
     </NInputGroup>
   </div>
 </template>

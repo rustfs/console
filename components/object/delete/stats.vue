@@ -2,36 +2,36 @@
   <n-button text v-if="total > 0" @click="toggleDrawer">
     <div v-if="pending.length" class="flex items-center gap-2">
       <n-spin :size="14" />
-      <span>{{ total }} 任务进行中（进行中 {{ deleting.length }} 个，已成功 {{ completed.length }} 个）</span>
+      <span>{{ t('In Progress', { total: total, deleting: deleting.length, completed: completed.length }) }}</span>
     </div>
-    <div v-else>删除完成（成功 {{ completed.length }} 个，失败 {{ failed.length }} 个）</div>
+    <div v-else>{{ t('Delete Completed', { completed: completed.length, failed: failed.length }) }}</div>
   </n-button>
 
   <n-drawer v-model:show="showDrawer" :width="502">
-    <n-drawer-content title="任务管理" closable>
+    <n-drawer-content :title="t('Management')" closable>
       <div class="flex flex-col gap-4">
         <n-alert type="warning" :show-icon="false">
-          <p><span class="text-red-500">刷新/关闭浏览器</span> 将取消当前所有任务。</p>
-          <p><span class="text-red-500">清空浏览器缓存、session过期</span>等情况会导致任务中断或丢失，请谨慎操作。</p>
+          <p><span class="text-red-500">{{ t('Browser Warning') }}</span></p>
+          <p><span class="text-red-500">{{ t('Cache Warning') }}</span></p>
         </n-alert>
         <div v-if="total > 0">
           <div class="flex items-center justify-between">
             <div>{{ total - (pending.length + deleting.length) }}/{{ total }}</div>
-            <n-button text type="info" @click="clearTasks">清空记录</n-button>
+            <n-button text type="info" @click="clearTasks">{{ t('Clear Records') }}</n-button>
           </div>
           <n-progress type="line" :height="2" :percentage="percentage" :show-indicator="false" :processing="percentage < 100" />
         </div>
         <n-tabs type="line" animated v-model:value="tab">
-          <n-tab-pane :tab="`待处理(${pending.length})`" name="pending">
+          <n-tab-pane :tab="t('Pending', { count: pending.length })" name="pending">
             <object-delete-task-list :tasks="pending" />
           </n-tab-pane>
-          <n-tab-pane :tab="`进行中(${deleting.length})`" name="deleting">
+          <n-tab-pane :tab="t('Deleting', { count: deleting.length })" name="deleting">
             <object-delete-task-list :tasks="deleting" />
           </n-tab-pane>
-          <n-tab-pane :tab="`已完成(${completed.length})`" name="completed">
+          <n-tab-pane :tab="t('Completed', { count: completed.length })" name="completed">
             <object-delete-task-list :tasks="completed" />
           </n-tab-pane>
-          <n-tab-pane :tab="`已失败(${failed.length})`" name="failed">
+          <n-tab-pane :tab="t('Failed', { count: failed.length })" name="failed">
             <object-delete-task-list :tasks="failed" />
           </n-tab-pane>
         </n-tabs>
@@ -41,8 +41,10 @@
 </template>
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
 
+const { t } = useI18n()
 const showDrawer = ref(false)
 
 const store = useDeleteTaskManagerStore()

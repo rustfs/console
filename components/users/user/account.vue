@@ -4,7 +4,7 @@
       <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false" v-if="!editStatus">
         <n-flex justify="space-between">
           <n-form-item class="!w-64" label="" path="name">
-            <n-input placeholder="搜索账号" @input="filterName" />
+            <n-input :placeholder="t('Search Account')" @input="filterName" />
           </n-form-item>
 
           <n-space>
@@ -19,7 +19,7 @@
                 <template #icon>
                   <Icon name="ri:add-line"></Icon>
                 </template>
-                添加账号
+                {{ t('Add Account') }}
               </NButton>
             </NFlex>
           </n-space>
@@ -34,13 +34,13 @@
         label-align="right"
         :label-width="130">
         <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item :span="24" label="Access Key" path="accessKey">
+          <n-form-item-grid-item :span="24" :label="t('Access Key')" path="accessKey">
             <n-input v-model:value="formModel.accessKey" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="Secret Key" path="secretKey">
+          <n-form-item-grid-item :span="24" :label="t('Secret Key')" path="secretKey">
             <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="有效期" path="expiry">
+          <n-form-item-grid-item :span="24" :label="t('Expiration')" path="expiry">
             <n-date-picker
               class="!w-full"
               v-model:value="formModel.expiry"
@@ -49,19 +49,19 @@
               type="datetime"
               clearable />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="名称" path="name">
+          <n-form-item-grid-item :span="24" :label="t('Name')" path="name">
             <n-input v-model:value="formModel.name" />
           </n-form-item-grid-item>
           <!-- <n-form-item-grid-item :span="24" label="描述" path="comment" v-if="editType == 'add'">
             <n-input v-model:value="formModel.comment" />
           </n-form-item-grid-item> -->
-          <n-form-item-grid-item :span="24" label="注释" path="description">
+          <n-form-item-grid-item :span="24" :label="t('Description')" path="description">
             <n-input v-model:value="formModel.description" />
           </n-form-item-grid-item>
-          <n-form-item-gi :span="24" label="使用主账户策略" path="impliedPolicy">
+          <n-form-item-gi :span="24" :label="t('Use Main Account Policy')" path="impliedPolicy">
             <n-switch v-model:value="formModel.impliedPolicy" />
           </n-form-item-gi>
-          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" label="当前用户策略" path="policy">
+          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" :label="t('Current User Policy')" path="policy">
             <json-editor v-model="formModel.policy" />
           </n-form-item-gi>
           <!-- <n-form-item-grid-item :span="24" label="状态" v-if="editType == 'edit'" path="accountStatus">
@@ -70,8 +70,8 @@
         </n-grid>
         <n-space>
           <NFlex justify="center">
-            <NButton secondary @click="cancelAdd">取消</NButton>
-            <NButton secondary @click="submitForm">提交</NButton>
+            <NButton secondary @click="cancelAdd">{{ t('Cancel') }}</NButton>
+            <NButton secondary @click="submitForm">{{ t('Submit') }}</NButton>
           </NFlex>
         </n-space>
       </n-form>
@@ -106,8 +106,10 @@ import {
   NSpace,
 } from "naive-ui"
 import { Icon } from "#components"
+import { useI18n } from 'vue-i18n'
 // 随机字符串函数
 import { makeRandomString } from "~/utils/functions"
+const { t } = useI18n()
 const { listUserServiceAccounts, createServiceAccount } = useAccessKeys()
 const { $api } = useNuxtApp()
 
@@ -124,20 +126,19 @@ const rules = ref({
   accessKey: {
     required: true,
     trigger: ["blur", "input"],
-    message: "请输入Access Key",
+    message: t('Please enter Access Key'),
   },
   secretKey: {
     required: true,
     trigger: ["blur", "input"],
-    message: "请输入Secret Key",
+    message: t('Please enter Secret Key'),
   },
   expiry: {
     required: true,
     trigger: ["blur", "change"],
-    // message: "请选择有效期",
     validator(rule: FormItemRule, value: string) {
       if (!value) {
-        return new Error("请选择有效期")
+        return new Error(t('Please select expiration date'))
       }
       return true
     },
@@ -168,7 +169,7 @@ const columns: DataTableColumns<RowData> = [
     type: "selection",
   },
   {
-    title: "Access Key",
+    title: t('Access Key'),
     align: "center",
     key: "accessKey",
     filter(value, row) {
@@ -176,20 +177,20 @@ const columns: DataTableColumns<RowData> = [
     },
   },
   {
-    title: "有效期",
+    title: t('Expiration'),
     align: "center",
     key: "expiration",
   },
   {
-    title: "状态",
+    title: t('Status'),
     align: "center",
     key: "accountStatus",
     render: (row: any) => {
-      return row.accountStatus === "on" ? "可用" : "禁用"
+      return row.accountStatus === "on" ? t('Available') : t('Disabled')
     },
   },
   {
-    title: "名称",
+    title: t('Name'),
     align: "center",
     key: "name",
   },
@@ -199,7 +200,7 @@ const columns: DataTableColumns<RowData> = [
   //   key: "description",
   // },
   {
-    title: "操作",
+    title: t('Actions'),
     key: "actions",
     align: "center",
     width: 125,
@@ -227,7 +228,7 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => "确认删除",
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,

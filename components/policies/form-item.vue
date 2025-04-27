@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
+const { t } = useI18n();
 const { $api } = useNuxtApp();
 const message = useMessage();
 
@@ -42,35 +44,36 @@ const closeModal = () => emit('update:show', false)
 async function submitForm() {
   try {
     const res = await $api.put(`/add-canned-policy?name=${name.value}`, JSON.parse(content.value || '{}'));
-    message.success('已保存');
+    message.success(t('Saved'));
     closeModal();
     emit('saved');
   } catch (error) {
-    message.error('保存失败');
+    message.error(t('Save Failed'));
     console.error('Error:', error);
   }
 }
 </script>
 
 <template>
-  <n-modal :show="show" @update:show="(val: boolean) => $emit('update:show', val)" :mask-closable="false" preset="card" title="策略原文" class="max-w-screen-md" :segmented="{
-    content: true,
-    action: true,
-  }">
+  <n-modal :show="show" @update:show="(val: boolean) => $emit('update:show', val)" :mask-closable="false" preset="card" :title="t('Policy Original')" class="max-w-screen-md"
+    :segmented="{
+      content: true,
+      action: true,
+    }">
     <n-form label-placement="top" label-align="left" :label-width="100">
       <n-grid :cols="24" :x-gap="18">
-        <n-form-item-grid-item :span="24" label="策略名称" path="name">
+        <n-form-item-grid-item :span="24" :label="t('Policy Name')" path="name">
           <n-input v-model:value="name" />
         </n-form-item-grid-item>
-        <n-form-item-grid-item :span="24" label="策略原文" path="content">
+        <n-form-item-grid-item :span="24" :label="t('Policy Original')" path="content">
           <n-scrollbar class="w-full max-h-[60vh] "> <json-editor v-model="content" /></n-scrollbar>
         </n-form-item-grid-item>
       </n-grid>
     </n-form>
     <template #action>
       <n-space justify="center">
-        <n-button @click="closeModal()">取消</n-button>
-        <n-button type="primary" @click="submitForm">提交</n-button>
+        <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
+        <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
       </n-space>
     </template>
   </n-modal>

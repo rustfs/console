@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const lineOptions = ref<ECOption>({
   tooltip: {
     trigger: 'item',
@@ -16,11 +20,11 @@ const lineOptions = ref<ECOption>({
       fontSize: 18,
       fontWeight: 'bold'
     },
-    data: ['已使用 (7TB)', '剩余 (3TB)']
+    data: [t('Used (7TB)'), t('Remaining (3TB)')]
   },
   series: [
     {
-      name: '存储使用统计',
+      name: t('Storage Usage Statistics'),
       type: 'pie',
       radius: ['50%', '70%'],
       avoidLabelOverlap: false,
@@ -32,8 +36,8 @@ const lineOptions = ref<ECOption>({
         show: false
       },
       data: [
-        { value: 7, name: '已使用 (7TB)', itemStyle: { color: '#2f98ff' } },
-        { value: 3, name: '剩余 (3TB)', itemStyle: { color: '#61cda3' } }
+        { value: 7, name: t('Used (7TB)'), itemStyle: { color: '#2f98ff' } },
+        { value: 3, name: t('Remaining (3TB)'), itemStyle: { color: '#61cda3' } }
       ]
     }
   ]

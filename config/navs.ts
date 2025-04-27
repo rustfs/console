@@ -1,47 +1,47 @@
 // icons: https://icones.js.org/collection/ri
 export default [
   {
-    label: '存储桶',
+    label: 'Browser',
     to: '/browser',
     icon: 'ri:box-3-line'
   },
   {
-    label: '访问密钥',
+    label: 'Access Keys',
     to: '/access-keys',
     icon: 'ri:door-lock-line'
   },
   {
-    label: '策略',
+    label: 'Policies',
     to: '/policies',
     icon: 'ri:shield-check-fill'
   },
   {
-    label: '用户',
+    label: 'Users',
     to: '/users',
     icon: 'ri:file-user-line'
   },
   {
-    label: '桶事件',
+    label: 'Bucket Events',
     to: '/events',
     icon: 'ri:broadcast-line',
   },
   {
-    label: '桶复制',
+    label: 'Bucket Replication',
     to: '/replication',
     icon: 'ri:file-copy-line',
   },
   {
-    label: '分层存储',
+    label: 'Tiered Storage',
     to: '/tiers',
     icon: 'ri:stack-line',
   },
   {
-    label: '生命周期',
+    label: 'Lifecycle',
     to: '/lifecycle',
     icon: 'ri:exchange-2-line',
   },
   {
-    label: '站点复制',
+    label: 'Site Replication',
     to: '/site-replication',
     icon: 'ri:upload-cloud-2-line',
   },
@@ -51,18 +51,18 @@ export default [
   //   icon: 'ri:settings-2-line',
   // },
   {
-    label: '性能',
+    label: 'Performance',
     to: '/performance',
     icon: 'ri:bar-chart-box-line'
   },
   {
-    label: '许可证',
+    label: 'License',
     // to: 'https://github.com/rustfs/rustfs?tab=Apache-2.0-1-ov-file#readme',
     to: '/licenseinfo',
     icon: 'ri:copyright-line'
   },
   {
-    label: '文档',
+    label: 'Documentation',
     to: 'https://rustfs.com/docs/',
     target: '_blank',
     icon: 'ri:file-list-3-line'

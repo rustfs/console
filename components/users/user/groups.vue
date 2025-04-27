@@ -8,7 +8,7 @@
         :show-feedback="false">
         <n-flex justify="space-between" v-if="!editStatus">
           <n-form-item class="!w-64" label="" path="name">
-            <n-input placeholder="搜索分组" @input="filterName" />
+            <n-input :placeholder="t('Search Group')" @input="filterName" />
           </n-form-item>
 
           <n-space>
@@ -17,13 +17,13 @@
                 <template #icon>
                   <Icon name="ri:add-line"></Icon>
                 </template>
-                编辑分组
+                {{ t('Edit Group') }}
               </NButton>
             </NFlex>
           </n-space>
         </n-flex>
         <n-flex justify="space-between" v-else>
-          <n-form-item class="!w-96" label="选择分组" path="group">
+          <n-form-item class="!w-96" :label="t('Select Group')" path="group">
             <n-select
               v-model:value="group"
               filterable
@@ -32,7 +32,7 @@
           </n-form-item>
           <n-space>
             <NFlex>
-              <NButton secondary @click="changeMebers">提交</NButton>
+              <NButton secondary @click="changeMebers">{{ t('Submit') }}</NButton>
             </NFlex>
           </n-space>
         </n-flex>
@@ -55,6 +55,9 @@ import {
   NButton,
   NSpace
 } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const { listGroup } = useGroups()
 // const { updateUserGroups } = useUsers()
 const { updateGroupMembers } = useGroups()
@@ -75,7 +78,7 @@ interface RowData {
 }
 const columns: DataTableColumns<RowData> = [
   {
-    title: '名称',
+    title: t('Name'),
     align: 'left',
     key: 'name',
     filter(value, row) {
@@ -148,11 +151,11 @@ const changeMebers = async () => {
       })
     })
 
-    messge.success('修改成功')
+    messge.success(t('Update Success'))
     editStatus.value = false
     emit('search')
   } catch (e) {
-    messge.error('修改失败')
+    messge.error(t('Update Failed'))
   }
 }
 </script>

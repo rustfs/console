@@ -1,18 +1,12 @@
 <template>
-   <n-modal
-    v-model:show="visible"
-    :mask-closable="false"
-    preset="card"
-    title="添加分层"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }">
-    <n-card v-if="!formData.type">  
-      <n-grid  x-gap="12" y-gap="12" :cols="2">
+  <n-modal v-model:show="visible" :mask-closable="false" preset="card" :title="t('Add Tier')" class="max-w-screen-md" :segmented="{
+    content: true,
+    action: true,
+  }">
+    <n-card v-if="!formData.type">
+      <n-grid x-gap="12" y-gap="12" :cols="2">
         <n-gi v-for="item in typeOptions">
-          <n-card class="cursor-pointer " @click="formData.type=item.value" >
+          <n-card class="cursor-pointer " @click="formData.type = item.value">
             <div class="flex flex-center leading-8">
               <img :src="item.iconUrl" class="w-8 h-8" /> <span class="ms-2">{{ item.label }}</span>
             </div>
@@ -31,31 +25,31 @@
             placeholder="选择规则类型"
           />
         </n-form-item> -->
-      
-        <n-form-item label="名称">
-          <n-input v-model="formData.name" placeholder="请输入名称" />
+
+        <n-form-item :label="t('Name')">
+          <n-input v-model="formData.name" :placeholder="t('Please enter name')" />
         </n-form-item>
-        <n-form-item label="Endpoint">
-          <n-input v-model="formData.endpoint" placeholder="请输入资endpoint" />
+        <n-form-item :label="t('Endpoint')">
+          <n-input v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
         </n-form-item>
-        <n-form-item label="Access Key ">
-          <n-input v-model="formData.accesskey" placeholder="请输入Access Key" />
+        <n-form-item :label="t('Access Key')">
+          <n-input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" />
         </n-form-item>
-        <n-form-item label="Secret Key ">
-          <n-input v-model="formData.secretkey" placeholder="请输入Secret Key" />
+        <n-form-item :label="t('Secret Key')">
+          <n-input v-model="formData.secretkey" :placeholder="t('Please enter Secret Key')" />
         </n-form-item>
-        <n-form-item label="存储空间">
-          <n-input v-model="formData.bucket" placeholder="请输入存储空间" />
+        <n-form-item :label="t('Bucket')">
+          <n-input v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
         </n-form-item>
-        <n-form-item label="前缀">
-          <n-input v-model="formData.prefix" placeholder="请输入前缀" />
+        <n-form-item :label="t('Prefix')">
+          <n-input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
         </n-form-item>
-        <n-form-item label="地区">
-          <n-input v-model="formData.regio" placeholder="请输入地区" />
+        <n-form-item :label="t('Region')">
+          <n-input v-model="formData.regio" :placeholder="t('Please enter region')" />
         </n-form-item>
         <n-space justify="center">
-          <n-button @click="handleCancel">取消</n-button>
-          <n-button type="primary" @click="handleSave">保存</n-button>
+          <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
+          <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
         </n-space>
       </n-form>
     </n-card>
@@ -64,6 +58,7 @@
 
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import MinioIcon from '~/assets/svg/rustfs.svg'
 import GoogleIcon from '~/assets/svg/google.svg'
 import AWSIcon from '~/assets/svg/aws.svg'
@@ -80,9 +75,11 @@ import {
   NButton,
 } from 'naive-ui'
 
+const { t } = useI18n()
+
 const formRef = ref(null)
 const formData = ref({
-  type:'',
+  type: '',
   name: '',
   endpoint: '',
   accesskey: '',
@@ -92,23 +89,21 @@ const formData = ref({
   regio: '',
 })
 const typeOptions = [
-  { label: 'Minio', value: 'rustfs' ,iconUrl: MinioIcon},
-  { label: 'Google Cloue Storage', value: 'google',iconUrl: GoogleIcon },
-  { label: 'AWS S3', value: 'AWS' ,iconUrl: AWSIcon},
-  { label: 'Azure', value: 'azure' ,iconUrl: AzureIcon},
-  { label: '阿里云', value: 'aliyun' ,iconUrl:AliyunIcon},
-  { label: '腾讯云', value: 'tqyun',iconUrl: TqyunIcon },
-  { label: '华为云', value: 'hwyun',iconUrl: HwcloudIcon },
-  { label: '百度云', value: 'bdyun' ,iconUrl: BaiduIcon},
+  { label: t('Minio'), value: 'rustfs', iconUrl: MinioIcon },
+  { label: t('Google Cloud Storage'), value: 'google', iconUrl: GoogleIcon },
+  { label: t('AWS S3'), value: 'AWS', iconUrl: AWSIcon },
+  { label: t('Azure'), value: 'azure', iconUrl: AzureIcon },
+  { label: t('Aliyun'), value: 'aliyun', iconUrl: AliyunIcon },
+  { label: t('Tencent Cloud'), value: 'tqyun', iconUrl: TqyunIcon },
+  { label: t('Huawei Cloud'), value: 'hwyun', iconUrl: HwcloudIcon },
+  { label: t('Baidu Cloud'), value: 'bdyun', iconUrl: BaiduIcon },
 ]
 
-
 const rules = {
-  ruleName: { required: true, message: '请输入规则名称' },
-  type: { required: true, message: '请选择规则类型' },
-  versionType: { required: true, message: '请选择版本类型' }
+  ruleName: { required: true, message: t('Please enter rule name') },
+  type: { required: true, message: t('Please select rule type') },
+  versionType: { required: true, message: t('Please select version type') }
 }
-
 
 const visible = ref(false)
 
@@ -122,7 +117,7 @@ defineExpose({
 const handleSave = () => {
   formRef.value?.validate((errors) => {
     if (!errors) {
-      console.log('提交数据:', formData.value)
+      console.log(t('Submit data'), formData.value)
       // 调用保存接口
     }
   })

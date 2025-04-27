@@ -2,138 +2,138 @@
   <div class="license-page eading-7">
      <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">License</h1>
+        <h1 class="text-2xl font-bold">{{ t('License') }}</h1>
       </template>
     </page-header>
     <page-content>
       <n-card  size="large" >
         <template #header>
-          <h1 class="text-2xl font-bold text-center">Apache许可证</h1>
+          <h1 class="text-2xl font-bold text-center">{{ t('Apache License') }}</h1>
         </template>
         <article>
           <section  style="max-width: 1220px;margin: 0 auto;">
              <n-p>
-          第 2.0 版，2004 年 1 月
+          {{ t('Version 2.0, January 2004') }}
         </n-p>
         <n-p class=" mt-2">
           <n-a href="http://www.apache.org/licenses/"><n-text type="info">http://www.apache.org/licenses/</n-text></n-a>
         </n-p>
         <n-divider />
-             <n-h3>使用、复制和分发的条款和条件</n-h3>
-            <n-h4>1. 定义</n-h4>
+             <n-h3>{{ t('Terms and Conditions for Use, Reproduction, and Distribution') }}</n-h3>
+            <n-h4>1. {{ t('Definitions') }}</n-h4>
             <n-p>
-            “本许可证”系指本文档第 1 节至第 9 节所定义的使用、复制和分发的条款和条件。
+            {{ t('License definition paragraph') }}
             </n-p>
             <n-p>
-            “许可方”系指授予本许可证的版权所有者或经其授权的实体。
+            {{ t('Licensor definition paragraph') }}
             </n-p>
             <n-p>
-             “法人实体”系指行为实体及其他控制该实体、受该实体控制或与该实体在共同控制之下的实体的集合。就本条定义而言，“控制”指(i)直接或间接地引导或管理该实体的权力，不论通过合同或其他形式；或(ii)拥有百分之五十（50%）或以上流通股的所有权；或(iii)拥有该实体的实益所有权。
+             {{ t('Legal Entity definition paragraph') }}
             </n-p>
             <n-p>
-              “您”（或“您的”）系指行使本许可证下许可的个人或法人实体。
+              {{ t('You definition paragraph') }}
             </n-p>
             <n-p>
-             “源码”形式系指进行修改的首选形式，包括但不限于软件源代码、源文档和配置文件。
+             {{ t('Source form definition paragraph') }}
             </n-p>
             <n-p>
-             “目标码”形式系指对源码形式进行机器转换或翻译而产生的任何形式，包括但不限于已编译的目标代码、生成的文档和转换的其他媒体类型。
+             {{ t('Object form definition paragraph') }}
             </n-p>
             <n-p>
-             “本作品”系指在本许可证下无论以源码形式或目标码形式提供的原创作品，如作品中所包含或附加的版权声明所述（示例请见下文附录）。
+             {{ t('Work definition paragraph') }}
             </n-p>
             <n-p>
-                “衍生作品”系指基于（或衍生于）本作品的任何作品，无论是源码形式或目标码形式，且对本作品的编辑修订、注释、阐述或其他修改在整体上形成原创作品。就本许可证而言，衍生作品不包括与本作品及其衍生作品仍保持分离或仅通过接口连接（或以名称绑定）的作品。
+                {{ t('Derivative Works definition paragraph') }}
             </n-p>
             <n-p>
-             “贡献”系指由版权所有者或由经其授权的个人或法人实体有意提交给许可方以纳入本作品的任何原创作品，包括本作品的原始版本和对本作品的任何修改或添加或其衍生作品。就本条定义而言，“提交”系指发送给许可方或其代表的任何电子、口头或书面形式的通信内容，包括但不限于为供讨论和改进本作品目的，发送到许可方管理的、或代表许可方的电子邮件列表、源代码控制系统和发布跟踪系统的通信内容，但不包括版权所有者明确标注或以其他方式书面指定为“非贡献”的通信内容。
+             {{ t('Contribution definition paragraph') }}
             </n-p>
             <n-p>
-            “贡献者”是指许可方，以及其“贡献”已被许可方接收且许可方代表其将贡献合并入本作品中的任何个人或法人实体。
-            </n-p>
-            <n-h4>
-              2. 版权许可的授予
-            </n-h4>
-            <n-p>
-              受限于本许可证的条款和条件，每个贡献者特此授予您永久的、全球性的、非排他性的、免交易费的、免许可费的、不可撤销的版权许可，以复制、准备衍生作品、公开展示、公开表演、分许可和分发本作品及其衍生作品，以源码或目标码形式。
+            {{ t('Contributor definition paragraph') }}
             </n-p>
             <n-h4>
-              3. 专利许可的授予
+              2. {{ t('Grant of Copyright License') }}
             </n-h4>
             <n-p>
-              受限于本许可证的条款和条件，每个贡献者特此授予您永久的、全球性的、非排他性的、免交易费的、免许可费的、不可撤销的（按本节规定的除外）专利许可，以制造、委托制造、使用、许诺销售、销售、进口及以其他方式转移本作品，该许可仅及于贡献者有权许可且由其贡献本身或由其贡献与其提交时所针对的本作品形成的组合所必然侵犯的专利权利要求。如果您对任何实体提起专利诉讼（包括在法律诉讼中的交叉诉讼主张或反诉主张），主张本作品或纳入本作品的贡献构成专利的直接侵权或帮助侵权，则在本许可证下授予您的任何专利许可自该诉讼提起之日起终止。
+              {{ t('Copyright license paragraph') }}
             </n-p>
             <n-h4>
-              4. 再分发
+              3. {{ t('Grant of Patent License') }}
             </n-h4>
             <n-p>
-              您可在任何媒介上复制和分发本作品或其衍生作品的副本，无论是否经过修改，无论以源码形式或目标形式，只要您满足以下条件：
+              {{ t('Patent license paragraph') }}
+            </n-p>
+            <n-h4>
+              4. {{ t('Redistribution') }}
+            </n-h4>
+            <n-p>
+              {{ t('Redistribution paragraph') }}
             </n-p>
             <n-ol>
               <n-li>
-               1. 您必须向本作品或衍生作品的任何其他接收者提供本许可证的副本；
+               1. {{ t('Redistribution condition 1') }}
               </n-li>
               <n-li>
-                2. 您必须使任何修改后的文件都附上显著的声明，说明您修改了该文件
+                2. {{ t('Redistribution condition 2') }}
               </n-li>
               <n-li>
-                3. 您必须在您分发的任何衍生作品的源码形式中，保留来自本作品源码形式的所有版权、专利、商标和权属声明，但与该衍生作品任何部分无关的声明除外；
+                3. {{ t('Redistribution condition 3') }}
               </n-li>
               <n-li>
-                4. 如果本作品分发时包含“NOTICE”文本文件，则您分发的任何衍生作品必须至少在下述一处位置包含本文件中的署名声明的可读副本，但与该衍生作品任何部分无关的声明除外：在作为衍生作品一部分的 NOTICE 文本文件中；在与衍生作品一并提供的源码形式或文档中；或在衍生作品生成的显示界面中通常展示第三方声明的任何位置（如有）。NOTICE 文件中的内容仅为提供信息，并不修改本许可。您可以在您分发的衍生作品中添加您自己的权属声明，与本作品的NOTICE文本并列或作为其附录，只要该添加的权属声明不被解释为修改本许可。
+                4. {{ t('Redistribution condition 4') }}
               </n-li>
             </n-ol>
             <n-p>
-              您可以对您的修改部分添加您自己的版权声明，并可以就您的修改部分或就任何衍生作品整体提供额外或不同的许可条款和条件以使用、复制或分发，只要您使用、复制和分发本作品符合本许可规定的条件。
+              {{ t('Additional redistribution paragraph') }}
             </n-p>
             <n-h4>
-              5. 贡献的提交
+              5. {{ t('Submission of Contributions') }}
             </n-h4>
             <n-p>
-              除非您另有明确说明，您向许可方有意提交的任何以纳入本作品的贡献均受本许可证的条款和条件约束，而不带有任何附加条款或条件。尽管有上述规定，本许可证中任何内容均不会取代或修改您可能与许可方另行签署的任何关于该贡献的许可协议的条款。
+              {{ t('Contributions paragraph') }}
             </n-p>
             <n-h4>
-              6. 商标
+              6. {{ t('Trademarks') }}
             </n-h4>
             <n-p>
-              本许可证不授予使用许可方的商号、商标、服务标志或产品名称的许可，但在描述本作品来源及复制 NOTICE 文件内容时因合理和习惯用法需要的除外。
+              {{ t('Trademarks paragraph') }}
             </n-p>
             <n-h4>
-              7. 免责申明
+              7. {{ t('Disclaimer of Warranty') }}
             </n-h4>
             <n-p>
-              除非所适用法律要求或经书面同意，许可方就本作品（及每个贡献者就其贡献）是“按原样”提供，没有任何明示或默示的保证或条件，包括但不限于关于权属、不侵权、适销性或特定目的适用性的任何保证或条件。您自行负责确认使用或再分发本作品的适当性，并承担与您行使本许可证下所授许可相关的任何风险。
+              {{ t('Disclaimer paragraph') }}
             </n-p>
             <n-h4>
-              8. 责任限制
+              8. {{ t('Limitation of Liability') }}
             </n-h4>
             <n-p>
-              在任何情况和任何法律理论下，无论在侵权（包括过失）、合同或其他方面，除非所适用法律要求（如故意或严重过失行为）或经书面同意，任何贡献者均不对您的损失承担责任，包括因本许可证或因使用或无法使用本作品而导致的任何直接的、间接的、特定的、偶然性的或继发性的损失（包括但不限于商誉损失、停工、计算机失灵或故障，或任何其他商业损害或损失），即使该贡献者曾被告知该损失的可能性。
+              {{ t('Liability paragraph') }}
             </n-p>
             <n-h4>
-              9. 接受保证或附加责任。
+              9. {{ t('Accepting Warranty or Additional Liability') }}
             </n-h4>
             <n-p>
-              在再分发本作品或其衍生作品时，您可以选择接受支持、保证、补偿或其他符合本许可证的责任义务和/或权利，并为之收取费用。然而，在接受该义务时，您只能代表您自己行事且责任完全由您承担，不得代表任何其他贡献者，且在其他贡献者因您接受此类保证或附加责任而产生赔偿责任或主张时，您必须同意补偿、辩护并使该贡献者免受该损害。
+              {{ t('Additional liability paragraph') }}
             </n-p>
             <n-h4>
-              条款和条件结束
+              {{ t('END OF TERMS AND CONDITIONS') }}
             </n-h4>
             <n-h4>
-              附录：如何将 Apache 许可证应用到您的作品中
+              {{ t('APPENDIX: How to apply the Apache License to your work') }}
             </n-h4>
             <n-p>
-              在您作品中包含 Apache 许可证的副本，通常在名为“LICENSE”的文件中，并考虑在您作品中包含一个引用该许可证的“NOTICE”文件。
+              {{ t('Appendix paragraph 1') }}
             </n-p>
             <n-p>
-              要将 Apache 许可证应用于您的作品，请附上下述声明模板，并将由括号“[]”包围的字段替换为您自己的标识信息。（不要包含方括号！）该文本应纳入文件格式适合的注释语法中。我们还建议将文件名或类名和目的描述与版权声明放在同一“打印页面”上，以便于在第三方档案中识别。
+              {{ t('Appendix paragraph 2') }}
             </n-p>
-           <n-p> 版权所有[rustfs][版权所有者名称]</n-p>
-            <n-p>根据 Apache 许可证第 2.0 版（“本许可证”）许可；</n-p>
-            <n-p>除非符合本许可证的规定，否则您不得使用此文件。</n-p>
-            <n-p>您可以在此获取本许可证的副本：</n-p>
+           <n-p> {{ t('Copyright RustFS') }}</n-p>
+            <n-p>{{ t('Licensed under Apache 2.0') }}</n-p>
+            <n-p>{{ t('You may not use this file except in compliance with the License') }}</n-p>
+            <n-p>{{ t('You may obtain a copy of the License at') }}</n-p>
             <n-p>
-              除非所适用法律要求或经书面同意，在本许可证下分发的软件是“按原样”分发的，没有任何形式的保证或条件，不论明示或默示。请查阅本许可证了解有关本许可证下许可和限制的具体要求。
+              {{ t('Appendix final paragraph') }}
             </n-p>
           </section>
         </article>
@@ -143,7 +143,10 @@
 </template>
 
 <script setup>
-import { NCard, NDivider ,NOl} from 'naive-ui';
+import { NCard, NDivider, NOl } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n()
 </script>
 
 <style scoped>

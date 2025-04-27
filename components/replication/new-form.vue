@@ -1,131 +1,106 @@
 <template>
-   <n-modal
-    v-model:show="visible"
-    :mask-closable="false"
-    preset="card"
-    :title="`添加桶复制规则（桶：${bucketName}）`"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }">
+  <n-modal v-model:show="visible" :mask-closable="false" preset="card" :title="t('Add Bucket Replication Rule', { bucket: bucketName })" class="max-w-screen-md" :segmented="{
+    content: true,
+    action: true,
+  }">
     <n-card>
-  <n-form label-placement="left" :label-width='100' ref="formRef" :model="formData">
-    <n-form-item label="优先级" path="level">
-       <n-input v-model:value="formData.level" placeholder="请输入优先级"/>
-    </n-form-item>
-    <n-form-item label="目标地址" path="type">
-       <n-input v-model:value="formData.endpoint" placeholder="请输入目标地址"/>
-    </n-form-item>
-    <n-form-item label="使用TLS" path="tls">
-      <n-switch
-        v-model:value="formData.tls"
-        :round="false"
-      />
-    </n-form-item>
-    <n-form-item label="Access Key" path="type">
-       <n-input v-model:value="formData.accesskey" placeholder="请输入Access Key"/>
-    </n-form-item>
-    <n-form-item label="Secret Key" path="type">
-       <n-input v-model:value="formData.secrretkey" placeholder="请输入Secret Key"/>
-    </n-form-item>
-    <n-form-item label="目标存储空间" path="type">
-       <n-input v-model:value="formData.bucket" placeholder="请输入目标存储空间"/>
-    </n-form-item>
-    <n-form-item label="地区" path="type">
-       <n-input v-model:value="formData.region" placeholder="请输入地区"/>
-    </n-form-item>
-    <n-form-item label="复制模式" path="modeType">
-        <n-select v-model:value="formData.modeType"  placeholder="请选择复制模式" filterable  :options="modes" />
-    </n-form-item>
+      <n-form label-placement="left" :label-width='100' ref="formRef" :model="formData">
+        <n-form-item :label="t('Priority')" path="level">
+          <n-input v-model:value="formData.level" :placeholder="t('Please enter priority')" />
+        </n-form-item>
+        <n-form-item :label="t('Target Address')" path="type">
+          <n-input v-model:value="formData.endpoint" :placeholder="t('Please enter target address')" />
+        </n-form-item>
+        <n-form-item :label="t('Use TLS')" path="tls">
+          <n-switch v-model:value="formData.tls" :round="false" />
+        </n-form-item>
+        <n-form-item :label="t('Access Key')" path="type">
+          <n-input v-model:value="formData.accesskey" :placeholder="t('Please enter Access Key')" />
+        </n-form-item>
+        <n-form-item :label="t('Secret Key')" path="type">
+          <n-input v-model:value="formData.secrretkey" :placeholder="t('Please enter Secret Key')" />
+        </n-form-item>
+        <n-form-item :label="t('Target Bucket')" path="type">
+          <n-input v-model:value="formData.bucket" :placeholder="t('Please enter target bucket')" />
+        </n-form-item>
+        <n-form-item :label="t('Region')" path="type">
+          <n-input v-model:value="formData.region" :placeholder="t('Please enter region')" />
+        </n-form-item>
+        <n-form-item :label="t('Replication Mode')" path="modeType">
+          <n-select v-model:value="formData.modeType" :placeholder="t('Please select replication mode')" filterable :options="modes" />
+        </n-form-item>
 
-    <n-form-item label="带宽" path="type">
-      <n-input-group>
-       <n-input v-model="formData.daikuan" placeholder="请输入带宽"/>
-        <n-select v-model:value="formData.unit"  placeholder="请选择单位" filterable  :options="units" />
-      </n-input-group>
-    </n-form-item>
-    <n-form-item label="健康检查时长" path="timecheck">
-       <n-input v-model:value="formData.timecheck" placeholder="请输入健康检查时长"/>
-    </n-form-item>
-    <n-form-item label="存储类型" path="type">
-       <n-input v-model:value="formData.storageType" placeholder="请输入存储类型"/>
-    </n-form-item>
+        <n-form-item :label="t('Bandwidth')" path="type">
+          <n-input-group>
+            <n-input v-model="formData.daikuan" :placeholder="t('Please enter bandwidth')" />
+            <n-select v-model:value="formData.unit" :placeholder="t('Please select unit')" filterable :options="units" />
+          </n-input-group>
+        </n-form-item>
+        <n-form-item :label="t('Health Check Duration')" path="timecheck">
+          <n-input v-model:value="formData.timecheck" :placeholder="t('Please enter health check duration')" />
+        </n-form-item>
+        <n-form-item :label="t('Storage Type')" path="type">
+          <n-input v-model:value="formData.storageType" :placeholder="t('Please enter storage type')" />
+        </n-form-item>
 
-    <!-- 对象搜索 -->
-    <n-card title="对象搜索">  
-      <n-form-item label="前缀">
-        <n-input v-model="formData.prefix" placeholder="请输入前缀" />
-      </n-form-item>
-      <n-form-item label="标签">
-        <n-dynamic-input
-          v-model:value="formData.tags"
-          preset="pair"
-          key-placeholder="标签名"
-          value-placeholder="标签值"
-        />
-      </n-form-item>
+        <!-- 对象搜索 -->
+        <n-card :title="t('Object Search')">
+          <n-form-item :label="t('Prefix')">
+            <n-input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+          </n-form-item>
+          <n-form-item :label="t('Tags')">
+            <n-dynamic-input v-model:value="formData.tags" preset="pair" :key-placeholder="t('Tag Name')" :value-placeholder="t('Tag Value')" />
+          </n-form-item>
+        </n-card>
+
+
+        <!-- 复制选项 -->
+        <n-card class="my-4">
+          <n-collapse>
+            <n-collapse-item :title="t('Replication Options')" name="advanced">
+              <n-form-item :label="t('Existing Objects')">
+                <n-space>
+                  <n-switch v-model:value="formData.expiredDeleteMark" :round="false" />
+                  <span class="ml-4 text-gray-500">{{ t('Replicate existing objects') }}</span>
+                </n-space>
+              </n-form-item>
+
+              <n-form-item :label="t('Metadata Sync')">
+                <n-space>
+                  <n-switch v-model:value="formData.deleteAllExpired" :round="false" />
+                  <span class="ml-4 text-gray-500">{{ t('Sync metadata') }}</span>
+                </n-space>
+              </n-form-item>
+
+              <n-form-item :label="t('Delete Marker')">
+                <n-space>
+                  <n-switch v-model:value="formData.delete" :round="false" />
+                  <span class="ml-4 text-gray-500">{{ t('Replicate soft delete') }}</span>
+                </n-space>
+              </n-form-item>
+
+              <n-form-item :label="t('Delete')">
+                <n-space>
+                  <n-switch v-model:value="formData.deleteforever" :round="false" />
+                  <span class="ml-4 text-gray-500">{{ t('Replicate version delete') }}</span>
+                </n-space>
+              </n-form-item>
+            </n-collapse-item>
+          </n-collapse>
+        </n-card>
+
+        <n-space justify="center">
+          <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
+          <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
+        </n-space>
+      </n-form>
     </n-card>
-     
-
-    <!-- 复制选项 -->
-    <n-card class="my-4">
-      <n-collapse >
-        <n-collapse-item title="复制选项" name="advanced">
-          <n-form-item label="现有对象">
-            <n-space >
-              <n-switch
-                v-model:value="formData.expiredDeleteMark"
-                :round="false"
-              />
-              <span class="ml-4 text-gray-500">复制现有对象</span>
-            </n-space>
-          </n-form-item>
-
-          <n-form-item label="元数据同步">
-            <n-space >
-              <n-switch
-                v-model:value="formData.deleteAllExpired"
-                :round="false"
-              />
-              <span class="ml-4 text-gray-500">元数据同步</span>
-            </n-space>
-          </n-form-item>
-
-          <n-form-item label="删除标记">
-            <n-space >
-              <n-switch
-                v-model:value="formData.delete"
-                :round="false"
-              />
-              <span class="ml-4 text-gray-500">复制软删除</span>
-            </n-space>
-          </n-form-item>
-
-          <n-form-item label="删除">
-            <n-space >
-              <n-switch
-                v-model:value="formData.deleteforever"
-                :round="false"
-              />
-              <span class="ml-4 text-gray-500">复制版本化删除</span>
-            </n-space>
-          </n-form-item>
-        </n-collapse-item>
-      </n-collapse>
-    </n-card> 
-
-    <n-space justify="center">
-      <n-button @click="handleCancel">取消</n-button>
-      <n-button type="primary" @click="handleSave">保存</n-button>
-    </n-space>
-  </n-form>
-  </n-card>
   </n-modal>
 </template>
 
 <script setup>
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import {
   NForm,
   NFormItem,
@@ -137,13 +112,15 @@ import {
   NButton,
 } from 'naive-ui'
 
+const { t } = useI18n()
+
 const modes = [
   {
-    label: '同步',
+    label: t('Sync'),
     value: 'sync',
   },
   {
-    label: '异步',
+    label: t('Async'),
     value: 'async',
   },
 ]
@@ -173,18 +150,18 @@ const units = [
 
 const formRef = ref(null)
 const formData = ref({
-  level:'1',
-  timecheck:'60',
+  level: '1',
+  timecheck: '60',
   modeType: 'sync',
   type: null,
   unit: 'Mi',
-  tags:[{
-    key:'',
-    value:''
+  tags: [{
+    key: '',
+    value: ''
   }],
   expiredDeleteMark: false,
   deleteAllExpired: false,
-  delete:false,
+  delete: false,
   deleteforever: false,
 })
 
@@ -206,7 +183,7 @@ defineExpose({
 const handleSave = () => {
   formRef.value?.validate((errors) => {
     if (!errors) {
-      console.log('提交数据:', formData.value)
+      console.log(t('Submit data'), formData.value)
       // 调用保存接口
     }
   })

@@ -12,20 +12,20 @@
       }">
       <n-card>
         <n-tabs type="card">
-          <n-tab-pane name="groups" tab="分组">
+          <n-tab-pane name="groups" :tab="t('Groups')">
             <users-user-groups :user="user" @search="getUserData(user.accessKey)"></users-user-groups>
           </n-tab-pane>
-          <n-tab-pane name="policy" tab="策略">
+          <n-tab-pane name="policy" :tab="t('Policies')">
             <users-user-policies :user="user" @search="getUserData(user.accessKey)"></users-user-policies>
           </n-tab-pane>
-          <n-tab-pane name="accesskey" tab="账号">
+          <n-tab-pane name="accesskey" :tab="t('Account')">
             <users-user-account
               :user="user"
               @search="getUserData(user.accessKey)"
               @notice="noticeDialog"></users-user-account>
           </n-tab-pane>
           <template #suffix>
-            状态
+            {{ t('Status') }}
             <n-switch
               class="ml-2"
               checked-value="enabled"
@@ -41,7 +41,9 @@
 </template>
 
 <script setup lang="ts">
-// import { userPolicies, userAccount, userGroups } from './components';
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const visible = ref(false)
 const { getUser, updateUser, changeUserStatus } = useUsers()
 interface UserInfo {

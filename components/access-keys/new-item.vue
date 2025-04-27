@@ -1,27 +1,15 @@
 <template>
-  <n-modal
-    v-model:show="modalVisible"
-    :mask-closable="false"
-    preset="card"
-    title="创建秘钥"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }">
+  <n-modal v-model:show="modalVisible" :mask-closable="false" preset="card" :title="t('Create Key')" class="max-w-screen-md" :segmented="{
+    content: true,
+    action: true,
+  }">
     <n-card>
-      <n-form
-        ref="formRef"
-        label-placement="left"
-        :model="formModel"
-        :rules="rules"
-        label-align="center"
-        :label-width="130">
+      <n-form ref="formRef" label-placement="left" :model="formModel" :rules="rules" label-align="center" :label-width="130">
         <n-grid :cols="24" :x-gap="18">
-          <n-form-item-gi :span="24" label="Access Key" path="accessKey">
+          <n-form-item-gi :span="24" :label="t('Access Key')" path="accessKey">
             <n-input v-model:value="formModel.accessKey" />
           </n-form-item-gi>
-          <n-form-item-gi :span="24" label="Secret Key" path="secretKey">
+          <n-form-item-gi :span="24" :label="t('Secret Key')" path="secretKey">
             <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
           </n-form-item-gi>
 
@@ -29,27 +17,22 @@
             <n-select v-model:value="formModel.policy" filterable multiple :options="polices" />
           </n-form-item-gi> -->
 
-          <n-form-item-gi :span="24" label="有效期" path="expiry">
-            <n-date-picker
-              class="!w-full"
-              v-model:value="formModel.expiry"
-              :is-date-disabled="dateDisabled"
-              type="datetime"
-              clearable />
+          <n-form-item-gi :span="24" :label="t('Expiry')" path="expiry">
+            <n-date-picker class="!w-full" v-model:value="formModel.expiry" :is-date-disabled="dateDisabled" type="datetime" clearable />
           </n-form-item-gi>
-          <n-form-item-gi :span="24" label="名称" path="name">
+          <n-form-item-gi :span="24" :label="t('Name')" path="name">
             <n-input v-model:value="formModel.name" />
           </n-form-item-gi>
           <!-- <n-form-item-gi :span="24" label="描述" path="comment">
             <n-input v-model:value="formModel.comment" />
           </n-form-item-gi> -->
-          <n-form-item-gi :span="24" label="注释" path="description">
+          <n-form-item-gi :span="24" :label="t('Description')" path="description">
             <n-input v-model:value="formModel.description" />
           </n-form-item-gi>
-          <n-form-item-gi :span="24" label="使用主账户策略" path="impliedPolicy">
+          <n-form-item-gi :span="24" :label="t('Use main account policy')" path="impliedPolicy">
             <n-switch v-model:value="formModel.impliedPolicy" />
           </n-form-item-gi>
-          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" label="当前用户策略" path="policy">
+          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" :label="t('Current user policy')" path="policy">
             <json-editor v-model="formModel.policy" />
           </n-form-item-gi>
         </n-grid>
@@ -57,8 +40,8 @@
     </n-card>
     <template #action>
       <n-space justify="center">
-        <n-button @click="closeModal()">取消</n-button>
-        <n-button type="primary" @click="submitForm">提交</n-button>
+        <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
+        <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
       </n-space>
     </template>
   </n-modal>
@@ -66,8 +49,10 @@
 <script setup lang="ts">
 import type { FormInst, FormItemRule } from "naive-ui"
 import { computed, ref } from "vue"
+import { useI18n } from "vue-i18n"
 import { makeRandomString } from "~/utils/functions"
 
+const { t } = useI18n()
 interface Props {
   visible: boolean
 }
@@ -94,12 +79,12 @@ const rules = ref({
   accessKey: {
     required: true,
     trigger: ["blur", "input"],
-    message: "请输入Access Key",
+    message: t("Please enter Access Key"),
   },
   secretKey: {
     required: true,
     trigger: ["blur", "input"],
-    message: "请输入Secret Key",
+    message: t("Please enter Secret Key"),
   },
   expiry: {
     required: true,
@@ -107,7 +92,7 @@ const rules = ref({
     // message: "请选择有效期",
     validator(rule: FormItemRule, value: string) {
       if (!value) {
-        return new Error("请选择有效期")
+        return new Error(t("Please select expiry date"))
       }
       return true
     },
@@ -149,17 +134,17 @@ async function submitForm(e: MouseEvent) {
           policy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
           expiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
         })
-        message.success("添加成功")
+        message.success(t("Added successfully"))
         emit("notice", res)
         closeModal()
         emit("search")
       } catch (error) {
         console.log("🚀 ~ submitForm ~ error:", error)
-        message.error("添加失败")
+        message.error(t("Add failed"))
       }
     } else {
       console.log(errors)
-      message.error("请填写正确的格式")
+      message.error(t("Please fill in the correct format"))
     }
   })
 }

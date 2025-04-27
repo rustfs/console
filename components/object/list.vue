@@ -40,8 +40,8 @@
   </n-page-header>
   <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredObjects" :row-key="rowKey" @update:checked-row-keys="handleCheck"
     :pagination="false" :bordered="false" />
-  <object-upload-picker :show="uploadPickerVisible" @update:show="(val) => (uploadPickerVisible = val && refresh())" :bucketName="bucketName" :prefix="prefix" />
-  <object-new-form :show="newObjectFormVisible" :asPrefix="newObjectAsPrefix" @update:show="(val) => (newObjectFormVisible = val && refresh())" :bucketName="bucketName"
+  <object-upload-picker :show="uploadPickerVisible" @update:show="(val: any) => (uploadPickerVisible = val && refresh())" :bucketName="bucketName" :prefix="prefix" />
+  <object-new-form :show="newObjectFormVisible" :asPrefix="newObjectAsPrefix" @update:show="(val: any) => (newObjectFormVisible = val && refresh())" :bucketName="bucketName"
     :prefix="prefix" />
   <n-button-group class="ml-auto">
     <n-button @click="goToPreviousPage" :disabled="!continuationToken">
@@ -159,11 +159,13 @@ const columns: DataTableColumns<RowData> = [
       }
 
       const keyInUri = row.Key;
-      return h(NuxtLink, { href: row.type === "prefix"? bucketPath(keyInUri) : '', class: "block text-cyan-400 cursor-pointer" , onClick : (e:MouseEvent)=>{
-        if(row.type === "prefix") return
-        infoRef.value.openDrawer(bucketName.value,row.Key)
-        return
-}} ,() => label); 
+      return h(NuxtLink, {
+        href: row.type === "prefix" ? bucketPath(keyInUri) : '', class: "block text-cyan-400 cursor-pointer", onClick: (e: MouseEvent) => {
+          if (row.type === "prefix") return
+          infoRef.value.openDrawer(bucketName.value, row.Key)
+          return
+        }
+      }, () => label);
     },
   },
   { key: "Size", title: "大小", render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },

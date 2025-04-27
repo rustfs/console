@@ -9,13 +9,13 @@
         label-align="right"
         :label-width="130">
         <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item :span="24" label="Access Key" path="accessKey">
+          <n-form-item-grid-item :span="24" :label="t('Access Key')" path="accessKey">
             <n-input v-model:value="formModel.accessKey" :disabled="true" />
           </n-form-item-grid-item>
           <!-- <n-form-item-grid-item :span="24" label="Secret Key" path="secretKey">
             <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
           </n-form-item-grid-item> -->
-          <n-form-item-grid-item :span="24" label="有效期" path="expiry">
+          <n-form-item-grid-item :span="24" :label="t('Expiration')" path="expiry">
             <n-date-picker
               class="!w-full"
               v-model:value="formModel.expiry"
@@ -24,30 +24,30 @@
               type="datetime"
               clearable />
           </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" label="名称" path="name">
+          <n-form-item-grid-item :span="24" :label="t('Name')" path="name">
             <n-input v-model:value="formModel.name" />
           </n-form-item-grid-item>
 
-          <n-form-item-grid-item :span="24" label="注释" path="description">
+          <n-form-item-grid-item :span="24" :label="t('Description')" path="description">
             <n-input v-model:value="formModel.description" />
           </n-form-item-grid-item>
 
           <n-form-item-gi :span="24">
-            <n-form-item-gi :span="24" label="使用主账户策略" path="impliedPolicy">
+            <n-form-item-gi :span="24" :label="t('Use Main Account Policy')" path="impliedPolicy">
               <n-switch v-model:value="formModel.impliedPolicy" />
             </n-form-item-gi>
-            <n-form-item-grid-item :span="24" label="状态" path="accountStatus">
+            <n-form-item-grid-item :span="24" :label="t('Status')" path="accountStatus">
               <n-switch v-model:value="formModel.accountStatus" checked-value="on" unchecked-value="off" />
             </n-form-item-grid-item>
           </n-form-item-gi>
-          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" label="当前用户策略" path="policy">
+          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" :label="t('Current User Policy')" path="policy">
             <json-editor v-model="formModel.policy" />
           </n-form-item-gi>
         </n-grid>
         <n-space>
           <NFlex justify="center">
-            <NButton secondary @click="cancelEdit">取消</NButton>
-            <NButton secondary @click="submitForm">提交</NButton>
+            <NButton secondary @click="cancelEdit">{{ t('Cancel') }}</NButton>
+            <NButton secondary @click="submitForm">{{ t('Submit') }}</NButton>
           </NFlex>
         </n-space>
       </n-form>
@@ -57,34 +57,37 @@
 
 <script setup lang="ts">
 import { type FormItemRule, type FormInst, NButton, NSpace } from "naive-ui"
-// 随机字符串函数
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 const { updateServiceAccount } = useAccessKeys()
 const { $api } = useNuxtApp()
 const { getPolicyByUserName } = usePolicies()
+
 // 验证
 const rules = ref({
   accessKey: {
     required: true,
     trigger: ["blur", "input"],
-    message: "请输入Access Key",
+    message: t('Please enter Access Key'),
   },
   secretKey: {
     required: true,
     trigger: ["blur", "input"],
-    message: "请输入Secret Key",
+    message: t('Please enter Secret Key'),
   },
   expiry: {
     required: true,
     trigger: ["blur", "change"],
-    // message: "请选择有效期",
     validator(rule: FormItemRule, value: string) {
       if (!value) {
-        return new Error("请选择有效期")
+        return new Error(t('Please select expiration date'))
       }
       return true
     },
   },
 })
+
 const message = useMessage()
 const props = defineProps({
   user: {
@@ -117,7 +120,6 @@ watch(
     }
     // 如果没有默认策略，则获取默认策略
     if (props.user.impliedPolicy) getPolicie()
-    // 新增
   },
   {
     deep: true,
@@ -154,23 +156,23 @@ async function submitForm() {
     if (!errors) {
       try {
         const res = await updateServiceAccount(props.user.accessKey, {
-          newStatus: formModel.value.accountStatus, // 可选，新状态
-          newName: formModel.value.name, // 可选，新名称
-          newDescription: formModel.value.description, // 可选，新描述
-          newPolicy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null, // 可选，新策略
-          newExpiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null, // 可选，新过期时间
+          newStatus: formModel.value.accountStatus,
+          newName: formModel.value.name,
+          newDescription: formModel.value.description,
+          newPolicy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
+          newExpiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
         })
 
-        message.success("修改成功")
+        message.success(t('Update Success'))
         emit("search")
         cancelEdit()
       } catch (error) {
         console.log(error)
-        message.error("修改失败")
+        message.error(t('Update Failed'))
       }
     } else {
       console.log(errors)
-      message.error("请填写正确的格式")
+      message.error(t('Please fill in the correct format'))
     }
   })
 }

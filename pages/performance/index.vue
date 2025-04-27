@@ -1,7 +1,7 @@
 <template>
   <page-header>
     <template #title>
-      <h1 class="text-2xl font-bold">服务器信息</h1>
+      <h1 class="text-2xl font-bold">{{ t('Server Information') }}</h1>
     </template>
     <template #actions>
       <NFlex>
@@ -9,7 +9,7 @@
           <template #icon>
             <Icon name="ri:refresh-line"></Icon>
           </template>
-          同步
+          {{ t('Sync') }}
         </NButton>
       </NFlex>
     </template>
@@ -19,30 +19,30 @@
       <n-flex vertical class="basis-2/3">
         <n-flex class="flex-no-wrap">
           <!-- 存储空间 -->
-          <n-card title="存储空间" class="flex-1">
+          <n-card :title="t('Storage Space')" class="flex-1">
             <n-statistic label="" :value="systemInfo?.buckets?.count"></n-statistic>
           </n-card>
 
           <!-- 对象 -->
-          <n-card title="对象" class="flex-1">
+          <n-card :title="t('Objects')" class="flex-1">
             <n-statistic label="" :value="systemInfo?.objects?.count" />
           </n-card>
         </n-flex>
 
         <n-flex class="flex-no-wrap flex-auto">
           <!-- 服务器 -->
-          <n-card title="服务器" class="flex-1">
+          <n-card :title="t('Servers')" class="flex-1">
             <n-flex>
               <n-row>
                 <n-col :span="12">
-                  <n-statistic label="在线" :value="onlineServers">
+                  <n-statistic :label="t('Online')" :value="onlineServers">
                     <template #prefix>
                       <n-badge type="success" dot />
                     </template>
                   </n-statistic>
                 </n-col>
                 <n-col :span="12">
-                  <n-statistic label="离线" :value="offlineServers">
+                  <n-statistic :label="t('Offline')" :value="offlineServers">
                     <template #prefix>
                       <n-badge dot />
                     </template>
@@ -53,18 +53,18 @@
           </n-card>
 
           <!-- 磁盘 -->
-          <n-card title="磁盘" class="flex-1">
+          <n-card :title="t('Disks')" class="flex-1">
             <n-flex>
               <n-row>
                 <n-col :span="12">
-                  <n-statistic label="在线" :value="systemInfo?.backend?.onlineDisks">
+                  <n-statistic :label="t('Online')" :value="systemInfo?.backend?.onlineDisks">
                     <template #prefix>
                       <n-badge type="success" dot />
                     </template>
                   </n-statistic>
                 </n-col>
                 <n-col :span="12">
-                  <n-statistic label="离线" :value="systemInfo?.backend?.offlineDisks">
+                  <n-statistic :label="t('Offline')" :value="systemInfo?.backend?.offlineDisks">
                     <template #prefix>
                       <n-badge dot />
                     </template>
@@ -76,7 +76,7 @@
         </n-flex>
       </n-flex>
       <n-flex vertical :size="20" class="basis-1/3">
-        <n-card title="用户情况报告" :bordered="false" class="report-card">
+        <n-card :title="t('Usage Report')" :bordered="false" class="report-card">
           <n-flex :size="20" justify="space-between" align="center">
             <span class="text-3xl font-bold">{{ niceBytes(datausageinfo.total_used_capacity) }}</span>
             <n-progress style="margin: 0 8px 12px 0; width: 90px" type="circle" :percentage="datausageinfo.total_used_capacity / datausageinfo.total_capacity"
@@ -90,7 +90,7 @@
                 <template #avatar>
                   <Icon name="ri:signal-wifi-line" />
                 </template>
-                <template #header>距离上次 正常运行</template>
+                <template #header>{{ t('Last Normal Operation') }}</template>
                 <template #header-extra>{{ fromLsatStartTime }}</template>
               </n-thing>
             </n-list-item>
@@ -99,7 +99,7 @@
                 <template #avatar>
                   <Icon name="ri:scan-line" />
                 </template>
-                <template #header>距离上次 扫描活动</template>
+                <template #header>{{ t('Last Scan Activity') }}</template>
                 <template #header-extra>{{ fromLastScanTime }}</template>
               </n-thing>
             </n-list-item>
@@ -108,7 +108,7 @@
                 <template #avatar>
                   <Icon name="ri:time-line" />
                 </template>
-                <template #header>运行时间</template>
+                <template #header>{{ t('Uptime') }}</template>
                 <template #header-extra>{{lastScanTime}}</template>
               </n-thing>
             </n-list-item>
@@ -123,7 +123,7 @@
           <template #avatar>
             <Icon name="ri:archive-drawer-fill" />
           </template>
-          <template #header>后端类型</template>
+          <template #header>{{ t('Backend Type') }}</template>
           <template #header-extra>{{ systemInfo?.backend?.backendType }}</template>
         </n-thing>
       </n-list-item>
@@ -134,10 +134,8 @@
               <Icon name="ri:secure-payment-fill" />
             </div>
           </template>
-          <template #header>标准存储类奇偶校验</template>
+          <template #header>{{ t('Standard Storage Parity') }}</template>
           <template #header-extra>
-            <!-- {{ stroageinfo.backend.StandardSCParity }}/{{ stroageinfo.backend.StandardSCParity }} -->
-            <!-- n/a -->
             {{ stroageinfo.backend?.StandardSCParity }}
           </template>
         </n-thing>
@@ -147,16 +145,15 @@
           <template #avatar>
             <Icon name="ri:list-settings-fill" />
           </template>
-          <template #header>减少冗余存储类奇偶校验</template>
+          <template #header>{{ t('Reduced Redundancy Parity') }}</template>
           <template #header-extra>
             {{ stroageinfo.backend?.RRSCParity }}
-            <!-- n/a -->
           </template>
         </n-thing>
       </n-list-item>
     </n-list>
     <n-space vertical :size="20">
-      <n-card :title="`服务器列表(${serverInfo.count})`" :bordered="false" class="server-list-card">
+      <n-card :title="`${t('Server List')}(${serverInfo.count})`" :bordered="false" class="server-list-card">
         <n-collapse :accordion="true" :default-expanded-names="1" class="server-list">
           <n-collapse-item v-for="(server, index) in systemInfo?.servers" :name="index + 1" :key="server.endpoint" :title="server.endpoint">
             <template #header>
@@ -168,25 +165,25 @@
                   <span>
                     <n-badge type="success" dot />
                     <span class="align-middle ms-1 me-4">
-                      磁盘:{{ countOnlineDrives(server, "ok") }} / {{ server.drives.length }}
+                      {{ t('Disks') }}: {{ countOnlineDrives(server, "ok") }} / {{ server.drives.length }}
                     </span>
                   </span>
                   <span>
                     <n-badge type="success" dot />
                     <span class="align-middle ms-1 me-4">
-                      网络: {{ countOnlineNetworks(server, "online") }} / {{ Object.keys(server.network).length }}
+                      {{ t('Network') }}: {{ countOnlineNetworks(server, "online") }} / {{ Object.keys(server.network).length }}
                     </span>
                   </span>
                   <span>
                     <n-badge type="success" dot />
                     <span class="align-middle ms-1">
-                      运行时间: {{ dayjs( ).subtract(server.uptime,'second').toNow() }}
+                      {{ t('Uptime') }}: {{ dayjs( ).subtract(server.uptime,'second').toNow() }}
                     </span>
                   </span>
                 </n-space>
               </div>
             </template>
-            <template #header-extra>版本: {{ server.version }}</template>
+            <template #header-extra>{{ t('Version') }}: {{ server.version }}</template>
             <n-carousel :show-dots="false" :show-arrow="true" :autoplay="false" :slides-per-view="3" ref="driveCarouselRef" draggable class="drive-carousel" :space-between="20">
               <n-carousel-item v-for="drive in server.drives" :key="drive.uuid" style="width: 350px" class="flex flex-col justify-start items-center p-4 border rounded mx-2 ml-0">
                 <div class="self-start ps-6">{{ drive.drive_path }}</div>
@@ -196,11 +193,11 @@
                   </n-progress>
                   <div class="flex flex-col justify-between text-center">
                     <div class="text-lg">{{ niceBytes(drive.total_space) }}</div>
-                    <div class="mb-2">总容量</div>
+                    <div class="mb-2">{{ t('Total Space') }}</div>
                     <div class="text-lg">{{ niceBytes(drive.used_space) }}</div>
-                    <div class="mb-2">已使用</div>
+                    <div class="mb-2">{{ t('Used') }}</div>
                     <div class="text-lg">{{ niceBytes(drive.available_space) }}</div>
-                    <div>可用</div>
+                    <div>{{ t('Available') }}</div>
                   </div>
                 </div>
               </n-carousel-item>
@@ -218,8 +215,10 @@ import zhCn from 'dayjs/locale/zh-cn'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { NButton, NCard, NCol, NProgress, NRow, NSpace, useThemeVars } from "naive-ui"
 import { changeColor } from "seemly"
+import { useI18n } from 'vue-i18n'
 import { niceBytes } from "../../utils/functions"
-import { last } from "lodash"
+
+const { t } = useI18n()
 const themeVars = useThemeVars()
 const systemApi = useSystem()
 const poolsApi = usePools()

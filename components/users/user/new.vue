@@ -4,7 +4,7 @@
       v-model:show="visible"
       :mask-closable="false"
       preset="card"
-      title="创建用户"
+      :title="t('Create User')"
       class="max-w-screen-md"
       :segmented="{
         content: true,
@@ -19,17 +19,17 @@
           label-align="right"
           :label-width="130">
           <n-grid :cols="24" :x-gap="18">
-            <n-form-item-grid-item :span="24" label="用户名" path="accessKey">
+            <n-form-item-grid-item :span="24" :label="t('Username')" path="accessKey">
               <n-input v-model:value="editForm.accessKey" />
             </n-form-item-grid-item>
-            <n-form-item-grid-item :span="24" label="秘钥" path="secretKey">
+            <n-form-item-grid-item :span="24" :label="t('Secret Key')" path="secretKey">
               <n-input v-model:value="editForm.secretKey" type="password" />
             </n-form-item-grid-item>
-            <n-form-item-grid-item :span="24" label="分组" path="groups">
+            <n-form-item-grid-item :span="24" :label="t('Group')" path="groups">
               <n-select v-model:value="editForm.groups" filterable multiple :options="groupsList" />
             </n-form-item-grid-item>
 
-            <n-form-item-grid-item :span="24" label="策略" path="policies">
+            <n-form-item-grid-item :span="24" :label="t('Policy')" path="policies">
               <n-select v-model:value="editForm.policies" filterable multiple :options="policiesList" />
             </n-form-item-grid-item>
           </n-grid>
@@ -37,8 +37,8 @@
       </n-card>
       <template #action>
         <n-space justify="center">
-          <n-button @click="closeModal()">取消</n-button>
-          <n-button type="primary" @click="submitForm">提交</n-button>
+          <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
+          <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
         </n-space>
       </template>
     </n-modal>
@@ -47,6 +47,8 @@
 
 <script setup lang="ts">
 import { type FormRules } from "naive-ui"
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const { listPolicies, setUserOrGroupPolicy } = usePolicies()
 const { listGroup } = useGroups()
 const message = useMessage()
@@ -64,19 +66,19 @@ const rules: FormRules = {
   accessKey: [
     {
       required: true,
-      message: "请输入用户名",
+      message: t('Please enter username'),
     },
   ],
   secretKey: [
     {
       required: true,
-      message: "请输入秘钥",
+      message: t('Please enter secret key'),
     },
     // length>=8
     {
       type: "string",
       pattern: /^.{8,}$/,
-      message: "秘钥长度不能小于8位",
+      message: t('Secret key length cannot be less than 8 characters'),
     },
   ],
 }
@@ -126,11 +128,11 @@ function submitForm(e: MouseEvent) {
 
       // 添加完成之后设置Group
 
-      message.success("添加成功")
+      message.success(t('Add Success'))
       emit("search")
       closeModal()
     } catch (error) {
-      message.error("添加失败")
+      message.error(t('Add Failed'))
     }
   })
 }

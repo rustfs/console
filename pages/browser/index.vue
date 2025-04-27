@@ -2,13 +2,13 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">桶</h1>
+        <h1 class="text-2xl font-bold">{{ t('Buckets') }}</h1>
       </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center justify-between">
-          <n-input v-model:value="searchTerm" placeholder="搜索">
+          <n-input v-model:value="searchTerm" :placeholder="t('Search')">
             <template #prefix>
               <Icon name="ri:search-2-line" />
             </template>
@@ -18,11 +18,11 @@
         <div class="flex items-center gap-4">
           <n-button @click="() => (formVisible = true)">
             <Icon name="ri:add-line" class="mr-2" />
-            <span>创建桶</span>
+            <span>{{ t('Create Bucket') }}</span>
           </n-button>
           <n-button @click="async () => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
-            <span>刷新</span>
+            <span>{{ t('Refresh') }}</span>
           </n-button>
         </div>
       </div>
@@ -38,7 +38,9 @@
 import { Icon, NuxtLink } from '#components'
 import dayjs from 'dayjs'
 import { NButton, NSpace, type DataTableColumns ,NPopconfirm} from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { listBuckets ,deleteBucket} = useBucket({});
 const formVisible = ref(false);
 const searchTerm = ref('');
@@ -50,8 +52,7 @@ interface RowData {
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: '桶',
-    // dataIndex: 'name',
+    title: t('Bucket'),
     key: 'Name',
     render: (row: { Name: string }) => {
       return h(
@@ -67,15 +68,14 @@ const columns: DataTableColumns<RowData> = [
     },
   },
   {
-    title: '创建时间',
-    // dataIndex: 'creationDate',
+    title: t('Creation Date'),
     key: 'CreationDate',
     render: (row: RowData) => {
       return dayjs(row.CreationDate).format('YYYY-MM-DD HH:mm:ss');
     },
   },
   {
-    title: '操作',
+    title: t('Actions'),
     key: 'actions',
     align: 'center',
     width: 140,
@@ -91,7 +91,7 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => "确认删除",
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,
@@ -115,7 +115,7 @@ const columns: DataTableColumns<RowData> = [
                 icon: () => h(Icon, { name: 'ri:settings-5-line' }),
               }
             ),
-           
+
           ],
         }
       );
@@ -127,9 +127,6 @@ const { data, refresh } = await useAsyncData(
   'buckets',
   async () => {
     const response = await listBuckets();
-    // sort by creation date
-    // return response.Buckets?.sort((a:any, b:any) => {return new Date(b.CreationDate).getTime() -  new Date(a.CreationDate).getTime()  }) || [];
-    // sort  by name
     return response.Buckets?.sort((a:any, b:any) => {return a.Name.localeCompare(b.Name)  }) || [];
   },
   { default: () => [] }
@@ -160,17 +157,15 @@ const objectApi = useObject({ bucket: row.Name});
   console.log("🚀 ~ deleteItem ~ files:", files)
 
   if(files.KeyCount || files.CommonPrefixes?.length){
-    message.error("当前桶不为空，请先删除桶内容")
-    return 
+    message.error(t('Bucket is not empty, please delete contents first'))
+    return
   }
    deleteBucket(row.Name).then(()=>{
-    message.success("删除成功")
+    message.success(t('Delete Success'))
        refresh();
-
   }).catch((error)=>{
-    message.error("删除失败")
+    message.error(t('Delete Failed'))
   })
- 
 };
 const handleFormClosed = (show: boolean) => {
   formVisible.value = show;

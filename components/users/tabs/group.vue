@@ -8,7 +8,7 @@
       :show-feedback="false">
       <n-flex justify="space-between">
         <n-form-item label="" path="name">
-          <n-input placeholder="搜索用户组" @input="filterName" />
+          <n-input :placeholder="t('Search User Group')" @input="filterName" />
         </n-form-item>
         <n-space>
           <NFlex>
@@ -25,13 +25,13 @@
               <template #icon>
                 <Icon name="ri:group-2-fill"></Icon>
               </template>
-              分配策略
+              {{ t('Assign Policy') }}
             </NButton>
             <NButton secondary @click="addUserGroup">
               <template #icon>
                 <Icon name="ri:add-line"></Icon>
               </template>
-              新增用户组
+              {{ t('Add User Group') }}
             </NButton>
           </NFlex>
         </n-space>
@@ -67,7 +67,10 @@ import {
   NSpace
 } from 'naive-ui'
 import { Icon } from '#components'
+import { useI18n } from 'vue-i18n'
 // import { groupEdit, newGroup, setPoliciesMutiple } from '../components';
+
+const { t } = useI18n()
 
 const { $api } = useNuxtApp()
 const dialog = useDialog()
@@ -86,7 +89,7 @@ const columns: DataTableColumns<RowData> = [
     type: 'selection'
   },
   {
-    title: '名称',
+    title: t('Name'),
     align: 'left',
     key: 'name',
     filter(value, row) {
@@ -94,7 +97,7 @@ const columns: DataTableColumns<RowData> = [
     }
   },
   {
-    title: '操作',
+    title: t('Actions'),
     key: 'actions',
     align: 'center',
     width: 180,
@@ -122,7 +125,7 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => '确认删除',
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,
@@ -166,7 +169,7 @@ const getDataList = async () => {
       }) || []
     checkedKeys.value = []
   } catch (error) {
-    message.error('获取数据失败')
+    message.error(t('Failed to get data'))
   }
 }
 
@@ -210,10 +213,10 @@ async function deleteItem(row: any) {
       isRemove: true,
       groupStatus: 'enabled'
     })
-    message.success('删除成功')
+    message.success(t('Delete Success'))
     getDataList()
   } catch (error) {
-    message.error('删除失败')
+    message.error(t('Delete Failed'))
   }
 }
 
@@ -229,13 +232,13 @@ function handleCheck(keys: DataTableRowKey[]) {
 }
 function deleteByList() {
   dialog.error({
-    title: '警告',
-    content: '你确定要删除所有选中的用户组吗？',
-    positiveText: '确定',
-    negativeText: '取消',
+    title: t('Warning'),
+    content: t('Are you sure you want to delete all selected user groups?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
     onPositiveClick: () => {
       if (!checkedKeys.value.length) {
-        message.error('请至少选择一项')
+        message.error(t('Please select at least one item'))
         return
       }
       checkedKeys.value.forEach(async (element: any) => {

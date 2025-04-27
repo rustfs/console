@@ -3,7 +3,7 @@
     <n-form class="mb-4 mt-2" ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
       <n-flex justify="space-between">
         <n-form-item label="" path="name">
-          <n-input placeholder="搜索访问用户" @input="filterName" />
+          <n-input :placeholder="t('Search Access User')" @input="filterName" />
         </n-form-item>
         <n-space>
           <NFlex>
@@ -11,19 +11,19 @@
               <template #icon>
                 <Icon name="ri:delete-bin-5-line"></Icon>
               </template>
-              删除选中项
+              {{ t('Delete Selected') }}
             </NButton>
             <NButton :disabled="!checkedKeys.length" secondary @click="addToGroup">
               <template #icon>
                 <Icon name="ri:group-2-fill"></Icon>
               </template>
-              添加到分组
+              {{ t('Add to Group') }}
             </NButton>
             <NButton secondary @click="addUserItem">
               <template #icon>
                 <Icon name="ri:add-line"></Icon>
               </template>
-              新增用户
+              {{ t('Add User') }}
             </NButton>
           </NFlex>
         </n-space>
@@ -45,6 +45,9 @@
 <script setup lang="ts">
 import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NPopconfirm, NSpace } from "naive-ui"
 import { Icon } from "#components"
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const { $api } = useNuxtApp()
 const { listUsers, deleteUser } = useUsers()
@@ -63,7 +66,7 @@ const columns: DataTableColumns<RowData> = [
     type: "selection",
   },
   {
-    title: "名称",
+    title: t('Name'),
     align: "left",
     key: "accessKey",
     filter(value, row) {
@@ -71,7 +74,7 @@ const columns: DataTableColumns<RowData> = [
     },
   },
   {
-    title: "操作",
+    title: t('Actions'),
     key: "actions",
     align: "center",
     width: 180,
@@ -99,7 +102,7 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => "确认删除",
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,
@@ -142,7 +145,7 @@ const getDataList = async () => {
       ...(typeof info === "object" ? info : {}), // 展开用户信息
     }))
   } catch (error) {
-    message.error("获取数据失败")
+    message.error(t('Failed to get data'))
   }
 }
 
@@ -165,10 +168,10 @@ function openEditItem(row: any) {
 async function deleteItem(row: any) {
   try {
     const res = await deleteUser(row.accessKey)
-    message.success("删除成功")
+    message.success(t('Delete Success'))
     getDataList()
   } catch (error) {
-    message.error("删除失败")
+    message.error(t('Delete Failed'))
   }
 }
 
@@ -184,25 +187,25 @@ function handleCheck(keys: DataTableRowKey[]) {
 }
 function deleteByList() {
   dialog.error({
-    title: "警告",
-    content: "你确定要删除所有选中的用户吗？",
-    positiveText: "确定",
-    negativeText: "取消",
+    title: t('Warning'),
+    content: t('Are you sure you want to delete all selected users?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error("请至少选择一项")
+        message.error(t('Please select at least one item'))
         return
       }
       try {
         // 循环遍历删除
         await Promise.all(checkedKeys.value.map((item) => deleteUser(item as string)))
         checkedKeys.value = []
-        message.success("删除成功")
+        message.success(t('Delete Success'))
         nextTick(() => {
           getDataList()
         })
       } catch (error) {
-        message.error("删除失败")
+        message.error(t('Delete Failed'))
       }
     },
   })

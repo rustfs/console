@@ -1,45 +1,45 @@
 <template>
-  <n-drawer v-model:show="visibel" :width="450">
-    <n-drawer-content title="对象信息">
+  <n-drawer v-model:show="visibel" :width="550">
+    <n-drawer-content :title="t('Object Details')">
       <div class="flex items-center gap-4 ml-auto">
         <n-button @click="download">
           <Icon name="ri:download-line" class="mr-2" />
-          <span>下载</span>
+          <span>{{ t('Download') }}</span>
         </n-button>
 
         <n-button @click="() => showPreview = true">
           <Icon name="ri:eye-line" class="mr-2" />
-          <span>预览</span>
+          <span>{{ t('Preview') }}</span>
         </n-button>
 
         <n-button @click="() => showTagView = true">
           <Icon name="ri:price-tag-3-line" class="mr-2" />
-          <span>标签</span>
+          <span>{{ t('Tags') }}</span>
         </n-button>
 
         <n-button id="copyTag" ref="copyRef" @click="copySignUrl">
           <Icon name="ri:file-copy-line" class="mr-2" />
-          <span>复制临时链接</span>
+          <span>{{ t('Copy URL') }}</span>
         </n-button>
 
       </div>
-      <n-card title="对象信息" class="mt-4">
+      <n-card :title="t('Info')" class="mt-4">
         <div v-if="loading === 'pending'" class="flex items-center justify-center">
           <n-spin size="small" />
         </div>
         <n-descriptions :column="1">
-          <n-descriptions-item label="对象名称"><span class="select-all">{{ key }}</span></n-descriptions-item>
-          <n-descriptions-item label="对象大小">{{ object?.ContentLength }}</n-descriptions-item>
-          <n-descriptions-item label="对象类型">{{ object?.ContentType }}</n-descriptions-item>
+          <n-descriptions-item :label="t('Object Name')"><span class="select-all">{{ key }}</span></n-descriptions-item>
+          <n-descriptions-item :label="t('Object Size')">{{ object?.ContentLength }}</n-descriptions-item>
+          <n-descriptions-item :label="t('Object Type')">{{ object?.ContentType }}</n-descriptions-item>
           <!-- <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
           <n-descriptions-item label="ETag"><span class="select-all">{{ object?.ETag }}</span></n-descriptions-item>
-          <n-descriptions-item label="最后修改时间">{{ object?.LastModified }}</n-descriptions-item>
+          <n-descriptions-item :label="t('Last Modified Time')">{{ object?.LastModified }}</n-descriptions-item>
           <!-- <n-descriptions-item label="版本ID">{{ object?.VersionId }}</n-descriptions-item>
           <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
-          <n-descriptions-item label="临时链接">
+          <n-descriptions-item :label="t('Temporary URL')">
             <div class="flex items-center gap-2 mt-1">
-              <n-input v-model:value="signedUrl" id="signedUrl" placeholder="临时链接" />
-              <n-button @click="copySignUrl">复制</n-button>
+              <n-input v-model:value="signedUrl" id="signedUrl" :placeholder="t('Temporary URL')" />
+              <n-button @click="copySignUrl">{{ t('Copy') }}</n-button>
             </div>
           </n-descriptions-item>
         </n-descriptions>
@@ -47,7 +47,7 @@
         <object-preview-modal v-model:show="showPreview" :bucketName="bucketName" :objectKey="key" />
 
         <!-- tagview -->
-        <n-modal v-model:show="showTagView" preset="card" title="设置tag" draggable class="max-w-screen-md">
+        <n-modal v-model:show="showTagView" preset="card" :title="t('Set Tags')" draggable class="max-w-screen-md">
           <n-card class="max-w-screen-md">
             <n-space class="my-4">
               <n-tag class="m-2 align-middle" v-for="(tag, index) in tags" type="info" closable @close="handledeleteTag(index)">
@@ -55,15 +55,15 @@
               </n-tag>
             </n-space>
             <n-form ref="formRef" inline class="flex" :label-width="80" :model="tagFormValue">
-              <n-form-item label="标签key" path="Key">
-                <n-input v-model:value="tagFormValue.Key" placeholder="输入标签key" />
+              <n-form-item :label="t('Tag Key')" path="Key">
+                <n-input v-model:value="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
               </n-form-item>
-              <n-form-item label="标签值" path="Value">
-                <n-input v-model:value="tagFormValue.Value" placeholder="输入标签值" />
+              <n-form-item :label="t('Tag Value')" path="Value">
+                <n-input v-model:value="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
               </n-form-item>
               <n-form-item>
-                <n-button type="primary" @click="submitTagForm">添加</n-button>
-                <n-button class="mx-4" @click="showTagView = false">取消</n-button>
+                <n-button type="primary" @click="submitTagForm">{{ t('Add') }}</n-button>
+                <n-button class="mx-4" @click="showTagView = false">{{ t('Cancel') }}</n-button>
               </n-form-item>
             </n-form>
           </n-card>
@@ -75,7 +75,9 @@
 </template>
 
 <script setup lang="ts">
-const dialog = useDialog()
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n();
 const visibel = ref(false)
 const bucketName = ref('')
 const key = ref('')
@@ -123,18 +125,18 @@ const getTags = async () => {
 const handledeleteTag = async (index: number) => {
   const { putObjectTagging } = useObject({ bucket: bucketName.value })
   dialog.error({
-    title: "警告",
-    content: "你确定要删除这个标签吗？",
-    positiveText: "确定",
-    negativeText: "取消",
+    title: t("Warning"),
+    content: t("Delete Tag Confirm"),
+    positiveText: t("Confirm"),
+    negativeText: t("Cancel"),
     onPositiveClick: async () => {
       putObjectTagging(key.value, { TagSet: tags.value.filter((item, keyIndex) => keyIndex !== index) })
         .then(() => {
-          message.success("标签更新成功")
+          message.success(t("Tag Update Success"))
           getTags()
         })
         .catch((error) => {
-          message.error("删除标签失败: " + error.message)
+          message.error(t("Tag Delete Failed", { error: error.message }))
         })
     },
   });
@@ -151,7 +153,7 @@ const submitTagForm = async () => {
   putObjectTagging(key.value, {
     TagSet: [...tags.value, tag]
   }).then(() => {
-    message.success('标签设置成功')
+    message.success(t('Tag Set Success'))
     getTags()
   })
 }
@@ -171,27 +173,28 @@ const getObject = () => {
 const refreshSignedUrl = async () => {
   try {
     signedUrl.value = await objectApi.getSignedUrl(key.value);
-    message.success('获取成功');
+    message.success(t('Get Success'));
   } catch (error) {
-    message.error('获取失败');
+    message.error(t('Get Failed'));
   } finally {
   }
 }
 
 import ClipboardJS from 'clipboard'
+const dialog = useDialog()
 const copySignUrl = async () => {
   try {
     // @ts-ignore
     ClipboardJS.copy(document.querySelector('#signedUrl'))
     console.log('复制成功', signedUrl.value);
   } catch (error) {
-    message.error('复制失败')
+    message.error(t('Copy Failed'))
     console.error('复制失败', error)
   }
 }
 
 const download = async () => {
-  const msg = message.loading('正在获取下载链接...');
+  const msg = message.loading(t('Getting URL'));
   await refreshSignedUrl()
   const url = await objectApi.getSignedUrl(key.value);
   msg.destroy();

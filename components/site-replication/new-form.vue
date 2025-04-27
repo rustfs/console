@@ -3,30 +3,30 @@
     v-model:show="visible"
     :mask-closable="false"
     preset="card"
-    title="添加站点复制"
+    :title="t('Add Site Replication')"
     class="max-w-screen-lg"
     :segmented="{
       content: true,
       action: true,
     }">
-    <n-card title="添加复制站点">
-      <p>注意：添加或编辑对等站点时，每个站点的 AccessKey 和 SecretKey 值都是必需的</p>
+    <n-card :title="t('Add Replication Site')">
+      <p>{{ t('Note: AccessKey and SecretKey values are required for each site when adding or editing peer sites') }}</p>
       <n-form ref="currentFormRef" :model="currentSite" :rules="rules">
         <!-- 当前站点 -->
         <n-flex  style="margin-top: 16px;">
-          <n-card  title="当前站点"  >
+          <n-card  :title="t('Current Site')"  >
             <n-space direction="vertical" >
-              <n-form-item label="站点名称" path="name">
-                <n-input v-model:value="currentSite.name" placeholder="站点名称" />
+              <n-form-item :label="t('Site Name')" path="name">
+                <n-input v-model:value="currentSite.name" :placeholder="t('Site Name')" />
               </n-form-item>
-              <n-form-item label="Endpoint *" path="endpoint">
-                <n-input v-model:value="currentSite.endpoint" placeholder="Endpoint" />
+              <n-form-item :label="t('Endpoint *')" path="endpoint">
+                <n-input v-model:value="currentSite.endpoint" :placeholder="t('Endpoint')" />
               </n-form-item>
-              <n-form-item label="Access Key *" path="accessKey">
-                <n-input v-model:value="currentSite.accessKey" placeholder="Access Key" />
+              <n-form-item :label="t('Access Key *')" path="accessKey">
+                <n-input v-model:value="currentSite.accessKey" :placeholder="t('Access Key')" />
               </n-form-item>
-              <n-form-item label="Secret Key *" path="secretKey">
-                <n-input type="password" v-model:value="currentSite.secretKey" placeholder="Secret Key" />
+              <n-form-item :label="t('Secret Key *')" path="secretKey">
+                <n-input type="password" v-model:value="currentSite.secretKey" :placeholder="t('Secret Key')" />
               </n-form-item>
             </n-space>
           </n-card>
@@ -34,29 +34,29 @@
 
         <!-- 远程站点 -->
         <n-flex direction="vertical" style="margin-top: 16px;">
-          <n-card title="远程站点">
+          <n-card :title="t('Remote Site')">
             <n-space direction="vertical">
                <n-dynamic-input :min='1' v-model:value="remoteSite" :on-create="onCreate">
                 <template #default="{ value }" >
                    <n-grid x-gap="12" :cols="4">
                     <n-gi>
-                      <n-form-item label="站点名称" path="name">
-                        <n-input v-model:value="value.name" placeholder="站点名称" />
+                      <n-form-item :label="t('Site Name')" path="name">
+                        <n-input v-model:value="value.name" :placeholder="t('Site Name')" />
                       </n-form-item>
                     </n-gi>
                     <n-gi>
-                      <n-form-item label="Endpoint *" path="endpoint">
-                        <n-input v-model:value="value.endpoint" placeholder="Endpoint" />
+                      <n-form-item :label="t('Endpoint *')" path="endpoint">
+                        <n-input v-model:value="value.endpoint" :placeholder="t('Endpoint')" />
                       </n-form-item>
                     </n-gi>
                     <n-gi>
-                        <n-form-item label="Access Key *" path="accessKey">
-                          <n-input v-model:value="value.accessKey" placeholder="Access Key" />
+                        <n-form-item :label="t('Access Key *')" path="accessKey">
+                          <n-input v-model:value="value.accessKey" :placeholder="t('Access Key')" />
                         </n-form-item>
                     </n-gi>
                     <n-gi>
-                      <n-form-item label="Secret Key *" path="secretKey">
-                        <n-input type="password" v-model:value="value.secretKey" placeholder="Secret Key" />
+                      <n-form-item :label="t('Secret Key *')" path="secretKey">
+                        <n-input type="password" v-model:value="value.secretKey" :placeholder="t('Secret Key')" />
                       </n-form-item>
                     </n-gi>
                   </n-grid>
@@ -68,8 +68,8 @@
       </n-form>
       <!-- 按钮 -->
       <n-space justify="center" style="margin-top: 16px;">
-        <n-button type="primary" @click="save">保存</n-button>
-        <n-button @click="cancel">取消</n-button>
+        <n-button type="primary" @click="save">{{ t('Save') }}</n-button>
+        <n-button @click="cancel">{{ t('Cancel') }}</n-button>
       </n-space>
     </n-card>
   </n-modal>
@@ -77,6 +77,9 @@
 
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const currentSite = ref({
   name: '',
@@ -103,13 +106,13 @@ const onCreate = () => {
 
 const rules = {
   endpoint: [
-    { required: true, message: 'Endpoint 必须提供', trigger: 'blur' }
+    { required: true, message: t('Endpoint is required'), trigger: 'blur' }
   ],
   accessKey: [
-    { required: true, message: 'Access Key 必须提供', trigger: 'blur' }
+    { required: true, message: t('Access Key is required'), trigger: 'blur' }
   ],
   secretKey: [
-    { required: true, message: 'Secret Key 必须提供', trigger: 'blur' }
+    { required: true, message: t('Secret Key is required'), trigger: 'blur' }
   ]
 };
 

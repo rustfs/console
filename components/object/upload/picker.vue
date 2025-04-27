@@ -3,31 +3,31 @@
     <n-card class="max-w-screen-md">
       <template #header>
         <div style="display:flex; justify-content: space-between; align-items:center;">
-          <span>上传文件</span>
-          <n-button size="small" ghost @click="closeModal">关闭</n-button>
+          <span>{{ t('Upload File') }}</span>
+          <n-button size="small" ghost @click="closeModal">{{ t('Close') }}</n-button>
         </div>
       </template>
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-4">
           <input type="file" ref="fileInput" multiple hidden @change="handleFileSelect" />
           <input type="file" ref="folderInput" webkitdirectory directory hidden @change="handleFolderSelect" />
-          <n-button type="primary" @click="selectFile">选择文件</n-button>
-          <div>或</div>
-          <n-button @click="selectFolder">选择文件夹</n-button>
-          <div>上传至</div>
+          <n-button type="primary" @click="selectFile">{{ t('Select File') }}</n-button>
+          <div>{{ t('Or') }}</div>
+          <n-button @click="selectFolder">{{ t('Select Folder') }}</n-button>
+          <div>{{ t('Upload To') }}</div>
           <div class="text-cyan-600">{{ bucketName }}{{ prefix || '/' }}</div>
         </div>
 
         <n-alert title="" type="info">
-          若上传路径中存在同名文件，上传将覆盖原有文件。
+          {{ t('Overwrite Warning') }}
         </n-alert>
 
         <div @dragover.prevent @drop.prevent="handleDrop">
           <div v-if="selectedItems.length === 0" class="flex flex-col gap-6 items-center justify-center border border-dashed border-muted rounded p-4 h-[40vh]">
-            <div class="text-gray-500 font-bold">未选择文件/文件夹</div>
+            <div class="text-gray-500 font-bold">{{ t('No Selection') }}</div>
             <div class="text-muted-foreground text-center">
-              Chrome 和 FireFox 支持拖拽到此区域上传，支持选择多个文件/文件夹<br>
-              单个文件最大支持 512GB，上传更大的文件请使用命令行工具
+              {{ t('Drag Drop Info') }}<br>
+              {{ t('File Size Limit') }}
             </div>
           </div>
 
@@ -35,9 +35,9 @@
           <n-list v-if="selectedItems.length" bordered class="h-[40vh] overflow-y-auto sticky-header relative">
             <template #header>
               <div class="flex items-center gap-2 font-bold">
-                <div class="flex-1">已选择文件/文件夹</div>
-                <div class="w-32 text-center">大小</div>
-                <div class="w-32 text-center">操作</div>
+                <div class="flex-1">{{ t('Selected Items') }}</div>
+                <div class="w-32 text-center">{{ t('Size') }}</div>
+                <div class="w-32 text-center">{{ t('Operation') }}</div>
               </div>
             </template>
             <n-list-item v-for="(item, index) in selectedItems" :key="index">
@@ -48,7 +48,7 @@
                 </div>
                 <div class="w-32 text-center">{{ formatBytes(item.size) }}</div>
                 <div class="w-32 text-center">
-                  <n-button text type="info" @click="removeItem(index)">删除</n-button>
+                  <n-button text type="info" @click="removeItem(index)">{{ t('Delete') }}</n-button>
                 </div>
               </div>
             </n-list-item>
@@ -56,8 +56,8 @@
         </div>
 
         <div class="flex justify-center gap-4">
-          <n-button type="default" :disabled="!hasFiles">参数配置</n-button>
-          <n-button type="primary" :disabled="!hasFiles" @click="handleUpload">开始上传</n-button>
+          <n-button type="default" :disabled="!hasFiles">{{ t('Configure') }}</n-button>
+          <n-button type="primary" :disabled="!hasFiles" @click="handleUpload">{{ t('Start Upload') }}</n-button>
         </div>
       </div>
     </n-card>
@@ -66,8 +66,10 @@
 
 <script setup lang="ts">
 import { computed, defineEmits, defineProps, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
+const { t } = useI18n()
 const uploadTaskManagerStore = useUploadTaskManagerStore()
 
 interface FileItem {
@@ -117,7 +119,7 @@ const handleFolderSelect = (e: Event) => {
       // 保留完整目录路径（去掉最后的文件名）
       const pathParts = file.webkitRelativePath.split('/')
       pathParts.pop() // 移除文件名
-      const folderPath = pathParts.join('/') || '未知文件夹'
+      const folderPath = pathParts.join('/') || t('Unknown Folder')
 
       if (!folderMap.has(folderPath)) {
         folderMap.set(folderPath, [])

@@ -1,7 +1,11 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+
 const lineOptions = ref<ECOption>({
     title: {
-        text: '每周MB/s变化趋势',
+        text: t('Weekly MB/s Change Trend'),
         left: 'center',
         textStyle: {
             color: '#fff'
@@ -11,15 +15,15 @@ const lineOptions = ref<ECOption>({
         trigger: 'axis'
     },
      grid: {
-        top: '15%', 
-        left: '0%', 
-        right: '0%', 
-        bottom: '0%', 
+        top: '15%',
+        left: '0%',
+        right: '0%',
+        bottom: '0%',
         containLabel: true // 确保标签不会被裁剪
         },
     xAxis: {
         type: 'category',
-        data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+        data: [t('Monday'), t('Tuesday'), t('Wednesday'), t('Thursday'), t('Friday'), t('Saturday'), t('Sunday')],
         axisLabel: {
             color: '#fff'
         }

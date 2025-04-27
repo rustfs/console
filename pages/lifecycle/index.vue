@@ -2,40 +2,47 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">生命周期</h1>
+        <h1 class="text-2xl font-bold">{{ t('Lifecycle') }}</h1>
       </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
         <div style="width:300px">
-          <n-form-item label="存储桶：" path="" class="flex-auto" label-placement="left">
-            <n-select filterable v-model:value="bucketName" placeholder="请选择桶" :options="bucketList" />
+          <n-form-item :label="t('Bucket')" path="" class="flex-auto" label-placement="left">
+            <n-select filterable v-model:value="bucketName" :placeholder="t('Please select bucket')" :options="bucketList" />
           </n-form-item>
         </div>
 
         <div class="flex items-center gap-4">
-          <n-button @click="() => openForm()">
+          <n-button @click="() => handleNew()">
             <Icon name="ri:add-line" class="mr-2" />
-            <span>添加生命周期规则</span>
+            <span>{{ t('Add Lifecycle Rule') }}</span>
           </n-button>
           <n-button @click="">
             <Icon name="ri:refresh-line" class="mr-2" />
-            <span>刷新</span>
+            <span>{{ t('Refresh') }}</span>
           </n-button>
         </div>
       </div>
-      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false" :bordered="false" />
+
+      <n-card class="flex flex-center" style="height:400px">
+        <n-empty :description="t('No Data')" ></n-empty>
+      </n-card>
+      <!-- <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false" :bordered="false" /> -->
+       <lifecycle-new-form ref="newRef" :bucketName="bucketName"></lifecycle-new-form>
     </page-content>
 
-    <lifecycle-new-form :bucketName="bucketName" ref="formRef"></lifecycle-new-form>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { Icon } from '#components'
 import { NButton, NSpace, type DataTableColumns } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const { listBuckets } = useBucket({});
+const formVisible = ref(false);
 const searchTerm = ref('');
 
 interface RowData {
@@ -45,36 +52,36 @@ interface RowData {
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: '类型',
+    title: t('Type'),
     key: '',
-   
+
   },
   {
-    title: '版本',
+    title: t('Version'),
     key: '',
   },
    {
-    title: '到期删除标记',
+    title: t('Expiration Delete Mark'),
     key: '',
   },
    {
-    title: '分层',
+    title: t('Tier'),
     key: '',
   },
    {
-    title: '前缀',
+    title: t('Prefix'),
     key: '',
   },
    {
-    title: '时间',
+    title: t('Time'),
     key: '',
   },
    {
-    title: '状态',
+    title: t('Status'),
     key: '',
   },
   {
-    title: '操作',
+    title: t('Actions'),
     key: 'actions',
     align: 'center',
     width: 100,
@@ -111,7 +118,6 @@ const { data } = await useAsyncData(
   async () => {
     const response = await listBuckets();
     return response.Buckets?.sort((a:any, b:any) => {return a.Name.localeCompare(b.Name)  }) || [];
-
   },
   { default: () => [] }
 );
@@ -129,13 +135,13 @@ const bucketName = ref<string>(
 
 const pageData = ref([])
 
-const formRef = ref()
-const openForm = ()=>{
-  formRef.value.open()
-}
-
 const handleRowDelete = (row: RowData, e: Event) => {
   e.stopPropagation();
   console.log(row);
 };
+
+const newRef= ref()
+const handleNew = () => {
+  newRef.value.open()
+}
 </script>

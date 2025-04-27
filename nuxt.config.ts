@@ -33,7 +33,8 @@ export default defineNuxtConfig({
     }
   },
   modules: [
-    '@nuxtjs/tailwindcss', // '@nuxtjs/i18n',
+    '@nuxtjs/tailwindcss',
+    '@nuxtjs/i18n',
     '@pinia/nuxt', '@nuxt/icon', 'nuxtjs-naive-ui', '@vueuse/nuxt', '@nuxt/image'
   ],
   // Nuxt automatically reads the files in the plugins/ directory
@@ -70,9 +71,31 @@ export default defineNuxtConfig({
       }
     }
   },
-  // i18n: {
-  //   vueI18n: './i18n.config.ts'
-  // },
+  i18n: {
+    defaultLocale: 'en',
+    strategy: 'no_prefix',
+    locales: [
+      {
+        code: 'en',
+        iso: 'en-US',
+        name: 'English',
+        file: 'en-US.json'
+      },
+      {
+        code: 'zh',
+        iso: 'zh-CN',
+        name: '中文',
+        file: 'zh-CN.json'
+      }
+    ],
+    langDir: 'locales',
+    detectBrowserLanguage: {
+      useCookie: true,
+      cookieKey: 'i18n_redirected',
+      redirectOn: 'root',
+      alwaysRedirect: true
+    },
+  },
   typescript: {
     typeCheck: true
   },

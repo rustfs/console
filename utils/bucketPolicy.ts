@@ -59,29 +59,39 @@ class BucketAccessPolicy {
     }
 }
 
-export function isValidStatement(statement: Statement, bucketName: string): boolean {
-    if (Array.from(statement.Actions).every(action => !validActions.has(action))) {
-        return false;
-    }
+// 提取公共的判断逻辑
+function hasValidPrincipal(statement: Statement): boolean {
+    return statement.Principal.AWS?.has('*') || false;
+}
 
-    if (statement.Effect !== 'Allow') {
-        return false;
-    }
+function hasValidEffect(statement: Statement): boolean {
+    return statement.Effect === 'Allow';
+}
 
-    if (!statement.Principal.AWS || !statement.Principal.AWS.has('*')) {
-        return false;
-    }
+function hasValidActions(statement: Statement, validActions: Set<string>): boolean {
+    return Array.from(statement.Actions).every(action => validActions.has(action));
+}
 
+function hasValidResource(statement: Statement, bucketName: string): boolean {
     const bucketResource = `${awsResourcePrefix}${bucketName}`;
-    if (statement.Resources.has(bucketResource)) {
-        return true;
+    return statement.Resources.has(bucketResource) ||
+        Array.from(statement.Resources).some(resource => resource.startsWith(bucketResource + '/'));
+}
+
+export function isValidStatement(statement: Statement, bucketName: string): boolean {
+    if (!hasValidActions(statement, validActions)) {
+        return false;
     }
 
-    if (Array.from(statement.Resources).some(resource => resource.startsWith(bucketResource + '/'))) {
-        return true;
+    if (!hasValidEffect(statement)) {
+        return false;
     }
 
-    return false;
+    if (!hasValidPrincipal(statement)) {
+        return false;
+    }
+
+    return hasValidResource(statement, bucketName);
 }
 
 export function newBucketStatement(policy: BucketPolicy, bucketName: string, prefix: string): Statement[] {
@@ -259,7 +269,7 @@ export function removeStatements(statements: Statement[], bucketName: string, pr
             out.push(statement);
             continue;
         }
-                       
+
 
 
         if (statement.Resources.has(bucketResource)) {
@@ -378,22 +388,22 @@ export function appendStatement(statements: Statement[], statement: Statement): 
 function appendStatement(statements: Statement[], statement: Statement): Statement[] {
     for (let i = 0; i < statements.length; i++) {
         const s = statements[i];
-        
+
         // 第一个合并条件
         if (areSetsEqual(s.Actions, statement.Actions) &&
             s.Effect === statement.Effect &&
             areSetsEqual(s.Principal.AWS, statement.Principal.AWS) &&
             deepEqual(s.Conditions, statement.Conditions)) {
-            
+
             statements[i].Resources = new Set([...s.Resources, ...statement.Resources]);
             return statements;
-        } 
+        }
         // 第二个合并条件
         else if (areSetsEqual(s.Resources, statement.Resources) &&
             s.Effect === statement.Effect &&
             areSetsEqual(s.Principal.AWS, statement.Principal.AWS) &&
             deepEqual(s.Conditions, statement.Conditions)) {
-            
+
             statements[i].Actions = new Set([...s.Actions, ...statement.Actions]);
             return statements;
         }
@@ -401,17 +411,17 @@ function appendStatement(statements: Statement[], statement: Statement): Stateme
         // 处理交集条件
         const resourceIntersection = setIntersection(s.Resources, statement.Resources);
         const actionIntersection = setIntersection(s.Actions, statement.Actions);
-        const principalIntersection = setIntersection(s.Principal.AWS  as Set<string>, statement.Principal.AWS  as Set<string>);
-        
+        const principalIntersection = setIntersection(s.Principal.AWS as Set<string>, statement.Principal.AWS as Set<string>);
+
         if (areSetsEqual(resourceIntersection, statement.Resources) &&
             areSetsEqual(actionIntersection, statement.Actions) &&
             s.Effect === statement.Effect &&
             areSetsEqual(principalIntersection, statement.Principal.AWS)) {
-            
+
             if (deepEqual(s.Conditions, statement.Conditions)) {
                 return statements;
             }
-            
+
             if (s.Conditions && statement.Conditions) {
                 if (areSetsEqual(s.Resources, statement.Resources)) {
                     statements[i].Conditions = mergeConditionMap(s.Conditions, statement.Conditions);
@@ -463,30 +473,26 @@ export function appendStatements(statements: Statement[], appendStatements: Stat
     for (const s of appendStatements) {
         statements = appendStatement(statements, s);
     }
-        console.log("🚀 ~ appendStatements ~ statements:", statements)
+    console.log("🚀 ~ appendStatements ~ statements:", statements)
 
     return statements;
 }
 
 export function getBucketPolicy(statement: Statement, prefix: string): [boolean, boolean, boolean] {
-    if (!(statement.Effect === 'Allow' && statement.Principal.AWS?.has('*'))) {
+    if (!hasValidEffect(statement) || !hasValidPrincipal(statement)) {
         return [false, false, false];
     }
 
-    const commonFound = Array.from(statement.Actions).every(action => commonBucketActions.has(action)) && !statement.Conditions;
-    const writeOnly = Array.from(statement.Actions).every(action => writeOnlyBucketActions.has(action)) && !statement.Conditions;
+    const commonFound = hasValidActions(statement, commonBucketActions) && !statement.Conditions;
+    const writeOnly = hasValidActions(statement, writeOnlyBucketActions) && !statement.Conditions;
     let readOnly = false;
 
-    if (Array.from(statement.Actions).every(action => readOnlyBucketActions.has(action))) {
+    if (hasValidActions(statement, readOnlyBucketActions)) {
         if (prefix && statement.Conditions) {
             const stringEqualsValue = statement.Conditions['StringEquals'];
             const values = stringEqualsValue ? stringEqualsValue['s3:prefix'] || new Set() : new Set();
-            if (values.has(prefix)) {
-                readOnly = true;
-            }
-        } else if (!prefix && !statement.Conditions) {
-            readOnly = true;
-        } else if (prefix && !statement.Conditions) {
+            readOnly = values.has(prefix);
+        } else if (!prefix || !statement.Conditions) {
             readOnly = true;
         }
     }
@@ -495,9 +501,9 @@ export function getBucketPolicy(statement: Statement, prefix: string): [boolean,
 }
 
 export function getObjectPolicy(statement: Statement): [boolean, boolean] {
-    if (statement.Effect === 'Allow' && statement.Principal.AWS?.has('*') && !statement.Conditions) {
-        const readOnly = Array.from(statement.Actions).every(action => readOnlyObjectActions.has(action));
-        const writeOnly = Array.from(statement.Actions).every(action => writeOnlyObjectActions.has(action));
+    if (hasValidEffect(statement) && hasValidPrincipal(statement) && !statement.Conditions) {
+        const readOnly = hasValidActions(statement, readOnlyObjectActions);
+        const writeOnly = hasValidActions(statement, writeOnlyObjectActions);
         return [readOnly, writeOnly];
     }
     return [false, false];
@@ -552,7 +558,7 @@ export function getPolicy(statements: Statement[], bucketName: string, prefix: s
     }
 
     let policy: BucketPolicy = BucketPolicyConstants.None;
-        console.log("🚀 ~ getPolicy ~ bucketCommonFound:", bucketCommonFound)
+    console.log("🚀 ~ getPolicy ~ bucketCommonFound:", bucketCommonFound)
 
     if (bucketCommonFound) {
         if (bucketReadOnly && bucketWriteOnly && objReadOnly && objWriteOnly) {

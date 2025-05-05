@@ -58,58 +58,81 @@ const loading = ref<boolean>(false)
 
 const message = useMessage()
 
-const textMimes = [
-  'application/json', 'application/xml',
-  'application/javascript', 'application/x-sh',
-  'application/x-csh', 'application/x-python',
-  'application/x-php', 'application/x-perl',
-  'application/x-shellscript', 'application/x-ruby',
-  'application/x-java', 'application/x-cpp',
-]
+// 文件类型配置
+const fileTypeConfig = {
+  text: {
+    mimes: [
+      'application/json', 'application/xml',
+      'application/javascript', 'application/x-sh',
+      'application/x-csh', 'application/x-python',
+      'application/x-php', 'application/x-perl',
+      'application/x-shellscript', 'application/x-ruby',
+      'application/x-java', 'application/x-cpp',
+    ],
+    extensions: [
+      '.txt', '.json', '.xml', '.js', '.sh', '.csh',
+      '.py', '.php', '.pl', '.sh', '.rb', '.java',
+      '.cpp', '.h', '.hpp', '.c', '.cc', '.hh',
+      '.hxx', '.cxx', '.java', '.kt', '.scala',
+      '.groovy', '.rs', '.go', '.dart', '.swift',
+      '.m', '.mm', '.cs', '.ts', '.jsx', '.tsx',
+      '.html', '.htm', '.css', '.scss', '.sass',
+      '.less', '.styl', '.yaml', '.yml', '.toml',
+      '.ini', '.cfg', '.conf', '.properties', '.md',
+      '.markdown', '.rst', '.r',
+    ]
+  },
+  image: {
+    extensions: [
+      '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
+    ]
+  },
+  audio: {
+    extensions: [
+      '.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma',
+    ]
+  },
+  pdf: {
+    extensions: [
+      '.pdf',
+    ]
+  }
+};
 
-const textExtensions = [
-  '.txt', '.json', '.xml', '.js', '.sh', '.csh',
-  '.py', '.php', '.pl', '.sh', '.rb', '.java',
-  '.cpp', '.h', '.hpp', '.c', '.cc', '.hh',
-  '.hxx', '.cxx', '.java', '.kt', '.scala',
-  '.groovy', '.rs', '.go', '.dart', '.swift',
-  '.m', '.mm', '.cs', '.ts', '.jsx', '.tsx',
-  '.html', '.htm', '.css', '.scss', '.sass',
-  '.less', '.styl', '.yaml', '.yml', '.toml',
-  '.ini', '.cfg', '.conf', '.properties', '.md',
-  '.markdown', '.rst', '.r',
-]
+// 文件类型判断函数
+function isFileType(contentType: string | undefined, fileName: string, type: keyof typeof fileTypeConfig): boolean {
+  if (type === 'text') {
+    return contentType?.startsWith('text/') ||
+      fileTypeConfig.text.mimes.some(mime => contentType?.includes(mime)) ||
+      fileTypeConfig.text.extensions.some(ext => fileName.endsWith(ext));
+  }
 
-const imageExtensions = [
-  '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg',
-]
+  if (type === 'image') {
+    return contentType?.startsWith('image/') ||
+      fileTypeConfig.image.extensions.some(ext => fileName.endsWith(ext));
+  }
 
-const audioExtensions = [
-  '.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma',
-]
+  if (type === 'audio') {
+    return contentType?.startsWith('audio/') ||
+      fileTypeConfig.audio.extensions.some(ext => fileName.endsWith(ext));
+  }
 
-const pdfExtensions = [
-  '.pdf',
-]
+  if (type === 'pdf') {
+    return contentType === 'application/pdf' ||
+      fileTypeConfig.pdf.extensions.some(ext => fileName.endsWith(ext));
+  }
 
-// MIME 类型判断逻辑
-const isImage = computed(() => {
-  return contentType.value?.startsWith('image/') || imageExtensions.some(ext => props.objectKey.endsWith(ext))
-})
-const isVideo = computed(() => contentType.value?.startsWith('video/') || false)
-const isAudio = computed(() => {
-  return contentType.value?.startsWith('audio/') || audioExtensions.some(ext => props.objectKey.endsWith(ext))
-})
-const isPdf = computed(() => {
-  return contentType.value === 'application/pdf' || pdfExtensions.some(ext => props.objectKey.endsWith(ext))
-})
-const isText = computed(() => {
-  // 常见文本类型，可按需扩展
-  return contentType.value?.startsWith('text/') || textMimes.some(mime => contentType.value?.includes(mime)) ||
-    textExtensions.some(ext => props.objectKey.endsWith(ext))
-})
+  return false;
+}
 
-const canPreview = computed(() => isImage.value || isPdf.value || isText.value || isVideo.value || isAudio.value)
+// 使用新的判断函数
+const isImage = computed(() => isFileType(contentType.value, props.objectKey, 'image'));
+const isVideo = computed(() => contentType.value?.startsWith('video/') || false);
+const isAudio = computed(() => isFileType(contentType.value, props.objectKey, 'audio'));
+const isPdf = computed(() => isFileType(contentType.value, props.objectKey, 'pdf'));
+const isText = computed(() => isFileType(contentType.value, props.objectKey, 'text'));
+
+const canPreview = computed(() => isImage.value || isPdf.value || isText.value || isVideo.value || isAudio.value);
 
 // 当 show 为 true 时触发加载逻辑
 watch(() => props.show, async (newVal) => {
@@ -128,12 +151,12 @@ async function loadPreview() {
 
   try {
     // 获取预签名URL
-    const url = await getSignedUrl(objectKey.value)
+    const url = await getSignedUrl(props.objectKey)
 
     previewUrl.value = url
 
     // 先使用 HEAD 请求获取 Content-Type
-    const response = await headObject(objectKey.value)
+    const response = await headObject(props.objectKey)
 
     const ctype = response?.ContentType
     contentType.value = ctype || 'application/octet-stream'

@@ -67,6 +67,7 @@ import AliyunIcon from '~/assets/svg/aliyun.svg'
 import TqyunIcon from '~/assets/svg/tenxunyun.svg'
 import HwcloudIcon from '~/assets/svg/huaweiyun.svg'
 import BaiduIcon from '~/assets/svg/baiduyun.svg'
+import RustfsIcon from '~/assets/logo.svg'
 import {
   NForm,
   NFormItem,
@@ -89,7 +90,8 @@ const formData = ref({
   regio: '',
 })
 const typeOptions = [
-  { label: t('Minio'), value: 'rustfs', iconUrl: MinioIcon },
+  { label: t('RustFS'), value: 'rustfs', iconUrl: RustfsIcon },
+  { label: t('Minio'), value: 'minio', iconUrl: MinioIcon },
   { label: t('Google Cloud Storage'), value: 'google', iconUrl: GoogleIcon },
   { label: t('AWS S3'), value: 'AWS', iconUrl: AWSIcon },
   { label: t('Azure'), value: 'azure', iconUrl: AzureIcon },

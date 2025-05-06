@@ -59,7 +59,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import MinioIcon from '~/assets/svg/rustfs.svg'
+import MinioIcon from '~/assets/svg/minio.svg'
 import GoogleIcon from '~/assets/svg/google.svg'
 import AWSIcon from '~/assets/svg/aws.svg'
 import AzureIcon from '~/assets/svg/azure.svg'

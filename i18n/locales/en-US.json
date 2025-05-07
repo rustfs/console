@@ -267,5 +267,13 @@
   "Remote Site": "Remote Site",
   "Endpoint Required": "Endpoint Required",
   "Access Key Required": "Access Key Required",
-  "Secret Key Required": "Secret Key Required"
+  "Secret Key Required": "Secret Key Required",
+  "Rust-based": "Rust-based",
+  "High Performance": "High Performance",
+  "Infinite Scaling": "Infinite Scaling",
+  "Secure & Reliable": "Secure & Reliable",
+  "Multi-Cloud Storage": "Multi-Cloud Storage",
+  "S3 Compatible": "S3 Compatible",
+  "Reliable distributed file system": "Reliable distributed file system",
+  "Visit website": "Visit website"
 }

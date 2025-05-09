@@ -458,5 +458,13 @@
   "Please select at least one item": "请至少选择一项",
   "Get Data Failed": "获取数据失败",
   "StorageClass": "存储类型",
-  "Please Enter storage class": "请输入存储类型"
+  "Please Enter storage class": "请输入存储类型",
+  "Rust-based": "基于 Rust 的",
+  "High Performance": "高性能",
+  "Infinite Scaling": "无限扩容",
+  "Secure & Reliable": "安全可靠",
+  "Multi-Cloud Storage": "多云存储",
+  "S3 Compatible": "兼容 S3",
+  "Reliable distributed file system": "靠谱的分布式文件系统",
+  "Visit website": "访问官网"
 }

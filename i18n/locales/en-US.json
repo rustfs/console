@@ -269,6 +269,13 @@
   "Access Key Required": "Access Key Required",
   "Secret Key Required": "Secret Key Required",
   "StorageClass": "Storage Class",
-  "Please Enter storage class": "Please Enter storage class(e.g., STANDARD, IA, GLACIER)"
-
+  "Please Enter storage class": "Please Enter storage class(e.g., STANDARD, IA, GLACIER)",
+  "Rust-based": "Rust-based",
+  "High Performance": "High Performance",
+  "Infinite Scaling": "Infinite Scaling",
+  "Secure & Reliable": "Secure & Reliable",
+  "Multi-Cloud Storage": "Multi-Cloud Storage",
+  "S3 Compatible": "S3 Compatible",
+  "Reliable distributed file system": "Reliable distributed file system",
+  "Visit website": "Visit website"
 }

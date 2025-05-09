@@ -267,5 +267,8 @@
   "Remote Site": "Remote Site",
   "Endpoint Required": "Endpoint Required",
   "Access Key Required": "Access Key Required",
-  "Secret Key Required": "Secret Key Required"
+  "Secret Key Required": "Secret Key Required",
+  "StorageClass": "Storage Class",
+  "Please Enter storage class": "Please Enter storage class(e.g., STANDARD, IA, GLACIER)"
+
 }

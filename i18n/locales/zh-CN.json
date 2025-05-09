@@ -456,5 +456,7 @@
   "Description": "描述",
   "Are you sure you want to delete all selected keys?": "您确定要删除所有选中的密钥吗？",
   "Please select at least one item": "请至少选择一项",
-  "Get Data Failed": "获取数据失败"
+  "Get Data Failed": "获取数据失败",
+  "StorageClass": "存储类型",
+  "Please Enter storage class": "请输入存储类型"
 }

@@ -45,7 +45,10 @@
           <n-input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
         </n-form-item>
         <n-form-item :label="t('Region')">
-          <n-input v-model="formData.regio" :placeholder="t('Please enter region')" />
+          <n-input v-model="formData.region" :placeholder="t('Please enter region')" />
+        </n-form-item>
+        <n-form-item :label="t('StorageClass')">
+          <n-input v-model:value="formData.storageclass" :placeholder="t('Please Enter storage class') " />
         </n-form-item>
         <n-space justify="center">
           <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
@@ -75,8 +78,10 @@ import {
   NSelect,
   NButton,
 } from 'naive-ui'
+import { useTiers } from '#imports'
 
 const { t } = useI18n()
+const usetier = useTiers()
 
 const formRef = ref(null)
 const formData = ref({
@@ -87,18 +92,20 @@ const formData = ref({
   secretkey: '',
   bucket: '',
   prefix: '',
-  regio: '',
+  region: '',
+  storageclass: 'STANDARD', // 新增字段，默认值为 STANDARD
 })
 const typeOptions = [
   { label: t('RustFS'), value: 'rustfs', iconUrl: RustfsIcon },
   { label: t('Minio'), value: 'minio', iconUrl: MinioIcon },
-  { label: t('Google Cloud Storage'), value: 'google', iconUrl: GoogleIcon },
-  { label: t('AWS S3'), value: 'AWS', iconUrl: AWSIcon },
-  { label: t('Azure'), value: 'azure', iconUrl: AzureIcon },
-  { label: t('Aliyun'), value: 'aliyun', iconUrl: AliyunIcon },
-  { label: t('Tencent Cloud'), value: 'tqyun', iconUrl: TqyunIcon },
-  { label: t('Huawei Cloud'), value: 'hwyun', iconUrl: HwcloudIcon },
-  { label: t('Baidu Cloud'), value: 'bdyun', iconUrl: BaiduIcon },
+  { label: t('AWS S3'), value: 's3', iconUrl: AWSIcon },
+  // 暂未支持
+  // { label: t('Google Cloud Storage'), value: 'google', iconUrl: GoogleIcon },
+  // { label: t('Azure'), value: 'azure', iconUrl: AzureIcon },
+  // { label: t('Aliyun'), value: 'aliyun', iconUrl: AliyunIcon },
+  // { label: t('Tencent Cloud'), value: 'tqyun', iconUrl: TqyunIcon },
+  // { label: t('Huawei Cloud'), value: 'hwyun', iconUrl: HwcloudIcon },
+  // { label: t('Baidu Cloud'), value: 'bdyun', iconUrl: BaiduIcon },
 ]
 
 const rules = {
@@ -116,11 +123,36 @@ const open = () => {
 defineExpose({
   open
 })
+
+const emmit = defineEmits(['search'])
 const handleSave = () => {
   formRef.value?.validate((errors) => {
     if (!errors) {
-      console.log(t('Submit data'), formData.value)
+      // {"type":"minio","minio":{"name":"COLDTIER","endpoint":"","bucket":"","prefix":"","region":"","accesskey":"","secretkey":""}}
       // 调用保存接口
+      const data = {
+        type: formData.value.type,
+        [formData.value.type]: {
+          name: formData.value.name,
+          endpoint: formData.value.endpoint,
+          bucket: formData.value.bucket,
+          prefix: formData.value.prefix,
+          region: formData.value.region,
+          accesskey: formData.value.accesskey,
+          secretkey: formData.value.secretkey,
+          storageclass: formData.value.storageclass, // 新增字段
+        },
+      }
+      console.log(t('Submit data'), data)
+      
+      usetier.addTiers(data).then((res) => {
+        if (res.code === 200) {
+          visible.value = false
+        }
+        // 处理成功逻辑
+        console.log('保存成功', res)
+        emit('search')
+      })
     }
   })
 }

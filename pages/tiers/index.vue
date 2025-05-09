@@ -27,7 +27,7 @@
         </div>
       </div>
       <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredData" :pagination="false" :bordered="false" />
-      <tiers-new-form ref='newFormRef'></tiers-new-form>
+      <tiers-new-form ref='newFormRef' @search="refresh"></tiers-new-form>
     </page-content>
   </div>
 </template>
@@ -37,6 +37,7 @@ import { Icon } from '#components'
 import dayjs from 'dayjs'
 import { NButton, NSpace, type DataTableColumns ,NPopconfirm} from 'naive-ui'
 import { useI18n } from 'vue-i18n'
+const usetier = useTiers()
 
 const { t } = useI18n()
 const searchTerm = ref('');
@@ -116,11 +117,10 @@ const columns: DataTableColumns<RowData> = [
 ];
 
 const { data, refresh } = await useAsyncData(
-  'tiers',
+  'tier',
   async () => {
-    // const response = await listBuckets();
-    // return response
-    return []
+    const response = await usetier.listTiers();
+    return response
   },
   { default: () => [] }
 );
@@ -131,8 +131,10 @@ const filteredData = computed(() => {
   }
 
   const term = searchTerm.value.toLowerCase();
-  return data.value.filter(bucket =>
-    bucket
+  return data.value.filter((tier:any) =>
+    tier.name.toLowerCase().includes(term) ||
+    tier.endpoint.toLowerCase().includes(term) ||
+    tier.bucket.toLowerCase().includes(term)
   );
 });
 

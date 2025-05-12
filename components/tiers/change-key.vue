@@ -6,11 +6,11 @@
     <n-card>
       <n-form ref="formRef" label-placement="left" :model="formModel" :rules="rules" label-align="center" :label-width="130">
         <n-grid :cols="24" :x-gap="18">
-          <n-form-item-gi :span="24" :label="t('Access Key')" path="accessKey">
-            <n-input v-model:value="formModel.accessKey" />
+          <n-form-item-gi :span="24" :label="t('Access Key')" path="accesskey">
+            <n-input v-model:value="formModel.accesskey" />
           </n-form-item-gi>
-          <n-form-item-gi :span="24" :label="t('Secret Key')" path="secretKey">
-            <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
+          <n-form-item-gi :span="24" :label="t('Secret Key')" path="secretkey">
+            <n-input v-model:value="formModel.secretkey" show-password-on="mousedown" type="password" />
           </n-form-item-gi>
         </n-grid>
       </n-form>
@@ -40,19 +40,19 @@ const message = useMessage()
 
 const emit = defineEmits<Emits>()
 const defaultFormModal = {
-  accessKey: '',
-  secretKey: '',
+  accesskey: '',
+  secretkey: '',
 }
 const formModel = ref({ ...defaultFormModal })
 
 // 验证
 const rules = ref({
-  accessKey: {
+  accesskey: {
     required: true,
     trigger: ["blur", "input"],
     message: t("Please enter Access Key"),
   },
-  secretKey: {
+  secretkey: {
     required: true,
     trigger: ["blur", "input"],
     message: t("Please enter Secret Key"),

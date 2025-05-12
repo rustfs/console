@@ -466,5 +466,8 @@
   "Multi-Cloud Storage": "多云存储",
   "S3 Compatible": "兼容 S3",
   "Reliable distributed file system": "靠谱的分布式文件系统",
-  "Visit website": "访问官网"
+  "Visit website": "访问官网",
+  "Update Key": "更新密钥",
+  "Update Success": "更新成功",
+  "Update Failed": "更新失败"
 }

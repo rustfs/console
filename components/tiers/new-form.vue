@@ -3,7 +3,7 @@
     content: true,
     action: true,
   }">
-    <n-card v-if="!formData.type">
+    <n-card v-show="!formData.type">
       <n-grid x-gap="12" y-gap="12" :cols="2">
         <n-gi v-for="item in typeOptions">
           <n-card class="cursor-pointer " @click="formData.type = item.value">
@@ -14,7 +14,7 @@
         </n-gi>
       </n-grid>
     </n-card>
-    <n-card v-else>
+    <n-card v-show="formData.type">
       <n-card class="mb-4">{{ formData.type }}</n-card>
       <n-form ref="formRef" :model="formData" :rules="rules">
         <!-- 规则类型 -->
@@ -27,25 +27,25 @@
         </n-form-item> -->
 
         <n-form-item :label="t('Name')">
-          <n-input v-model="formData.name" :placeholder="t('Please enter name')" />
+          <n-input v-model:value="formData.name" :placeholder="t('Please enter name')" />
         </n-form-item>
         <n-form-item :label="t('Endpoint')">
-          <n-input v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
+          <n-input v-model:value="formData.endpoint" :placeholder="t('Please enter endpoint')" />
         </n-form-item>
         <n-form-item :label="t('Access Key')">
-          <n-input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" />
+          <n-input v-model:value="formData.accesskey" :placeholder="t('Please enter Access Key')" />
         </n-form-item>
         <n-form-item :label="t('Secret Key')">
-          <n-input v-model="formData.secretkey" :placeholder="t('Please enter Secret Key')" />
+          <n-input v-model:value="formData.secretkey" :placeholder="t('Please enter Secret Key')" />
         </n-form-item>
         <n-form-item :label="t('Bucket')">
-          <n-input v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
+          <n-input v-model:value="formData.bucket" :placeholder="t('Please enter bucket')" />
         </n-form-item>
         <n-form-item :label="t('Prefix')">
-          <n-input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+          <n-input v-model:value="formData.prefix" :placeholder="t('Please enter prefix')" />
         </n-form-item>
         <n-form-item :label="t('Region')">
-          <n-input v-model="formData.region" :placeholder="t('Please enter region')" />
+          <n-input v-model:value="formData.region" :placeholder="t('Please enter region')" />
         </n-form-item>
         <n-form-item :label="t('StorageClass')">
           <n-input v-model:value="formData.storageclass" :placeholder="t('Please Enter storage class') " />
@@ -83,18 +83,7 @@ import { useTiers } from '#imports'
 const { t } = useI18n()
 const usetier = useTiers()
 
-const formRef = ref(null)
-const formData = ref({
-  type: '',
-  name: '',
-  endpoint: '',
-  accesskey: '',
-  secretkey: '',
-  bucket: '',
-  prefix: '',
-  region: '',
-  storageclass: 'STANDARD', // 新增字段，默认值为 STANDARD
-})
+// 支持的存储类型
 const typeOptions = [
   { label: t('RustFS'), value: 'rustfs', iconUrl: RustfsIcon },
   { label: t('Minio'), value: 'minio', iconUrl: MinioIcon },
@@ -107,6 +96,20 @@ const typeOptions = [
   // { label: t('Huawei Cloud'), value: 'hwyun', iconUrl: HwcloudIcon },
   // { label: t('Baidu Cloud'), value: 'bdyun', iconUrl: BaiduIcon },
 ]
+
+
+const formRef = ref(null)
+const formData = ref({
+  type: '',
+  name: '',
+  endpoint: '',
+  accesskey: '',
+  secretkey: '',
+  bucket: '',
+  prefix: '',
+  region: '',
+  storageclass: 'STANDARD', // 新增字段，默认值为 STANDARD
+})
 
 const rules = {
   ruleName: { required: true, message: t('Please enter rule name') },
@@ -126,6 +129,7 @@ defineExpose({
 
 const emmit = defineEmits(['search'])
 const handleSave = () => {
+  console.log(formData.value)
   formRef.value?.validate((errors) => {
     if (!errors) {
       // {"type":"minio","minio":{"name":"COLDTIER","endpoint":"","bucket":"","prefix":"","region":"","accesskey":"","secretkey":""}}

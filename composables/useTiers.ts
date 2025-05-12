@@ -9,7 +9,7 @@ export const useTiers = () => {
      * 
      */ 
    const addTiers =  async (data: any)=> {
-      return await $api.post('/tier',data)
+      return await $api.put('/tier?force=false',data)
     }
 
 
@@ -18,7 +18,7 @@ export const useTiers = () => {
      * @returns
      */
     const updateTiers = async (name: string, data: any) =>{
-      return await $api.put(`/tier/${encodeURIComponent(name)}`, data)
+      return await $api.post(`/tier/${encodeURIComponent(name)}`, data)
     }
 
     /**

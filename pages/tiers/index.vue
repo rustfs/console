@@ -28,6 +28,7 @@
       </div>
       <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredData" :pagination="false" :bordered="false" />
       <tiers-new-form ref='newFormRef' @search="refresh"></tiers-new-form>
+      <tiers-change-key v-model:visible="changeKeyVisible" v-model:name="editName" ref='infoRef' @search="refresh"></tiers-change-key>
     </page-content>
   </div>
 </template>
@@ -42,29 +43,70 @@ const usetier = useTiers()
 const { t } = useI18n()
 const searchTerm = ref('');
 
+interface S3Config {
+  name: string;
+  endpoint: string;
+  accesskey: string;
+  secretkey: string;
+  bucket: string;
+  prefix: string;
+  region: string;
+  storageclass: string;
+}
+
 interface RowData {
-  Name: string;
-  CreationDate: string;
+  type: string;
+  rustfs?: S3Config;  
+  minio?: S3Config;  
+  s3?: S3Config;
+}
+
+const  getConfig = (row: RowData): S3Config | undefined  =>{
+  switch (row.type) {
+    case 'rustfs':
+      return row.rustfs;
+    case 'minio':
+      return row.minio;
+    case 's3':
+      return row.s3;
+  }
 }
 
 const columns: DataTableColumns<RowData> = [
   {
     title: t('Tier Type'),
-    key: 'Name',
+    key: 'type',
+    render: (row) => row.type,
+  },
+  {
+   title: t('Name'),
+    key: 'name',
+    render: (row) => getConfig(row)?.name,
   },
   {
     title: t('Endpoint'),
-    key: 'Endpoint',
+    key: 'endpoint',
+    render: (row) => getConfig(row)?.endpoint,
   },
   {
     title: t('Bucket'),
-    key: 'Bucket',
+    key: 'bucket',
+    render: (row) => getConfig(row)?.bucket,
+  },
+   {
+    title: t('Region'),
+    key: 'region',
+    render: (row) => getConfig(row)?.region,
   },
   {
-    title: t('Creation Time'),
-    key: 'CreationDate',
-    render: (row: RowData) => {
-      return dayjs(row.CreationDate).format('YYYY-MM-DD HH:mm:ss');
+    title: t('Storage Class'),
+    key: 'storageclass',
+    render: (row) => {
+      // 只有 s3 类型才有 storageclass
+      if (row.type === 's3') {
+        return row.s3?.storageclass;
+      }
+      return '-';
     },
   },
   {
@@ -105,7 +147,7 @@ const columns: DataTableColumns<RowData> = [
               },
               {
                 default: () => '',
-                icon: () => h(Icon, { name: 'ri:settings-5-line' }),
+                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
 
@@ -139,13 +181,24 @@ const filteredData = computed(() => {
 });
 
 const infoRef = ref();
+const changeKeyVisible = ref(false);
+const editName = ref();
 const handleRowClick = (row: RowData,e: Event) => {
   e.stopPropagation();
-  infoRef.value.openDrawer(row.Name);
+  changeKeyVisible.value = true;
+  editName.value = getConfig(row)?.name;
 };
 
 const message = useMessage();
 const deleteItem = async (row: RowData) => {
+  const config = getConfig(row) || {name:''};
+  if(!config.name ) return;
+  usetier.removeTiers(config.name ).then(()=>{
+    message.success(t('Delete Success'))
+       refresh();
+  }).catch((error)=>{
+    message.error(t('Delete Failed'))
+  })
 
   //  delete(row.Name).then(()=>{
   //   message.success(t('Delete Success'))

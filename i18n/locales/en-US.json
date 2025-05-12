@@ -277,5 +277,8 @@
   "Multi-Cloud Storage": "Multi-Cloud Storage",
   "S3 Compatible": "S3 Compatible",
   "Reliable distributed file system": "Reliable distributed file system",
-  "Visit website": "Visit website"
+  "Visit website": "Visit website",
+  "Update Key": "Update Key" ,
+  "Update Success": "Update Success",
+  "Update Failed": "Update Failed"
 }

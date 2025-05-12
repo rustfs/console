@@ -82,6 +82,7 @@ import { useTiers } from '#imports'
 
 const { t } = useI18n()
 const usetier = useTiers()
+const message = useMessage()
 
 // 支持的存储类型
 const typeOptions = [
@@ -129,7 +130,6 @@ defineExpose({
 
 const emmit = defineEmits(['search'])
 const handleSave = () => {
-  console.log(formData.value)
   formRef.value?.validate((errors) => {
     if (!errors) {
       // {"type":"minio","minio":{"name":"COLDTIER","endpoint":"","bucket":"","prefix":"","region":"","accesskey":"","secretkey":""}}
@@ -147,15 +147,10 @@ const handleSave = () => {
           storageclass: formData.value.storageclass, // 新增字段
         },
       }
-      console.log(t('Submit data'), data)
-      
       usetier.addTiers(data).then((res) => {
-        if (res.code === 200) {
-          visible.value = false
-        }
-        // 处理成功逻辑
-        console.log('保存成功', res)
-        emit('search')
+        visible.value = false
+        emmit('search')
+        message.success(t('Create Success'))
       })
     }
   })

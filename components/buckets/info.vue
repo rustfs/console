@@ -52,6 +52,7 @@
           对象锁
         </template>
          <n-switch
+          :disabled="true"
           v-model:value="lockStatus"
           :loading="objectLockLoading"
           @update:value="handleChangeVersionStatus" />

@@ -14,8 +14,11 @@ import {
   PutBucketPolicyCommand,
   GetBucketPolicyStatusCommand,
   GetObjectLockConfigurationCommand,
-  PutObjectLockConfigurationCommand
+  PutObjectLockConfigurationCommand,
   // GetBucketEncryptionCommand,
+  GetBucketLifecycleConfigurationCommand,
+  PutBucketLifecycleConfigurationCommand,
+  DeleteBucketLifecycleCommand,
 } from "@aws-sdk/client-s3"
 
 export function useBucket({ region }: { region?: string }) {
@@ -25,11 +28,7 @@ export function useBucket({ region }: { region?: string }) {
     return await $client.send(new ListBucketsCommand({}))
   }
 
-  const createBucket = async (bucket: string) => {
-    const params = {
-      Bucket: bucket,
-    }
-
+  const createBucket = async (params: any) => {
     return await $client.send(new CreateBucketCommand(params))
   }
 
@@ -136,6 +135,26 @@ export function useBucket({ region }: { region?: string }) {
     return await $client.send(new PutObjectLockConfigurationCommand(params))
   }
 
+  const getBucketLifecycleConfiguration = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    }
+    return await $client.send(new GetBucketLifecycleConfigurationCommand(params))
+  }
+  const putBucketLifecycleConfiguration = async (bucket: string, lifecycleConfiguration: any) => {
+    const params = {
+      Bucket: bucket,
+      LifecycleConfiguration: lifecycleConfiguration,
+    }
+    return await $client.send(new PutBucketLifecycleConfigurationCommand(params))
+  }
+  const deleteBucketLifecycle = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    }       
+    return await $client.send(new DeleteBucketLifecycleCommand(params))
+  }
+
   return {
     listBuckets,
     createBucket,
@@ -150,6 +169,9 @@ export function useBucket({ region }: { region?: string }) {
     getBucketPolicy,
     putBucketPolicy,
     getObjectLockConfiguration,
-    putObjectLockConfiguration
+    putObjectLockConfiguration,
+    getBucketLifecycleConfiguration,
+    putBucketLifecycleConfiguration,
+    deleteBucketLifecycle
   }
 }

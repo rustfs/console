@@ -50,11 +50,11 @@
       <n-descriptions-item>
         <template #label>
           对象锁
-          <n-button quaternary round type="primary">
-            <Icon name="ri:edit-2-line" class="mr-2" />
-          </n-button>
         </template>
-        关闭
+         <n-switch
+          v-model:value="lockStatus"
+          :loading="objectLockLoading"
+          @update:value="handleChangeVersionStatus" />
       </n-descriptions-item>
 
       <n-descriptions-item>
@@ -133,8 +133,6 @@
     bucketName.value = bucket
     // 在服务端获取数据
     getData()
-    // putObjectLockConfig()
-    // getObjectLockConfig()
 
   }
   defineExpose({
@@ -145,6 +143,8 @@
     getbucketPolicy()
     getTags()
     getVersioningStatus()
+    getObjectLockConfig()
+
   }
 
 const message = useMessage()
@@ -152,37 +152,22 @@ const { getBucketTagging, deleteBucket, putBucketTagging, putBucketVersioning, g
     putBucketPolicy,getObjectLockConfiguration,putObjectLockConfiguration} = useBucket({})
 
 /**********object lock ***********************/
-
-const lockStatus = ref('')
+const lockStatus = ref(false)
+const objectLockLoading = ref(false)
 const getObjectLockConfig = async () => {
-  try {
-    const res = await getObjectLockConfiguration( bucketName.value )
-    console.log("🚀 ~ getObjectLockConfiguration ~ res:", res)
-    // lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled
-  } catch (error) {
-    // console.error("Error fetching bucket policy:", error)
-  }
+  objectLockLoading.value = true
+  getObjectLockConfiguration( bucketName.value ).then(res=>{
+    if(res.ObjectLockConfiguration?.ObjectLockEnabled){
+      lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == 'Enabled' ? true : false
+    }else{
+      lockStatus.value = false
+    }
+  }).finally(() => {
+    objectLockLoading.value = false
+  })
+ 
 }
 
-const putObjectLockConfig = async () => {
-  try {
-    const res = await putObjectLockConfiguration( bucketName.value ,{
-      ObjectLockEnabled: "Enabled",
-      Rule: { // ObjectLockRule
-        DefaultRetention: { // DefaultRetention
-          // Mode: "GOVERNANCE" || "COMPLIANCE",
-          // Days: Number("int"),
-          // Years: Number("int"),
-          Mode: "COMPLIANCE" ,
-          Days: 7,
-        },
-      },
-    })
-    console.log("🚀 ~ putObjectLockConfig ~ res:", res)
-  } catch (error) {
-    // console.error("Error fetching bucket policy:", error)
-  }
-}
 /**********object lock ***********************/
 
 

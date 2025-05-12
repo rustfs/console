@@ -20,6 +20,14 @@
         <div class="flex items-center gap-4">
           <n-input :placeholder="t('Please enter name')" v-model:value="objectKey" />
         </div>
+         <div class="flex items-center gap-4">
+          <n-space class=" w-12">{{ t('Version') }}:</n-space>
+           <n-switch v-model:value="version" @change="handleVersionChange"/>  
+        </div>
+         <div class="flex items-center gap-4">
+          <n-space class=" w-12">{{ t('Object Lock') }}:</n-space>
+          <n-switch v-model:value="objectLock" @change="handleObjectLock"/>
+        </div>
 
         <div class="flex justify-center gap-4">
           <n-button type="primary" :disabled="objectKey.trim().length < 1" @click="handlePutObject">{{ t('Create') }}</n-button>
@@ -41,16 +49,47 @@ const props = defineProps<{ show: boolean; }>()
 const closeModal = () => emit('update:show', false)
 
 const objectKey = ref('')
+const version = ref(false)
+const objectLock = ref(false)
 
-const { createBucket } = useBucket({})
+const { createBucket ,putBucketVersioning} = useBucket({})
 
 const $message = useMessage()
 
+// 如果开启对象锁，必须开启版本控制
+const handleObjectLock = () => {
+  if (objectLock.value) {
+    version.value = true
+  } 
+}
+
+// 如果关闭版本控制，关闭对象锁
+const handleVersionChange = () => {
+  if (!version.value) {
+    objectLock.value = false
+  }
+ }
+
 const handlePutObject = () => {
-  createBucket(objectKey.value).then(() => {
-    emit('update:show', false)
-    objectKey.value = ''
-    $message.success(t('Create Success'))
+  const params = {
+    Bucket: objectKey.value,
+    ObjectLockEnabledForBucket: objectLock.value,
+  }
+  createBucket(params).then(() => {
+    // 开启版本控制
+    if (version.value) {
+      putBucketVersioning(
+        objectKey.value,
+        version.value?"Enabled":"Suspended",
+      ).then(() => {
+        emit('update:show', false)
+        objectKey.value = ''
+        $message.success(t('Create Success'))
+      }).catch((e) => {
+        $message.error(t('Create Failed'))
+      })
+    }
+   
   }).catch((e) => {
     $message.error(e.message)
   })

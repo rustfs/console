@@ -469,5 +469,17 @@
   "Visit website": "访问官网",
   "Update Key": "更新密钥",
   "Update Success": "更新成功",
-  "Update Failed": "更新失败"
+  "Update Failed": "更新失败",
+  "TierNameAlreadyExist":  "",
+  "TierNameNotUppercase"  :"分层名称必须大写!",
+  "TierNameBackendInUse"  :"分层名称已占用!",
+  "TierConnectError"      :"连接错误!",
+  "XRustFSAdminTierInvalidCredentials": "远程验证错误",
+  "TierAddFailed"         :"分层添加失败",
+  "TierNotFound"          :"未找到分层!",
+  "TierMissingCredentials": "验证缺失!",
+  "TierEditFailed"        : "分层修改失败",
+  "TierRemoveFailed"      : "分层删除失败",
+  "Usage": "使用情况"
+
 }

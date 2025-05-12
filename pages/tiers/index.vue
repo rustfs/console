@@ -51,6 +51,9 @@ interface S3Config {
   bucket: string;
   prefix: string;
   region: string;
+  usage: string;
+  objects: string;
+  versions: string;
   storageclass: string;
 }
 
@@ -108,6 +111,21 @@ const columns: DataTableColumns<RowData> = [
       }
       return '-';
     },
+  },
+  {
+    title: t('Usage'),
+    key: 'usage',
+    render: (row) => getConfig(row)?.usage,
+  },
+  {
+    title: t('Objects'),
+    key: 'objects',
+    render: (row) => getConfig(row)?.objects,
+  },
+  {
+    title: t('Version'),
+    key: 'versions',
+    render: (row) => getConfig(row)?.versions,
   },
   {
     title: t('Actions'),
@@ -199,15 +217,6 @@ const deleteItem = async (row: RowData) => {
   }).catch((error)=>{
     message.error(t('Delete Failed'))
   })
-
-  //  delete(row.Name).then(()=>{
-  //   message.success(t('Delete Success'))
-  //      refresh();
-
-  // }).catch((error)=>{
-  //   message.error(t('Delete Failed'))
-  // })
-
 };
 
 const newFormRef = ref();

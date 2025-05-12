@@ -280,5 +280,17 @@
   "Visit website": "Visit website",
   "Update Key": "Update Key" ,
   "Update Success": "Update Success",
-  "Update Failed": "Update Failed"
+  "Update Failed": "Update Failed",
+  "TierNameAlreadyExist":  "tier name already exists!",
+  "TierNameNotUppercase"  :"tier name not uppercase!",
+  "TierNameBackendInUse"  :"tier name backend in use!",
+  "TierConnectError"      :"tier connect error!",
+  "XRustFSAdminTierInvalidCredentials": "Invalid remote tier credentials",
+  "TierAddFailed"         :"tier add failed",
+  "TierNotFound"          :"tier not found!",
+  "TierMissingCredentials": "tier missing credentials!",
+  "TierEditFailed"        : "tier edit failed",
+  "TierRemoveFailed"      : "tier remove failed",
+  "Usage": "Usage"
+
 }

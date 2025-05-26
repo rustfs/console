@@ -88,6 +88,10 @@ const handlePutObject = () => {
       }).catch((e) => {
         $message.error(t('Create Failed'))
       })
+    }else {
+      emit('update:show', false)
+      objectKey.value = ''
+      $message.success(t('Create Success'))
     }
    
   }).catch((e) => {

@@ -31,7 +31,7 @@ const handleLogin = async () => {
   try {
     await auth.login(credentials)
     message.success(t('Login Success'))
-    router.push('/')
+    window.location.href = '/'
   } catch (error) {
     message.error(t('Login Failed'))
   }

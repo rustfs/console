@@ -188,15 +188,15 @@
               <n-carousel-item v-for="drive in server.drives" :key="drive.uuid" style="width: 350px" class="flex flex-col justify-start items-center p-4 border rounded mx-2 ml-0">
                 <div class="self-start ps-6">{{ drive.drive_path }}</div>
                 <div class="flex w-full justify-around items-center my-8">
-                  <n-progress type="circle" style="width: 140px" :percentage="Math.round((drive.used_space / drive.total_space) * 100)" size="small">
-                    <span class="text-center">{{ niceBytes(drive.used_space) }}</span>
+                  <n-progress type="circle" style="width: 140px" :percentage="Math.round((drive.usedspace / drive.totalspace) * 100)" size="small">
+                    <span class="text-center">{{ niceBytes(drive.usedspace) }}</span>
                   </n-progress>
                   <div class="flex flex-col justify-between text-center">
-                    <div class="text-lg">{{ niceBytes(drive.total_space) }}</div>
+                    <div class="text-lg">{{ niceBytes(drive.totalspace) }}</div>
                     <div class="mb-2">{{ t('Total Space') }}</div>
-                    <div class="text-lg">{{ niceBytes(drive.used_space) }}</div>
+                    <div class="text-lg">{{ niceBytes(drive.usedspace) }}</div>
                     <div class="mb-2">{{ t('Used') }}</div>
-                    <div class="text-lg">{{ niceBytes(drive.available_space) }}</div>
+                    <div class="text-lg">{{ niceBytes(drive.availspace) }}</div>
                     <div>{{ t('Available') }}</div>
                   </div>
                 </div>
@@ -235,7 +235,6 @@ const getMetricsInfo = async () => {
   for await (const data of $api.streamRequest(url, options)) {
     // 更新metricsInfo.value
     metricsInfo.value = { ...metricsInfo.value, ...data };
-    console.log(metricsInfo.value )
   }
 };
 

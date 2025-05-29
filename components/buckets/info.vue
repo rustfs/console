@@ -55,6 +55,7 @@
           :disabled="true"
           v-model:value="lockStatus"
           :loading="objectLockLoading"
+          :round="false"
           @update:value="handleChangeVersionStatus" />
       </n-descriptions-item>
 
@@ -64,8 +65,10 @@
         </template>
         <n-switch
           v-model:value="versioningStatus"
+          :disabled="lockStatus== true"
           checked-value="Enabled"
           unchecked-value="Suspended"
+          :round="false"
           :loading="statusLoading"
           @update:value="handleChangeVersionStatus" />
       </n-descriptions-item>
@@ -173,12 +176,12 @@ const getObjectLockConfig = async () => {
 
 
 /******** policy ***********************/
-import {setPolicy,getPolicy,getPolicies} from '~/utils/bucketPolicy'
+import {setBucketPolicy,getBucketPolicy as getBucketPolicyFn} from '~/utils/bucketPolicy'
 
-const policys = setPolicy([],'readonly',bucketName.value,'')
-console.log("🚀 ~ policys:", policys)
-const  po = getPolicy(policys,bucketName.value,'')
-console.log(111,po)
+// const policys = setBucketPolicy([],'private',bucketName.value,'')
+// console.log("🚀 ~ policys:", policys)
+// const  po = getBucketPolicyFn(policys,bucketName.value,'')
+// console.log(111,po)
 
 const bucketPolicy = ref("private")
 const getbucketPolicy = async () => {

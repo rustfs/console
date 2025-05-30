@@ -140,7 +140,7 @@ const columns: DataTableColumns<RowData> = [
         },
         {
           default: () => [
-             h(
+            h(
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {

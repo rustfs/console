@@ -68,6 +68,35 @@
             :loading="statusLoading"
             @update:value="handleChangeVersionStatus" />
         </n-descriptions-item>
+
+        <n-descriptions-item>
+          <template #label>保留</template>
+          <n-switch
+            v-model:value="retentionEnabled"
+            :loading="objectLockLoading"
+            :round="false"
+            @update:value="handleChangeVersionStatus" />
+          <n-space v-if="retentionEnabled">
+            <div v-if="retentionEnabled" class="flex flex-col gap-4">
+              <div v-if="retentionEnabled">
+                <div class="flex items-center justify-between">
+                  <n-space>{{ t("Retention Mode") }}:</n-space>
+                  <n-radio-group v-model:value="retentionMode">
+                    <n-radio value="COMPLIANCE">Compliance</n-radio>
+                    <n-radio value="GOVERNANCE">Governance</n-radio>
+                  </n-radio-group>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                  <n-space class="w-24">{{ t("Validity") }}*</n-space>
+                  <n-input-group class="justify-end">
+                    <n-input-number v-model:value="retentionPeriod" :min="1" />
+                    <n-select v-model:value="retentionUnit" :options="retentionUnitOptions" class="w-16" />
+                  </n-input-group>
+                </div>
+              </div>
+            </div>
+          </n-space>
+        </n-descriptions-item>
       </n-descriptions>
     </n-drawer-content>
 
@@ -132,6 +161,8 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const dialog = useDialog();
 const visibel = ref(false);
 const bucketName = ref("");
@@ -145,12 +176,17 @@ defineExpose({
   openDrawer,
 });
 
-const getData = () => {
-  getbucketPolicy();
-  getTags();
-  getVersioningStatus();
-  getObjectLockConfig();
+const getData = async () => {
+  await getTags();
+  await getVersioningStatus();
+  await getObjectLockConfig();
+  await getbucketPolicy();
 };
+
+const retentionUnitOptions = [
+  { label: t("Day"), value: "DAYS" },
+  { label: t("Year"), value: "YEARS" },
+];
 
 const message = useMessage();
 const {
@@ -168,14 +204,28 @@ const {
 /**********object lock ***********************/
 const lockStatus = ref(false);
 const objectLockLoading = ref(false);
+const retentionEnabled = ref(false);
+const retentionMode = ref("COMPLIANCE");
+const retentionPeriod = ref(180);
+const retentionUnit = ref("DAYS");
+
 const getObjectLockConfig = async () => {
   objectLockLoading.value = true;
   getObjectLockConfiguration(bucketName.value)
     .then((res) => {
       if (res.ObjectLockConfiguration?.ObjectLockEnabled) {
         lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == "Enabled" ? true : false;
+        console.log(res.ObjectLockConfiguration?.Rule);
+        if (res.ObjectLockConfiguration?.Rule) {
+          console.log(1111);
+          retentionEnabled.value = true;
+          retentionMode.value = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Mode || "COMPLIANCE";
+          retentionPeriod.value = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days || 180;
+          retentionUnit.value = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years ? "YEARS" : "DAYS";
+        }
       } else {
         lockStatus.value = false;
+        retentionEnabled.value = false;
       }
     })
     .finally(() => {

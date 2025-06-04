@@ -551,6 +551,10 @@ const retentionFormValue = ref<RetentionFormValue>({
 });
 
 const editRetention = () => {
+  if (!lockStatus.value) {
+    message.error("对象锁定未启用，无法设置保留");
+    return;
+  }
   showRetentionModal.value = true;
 };
 

@@ -1,45 +1,77 @@
 <template>
   <n-drawer v-model:show="visibel" :width="550">
     <n-drawer-content :title="t('Object Details')">
-      <div class="flex items-center gap-4 ml-auto">
+      <div class="flex items-center flex-wrap gap-4 ml-auto">
         <n-button @click="download">
           <Icon name="ri:download-line" class="mr-2" />
-          <span>{{ t('Download') }}</span>
+          <span>{{ t("Download") }}</span>
         </n-button>
 
-        <n-button @click="() => showPreview = true">
+        <n-button @click="() => (showPreview = true)">
           <Icon name="ri:eye-line" class="mr-2" />
-          <span>{{ t('Preview') }}</span>
+          <span>{{ t("Preview") }}</span>
         </n-button>
 
-        <n-button @click="() => showTagView = true">
+        <n-button @click="() => (showTagView = true)">
           <Icon name="ri:price-tag-3-line" class="mr-2" />
-          <span>{{ t('Tags') }}</span>
+          <span>{{ t("Tags") }}</span>
         </n-button>
+
+        <!-- <n-button v-if="lockStatus" @click="() => true == true">
+          <Icon name="ri:save-2-line" class="mr-2" />
+          <span>{{ t("Retention") }}</span>
+        </n-button>
+        <n-button v-if="lockStatus" @click="() => true == true">
+          <Icon name="ri:auction-line" class="mr-2" />
+          <span>{{ t("Legal Hold") }}</span>
+        </n-button> -->
 
         <n-button id="copyTag" ref="copyRef" @click="copySignUrl">
           <Icon name="ri:file-copy-line" class="mr-2" />
-          <span>{{ t('Copy URL') }}</span>
+          <span>{{ t("Copy URL") }}</span>
         </n-button>
-
       </div>
       <n-card :title="t('Info')" class="mt-4">
         <div v-if="loading === 'pending'" class="flex items-center justify-center">
           <n-spin size="small" />
         </div>
         <n-descriptions :column="1">
-          <n-descriptions-item :label="t('Object Name')"><span class="select-all">{{ key }}</span></n-descriptions-item>
+          <n-descriptions-item :label="t('Object Name')">
+            <span class="select-all">{{ key }}</span>
+          </n-descriptions-item>
           <n-descriptions-item :label="t('Object Size')">{{ object?.ContentLength }}</n-descriptions-item>
           <n-descriptions-item :label="t('Object Type')">{{ object?.ContentType }}</n-descriptions-item>
           <!-- <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
-          <n-descriptions-item label="ETag"><span class="select-all">{{ object?.ETag }}</span></n-descriptions-item>
+          <n-descriptions-item label="ETag">
+            <span class="select-all">{{ object?.ETag }}</span>
+          </n-descriptions-item>
           <n-descriptions-item :label="t('Last Modified Time')">{{ object?.LastModified }}</n-descriptions-item>
+
+          <!-- 合法保留 -->
+          <n-descriptions-item :label="t('Legal Hold')" v-if="lockStatus">
+            <n-switch
+              v-model:value="legalHold"
+              :loading="legalHoldLoading"
+              :round="false"
+              @update:value="handleChangeLegalStatus">
+              <template #checked>
+                {{ t("Enabled") }}
+              </template>
+              <template #unchecked>
+                {{ t("Disabled") }}
+              </template>
+            </n-switch>
+          </n-descriptions-item>
+
+          <!-- 保留 -->
+          <n-descriptions-item :label="t('Retention') + t('Policy')">compliance</n-descriptions-item>
+
           <!-- <n-descriptions-item label="版本ID">{{ object?.VersionId }}</n-descriptions-item>
           <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
           <n-descriptions-item :label="t('Temporary URL')">
             <div class="flex items-center gap-2 mt-1">
               <n-input v-model:value="signedUrl" id="signedUrl" :placeholder="t('Temporary URL')" />
-              <n-button @click="copySignUrl">{{ t('Copy') }}</n-button>
+              <n-button @click="copySignUrl">{{ t("Copy") }}</n-button>
             </div>
           </n-descriptions-item>
         </n-descriptions>
@@ -50,7 +82,12 @@
         <n-modal v-model:show="showTagView" preset="card" :title="t('Set Tags')" draggable class="max-w-screen-md">
           <n-card class="max-w-screen-md">
             <n-space class="my-4">
-              <n-tag class="m-2 align-middle" v-for="(tag, index) in tags" type="info" closable @close="handledeleteTag(index)">
+              <n-tag
+                class="m-2 align-middle"
+                v-for="(tag, index) in tags"
+                type="info"
+                closable
+                @close="handledeleteTag(index)">
                 {{ tag.Key }}:{{ tag.Value }}
               </n-tag>
             </n-space>
@@ -62,12 +99,11 @@
                 <n-input v-model:value="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
               </n-form-item>
               <n-form-item>
-                <n-button type="primary" @click="submitTagForm">{{ t('Add') }}</n-button>
-                <n-button class="mx-4" @click="showTagView = false">{{ t('Cancel') }}</n-button>
+                <n-button type="primary" @click="submitTagForm">{{ t("Add") }}</n-button>
+                <n-button class="mx-4" @click="showTagView = false">{{ t("Cancel") }}</n-button>
               </n-form-item>
             </n-form>
           </n-card>
-
         </n-modal>
       </n-card>
     </n-drawer-content>
@@ -75,55 +111,111 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
+import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
-const visibel = ref(false)
-const bucketName = ref('')
-const key = ref('')
+const visibel = ref(false);
+const bucketName = ref("");
+const key = ref("");
 
-let objectApi: any
+let objectApi: any;
 const openDrawer = (bucket: string, objName: string) => {
-  visibel.value = true
-  bucketName.value = bucket
-  key.value = objName
+  visibel.value = true;
+  bucketName.value = bucket;
+  key.value = objName;
   objectApi = useObject({ bucket: bucketName.value });
-  getTags()
-  getObject()
-}
+  getTags();
+  getObject();
+  getObjectLockConfig();
+};
 defineExpose({
-  openDrawer
-})
-
+  openDrawer,
+});
 
 const message = useMessage();
 
 // 当前路径的前缀, example: '/folder1/folder2/'
 // 预览内容
-const showPreview = ref(false)
+const showPreview = ref(false);
 //  标签
-const showTagView = ref(false)
+const showTagView = ref(false);
 const tagFormValue = ref({
-  Key: '',
-  Value: ''
-})
+  Key: "",
+  Value: "",
+});
 interface Tag {
-  Key: string
-  Value: string
+  Key: string;
+  Value: string;
 }
 // 获取tags
-const tags = ref<Tag[]>([])
+const tags = ref<Tag[]>([]);
 const getTags = async () => {
-  const { getObjectTagging } = useObject({ bucket: bucketName.value })
+  const { getObjectTagging } = useObject({ bucket: bucketName.value });
 
-  const resp: any = await getObjectTagging(key.value)
-  tags.value = resp.TagSet || []
+  const resp: any = await getObjectTagging(key.value);
+  tags.value = resp.TagSet || [];
+};
 
-}
+/****************************************************************** */
+// 获取object lock  保留与合法保留相关
+/****************************************************************** */
+// const { getObjectRetention, putObjectRetention, getObjectLegalHold, putObjectLegalHold } = useObject({
+//   bucket: bucketName.value,
+// });
+
+// 桶的object lock状态
+const lockStatus = ref(false);
+// 合法保留状态
+const legalHold = ref(false);
+const legalHoldLoading = ref(false);
+
+// 获取桶的object lock
+const getObjectLockConfig = async () => {
+  const { getObjectLockConfiguration } = useBucket({});
+  getObjectLockConfiguration(bucketName.value).then((res) => {
+    if (res.ObjectLockConfiguration?.ObjectLockEnabled) {
+      lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == "Enabled" ? true : false;
+      // 如果桶开启了object lock，则获取合法保留状态
+      if (lockStatus.value) {
+        getObjectLegalHoldFn();
+      }
+    } else {
+      lockStatus.value = false;
+    }
+  });
+};
+
+// 获取合法保留状态
+const getObjectLegalHoldFn = () => {
+  legalHoldLoading.value = true;
+  const { getObjectLegalHold } = useObject({
+    bucket: bucketName.value,
+  });
+  getObjectLegalHold(key.value)
+    .then((res) => {
+      legalHold.value = res.LegalHold?.Status == "ON" ? true : false;
+    })
+    .finally(() => {
+      legalHoldLoading.value = false;
+    });
+};
+
+const handleChangeLegalStatus = () => {
+  const { putObjectLegalHold } = useObject({
+    bucket: bucketName.value,
+  });
+  putObjectLegalHold(key.value, {
+    Status: legalHold.value ? "ON" : "OFF",
+  }).finally(() => {
+    getObjectLegalHoldFn();
+  });
+};
+
+/****************************************************************** */
 
 // 删除标签
 const handledeleteTag = async (index: number) => {
-  const { putObjectTagging } = useObject({ bucket: bucketName.value })
+  const { putObjectTagging } = useObject({ bucket: bucketName.value });
   dialog.error({
     title: t("Warning"),
     content: t("Delete Tag Confirm"),
@@ -132,72 +224,70 @@ const handledeleteTag = async (index: number) => {
     onPositiveClick: async () => {
       putObjectTagging(key.value, { TagSet: tags.value.filter((item, keyIndex) => keyIndex !== index) })
         .then(() => {
-          message.success(t("Tag Update Success"))
-          getTags()
+          message.success(t("Tag Update Success"));
+          getTags();
         })
         .catch((error) => {
-          message.error(t("Tag Delete Failed", { error: error.message }))
-        })
+          message.error(t("Tag Delete Failed", { error: error.message }));
+        });
     },
   });
-
-
-}
+};
 
 const submitTagForm = async () => {
-  const { putObjectTagging } = useObject({ bucket: bucketName.value })
+  const { putObjectTagging } = useObject({ bucket: bucketName.value });
   const tag = {
     Key: tagFormValue.value.Key,
-    Value: tagFormValue.value.Value
-  }
+    Value: tagFormValue.value.Value,
+  };
   putObjectTagging(key.value, {
-    TagSet: [...tags.value, tag]
+    TagSet: [...tags.value, tag],
   }).then(() => {
-    message.success(t('Tag Set Success'))
-    getTags()
-  })
-}
+    message.success(t("Tag Set Success"));
+    getTags();
+  });
+};
 
-const object = ref()
-const loading = ref('pending')
-const signedUrl = ref('')
+const object = ref();
+const loading = ref("pending");
+const signedUrl = ref("");
 
 const getObject = () => {
   objectApi.headObject(key.value).then(async (res: any) => {
-    object.value = res
-    loading.value = 'fulfilled'
+    object.value = res;
+    loading.value = "fulfilled";
     signedUrl.value = await objectApi.getSignedUrl(key.value);
-  })
-}
+  });
+};
 
 const refreshSignedUrl = async () => {
   try {
     signedUrl.value = await objectApi.getSignedUrl(key.value);
-    message.success(t('Get Success'));
+    message.success(t("Get Success"));
   } catch (error) {
-    message.error(t('Get Failed'));
+    message.error(t("Get Failed"));
   } finally {
   }
-}
+};
 
-import ClipboardJS from 'clipboard'
-const dialog = useDialog()
+import ClipboardJS from "clipboard";
+const dialog = useDialog();
 const copySignUrl = async () => {
   try {
     // @ts-ignore
-    ClipboardJS.copy(document.querySelector('#signedUrl'))
-    console.log('复制成功', signedUrl.value);
+    ClipboardJS.copy(document.querySelector("#signedUrl"));
+    console.log("复制成功", signedUrl.value);
   } catch (error) {
-    message.error(t('Copy Failed'))
-    console.error('复制失败', error)
+    message.error(t("Copy Failed"));
+    console.error("复制失败", error);
   }
-}
+};
 
 const download = async () => {
-  const msg = message.loading(t('Getting URL'));
-  await refreshSignedUrl()
+  const msg = message.loading(t("Getting URL"));
+  await refreshSignedUrl();
   const url = await objectApi.getSignedUrl(key.value);
   msg.destroy();
-  window.open(url, '_blank')
-}
+  window.open(url, "_blank");
+};
 </script>

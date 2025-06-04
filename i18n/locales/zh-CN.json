@@ -519,5 +519,6 @@
   "Retention Period": "保留期限",
   "Please enter retention period": "请输入保留期限",
   "Please select retention unit": "请选择保留单位",
-  "Set Retention": "设置保留"
+  "Set Retention": "设置保留",
+  "Legal Hold": "合法保留"
 }

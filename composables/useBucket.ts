@@ -17,7 +17,9 @@ import {
   PutObjectLockConfigurationCommand,
   PutObjectRetentionCommand,
   GetObjectRetentionCommand,
-  // GetBucketEncryptionCommand,
+  GetBucketEncryptionCommand,
+  PutBucketEncryptionCommand,
+  DeleteBucketEncryptionCommand,
   GetBucketLifecycleConfigurationCommand,
   PutBucketLifecycleConfigurationCommand,
   DeleteBucketLifecycleCommand,
@@ -173,6 +175,26 @@ export function useBucket({ region }: { region?: string }) {
     return await $client.send(new GetObjectRetentionCommand(params));
   };
 
+  const getBucketEncryption = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    };
+    return await $client.send(new GetBucketEncryptionCommand(params));
+  };
+  const putBucketEncryption = async (bucket: string, encryption: any) => {
+    const params = {
+      Bucket: bucket,
+      ServerSideEncryptionConfiguration: encryption,
+    };
+    return await $client.send(new PutBucketEncryptionCommand(params));
+  };
+  const deleteBucketEncryption = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    };
+    return await $client.send(new DeleteBucketEncryptionCommand(params));
+  };
+
   return {
     listBuckets,
     createBucket,
@@ -193,5 +215,8 @@ export function useBucket({ region }: { region?: string }) {
     deleteBucketLifecycle,
     putObjectRetention,
     getObjectRetention,
+    getBucketEncryption,
+    putBucketEncryption,
+    deleteBucketEncryption,
   };
 }

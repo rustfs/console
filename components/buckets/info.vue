@@ -1,24 +1,25 @@
 <template>
   <n-drawer v-model:show="visibel" :width="502">
     <n-drawer-content :title="`桶配置(${bucketName})`" closable>
-      <n-descriptions :column="1">
+      <n-descriptions :column="2" label-placement="top" bordered label-class="w-1/2">
         <n-descriptions-item>
           <template #label>
-            访问策略
+            <span>{{ t("Access Policy") }}</span>
             <n-button class="align-middle" quaternary round type="primary" @click="editPolicy">
               <Icon name="ri:edit-2-line" class="mr-2" />
             </n-button>
           </template>
           {{ policyOptions.find((item) => item.value === bucketPolicy)?.label }}
         </n-descriptions-item>
+
         <n-descriptions-item>
           <template #label>
-            加密类型
+            <span class="mr-2">{{ t("Encryption") }}</span>
             <n-button class="align-middle" quaternary round type="primary" @click="editEncript">
               <Icon name="ri:edit-2-line" class="mr-2" />
             </n-button>
           </template>
-          禁用
+          {{ t("Disabled") }}
         </n-descriptions-item>
         <!-- <n-descriptions-item>
         <template #label>
@@ -31,7 +32,7 @@
       </n-descriptions-item> -->
         <n-descriptions-item class="w-1/2">
           <template #label>
-            标签
+            {{ t("Tag") }}
             <n-button class="align-middle" round quaternary type="primary" @click="addTag">
               <Icon name="ri:add-line" size="16" class="mr-2" />
             </n-button>
@@ -48,7 +49,7 @@
         </n-descriptions-item>
 
         <n-descriptions-item>
-          <template #label>对象锁</template>
+          <template #label>{{ t("Object Lock") }}</template>
           <n-switch
             :disabled="true"
             v-model:value="lockStatus"
@@ -58,7 +59,7 @@
         </n-descriptions-item>
 
         <n-descriptions-item>
-          <template #label>版本控制</template>
+          <template #label>{{ t("Version Control") }}</template>
           <n-switch
             v-model:value="versioningStatus"
             :disabled="lockStatus == true"
@@ -68,70 +69,81 @@
             :loading="statusLoading"
             @update:value="handleChangeVersionStatus" />
         </n-descriptions-item>
+      </n-descriptions>
+
+      <!-- retention -->
+      <n-descriptions :column="2" label-placement="top" bordered label-class="w-1/2">
+        <n-descriptions-item>
+          <template #label>{{ t("Retention") }}</template>
+          <n-tag type="success" size="small" v-if="retentionEnabled" @click="editRetention">
+            {{ t("Enabled") }}
+            <template #icon>
+              <Icon name="ri:checkbox-circle-fill" />
+            </template>
+          </n-tag>
+          <n-tag type="error" size="small" v-else @click="editRetention">
+            {{ t("Disabled") }}
+            <template #icon>
+              <Icon name="ri:close-circle-fill" />
+            </template>
+          </n-tag>
+        </n-descriptions-item>
+        <n-descriptions-item>
+          <template #label>{{ t("Retention Mode") }}</template>
+          {{ t(retentionFormValue.retentionMode || "") }}
+        </n-descriptions-item>
 
         <n-descriptions-item>
-          <template #label>保留</template>
-          <n-switch
-            v-model:value="retentionEnabled"
-            :loading="objectLockLoading"
-            :round="false"
-            @update:value="handleChangeVersionStatus" />
-          <n-space v-if="retentionEnabled">
-            <div v-if="retentionEnabled" class="flex flex-col gap-4">
-              <div v-if="retentionEnabled">
-                <div class="flex items-center justify-between">
-                  <n-space>{{ t("Retention Mode") }}:</n-space>
-                  <n-radio-group v-model:value="retentionMode">
-                    <n-radio value="COMPLIANCE">Compliance</n-radio>
-                    <n-radio value="GOVERNANCE">Governance</n-radio>
-                  </n-radio-group>
-                </div>
-                <div class="flex items-center justify-between gap-4">
-                  <n-space class="w-24">{{ t("Validity") }}*</n-space>
-                  <n-input-group class="justify-end">
-                    <n-input-number v-model:value="retentionPeriod" :min="1" />
-                    <n-select v-model:value="retentionUnit" :options="retentionUnitOptions" class="w-16" />
-                  </n-input-group>
-                </div>
-              </div>
-            </div>
-          </n-space>
+          <template #label>{{ t("Retention Unit") }}</template>
+          {{ t(retentionFormValue.retentionUnit || "") }}
+        </n-descriptions-item>
+        <n-descriptions-item>
+          <template #label>{{ t("Retention Period") }}</template>
+          {{ retentionFormValue.retentionPeriod || "" }}
         </n-descriptions-item>
       </n-descriptions>
     </n-drawer-content>
 
     <!-- policy -->
-    <n-modal v-model:show="showPolicyModal" title="设置策略" preset="card" draggable :style="{ width: '750px' }">
+    <n-modal
+      v-model:show="showPolicyModal"
+      :title="t('Set Policy')"
+      preset="card"
+      draggable
+      :style="{ width: '750px' }">
       <n-form
         ref="policyFormRef"
         :inline="policyFormValue.policy !== 'custom'"
         :label-width="80"
         :model="policyFormValue">
-        <n-form-item label="策略" path="" class="flex-auto">
-          <n-select v-model:value="policyFormValue.policy" placeholder="请选择策略" :options="policyOptions" />
+        <n-form-item :label="t('Policy')" path="" class="flex-auto">
+          <n-select
+            v-model:value="policyFormValue.policy"
+            :placeholder="t('Please select policy')"
+            :options="policyOptions" />
         </n-form-item>
-        <n-form-item :span="24" v-if="policyFormValue.policy == 'custom'" label="策略原文" path="content">
+        <n-form-item :span="24" v-if="policyFormValue.policy == 'custom'" :label="t('Policy Content')" path="content">
           <n-scrollbar class="w-full max-h-[60vh]"><json-editor v-model="policyFormValue.content" /></n-scrollbar>
         </n-form-item>
         <n-form-item>
-          <n-button type="primary" @click="submitPolicyForm">确认</n-button>
-          <n-button class="mx-4" @click="showPolicyModal = false">取消</n-button>
+          <n-button type="primary" @click="submitPolicyForm">{{ t("Confirm") }}</n-button>
+          <n-button class="mx-4" @click="showPolicyModal = false">{{ t("Cancel") }}</n-button>
         </n-form-item>
       </n-form>
     </n-modal>
 
     <!-- tag -->
-    <n-modal v-model:show="showTagModal" title="设置tag" preset="card" draggable :style="{ width: '550px' }">
+    <n-modal v-model:show="showTagModal" :title="t('Set Tag')" preset="card" draggable :style="{ width: '550px' }">
       <n-form ref="formRef" inline :label-width="80" :model="tagFormValue">
-        <n-form-item label="标签key" path="name">
+        <n-form-item :label="t('Tag Key')" path="name">
           <n-input v-model:value="tagFormValue.name" placeholder="输入标签key" />
         </n-form-item>
-        <n-form-item label="标签值" path="value">
-          <n-input v-model:value="tagFormValue.value" placeholder="输入标签值" />
+        <n-form-item :label="t('Tag Value')" path="value">
+          <n-input v-model:value="tagFormValue.value" :placeholder="t('Please enter tag value')" />
         </n-form-item>
         <n-form-item>
-          <n-button type="primary" @click="submitTagForm">确认</n-button>
-          <n-button class="mx-4" @click="showTagModal = false">取消</n-button>
+          <n-button type="primary" @click="submitTagForm">{{ t("Confirm") }}</n-button>
+          <n-button class="mx-4" @click="showTagModal = false">{{ t("Cancel") }}</n-button>
         </n-form-item>
       </n-form>
     </n-modal>
@@ -139,21 +151,57 @@
     <!-- Encrypt -->
     <n-modal
       v-model:show="showEncryptModal"
-      title="启用存储空间加密"
+      :title="t('Enable Storage Encryption')"
       preset="card"
       draggable
       :style="{ width: '550px' }">
       <n-form ref="encryptFormRef" label-placemen="left" label-width="auto" inline :model="encryptFormValue">
-        <n-form-item label="加密类型" path="encrypt" class="flex-auto">
-          <n-select v-model:value="encryptFormValue.encrypt" placeholder="请选择加密类型" :options="encryptOptions" />
+        <n-form-item :label="t('Encryption Type')" path="encrypt" class="flex-auto">
+          <n-select
+            v-model:value="encryptFormValue.encrypt"
+            :placeholder="t('Please select encryption type')"
+            :options="encryptOptions" />
         </n-form-item>
         <n-form-item v-if="encryptFormValue.encrypt == 'SSE-KMS'" label="KMS Key ID" path="kmsKeyId" class="flex-auto">
           <n-select v-model:value="encryptFormValue.kmsKeyId" placeholder="" :options="[]" />
         </n-form-item>
 
         <n-form-item>
-          <n-button type="primary" @click="submitEncryptForm">确认</n-button>
-          <n-button class="mx-4" @click="showEncryptModal = false">取消</n-button>
+          <n-button type="primary" @click="submitEncryptForm">{{ t("Confirm") }}</n-button>
+          <n-button class="mx-4" @click="showEncryptModal = false">{{ t("Cancel") }}</n-button>
+        </n-form-item>
+      </n-form>
+    </n-modal>
+
+    <!-- retention -->
+    <n-modal
+      v-model:show="showRetentionModal"
+      :title="t('Set Retention')"
+      preset="card"
+      draggable
+      :style="{ width: '550px' }">
+      <n-form ref="retentionFormRef" label-placemen="left" label-width="auto" :model="retentionFormValue">
+        <n-form-item :label="t('Retention Mode')" path="retentionMode" class="flex-auto">
+          <n-radio-group v-model:value="retentionFormValue.retentionMode">
+            <n-radio value="COMPLIANCE">Compliance</n-radio>
+            <n-radio value="GOVERNANCE">Governance</n-radio>
+          </n-radio-group>
+        </n-form-item>
+
+        <n-form-item :label="t('Retention Unit')" path="retentionUnit" class="flex-auto">
+          <n-radio-group v-model:value="retentionFormValue.retentionUnit">
+            <n-radio value="Days">{{ t("DAYS") }}</n-radio>
+            <n-radio value="Years">{{ t("YEARS") }}</n-radio>
+          </n-radio-group>
+        </n-form-item>
+
+        <n-form-item :label="t('Retention Period')" path="retentionPeriod" class="flex-auto">
+          <n-input-number v-model:value="retentionFormValue.retentionPeriod" />
+        </n-form-item>
+
+        <n-form-item>
+          <n-button type="primary" @click="submitRetentionForm">{{ t("Confirm") }}</n-button>
+          <n-button class="mx-4" @click="showRetentionModal = false">{{ t("Cancel") }}</n-button>
         </n-form-item>
       </n-form>
     </n-modal>
@@ -161,7 +209,7 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
+import { Icon } from "#components";
 const { t } = useI18n();
 const dialog = useDialog();
 const visibel = ref(false);
@@ -180,13 +228,9 @@ const getData = async () => {
   await getTags();
   await getVersioningStatus();
   await getObjectLockConfig();
+  // await getBucketEncryptionFn();
   await getbucketPolicy();
 };
-
-const retentionUnitOptions = [
-  { label: t("Day"), value: "DAYS" },
-  { label: t("Year"), value: "YEARS" },
-];
 
 const message = useMessage();
 const {
@@ -199,15 +243,15 @@ const {
   putBucketPolicy,
   getObjectLockConfiguration,
   putObjectLockConfiguration,
+  getBucketEncryption,
+  putBucketEncryption,
+  deleteBucketEncryption,
 } = useBucket({});
 
 /**********object lock ***********************/
 const lockStatus = ref(false);
 const objectLockLoading = ref(false);
 const retentionEnabled = ref(false);
-const retentionMode = ref("COMPLIANCE");
-const retentionPeriod = ref(180);
-const retentionUnit = ref("DAYS");
 
 const getObjectLockConfig = async () => {
   objectLockLoading.value = true;
@@ -215,17 +259,25 @@ const getObjectLockConfig = async () => {
     .then((res) => {
       if (res.ObjectLockConfiguration?.ObjectLockEnabled) {
         lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == "Enabled" ? true : false;
-        console.log(res.ObjectLockConfiguration?.Rule);
         if (res.ObjectLockConfiguration?.Rule) {
-          console.log(1111);
           retentionEnabled.value = true;
-          retentionMode.value = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Mode || "COMPLIANCE";
-          retentionPeriod.value = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days || 180;
-          retentionUnit.value = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years ? "YEARS" : "DAYS";
+          retentionFormValue.value.retentionMode = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Mode || null;
+          retentionFormValue.value.retentionPeriod =
+            res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days ||
+            res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years ||
+            null;
+          retentionFormValue.value.retentionUnit = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years
+            ? "Years"
+            : res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days
+            ? "Days"
+            : "";
         }
       } else {
         lockStatus.value = false;
         retentionEnabled.value = false;
+        retentionFormValue.value.retentionMode = null;
+        retentionFormValue.value.retentionPeriod = null;
+        retentionFormValue.value.retentionUnit = null;
       }
     })
     .finally(() => {
@@ -297,15 +349,15 @@ const submitPolicyForm = () => {
 };
 const policyOptions = [
   {
-    label: "公有",
+    label: t("Public"),
     value: "public",
   },
   {
-    label: "私有",
+    label: t("Private"),
     value: "private",
   },
   {
-    label: "自定义",
+    label: t("Custom"),
     value: "custom",
   },
 ];
@@ -321,7 +373,7 @@ const encryptFormValue = ref({
 
 const encryptOptions = [
   {
-    label: "禁用",
+    label: t("Disabled"),
     value: "disabled",
   },
   {
@@ -334,6 +386,10 @@ const encryptOptions = [
   },
 ];
 
+const getBucketEncryptionFn = async () => {
+  const res = await getBucketEncryption(bucketName.value);
+  console.log(res);
+};
 const editEncript = () => {
   showEncryptModal.value = true;
 };
@@ -341,6 +397,26 @@ const submitEncryptForm = () => {
   // 处理表单提交逻辑
   // console.log("提交表单数据:", encryptFormValue.value)
   // showEncryptModal.value = false
+  // if (encryptFormValue.value.encrypt == "disabled") {
+  //   deleteBucketEncryption(bucketName.value).then(() => {
+  //     message.success("修改成功");
+  //     showEncryptModal.value = false;
+  //   });
+  // } else {
+  //   putBucketEncryption(bucketName.value, {
+  //     Rules: [
+  //       {
+  //         ServerSideEncryptionByDefault: {
+  //           SSEAlgorithm: encryptFormValue.value.encrypt,
+  //           KMSMasterKeyID: encryptFormValue.value.encrypt == "SSE-KMS" ? encryptFormValue.value.kmsKeyId : "",
+  //         },
+  //       },
+  //     ],
+  //   }).then(() => {
+  //     message.success("修改成功");
+  //     showEncryptModal.value = false;
+  //   });
+  // }
   if (encryptFormValue.value.encrypt == "SSE-KMS") {
     message.error("您提供的 XML 格式不正确，或者未根据我们发布的架构进行验证。 (MasterKeyID 未找到 aws:kms)。");
   } else if (encryptFormValue.value.encrypt == "SSE-S3") {
@@ -459,6 +535,51 @@ const handledeleteTag = (index: number) => {
   });
 };
 /********tag ***********************/
-</script>
 
-<style lang="scss" scoped></style>
+/********retention ***********************/
+interface RetentionFormValue {
+  retentionMode: string | null;
+  retentionPeriod: number | null;
+  retentionUnit: string | null;
+}
+
+const showRetentionModal = ref(false);
+const retentionFormValue = ref<RetentionFormValue>({
+  retentionMode: null,
+  retentionPeriod: null,
+  retentionUnit: null,
+});
+
+const editRetention = () => {
+  showRetentionModal.value = true;
+};
+
+const submitRetentionForm = () => {
+  console.log(retentionFormValue.value);
+  if (
+    retentionFormValue.value.retentionMode == null ||
+    retentionFormValue.value.retentionPeriod == null ||
+    retentionFormValue.value.retentionUnit == null
+  ) {
+    message.error("请填写完整的保留信息");
+    return;
+  }
+
+  putObjectLockConfiguration(bucketName.value, {
+    ObjectLockEnabled: "Enabled",
+    Rule: {
+      DefaultRetention: {
+        Mode: retentionFormValue.value.retentionMode,
+        Days: retentionFormValue.value.retentionUnit == "Days" ? retentionFormValue.value.retentionPeriod : null,
+        Years: retentionFormValue.value.retentionUnit == "Years" ? retentionFormValue.value.retentionPeriod : null,
+      },
+    },
+  }).then(() => {
+    message.success("修改成功");
+    showRetentionModal.value = false;
+    getObjectLockConfig();
+  });
+};
+
+/********retention ***********************/
+</script>

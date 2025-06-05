@@ -17,14 +17,10 @@
           <span>{{ t("Tags") }}</span>
         </n-button>
 
-        <!-- <n-button v-if="lockStatus" @click="() => true == true">
+        <n-button v-if="lockStatus" @click="() => (showRetentionView = true)">
           <Icon name="ri:save-2-line" class="mr-2" />
           <span>{{ t("Retention") }}</span>
         </n-button>
-        <n-button v-if="lockStatus" @click="() => true == true">
-          <Icon name="ri:auction-line" class="mr-2" />
-          <span>{{ t("Legal Hold") }}</span>
-        </n-button> -->
 
         <n-button id="copyTag" ref="copyRef" @click="copySignUrl">
           <Icon name="ri:file-copy-line" class="mr-2" />
@@ -64,7 +60,14 @@
           </n-descriptions-item>
 
           <!-- 保留 -->
-          <n-descriptions-item :label="t('Retention') + t('Policy')">compliance</n-descriptions-item>
+          <n-descriptions-item :label="t('Retention') + t('Policy')">
+            <n-space>
+              <span>{{ t("Retention Type") + ": " + retentionMode }}</span>
+            </n-space>
+            <n-space>
+              <span>{{ t("Retention RetainUntilDate") + ": " + retainUntilDate }}</span>
+            </n-space>
+          </n-descriptions-item>
 
           <!-- <n-descriptions-item label="版本ID">{{ object?.VersionId }}</n-descriptions-item>
           <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
@@ -105,6 +108,42 @@
             </n-form>
           </n-card>
         </n-modal>
+
+        <n-modal
+          v-model:show="showRetentionView"
+          preset="card"
+          :title="t('Retention') + t('Policy')"
+          class="max-w-screen-md">
+          <n-card class="flex-col justify-center items-center">
+            <n-form
+              ref="retentionFormRef"
+              :label-width="200"
+              label-placement="left"
+              label-align="left"
+              class="w-[500px]">
+              <n-form-item :label="t('Retention Mode')" path="retentionMode" class="flex-auto">
+                <n-radio-group v-model:value="retentionMode">
+                  <n-radio value="COMPLIANCE">Compliance</n-radio>
+                  <n-radio value="GOVERNANCE">Governance</n-radio>
+                </n-radio-group>
+              </n-form-item>
+
+              <n-form-item :label="t('Retention RetainUntilDate')" path="retainUntilDate" class="flex-auto">
+                <n-date-picker
+                  v-model:formatted-value="retainUntilDate"
+                  value-format="yyyy-MM-dd HH:mm:ss"
+                  type="datetime"
+                  clearable />
+              </n-form-item>
+
+              <n-form-item>
+                <n-button type="primary" @click="submitRetention">{{ t("Confirm") }}</n-button>
+                <n-button class="mx-4" @click="resetRetention">{{ t("Reset") }}</n-button>
+                <n-button @click="showRetentionView = false">{{ t("Cancel") }}</n-button>
+              </n-form-item>
+            </n-form>
+          </n-card>
+        </n-modal>
       </n-card>
     </n-drawer-content>
   </n-drawer>
@@ -112,6 +151,7 @@
 
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import dayjs from "dayjs";
 
 const { t } = useI18n();
 const visibel = ref(false);
@@ -178,6 +218,7 @@ const getObjectLockConfig = async () => {
       // 如果桶开启了object lock，则获取合法保留状态
       if (lockStatus.value) {
         getObjectLegalHoldFn();
+        getObjectRetentionFn();
       }
     } else {
       lockStatus.value = false;
@@ -211,7 +252,59 @@ const handleChangeLegalStatus = () => {
   });
 };
 
-/****************************************************************** */
+/**======================================================= */
+// 保留相关
+const retentionFormRef = ref();
+
+const retentionMode = ref<string | null>(null);
+const retainUntilDate = ref<string | null>(null);
+console.log("🚀 ~ retainUntilDate:", retainUntilDate.value);
+
+const retentionLoading = ref(false);
+const showRetentionView = ref(false);
+// 获取保留状态
+const getObjectRetentionFn = () => {
+  const { getObjectRetention } = useObject({
+    bucket: bucketName.value,
+  });
+  getObjectRetention(key.value).then((res) => {
+    if (res.Retention) {
+      retentionMode.value = res.Retention.Mode || "";
+      retainUntilDate.value = res.Retention.RetainUntilDate
+        ? dayjs(res.Retention.RetainUntilDate).format("YYYY-MM-DD HH:mm:ss")
+        : null;
+    } else {
+      retentionMode.value = "";
+    }
+  });
+};
+
+const submitRetention = () => {
+  retentionLoading.value = true;
+
+  const { putObjectRetention } = useObject({
+    bucket: bucketName.value,
+  });
+  putObjectRetention(key.value, {
+    Mode: retentionMode.value,
+    RetainUntilDate: retainUntilDate.value ? new Date(retainUntilDate.value) : null,
+  })
+    .then(() => {
+      message.success(t("Retention Update Success"));
+      getObjectRetentionFn();
+    })
+    .finally(() => {
+      retentionLoading.value = false;
+      showRetentionView.value = false;
+    });
+};
+
+const resetRetention = () => {
+  retentionMode.value = null;
+  retainUntilDate.value = null;
+};
+
+/**======================================================= */
 
 // 删除标签
 const handledeleteTag = async (index: number) => {

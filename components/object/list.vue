@@ -38,10 +38,24 @@
       </div>
     </template>
   </n-page-header>
-  <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredObjects" :row-key="rowKey" @update:checked-row-keys="handleCheck"
-    :pagination="false" :bordered="false" />
-  <object-upload-picker :show="uploadPickerVisible" @update:show="(val: any) => (uploadPickerVisible = val && refresh())" :bucketName="bucketName" :prefix="prefix" />
-  <object-new-form :show="newObjectFormVisible" :asPrefix="newObjectAsPrefix" @update:show="(val: any) => (newObjectFormVisible = val && refresh())" :bucketName="bucketName"
+  <n-data-table
+    class="border dark:border-neutral-700 rounded overflow-hidden"
+    :columns="columns"
+    :data="filteredObjects"
+    :row-key="rowKey"
+    @update:checked-row-keys="handleCheck"
+    :pagination="false"
+    :bordered="false" />
+  <object-upload-picker
+    :show="uploadPickerVisible"
+    @update:show="(val: any) => (uploadPickerVisible = val && refresh())"
+    :bucketName="bucketName"
+    :prefix="prefix" />
+  <object-new-form
+    :show="newObjectFormVisible"
+    :asPrefix="newObjectAsPrefix"
+    @update:show="(val: any) => (newObjectFormVisible = val && refresh())"
+    :bucketName="bucketName"
     :prefix="prefix" />
   <n-button-group class="ml-auto">
     <n-button @click="goToPreviousPage" :disabled="!continuationToken">
@@ -58,15 +72,15 @@
 
 <script setup lang="ts">
 const { $s3Client } = useNuxtApp();
-import { useAsyncData, useRoute, useRouter } from "#app"
-import { NuxtLink } from "#components"
-import { ListObjectsV2Command, type _Object, type CommonPrefix } from "@aws-sdk/client-s3"
-import dayjs from "dayjs"
-import type { DataTableColumns, DataTableRowKey } from 'naive-ui'
-import { joinRelativeURL } from "ufo"
-import { computed, ref, watch, type VNode } from "vue"
-import { useDeleteTaskManagerStore } from "~/store/delete-tasks"
-import { useUploadTaskManagerStore } from "~/store/upload-tasks"
+import { useAsyncData, useRoute, useRouter } from "#app";
+import { NuxtLink } from "#components";
+import { ListObjectsV2Command, type _Object, type CommonPrefix } from "@aws-sdk/client-s3";
+import dayjs from "dayjs";
+import type { DataTableColumns, DataTableRowKey } from "naive-ui";
+import { joinRelativeURL } from "ufo";
+import { computed, ref, watch, type VNode } from "vue";
+import { useDeleteTaskManagerStore } from "~/store/delete-tasks";
+import { useUploadTaskManagerStore } from "~/store/upload-tasks";
 
 const route = useRoute();
 const router = useRouter();
@@ -77,7 +91,7 @@ const props = defineProps<{ bucket: string; path: string }>();
 const uploadPickerVisible = ref(false);
 const newObjectFormVisible = ref(false);
 const newObjectAsPrefix = ref(false);
-const searchTerm = ref('');
+const searchTerm = ref("");
 
 // Add debounce function for search
 const debounce = (fn: Function, delay: number) => {
@@ -107,8 +121,16 @@ const deleteTaskStore = useDeleteTaskManagerStore();
 const deleteTasks = computed(() => deleteTaskStore.tasks);
 
 // 当任务变化时，刷新数据
-watch(() => uploadTasks, () => setTimeout(refresh, 500), { deep: true });
-watch(() => deleteTasks, () => setTimeout(refresh, 500), { deep: true });
+watch(
+  () => uploadTasks,
+  () => setTimeout(refresh, 500),
+  { deep: true }
+);
+watch(
+  () => deleteTasks,
+  () => setTimeout(refresh, 500),
+  { deep: true }
+);
 
 // bucketName
 const bucketName = computed(() => props.bucket as string);
@@ -139,7 +161,6 @@ interface RowData {
   type: "prefix" | "object";
   Size: number;
   LastModified: string;
-
 }
 
 const infoRef = ref();
@@ -159,13 +180,19 @@ const columns: DataTableColumns<RowData> = [
       }
 
       const keyInUri = row.Key;
-      return h(NuxtLink, {
-        href: row.type === "prefix" ? bucketPath(keyInUri) : '', class: "block text-cyan-400 cursor-pointer", onClick: (e: MouseEvent) => {
-          if (row.type === "prefix") return
-          infoRef.value.openDrawer(bucketName.value, row.Key)
-          return
-        }
-      }, () => label);
+      return h(
+        NuxtLink,
+        {
+          href: row.type === "prefix" ? bucketPath(keyInUri) : "",
+          class: "block text-cyan-400 cursor-pointer",
+          onClick: (e: MouseEvent) => {
+            if (row.type === "prefix") return;
+            infoRef.value.openDrawer(bucketName.value, row.Key);
+            return;
+          },
+        },
+        () => label
+      );
     },
   },
   { key: "Size", title: "大小", render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },
@@ -173,7 +200,7 @@ const columns: DataTableColumns<RowData> = [
     key: "LastModified",
     title: "更新时间",
     render: (row: { LastModified: string }) => {
-      return row.LastModified ? dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss') : "";
+      return row.LastModified ? dayjs(row.LastModified).format("YYYY-MM-DD HH:mm:ss") : "";
     },
   },
 ];
@@ -185,14 +212,14 @@ interface ListObjectsResponse {
   isTruncated: boolean;
 }
 const randomString = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
   for (let i = 0; i < 8; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return result;
 };
-const salt = ref(randomString())
+const salt = ref(randomString());
 // 在服务端获取数据
 const { data, refresh } = await useAsyncData<ListObjectsResponse>(
   `objectsData-${salt.value}&${prefix.value}&${pageSize.value}&${continuationToken.value}`,
@@ -256,7 +283,7 @@ const filteredObjects = computed(() => {
   }
 
   const term = searchTerm.value.toLowerCase();
-  return objects.value.filter(obj => {
+  return objects.value.filter((obj) => {
     const displayKey = prefix.value ? obj.Key?.substring(prefix.value.length) : obj.Key;
     return displayKey?.toLowerCase().includes(term);
   });
@@ -287,20 +314,22 @@ function handleBatchDelete() {
         return;
       }
       try {
-        await Promise.all(checkedKeys.value.map(async (item) => {
-          const findOne = objects.value.find((obj) => obj.Key === item);
-          // 目录删除
-          // 递归查询目录下的所有文件，然后删除
-          if (findOne?.type === "prefix" && findOne?.Key) {
-            return await objectApi.mapAllFiles(bucketName.value, findOne.Key, (fileKey: string) => {
-              deleteTaskStore.addKeys([fileKey], bucketName.value);
-            });
-          }
+        await Promise.all(
+          checkedKeys.value.map(async (item) => {
+            const findOne = objects.value.find((obj) => obj.Key === item);
+            // 目录删除
+            // 递归查询目录下的所有文件，然后删除
+            if (findOne?.type === "prefix" && findOne?.Key) {
+              return await objectApi.mapAllFiles(bucketName.value, findOne.Key, (fileKey: string) => {
+                deleteTaskStore.addKeys([fileKey], bucketName.value);
+              });
+            }
 
-          return deleteTaskStore.addKeys([String(item)], bucketName.value);
-        }));
+            return deleteTaskStore.addKeys([String(item)], bucketName.value);
+          })
+        );
         message.success("删除中");
-        salt.value = randomString()
+        salt.value = randomString();
         refresh();
       } catch (error) {
         message.error("删除失败");

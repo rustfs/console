@@ -328,5 +328,10 @@
   "Please enter retention period": "Please enter retention period",
   "Please select retention unit": "Please select retention unit",
   "Set Retention": "Set Retention",
-  "Legal Hold": "Legal Hold"
+  "Legal Hold": "Legal Hold",
+  "Retention RetainUntilDate": "Retention RetainUntilDate",
+  "Retention Update Success": "Retention Update Success",
+  "Retention Update Failed": "Retention Update Failed",
+  "Retention RetainUntilDate Placeholder": "Retention RetainUntilDate Placeholder",
+  "Retention RetainUntilDate Clear": "Retention RetainUntilDate Clear"
 }

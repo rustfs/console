@@ -22,11 +22,11 @@
         </div>
         <div class="flex items-center justify-between gap-4">
           <n-space class="w-24">{{ t("Version") }}:</n-space>
-          <n-switch v-model:value="version" @change="handleVersionChange" />
+          <n-switch v-model:value="version" @update:value="handleVersionChange" />
         </div>
         <div class="flex items-center justify-between gap-4">
           <n-space class="w-24">{{ t("Object Lock") }}:</n-space>
-          <n-switch v-model:value="objectLock" @change="handleObjectLock" />
+          <n-switch v-model:value="objectLock" @update:value="handleObjectLock" />
         </div>
 
         <!-- Retention 配置区块，仅对象锁开启时显示 -->

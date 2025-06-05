@@ -131,13 +131,25 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
       Key: key,
     };
 
-    return await $client.send(new GetObjectRetentionCommand(params));
+    try {
+      const response = await $client.send(new GetObjectRetentionCommand(params));
+      if (!response || !response.Retention || Object.keys(response.Retention).length === 0) {
+        return { Retention: null };
+      }
+      return response;
+    } catch (error: any) {
+      if (error.message?.includes("Deserialization error")) {
+        return { Retention: null };
+      }
+      throw error;
+    }
   }
 
   async function putObjectRetention(key: string, retention: any) {
     const params = {
       Bucket: bucket,
       Key: key,
+      Retention: retention,
     };
     return await $client.send(new PutObjectRetentionCommand(params));
   }
@@ -147,7 +159,6 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
       Bucket: bucket,
       Key: key,
     };
-    console.log("🚀 ~ getObjectLegalHold ~ params:", params);
 
     return await $client.send(new GetObjectLegalHoldCommand(params));
   }

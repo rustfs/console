@@ -204,7 +204,7 @@
   "Last Modified": "更新时间",
   "Ellipsis": "...",
   "Object Details": "对象详情",
-  "Copy URL": "复制临时链接",
+  "Copy URL": "复制链接",
   "Delete Confirm": "删除对象 {key} ?",
   "Info": "对象信息",
   "Object Name": "对象名称",
@@ -520,5 +520,10 @@
   "Please enter retention period": "请输入保留期限",
   "Please select retention unit": "请选择保留单位",
   "Set Retention": "设置保留",
-  "Legal Hold": "合法保留"
+  "Legal Hold": "合法保留",
+  "Retention RetainUntilDate": "保留至日期",
+  "Retention Update Success": "保留更新成功",
+  "Retention Update Failed": "保留更新失败",
+  "Retention RetainUntilDate Placeholder": "请输入保留至日期",
+  "Retention RetainUntilDate Clear": "清除保留至日期"
 }

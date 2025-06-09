@@ -525,5 +525,6 @@
   "Retention Update Success": "保留更新成功",
   "Retention Update Failed": "保留更新失败",
   "Retention RetainUntilDate Placeholder": "请输入保留至日期",
-  "Retention RetainUntilDate Clear": "清除保留至日期"
+  "Retention RetainUntilDate Clear": "清除保留至日期",
+  "None": "未设置"
 }

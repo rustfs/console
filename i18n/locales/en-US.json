@@ -333,5 +333,6 @@
   "Retention Update Success": "Retention Update Success",
   "Retention Update Failed": "Retention Update Failed",
   "Retention RetainUntilDate Placeholder": "Retention RetainUntilDate Placeholder",
-  "Retention RetainUntilDate Clear": "Retention RetainUntilDate Clear"
+  "Retention RetainUntilDate Clear": "Retention RetainUntilDate Clear",
+  "None": "None"
 }

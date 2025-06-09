@@ -44,8 +44,10 @@
           <n-descriptions-item :label="t('Last Modified Time')">{{ object?.LastModified }}</n-descriptions-item>
 
           <!-- 合法保留 -->
-          <n-descriptions-item :label="t('Legal Hold')" v-if="lockStatus">
+          <n-descriptions-item :label="t('Legal Hold')">
             <n-switch
+              class="mt-1"
+              v-if="lockStatus"
               v-model:value="legalHold"
               :loading="legalHoldLoading"
               :round="false"
@@ -57,14 +59,20 @@
                 {{ t("Disabled") }}
               </template>
             </n-switch>
+            <n-tag type="error" size="small" v-else class="mt-2">
+              {{ t("Disabled") }}
+              <template #icon>
+                <Icon name="ri:close-circle-fill" />
+              </template>
+            </n-tag>
           </n-descriptions-item>
 
           <!-- 保留 -->
           <n-descriptions-item :label="t('Retention') + t('Policy')">
             <n-space>
-              <span>{{ t("Retention Type") + ": " + retentionMode }}</span>
+              <span>{{ t("Retention Mode") + ": " + (retentionMode ? retentionMode : t("None")) }}</span>
             </n-space>
-            <n-space>
+            <n-space v-if="retainUntilDate">
               <span>{{ t("Retention RetainUntilDate") + ": " + retainUntilDate }}</span>
             </n-space>
           </n-descriptions-item>

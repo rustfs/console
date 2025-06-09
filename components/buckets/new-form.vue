@@ -39,8 +39,8 @@
             <div class="flex items-center justify-between gap-4">
               <n-space class="w-24">{{ t("Retention Mode") }}:</n-space>
               <n-radio-group v-model:value="retentionMode">
-                <n-radio value="COMPLIANCE">Compliance</n-radio>
-                <n-radio value="GOVERNANCE">Governance</n-radio>
+                <n-radio value="COMPLIANCE">{{ t("COMPLIANCE") }}</n-radio>
+                <n-radio value="GOVERNANCE">{{ t("GOVERNANCE") }}</n-radio>
               </n-radio-group>
             </div>
             <div class="flex items-center justify-between gap-4">

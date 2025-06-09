@@ -183,8 +183,8 @@
       <n-form ref="retentionFormRef" label-placemen="left" label-width="auto" :model="retentionFormValue">
         <n-form-item :label="t('Retention Mode')" path="retentionMode" class="flex-auto">
           <n-radio-group v-model:value="retentionFormValue.retentionMode">
-            <n-radio value="COMPLIANCE">Compliance</n-radio>
-            <n-radio value="GOVERNANCE">Governance</n-radio>
+            <n-radio value="COMPLIANCE">{{ t("COMPLIANCE") }}</n-radio>
+            <n-radio value="GOVERNANCE">{{ t("GOVERNANCE") }}</n-radio>
           </n-radio-group>
         </n-form-item>
 

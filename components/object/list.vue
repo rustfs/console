@@ -314,20 +314,66 @@ function handleBatchDelete() {
         return;
       }
       try {
+        const protectedKeys: string[] = [];
+        const deletableKeys: string[] = [];
+
+        // 检查每个对象的保留和合法保留状态
         await Promise.all(
           checkedKeys.value.map(async (item) => {
             const findOne = objects.value.find((obj) => obj.Key === item);
-            // 目录删除
-            // 递归查询目录下的所有文件，然后删除
-            if (findOne?.type === "prefix" && findOne?.Key) {
-              return await objectApi.mapAllFiles(bucketName.value, findOne.Key, (fileKey: string) => {
-                deleteTaskStore.addKeys([fileKey], bucketName.value);
+            // 只检查文件，目录递归时再处理
+            if (findOne?.type === "object") {
+              const [retentionRes, legalHoldRes] = await Promise.all([
+                objectApi.getObjectRetention(item as string),
+                objectApi.getObjectLegalHold(item as string),
+              ]);
+              // 判断合法保留
+              const legalHoldOn = legalHoldRes?.LegalHold?.Status === "ON";
+              // 判断保留（retention）
+              let retentionOn = false;
+              if (retentionRes?.Retention?.RetainUntilDate) {
+                const now = new Date();
+                const until = new Date(retentionRes.Retention.RetainUntilDate);
+                retentionOn = until > now;
+              }
+              if (legalHoldOn || retentionOn) {
+                protectedKeys.push(item as string);
+                return;
+              }
+              deletableKeys.push(item as string);
+            } else if (findOne?.type === "prefix" && findOne?.Key) {
+              // 目录递归下的每个文件都要检查
+              await objectApi.mapAllFiles(bucketName.value, findOne.Key, async (fileKey: string) => {
+                const [retentionRes, legalHoldRes] = await Promise.all([
+                  objectApi.getObjectRetention(fileKey),
+                  objectApi.getObjectLegalHold(fileKey),
+                ]);
+                const legalHoldOn = legalHoldRes?.LegalHold?.Status === "ON";
+                let retentionOn = false;
+                if (retentionRes?.Retention?.RetainUntilDate) {
+                  const now = new Date();
+                  const until = new Date(retentionRes.Retention.RetainUntilDate);
+                  retentionOn = until > now;
+                }
+                if (legalHoldOn || retentionOn) {
+                  protectedKeys.push(fileKey);
+                } else {
+                  deletableKeys.push(fileKey);
+                }
               });
             }
-
-            return deleteTaskStore.addKeys([String(item)], bucketName.value);
           })
         );
+
+        if (protectedKeys.length) {
+          message.error(`以下对象设置了保留或合法保留，无法删除：\n${protectedKeys.join("\n")}`);
+        }
+        if (!deletableKeys.length) {
+          return;
+        }
+
+        // 执行删除
+        await Promise.all(deletableKeys.map((item) => deleteTaskStore.addKeys([String(item)], bucketName.value)));
         message.success("删除中");
         salt.value = randomString();
         refresh();
@@ -338,11 +384,11 @@ function handleBatchDelete() {
   });
 }
 
-// 为了实现 “Previous” 功能，需要记录访问过的 token 列表。
+// 为了实现 "Previous" 功能，需要记录访问过的 token 列表。
 // 因为我们是通过路由导航，每次下一页时会改变 URL，从而 SSR 获取新数据。
 // 当访问过的 token 会体现在浏览器历史记录中。
 // 在这种设计中，每次点击 Next/Previous 都会换 URL，并生成新 SSR 页面。
-// 因此“上一页”可以通过浏览器后退实现，也可以在数据中保存 token 来人工实现。
+// 因此"上一页"可以通过浏览器后退实现，也可以在数据中保存 token 来人工实现。
 // 这里演示一个简化版本——在客户端保存 tokenHistory。
 // 请注意：刷新后 tokenHistory 会丢失，因为它是前端状态。
 const tokenHistory = ref<string[]>([]);

@@ -334,5 +334,8 @@
   "Retention Update Failed": "Retention Update Failed",
   "Retention RetainUntilDate Placeholder": "Retention RetainUntilDate Placeholder",
   "Retention RetainUntilDate Clear": "Retention RetainUntilDate Clear",
-  "None": "None"
+  "None": "None",
+  "Event Destinations": "Event Destinations",
+  "Bucket Setting": "Bucket Setting",
+  "Add Event Destination": "Add Event Destination"
 }

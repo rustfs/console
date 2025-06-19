@@ -1,90 +1,104 @@
 <script lang="ts" setup>
-import { useI18n } from 'vue-i18n'
-import { RouterLink } from 'vue-router'
-import { useSidebarStore } from '~/store/sidebar'
-import type { SiteConfig } from '~/types/config'
+import { useI18n } from "vue-i18n";
+import { RouterLink } from "vue-router";
+import { useSidebarStore } from "~/store/sidebar";
+import type { SiteConfig } from "~/types/config";
 
-const { t } = useI18n()
-const appConfig = useAppConfig()
-const siteConfig = useNuxtApp().$siteConfig as unknown as SiteConfig
-const route = useRoute()
-const sidebarStore = useSidebarStore()
-const isCollapsed = computed(() => sidebarStore.isCollapsed)
+const { t } = useI18n();
+const appConfig = useAppConfig();
+const siteConfig = useNuxtApp().$siteConfig as unknown as SiteConfig;
+const route = useRoute();
+const sidebarStore = useSidebarStore();
+const isCollapsed = computed(() => sidebarStore.isCollapsed);
 
 const toggleSidebar = () => {
-  sidebarStore.toggleSidebar()
-}
+  sidebarStore.toggleSidebar();
+};
 
 const options = computed(() => {
   return appConfig.navs.map(
     (nav: {
-      label: string
-      to?: string
-      icon?: string
-      target?: string
+      label: string;
+      to?: string;
+      type?: string;
+      icon?: string;
+      target?: string;
       children?: {
-        label: string
-        to: string
-        icon?: string
-      }[]
+        label: string;
+        to: string;
+        icon?: string;
+      }[];
     }) => {
       let item: {
-        key: string
-        label: () => string | VNode
-        icon?: () => VNode
-        children?: any[]
+        key: string;
+        type?: string;
+        label: () => string | VNode;
+        icon?: () => VNode;
+        children?: any[];
       } = {
         key: nav.label,
         label: () =>
           nav.to
             ? nav.target
               ? h(
-                'a',
-                {
-                  href: nav.to,
-                  target: '_blank'
-                },
-                { default: () => t(nav.label) }
-              )
+                  "a",
+                  {
+                    href: nav.to,
+                    target: "_blank",
+                  },
+                  { default: () => t(nav.label) }
+                )
               : h(RouterLink, { to: nav.to }, { default: () => t(nav.label) })
             : t(nav.label),
-        icon: nav.icon ? iconRender(nav.icon) : undefined
-      }
+        icon: nav.icon ? iconRender(nav.icon) : undefined,
+        type: nav.type,
+      };
 
-      if (nav['children']) {
-        item.children = nav['children'].map((child) => {
+      if (nav["children"]) {
+        item.children = nav["children"].map((child) => {
           return {
             key: child.label,
-            type: 'item',
-            label: () =>
-              h(RouterLink, { to: child.to }, { default: () => t(child.label) }),
-            icon: child.icon ? iconRender(child.icon) : undefined
-          }
-        })
+            type: "item",
+            label: () => h(RouterLink, { to: child.to }, { default: () => t(child.label) }),
+            icon: child.icon ? iconRender(child.icon) : undefined,
+          };
+        });
       }
 
-      return item
+      return item;
     }
-  )
-})
+  );
+});
 </script>
 <template>
-  <n-layout-sider bordered class="min-h-full" collapse-mode="width" :collapsed-width="64" :width="240" :native-scrollbar="false" :collapsed="isCollapsed"
+  <n-layout-sider
+    bordered
+    class="min-h-full"
+    collapse-mode="width"
+    :collapsed-width="64"
+    :width="240"
+    :native-scrollbar="false"
+    :collapsed="isCollapsed"
     v-if="route.path.startsWith('/auth') === false">
     <div class="flex flex-col h-screen overflow-hidden gap-2 relative">
-      <div class="border-b dark:border-neutral-800 flex flex-wrap h-16 items-center p-4" :class="isCollapsed ? 'justify-center' : 'justify-between'">
+      <div
+        class="border-b dark:border-neutral-800 flex flex-wrap h-16 items-center p-4"
+        :class="isCollapsed ? 'justify-center' : 'justify-between'">
         <div>
           <n-avatar v-if="isCollapsed" class="text-center text-2xl leading-none">
             {{ appConfig.name.substring(0, 1) }}
           </n-avatar>
           <h2 v-else class="text-center text-2xl flex">
             <img src="~/assets/logo.svg" class="max-w-28" alt="" />
-            <span v-if="siteConfig.license.name && siteConfig.license.expired != 0"
+            <span
+              v-if="siteConfig.license.name && siteConfig.license.expired != 0"
               class="flex items-center justify-center text-[9px] leading-[9px] ml-1 p-1 bg-orange-600 text-white rounded rounded-bl-none">
-              {{ t('PRO') }}
+              {{ t("PRO") }}
             </span>
-            <span v-else class="flex items-center justify-center text-[9px] leading-[9px] ml-1 p-1 bg-green-600 text-white rounded rounded-bl-none">
-              {{ t('OSS') }}
+            <span
+              v-else
+              class="flex items-center justify-center text-[9px] leading-[9px] ml-1 p-1 bg-green-600 text-white rounded rounded-bl-none">
+              {{ t("OSS") }}
             </span>
 
             <span class="sr-only">{{ appConfig.name }}</span>
@@ -96,7 +110,14 @@ const options = computed(() => {
       </div>
 
       <div class="overflow-y-auto flex-1">
-        <n-menu :indent="26" :root-indent="12" :collapsed-width="64" :collapsed-icon-size="22" :options="options" default-expand-all class="flex-1" />
+        <n-menu
+          :indent="26"
+          :root-indent="12"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :options="options"
+          default-expand-all
+          class="flex-1" />
       </div>
 
       <div v-if="isCollapsed" class="w-full flex items-center justify-center py-4">
@@ -106,15 +127,15 @@ const options = computed(() => {
       <div v-if="!isCollapsed" class="flex flex-col p-4 text-gray-500">
         <div class="flex items-center gap-2">
           <Icon name="ri-server-line" />
-          <span>{{ t('Version') }}: {{ siteConfig.release.version }}</span>
+          <span>{{ t("Version") }}: {{ siteConfig.release.version }}</span>
         </div>
         <div class="flex items-center gap-2">
           <Icon name="ri-calendar-line" />
-          <span>{{ t('Build Date') }}：{{ siteConfig.release.date }}</span>
+          <span>{{ t("Build Date") }}：{{ siteConfig.release.date }}</span>
         </div>
         <div class="flex items-center gap-2">
           <Icon name="ri-verified-badge-line" />
-          <span>{{ t('License') }}：{{ siteConfig.license.name }}</span>
+          <span>{{ t("License") }}：{{ siteConfig.license.name }}</span>
         </div>
       </div>
 
@@ -128,7 +149,7 @@ const options = computed(() => {
                   <Icon :name="isCollapsed ? 'ri:translate-2' : 'ri:translate'" class="text-xl" />
                 </div>
               </template>
-              {{ t('Language') }}
+              {{ t("Language") }}
             </n-tooltip>
           </div>
           <language-switcher v-else />
@@ -143,7 +164,7 @@ const options = computed(() => {
                   <Icon name="ri:contrast-2-line" class="text-xl" />
                 </div>
               </template>
-              {{ t('Theme') }}
+              {{ t("Theme") }}
             </n-tooltip>
           </div>
           <theme-switcher v-else />

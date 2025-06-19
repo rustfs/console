@@ -14,7 +14,7 @@
   "Bucket Events": "存储桶事件",
   "Bucket Replication": "存储桶复制",
   "Tiered Storage": "分层存储",
-  "Lifecycle": "桶生命周期",
+  "Lifecycle": "存储桶生命周期",
   "Site Replication": "站点复制",
   "Performance": "性能",
   "Documentation": "文档",
@@ -526,5 +526,8 @@
   "Retention Update Failed": "保留更新失败",
   "Retention RetainUntilDate Placeholder": "请输入保留至日期",
   "Retention RetainUntilDate Clear": "清除保留至日期",
-  "None": "未设置"
+  "None": "未设置",
+  "Event Destinations": "事件目标",
+  "Bucket Setting": "存储桶设置",
+  "Add Event Destination": "添加事件目标"
 }

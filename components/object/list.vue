@@ -81,6 +81,7 @@ import { joinRelativeURL } from "ufo";
 import { computed, ref, watch, type VNode } from "vue";
 import { useDeleteTaskManagerStore } from "~/store/delete-tasks";
 import { useUploadTaskManagerStore } from "~/store/upload-tasks";
+import { useBucket } from "~/composables/useBucket";
 
 const route = useRoute();
 const router = useRouter();
@@ -300,6 +301,7 @@ function handleCheck(keys: DataTableRowKey[]) {
   return checkedKeys;
 }
 const objectApi = useObject({ bucket: bucketName.value });
+const bucketApi = useBucket({});
 
 // 批量删除
 function handleBatchDelete() {
@@ -314,6 +316,19 @@ function handleBatchDelete() {
         return;
       }
       try {
+        // 先检查桶的Object Lock配置
+        const lockConfig = await bucketApi.getObjectLockConfiguration(bucketName.value);
+        const objectLockEnabled = lockConfig?.ObjectLockConfiguration?.ObjectLockEnabled === "Enabled";
+        const defaultRetention = lockConfig?.ObjectLockConfiguration?.Rule?.DefaultRetention;
+        if (
+          objectLockEnabled &&
+          defaultRetention &&
+          (defaultRetention.Mode || defaultRetention.Days || defaultRetention.Years)
+        ) {
+          message.error("存储桶已启用默认保留策略，无法删除对象。");
+          return;
+        }
+
         const protectedKeys: string[] = [];
         const deletableKeys: string[] = [];
 

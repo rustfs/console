@@ -338,9 +338,10 @@ function handleBatchDelete() {
             const findOne = objects.value.find((obj) => obj.Key === item);
             // 只检查文件，目录递归时再处理
             if (findOne?.type === "object") {
+              // 兼容未设置时的异常
               const [retentionRes, legalHoldRes] = await Promise.all([
-                objectApi.getObjectRetention(item as string),
-                objectApi.getObjectLegalHold(item as string),
+                objectApi.getObjectRetention(item as string).catch(() => ({ Retention: null })),
+                objectApi.getObjectLegalHold(item as string).catch(() => ({ LegalHold: null })),
               ]);
               // 判断合法保留
               const legalHoldOn = legalHoldRes?.LegalHold?.Status === "ON";
@@ -360,8 +361,8 @@ function handleBatchDelete() {
               // 目录递归下的每个文件都要检查
               await objectApi.mapAllFiles(bucketName.value, findOne.Key, async (fileKey: string) => {
                 const [retentionRes, legalHoldRes] = await Promise.all([
-                  objectApi.getObjectRetention(fileKey),
-                  objectApi.getObjectLegalHold(fileKey),
+                  objectApi.getObjectRetention(fileKey).catch(() => ({ Retention: null })),
+                  objectApi.getObjectLegalHold(fileKey).catch(() => ({ LegalHold: null })),
                 ]);
                 const legalHoldOn = legalHoldRes?.LegalHold?.Status === "ON";
                 let retentionOn = false;
@@ -389,7 +390,7 @@ function handleBatchDelete() {
 
         // 执行删除
         await Promise.all(deletableKeys.map((item) => deleteTaskStore.addKeys([String(item)], bucketName.value)));
-        message.success("删除中");
+        message.success("删除成功");
         salt.value = randomString();
         refresh();
       } catch (error) {

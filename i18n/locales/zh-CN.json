@@ -342,6 +342,7 @@
   "Please enter target bucket": "请输入目标存储桶",
   "Please enter region": "请输入区域",
   "Please select replication mode": "请选择复制模式",
+  "Please enter name": "请输入名称",
   "Replication Options": "复制选项",
   "Subscribe to event notification": "订阅事件通知",
   "Amazon Resource Name": "Amazon资源名称",

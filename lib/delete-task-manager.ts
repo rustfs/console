@@ -85,7 +85,9 @@ class DeleteTaskManager {
   private async processQueue() {
     while (this.activeUploads < this.maxConcurrentUploads) {
       const nextTask = this.tasks.find((task) => task.status === "pending");
-      if (!nextTask) { break; }
+      if (!nextTask) {
+        break;
+      }
 
       this.activeUploads++;
       nextTask.status = "deleting";
@@ -111,8 +113,6 @@ class DeleteTaskManager {
     const { key, bucketName, prefix } = task;
     const abortController = new AbortController();
     task.abortController = abortController;
-    console.log('deleteObject', task);
-
     const command = new DeleteObjectCommand({
       Bucket: bucketName,
       Key: prefix + key,

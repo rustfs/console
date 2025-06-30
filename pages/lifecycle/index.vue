@@ -60,18 +60,22 @@ const formVisible = ref(false);
 interface RowData {
   Status?: string;
   ID?: string;
+  NoncurrentVersionExpiration?: {
+    NoncurrentDays?: number;
+  };
   Expiration?: {
     StorageClass?: string;
     Days?: number;
     Date?: string;
+    ExpiredObjectDeleteMarker?: boolean;
   };
   Filter?: {
     Prefix?: string;
   };
-  Transition?: {
+  Transitions?: {
     Days?: number;
     StorageClass?: string;
-  };
+  }[];
 }
 
 const columns: DataTableColumns<RowData> = [
@@ -80,11 +84,11 @@ const columns: DataTableColumns<RowData> = [
     key: "",
     render: (row) => {
       return h(NSpace, {}, () => {
-        console.log(row?.Transition);
-        if (row?.Transition?.StorageClass) {
-          return t("Expire");
-        } else {
+        console.log(row);
+        if (row?.Transitions) {
           return t("Transition");
+        } else {
+          return t("Expire");
         }
       });
     },
@@ -93,18 +97,21 @@ const columns: DataTableColumns<RowData> = [
     title: t("Version"),
     key: "Transition",
     render: (row) => {
-      return h(NSpace, {}, row?.Transition ? t("Current Version") : t("Non-current Version"));
+      return h(NSpace, {}, row?.NoncurrentVersionExpiration ? t("Non-current Version") : t("Current Version"));
     },
   },
   {
     title: t("Expiration Delete Mark"),
     key: "",
+    render: (row) => {
+      return h(NSpace, {}, row?.Expiration?.ExpiredObjectDeleteMarker ? t("On") : t("Off"));
+    },
   },
   {
     title: t("Tier"),
     key: "",
     render: (row) => {
-      return h(NSpace, {}, row?.Expiration?.StorageClass || "--");
+      return h(NSpace, {}, row?.Transitions?.[0]?.StorageClass || "--");
     },
   },
   {
@@ -112,6 +119,18 @@ const columns: DataTableColumns<RowData> = [
     key: "Filter",
     render: (row) => {
       return h(NSpace, {}, row?.Filter?.Prefix || "");
+    },
+  },
+
+  {
+    title: t("Time Cycle") + "(" + t("Days") + ")",
+    key: "NoncurrentVersionExpiration",
+    render: (row) => {
+      return h(
+        NSpace,
+        {},
+        row?.Expiration?.Days || row?.NoncurrentVersionExpiration?.NoncurrentDays || row?.Transitions?.[0]?.Days || ""
+      );
     },
   },
   {
@@ -197,14 +216,22 @@ watch(
 
 const handleRowDelete = (row: RowData) => {
   const params = pageData.value.filter((item) => item.ID !== row.ID);
-  putBucketLifecycleConfiguration(bucketName.value, { Rules: params })
-    .then(async (res) => {
+  console.log(params);
+  if (params.length === 0) {
+    deleteBucketLifecycle(bucketName.value).then(async (res) => {
       message.success(t("Delete Success"));
       refresh();
-    })
-    .catch((e) => {
-      message.error(e.message);
     });
+  } else {
+    putBucketLifecycleConfiguration(bucketName.value, { Rules: params })
+      .then(async (res) => {
+        message.success(t("Delete Success"));
+        refresh();
+      })
+      .catch((e) => {
+        message.error(e.message);
+      });
+  }
 };
 
 const refresh = async () => {

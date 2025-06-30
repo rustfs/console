@@ -530,5 +530,9 @@
   "None": "未设置",
   "Event Destinations": "事件目标",
   "Bucket Setting": "存储桶设置",
-  "Add Event Destination": "添加事件目标"
+  "Add Event Destination": "添加事件目标",
+  "Please enter valid days": "请输入天数",
+  "Expire": "过期",
+  "On": "开启",
+  "Off": "关闭"
 }

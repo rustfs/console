@@ -10,13 +10,13 @@
       action: true,
     }">
     <n-card>
-      <n-form class="my-4" ref="formRef" :model="formData">
+      <n-form class="my-4" ref="formRef" :model="formData" :rules="rules">
         <n-tabs default-value="expire" justify-content="space-evenly" type="line" @update:value="handleUpdateValue">
           <n-tab-pane name="expire" :tab="t('Expiration')">
             <n-form-item :label="t('Object Version')" path="versionType" v-if="versioningStatus">
               <n-select v-model:value="formData.versionType" :options="versionOptions" />
             </n-form-item>
-            <n-form-item label="时间周期" path="type">
+            <n-form-item :label="t('Time Cycle')" path="days">
               <div class="w-full flex items-center justify-between">
                 <n-input-number
                   class="flex-auto"
@@ -32,7 +32,7 @@
               <n-collapse>
                 <n-collapse-item :title="t('More Configurations')" name="advanced">
                   <n-form-item :label="t('Prefix')">
-                    <n-input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+                    <n-input v-model:value="formData.prefix" :placeholder="t('Please enter prefix')" />
                   </n-form-item>
                   <n-form-item :label="t('Tags')">
                     <n-dynamic-input
@@ -45,7 +45,7 @@
               </n-collapse>
             </n-card>
             <!-- 高级设置 -->
-            <n-card class="my-4" v-if="formData.versionType == 'non-current'">
+            <n-card class="my-4" v-if="formData.versionType == 'current'">
               <n-collapse>
                 <n-collapse-item title="高级设置" name="advanced">
                   <n-form-item label="删除标记处理">
@@ -56,11 +56,8 @@
                   </n-form-item>
 
                   <!-- <n-form-item label="版本清理">
-                    <n-space >
-                      <n-switch
-                        v-model:value="formData.deleteAllExpired"
-                        :round="false"
-                      />
+                    <n-space>
+                      <n-switch v-model:value="formData.deleteAllExpired" :round="false" />
                       <span class="ml-4 text-gray-500">删除所有过期版本</span>
                     </n-space>
                   </n-form-item> -->
@@ -72,7 +69,7 @@
             <n-form-item :label="t('Object Version')" path="versionType" v-if="versioningStatus">
               <n-select v-model:value="formData.versionType" :options="versionOptions" />
             </n-form-item>
-            <n-form-item :label="t('Time Cycle')" path="type">
+            <n-form-item :label="t('Time Cycle')" path="days">
               <div class="w-full flex items-center justify-between">
                 <n-input-number
                   class="flex-auto"
@@ -92,7 +89,7 @@
               <n-collapse>
                 <n-collapse-item :title="t('More Configurations')" name="advanced">
                   <n-form-item :label="t('Prefix')">
-                    <n-input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+                    <n-input v-model:value="formData.prefix" :placeholder="t('Please enter prefix')" />
                   </n-form-item>
                   <n-form-item :label="t('Tags')">
                     <n-dynamic-input
@@ -131,7 +128,7 @@ import {
 import { randomUUID } from "uncrypto";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
-const { putBucketLifecycleConfiguration, getBucketVersioning } = useBucket({});
+const { putBucketLifecycleConfiguration, getBucketVersioning, getBucketLifecycleConfiguration } = useBucket({});
 const { listTiers } = useTiers();
 const { t } = useI18n();
 const message = useMessage();
@@ -148,7 +145,7 @@ const formData = ref({
   type: null,
   versionType: "current",
   days: null,
-  action: "transition",
+  action: "expire",
   prefix: "",
   expiredDeleteMark: false,
   deleteAllExpired: false,
@@ -165,6 +162,30 @@ const versionOptions = ref([
   { label: t("Current Version"), value: "current" },
   { label: t("Non-current Version"), value: "non-current" },
 ]);
+
+// 表单验证规则
+const rules = {
+  days: {
+    required: true,
+    validator: (rule: any, value: any) => {
+      if (value === null || value === undefined || value < 1) {
+        return new Error(t("Please enter valid days"));
+      }
+      return true;
+    },
+    trigger: ["blur", "input", "change"],
+  },
+  storageType: {
+    validator: (rule: any, value: any) => {
+      // 只在 transition 模式下验证 storageType
+      if (formData.value.action === "transition" && (!value || value === "")) {
+        return new Error(t("Please select storage type"));
+      }
+      return true;
+    },
+    trigger: ["blur", "change"],
+  },
+};
 
 const props = defineProps({
   bucketName: {
@@ -206,149 +227,125 @@ const handleUpdateValue = (value: string) => {
 const handleSave = () => {
   formRef.value?.validate((errors: any) => {
     if (!errors) {
-      // 调用保存接口
-      // const params = {
-      //     Rules: [
-      //       {
-      //         Status: 'Enabled',
-      //         Filter: {
-      //           Prefix: formData.value.prefix || '',
-      //           Tag: formData.value.tags.filter(item => item.key && item.value).map(item => {
-      //             return {
-      //               Key: item.key,
-      //               Value: item.value
-      //             }
-      //           }) || []
-      //         },
-      //         Expiration: {
-      //           Date: new Date(),
-      //           Days: formData.value.days,
-      //         },
-      //       }
-      //     ]
-      // }
+      // 额外的参数验证（与表单验证保持一致）
+      if (formData.value.days === null || formData.value.days === undefined || formData.value.days < 1) {
+        message.error(t("Please enter valid days"));
+        return;
+      }
 
-      const params = {
-        Rules: [
-          {
+      if (
+        formData.value.action === "transition" &&
+        (!formData.value.storageType || formData.value.storageType === "")
+      ) {
+        message.error(t("Please select storage type"));
+        return;
+      }
+
+      // 先获取当前的生命周期配置
+      getBucketLifecycleConfiguration(props.bucketName)
+        .then((currentConfig) => {
+          // 创建新的规则
+          const newRule: any = {
+            ID: randomUUID(),
             Status: "Enabled",
-            Filter: {
-              Prefix: "logs/", // 仅对 logs/ 前缀的对象生效
-            },
-            Expiration: {
-              // "Days": 7,
-            },
-            Transition: {
-              Days: 7,
-              StorageClass: "MINIO",
-            },
-          },
-        ],
-      };
+          };
 
-      // const params = {
-      //   Rules: [
-      //     {
-      //        "ID": randomUUID(),
-      //         "Expiration": {
-      //         },
-      //         "Status": "Enabled",
-      //         "Transition": {
-      //             "Days": 3,
-      //             "StorageClass": "MINIO"
-      //         }
-      //     },
-      //     {
-      //      "ID": randomUUID(),
-      //         "Expiration": {
-      //             "Days": 5
-      //         },
-      //         "Status": "Disabled",
-      //         "Transition": {
-      //         }
-      //     },
-      //     {
-      //       "ID": randomUUID(),
-      //         "Expiration": {
-      //         },
-      //         "Status": "Enabled",
-      //         "Transition": {
-      //             "StorageClass": "MINIO",
-      //             "Days": 4
-      //         }
-      //     },
-      //     {
-      //       "ID": randomUUID(),
-      //         "Expiration": {
-      //             "Days": 3
-      //         },
-      //         "Status": "Enabled",
-      //         "Transition": {
-      //         }
-      //     },
-      //     {
-      //       "ID": randomUUID(),
-      //         "Expiration": {
-      //             "Days": 5
-      //         },
-      //         "Status": "Enabled",
-      //         "Transition": {
-      //         }
-      //     },
-      //     {
-      //       "ID": randomUUID(),
-      //         "Expiration": {
-      //             "ExpiredObjectDeleteMarker": true,
-      //             "Days": 2
-      //         },
-      //         "Status": "Enabled",
-      //         "Transition": {
-      //         }
-      //     },
-      //     {
-      //       "ID": randomUUID(),
-      //         "Expiration": {
-      //             "ExpiredObjectDeleteMarker": true,
-      //             "Days": 730
-      //         },
-      //         "Status": "Enabled",
-      //         "Transition": {
-      //         }
-      //     }
-      //   ]
-      // }
+          // 设置 Filter 或 Prefix（不能同时使用）
+          console.log("formData.value.prefix:", formData.value.prefix);
+          console.log("formData.value.tags:", formData.value.tags);
+          console.log("formData.value.expiredDeleteMark:", formData.value.expiredDeleteMark);
 
-      // const params = {
-      //   Rules: [
-      //     {
-      //      "Status": "Enabled",
-      //       "Filter": { "Prefix": "archives/" },
-      //       "Transitions": [
-      //         {
-      //           "StorageClass": "SBHJA",
-      //           "Days": 90 // 90天后归档到Glacier
-      //         }
-      //       ],
-      //       "Expiration": {
-      //         "Days": 5, // 5天后删除当前版本对象
-      //         "ExpiredObjectDeleteMarker": true // 清理过期删除标记
-      //       },
-      //       "NoncurrentVersionTransitions": [
-      //         {
-      //           "StorageClass": "SBHJA",
-      //           "NoncurrentDays": 5 // 非当前版本180天后转入深度归档
-      //         }
-      //       ],
-      //       "NoncurrentVersionExpiration": {
-      //         "NoncurrentDays": 5 // 非当前版本5天后彻底删除
-      //       }
-      //     }
-      //   ]
-      // }
+          // 检查是否有有效的标签
+          const validTags = formData.value.tags.filter((item: any) => item.key && item.value);
+          const hasValidTags = validTags.length > 0;
 
-      console.log("🚀 ~ formRef.value?.validate ~ params:", params);
+          if (formData.value.prefix || hasValidTags) {
+            newRule.Filter = {};
 
-      putBucketLifecycleConfiguration(props.bucketName, params)
+            if (hasValidTags) {
+              if (validTags.length === 1) {
+                newRule.Filter.Tag = {
+                  Key: validTags[0].key,
+                  Value: validTags[0].value,
+                };
+                if (formData.value.prefix) {
+                  newRule.Filter.Prefix = formData.value.prefix;
+                }
+              } else {
+                newRule.Filter.And = {
+                  Tags: validTags.map((item: any) => ({
+                    Key: item.key,
+                    Value: item.value,
+                  })),
+                };
+                if (formData.value.prefix) {
+                  newRule.Filter.And.Prefix = formData.value.prefix;
+                }
+              }
+            } else {
+              // 只有前缀时，直接添加到 Filter
+              newRule.Filter.Prefix = formData.value.prefix;
+            }
+          }
+
+          // 根据操作类型添加相应的配置
+          if (formData.value.action === "expire") {
+            if (formData.value.versionType === "non-current") {
+              newRule.NoncurrentVersionExpiration = {
+                NoncurrentDays: formData.value.days,
+              };
+
+              // 如果启用了删除标记处理
+              if (formData.value.expiredDeleteMark) {
+                newRule.ExpiredObjectDeleteMarker = true;
+              }
+            } else {
+              newRule.Expiration = {
+                Days: formData.value.days,
+              };
+
+              // 如果启用了删除标记处理（当前版本也支持）
+              if (formData.value.expiredDeleteMark) {
+                newRule.Expiration.ExpiredObjectDeleteMarker = true;
+              }
+            }
+          } else {
+            // transition 操作
+            if (formData.value.versionType === "non-current") {
+              newRule.NoncurrentVersionTransitions = [
+                {
+                  NoncurrentDays: formData.value.days,
+                  StorageClass: formData.value.storageType,
+                },
+              ];
+            } else {
+              newRule.Transitions = [
+                {
+                  Days: formData.value.days,
+                  StorageClass: formData.value.storageType,
+                },
+              ];
+            }
+          }
+
+          console.log("formData.value.prefix:", formData.value.prefix);
+          console.log("formData.value.tags:", formData.value.tags);
+          console.log("formData.value.expiredDeleteMark:", formData.value.expiredDeleteMark);
+          console.log("Final newRule:", JSON.stringify(newRule, null, 2));
+          // return;
+
+          // 合并现有规则和新规则
+          const existingRules = currentConfig.Rules || [];
+          const updatedRules = [...existingRules, newRule];
+
+          // 调用保存接口
+          const params = {
+            Rules: updatedRules,
+          };
+          console.log("🚀 ~ .then ~ params:", params);
+
+          return putBucketLifecycleConfiguration(props.bucketName, params);
+        })
         .then((res) => {
           visible.value = false;
           emit("search");
@@ -358,7 +355,7 @@ const handleSave = () => {
             type: null,
             versionType: "current",
             days: null,
-            action: "transition",
+            action: "expire",
             expiredDeleteMark: false,
             deleteAllExpired: false,
             storageType: "",

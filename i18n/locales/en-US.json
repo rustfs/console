@@ -338,5 +338,10 @@
   "None": "None",
   "Event Destinations": "Event Destinations",
   "Bucket Setting": "Bucket Setting",
-  "Add Event Destination": "Add Event Destination"
+  "Add Event Destination": "Add Event Destination",
+  "Please enter valid days": "Please enter valid days",
+  "Days After": "Days After",
+  "Expire": "Expire",
+  "On": "On",
+  "Off": "Off"
 }

@@ -1,14 +1,21 @@
 <template>
-  <n-modal v-model:show="visible" :mask-closable="false" preset="card" :title="t('Add Tier')" class="max-w-screen-md" :segmented="{
-    content: true,
-    action: true,
-  }">
+  <n-modal
+    v-model:show="visible"
+    :mask-closable="false"
+    preset="card"
+    :title="t('Add Tier')"
+    class="max-w-screen-md"
+    :segmented="{
+      content: true,
+      action: true,
+    }">
     <n-card v-show="!formData.type">
       <n-grid x-gap="12" y-gap="12" :cols="2">
         <n-gi v-for="item in typeOptions">
-          <n-card class="cursor-pointer " @click="formData.type = item.value">
+          <n-card class="cursor-pointer" @click="formData.type = item.value">
             <div class="flex flex-center leading-8">
-              <img :src="item.iconUrl" class="w-8 h-8" /> <span class="ms-2">{{ item.label }}</span>
+              <img :src="item.iconUrl" class="w-8 h-8" />
+              <span class="ms-2">{{ item.label }}</span>
             </div>
           </n-card>
         </n-gi>
@@ -48,11 +55,11 @@
           <n-input v-model:value="formData.region" :placeholder="t('Please enter region')" />
         </n-form-item>
         <n-form-item :label="t('StorageClass')">
-          <n-input v-model:value="formData.storageclass" :placeholder="t('Please Enter storage class') " />
+          <n-input v-model:value="formData.storageclass" :placeholder="t('Please Enter storage class')" />
         </n-form-item>
         <n-space justify="center">
-          <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
-          <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
+          <n-button @click="handleCancel">{{ t("Cancel") }}</n-button>
+          <n-button type="primary" @click="handleSave">{{ t("Save") }}</n-button>
         </n-space>
       </n-form>
     </n-card>
@@ -60,35 +67,29 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import MinioIcon from '~/assets/svg/minio.svg'
-import GoogleIcon from '~/assets/svg/google.svg'
-import AWSIcon from '~/assets/svg/aws.svg'
-import AzureIcon from '~/assets/svg/azure.svg'
-import AliyunIcon from '~/assets/svg/aliyun.svg'
-import TqyunIcon from '~/assets/svg/tenxunyun.svg'
-import HwcloudIcon from '~/assets/svg/huaweiyun.svg'
-import BaiduIcon from '~/assets/svg/baiduyun.svg'
-import RustfsIcon from '~/assets/logo.svg'
-import {
-  NForm,
-  NFormItem,
-  NInput,
-  NSelect,
-  NButton,
-} from 'naive-ui'
-import { useTiers } from '#imports'
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import MinioIcon from "~/assets/svg/minio.svg";
+import GoogleIcon from "~/assets/svg/google.svg";
+import AWSIcon from "~/assets/svg/aws.svg";
+import AzureIcon from "~/assets/svg/azure.svg";
+import AliyunIcon from "~/assets/svg/aliyun.svg";
+import TqyunIcon from "~/assets/svg/tenxunyun.svg";
+import HwcloudIcon from "~/assets/svg/huaweiyun.svg";
+import BaiduIcon from "~/assets/svg/baiduyun.svg";
+import RustfsIcon from "~/assets/logo.svg";
+import { NForm, NFormItem, NInput, NSelect, NButton } from "naive-ui";
+import { useTiers } from "#imports";
 
-const { t } = useI18n()
-const usetier = useTiers()
-const message = useMessage()
+const { t } = useI18n();
+const usetier = useTiers();
+const message = useMessage();
 
 // 支持的存储类型
 const typeOptions = [
-  { label: t('RustFS'), value: 'rustfs', iconUrl: RustfsIcon },
-  { label: t('Minio'), value: 'minio', iconUrl: MinioIcon },
-  { label: t('AWS S3'), value: 's3', iconUrl: AWSIcon },
+  { label: t("RustFS"), value: "rustfs", iconUrl: RustfsIcon },
+  { label: t("Minio"), value: "minio", iconUrl: MinioIcon },
+  { label: t("AWS S3"), value: "s3", iconUrl: AWSIcon },
   // 暂未支持
   // { label: t('Google Cloud Storage'), value: 'google', iconUrl: GoogleIcon },
   // { label: t('Azure'), value: 'azure', iconUrl: AzureIcon },
@@ -96,39 +97,38 @@ const typeOptions = [
   // { label: t('Tencent Cloud'), value: 'tqyun', iconUrl: TqyunIcon },
   // { label: t('Huawei Cloud'), value: 'hwyun', iconUrl: HwcloudIcon },
   // { label: t('Baidu Cloud'), value: 'bdyun', iconUrl: BaiduIcon },
-]
+];
 
-
-const formRef = ref(null)
+const formRef = ref(null);
 const formData = ref({
-  type: '',
-  name: '',
-  endpoint: '',
-  accesskey: '',
-  secretkey: '',
-  bucket: '',
-  prefix: '',
-  region: '',
-  storageclass: 'STANDARD', // 新增字段，默认值为 STANDARD
-})
+  type: "",
+  name: "",
+  endpoint: "",
+  accesskey: "",
+  secretkey: "",
+  bucket: "",
+  prefix: "",
+  region: "",
+  storageclass: "STANDARD", // 新增字段，默认值为 STANDARD
+});
 
 const rules = {
-  ruleName: { required: true, message: t('Please enter rule name') },
-  type: { required: true, message: t('Please select rule type') },
-  versionType: { required: true, message: t('Please select version type') }
-}
+  ruleName: { required: true, message: t("Please enter rule name") },
+  type: { required: true, message: t("Please select rule type") },
+  versionType: { required: true, message: t("Please select version type") },
+};
 
-const visible = ref(false)
+const visible = ref(false);
 
 const open = () => {
-  visible.value = true
-}
+  visible.value = true;
+};
 
 defineExpose({
-  open
-})
+  open,
+});
 
-const emmit = defineEmits(['search'])
+const emmit = defineEmits(["search"]);
 const handleSave = () => {
   formRef.value?.validate((errors) => {
     if (!errors) {
@@ -142,23 +142,23 @@ const handleSave = () => {
           bucket: formData.value.bucket,
           prefix: formData.value.prefix,
           region: formData.value.region,
-          accesskey: formData.value.accesskey,
-          secretkey: formData.value.secretkey,
-          storageclass: formData.value.storageclass, // 新增字段
+          accessKey: formData.value.accesskey,
+          secretKey: formData.value.secretkey,
+          storageClass: formData.value.storageclass, // 新增字段
         },
-      }
+      };
       usetier.addTiers(data).then((res) => {
-        visible.value = false
-        emmit('search')
-        message.success(t('Create Success'))
-      })
+        visible.value = false;
+        emmit("search");
+        message.success(t("Create Success"));
+      });
     }
-  })
-}
+  });
+};
 
 const handleCancel = () => {
-  visible.value = false
+  visible.value = false;
   // 取消逻辑
-  formData.value.type = ''
-}
+  formData.value.type = "";
+};
 </script>

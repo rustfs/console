@@ -2,7 +2,7 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">{{ t("Tiers") }}</h1>
+        <h1 class="text-2xl font-bold">{{ t('Tiers') }}</h1>
       </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
@@ -18,11 +18,11 @@
         <div class="flex items-center gap-4">
           <n-button @click="() => addForm()">
             <Icon name="ri:add-line" class="mr-2" />
-            <span>{{ t("Add Tier") }}</span>
+            <span>{{ t('Add Tier') }}</span>
           </n-button>
           <n-button @click="async () => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
-            <span>{{ t("Refresh") }}</span>
+            <span>{{ t('Refresh') }}</span>
           </n-button>
         </div>
       </div>
@@ -43,26 +43,26 @@
 </template>
 
 <script lang="ts" setup>
-import { Icon } from "#components";
-import { NButton, NSpace, type DataTableColumns, NPopconfirm } from "naive-ui";
-import { useI18n } from "vue-i18n";
+import { Icon } from '#components';
+import { NButton, NSpace, type DataTableColumns, NPopconfirm } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
 const usetier = useTiers();
 
 const { t } = useI18n();
-const searchTerm = ref("");
+const searchTerm = ref('');
 
 interface S3Config {
   name: string;
   endpoint: string;
-  accesskey: string;
-  secretkey: string;
+  accessKey: string;
+  secretKey: string;
   bucket: string;
   prefix: string;
   region: string;
   usage: string;
   objects: string;
   versions: string;
-  storageclass: string;
+  storageClass: string;
 }
 
 interface RowData {
@@ -74,77 +74,82 @@ interface RowData {
 
 const getConfig = (row: RowData): S3Config | undefined => {
   switch (row.type) {
-    case "rustfs":
+    case 'rustfs':
       return row.rustfs;
-    case "minio":
+    case 'minio':
       return row.minio;
-    case "s3":
+    case 's3':
       return row.s3;
   }
 };
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: t("Tier Type"),
-    key: "type",
+    title: t('Tier Type'),
+    key: 'type',
     render: (row) => row.type,
   },
   {
-    title: t("Name"),
-    key: "name",
+    title: t('Name'),
+    key: 'name',
     render: (row) => getConfig(row)?.name,
   },
   {
-    title: t("Endpoint"),
-    key: "endpoint",
+    title: t('Endpoint'),
+    key: 'endpoint',
     render: (row) => getConfig(row)?.endpoint,
   },
   {
-    title: t("Bucket"),
-    key: "bucket",
+    title: t('Bucket'),
+    key: 'bucket',
     render: (row) => getConfig(row)?.bucket,
   },
   {
-    title: t("Region"),
-    key: "region",
+    title: t('Prefix'),
+    key: 'prefix',
+    render: (row) => getConfig(row)?.prefix,
+  },
+  {
+    title: t('Region'),
+    key: 'region',
     render: (row) => getConfig(row)?.region,
   },
+  // {
+  //   title: t('Storage Class'),
+  //   key: 'storageClass',
+  //   render: (row) => {
+  //     // 只有 s3 类型才有 storageclass
+  //     if (row.type === 's3') {
+  //       return row.s3?.storageClass;
+  //     }
+  //     return '-';
+  //   },
+  // },
+  // {
+  //   title: t('Usage'),
+  //   key: 'usage',
+  //   render: (row) => getConfig(row)?.usage,
+  // },
+  // {
+  //   title: t('Objects'),
+  //   key: 'objects',
+  //   render: (row) => getConfig(row)?.objects,
+  // },
+  // {
+  //   title: t('Version'),
+  //   key: 'versions',
+  //   render: (row) => getConfig(row)?.versions,
+  // },
   {
-    title: t("Storage Class"),
-    key: "storageclass",
-    render: (row) => {
-      // 只有 s3 类型才有 storageclass
-      if (row.type === "s3") {
-        return row.s3?.storageclass;
-      }
-      return "-";
-    },
-  },
-  {
-    title: t("Usage"),
-    key: "usage",
-    render: (row) => getConfig(row)?.usage,
-  },
-  {
-    title: t("Objects"),
-    key: "objects",
-    render: (row) => getConfig(row)?.objects,
-  },
-  {
-    title: t("Version"),
-    key: "versions",
-    render: (row) => getConfig(row)?.versions,
-  },
-  {
-    title: t("Actions"),
-    key: "actions",
-    align: "center",
+    title: t('Actions'),
+    key: 'actions',
+    align: 'center',
     width: 140,
     render: (row: RowData) => {
       return h(
         NSpace,
         {
-          justify: "center",
+          justify: 'center',
         },
         {
           default: () => [
@@ -152,14 +157,14 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => t("Confirm Delete"),
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,
-                    { size: "small", secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => "",
-                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
               }
@@ -167,13 +172,13 @@ const columns: DataTableColumns<RowData> = [
             h(
               NButton,
               {
-                size: "small",
+                size: 'small',
                 secondary: true,
                 onClick: (e) => handleRowClick(row, e),
               },
               {
-                default: () => "",
-                icon: () => h(Icon, { name: "ri:edit-2-line" }),
+                default: () => '',
+                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
           ],
@@ -184,7 +189,7 @@ const columns: DataTableColumns<RowData> = [
 ];
 
 const { data, refresh } = await useAsyncData(
-  "tier",
+  'tier',
   async () => {
     const response = await usetier.listTiers();
     return response;
@@ -217,16 +222,16 @@ const handleRowClick = (row: RowData, e: Event) => {
 
 const message = useMessage();
 const deleteItem = async (row: RowData) => {
-  const config = getConfig(row) || { name: "" };
+  const config = getConfig(row) || { name: '' };
   if (!config.name) return;
   usetier
     .removeTiers(config.name)
     .then(() => {
-      message.success(t("Delete Success"));
+      message.success(t('Delete Success'));
       refresh();
     })
     .catch((error) => {
-      message.error(t("Delete Failed"));
+      message.error(t('Delete Failed'));
     });
 };
 

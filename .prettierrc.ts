@@ -11,7 +11,7 @@ module.exports = {
   proseWrap: "preserve", // 指定如何处理 markdown 文本的换行。（always | never | preserve）
   quoteProps: "as-needed", // 对象属性是否使用引号包裹。（as-needed | consistent | preserve）
   requirePragma: false, // 只有在文件顶部包含了特殊的 @format 标记时，才格式化文件。
-  semi: true, //分号是否添加
+  semi: false, //分号是否添加
   singleAttributePerLine: false, // 是否将每个 JSX 属性放在单独的一行上。
   singleQuote: true, //是否单引号
   tabWidth: 2, // 指定每个缩进级别的空格数。

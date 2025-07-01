@@ -343,5 +343,14 @@
   "Days After": "Days After",
   "Expire": "Expire",
   "On": "On",
-  "Off": "Off"
+  "Off": "Off",
+  "Replicate existing objects": "Replicate existing objects",
+  "Sync metadata": "Sync metadata",
+  "Replicate soft delete": "Replicate soft delete",
+  "Replicate version delete": "Replicate version delete",
+  "Health Check Duration": "Health Check Duration",
+  "Please enter health check duration": "Please enter health check duration",
+  "Please enter bandwidth": "Please enter bandwidth",
+  "Please enter storage type": "Please enter storage type",
+  "Add Replication Rule": "Add Replication Rule"
 }

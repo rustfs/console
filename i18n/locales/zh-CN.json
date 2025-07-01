@@ -534,5 +534,14 @@
   "Please enter valid days": "请输入天数",
   "Expire": "过期",
   "On": "开启",
-  "Off": "关闭"
+  "Off": "关闭",
+  "Replicate existing objects": "复制现有对象",
+  "Sync metadata": "同步元数据",
+  "Replicate soft delete": "复制软删除",
+  "Replicate version delete": "复制版本删除",
+  "Health Check Duration": "健康检查时长",
+  "Please enter health check duration": "请输入健康检查时长",
+  "Please enter bandwidth": "请输入带宽",
+  "Please enter storage type": "请输入存储类型",
+  "Add Replication Rule": "添加复制规则"
 }

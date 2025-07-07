@@ -86,7 +86,7 @@ export default [
   },
   {
     label: "Documentation",
-    to: "https://rustfs.com/docs/",
+    to: "https://docs.rustfs.com/",
     target: "_blank",
     icon: "ri:file-list-3-line",
   },

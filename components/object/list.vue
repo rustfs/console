@@ -388,9 +388,9 @@ function handleBatchDelete() {
           return;
         }
 
-        // 执行删除
-        await Promise.all(deletableKeys.map((item) => deleteTaskStore.addKeys([String(item)], bucketName.value)));
-        message.success("删除成功");
+        // 执行删除 - 一次性添加所有文件
+        deleteTaskStore.addKeys(deletableKeys.map(String), bucketName.value);
+        message.success("删除任务已创建");
         salt.value = randomString();
         refresh();
       } catch (error) {

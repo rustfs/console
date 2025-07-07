@@ -31,17 +31,10 @@
             </div>
           </div>
 
-          <!-- 展示文件与文件夹 -->
-          <n-list v-if="selectedItems.length" bordered class="h-[40vh] overflow-y-auto sticky-header relative">
-            <template #header>
-              <div class="flex items-center gap-2 font-bold">
-                <div class="flex-1">{{ t('Selected Items') }}</div>
-                <div class="w-32 text-center">{{ t('Size') }}</div>
-                <div class="w-32 text-center">{{ t('Operation') }}</div>
-              </div>
-            </template>
-            <n-list-item v-for="(item, index) in selectedItems" :key="index">
-              <div class="flex items-center gap-2 w-full">
+          <!-- 虚拟滚动文件与文件夹列表 -->
+          <n-virtual-list v-if="selectedItems.length" :items="selectedItems" :item-size="40" class="h-[40vh] overflow-y-auto border rounded">
+            <template #default="{ item, index }">
+              <div class="flex items-center gap-2 w-full border-b py-1">
                 <div class="flex-1">
                   <span v-if="item.type === 'folder'">{{ item.name }}/</span>
                   <span v-else>{{ item.name }}</span>
@@ -51,13 +44,19 @@
                   <n-button text type="info" @click="removeItem(index)">{{ t('Delete') }}</n-button>
                 </div>
               </div>
-            </n-list-item>
-          </n-list>
+            </template>
+          </n-virtual-list>
         </div>
 
+        <n-progress v-if="isAdding" :percentage="addProgress" type="line" :show-indicator="true" style="margin-bottom: 16px;">
+          <template #default>
+            正在添加到上传队列 ({{ addProgress }}%)
+          </template>
+        </n-progress>
+
         <div class="flex justify-center gap-4">
-          <n-button type="default" :disabled="!hasFiles">{{ t('Configure') }}</n-button>
-          <n-button type="primary" :disabled="!hasFiles" @click="handleUpload">{{ t('Start Upload') }}</n-button>
+          <n-button type="default" :disabled="!hasFiles || isAdding">{{ t('Configure') }}</n-button>
+          <n-button type="primary" :disabled="!hasFiles || isAdding" :loading="isAdding" @click="handleUpload">{{ t('Start Upload') }}</n-button>
         </div>
       </div>
     </n-card>
@@ -93,6 +92,9 @@ const folderInput = ref<HTMLInputElement | null>(null)
 
 // 待上传的文件/文件夹列表
 const selectedItems = ref<SelectedItem[]>([])
+
+const isAdding = ref(false)
+const addProgress = ref(0)
 
 const closeModal = () => emit('update:show', false)
 const selectFile = () => fileInput.value?.click()
@@ -156,13 +158,42 @@ function removeItem(index: number) {
   selectedItems.value.splice(index, 1)
 }
 
-function handleUpload() {
-  console.log('uploading', allFiles.value);
-  allFiles.value.forEach(fileItem => {
-    uploadTaskManagerStore.addFiles([fileItem.file], props.bucketName, fileItem.prefix)
-  })
-  selectedItems.value = []
-  emit('submit')
-  closeModal()
+async function handleUpload() {
+  const filesToUpload = allFiles.value;
+  if (!filesToUpload.length) return;
+
+  isAdding.value = true;
+  addProgress.value = 0;
+
+  // 分组
+  const uploadGroups = new Map<string, File[]>();
+  filesToUpload.forEach(fileItem => {
+    const key = `${props.bucketName}:${fileItem.prefix}`;
+    if (!uploadGroups.has(key)) uploadGroups.set(key, []);
+    uploadGroups.get(key)!.push(fileItem.file);
+  });
+
+  // 统计总数
+  const total = Array.from(uploadGroups.values()).reduce((sum, arr) => sum + arr.length, 0);
+  let done = 0;
+
+  // 分批异步添加，避免阻塞主线程
+  for (const [key, files] of uploadGroups.entries()) {
+    const [bucketName, prefix] = key.split(':');
+    for (let i = 0; i < files.length; i += 50) {
+      const batch = files.slice(i, i + 50);
+      // 让出主线程，保证 UI 可响应
+      await new Promise(resolve => setTimeout(resolve, 0));
+      await uploadTaskManagerStore.addFiles(batch, bucketName, prefix);
+      done += batch.length;
+      addProgress.value = Math.round((done / total) * 100);
+    }
+  }
+
+  isAdding.value = false;
+  addProgress.value = 100;
+  selectedItems.value = [];
+  emit('submit');
+  closeModal();
 }
 </script>

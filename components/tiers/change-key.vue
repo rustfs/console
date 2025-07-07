@@ -3,7 +3,7 @@
     v-model:show="modalVisible"
     :mask-closable="false"
     preset="card"
-    :title="t('Update Key')"
+    :title="t('Update Key') + '：' + name"
     class="max-w-screen-md"
     :segmented="{
       content: true,

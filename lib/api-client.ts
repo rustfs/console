@@ -30,7 +30,30 @@ class ApiClient {
     console.log("[request] response:", response);
 
     if (!response.ok) {
-      throw new Error(response.statusText);
+      let errorMsg = response.statusText;
+      try {
+        // 优先尝试解析为 JSON
+        const errorData = await response.clone().json();
+        errorMsg = errorData.message || JSON.stringify(errorData) || errorMsg;
+      } catch (e) {
+        try {
+          // 如果不是 JSON，尝试解析为文本
+          const text = await response.clone().text();
+          if (text) {
+            // 检查是否为 XML
+            if (text.trim().startsWith("<")) {
+              // 简单提取 <Message> 或 <Error> 标签内容
+              const match = text.match(/<Message>(.*?)<\/Message>/i) || text.match(/<Error>(.*?)<\/Error>/i);
+              errorMsg = match ? match[1] : text;
+            } else {
+              errorMsg = text;
+            }
+          }
+        } catch (e2) {
+          // 保持原有 statusText
+        }
+      }
+      throw new Error(errorMsg);
     }
 
     // 处理401

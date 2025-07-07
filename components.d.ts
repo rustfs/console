@@ -40,6 +40,7 @@ declare module 'vue' {
     NGrid: typeof import('naive-ui')['NGrid']
     NH3: typeof import('naive-ui')['NH3']
     NH4: typeof import('naive-ui')['NH4']
+    NIcon: typeof import('naive-ui')['NIcon']
     NInput: typeof import('naive-ui')['NInput']
     NInputGroup: typeof import('naive-ui')['NInputGroup']
     NInputGroupLabel: typeof import('naive-ui')['NInputGroupLabel']

@@ -74,6 +74,11 @@ export default [
     type: "divider",
   },
   {
+    label: "Settings",
+    to: "/settings",
+    icon: "ri:settings-3-line",
+  },
+  {
     label: "License",
     // to: 'https://github.com/rustfs/rustfs?tab=Apache-2.0-1-ov-file#readme',
     to: "/licenseinfo",

@@ -40,9 +40,9 @@
             :options="modes" />
         </n-form-item>
 
-        <n-form-item v-if="formData.modeType === 'async'" :label="t('Bandwidth')" path="daikuan">
+        <n-form-item v-if="formData.modeType === 'async'" :label="t('Bandwidth')" path="bandwidth">
           <n-input-group>
-            <n-input v-model="formData.daikuan" :placeholder="t('Please enter bandwidth')" />
+            <n-input v-model:value="formData.bandwidth" :placeholder="t('Please enter bandwidth')" />
             <n-select
               v-model:value="formData.unit"
               :placeholder="t('Please select unit')"
@@ -80,28 +80,28 @@
               <div style="text-align: right">
                 <n-form-item :label="t('Existing Objects')">
                   <n-space align="center" justify="end">
-                    <n-switch v-model:value="formData.expiredDeleteMark" :round="false" />
+                    <n-switch v-model:value="formData.existingObject" :round="false" />
                     <span class="ml-4 text-gray-500">{{ t("Replicate existing objects") }}</span>
                   </n-space>
                 </n-form-item>
-                <n-form-item :label="t('Metadata Sync')">
+                <!-- <n-form-item :label="t('Metadata Sync')">
                   <n-space align="center" justify="end">
                     <n-switch v-model:value="formData.deleteAllExpired" :round="false" />
                     <span class="ml-4 text-gray-500">{{ t("Sync metadata") }}</span>
                   </n-space>
-                </n-form-item>
+                </n-form-item> -->
                 <n-form-item :label="t('Delete Marker')">
                   <n-space align="center" justify="end">
-                    <n-switch v-model:value="formData.delete" :round="false" />
+                    <n-switch v-model:value="formData.expiredDeleteMark" :round="false" />
                     <span class="ml-4 text-gray-500">{{ t("Replicate soft delete") }}</span>
                   </n-space>
                 </n-form-item>
-                <n-form-item :label="t('Delete')">
+                <!-- <n-form-item :label="t('Delete')">
                   <n-space align="center" justify="end">
                     <n-switch v-model:value="formData.deleteforever" :round="false" />
                     <span class="ml-4 text-gray-500">{{ t("Replicate version delete") }}</span>
                   </n-space>
-                </n-form-item>
+                </n-form-item> -->
               </div>
             </n-collapse-item>
           </n-collapse>
@@ -121,6 +121,7 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { NForm, NFormItem, NInput, NDynamicInput, NCollapse, NCollapseItem, NSwitch, NButton } from "naive-ui";
 import { useBucket } from "@/composables/useBucket";
+import { getBytes } from "@/utils/functions";
 
 const { t } = useI18n();
 
@@ -169,8 +170,8 @@ const formData = ref({
   region: "",
   modeType: "async",
   timecheck: "60",
-  unit: "Mi",
-  daikuan: "",
+  unit: "Gi",
+  bandwidth: 100,
   storageType: "",
   prefix: "",
   tags: [
@@ -179,8 +180,9 @@ const formData = ref({
       value: "",
     },
   ],
-  expiredDeleteMark: false,
-  deleteAllExpired: false,
+  existingObject: true,
+  expiredDeleteMark: true,
+  // deleteAllExpired: false,
   delete: false,
   deleteforever: false,
 });
@@ -208,7 +210,7 @@ const handleSave = async () => {
   formRef.value?.validate(async (errors) => {
     if (!errors) {
       try {
-        const config = {
+        let config = {
           sourcebucket: props.bucketName,
           endpoint: formData.value.endpoint,
           credentials: {
@@ -237,6 +239,11 @@ const handleSave = async () => {
           edgeSyncBeforeExpiry: false,
         };
 
+        // 添加带宽
+        if (formData.value.modeType === "async") {
+          // 根据单位转化为字节
+          config.bandwidth = Number(getBytes(formData.value.bandwidth, formData.value.unit, true)) || 0;
+        }
         const targetRESP = await setRemoteReplicationTarget(props.bucketName, config);
         if (!targetRESP) return;
 
@@ -269,6 +276,7 @@ const handleSave = async () => {
                 };
               } else {
                 filter.And = {
+                  Prefix: formData.value.prefix || "",
                   Tags: validTags.map((tag) => ({
                     Key: tag.key,
                     Value: tag.value,
@@ -278,15 +286,21 @@ const handleSave = async () => {
             }
             return filter;
           })(),
-          Destination: {
-            Bucket: `arn:aws:s3:::${formData.value.bucket}`,
-            StorageClass: formData.value.storageType || "STANDARD",
-          },
-          DeleteMarkerReplication: {
-            Status: formData.value.delete ? "Enabled" : "Disabled",
+          SourceSelectionCriteria: {
+            SseKmsEncryptedObjects: {
+              Status: "Enabled",
+            },
           },
           ExistingObjectReplication: {
+            Status: formData.value.existingObject ? "Enabled" : "Disabled",
+          },
+          DeleteMarkerReplication: {
             Status: formData.value.expiredDeleteMark ? "Enabled" : "Disabled",
+          },
+          Destination: {
+            Bucket: targetRESP,
+            StorageClass: formData.value.storageType ? formData.value.storageType.toUpperCase() : "STANDARD",
+            // ReplicateDelete: formData.value.deleteforever ? "Enabled" : "Disabled",
           },
         };
 

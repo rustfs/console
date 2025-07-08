@@ -14,22 +14,22 @@
         <n-form-item :label="t('Priority')" path="level">
           <n-input v-model:value="formData.level" :placeholder="t('Please enter priority')" />
         </n-form-item>
-        <n-form-item :label="t('Target Address')" path="type">
+        <n-form-item :label="t('Target Address')" path="endpoint">
           <n-input v-model:value="formData.endpoint" :placeholder="t('Please enter target address')" />
         </n-form-item>
         <n-form-item :label="t('Use TLS')" path="tls">
           <n-switch v-model:value="formData.tls" :round="false" />
         </n-form-item>
-        <n-form-item :label="t('Access Key')" path="type">
+        <n-form-item :label="t('Access Key')" path="accesskey">
           <n-input v-model:value="formData.accesskey" :placeholder="t('Please enter Access Key')" />
         </n-form-item>
-        <n-form-item :label="t('Secret Key')" path="type">
+        <n-form-item :label="t('Secret Key')" path="secrretkey">
           <n-input v-model:value="formData.secrretkey" :placeholder="t('Please enter Secret Key')" />
         </n-form-item>
-        <n-form-item :label="t('Target Bucket')" path="type">
+        <n-form-item :label="t('Target Bucket')" path="bucket">
           <n-input v-model:value="formData.bucket" :placeholder="t('Please enter target bucket')" />
         </n-form-item>
-        <n-form-item :label="t('Region')" path="type">
+        <n-form-item :label="t('Region')" path="region">
           <n-input v-model:value="formData.region" :placeholder="t('Please enter region')" />
         </n-form-item>
         <n-form-item :label="t('Replication Mode')" path="modeType">
@@ -40,7 +40,7 @@
             :options="modes" />
         </n-form-item>
 
-        <n-form-item v-if="formData.modeType === 'async'" :label="t('Bandwidth')" path="type">
+        <n-form-item v-if="formData.modeType === 'async'" :label="t('Bandwidth')" path="daikuan">
           <n-input-group>
             <n-input v-model="formData.daikuan" :placeholder="t('Please enter bandwidth')" />
             <n-select
@@ -51,9 +51,11 @@
           </n-input-group>
         </n-form-item>
         <n-form-item :label="t('Health Check Duration')" path="timecheck">
-          <n-input v-model:value="formData.timecheck" :placeholder="t('Please enter health check duration')" />
+          <n-input v-model:value="formData.timecheck" :placeholder="t('Please enter health check duration')">
+            <template #suffix>s</template>
+          </n-input>
         </n-form-item>
-        <n-form-item :label="t('Storage Type')" path="type">
+        <n-form-item :label="t('Storage Type')" path="storageType">
           <n-input v-model:value="formData.storageType" :placeholder="t('Please enter storage type')" />
         </n-form-item>
 
@@ -159,10 +161,18 @@ const units = [
 const formRef = ref(null);
 const formData = ref({
   level: "1",
+  endpoint: "",
+  tls: false,
+  accesskey: "",
+  secrretkey: "",
+  bucket: "",
+  region: "",
+  modeType: "async",
   timecheck: "60",
-  modeType: "sync",
-  type: null,
   unit: "Mi",
+  daikuan: "",
+  storageType: "",
+  prefix: "",
   tags: [
     {
       key: "",
@@ -192,74 +202,114 @@ defineExpose({
 });
 
 const emit = defineEmits(["success"]);
-
-function genRuleId() {
-  return "rule-" + Math.random().toString(36).substr(2, 9) + Date.now();
-}
-
+// 创建远程复制目标
+const { setRemoteReplicationTarget, putBucketReplication, getBucketReplication } = useBucket({});
 const handleSave = async () => {
   formRef.value?.validate(async (errors) => {
     if (!errors) {
       try {
-        const { putBucketReplication } = useBucket({});
         const config = {
-          Role: formData.value.role || "arn:aws:iam::xxxx:role/xxx",
-          Rules: [
-            {
-              ID: genRuleId(),
-              Status: "Enabled",
-              Priority: Number(formData.value.level),
-              DeleteMarkerReplication: {
-                Status: formData.value.delete ? "Enabled" : "Disabled",
-              },
-              Filter: {
-                And: {
-                  Prefix: formData.value.prefix,
-                  Tag: (formData.value.tags || [])
-                    .filter((tag) => tag.key && tag.value)
-                    .map((tag) => ({
-                      Key: tag.key,
-                      Value: tag.value,
-                    })),
-                },
-              },
-              Destination: {
-                Bucket: `arn:aws:s3:::${formData.value.bucket}`,
-                ...(formData.value.metricsStatus && formData.value.metricsMinutes
-                  ? {
-                      Metrics: {
-                        Status: formData.value.metricsStatus,
-                        EventThreshold: {
-                          Minutes: Number(formData.value.metricsMinutes),
-                        },
-                      },
-                    }
-                  : {}),
-                ...(formData.value.replicationTimeStatus && formData.value.replicationTimeMinutes
-                  ? {
-                      ReplicationTime: {
-                        Status: formData.value.replicationTimeStatus,
-                        Time: {
-                          Minutes: Number(formData.value.replicationTimeMinutes),
-                        },
-                      },
-                    }
-                  : {}),
-                ...(formData.value.modeType === "async" && formData.value.daikuan
-                  ? {
-                      Bandwidth: {
-                        Value: formData.value.daikuan,
-                        Unit: formData.value.unit,
-                      },
-                    }
-                  : {}),
-              },
-            },
-          ],
+          sourcebucket: props.bucketName,
+          endpoint: formData.value.endpoint,
+          credentials: {
+            accessKey: formData.value.accesskey,
+            secretKey: formData.value.secrretkey,
+            expiration: "0001-01-01T00:00:00Z",
+          },
+          targetbucket: formData.value.bucket,
+          secure: formData.value.tls,
+          path: "auto",
+          api: "s3v4",
+          type: "replication",
+          replicationSync: formData.value.modeType === "sync" ? true : false,
+          healthCheckDuration: formData.value.timecheck * 1000000000 - 0,
+          disableProxy: false,
+          resetBeforeDate: "0001-01-01T00:00:00Z",
+          totalDowntime: 0,
+          lastOnline: "0001-01-01T00:00:00Z",
+          isOnline: false,
+          latency: {
+            curr: 0,
+            avg: 0,
+            max: 0,
+          },
+          edge: false,
+          edgeSyncBeforeExpiry: false,
         };
-        console.log("🚀 ~ formRef.value?.validate ~ config:", config);
 
-        await putBucketReplication(props.bucketName, config);
+        const targetRESP = await setRemoteReplicationTarget(props.bucketName, config);
+        if (!targetRESP) return;
+
+        // 获取已有的 replication 配置
+        let oldConfig = null;
+        try {
+          oldConfig = await getBucketReplication(props.bucketName);
+          console.log(oldConfig);
+        } catch (e) {
+          console.log(e);
+          // 没有配置时会报错，忽略即可
+        }
+
+        // 构造新规则
+        const newRule = {
+          ID: `replication-rule-${Date.now()}`,
+          Status: "Enabled",
+          Priority: parseInt(formData.value.level) || 1,
+          Filter: (() => {
+            const filter = {};
+            if (formData.value.prefix) {
+              filter.Prefix = formData.value.prefix;
+            }
+            const validTags = formData.value.tags.filter((tag) => tag.key && tag.value);
+            if (validTags.length > 0) {
+              if (validTags.length === 1) {
+                filter.Tag = {
+                  Key: validTags[0].key,
+                  Value: validTags[0].value,
+                };
+              } else {
+                filter.And = {
+                  Tags: validTags.map((tag) => ({
+                    Key: tag.key,
+                    Value: tag.value,
+                  })),
+                };
+              }
+            }
+            return filter;
+          })(),
+          Destination: {
+            Bucket: `arn:aws:s3:::${formData.value.bucket}`,
+            StorageClass: formData.value.storageType || "STANDARD",
+          },
+          DeleteMarkerReplication: {
+            Status: formData.value.delete ? "Enabled" : "Disabled",
+          },
+          ExistingObjectReplication: {
+            Status: formData.value.expiredDeleteMark ? "Enabled" : "Disabled",
+          },
+        };
+
+        // 合并规则
+        let rules = [];
+        if (
+          oldConfig &&
+          oldConfig.ReplicationConfiguration &&
+          Array.isArray(oldConfig.ReplicationConfiguration.Rules)
+        ) {
+          rules = [...oldConfig.ReplicationConfiguration.Rules, newRule];
+        } else {
+          rules = [newRule];
+        }
+
+        const params = {
+          Role: targetRESP,
+          Rules: rules,
+        };
+
+        // 创建复制规则
+        await putBucketReplication(props.bucketName, params);
+
         emit("success");
         visible.value = false;
       } catch (e) {

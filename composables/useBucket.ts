@@ -28,8 +28,6 @@ import {
   DeleteBucketReplicationCommand,
 } from "@aws-sdk/client-s3";
 
-const { $api } = useNuxtApp();
-
 export function useBucket({ region }: { region?: string }) {
   const $client = useNuxtApp().$s3Client;
 
@@ -223,16 +221,28 @@ export function useBucket({ region }: { region?: string }) {
 
   /********************S3 Replication********************/
 
+  /********************rustfs Replication target********************/
+  const { $api } = useNuxtApp();
+  const message = useMessage();
   const setRemoteReplicationTarget = async (bucket: string, data: any) => {
-    console.log("🚀 ~ setRemoteReplicationTarget ~ bucket:", bucket);
-    return await $api.put(`/set-remote-target?bucket=${bucket}}`, data);
+    try {
+      return await $api.put(`/set-remote-target?bucket=${bucket}`, data);
+    } catch (error: any) {
+      message.error(error.message as string);
+      console.log(error);
+    }
+    // return await $api.put(`/set-remote-target?bucket=${bucket}`, data);
   };
 
   const listRemoteReplicationTarget = async (bucket: string) => {
-    return await $api.get(`/list-remote-target?bucket=${bucket}`);
+    return await $api.get(`/list-remote-targets?bucket=${bucket}&type=`);
   };
 
-  /********************rustfs Replication********************/
+  const deleteRemoteReplicationTarget = async (bucket: string, arn: string) => {
+    return await $api.delete(`/remove-remote-target?bucket=${bucket}&arn=${arn}`);
+  };
+
+  /********************rustfs Replication target  end********************/
 
   return {
     listBuckets,
@@ -262,5 +272,6 @@ export function useBucket({ region }: { region?: string }) {
     deleteBucketReplication,
     setRemoteReplicationTarget,
     listRemoteReplicationTarget,
+    deleteRemoteReplicationTarget,
   };
 }

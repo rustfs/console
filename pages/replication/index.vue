@@ -53,7 +53,13 @@ import { h, ref, computed, watch } from "vue";
 import { useMessage } from "naive-ui";
 
 const { t } = useI18n();
-const { listBuckets, listRemoteReplicationTarget, deleteBucketReplication } = useBucket({});
+const {
+  listBuckets,
+  getBucketReplication,
+  putBucketReplication,
+  deleteBucketReplication,
+  deleteRemoteReplicationTarget,
+} = useBucket({});
 const formVisible = ref(false);
 const searchTerm = ref("");
 const message = useMessage();
@@ -168,8 +174,12 @@ const loadReplication = async () => {
     return;
   }
   try {
-    console.log(11111);
-    const res = await listRemoteReplicationTarget(bucketName.value);
+    const res = await getBucketReplication(bucketName.value);
+    if (!res) {
+      pageData.value = [];
+      return;
+    }
+
     // 兼容无规则时返回空对象
     pageData.value = res?.ReplicationConfiguration?.Rules || [];
   } catch (e) {
@@ -190,7 +200,29 @@ watch(
 const handleRowDelete = async (row: any, e: Event) => {
   e.stopPropagation();
   try {
-    await deleteBucketReplication(bucketName.value);
+    // 1. 获取当前所有规则
+    const res: any = await getBucketReplication(bucketName.value);
+    let rules = res?.ReplicationConfiguration?.Rules || [];
+    const arn: string = res?.ReplicationConfiguration?.Role || ""; // 例如 arn:aws:s3:::bucketname
+    console.log(arn);
+
+    // 2. 过滤掉要删除的规则
+    const newRules = rules.filter((r: any) => r.ID !== row.ID);
+    if (newRules.length === 0) {
+      // 如果删除后没有规则，直接删除整个配置
+      await deleteBucketReplication(bucketName.value);
+    } else {
+      // 否则 put 新规则集
+      await putBucketReplication(bucketName.value, {
+        Role: res?.ReplicationConfiguration?.Role,
+        Rules: newRules,
+      });
+      // 4. 删除远程目标
+      if (arn) {
+        deleteRemoteReplicationTarget(bucketName.value, arn);
+      }
+    }
+
     message.success(t("Delete success"));
     loadReplication();
   } catch (err) {

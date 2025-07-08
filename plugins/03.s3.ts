@@ -64,6 +64,11 @@ export default defineNuxtPlugin({
             if (error?.$metadata?.httpStatusCode === 401) {
               await useAuth().logoutAndRedirect();
             }
+
+            // 处理 S3 客户端错误，优先抛出 error.message 作为新的 Error
+            if (error?.Code) {
+              throw new Error(error.Code);
+            }
             throw error;
           }
         },

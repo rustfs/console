@@ -87,7 +87,7 @@ export class AwsClient {
     this.region = region;
     /** @type {Map<string, ArrayBuffer>} */
     this.cache = cache || new Map();
-    this.retries = retries != null ? retries : 2; // Up to 25.6 secs
+    this.retries = retries != null ? retries : 0; // Up to 25.6 secs
     this.initRetryMs = initRetryMs || 50;
   }
 

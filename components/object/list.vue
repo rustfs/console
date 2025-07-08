@@ -316,80 +316,21 @@ function handleBatchDelete() {
         return;
       }
       try {
-        // 先检查桶的Object Lock配置
-        const lockConfig = await bucketApi.getObjectLockConfiguration(bucketName.value);
-        const objectLockEnabled = lockConfig?.ObjectLockConfiguration?.ObjectLockEnabled === "Enabled";
-        const defaultRetention = lockConfig?.ObjectLockConfiguration?.Rule?.DefaultRetention;
-        if (
-          objectLockEnabled &&
-          defaultRetention &&
-          (defaultRetention.Mode || defaultRetention.Days || defaultRetention.Years)
-        ) {
-          message.error("存储桶已启用默认保留策略，无法删除对象。");
-          return;
-        }
-
-        const protectedKeys: string[] = [];
-        const deletableKeys: string[] = [];
-
-        // 检查每个对象的保留和合法保留状态
         await Promise.all(
           checkedKeys.value.map(async (item) => {
             const findOne = objects.value.find((obj) => obj.Key === item);
-            // 只检查文件，目录递归时再处理
-            if (findOne?.type === "object") {
-              // 兼容未设置时的异常
-              const [retentionRes, legalHoldRes] = await Promise.all([
-                objectApi.getObjectRetention(item as string).catch(() => ({ Retention: null })),
-                objectApi.getObjectLegalHold(item as string).catch(() => ({ LegalHold: null })),
-              ]);
-              // 判断合法保留
-              const legalHoldOn = legalHoldRes?.LegalHold?.Status === "ON";
-              // 判断保留（retention）
-              let retentionOn = false;
-              if (retentionRes?.Retention?.RetainUntilDate) {
-                const now = new Date();
-                const until = new Date(retentionRes.Retention.RetainUntilDate);
-                retentionOn = until > now;
-              }
-              if (legalHoldOn || retentionOn) {
-                protectedKeys.push(item as string);
-                return;
-              }
-              deletableKeys.push(item as string);
-            } else if (findOne?.type === "prefix" && findOne?.Key) {
-              // 目录递归下的每个文件都要检查
-              await objectApi.mapAllFiles(bucketName.value, findOne.Key, async (fileKey: string) => {
-                const [retentionRes, legalHoldRes] = await Promise.all([
-                  objectApi.getObjectRetention(fileKey).catch(() => ({ Retention: null })),
-                  objectApi.getObjectLegalHold(fileKey).catch(() => ({ LegalHold: null })),
-                ]);
-                const legalHoldOn = legalHoldRes?.LegalHold?.Status === "ON";
-                let retentionOn = false;
-                if (retentionRes?.Retention?.RetainUntilDate) {
-                  const now = new Date();
-                  const until = new Date(retentionRes.Retention.RetainUntilDate);
-                  retentionOn = until > now;
-                }
-                if (legalHoldOn || retentionOn) {
-                  protectedKeys.push(fileKey);
-                } else {
-                  deletableKeys.push(fileKey);
-                }
+            // 目录删除
+            // 递归查询目录下的所有文件，然后删除
+            if (findOne?.type === "prefix" && findOne?.Key) {
+              return await objectApi.mapAllFiles(bucketName.value, findOne.Key, (fileKey: string) => {
+                deleteTaskStore.addKeys([fileKey], bucketName.value);
               });
             }
+
+            return deleteTaskStore.addKeys([String(item)], bucketName.value);
           })
         );
 
-        if (protectedKeys.length) {
-          message.error(`以下对象设置了保留或合法保留，无法删除：\n${protectedKeys.join("\n")}`);
-        }
-        if (!deletableKeys.length) {
-          return;
-        }
-
-        // 执行删除 - 一次性添加所有文件
-        deleteTaskStore.addKeys(deletableKeys.map(String), bucketName.value);
         message.success("删除任务已创建");
         salt.value = randomString();
         refresh();

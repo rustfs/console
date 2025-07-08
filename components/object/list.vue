@@ -2,7 +2,7 @@
   <n-page-header subtitle="" @back="router.back()">
     <template #title>
       <div class="flex items-center justify-between">
-        <n-input placeholder="搜索" v-model:value="searchTerm" @update:value="handleSearch">
+        <n-input :placeholder="t('Search')" v-model:value="searchTerm" @update:value="handleSearch">
           <template #prefix>
             <Icon name="ri:search-2-line" />
           </template>
@@ -15,25 +15,25 @@
         <object-delete-stats />
         <n-button @click="() => handleNewObject(true)">
           <Icon name="ri:add-line" class="mr-2" />
-          <span>新建目录</span>
+          <span>{{ t("New Folder") }}</span>
         </n-button>
         <n-button @click="() => handleNewObject(false)">
           <Icon name="ri:add-line" class="mr-2" />
-          <span>新建文件</span>
+          <span>{{ t("New File") }}</span>
         </n-button>
         <n-button @click="() => (uploadPickerVisible = true)">
           <Icon name="ri:file-add-line" class="mr-2" />
-          <span>上传文件/文件夹</span>
+          <span>{{ t("Upload File") + "/" + t("Folder") }}</span>
         </n-button>
         <n-button :disabled="!checkedKeys.length" secondary @click="handleBatchDelete">
           <template #icon>
             <Icon name="ri:delete-bin-5-line"></Icon>
           </template>
-          删除选中项
+          {{ t("Delete Selected") }}
         </n-button>
         <n-button @click="() => refresh()">
           <Icon name="ri:refresh-line" class="mr-2" />
-          <span>刷新</span>
+          <span>{{ t("Refresh") }}</span>
         </n-button>
       </div>
     </template>
@@ -48,13 +48,23 @@
     :bordered="false" />
   <object-upload-picker
     :show="uploadPickerVisible"
-    @update:show="(val: any) => (uploadPickerVisible = val && refresh())"
+    @update:show="
+      (val) => {
+        uploadPickerVisible = val;
+        refresh();
+      }
+    "
     :bucketName="bucketName"
     :prefix="prefix" />
   <object-new-form
     :show="newObjectFormVisible"
     :asPrefix="newObjectAsPrefix"
-    @update:show="(val: any) => (newObjectFormVisible = val && refresh())"
+    @update:show="
+      (val) => {
+        newObjectFormVisible = val;
+        refresh();
+      }
+    "
     :bucketName="bucketName"
     :prefix="prefix" />
   <n-button-group class="ml-auto">
@@ -72,6 +82,7 @@
 
 <script setup lang="ts">
 const { $s3Client } = useNuxtApp();
+const { t } = useI18n();
 import { useAsyncData, useRoute, useRouter } from "#app";
 import { NuxtLink } from "#components";
 import { ListObjectsV2Command, type _Object, type CommonPrefix } from "@aws-sdk/client-s3";
@@ -171,7 +182,7 @@ const columns: DataTableColumns<RowData> = [
   },
   {
     key: "Key",
-    title: "对象",
+    title: t("Object"),
     render: (row: { Key: string; type: "prefix" | "object" }) => {
       const displayKey = prefix.value ? row.Key.substring(prefix.value.length) : row.Key;
       let label: string | VNode = displayKey || "/";
@@ -196,10 +207,10 @@ const columns: DataTableColumns<RowData> = [
       );
     },
   },
-  { key: "Size", title: "大小", render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },
+  { key: "Size", title: t("Size"), render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },
   {
     key: "LastModified",
-    title: "更新时间",
+    title: t("Update Time"),
     render: (row: { LastModified: string }) => {
       return row.LastModified ? dayjs(row.LastModified).format("YYYY-MM-DD HH:mm:ss") : "";
     },

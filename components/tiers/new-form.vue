@@ -147,11 +147,16 @@ const handleSave = () => {
           storageClass: formData.value.storageclass, // 新增字段
         },
       };
-      usetier.addTiers(data).then((res) => {
-        visible.value = false;
-        emmit("search");
-        message.success(t("Create Success"));
-      });
+      usetier
+        .addTiers(data)
+        .then((res) => {
+          visible.value = false;
+          emmit("search");
+          message.success(t("Create Success"));
+        })
+        .catch((err) => {
+          message.error(err.message);
+        });
     }
   });
 };

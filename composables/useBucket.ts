@@ -23,6 +23,9 @@ import {
   GetBucketLifecycleConfigurationCommand,
   PutBucketLifecycleConfigurationCommand,
   DeleteBucketLifecycleCommand,
+  GetBucketReplicationCommand,
+  PutBucketReplicationCommand,
+  DeleteBucketReplicationCommand,
 } from "@aws-sdk/client-s3";
 
 export function useBucket({ region }: { region?: string }) {
@@ -195,6 +198,52 @@ export function useBucket({ region }: { region?: string }) {
     return await $client.send(new DeleteBucketEncryptionCommand(params));
   };
 
+  /********************S3 Replication********************/
+  const getBucketReplication = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    };
+    return await $client.send(new GetBucketReplicationCommand(params));
+  };
+  const putBucketReplication = async (bucket: string, replication: any) => {
+    const params = {
+      Bucket: bucket,
+      ReplicationConfiguration: replication,
+    };
+    return await $client.send(new PutBucketReplicationCommand(params));
+  };
+  const deleteBucketReplication = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    };
+    return await $client.send(new DeleteBucketReplicationCommand(params));
+  };
+
+  /********************S3 Replication********************/
+
+  /********************rustfs Replication target********************/
+  const { $api } = useNuxtApp();
+  const message = useMessage();
+  const setRemoteReplicationTarget = async (bucket: string, data: any) => {
+    try {
+      return await $api.put(`/set-remote-target?bucket=${bucket}`, data);
+    } catch (error: any) {
+      message.error(error.message as string);
+      console.log(error);
+    }
+    // return await $api.put(`/set-remote-target?bucket=${bucket}`, data);
+  };
+
+  const listRemoteReplicationTarget = async (bucket: string) => {
+    return await $api.get(`/list-remote-targets?bucket=${bucket}&type=`);
+  };
+
+  const deleteRemoteReplicationTarget = async (bucket: string, arn: string) => {
+    return await $api.delete(`/remove-remote-target?bucket=${bucket}&arn=${arn}`);
+  };
+
+  /********************rustfs Replication target  end********************/
+
   return {
     listBuckets,
     createBucket,
@@ -218,5 +267,11 @@ export function useBucket({ region }: { region?: string }) {
     getBucketEncryption,
     putBucketEncryption,
     deleteBucketEncryption,
+    getBucketReplication,
+    putBucketReplication,
+    deleteBucketReplication,
+    setRemoteReplicationTarget,
+    listRemoteReplicationTarget,
+    deleteRemoteReplicationTarget,
   };
 }

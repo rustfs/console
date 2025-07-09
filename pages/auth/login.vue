@@ -22,14 +22,11 @@ const sts = ref({
   sessionToken: '',
 })
 
-const localConfig =  configManager.loadConfig()
-const serverConfigObj  = new URL(localConfig?.s3.endpoint || 'http:://localhost:9000') 
-// 服务端配置
 const serverConfig = ref({
-  protocol: serverConfigObj.protocol || 'http',
-  host: serverConfigObj.hostname || 'localhost',
-  port: serverConfigObj.port || '9000',
-  region: localConfig?.s3.region || 'us-east-1'
+  protocol: 'http',
+  host: 'localhost',
+  port: '9000',
+  region: 'us-east-1'
 })
 
 

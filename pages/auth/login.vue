@@ -22,14 +22,11 @@ const sts = ref({
   sessionToken: '',
 })
 
-const localConfig =  configManager.loadConfig()
-const serverConfigObj  = new URL(localConfig?.s3.endpoint || 'http:://localhost:9000') 
-// 服务端配置
 const serverConfig = ref({
-  protocol: serverConfigObj.protocol || 'http',
-  host: serverConfigObj.hostname || 'localhost',
-  port: serverConfigObj.port || '9000',
-  region: localConfig?.s3.region || 'us-east-1'
+  protocol: 'http',
+  host: 'localhost',
+  port: '9000',
+  region: 'us-east-1'
 })
 
 
@@ -42,12 +39,29 @@ const expandedNames = ref<string[]>([])
 const configAlert = ref('')
 
 // 检查是否需要默认展开服务器配置
-onMounted(() => {
+onMounted(async () => {
+  // 使用 configManager 加载配置（按优先级：config.json > localStorage > 默认值）
+  const config = await configManager.loadConfig()
+  if (config) {
+    const serverConfigData = configManager.extractServerConfig(config)
+    if (serverConfigData) {
+      // 更新 serverConfig
+      serverConfig.value = serverConfigData
+
+      // 更新 serverUrl
+      serverUrl.value = `${serverConfigData.protocol}://${serverConfigData.host}:${serverConfigData.port}`
+    }
+  }
+
+  // 如果没有有效配置，设置默认 serverUrl
+  if (!serverUrl.value) {
+    serverUrl.value = `${serverConfig.value.protocol}://${serverConfig.value.host}:${serverConfig.value.port}`
+  }
+
   if (route.query.showConfig === '1') {
     expandedNames.value = ['server-config']
     configAlert.value = t('No valid server configuration detected, please check server configuration')
   }
-  serverUrl.value = `${serverConfig.value.protocol}://${serverConfig.value.host}:${serverConfig.value.port}`
 })
 
 const handleLogin = async () => {
@@ -61,15 +75,18 @@ const handleLogin = async () => {
   const credentials = method.value === 'accessKeyAndSecretKey' ? accessKeyAndSecretKey.value : sts.value
 
   try {
-    // 保存配置到 localStorage
-    configManager.saveConfig({
+    // 使用 configManager 保存配置（如果有 public/config.json 则不保存）
+    const saved = await configManager.saveConfig({
       protocol: serverConfig.value.protocol,
       host: serverConfig.value.host,
       port: serverConfig.value.port,
       region: serverConfig.value.region
     })
 
-    message.success(t('Server configuration saved'))
+    if (saved) {
+      message.success(t('Server configuration saved'))
+    }
+
     await auth.login(credentials)
     message.success(t('Login Success'))
     window.location.href = '/'

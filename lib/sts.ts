@@ -7,10 +7,15 @@ import type { SiteConfig } from "~/types/config";
  * @param {string} ak - 主账号 AccessKey
  * @param {string} sk - 主账号 SecretKey
  * @param {string} roleArn - 需要扮演的角色 ARN
+ * @param {SiteConfig} customConfig - 可选的自定义配置
  * @returns {Promise<Credentials>}
  */
-export async function getStsToken(credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider, roleArn: string) {
-  const siteConfig = useNuxtApp().$siteConfig as SiteConfig;
+export async function getStsToken(
+  credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
+  roleArn: string,
+  customConfig?: SiteConfig
+) {
+  const siteConfig = customConfig || (useNuxtApp().$siteConfig as SiteConfig);
 
   console.log('S3 siteConfig', siteConfig);
 

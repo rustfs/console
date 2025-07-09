@@ -1,5 +1,6 @@
 import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@aws-sdk/types";
 import { getStsToken } from "~/lib/sts";
+import type { SiteConfig } from "~/types/config";
 
 interface Credentials {
   AccessKeyId?: string;
@@ -29,8 +30,11 @@ export function useAuth() {
     return !!credentials?.AccessKeyId && !!credentials?.SecretAccessKey && !!credentials?.SessionToken && credentials?.Expiration && !isExpired(credentials.Expiration)
   }
 
-  const login = async (credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider) => {
-    const credentialsResponse = await getStsToken(credentials, 'arn:aws:iam::*:role/Admin')
+  const login = async (
+    credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
+    customConfig?: SiteConfig
+  ) => {
+    const credentialsResponse = await getStsToken(credentials, 'arn:aws:iam::*:role/Admin', customConfig)
 
     setCredentials({
       ...credentialsResponse,

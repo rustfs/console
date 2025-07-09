@@ -22,13 +22,16 @@ const sts = ref({
   sessionToken: '',
 })
 
+const localConfig =  configManager.loadConfig()
+const serverConfigObj  = new URL(localConfig?.s3.endpoint || 'http:://localhost:9000') 
 // 服务端配置
 const serverConfig = ref({
-  protocol: 'http',
-  host: 'localhost',
-  port: '9000',
-  region: 'us-east-1'
+  protocol: serverConfigObj.protocol || 'http',
+  host: serverConfigObj.hostname || 'localhost',
+  port: serverConfigObj.port || '9000',
+  region: localConfig?.s3.region || 'us-east-1'
 })
+
 
 const message = useMessage()
 const auth = useAuth()
@@ -201,8 +204,8 @@ const onUrlInput = () => {
             </div>
 
             <n-tabs type="segment" animated size="small" v-model:value="method">
-              <n-tab-pane name="accessKeyAndSecretKey" :label="t('Key Login')" />
-              <n-tab-pane name="sts" :label="t('STS Login')" />
+              <n-tab-pane name="accessKeyAndSecretKey" :tab="t('Key Login')" />
+              <n-tab-pane name="sts" :tab="t('STS Login')" />
             </n-tabs>
 
             <!-- Form -->
@@ -228,7 +231,7 @@ const onUrlInput = () => {
                   </div>
                   <div>
                     <label for="sts.secretAccessKey" class="block text-sm mb-2 dark:text-white">{{ t('STS Key') }}</label>
-                    <n-input v-model:value="sts.secretAccessKey" autocomplete="new-password" type="password" :placeholder="t('Please enter STS key')" />
+                    <n-input v-model:value="sts.secretAccessKey" autocomplete="new-password" type="password"  :placeholder="t('Please enter STS key')" />
                   </div>
                   <div>
                     <label for="sessionToken" class="block text-sm mb-2 dark:text-white">{{ t('STS Session Token') }}</label>

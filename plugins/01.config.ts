@@ -5,37 +5,48 @@ export default defineNuxtPlugin({
   async setup(nuxtApp) {
     let finalConfig: any
 
-    // 优先级：localStorage > public/config.json > runtimeConfig
     try {
-      // 1. 首先尝试从 localStorage 读取配置
-      const localStorageConfig = configManager.loadConfig()
-      if (localStorageConfig) {
-        finalConfig = { ...useRuntimeConfig().public, ...localStorageConfig }
-        console.log('Configuration loaded from localStorage')
-      }
-
-      // 2. 如果 localStorage 没有配置，尝试从 public/config.json 加载
-      if (!finalConfig) {
-        const response = await fetch('/config.json')
-        const remoteConfig = await response.json()
-
-        // 获取license
-        // 判断是否是开发环境
-        if (process.env.NODE_ENV !== 'development') {
-          const licenseResponse = await fetch('/license')
-          const licenseConfig = await licenseResponse.json()
-          remoteConfig.license = licenseConfig
-        }
-
-        // 合并 public/runtimeConfig 与 remote 配置，remote 的优先
-        finalConfig = { ...useRuntimeConfig().public, ...remoteConfig }
-        console.log('Configuration loaded from config.json')
-      }
-
-      // 3. 如果都没有，使用 runtimeConfig
-      if (!finalConfig) {
+      // 使用 configManager 加载配置（内部优先级：config.json > localStorage > runtimeconfig）
+      const userConfig = await configManager.loadConfig()
+      if (userConfig) {
+        finalConfig = { ...useRuntimeConfig().public, ...userConfig }
+        console.log('Configuration loaded from configManager')
+      } else {
+        // 如果 configManager 没有配置，使用 runtimeConfig
         finalConfig = useRuntimeConfig().public
         console.log('Configuration loaded from runtimeConfig')
+      }
+
+      // 如果有 public/config.json，尝试获取额外的信息（如 license）
+      if (await configManager.hasPublicConfig()) {
+        try {
+          const response = await fetch('/config.json')
+          const publicConfig = await response.json()
+
+          // 保留 license 和其他额外信息
+          if (publicConfig.license) {
+            finalConfig.license = publicConfig.license
+          }
+          if (publicConfig.release) {
+            finalConfig.release = publicConfig.release
+          }
+          if (publicConfig.doc) {
+            finalConfig.doc = publicConfig.doc
+          }
+
+          // 获取 license 信息（如果不是开发环境）
+          if (process.env.NODE_ENV !== 'development') {
+            try {
+              const licenseResponse = await fetch('/license')
+              const licenseConfig = await licenseResponse.json()
+              finalConfig.license = licenseConfig
+            } catch (licenseError) {
+              console.warn('Failed to load license info:', licenseError)
+            }
+          }
+        } catch (error) {
+          console.warn('Failed to load additional config info:', error)
+        }
       }
 
     } catch (error) {

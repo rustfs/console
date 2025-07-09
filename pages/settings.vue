@@ -15,36 +15,36 @@ const serverConfig = ref({
 })
 
 // 加载当前配置
-const loadCurrentConfig = () => {
-  const currentConfig = configManager.loadConfig()
+const loadCurrentConfig = async () => {
+  const currentConfig = await configManager.loadConfig()
   if (currentConfig) {
-    // 从 baseURL 解析配置
-    const url = new URL(currentConfig.api.baseURL)
-    serverConfig.value = {
-      protocol: url.protocol.replace(':', ''),
-      host: url.hostname,
-      port: url.port || (url.protocol === 'https:' ? '443' : '80'),
-      region: currentConfig.s3.region
+    const serverConfigData = configManager.extractServerConfig(currentConfig)
+    if (serverConfigData) {
+      serverConfig.value = serverConfigData
     }
   }
 }
 
 // 保存配置
-const saveConfig = () => {
-  configManager.saveConfig(serverConfig.value)
-  message.success(t('Server configuration saved'))
+const saveConfig = async () => {
+  const saved = await configManager.saveConfig(serverConfig.value)
+  if (saved) {
+    message.success(t('Server configuration saved'))
+  } else {
+    message.info(t('Using public configuration, cannot save to localStorage'))
+  }
 }
 
 // 清除配置
-const clearConfig = () => {
+const clearConfig = async () => {
   configManager.clearConfig()
   message.success('Configuration cleared')
-  loadCurrentConfig()
+  await loadCurrentConfig()
 }
 
 // 页面加载时读取当前配置
-onMounted(() => {
-  loadCurrentConfig()
+onMounted(async () => {
+  await loadCurrentConfig()
 })
 </script>
 

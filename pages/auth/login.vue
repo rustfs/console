@@ -75,21 +75,10 @@ const handleLogin = async () => {
   const credentials = method.value === 'accessKeyAndSecretKey' ? accessKeyAndSecretKey.value : sts.value
 
   try {
-    // 使用 configManager 保存配置（如果有 public/config.json 则不保存）
-    const saved = await configManager.saveConfig({
-      protocol: serverConfig.value.protocol,
-      host: serverConfig.value.host,
-      port: serverConfig.value.port,
-      region: serverConfig.value.region
-    })
-
-    if (saved) {
-      message.success(t('Server configuration saved'))
-    }
-
     await auth.login(credentials)
     message.success(t('Login Success'))
-    window.location.href = '/'
+    // 重新加载页面以确保新的配置生效
+    window.location.reload()
   } catch (error) {
     expandedNames.value = ['server-config']
     configAlert.value = t('Login failed, please check server configuration')
@@ -134,10 +123,52 @@ const validateAndParseUrl = () => {
 
     urlValidationStatus.value = 'success'
     urlError.value = ''
+
+    // 立即保存配置并更新 $siteConfig
+    saveConfigAndUpdateSiteConfig()
   } catch (error) {
     urlValidationStatus.value = 'error'
     urlError.value = t('Invalid URL format')
   }
+}
+
+// 保存配置并更新 $siteConfig 的函数
+const saveConfigAndUpdateSiteConfig = async () => {
+  try {
+    // 保存配置到 localStorage
+    const saved = await configManager.saveConfig({
+      protocol: serverConfig.value.protocol,
+      host: serverConfig.value.host,
+      port: serverConfig.value.port,
+      region: serverConfig.value.region
+    })
+
+    if (saved) {
+      // 动态更新 $siteConfig
+      const nuxtApp = useNuxtApp()
+      const currentConfig = nuxtApp.$siteConfig
+      const updatedConfig = {
+        ...currentConfig,
+        api: {
+          baseURL: `${serverConfig.value.protocol}://${serverConfig.value.host}:${serverConfig.value.port}/rustfs/admin/v3`
+        },
+        s3: {
+          endpoint: `${serverConfig.value.protocol}://${serverConfig.value.host}:${serverConfig.value.port}`,
+          region: serverConfig.value.region
+        }
+      }
+
+      // 更新 $siteConfig
+      nuxtApp.$siteConfig = updatedConfig
+    }
+  } catch (error) {
+    console.warn('Failed to save config:', error)
+  }
+}
+
+// 监听 region 变化
+const onRegionChange = () => {
+  saveConfigAndUpdateSiteConfig()
 }
 
 const onUrlInput = () => {
@@ -212,7 +243,7 @@ const onUrlInput = () => {
 
                       <div>
                         <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">{{ t('Region') }}</label>
-                        <n-input v-model:value="serverConfig.region" size="medium" type="text" :placeholder="'us-east-1'" />
+                        <n-input v-model:value="serverConfig.region" size="medium" type="text" :placeholder="'us-east-1'" @change="onRegionChange" />
                       </div>
                     </div>
                   </div>
@@ -248,7 +279,7 @@ const onUrlInput = () => {
                   </div>
                   <div>
                     <label for="sts.secretAccessKey" class="block text-sm mb-2 dark:text-white">{{ t('STS Key') }}</label>
-                    <n-input v-model:value="sts.secretAccessKey" autocomplete="new-password" type="password"  :placeholder="t('Please enter STS key')" />
+                    <n-input v-model:value="sts.secretAccessKey" autocomplete="new-password" type="password" :placeholder="t('Please enter STS key')" />
                   </div>
                   <div>
                     <label for="sessionToken" class="block text-sm mb-2 dark:text-white">{{ t('STS Session Token') }}</label>

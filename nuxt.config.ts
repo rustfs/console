@@ -66,8 +66,8 @@ export default defineNuxtConfig({
 
       // 授权信息
       license: {
-        "name": "Apache-2.0",
-        "expired": 4102329600
+        // "name": "Apache-2.0",
+        // "expired": 4102329600
       }
     }
   },

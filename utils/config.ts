@@ -18,23 +18,6 @@ export interface RustFSConfig {
 const CONFIG_KEY = 'rustfs-config'
 
 export const configManager = {
-  // 从 public/config.json 读取配置
-  async loadPublicConfig(): Promise<RustFSConfig | null> {
-    if (process.client) {
-      try {
-        const response = await fetch('/config.json')
-        if (response.ok) {
-          const publicConfig = await response.json()
-          if (publicConfig.api?.baseURL) {
-            return publicConfig
-          }
-        }
-      } catch (error) {
-        console.log('public/config.json not found')
-      }
-    }
-    return null
-  },
 
   // 从 localStorage 读取配置
   loadStorageConfig(): RustFSConfig | null {
@@ -72,13 +55,8 @@ export const configManager = {
     return null
   },
 
-  // 按优先级加载配置：config.json > localStorage > runtimeconfig
+  // 按优先级加载配置： localStorage > runtimeconfig
   async loadConfig(): Promise<RustFSConfig | null> {
-    // 首先尝试从 config.json 加载
-    const publicConfig = await this.loadPublicConfig()
-    if (publicConfig) {
-      return publicConfig
-    }
 
     // 如果没有 config.json，尝试从 localStorage 加载
     const storageConfig = this.loadStorageConfig()
@@ -106,19 +84,10 @@ export const configManager = {
     }
   },
 
-  // 检查是否有 public/config.json
-  async hasPublicConfig(): Promise<boolean> {
-    const config = await this.loadPublicConfig()
-    return !!config
-  },
 
   // 保存配置到 localStorage（只有当没有 public/config.json 时）
   async saveConfig(serverConfig: ServerConfig): Promise<boolean> {
     if (process.client) {
-      // 如果有 public/config.json，就不保存到 localStorage
-      if (await this.hasPublicConfig()) {
-        return false
-      }
 
       const config: RustFSConfig = {
         api: {

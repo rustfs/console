@@ -6,7 +6,7 @@ export default defineNuxtPlugin({
     let finalConfig: any
 
     try {
-      // 使用 configManager 加载配置（内部优先级：config.json > localStorage > runtimeconfig）
+      // 使用 configManager 加载配置（内部优先级： localStorage > runtimeconfig）
       const userConfig = await configManager.loadConfig()
       if (userConfig) {
         finalConfig = { ...useRuntimeConfig().public, ...userConfig }
@@ -17,37 +17,6 @@ export default defineNuxtPlugin({
         console.log('Configuration loaded from runtimeConfig')
       }
 
-      // 如果有 public/config.json，尝试获取额外的信息（如 license）
-      if (await configManager.hasPublicConfig()) {
-        try {
-          const response = await fetch('/config.json')
-          const publicConfig = await response.json()
-
-          // 保留 license 和其他额外信息
-          if (publicConfig.license) {
-            finalConfig.license = publicConfig.license
-          }
-          if (publicConfig.release) {
-            finalConfig.release = publicConfig.release
-          }
-          if (publicConfig.doc) {
-            finalConfig.doc = publicConfig.doc
-          }
-
-          // 获取 license 信息（如果不是开发环境）
-          if (process.env.NODE_ENV !== 'development') {
-            try {
-              const licenseResponse = await fetch('/license')
-              const licenseConfig = await licenseResponse.json()
-              finalConfig.license = licenseConfig
-            } catch (licenseError) {
-              console.warn('Failed to load license info:', licenseError)
-            }
-          }
-        } catch (error) {
-          console.warn('Failed to load additional config info:', error)
-        }
-      }
 
     } catch (error) {
       console.error('Failed to load configuration:', error)

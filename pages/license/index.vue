@@ -9,7 +9,7 @@
       <!-- 顶部信息 -->
     <n-card>
       <n-flex justify="space-between" class="top-info py-4 px-2">
-        <n-space vertical v-if="new Date().getTime() - siteConfig.license.expired*1000<0">
+        <n-space vertical v-if="false">
           <n-space><n-tag type="success">{{ t('Enterprise License') }}</n-tag> <n-text style="line-height: 28px;" type="success">{{ t('Status') }}：{{ t('Normal') }}</n-text></n-space>
           <n-space>{{ t('License Valid Until') }}：{{ endDate }}</n-space>
         </n-space>
@@ -44,7 +44,7 @@
     <!-- 许可证详情 -->
     <n-card :title="t('License Details')" class="license-details mt-4">
       <n-descriptions :columns="2" :bordered="true">
-        <n-descriptions-item :label="t('Licensed Company')">{{ siteConfig.license?.name }}</n-descriptions-item>
+        <n-descriptions-item :label="t('Licensed Company')">{{ t('No License') }}</n-descriptions-item>
         <n-descriptions-item :label="t('License Key')">{{ licenseKey }}</n-descriptions-item>
         <n-descriptions-item :label="t('Licensed Users')">{{ t('Unlimited') }}</n-descriptions-item>
         <n-descriptions-item :label="t('Support Level')">{{ t('Enterprise') }} (7x24x365)</n-descriptions-item>
@@ -128,7 +128,7 @@
     </page-content >
   </div>
 
-  <articleL v-else></articleL>
+  <LicenseArticle v-else></LicenseArticle>
 </template>
 
 <script setup lang="ts">
@@ -138,16 +138,17 @@ import { NButton } from 'naive-ui'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SiteConfig } from "~/types/config"
-import articleL from './article.vue'
+import LicenseArticle from './components/license-article.vue'
 
 const { t } = useI18n()
 const siteConfig = useNuxtApp().$siteConfig as SiteConfig;
-const hasLicense = siteConfig.license
+// 由于移除了license配置，始终显示无许可证状态
+const hasLicense = false
 
 // 服务开始
 const startDate = new Date('2025-01-01');
-// 服务结束
-const endDate = dayjs(siteConfig.license.expired*1000).format('YYYY-MM-DD');
+// 服务结束 - 使用默认日期
+const endDate = dayjs().format('YYYY-MM-DD');
 
 // 数据
 const licenseKey = ref('RUSTFS-ENTERPRISE-127-183');

@@ -3,7 +3,7 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 
 const appName = process.env.APP_NAME || 'RustFS'
-const baseUrl = process.env.BASE_URL || '/rustfs/console/'
+const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '')
 const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -21,11 +21,8 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: baseUrl + '/favicon.ico' },
-        // <link rel="icon" type = "image/png" sizes = "32x32" href = "/favicon-32x32.png" >
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: baseUrl + '/favicon-32x32.png' },
-        // <link rel="icon" type = "image/png" sizes = "16x16" href = "/favicon-16x16.png" >
         { rel: 'icon', type: 'image/png', sizes: '16x16', href: baseUrl + '/favicon-16x16.png' },
-        // <link rel="apple-touch-icon" sizes = "180x180" href = "/apple-touch-icon.png" >
         { rel: 'apple-touch-icon', sizes: '180x180', href: baseUrl + '/apple-touch-icon.png' },
         { rel: 'manifest', href: baseUrl + '/site.webmanifest' },
       ],
@@ -47,7 +44,9 @@ export default defineNuxtConfig({
         durationSeconds: Number(process.env.SESSION_DURATION_SECONDS) || 3600 * 12
       },
 
-      // 下面部分修改的时候记得同步修改 public/config.json
+      // 服务器地址
+      serverHost: process.env.SERVER_HOST || '',
+
       // admin API 请求基础 URL
       api: {
         baseURL: process.env.API_BASE_URL || ''
@@ -56,7 +55,7 @@ export default defineNuxtConfig({
       // 对象存储配置
       s3: {
         region: process.env.S3_REGION || 'us-east-1',
-        endpoint: process.env.S3_ENDPOINT  || process.env.API_BASE_URL || ''
+        endpoint: process.env.S3_ENDPOINT || process.env.API_BASE_URL || ''
       },
 
       // 版本信息

@@ -17,7 +17,7 @@ export function useAuth() {
   }
 
   const getCredentials = () => {
-    if (!isValiedCredentials(store.value)) {
+    if (!isValidCredentials(store.value)) {
       return
     }
 
@@ -26,7 +26,7 @@ export function useAuth() {
 
   const isExpired = (expiration: string) => expiration ? new Date(expiration) < new Date() : false
 
-  const isValiedCredentials = (credentials: Credentials) => {
+  const isValidCredentials = (credentials: Credentials) => {
     return !!credentials?.AccessKeyId && !!credentials?.SecretAccessKey && !!credentials?.SessionToken && credentials?.Expiration && !isExpired(credentials.Expiration)
   }
 
@@ -58,6 +58,6 @@ export function useAuth() {
     logout,
     logoutAndRedirect,
     credentials: ref<Credentials | undefined>(getCredentials()),
-    isAuthenticated: ref(isValiedCredentials(store.value)),
+    isAuthenticated: ref(isValidCredentials(store.value)),
   }
 }

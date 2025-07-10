@@ -125,7 +125,18 @@ import {
   NInputNumber,
   NSelect,
 } from "naive-ui";
-import { randomUUID } from "uncrypto";
+// 使用 Web Crypto API 或 Node.js crypto 模块
+const randomUUID = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID()
+  }
+  // 兜底方案
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 const { putBucketLifecycleConfiguration, getBucketVersioning, getBucketLifecycleConfiguration } = useBucket({});

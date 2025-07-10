@@ -288,7 +288,7 @@ const getObjectLockConfig = async () => {
 /**********object lock ***********************/
 
 /******** policy ***********************/
-import { setBucketPolicy, getBucketPolicy as getBucketPolicyFn } from "~/utils/bucketPolicy";
+import { setBucketPolicy, getBucketPolicy as getBucketPolicyFn } from "~/utils/bucket-policy";
 
 const bucketPolicy = ref("public");
 const getbucketPolicy = async () => {

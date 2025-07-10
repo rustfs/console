@@ -1,4 +1,5 @@
 import { configManager } from '~/utils/config'
+import { logger } from '~/utils/logger'
 
 export default defineNuxtPlugin({
   name: 'load-site-config',
@@ -6,20 +7,18 @@ export default defineNuxtPlugin({
     let finalConfig: any
 
     try {
-      // 使用 configManager 加载配置（内部优先级： localStorage > runtimeconfig）
-      const userConfig = await configManager.loadConfig()
-      if (userConfig) {
-        finalConfig = { ...useRuntimeConfig().public, ...userConfig }
-        console.log('Configuration loaded from configManager')
+      // 使用 configManager 加载配置（优先使用当前host）
+      const config = await configManager.loadConfig()
+      if (config) {
+        finalConfig = { ...useRuntimeConfig().public, ...config }
+        logger.log('Configuration loaded from configManager')
       } else {
         // 如果 configManager 没有配置，使用 runtimeConfig
         finalConfig = useRuntimeConfig().public
-        console.log('Configuration loaded from runtimeConfig')
+        logger.log('Configuration loaded from runtimeConfig')
       }
-
-
     } catch (error) {
-      console.error('Failed to load configuration:', error)
+      logger.error('Failed to load configuration:', error)
 
       // 如果配置加载失败，重定向到登录页而不是抛出错误
       if (process.client) {
@@ -33,12 +32,12 @@ export default defineNuxtPlugin({
       finalConfig = useRuntimeConfig().public
     }
 
-    if (!finalConfig.api.baseURL) {
-      // 如果仍然没有 baseURL，重定向到登录页
+    if (!finalConfig.api?.baseURL && !finalConfig.serverHost) {
+      // 如果仍然没有 baseURL 或 serverHost，重定向到登录页
       if (process.client) {
         const currentRoute = useRoute()
         if (currentRoute.path !== '/auth/login') {
-          await navigateTo('/auth/login?showConfig=1')
+          await navigateTo('/auth/login')
         }
       }
     }

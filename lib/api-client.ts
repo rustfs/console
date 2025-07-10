@@ -1,7 +1,7 @@
 import { joinURL } from "ufo";
-import type { AwsClient } from "./aws4fetch";
 import { parseApiError } from "~/utils/error-handler";
 import { logger } from "~/utils/logger";
+import type { AwsClient } from "./aws4fetch";
 
 interface ApiClientOptions {
   baseUrl?: string;
@@ -59,7 +59,7 @@ class ApiClient {
     }
 
     // 204 or body length is 0
-    if (response.status === 204 || response.headers.get("content-length") === "0") {
+    if (response.status === 204 || response.headers.get("content-length") === "0" || !response.body) {
       return null;
     }
 

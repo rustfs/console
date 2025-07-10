@@ -1,16 +1,30 @@
 import { joinURL } from "ufo";
 import type { AwsClient } from "./aws4fetch";
+import { parseApiError } from "~/utils/error-handler";
+import { logger } from "~/utils/logger";
+
+interface ApiClientOptions {
+  baseUrl?: string;
+  headers?: Record<string, string>;
+}
+
+interface RequestOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: any;
+  params?: Record<string, string>;
+}
 
 class ApiClient {
-  private $api: any;
-  private config?: { baseUrl?: string; headers?: Record<string, string> };
+  private $api: AwsClient;
+  private config?: ApiClientOptions;
 
-  constructor(api: AwsClient, options?: any) {
+  constructor(api: AwsClient, options?: ApiClientOptions) {
     this.$api = api;
     this.config = options;
   }
 
-  async request(url: string, options: any = {}, parseJson: boolean = true) {
+  async request(url: string, options: RequestOptions = {}, parseJson: boolean = true) {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url;
     options.headers = { ...this.config?.headers, ...options.headers };
     // 处理body的数据格式
@@ -22,37 +36,15 @@ class ApiClient {
       delete options.params; // 删除params，以免影响fetch的options
     }
 
-    console.log("[request] url:", url);
-    console.log("[request] options:", options);
+    logger.log("[request] url:", url);
+    logger.log("[request] options:", options);
 
     const response = await this.$api.fetch(url, options);
 
-    console.log("[request] response:", response);
+    logger.log("[request] response:", response);
 
     if (!response.ok) {
-      let errorMsg = response.statusText;
-      try {
-        // 优先尝试解析为 JSON
-        const errorData = await response.clone().json();
-        errorMsg = errorData.message || JSON.stringify(errorData) || errorMsg;
-      } catch (e) {
-        try {
-          // 如果不是 JSON，尝试解析为文本
-          const text = await response.clone().text();
-          if (text) {
-            // 检查是否为 XML
-            if (text.trim().startsWith("<")) {
-              // 简单提取 <Message> 或 <Error> 标签内容
-              const match = text.match(/<Message>(.*?)<\/Message>/i) || text.match(/<Error>(.*?)<\/Error>/i);
-              errorMsg = match ? match[1] : text;
-            } else {
-              errorMsg = text;
-            }
-          }
-        } catch (e2) {
-          // 保持原有 statusText
-        }
-      }
+      const errorMsg = await parseApiError(response);
       throw new Error(errorMsg);
     }
 
@@ -78,7 +70,7 @@ class ApiClient {
     }
   }
 
-  async *streamRequest(url: string, options: any = {}) {
+  async *streamRequest(url: string, options: RequestOptions = {}) {
     const response = await this.request(url, options, false);
 
     if (!response.body) {
@@ -96,39 +88,39 @@ class ApiClient {
         const data = JSON.parse(chunk);
         yield data; // 使用 yield 返回数据
       } catch (error) {
-        console.error("Failed to parse chunk:", error);
+        logger.error("Failed to parse chunk:", error);
       }
     }
   }
-  async get(url: string, options?: any) {
+  async get(url: string, options?: RequestOptions) {
     return this.request(url, { method: "GET", ...options });
   }
 
-  async post(url: string, body: any, options?: any) {
+  async post(url: string, body: any, options?: RequestOptions) {
     return this.request(url, { method: "POST", body, ...options });
   }
 
-  async delete(url: string, options?: any) {
+  async delete(url: string, options?: RequestOptions) {
     return this.request(url, { method: "DELETE", ...options });
   }
 
-  async put(url: string, body: any, options?: any) {
+  async put(url: string, body: any, options?: RequestOptions) {
     return this.request(url, { method: "PUT", body, ...options });
   }
 
-  async patch(url: string, body: any, options?: any) {
+  async patch(url: string, body: any, options?: RequestOptions) {
     return this.request(url, { method: "PATCH", body, ...options });
   }
 
-  async head(url: string, options?: any) {
+  async head(url: string, options?: RequestOptions) {
     return this.request(url, { method: "HEAD", ...options });
   }
 
-  async options(url: string, options?: any) {
+  async options(url: string, options?: RequestOptions) {
     return this.request(url, { method: "OPTIONS", ...options });
   }
 
-  async trace(url: string, options?: any) {
+  async trace(url: string, options?: RequestOptions) {
     return this.request(url, { method: "TRACE", ...options });
   }
 }

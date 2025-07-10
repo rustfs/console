@@ -1,9 +1,9 @@
 import AutoImport from 'unplugin-auto-import/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
-const isDev = process.env.NODE_ENV === 'development'
 
 const appName = process.env.APP_NAME || 'RustFS'
+const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '')
 const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
@@ -13,20 +13,18 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-04-13',
   devtools: { enabled: true },
   app: {
+    baseURL: baseUrl,
     head: {
       title: appName,
       meta: [
         { name: 'description', content: appDescription },
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        // <link rel="icon" type = "image/png" sizes = "32x32" href = "/favicon-32x32.png" >
-        { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/favicon-32x32.png' },
-        // <link rel="icon" type = "image/png" sizes = "16x16" href = "/favicon-16x16.png" >
-        { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/favicon-16x16.png' },
-        // <link rel="apple-touch-icon" sizes = "180x180" href = "/apple-touch-icon.png" >
-        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
-        { rel: 'manifest', href: '/site.webmanifest' },
+        { rel: 'icon', type: 'image/x-icon', href: baseUrl + '/favicon.ico' },
+        { rel: 'icon', type: 'image/png', sizes: '32x32', href: baseUrl + '/favicon-32x32.png' },
+        { rel: 'icon', type: 'image/png', sizes: '16x16', href: baseUrl + '/favicon-16x16.png' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: baseUrl + '/apple-touch-icon.png' },
+        { rel: 'manifest', href: baseUrl + '/site.webmanifest' },
       ],
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
@@ -46,7 +44,9 @@ export default defineNuxtConfig({
         durationSeconds: Number(process.env.SESSION_DURATION_SECONDS) || 3600 * 12
       },
 
-      // 下面部分修改的时候记得同步修改 public/config.json
+      // 服务器地址
+      serverHost: process.env.SERVER_HOST || '',
+
       // admin API 请求基础 URL
       api: {
         baseURL: process.env.API_BASE_URL || ''

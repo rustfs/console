@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { download } from '@/utils/exportFile'
+import { download } from '@/utils/export-file'
 const visible = ref(false)
 
 const accessKey = ref('')

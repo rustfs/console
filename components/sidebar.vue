@@ -3,32 +3,39 @@ import { useI18n } from "vue-i18n";
 import { RouterLink } from "vue-router";
 import { useSidebarStore } from "~/store/sidebar";
 import type { SiteConfig } from "~/types/config";
+import type { AppConfig, NavItem } from "~/types/app-config";
 
 const { t } = useI18n();
-const appConfig = useAppConfig();
-const siteConfig = useNuxtApp().$siteConfig as unknown as SiteConfig;
+const appConfig = useAppConfig() as unknown as AppConfig;
 const route = useRoute();
 const sidebarStore = useSidebarStore();
 const isCollapsed = computed(() => sidebarStore.isCollapsed);
+
+// 安全地获取 siteConfig，如果失败则使用默认值
+let siteConfig: SiteConfig;
+try {
+  siteConfig = useNuxtApp().$siteConfig as SiteConfig;
+} catch (error) {
+  console.warn('Failed to load siteConfig, using defaults:', error);
+  siteConfig = {
+    serverHost: window.location.origin,
+    api: { baseURL: `${window.location.origin}/rustfs/admin/v3` },
+    s3: { 
+      endpoint: window.location.origin, 
+      region: 'us-east-1',
+      accessKeyId: '',
+      secretAccessKey: ''
+    }
+  };
+}
 
 const toggleSidebar = () => {
   sidebarStore.toggleSidebar();
 };
 
-const options = computed(() => {
-  return appConfig.navs.map(
-    (nav: {
-      label: string;
-      to?: string;
-      type?: string;
-      icon?: string;
-      target?: string;
-      children?: {
-        label: string;
-        to: string;
-        icon?: string;
-      }[];
-    }) => {
+// 缓存导航配置的生成逻辑，避免每次重新计算
+const navOptions = computed(() => {
+  return appConfig.navs.map((nav: NavItem) => {
       let item: {
         key: string;
         type?: string;
@@ -59,7 +66,7 @@ const options = computed(() => {
           return {
             key: child.label,
             type: "item",
-            label: () => h(RouterLink, { to: child.to }, { default: () => t(child.label) }),
+            label: () => h(RouterLink, { to: child.to || '/' }, { default: () => t(child.label) }),
             icon: child.icon ? iconRender(child.icon) : undefined,
           };
         });
@@ -69,6 +76,9 @@ const options = computed(() => {
     }
   );
 });
+
+// 直接使用计算属性，不需要 readonly 包装
+const menuOptions = navOptions;
 </script>
 <template>
   <n-layout-sider
@@ -90,17 +100,6 @@ const options = computed(() => {
           </n-avatar>
           <h2 v-else class="text-center text-2xl flex">
             <img src="~/assets/logo.svg" class="max-w-28" alt="" />
-            <span
-              v-if="siteConfig.license.name && siteConfig.license.expired != 0"
-              class="flex items-center justify-center text-[9px] leading-[9px] ml-1 p-1 bg-orange-600 text-white rounded rounded-bl-none">
-              {{ t("PRO") }}
-            </span>
-            <span
-              v-else
-              class="flex items-center justify-center text-[9px] leading-[9px] ml-1 p-1 bg-green-600 text-white rounded rounded-bl-none">
-              {{ t("OSS") }}
-            </span>
-
             <span class="sr-only">{{ appConfig.name }}</span>
           </h2>
         </div>
@@ -115,28 +114,13 @@ const options = computed(() => {
           :root-indent="12"
           :collapsed-width="64"
           :collapsed-icon-size="22"
-          :options="options"
+          :options="menuOptions"
           default-expand-all
           class="flex-1" />
       </div>
 
       <div v-if="isCollapsed" class="w-full flex items-center justify-center py-4">
         <Icon name="ri:menu-unfold-fill" class="cursor-pointer text-xl" @click="toggleSidebar" :title="t('Expand')" />
-      </div>
-
-      <div v-if="!isCollapsed" class="flex flex-col p-4 text-gray-500">
-        <div class="flex items-center gap-2">
-          <Icon name="ri-server-line" />
-          <span>{{ t("Version") }}: {{ siteConfig.release.version }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <Icon name="ri-calendar-line" />
-          <span>{{ t("Build Date") }}：{{ siteConfig.release.date }}</span>
-        </div>
-        <div class="flex items-center gap-2">
-          <Icon name="ri-verified-badge-line" />
-          <span>{{ t("License") }}：{{ siteConfig.license.name }}</span>
-        </div>
       </div>
 
       <div class="border-t dark:border-neutral-800 p-2" :class="{ 'flex justify-between items-center': !isCollapsed }">

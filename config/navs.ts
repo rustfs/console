@@ -1,4 +1,6 @@
 // icons: https://icones.js.org/collection/ri
+import type { NavItem } from '~/types/app-config'
+
 export default [
   {
     label: "Browser",
@@ -74,14 +76,8 @@ export default [
     type: "divider",
   },
   {
-    label: "Settings",
-    to: "/settings",
-    icon: "ri:settings-3-line",
-  },
-  {
     label: "License",
-    // to: 'https://github.com/rustfs/rustfs?tab=Apache-2.0-1-ov-file#readme',
-    to: "/licenseinfo",
+    to: "/license",
     icon: "ri:copyright-line",
   },
   {
@@ -90,4 +86,4 @@ export default [
     target: "_blank",
     icon: "ri:file-list-3-line",
   },
-];
+] as NavItem[];

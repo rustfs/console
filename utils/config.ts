@@ -1,11 +1,15 @@
-export interface ServerConfig {
-  protocol: string
-  host: string
-  port: string
-  region: string
-}
+import type { SiteConfig } from '~/types/config'
+import { handleConfigError } from './error-handler'
+import { logger } from './logger'
+import { 
+  createDefaultConfig, 
+  getStoredHostConfig, 
+  getCurrentBrowserConfig, 
+  getServerDefaultConfig 
+} from './config-helpers'
 
 export interface RustFSConfig {
+  serverHost: string
   api: {
     baseURL: string
   }
@@ -15,137 +19,101 @@ export interface RustFSConfig {
   }
 }
 
-const CONFIG_KEY = 'rustfs-config'
+// 添加配置缓存
+let configCache: SiteConfig | null = null
+let configCacheTime = 0
+const CACHE_DURATION = 60000 // 1分钟缓存
 
 export const configManager = {
-  // 从 public/config.json 读取配置
-  async loadPublicConfig(): Promise<RustFSConfig | null> {
-    if (process.client) {
-      try {
-        const response = await fetch('/config.json')
-        if (response.ok) {
-          const publicConfig = await response.json()
-          if (publicConfig.api?.baseURL) {
-            return publicConfig
-          }
-        }
-      } catch (error) {
-        console.log('public/config.json not found')
-      }
+  // 获取当前host配置
+  getCurrentHostConfig(): SiteConfig {
+    // 优先使用localStorage中保存的配置
+    const storedConfig = getStoredHostConfig()
+    if (storedConfig) {
+      return storedConfig
     }
-    return null
-  },
 
-  // 从 localStorage 读取配置
-  loadStorageConfig(): RustFSConfig | null {
-    if (process.client) {
-      try {
-        const configStr = localStorage.getItem(CONFIG_KEY)
-        if (configStr) {
-          return JSON.parse(configStr)
-        }
-      } catch (error) {
-        console.warn('Failed to parse localStorage config:', error)
-      }
+    // 使用当前浏览器地址
+    const browserConfig = getCurrentBrowserConfig()
+    if (browserConfig) {
+      return browserConfig
     }
-    return null
+
+    // 服务端fallback
+    return getServerDefaultConfig()
   },
 
   // 从 nuxt runtimeconfig 读取配置
-  loadRuntimeConfig(): RustFSConfig | null {
+  loadRuntimeConfig(): SiteConfig | null {
     try {
       const runtimeConfig = useRuntimeConfig()
-      if (runtimeConfig.public?.api?.baseURL) {
+      
+      // 优先使用 serverHost，然后是 API_BASE_URL
+      const serverHost = runtimeConfig.public?.serverHost || 
+                        runtimeConfig.public?.api?.baseURL?.replace(/\/rustfs\/admin\/v3$/, '')
+      
+      if (serverHost) {
         return {
+          serverHost,
           api: {
-            baseURL: runtimeConfig.public.api.baseURL
+            baseURL: runtimeConfig.public.api?.baseURL || `${serverHost}/rustfs/admin/v3`
           },
           s3: {
-            endpoint: runtimeConfig.public.s3?.endpoint || runtimeConfig.public.api.baseURL,
-            region: runtimeConfig.public.s3?.region || 'us-east-1'
-          }
+            endpoint: runtimeConfig.public.s3?.endpoint || serverHost,
+            region: runtimeConfig.public.s3?.region || 'us-east-1',
+            accessKeyId: '',
+            secretAccessKey: ''
+          },
+          session: runtimeConfig.public.session
         }
       }
     } catch (error) {
-      console.warn('Failed to load runtime config:', error)
+      const configError = handleConfigError(error, 'runtime config loading')
+      logger.warn('Failed to load runtime config:', configError.message)
     }
     return null
   },
 
-  // 按优先级加载配置：config.json > localStorage > runtimeconfig
-  async loadConfig(): Promise<RustFSConfig | null> {
-    // 首先尝试从 config.json 加载
-    const publicConfig = await this.loadPublicConfig()
-    if (publicConfig) {
-      return publicConfig
+  // 加载配置：优先使用localStorage，然后是当前host，最后是runtimeconfig
+  async loadConfig(): Promise<SiteConfig> {
+    // 检查缓存
+    const now = Date.now()
+    if (configCache && (now - configCacheTime) < CACHE_DURATION) {
+      return configCache
     }
 
-    // 如果没有 config.json，尝试从 localStorage 加载
-    const storageConfig = this.loadStorageConfig()
-    if (storageConfig) {
-      return storageConfig
-    }
+    let config: SiteConfig
 
-    // 如果都没有，使用 runtimeconfig 作为默认值
-    return this.loadRuntimeConfig()
-  },
-
-  // 从 RustFSConfig 提取 ServerConfig
-  extractServerConfig(config: RustFSConfig): ServerConfig | null {
-    try {
-      const urlObj = new URL(config.api.baseURL)
-      return {
-        protocol: urlObj.protocol.replace(':', ''),
-        host: urlObj.hostname,
-        port: urlObj.port || (urlObj.protocol === 'https:' ? '443' : '80'),
-        region: config.s3.region
+    // 优先使用当前host配置（包括localStorage检查）
+    const currentHostConfig = this.getCurrentHostConfig()
+    if (currentHostConfig) {
+      config = currentHostConfig
+    } else {
+      // 如果没有当前host配置，使用 runtimeconfig
+      const runtimeConfig = this.loadRuntimeConfig()
+      if (runtimeConfig) {
+        config = runtimeConfig
+      } else {
+        // 最后使用浏览器当前地址或服务端默认值
+        config = getCurrentBrowserConfig() || getServerDefaultConfig()
       }
-    } catch (error) {
-      console.warn('Failed to extract server config:', error)
-      return null
     }
+
+    // 缓存配置
+    configCache = config
+    configCacheTime = now
+    return config
   },
 
-  // 检查是否有 public/config.json
-  async hasPublicConfig(): Promise<boolean> {
-    const config = await this.loadPublicConfig()
-    return !!config
-  },
-
-  // 保存配置到 localStorage（只有当没有 public/config.json 时）
-  async saveConfig(serverConfig: ServerConfig): Promise<boolean> {
-    if (process.client) {
-      // 如果有 public/config.json，就不保存到 localStorage
-      if (await this.hasPublicConfig()) {
-        return false
-      }
-
-      const config: RustFSConfig = {
-        api: {
-          baseURL: `${serverConfig.protocol}://${serverConfig.host}:${serverConfig.port}/rustfs/admin/v3`
-        },
-        s3: {
-          endpoint: `${serverConfig.protocol}://${serverConfig.host}:${serverConfig.port}`,
-          region: serverConfig.region
-        }
-      }
-
-      localStorage.setItem(CONFIG_KEY, JSON.stringify(config))
-      return true
-    }
-    return false
-  },
-
-  // 清除配置
-  clearConfig(): void {
-    if (process.client) {
-      localStorage.removeItem(CONFIG_KEY)
-    }
+  // 清除缓存
+  clearCache() {
+    configCache = null
+    configCacheTime = 0
   },
 
   // 检查是否有有效配置
   async hasValidConfig(): Promise<boolean> {
     const config = await this.loadConfig()
-    return !!(config?.api?.baseURL)
+    return !!(config?.serverHost && config?.api?.baseURL)
   }
 }

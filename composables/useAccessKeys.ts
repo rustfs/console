@@ -1,7 +1,7 @@
 export const useAccessKeys = () => {
   const { $api } = useNuxtApp()
 
-  const listUserServiceAccounts = async (params: object) => {
+  const listUserServiceAccounts = async (params: Record<string, string> = {}) => {
     return await $api.get("/list-service-accounts", { params })
   }
 

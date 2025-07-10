@@ -21,7 +21,7 @@ export async function getStsToken(
 
   // 1. 创建 STS 客户端
   const stsClient = new STSClient({
-    endpoint: siteConfig.s3.endpoint,
+    endpoint: siteConfig.s3.endpoint  + (process.env.BASE_URL || "/rustfs/console/") ,
     region: siteConfig.s3.region || 'us-east-1',
     credentials: credentials
   });

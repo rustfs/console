@@ -1,7 +1,9 @@
 <template>
   <n-dropdown :options="options" placement="right-end" @select="handleDropdownClick">
     <div class="flex items-center border-t dark:border-neutral-800 p-4">
-      <n-avatar round size="small" src="/img/rustfs.png" />
+      <div class="rounded-full h-8 w-8 object-cover bg-gray-100 border overflow-hidden">
+        <img class="min-h-full" size="small" src="~/assets/img/rustfs.png" />
+      </div>
       <template v-if="!isCollapsed">
         <span class="px-2">{{ t('RustFS') }}</span>
         <Icon name="ri:more-2-line" class="ml-auto text-xl" />

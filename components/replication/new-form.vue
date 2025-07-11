@@ -8,14 +8,18 @@
     :segmented="{
       content: true,
       action: true,
-    }">
+    }"
+  >
     <n-card>
       <n-form label-placement="left" :label-width="100" ref="formRef" :model="formData">
         <n-form-item :label="t('Priority')" path="level">
           <n-input v-model:value="formData.level" :placeholder="t('Please enter priority')" />
         </n-form-item>
         <n-form-item :label="t('Target Address')" path="endpoint">
-          <n-input v-model:value="formData.endpoint" :placeholder="t('Please enter target address')" />
+          <n-input
+            v-model:value="formData.endpoint"
+            :placeholder="t('Please enter target address')"
+          />
         </n-form-item>
         <n-form-item :label="t('Use TLS')" path="tls">
           <n-switch v-model:value="formData.tls" :round="false" />
@@ -24,7 +28,10 @@
           <n-input v-model:value="formData.accesskey" :placeholder="t('Please enter Access Key')" />
         </n-form-item>
         <n-form-item :label="t('Secret Key')" path="secrretkey">
-          <n-input v-model:value="formData.secrretkey" :placeholder="t('Please enter Secret Key')" />
+          <n-input
+            v-model:value="formData.secrretkey"
+            :placeholder="t('Please enter Secret Key')"
+          />
         </n-form-item>
         <n-form-item :label="t('Target Bucket')" path="bucket">
           <n-input v-model:value="formData.bucket" :placeholder="t('Please enter target bucket')" />
@@ -37,26 +44,37 @@
             v-model:value="formData.modeType"
             :placeholder="t('Please select replication mode')"
             filterable
-            :options="modes" />
+            :options="modes"
+          />
         </n-form-item>
 
         <n-form-item v-if="formData.modeType === 'async'" :label="t('Bandwidth')" path="bandwidth">
           <n-input-group>
-            <n-input v-model:value="formData.bandwidth" :placeholder="t('Please enter bandwidth')" />
+            <n-input
+              v-model:value="formData.bandwidth"
+              :placeholder="t('Please enter bandwidth')"
+            />
             <n-select
               v-model:value="formData.unit"
               :placeholder="t('Please select unit')"
               filterable
-              :options="units" />
+              :options="units"
+            />
           </n-input-group>
         </n-form-item>
         <n-form-item :label="t('Health Check Duration')" path="timecheck">
-          <n-input v-model:value="formData.timecheck" :placeholder="t('Please enter health check duration')">
+          <n-input
+            v-model:value="formData.timecheck"
+            :placeholder="t('Please enter health check duration')"
+          >
             <template #suffix>s</template>
           </n-input>
         </n-form-item>
         <n-form-item :label="t('Storage Type')" path="storageType">
-          <n-input v-model:value="formData.storageType" :placeholder="t('Please enter storage type')" />
+          <n-input
+            v-model:value="formData.storageType"
+            :placeholder="t('Please enter storage type')"
+          />
         </n-form-item>
 
         <!-- 对象搜索 -->
@@ -69,7 +87,8 @@
               v-model:value="formData.tags"
               preset="pair"
               :key-placeholder="t('Tag Name')"
-              :value-placeholder="t('Tag Value')" />
+              :value-placeholder="t('Tag Value')"
+            />
           </n-form-item>
         </n-card>
 
@@ -81,7 +100,7 @@
                 <n-form-item :label="t('Existing Objects')">
                   <n-space align="center" justify="end">
                     <n-switch v-model:value="formData.existingObject" :round="false" />
-                    <span class="ml-4 text-gray-500">{{ t("Replicate existing objects") }}</span>
+                    <span class="ml-4 text-gray-500">{{ t('Replicate existing objects') }}</span>
                   </n-space>
                 </n-form-item>
                 <!-- <n-form-item :label="t('Metadata Sync')">
@@ -93,7 +112,7 @@
                 <n-form-item :label="t('Delete Marker')">
                   <n-space align="center" justify="end">
                     <n-switch v-model:value="formData.expiredDeleteMark" :round="false" />
-                    <span class="ml-4 text-gray-500">{{ t("Replicate soft delete") }}</span>
+                    <span class="ml-4 text-gray-500">{{ t('Replicate soft delete') }}</span>
                   </n-space>
                 </n-form-item>
                 <!-- <n-form-item :label="t('Delete')">
@@ -108,8 +127,8 @@
         </n-card>
 
         <n-space justify="center">
-          <n-button @click="handleCancel">{{ t("Cancel") }}</n-button>
-          <n-button type="primary" @click="handleSave">{{ t("Save") }}</n-button>
+          <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
+          <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
         </n-space>
       </n-form>
     </n-card>
@@ -117,67 +136,76 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-import { NForm, NFormItem, NInput, NDynamicInput, NCollapse, NCollapseItem, NSwitch, NButton } from "naive-ui";
-import { useBucket } from "@/composables/useBucket";
-import { getBytes } from "@/utils/functions";
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import {
+  NForm,
+  NFormItem,
+  NInput,
+  NDynamicInput,
+  NCollapse,
+  NCollapseItem,
+  NSwitch,
+  NButton,
+} from 'naive-ui';
+import { useBucket } from '@/composables/useBucket';
+import { getBytes } from '@/utils/functions';
 
 const { t } = useI18n();
 
 const modes = [
   {
-    label: t("Sync"),
-    value: "sync",
+    label: t('Sync'),
+    value: 'sync',
   },
   {
-    label: t("Async"),
-    value: "async",
+    label: t('Async'),
+    value: 'async',
   },
 ];
 
 const units = [
   {
-    label: "Mi",
-    value: "Mi",
+    label: 'Mi',
+    value: 'Mi',
   },
   {
-    label: "Gi",
-    value: "Gi",
+    label: 'Gi',
+    value: 'Gi',
   },
   {
-    label: "Ti",
-    value: "Ti",
+    label: 'Ti',
+    value: 'Ti',
   },
   {
-    label: "Pi",
-    value: "Pi",
+    label: 'Pi',
+    value: 'Pi',
   },
   {
-    label: "Ei",
-    value: "Ei",
+    label: 'Ei',
+    value: 'Ei',
   },
 ];
 
 const formRef = ref(null);
 const formData = ref({
-  level: "1",
-  endpoint: "",
+  level: '1',
+  endpoint: '',
   tls: false,
-  accesskey: "",
-  secrretkey: "",
-  bucket: "",
-  region: "",
-  modeType: "async",
-  timecheck: "60",
-  unit: "Gi",
+  accesskey: '',
+  secrretkey: '',
+  bucket: '',
+  region: '',
+  modeType: 'async',
+  timecheck: '60',
+  unit: 'Gi',
   bandwidth: 100,
-  storageType: "",
-  prefix: "",
+  storageType: '',
+  prefix: '',
   tags: [
     {
-      key: "",
-      value: "",
+      key: '',
+      value: '',
     },
   ],
   existingObject: true,
@@ -203,11 +231,11 @@ defineExpose({
   open,
 });
 
-const emit = defineEmits(["success"]);
+const emit = defineEmits(['success']);
 // 创建远程复制目标
 const { setRemoteReplicationTarget, putBucketReplication, getBucketReplication } = useBucket({});
 const handleSave = async () => {
-  formRef.value?.validate(async (errors) => {
+  formRef.value?.validate(async errors => {
     if (!errors) {
       try {
         let config = {
@@ -216,19 +244,19 @@ const handleSave = async () => {
           credentials: {
             accessKey: formData.value.accesskey,
             secretKey: formData.value.secrretkey,
-            expiration: "0001-01-01T00:00:00Z",
+            expiration: '0001-01-01T00:00:00Z',
           },
           targetbucket: formData.value.bucket,
           secure: formData.value.tls,
-          path: "auto",
-          api: "s3v4",
-          type: "replication",
-          replicationSync: formData.value.modeType === "sync" ? true : false,
+          path: 'auto',
+          api: 's3v4',
+          type: 'replication',
+          replicationSync: formData.value.modeType === 'sync' ? true : false,
           healthCheckDuration: formData.value.timecheck * 1000000000 - 0,
           disableProxy: false,
-          resetBeforeDate: "0001-01-01T00:00:00Z",
+          resetBeforeDate: '0001-01-01T00:00:00Z',
           totalDowntime: 0,
-          lastOnline: "0001-01-01T00:00:00Z",
+          lastOnline: '0001-01-01T00:00:00Z',
           isOnline: false,
           latency: {
             curr: 0,
@@ -240,9 +268,10 @@ const handleSave = async () => {
         };
 
         // 添加带宽
-        if (formData.value.modeType === "async") {
+        if (formData.value.modeType === 'async') {
           // 根据单位转化为字节
-          config.bandwidth = Number(getBytes(formData.value.bandwidth, formData.value.unit, true)) || 0;
+          config.bandwidth =
+            Number(getBytes(formData.value.bandwidth, formData.value.unit, true)) || 0;
         }
         const targetRESP = await setRemoteReplicationTarget(props.bucketName, config);
         if (!targetRESP) return;
@@ -260,14 +289,14 @@ const handleSave = async () => {
         // 构造新规则
         const newRule = {
           ID: `replication-rule-${Date.now()}`,
-          Status: "Enabled",
+          Status: 'Enabled',
           Priority: parseInt(formData.value.level) || 1,
           Filter: (() => {
             const filter = {};
             if (formData.value.prefix) {
               filter.Prefix = formData.value.prefix;
             }
-            const validTags = formData.value.tags.filter((tag) => tag.key && tag.value);
+            const validTags = formData.value.tags.filter(tag => tag.key && tag.value);
             if (validTags.length > 0) {
               if (validTags.length === 1) {
                 filter.Tag = {
@@ -276,8 +305,8 @@ const handleSave = async () => {
                 };
               } else {
                 filter.And = {
-                  Prefix: formData.value.prefix || "",
-                  Tags: validTags.map((tag) => ({
+                  Prefix: formData.value.prefix || '',
+                  Tags: validTags.map(tag => ({
                     Key: tag.key,
                     Value: tag.value,
                   })),
@@ -288,18 +317,20 @@ const handleSave = async () => {
           })(),
           SourceSelectionCriteria: {
             SseKmsEncryptedObjects: {
-              Status: "Enabled",
+              Status: 'Enabled',
             },
           },
           ExistingObjectReplication: {
-            Status: formData.value.existingObject ? "Enabled" : "Disabled",
+            Status: formData.value.existingObject ? 'Enabled' : 'Disabled',
           },
           DeleteMarkerReplication: {
-            Status: formData.value.expiredDeleteMark ? "Enabled" : "Disabled",
+            Status: formData.value.expiredDeleteMark ? 'Enabled' : 'Disabled',
           },
           Destination: {
             Bucket: targetRESP,
-            StorageClass: formData.value.storageType ? formData.value.storageType.toUpperCase() : "STANDARD",
+            StorageClass: formData.value.storageType
+              ? formData.value.storageType.toUpperCase()
+              : 'STANDARD',
             // ReplicateDelete: formData.value.deleteforever ? "Enabled" : "Disabled",
           },
         };
@@ -324,10 +355,10 @@ const handleSave = async () => {
         // 创建复制规则
         await putBucketReplication(props.bucketName, params);
 
-        emit("success");
+        emit('success');
         visible.value = false;
       } catch (e) {
-        window.$message?.error?.(t("Save failed"));
+        window.$message?.error?.(t('Save failed'));
       }
     }
   });
@@ -335,5 +366,6 @@ const handleSave = async () => {
 
 const handleCancel = () => {
   // 取消逻辑
+  visible.value = false;
 };
 </script>

@@ -1,11 +1,17 @@
-import { CompleteMultipartUploadCommand, CreateMultipartUploadCommand, PutObjectCommand, S3Client, UploadPartCommand } from "@aws-sdk/client-s3";
+import {
+  CompleteMultipartUploadCommand,
+  CreateMultipartUploadCommand,
+  PutObjectCommand,
+  S3Client,
+  UploadPartCommand,
+} from '@aws-sdk/client-s3';
 
 export interface UploadTask {
   id: string;
   file: File;
   bucketName: string;
   prefix?: string;
-  status: "pending" | "uploading" | "completed" | "failed" | "canceled";
+  status: 'pending' | 'uploading' | 'completed' | 'failed' | 'canceled';
   progress: number;
   error?: string;
   abortController?: AbortController;
@@ -38,29 +44,32 @@ class UploadTaskManager {
   }
 
   addFiles(files: File[], bucketName: string, prefix?: string) {
-    const newTasks = files.map((file) => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${file.name}`,
-      file,
-      status: "pending" as const,
-      progress: 0,
-      bucketName,
-      prefix: prefix ?? "",
-      retryCount: 0,
-    }));
+    // 队列中所有任务（不管状态）
+    const existKeys = new Set(
+      this.tasks.map(task => `${task.bucketName}/${task.prefix || ''}${task.file.name}`)
+    );
+    // 过滤已存在的任务
+    const newTasks = files
+      .filter(file => !existKeys.has(`${bucketName}/${prefix || ''}${file.name}`))
+      .map(file => ({
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${file.name}`,
+        file,
+        status: 'pending' as const,
+        progress: 0,
+        bucketName,
+        prefix: prefix ?? '',
+        retryCount: 0,
+      }));
 
-    // 批量添加任务
     this.tasks.push(...newTasks);
-    console.debug("Added files to upload queue", files.length, "files");
-
-    // 启动处理（如果尚未启动）
     this.start();
   }
 
   start() {
     if (!this.isStarted) {
       this.isStarted = true;
-      this.processQueue();
     }
+    this.processQueue();
   }
 
   stop() {
@@ -70,36 +79,36 @@ class UploadTaskManager {
   cancel() {
     // 取消所有待处理的任务
     this.tasks
-      .filter((task) => task.status === "pending")
-      .forEach((task) => {
-        task.status = "canceled";
+      .filter(task => task.status === 'pending')
+      .forEach(task => {
+        task.status = 'canceled';
       });
 
     // 取消所有正在进行的上传
     this.tasks
-      .filter((task) => task.status === "uploading" && task.abortController)
-      .forEach((task) => {
+      .filter(task => task.status === 'uploading' && task.abortController)
+      .forEach(task => {
         task.abortController?.abort();
-        task.status = "canceled";
+        task.status = 'canceled';
       });
   }
 
   cancelTask(taskId: string) {
-    const task = this.tasks.find((task) => task.id === taskId);
+    const task = this.tasks.find(task => task.id === taskId);
     if (task) {
       if (task.abortController) {
         task.abortController.abort();
       }
-      task.status = "canceled";
+      task.status = 'canceled';
     }
   }
 
   removeTask(taskId: string) {
-    const taskIndex = this.tasks.findIndex((task) => task.id === taskId);
+    const taskIndex = this.tasks.findIndex(task => task.id === taskId);
     if (taskIndex !== -1) {
       // 如果任务正在进行，先取消它
       const task = this.tasks[taskIndex];
-      if (task.status === "uploading" && task.abortController) {
+      if (task.status === 'uploading' && task.abortController) {
         task.abortController.abort();
       }
       this.tasks.splice(taskIndex, 1);
@@ -128,7 +137,7 @@ class UploadTaskManager {
 
     // 启动新的上传任务
     while (this.activeUploads < this.maxConcurrentUploads) {
-      const nextTask = this.tasks.find((task) => task.status === "pending");
+      const nextTask = this.tasks.find(task => task.status === 'pending');
       if (!nextTask) {
         break;
       }
@@ -139,7 +148,7 @@ class UploadTaskManager {
     }
 
     // 如果还有待处理的任务，继续处理
-    if (this.tasks.some(task => task.status === "pending")) {
+    if (this.tasks.some(task => task.status === 'pending')) {
       // 使用 setTimeout 避免阻塞主线程
       setTimeout(() => {
         this.processQueue();
@@ -148,7 +157,7 @@ class UploadTaskManager {
   }
 
   private async startUpload(task: UploadTask) {
-    task.status = "uploading";
+    task.status = 'uploading';
     task.progress = 0;
 
     try {
@@ -157,22 +166,22 @@ class UploadTaskManager {
       } else {
         await this.putObject(task);
       }
-      task.status = "completed";
+      task.status = 'completed';
       task.progress = 100;
     } catch (error: any) {
       // 检查是否是取消操作
       if (error.name === 'AbortError' || error.message?.includes('canceled')) {
-        task.status = "canceled";
+        task.status = 'canceled';
         return;
       }
 
-      console.error("Upload failed:", error.message, "Task:", task.id);
+      console.error('Upload failed:', error.message, 'Task:', task.id);
 
       // 检查是否应该重试
       if (this.shouldRetry(task, error)) {
         await this.retryTask(task);
       } else {
-        task.status = "failed";
+        task.status = 'failed';
         task.error = error.message;
       }
     } finally {
@@ -186,12 +195,22 @@ class UploadTaskManager {
 
   private shouldRetry(task: UploadTask, error: any): boolean {
     // 如果任务被取消，不重试
-    if (task.status === "canceled") {
+    if (task.status === 'canceled') {
       return false;
     }
 
     // 如果达到最大重试次数，不重试
     if ((task.retryCount || 0) >= this.maxRetries) {
+      return false;
+    }
+
+    // 如果是 S3 返回的 4xx 错误，直接 failed
+    if (
+      error.$metadata &&
+      error.$metadata.httpStatusCode &&
+      error.$metadata.httpStatusCode >= 400 &&
+      error.$metadata.httpStatusCode < 500
+    ) {
       return false;
     }
 
@@ -202,7 +221,7 @@ class UploadTaskManager {
       'forbidden',
       'invalid credentials',
       'bucket not found',
-      'file not found'
+      'file not found',
     ];
 
     return !nonRetryableErrors.some(msg => errorMessage.includes(msg));
@@ -210,7 +229,7 @@ class UploadTaskManager {
 
   private async retryTask(task: UploadTask) {
     task.retryCount = (task.retryCount || 0) + 1;
-    task.status = "pending";
+    task.status = 'pending';
     task.progress = 0;
     task.error = undefined;
 
@@ -254,7 +273,7 @@ class UploadTaskManager {
       });
 
       const createResponse = await this.s3Client.send(createCommand, {
-        abortSignal: abortController.signal
+        abortSignal: abortController.signal,
       });
       uploadId = createResponse.UploadId;
 
@@ -285,7 +304,7 @@ class UploadTaskManager {
         });
 
         const { ETag } = await this.s3Client.send(uploadPartCommand, {
-          abortSignal: abortController.signal
+          abortSignal: abortController.signal,
         });
 
         if (!ETag) {
@@ -305,14 +324,13 @@ class UploadTaskManager {
       });
 
       await this.s3Client.send(completeCommand, {
-        abortSignal: abortController.signal
+        abortSignal: abortController.signal,
       });
-
     } catch (error: any) {
       // 如果上传失败，尝试清理分片上传
       if (uploadId) {
         try {
-          const { AbortMultipartUploadCommand } = await import("@aws-sdk/client-s3");
+          const { AbortMultipartUploadCommand } = await import('@aws-sdk/client-s3');
           const abortCommand = new AbortMultipartUploadCommand({
             Bucket: bucketName,
             Key: Key,

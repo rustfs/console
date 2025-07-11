@@ -587,5 +587,6 @@
   "Configuration saved successfully": "配置保存成功",
   "Configuration reset successfully": "配置重置成功",
   "Reset to default successfully": "重置为默认成功",
-  "Leave empty to use current host as default": "留空表示使用当前主机作为默认值"
+  "Leave empty to use current host as default": "留空表示使用当前主机作为默认值",
+  "All files are already in Tasks.": "所有文件都已经在任务中。"
 }

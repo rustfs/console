@@ -394,5 +394,6 @@
   "Configuration saved successfully": "Configuration saved successfully",
   "Configuration reset successfully": "Configuration reset successfully",
   "Reset to default successfully": "Reset to default successfully",
-  "Leave empty to use current host as default": "Leave empty to use current host as default"
+  "Leave empty to use current host as default": "Leave empty to use current host as default",
+  "All files are already in Tasks.": "All files are already in Tasks."
 }

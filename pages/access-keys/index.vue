@@ -228,14 +228,12 @@ function changePassword() {
 
 /** ***********************************删除 */
 async function deleteItem(row: any) {
-  try {
-    const res = await deleteServiceAccount(row.accessKey);
-
+  deleteServiceAccount(row.accessKey).then(res=>{
     message.success(t('Delete Success'));
     getDataList();
-  } catch (error) {
+  }).catch(error=>{
     message.error(t('Delete Failed'));
-  }
+  })
 }
 
 /** ************************************批量删除 */
@@ -261,12 +259,13 @@ function deleteByList() {
         return;
       }
       try {
-        // const res = await deleteMultipleServiceAccounts({
-        //   body: checkedKeys.value
-        // })
-        checkedKeys.value = [];
-        getDataList();
-        message.success(t('Delete Success'));
+         Promise.all(checkedKeys.value.map((item) => deleteServiceAccount(item as string))).then(() => {
+          message.success(t('Delete Success'));
+          checkedKeys.value = [];
+          nextTick(() => {
+            getDataList();
+          });
+        });
       } catch (error) {
         message.error(t('Delete Failed'));
       }

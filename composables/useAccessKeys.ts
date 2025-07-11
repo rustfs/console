@@ -9,9 +9,6 @@ export const useAccessKeys = () => {
     return await $api.put("/add-service-accounts", data)
   }
 
-  // const deleteMultipleServiceAccounts = async (data: any) => {
-  //   return await $api.delete('/delete-service-accounts', data)
-  // }
 
   const getServiceAccount = async (name: string) => {
     return await $api.get(`/info-service-account?accessKey=${encodeURIComponent(name)}`)
@@ -35,7 +32,6 @@ export const useAccessKeys = () => {
     deleteServiceAccount,
     createServiceAccountCreds,
     updateServiceAccount,
-    getServiceAccount,
-    // deleteMultipleServiceAccounts
+    getServiceAccount
   }
 }

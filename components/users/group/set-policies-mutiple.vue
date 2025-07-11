@@ -41,6 +41,7 @@
 <script setup lang="ts">
 import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NSpace } from "naive-ui"
 const { listPolicies, setUserOrGroupPolicy } = usePolicies()
+const {t} = useI18n()
 
 const props = defineProps({
   checkedKeys: {
@@ -53,10 +54,6 @@ const messge = useMessage()
 const visible = ref(false)
 async function openDialog() {
   visible.value = true
-}
-
-function closeModal() {
-  visible.value = false
 }
 
 defineExpose({
@@ -115,21 +112,24 @@ function handleCheck(keys: DataTableRowKey[]) {
   return checkedKeys
 }
 
-const changePolicies = async () => {
-  try {
-    props.checkedKeys.map((item) => {
-      setUserOrGroupPolicy({
-        policyName: checkedKeys.value,
-        userOrGroup: item,
-        isGroup: true,
-      })
-    })
 
-    visible.value = false
-    messge.success("修改成功")
-  } catch {
-    messge.error("修改失败")
-  }
+const emit = defineEmits(['changePoliciesSuccess'])
+const changePolicies = async () => {
+    Promise.all(
+      props.checkedKeys.map((item) => {
+        return setUserOrGroupPolicy({
+          policyName: checkedKeys.value,
+          userOrGroup: item,
+          isGroup: true,
+        })
+      })
+    ).then(()=>{
+      visible.value = false
+      messge.success(t('Edit Success'))
+      emit('changePoliciesSuccess')
+    }).catch(()=>{
+      messge.error(t('Edit Failed'))
+    })
 }
 </script>
 

@@ -155,7 +155,7 @@ const groupsList = ref([])
 const getGroupsList = async () => {
   const res = await listGroup()
   groupsList.value =
-    res.groups?.map((item: any) => {
+    res?.map((item: any) => {
       return {
         label: item,
         value: item,

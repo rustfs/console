@@ -53,6 +53,7 @@
       ref="newItemRef"></users-group-new>
     <users-group-set-policies-mutiple
       :checkedKeys="checkedKeys"
+      @changePoliciesSuccess="changePoliciesSuccess"
       ref="policiesRef"></users-group-set-policies-mutiple>
   </div>
 </template>
@@ -70,6 +71,7 @@ import { Icon } from '#components'
 import { useI18n } from 'vue-i18n'
 // import { groupEdit, newGroup, setPoliciesMutiple } from '../components';
 
+const messge = useMessage()
 const { t } = useI18n()
 
 const { $api } = useNuxtApp()
@@ -187,6 +189,9 @@ const allocationPolicy = () => {
   policiesRef.value.openDialog()
 }
 
+const changePoliciesSuccess = () => {
+  checkedKeys.value = []
+}
 /** **********************************修改 */
 const editItemRef = ref()
 function openEditItem(row: any) {
@@ -198,18 +203,14 @@ async function deleteItem(row: any) {
   try {
     // 获取组的成员
     const info = await group.getGroup(row.name)
+    if(info.members.length) {
+      messge.error("请先清空组成员")
+      return
+    }
     // 清空组的成员
     await group.updateGroupMembers({
       group: row.name,
       members: info.members,
-      isRemove: true,
-      groupStatus: 'enabled'
-    })
-    const t = await group.getGroup(row.name)
-    // 删除组
-    await group.updateGroupMembers({
-      group: row.name,
-      members: [],
       isRemove: true,
       groupStatus: 'enabled'
     })

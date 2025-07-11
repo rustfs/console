@@ -1,7 +1,13 @@
 <template>
   <div>
     <n-card>
-      <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false" v-if="!editStatus">
+      <n-form
+        ref="formRef"
+        :model="searchForm"
+        label-placement="left"
+        :show-feedback="false"
+        v-if="!editStatus"
+      >
         <n-flex justify="space-between">
           <n-form-item class="!w-64" label="" path="name">
             <n-input :placeholder="t('Search Account')" @input="filterName" />
@@ -32,13 +38,18 @@
         :model="formModel"
         :rules="rules"
         label-align="right"
-        :label-width="130">
+        :label-width="130"
+      >
         <n-grid :cols="24" :x-gap="18">
           <n-form-item-grid-item :span="24" :label="t('Access Key')" path="accessKey">
             <n-input v-model:value="formModel.accessKey" />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" :label="t('Secret Key')" path="secretKey">
-            <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
+            <n-input
+              v-model:value="formModel.secretKey"
+              show-password-on="mousedown"
+              type="password"
+            />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" :label="t('Expiration')" path="expiry">
             <n-date-picker
@@ -47,7 +58,8 @@
               :is-date-disabled="dateDisabled"
               value-format="yyyy-MM-ddTkk:mm:SSS"
               type="datetime"
-              clearable />
+              clearable
+            />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" :label="t('Name')" path="name">
             <n-input v-model:value="formModel.name" />
@@ -58,10 +70,15 @@
           <n-form-item-grid-item :span="24" :label="t('Description')" path="description">
             <n-input v-model:value="formModel.description" />
           </n-form-item-grid-item>
-          <n-form-item-gi :span="24" :label="t('Use Main Account Policy')" path="impliedPolicy">
+          <n-form-item-gi :span="24" :label="t('Use main account policy')" path="impliedPolicy">
             <n-switch v-model:value="formModel.impliedPolicy" />
           </n-form-item-gi>
-          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" :label="t('Current User Policy')" path="policy">
+          <n-form-item-gi
+            v-if="!formModel.impliedPolicy"
+            :span="24"
+            :label="t('Current User Policy')"
+            path="policy"
+          >
             <json-editor v-model="formModel.policy" />
           </n-form-item-gi>
           <!-- <n-form-item-grid-item :span="24" label="状态" v-if="editType == 'edit'" path="accountStatus">
@@ -85,12 +102,14 @@
       :row-key="rowKey"
       @update:checked-row-keys="handleCheck"
       :pagination="false"
-      :bordered="false" />
+      :bordered="false"
+    />
     <!-- 引入account-edit -->
     <users-user-acedit
       v-if="editStatus && editType === 'edit'"
       :user="editData"
-      @search="cancelAdd"></users-user-acedit>
+      @search="cancelAdd"
+    ></users-user-acedit>
   </div>
 </template>
 
@@ -104,95 +123,95 @@ import {
   NButton,
   NPopconfirm,
   NSpace,
-} from "naive-ui"
-import { Icon } from "#components"
-import { useI18n } from 'vue-i18n'
+} from 'naive-ui';
+import { Icon } from '#components';
+import { useI18n } from 'vue-i18n';
 // 随机字符串函数
-import { makeRandomString } from "~/utils/functions"
-const { t } = useI18n()
-const { listUserServiceAccounts, createServiceAccount } = useAccessKeys()
-const { $api } = useNuxtApp()
+import { makeRandomString } from '~/utils/functions';
+const { t } = useI18n();
+const { listUserServiceAccounts, createServiceAccount } = useAccessKeys();
+const { $api } = useNuxtApp();
 
 const {
   getServiceAccount,
   updateServiceAccount,
   deleteServiceAccount,
   // deleteMultipleServiceAccounts
-} = useAccessKeys()
+} = useAccessKeys();
 
-const { getPolicyByUserName } = usePolicies()
+const { getPolicyByUserName } = usePolicies();
 // 验证
 const rules = ref({
   accessKey: {
     required: true,
-    trigger: ["blur", "input"],
+    trigger: ['blur', 'input'],
     message: t('Please enter Access Key'),
   },
   secretKey: {
     required: true,
-    trigger: ["blur", "input"],
+    trigger: ['blur', 'input'],
     message: t('Please enter Secret Key'),
   },
   expiry: {
     required: true,
-    trigger: ["blur", "change"],
+    trigger: ['blur', 'change'],
     validator(rule: FormItemRule, value: string) {
       if (!value) {
-        return new Error(t('Please select expiration date'))
+        return new Error(t('Please select expiration date'));
       }
-      return true
+      return true;
     },
   },
-})
-const dialog = useDialog()
-const message = useMessage()
+});
+const dialog = useDialog();
+const message = useMessage();
 const props = defineProps({
   user: {
     type: Object,
     required: true,
   },
-})
+});
 
 const searchForm = reactive({
-  name: "",
-})
+  name: '',
+});
 interface RowData {
-  accessKey: string
-  expiration: string
-  name: string
-  description: string
-  accountStatus: string
-  actions: string
+  accessKey: string;
+  expiration: string;
+  name: string;
+  description: string;
+  accountStatus: string;
+  actions: string;
 }
 const columns: DataTableColumns<RowData> = [
   {
-    type: "selection",
+    type: 'selection',
   },
   {
     title: t('Access Key'),
-    align: "center",
-    key: "accessKey",
+    align: 'center',
+    key: 'accessKey',
     filter(value, row) {
-      return !!row.accessKey.includes(value.toString())
+      return !!row.accessKey.includes(value.toString());
     },
   },
   {
     title: t('Expiration'),
-    align: "center",
-    key: "expiration",
+    align: 'center',
+    key: 'expiration',
   },
   {
     title: t('Status'),
-    align: "center",
-    key: "accountStatus",
+    align: 'center',
+    key: 'accountStatus',
     render: (row: any) => {
-      return row.accountStatus === "on" ? t('Available') : t('Disabled')
+      return row.accountStatus === 'on' ? t('Available') : t('Disabled');
     },
   },
   {
     title: t('Name'),
-    align: "center",
-    key: "name",
+    align: 'center',
+    key: 'name',
   },
   // {
   //   title: "描述",
@@ -201,27 +220,27 @@ const columns: DataTableColumns<RowData> = [
   // },
   {
     title: t('Actions'),
-    key: "actions",
-    align: "center",
+    key: 'actions',
+    align: 'center',
     width: 125,
     render: (row: any) => {
       return h(
         NSpace,
         {
-          justify: "center",
+          justify: 'center',
         },
         {
           default: () => [
             h(
               NButton,
               {
-                size: "small",
+                size: 'small',
                 secondary: true,
                 onClick: () => openEditItem(row),
               },
               {
-                default: () => "",
-                icon: () => h(Icon, { name: "ri:edit-2-line" }),
+                default: () => '',
+                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
             h(
@@ -232,193 +251,197 @@ const columns: DataTableColumns<RowData> = [
                 trigger: () =>
                   h(
                     NButton,
-                    { size: "small", secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => "",
-                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
               }
             ),
           ],
         }
-      )
+      );
     },
   },
-]
+];
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>()
+const tableRef = ref<DataTableInst>();
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
       name: [value],
-    })
+    });
 }
-const listData = ref([])
+const listData = ref([]);
 const getUserList = async () => {
-  const res = await listUserServiceAccounts({ user: props.user.accessKey })
-  listData.value = res.accounts
-  console.log("🚀 ~ getUserList ~ listData.value:", listData.value)
-}
-getUserList()
+  const res = await listUserServiceAccounts({ user: props.user.accessKey });
+  listData.value = res.accounts;
+  console.log('🚀 ~ getUserList ~ listData.value:', listData.value);
+};
+getUserList();
 
 /** ***********************************编辑、新增 */
-const editStatus = ref(false)
-const editType = ref("add")
+const editStatus = ref(false);
+const editType = ref('add');
 
 const formModel = ref({
   accessKey: makeRandomString(20),
   secretKey: makeRandomString(40),
-  name: "",
-  description: "",
+  name: '',
+  description: '',
   impliedPolicy: true,
   expiry: null,
-  policy: "",
-  accountStatus: "on",
-})
+  policy: '',
+  accountStatus: 'on',
+});
 
-const parentPolicy = ref("")
+const parentPolicy = ref('');
 // 默认策略原文
 const getPolicie = async () => {
-  parentPolicy.value = JSON.stringify(await getPolicyByUserName(props.user.accessKey))
-}
-getPolicie()
+  parentPolicy.value = JSON.stringify(await getPolicyByUserName(props.user.accessKey));
+};
+getPolicie();
 
 // 新增
 function addItem() {
-  editType.value = "add"
-  editStatus.value = true
+  editType.value = 'add';
+  editStatus.value = true;
   formModel.value = {
     accessKey: makeRandomString(20),
     secretKey: makeRandomString(40),
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     impliedPolicy: true,
     expiry: null,
-    accountStatus: "on",
+    accountStatus: 'on',
     policy: parentPolicy.value,
-  }
+  };
 }
 // 编辑
-const editData = ref({})
+const editData = ref({});
 async function openEditItem(row: any) {
-  editType.value = "edit"
-  editStatus.value = true
-  const res = await getServiceAccount(row.accessKey)
-  editData.value = { ...res, accessKey: row.accessKey }
+  editType.value = 'edit';
+  editStatus.value = true;
+  const res = await getServiceAccount(row.accessKey);
+  editData.value = { ...res, accessKey: row.accessKey };
 }
 
 function cancelAdd() {
-  editStatus.value = false
-  editType.value === "add"
+  editStatus.value = false;
+  editType.value === 'add';
   formModel.value = {
     accessKey: makeRandomString(20),
     secretKey: makeRandomString(40),
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     impliedPolicy: true,
     expiry: null,
-    policy: "",
-    accountStatus: "on",
-  }
-  getUserList()
+    policy: '',
+    accountStatus: 'on',
+  };
+  getUserList();
 }
 
 interface Emits {
-  (e: "search"): void
-  (e: "notice", data: object): void
+  (e: 'search'): void;
+  (e: 'notice', data: object): void;
 }
-const emit = defineEmits<Emits>()
-const subFormRef = ref<FormInst | null>(null)
+const emit = defineEmits<Emits>();
+const subFormRef = ref<FormInst | null>(null);
 async function submitForm() {
-  if (editType.value === "add") {
-    subFormRef.value?.validate(async (errors) => {
+  if (editType.value === 'add') {
+    subFormRef.value?.validate(async errors => {
       if (!errors) {
         try {
           const res = await createServiceAccount({
             ...formModel.value,
             targetUser: props.user.accessKey,
-            policy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
-            expiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
-          })
+            policy: !formModel.value.impliedPolicy
+              ? JSON.stringify(JSON.parse(formModel.value.policy))
+              : null,
+            expiration: formModel.value.expiry
+              ? new Date(formModel.value.expiry).toISOString()
+              : null,
+          });
 
-          message.success("添加成功")
-          cancelAdd()
-          emit("notice", res)
-          getUserList()
+          message.success('添加成功');
+          cancelAdd();
+          emit('notice', res);
+          getUserList();
         } catch (error) {
-          console.log(error)
-          message.error("添加失败")
+          console.log(error);
+          message.error('添加失败');
         }
       } else {
-        console.log(errors)
-        message.error("请填写正确的格式")
+        console.log(errors);
+        message.error('请填写正确的格式');
       }
-    })
+    });
   } else {
     try {
       const res = await updateServiceAccount(formModel.value.secretKey, {
         ...formModel.value,
-        policy: formModel.value.policy || "{}",
+        policy: formModel.value.policy || '{}',
         expiry: new Date(formModel.value.expiry || 0).toISOString(),
-      })
-      message.success("修改成功")
-      cancelAdd()
-      getUserList()
+      });
+      message.success('修改成功');
+      cancelAdd();
+      getUserList();
     } catch (error) {
-      message.error("修改失败")
+      message.error('修改失败');
     }
   }
 }
 function dateDisabled(ts: number) {
-  const date = new Date(ts)
-  return date < new Date()
+  const date = new Date(ts);
+  return date < new Date();
 }
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
-    const res = await deleteServiceAccount(row.accessKey)
-    message.success("删除成功")
-    getUserList()
+    const res = await deleteServiceAccount(row.accessKey);
+    message.success('删除成功');
+    getUserList();
   } catch (error) {
-    message.error("删除失败")
+    message.error('删除失败');
   }
 }
 
 /** ************************************批量删除 */
 function rowKey(row: any): string {
-  return row.accessKey
+  return row.accessKey;
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([])
+const checkedKeys = ref<DataTableRowKey[]>([]);
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys
-  return checkedKeys
+  checkedKeys.value = keys;
+  return checkedKeys;
 }
 function deleteByList() {
   dialog.error({
-    title: "警告",
-    content: "你确定要删除所有选中的秘钥吗？",
-    positiveText: "确定",
-    negativeText: "取消",
+    title: '警告',
+    content: '你确定要删除所有选中的秘钥吗？',
+    positiveText: '确定',
+    negativeText: '取消',
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error("请至少选择一项")
-        return
+        message.error('请至少选择一项');
+        return;
       }
       try {
         // const res = await deleteMultipleServiceAccounts({
         //   body: checkedKeys.value
         // })
-        checkedKeys.value = []
-        getUserList()
-        message.success("删除成功")
+        checkedKeys.value = [];
+        getUserList();
+        message.success('删除成功');
       } catch (error) {
-        message.error("删除失败")
+        message.error('删除失败');
       }
     },
-  })
+  });
 }
 </script>
 

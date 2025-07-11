@@ -560,7 +560,7 @@
   "Please enter bandwidth": "请输入带宽",
   "Please enter storage type": "请输入存储类型",
   "Add Replication Rule": "添加复制规则",
-  
+
   "Server Configuration": "服务器配置",
   "Please configure your RustFS server address": "请配置您的RustFS服务器地址",
   "Server Address": "服务器地址",
@@ -588,5 +588,11 @@
   "Configuration reset successfully": "配置重置成功",
   "Reset to default successfully": "重置为默认成功",
   "Leave empty to use current host as default": "留空表示使用当前主机作为默认值",
-  "All files are already in Tasks.": "所有文件都已经在任务中。"
+  "All files are already in Tasks.": "所有文件都已经在任务中。",
+  "Edit Group": "编辑分组",
+  "Select Group": "选择分组",
+  "Add Account": "添加账户",
+  "Search Account": "搜索账户",
+  "Edit policy": "编辑策略",
+  "Search Policy": "搜索策略"
 }

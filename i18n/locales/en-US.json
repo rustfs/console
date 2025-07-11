@@ -367,7 +367,7 @@
   "Please enter storage type": "Please enter storage type",
   "Add Replication Rule": "Add Replication Rule",
   "Click to modify": "Click to modify",
-  
+
   "Server Configuration": "Server Configuration",
   "Please configure your RustFS server address": "Please configure your RustFS server address",
   "Server Address": "Server Address",
@@ -395,5 +395,11 @@
   "Configuration reset successfully": "Configuration reset successfully",
   "Reset to default successfully": "Reset to default successfully",
   "Leave empty to use current host as default": "Leave empty to use current host as default",
-  "All files are already in Tasks.": "All files are already in Tasks."
+  "All files are already in Tasks.": "All files are already in Tasks.",
+  "Select Group": "Select Group",
+  "Edit Group": "Edit Group",
+  "Add Account": "Add Account",
+  "Search Account": "Search Account",
+  "Edit policy": "Edit policy",
+  "Search Policy": "Search Policy"
 }

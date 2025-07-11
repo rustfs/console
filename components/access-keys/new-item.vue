@@ -115,7 +115,11 @@ const modalVisible = computed({
 })
 function closeModal(visible = false) {
   emit("update:visible", visible)
-  formModel.value = { ...defaultFormModal, policy: JSON.stringify(parentPolicy.value) }
+  formModel.value = { ...defaultFormModal,
+    accessKey: makeRandomString(20),
+    secretKey: makeRandomString(40), 
+    policy: JSON.stringify(parentPolicy.value)
+  }
 }
 
 function dateDisabled(ts: number) {
@@ -139,7 +143,6 @@ async function submitForm(e: MouseEvent) {
         closeModal()
         emit("search")
       } catch (error) {
-        console.log("🚀 ~ submitForm ~ error:", error)
         message.error(t("Add failed"))
       }
     } else {

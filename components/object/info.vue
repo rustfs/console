@@ -22,10 +22,10 @@
           <span>{{ t("Retention") }}</span>
         </n-button>
 
-        <n-button id="copyTag" ref="copyRef" @click="copySignUrl">
+        <!-- <n-button id="copyTag" ref="copyRef" @click="copySignUrl">
           <Icon name="ri:file-copy-line" class="mr-2" />
           <span>{{ t("Copy URL") }}</span>
-        </n-button>
+        </n-button> -->
       </div>
       <n-card :title="t('Info')" class="mt-4">
         <div v-if="loading === 'pending'" class="flex items-center justify-center">
@@ -82,7 +82,7 @@
           <n-descriptions-item :label="t('Temporary URL')">
             <div class="flex items-center gap-2 mt-1">
               <n-input v-model:value="signedUrl" id="signedUrl" :placeholder="t('Temporary URL')" />
-              <n-button @click="copySignUrl">{{ t("Copy") }}</n-button>
+              <n-button  id="signedUrlBtn" data-clipboard-target="#signedUrl">{{ t("Copy") }}</n-button>
             </div>
           </n-descriptions-item>
         </n-descriptions>
@@ -370,19 +370,23 @@ const refreshSignedUrl = async () => {
   } finally {
   }
 };
-
-import ClipboardJS from "clipboard";
 const dialog = useDialog();
-const copySignUrl = async () => {
-  try {
-    // @ts-ignore
-    ClipboardJS.copy(document.querySelector("#signedUrl"));
-    console.log("复制成功", signedUrl.value);
-  } catch (error) {
-    message.error(t("Copy Failed"));
-    console.error("复制失败", error);
-  }
-};
+
+
+// 复制
+import ClipboardJS from "clipboard";
+const clipboard = new ClipboardJS( "#signedUrlBtn");
+clipboard.on('success', function(e) {
+  message.success(t('Copy Success'));
+  e.clearSelection();
+});
+// 这里成功的时候也响应error，所以这里也加上
+clipboard.on('error', function(e) {
+  message.success(t('Copy Success'));
+});
+onUnmounted(() => {
+  clipboard.destroy();
+});
 
 const download = async () => {
   const msg = message.loading(t("Getting URL"));

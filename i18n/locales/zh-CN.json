@@ -594,5 +594,6 @@
   "Add Account": "添加账户",
   "Search Account": "搜索账户",
   "Edit policy": "编辑策略",
-  "Search Policy": "搜索策略"
+  "Search Policy": "搜索策略",
+  "Bucket Configuration":"桶配置"
 }

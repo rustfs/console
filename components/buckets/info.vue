@@ -1,6 +1,6 @@
 <template>
   <n-drawer v-model:show="visibel" :width="502">
-    <n-drawer-content :title="`桶配置(${bucketName})`" closable>
+    <n-drawer-content :title="t('Bucket Configuration')+`(${bucketName})`" closable>
       <n-descriptions :column="2" label-placement="top" bordered label-class="w-1/2">
         <n-descriptions-item>
           <template #label>

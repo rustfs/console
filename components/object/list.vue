@@ -70,10 +70,10 @@
   <n-button-group class="ml-auto">
     <n-button @click="goToPreviousPage" :disabled="!continuationToken">
       <Icon name="ri:arrow-left-s-line" class="mr-2" />
-      <span>上一页</span>
+      <span>{{ t("Previous Page") }}</span>
     </n-button>
     <n-button @click="goToNextPage" :disabled="!nextToken">
-      <span>下一页</span>
+      <span>{{ t("Next Page") }}</span>
       <Icon name="ri:arrow-right-s-line" class="ml-2" />
     </n-button>
   </n-button-group>

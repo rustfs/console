@@ -50,7 +50,7 @@
 
         <n-progress v-if="isAdding" :percentage="addProgress" type="line" :show-indicator="true" style="margin-bottom: 16px;">
           <template #default>
-            正在添加到上传队列 ({{ addProgress }}%)
+            {{ t('Adding to Upload Queue') }} ({{ addProgress }}%)
           </template>
         </n-progress>
 

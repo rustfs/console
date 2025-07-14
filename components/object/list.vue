@@ -331,13 +331,13 @@ const bucketApi = useBucket({});
 // 批量删除
 function handleBatchDelete() {
   dialog.error({
-    title: '警告',
-    content: '你确定要删除所有选中的对象吗？',
-    positiveText: '确定',
-    negativeText: '取消',
+    title: t('Warning'),
+    content: t('Are you sure you want to delete all selected objects?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error('请至少选择一项');
+        message.error(t('Please select at least one item'));
         return;
       }
       try {

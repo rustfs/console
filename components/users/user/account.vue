@@ -366,17 +366,17 @@ async function submitForm() {
               : null,
           });
 
-          message.success('添加成功');
+          message.success(t('Add Success'));
           cancelAdd();
           emit('notice', res);
           getUserList();
         } catch (error) {
           console.log(error);
-          message.error('添加失败');
+          message.error(t('Add Failed'));
         }
       } else {
         console.log(errors);
-        message.error('请填写正确的格式');
+        message.error(t('Please fill in the correct format'));
       }
     });
   } else {
@@ -386,11 +386,11 @@ async function submitForm() {
         policy: formModel.value.policy || '{}',
         expiry: new Date(formModel.value.expiry || 0).toISOString(),
       });
-      message.success('修改成功');
+      message.success(t('Edit Success'));
       cancelAdd();
       getUserList();
     } catch (error) {
-      message.error('修改失败');
+      message.error(t('Edit Failed'));
     }
   }
 }
@@ -402,10 +402,10 @@ function dateDisabled(ts: number) {
 async function deleteItem(row: any) {
   try {
     const res = await deleteServiceAccount(row.accessKey);
-    message.success('删除成功');
+    message.success(t('Delete Success'));
     getUserList();
   } catch (error) {
-    message.error('删除失败');
+    message.error(t('Delete Failed'));
   }
 }
 
@@ -421,13 +421,13 @@ function handleCheck(keys: DataTableRowKey[]) {
 }
 function deleteByList() {
   dialog.error({
-    title: '警告',
-    content: '你确定要删除所有选中的秘钥吗？',
-    positiveText: '确定',
-    negativeText: '取消',
+    title: t('Warning'),
+    content: t('Are you sure you want to delete all selected keys?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error('请至少选择一项');
+        message.error(t('Please select at least one item'));
         return;
       }
       try {
@@ -436,9 +436,9 @@ function deleteByList() {
         // })
         checkedKeys.value = [];
         getUserList();
-        message.success('删除成功');
+        message.success(t('Delete Success'));
       } catch (error) {
-        message.error('删除失败');
+        message.error(t('Delete Failed'));
       }
     },
   });

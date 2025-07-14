@@ -360,11 +360,11 @@ function handleBatchDelete() {
           })
         );
 
-        message.success('删除任务已创建');
+        message.success(t('Delete task created'));
         salt.value = randomString();
         refresh();
       } catch (error) {
-        message.error('删除失败');
+        message.error(t('Delete Failed'));
       }
     },
   });

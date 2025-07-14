@@ -24,7 +24,7 @@
           </n-form-item>
           <n-space>
             <NFlex>
-              <NButton secondary @click="changeMebers">提交</NButton>
+              <NButton secondary @click="changeMebers">{{ t('Submit') }}</NButton>
             </NFlex>
           </n-space>
         </n-flex>

@@ -550,5 +550,7 @@
   "Please select at least one item": "Please select at least one item",
   "Get Data Failed": "Get Data Failed",
   "New user has been created": "New user has been created",
-  "Export": "Export"
+  "Export": "Export",
+  "Login expired, please login again": "Login expired, please login again",
+  "Batch allocation policies": "Batch allocation policies"
 }

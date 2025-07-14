@@ -15,25 +15,25 @@
         <object-delete-stats />
         <n-button @click="() => handleNewObject(true)">
           <Icon name="ri:add-line" class="mr-2" />
-          <span>{{ t("New Folder") }}</span>
+          <span>{{ t('New Folder') }}</span>
         </n-button>
         <n-button @click="() => handleNewObject(false)">
           <Icon name="ri:add-line" class="mr-2" />
-          <span>{{ t("New File") }}</span>
+          <span>{{ t('New File') }}</span>
         </n-button>
         <n-button @click="() => (uploadPickerVisible = true)">
           <Icon name="ri:file-add-line" class="mr-2" />
-          <span>{{ t("Upload File") + "/" + t("Folder") }}</span>
+          <span>{{ t('Upload File') + '/' + t('Folder') }}</span>
         </n-button>
         <n-button :disabled="!checkedKeys.length" secondary @click="handleBatchDelete">
           <template #icon>
             <Icon name="ri:delete-bin-5-line"></Icon>
           </template>
-          {{ t("Delete Selected") }}
+          {{ t('Delete Selected') }}
         </n-button>
         <n-button @click="() => refresh()">
           <Icon name="ri:refresh-line" class="mr-2" />
-          <span>{{ t("Refresh") }}</span>
+          <span>{{ t('Refresh') }}</span>
         </n-button>
       </div>
     </template>
@@ -45,35 +45,38 @@
     :row-key="rowKey"
     @update:checked-row-keys="handleCheck"
     :pagination="false"
-    :bordered="false" />
+    :bordered="false"
+  />
   <object-upload-picker
     :show="uploadPickerVisible"
     @update:show="
-      (val) => {
+      val => {
         uploadPickerVisible = val;
         refresh();
       }
     "
     :bucketName="bucketName"
-    :prefix="prefix" />
+    :prefix="prefix"
+  />
   <object-new-form
     :show="newObjectFormVisible"
     :asPrefix="newObjectAsPrefix"
     @update:show="
-      (val) => {
+      val => {
         newObjectFormVisible = val;
         refresh();
       }
     "
     :bucketName="bucketName"
-    :prefix="prefix" />
+    :prefix="prefix"
+  />
   <n-button-group class="ml-auto">
     <n-button @click="goToPreviousPage" :disabled="!continuationToken">
       <Icon name="ri:arrow-left-s-line" class="mr-2" />
-      <span>{{ t("Previous Page") }}</span>
+      <span>{{ t('Previous Page') }}</span>
     </n-button>
     <n-button @click="goToNextPage" :disabled="!nextToken">
-      <span>{{ t("Next Page") }}</span>
+      <span>{{ t('Next Page') }}</span>
       <Icon name="ri:arrow-right-s-line" class="ml-2" />
     </n-button>
   </n-button-group>
@@ -83,16 +86,16 @@
 <script setup lang="ts">
 const { $s3Client } = useNuxtApp();
 const { t } = useI18n();
-import { useAsyncData, useRoute, useRouter } from "#app";
-import { NuxtLink } from "#components";
-import { ListObjectsV2Command, type _Object, type CommonPrefix } from "@aws-sdk/client-s3";
-import dayjs from "dayjs";
-import type { DataTableColumns, DataTableRowKey } from "naive-ui";
-import { joinRelativeURL } from "ufo";
-import { computed, ref, watch, type VNode } from "vue";
-import { useDeleteTaskManagerStore } from "~/store/delete-tasks";
-import { useUploadTaskManagerStore } from "~/store/upload-tasks";
-import { useBucket } from "~/composables/useBucket";
+import { useAsyncData, useRoute, useRouter } from '#app';
+import { NuxtLink } from '#components';
+import { ListObjectsV2Command, type _Object, type CommonPrefix } from '@aws-sdk/client-s3';
+import dayjs from 'dayjs';
+import type { DataTableColumns, DataTableRowKey } from 'naive-ui';
+import { joinRelativeURL } from 'ufo';
+import { computed, ref, watch, type VNode } from 'vue';
+import { useDeleteTaskManagerStore } from '~/store/delete-tasks';
+import { useUploadTaskManagerStore } from '~/store/upload-tasks';
+import { useBucket } from '~/composables/useBucket';
 
 const route = useRoute();
 const router = useRouter();
@@ -103,7 +106,7 @@ const props = defineProps<{ bucket: string; path: string }>();
 const uploadPickerVisible = ref(false);
 const newObjectFormVisible = ref(false);
 const newObjectAsPrefix = ref(false);
-const searchTerm = ref("");
+const searchTerm = ref('');
 
 // Add debounce function for search
 const debounce = (fn: Function, delay: number) => {
@@ -162,15 +165,19 @@ const handleNewObject = (asPrefix: boolean) => {
 
 const bucketPath = (path?: string | Array<string>) => {
   if (Array.isArray(path)) {
-    path = path.join("/");
+    path = path.join('/');
   }
 
-  return joinRelativeURL("/browser", encodeURIComponent(bucketName.value), path ? encodeURIComponent(path) : "");
+  return joinRelativeURL(
+    '/browser',
+    encodeURIComponent(bucketName.value),
+    path ? encodeURIComponent(path) : ''
+  );
 };
 
 interface RowData {
   Key: string;
-  type: "prefix" | "object";
+  type: 'prefix' | 'object';
   Size: number;
   LastModified: string;
 }
@@ -178,27 +185,30 @@ interface RowData {
 const infoRef = ref();
 const columns: DataTableColumns<RowData> = [
   {
-    type: "selection",
+    type: 'selection',
   },
   {
-    key: "Key",
-    title: t("Object"),
-    render: (row: { Key: string; type: "prefix" | "object" }) => {
+    key: 'Key',
+    title: t('Object'),
+    render: (row: { Key: string; type: 'prefix' | 'object' }) => {
       const displayKey = prefix.value ? row.Key.substring(prefix.value.length) : row.Key;
-      let label: string | VNode = displayKey || "/";
+      let label: string | VNode = displayKey || '/';
 
-      if (row.type === "prefix") {
-        label = h("span", { class: "inline-flex items-center gap-2" }, [icon("ri:folder-line"), label]);
+      if (row.type === 'prefix') {
+        label = h('span', { class: 'inline-flex items-center gap-2' }, [
+          icon('ri:folder-line'),
+          label,
+        ]);
       }
 
       const keyInUri = row.Key;
       return h(
         NuxtLink,
         {
-          href: row.type === "prefix" ? bucketPath(keyInUri) : "",
-          class: "block text-cyan-400 cursor-pointer",
+          href: row.type === 'prefix' ? bucketPath(keyInUri) : '',
+          class: 'block text-cyan-400 cursor-pointer',
           onClick: (e: MouseEvent) => {
-            if (row.type === "prefix") return;
+            if (row.type === 'prefix') return;
             infoRef.value.openDrawer(bucketName.value, row.Key);
             return;
           },
@@ -207,12 +217,16 @@ const columns: DataTableColumns<RowData> = [
       );
     },
   },
-  { key: "Size", title: t("Size"), render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : "") },
   {
-    key: "LastModified",
-    title: t("Update Time"),
+    key: 'Size',
+    title: t('Size'),
+    render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : ''),
+  },
+  {
+    key: 'LastModified',
+    title: t('Update Time'),
     render: (row: { LastModified: string }) => {
-      return row.LastModified ? dayjs(row.LastModified).format("YYYY-MM-DD HH:mm:ss") : "";
+      return row.LastModified ? dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss') : '';
     },
   },
 ];
@@ -224,8 +238,8 @@ interface ListObjectsResponse {
   isTruncated: boolean;
 }
 const randomString = () => {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
   for (let i = 0; i < 8; i++) {
     result += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -239,7 +253,7 @@ const { data, refresh } = await useAsyncData<ListObjectsResponse>(
     const params = {
       Bucket: bucketName.value,
       MaxKeys: pageSize.value || 25,
-      Delimiter: "/",
+      Delimiter: '/',
       Prefix: prefix.value || undefined,
       ContinuationToken: continuationToken.value,
     };
@@ -269,18 +283,18 @@ const nextToken = computed(() => data.value?.nextContinuationToken || null);
 
 const objects = computed(() => {
   return commonPrefixes.value
-    .map((prefix) => {
+    .map(prefix => {
       return {
         Key: prefix.Prefix,
-        type: "prefix",
+        type: 'prefix',
         Size: 0,
       };
     })
     .concat(
-      contents.value.map((object) => {
+      contents.value.map(object => {
         return {
           Key: object.Key,
-          type: "object",
+          type: 'object',
           Size: object.Size ?? 0,
           LastModified: object.LastModified ?? new Date(0),
         };
@@ -295,7 +309,7 @@ const filteredObjects = computed(() => {
   }
 
   const term = searchTerm.value.toLowerCase();
-  return objects.value.filter((obj) => {
+  return objects.value.filter(obj => {
     const displayKey = prefix.value ? obj.Key?.substring(prefix.value.length) : obj.Key;
     return displayKey?.toLowerCase().includes(term);
   });
@@ -317,36 +331,40 @@ const bucketApi = useBucket({});
 // 批量删除
 function handleBatchDelete() {
   dialog.error({
-    title: "警告",
-    content: "你确定要删除所有选中的对象吗？",
-    positiveText: "确定",
-    negativeText: "取消",
+    title: '警告',
+    content: '你确定要删除所有选中的对象吗？',
+    positiveText: '确定',
+    negativeText: '取消',
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error("请至少选择一项");
+        message.error('请至少选择一项');
         return;
       }
       try {
         await Promise.all(
-          checkedKeys.value.map(async (item) => {
-            const findOne = objects.value.find((obj) => obj.Key === item);
+          checkedKeys.value.map(async item => {
+            const findOne = objects.value.find(obj => obj.Key === item);
             // 目录删除
             // 递归查询目录下的所有文件，然后删除
-            if (findOne?.type === "prefix" && findOne?.Key) {
-              return await objectApi.mapAllFiles(bucketName.value, findOne.Key, (fileKey: string) => {
-                deleteTaskStore.addKeys([fileKey], bucketName.value);
-              });
+            if (findOne?.type === 'prefix' && findOne?.Key) {
+              return await objectApi.mapAllFiles(
+                bucketName.value,
+                findOne.Key,
+                (fileKey: string) => {
+                  deleteTaskStore.addKeys([fileKey], bucketName.value);
+                }
+              );
             }
 
             return deleteTaskStore.addKeys([String(item)], bucketName.value);
           })
         );
 
-        message.success("删除任务已创建");
+        message.success('删除任务已创建');
         salt.value = randomString();
         refresh();
       } catch (error) {
-        message.error("删除失败");
+        message.error('删除失败');
       }
     },
   });

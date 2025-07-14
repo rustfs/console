@@ -410,6 +410,8 @@
   "Storage Class": "存储类型",
   "Version ID": "版本ID",
   "Submit Data": "提交数据",
+  "New user has been created": "新用户已创建",
+  "Export": "导出",
   "Get Version Control Status Failed": "获取版本控制状态失败",
   "The XML format you provided is incorrect, or has not been validated against our published schema. (MasterKeyID not found aws:kms).": "您提供的XML格式不正确，或者未根据我们发布的架构进行验证。（未找到MasterKeyID aws:kms）。",
   "Server-side encryption is specified, but S3 is not configured.": "指定了服务器端加密，但S3未配置。",

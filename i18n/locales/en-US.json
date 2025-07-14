@@ -548,5 +548,7 @@
   "Description": "Description",
   "Are you sure you want to delete all selected keys?": "Are you sure you want to delete all selected keys?",
   "Please select at least one item": "Please select at least one item",
-  "Get Data Failed": "Get Data Failed"
+  "Get Data Failed": "Get Data Failed",
+  "New user has been created": "New user has been created",
+  "Export": "Export"
 }

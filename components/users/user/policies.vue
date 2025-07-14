@@ -119,11 +119,11 @@ const changeMebers = async () => {
       userOrGroup: encodeURIComponent(props.user.accessKey),
       isGroup: false,
     });
-    messge.success('修改成功');
+    messge.success(t('Edit Success'));
     editStatus.value = false;
     emit('search');
   } catch {
-    messge.error('修改失败');
+    messge.error(t('Edit Failed'));
   }
 };
 </script>

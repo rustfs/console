@@ -15,12 +15,12 @@
           <span>{{ t('Copy URL') }}</span>
         </n-button>
 
-        <n-button @click="() => showPreview = true">
+        <n-button @click="() => (showPreview = true)">
           <Icon name="ri:eye-line" class="mr-2" />
           <span>{{ t('Preview') }}</span>
         </n-button>
 
-        <n-button @click="() => showTagView = true">
+        <n-button @click="() => (showTagView = true)">
           <Icon name="ri:price-tag-3-line" class="mr-2" />
           <span>{{ t('Tags') }}</span>
         </n-button>
@@ -47,21 +47,41 @@
       <n-spin size="small" />
     </div>
     <n-descriptions :column="1">
-      <n-descriptions-item :label="t('Object Name')"><span class="select-all">{{ key }}</span></n-descriptions-item>
-      <n-descriptions-item :label="t('Object Size')">{{ object?.ContentLength }}</n-descriptions-item>
+      <n-descriptions-item :label="t('Object Name')"
+        ><span class="select-all">{{ key }}</span></n-descriptions-item
+      >
+      <n-descriptions-item :label="t('Object Size')">{{
+        object?.ContentLength
+      }}</n-descriptions-item>
       <n-descriptions-item :label="t('Object Type')">{{ object?.ContentType }}</n-descriptions-item>
       <!-- <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
-      <n-descriptions-item label="ETag"><span class="select-all">{{ object?.ETag }}</span></n-descriptions-item>
-      <n-descriptions-item :label="t('Last Modified Time')">{{ object?.LastModified }}</n-descriptions-item>
+      <n-descriptions-item label="ETag"
+        ><span class="select-all">{{ object?.ETag }}</span></n-descriptions-item
+      >
+      <n-descriptions-item :label="t('Last Modified Time')">{{
+        object?.LastModified
+      }}</n-descriptions-item>
     </n-descriptions>
 
     <object-preview-modal v-model:show="showPreview" :bucketName="bucketName" :objectKey="key" />
 
     <!-- tagview -->
-    <n-modal v-model:show="showTagView" preset="card" :title="t('Set Tags')" draggable class="max-w-screen-md">
+    <n-modal
+      v-model:show="showTagView"
+      preset="card"
+      :title="t('Set Tags')"
+      draggable
+      class="max-w-screen-md"
+    >
       <n-card class="max-w-screen-md">
         <n-space class="my-4">
-          <n-tag class="m-2 align-middle" v-for="(tag, index) in tags" type="info" closable @close="handledeleteTag(index)">
+          <n-tag
+            class="m-2 align-middle"
+            v-for="(tag, index) in tags"
+            type="info"
+            closable
+            @close="handledeleteTag(index)"
+          >
             {{ tag.Key }}:{{ tag.Value }}
           </n-tag>
         </n-space>
@@ -86,87 +106,91 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n()
-const router = useRouter()
+const { t } = useI18n();
+const router = useRouter();
 const { $s3Client } = useNuxtApp();
 const message = useMessage();
-const props = defineProps<{ bucket: string; objectKey: string }>()
+const props = defineProps<{ bucket: string; objectKey: string }>();
 
-const bucketName = computed(() => props.bucket as string)
-const { getObjectTagging, putObjectTagging, deleteObjectTagging } = useObject({ bucket: bucketName.value })
+const bucketName = computed(() => props.bucket as string);
+const { getObjectTagging, putObjectTagging, deleteObjectTagging } = useObject({
+  bucket: bucketName.value,
+});
 
 // 当前路径的前缀, example: '/folder1/folder2/'
-const key = computed(() => decodeURIComponent(props.objectKey as string))
+const key = computed(() => decodeURIComponent(props.objectKey as string));
 
 // 预览内容
-const showPreview = ref(false)
+const showPreview = ref(false);
 //  标签
-const showTagView = ref(false)
+const showTagView = ref(false);
 const tagFormValue = ref({
   Key: '',
-  Value: ''
-})
+  Value: '',
+});
 interface Tag {
-  Key: string
-  Value: string
+  Key: string;
+  Value: string;
 }
 // 获取tags
-const tags = ref<Tag[]>([])
+const tags = ref<Tag[]>([]);
 const getTags = async () => {
-  const resp: any = await getObjectTagging(key.value)
-  tags.value = resp.TagSet || []
+  const resp: any = await getObjectTagging(key.value);
+  tags.value = resp.TagSet || [];
+};
+getTags();
 
-}
-getTags()
-
-const dialog = useDialog()
+const dialog = useDialog();
 // 删除标签
 const handledeleteTag = async (index: number) => {
   dialog.error({
-    title: t("Warning"),
-    content: t("Delete Tag Confirm"),
-    positiveText: t("Confirm"),
-    negativeText: t("Cancel"),
+    title: t('Warning'),
+    content: t('Delete Tag Confirm'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
     onPositiveClick: async () => {
-      putObjectTagging(key.value, { TagSet: tags.value.filter((item, keyIndex) => keyIndex !== index) })
+      putObjectTagging(key.value, {
+        TagSet: tags.value.filter((item, keyIndex) => keyIndex !== index),
+      })
         .then(() => {
-          message.success(t("Tag Update Success"))
-          getTags()
+          message.success(t('Tag Update Success'));
+          getTags();
         })
-        .catch((error) => {
-          message.error(t("Tag Delete Failed", { error: error.message }))
-        })
+        .catch(error => {
+          message.error(t('Tag Delete Failed', { error: error.message }));
+        });
     },
   });
-
-
-}
+};
 
 const submitTagForm = async () => {
   const tag = {
     Key: tagFormValue.value.Key,
-    Value: tagFormValue.value.Value
-  }
+    Value: tagFormValue.value.Value,
+  };
   putObjectTagging(key.value, {
-    TagSet: [...tags.value, tag]
+    TagSet: [...tags.value, tag],
   }).then(() => {
-    message.success(t('Tag Set Success'))
-    getTags()
-  })
-
-}
+    message.success(t('Tag Set Success'));
+    getTags();
+  });
+};
 
 const objectApi = useObject({ bucket: bucketName.value });
 
 // 在服务端获取数据
-const { data: object, status, refresh } = useAsyncData(`head-object&${key}`, () => objectApi.headObject(key.value))
+const {
+  data: object,
+  status,
+  refresh,
+} = useAsyncData(`head-object&${key}`, () => objectApi.headObject(key.value));
 
 const download = async () => {
   const msg = message.loading(t('Getting URL'));
   const url = await objectApi.getSignedUrl(key.value);
   msg.destroy();
-  window.open(url, '_blank')
-}
+  window.open(url, '_blank');
+};
 
 const copySignedUrl = async () => {
   const msg = message.loading(t('Getting URL'));
@@ -174,12 +198,10 @@ const copySignedUrl = async () => {
   await navigator.clipboard.writeText(url);
   msg.destroy();
   message.success(t('URL Copied'));
-}
+};
 const deleteObject = async () => {
   await objectApi.deleteObject(key.value);
   message.success(t('Delete Success'));
   router.back();
-}
-
-
+};
 </script>

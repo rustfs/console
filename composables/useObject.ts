@@ -11,8 +11,9 @@ import {
   PutObjectRetentionCommand,
   GetObjectLegalHoldCommand,
   PutObjectLegalHoldCommand,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl as _getSignedUrl } from "@aws-sdk/s3-request-presigner";
+  ListObjectVersionsCommand,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export function useObject({ bucket, region }: { bucket: string; region?: string }) {
   const $client = useNuxtApp().$s3Client;
@@ -54,18 +55,26 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     return await $client.send(new DeleteObjectCommand(params));
   };
 
-  const listObject = async (bucket: string, prefix: string | undefined = undefined, pageSize: number = 25) => {
+  const listObject = async (
+    bucket: string,
+    prefix: string | undefined = undefined,
+    pageSize: number = 25
+  ) => {
     const params = {
       Bucket: bucket,
       Prefix: prefix,
       MaxKeys: pageSize,
-      Delimiter: "/",
+      Delimiter: '/',
     };
 
     return await $client.send(new ListObjectsV2Command(params));
   };
 
-  async function mapAllFiles(bucketName: string, prefix: string, callback: (fileKey: string) => void) {
+  async function mapAllFiles(
+    bucketName: string,
+    prefix: string,
+    callback: (fileKey: string) => void
+  ) {
     let isTruncated = true;
     let continuationToken: string | undefined = undefined;
 
@@ -82,7 +91,7 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
 
       try {
         const data = await $client.send(new ListObjectsV2Command(params));
-        data.Contents?.forEach((item) => {
+        data.Contents?.forEach(item => {
           if (item.Key) {
             callback(item.Key);
           }
@@ -91,7 +100,7 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
         isTruncated = data.IsTruncated || false;
         continuationToken = data.NextContinuationToken;
       } catch (error) {
-        console.error("Error listing files: ", error);
+        console.error('Error listing files: ', error);
         throw error;
       }
     }
@@ -138,7 +147,7 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
       }
       return response;
     } catch (error: any) {
-      if (error.message?.includes("Deserialization error")) {
+      if (error.message?.includes('Deserialization error')) {
         return { Retention: null };
       }
       throw error;
@@ -173,6 +182,15 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     return await $client.send(new PutObjectLegalHoldCommand(params));
   }
 
+  async function getObjectVersions(key: string) {
+    const params = {
+      Bucket: bucket,
+      Prefix: key,
+    };
+
+    return await $client.send(new ListObjectVersionsCommand(params));
+  }
+
   return {
     headObject,
     putObject,
@@ -187,5 +205,6 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     putObjectRetention,
     getObjectLegalHold,
     putObjectLegalHold,
+    getObjectVersions,
   };
 }

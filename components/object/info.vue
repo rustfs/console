@@ -4,22 +4,27 @@
       <div class="flex items-center flex-wrap gap-4 ml-auto">
         <n-button @click="download">
           <Icon name="ri:download-line" class="mr-2" />
-          <span>{{ t("Download") }}</span>
+          <span>{{ t('Download') }}</span>
         </n-button>
 
         <n-button @click="() => (showPreview = true)">
           <Icon name="ri:eye-line" class="mr-2" />
-          <span>{{ t("Preview") }}</span>
+          <span>{{ t('Preview') }}</span>
         </n-button>
 
         <n-button @click="() => (showTagView = true)">
           <Icon name="ri:price-tag-3-line" class="mr-2" />
-          <span>{{ t("Tags") }}</span>
+          <span>{{ t('Tags') }}</span>
+        </n-button>
+
+        <n-button @click="geVersions">
+          <Icon name="ri:file-history-line" class="mr-2" />
+          <span>{{ t('Version') }}</span>
         </n-button>
 
         <n-button v-if="lockStatus" @click="() => (showRetentionView = true)">
           <Icon name="ri:save-2-line" class="mr-2" />
-          <span>{{ t("Retention") }}</span>
+          <span>{{ t('Retention') }}</span>
         </n-button>
 
         <!-- <n-button id="copyTag" ref="copyRef" @click="copySignUrl">
@@ -35,13 +40,19 @@
           <n-descriptions-item :label="t('Object Name')">
             <span class="select-all">{{ key }}</span>
           </n-descriptions-item>
-          <n-descriptions-item :label="t('Object Size')">{{ object?.ContentLength }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Object Type')">{{ object?.ContentType }}</n-descriptions-item>
+          <n-descriptions-item :label="t('Object Size')">{{
+            object?.ContentLength
+          }}</n-descriptions-item>
+          <n-descriptions-item :label="t('Object Type')">{{
+            object?.ContentType
+          }}</n-descriptions-item>
           <!-- <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
           <n-descriptions-item label="ETag">
             <span class="select-all">{{ object?.ETag }}</span>
           </n-descriptions-item>
-          <n-descriptions-item :label="t('Last Modified Time')">{{ object?.LastModified }}</n-descriptions-item>
+          <n-descriptions-item :label="t('Last Modified Time')">{{
+            object?.LastModified
+          }}</n-descriptions-item>
 
           <!-- 合法保留 -->
           <n-descriptions-item :label="t('Legal Hold')">
@@ -51,16 +62,17 @@
               v-model:value="legalHold"
               :loading="legalHoldLoading"
               :round="false"
-              @update:value="handleChangeLegalStatus">
+              @update:value="handleChangeLegalStatus"
+            >
               <template #checked>
-                {{ t("Enabled") }}
+                {{ t('Enabled') }}
               </template>
               <template #unchecked>
-                {{ t("Disabled") }}
+                {{ t('Disabled') }}
               </template>
             </n-switch>
             <n-tag type="error" size="small" v-else class="mt-2">
-              {{ t("Disabled") }}
+              {{ t('Disabled') }}
               <template #icon>
                 <Icon name="ri:close-circle-fill" />
               </template>
@@ -70,10 +82,12 @@
           <!-- 保留 -->
           <n-descriptions-item :label="t('Retention') + t('Policy')">
             <n-space>
-              <span>{{ t("Retention Mode") + ": " + (retentionMode ? retentionMode : t("None")) }}</span>
+              <span>{{
+                t('Retention Mode') + ': ' + (retentionMode ? retentionMode : t('None'))
+              }}</span>
             </n-space>
             <n-space v-if="retainUntilDate">
-              <span>{{ t("Retention RetainUntilDate") + ": " + retainUntilDate }}</span>
+              <span>{{ t('Retention RetainUntilDate') + ': ' + retainUntilDate }}</span>
             </n-space>
           </n-descriptions-item>
 
@@ -82,15 +96,28 @@
           <n-descriptions-item :label="t('Temporary URL')">
             <div class="flex items-center gap-2 mt-1">
               <n-input v-model:value="signedUrl" id="signedUrl" :placeholder="t('Temporary URL')" />
-              <n-button  id="signedUrlBtn" data-clipboard-target="#signedUrl">{{ t("Copy") }}</n-button>
+              <n-button id="signedUrlBtn" data-clipboard-target="#signedUrl">{{
+                t('Copy')
+              }}</n-button>
             </div>
           </n-descriptions-item>
         </n-descriptions>
 
-        <object-preview-modal v-model:show="showPreview" :bucketName="bucketName" :objectKey="key" />
+        <object-preview-modal
+          v-model:show="showPreview"
+          :bucketName="bucketName"
+          :objectKey="key"
+          :versionId="previewVersionId"
+        />
 
         <!-- tagview -->
-        <n-modal v-model:show="showTagView" preset="card" :title="t('Set Tags')" draggable class="max-w-screen-md">
+        <n-modal
+          v-model:show="showTagView"
+          preset="card"
+          :title="t('Set Tags')"
+          draggable
+          class="max-w-screen-md"
+        >
           <n-card class="max-w-screen-md">
             <n-space class="my-4">
               <n-tag
@@ -98,7 +125,8 @@
                 v-for="(tag, index) in tags"
                 type="info"
                 closable
-                @close="handledeleteTag(index)">
+                @close="handledeleteTag(index)"
+              >
                 {{ tag.Key }}:{{ tag.Value }}
               </n-tag>
             </n-space>
@@ -107,11 +135,14 @@
                 <n-input v-model:value="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
               </n-form-item>
               <n-form-item :label="t('Tag Value')" path="Value">
-                <n-input v-model:value="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
+                <n-input
+                  v-model:value="tagFormValue.Value"
+                  :placeholder="t('Tag Value Placeholder')"
+                />
               </n-form-item>
               <n-form-item>
-                <n-button type="primary" @click="submitTagForm">{{ t("Add") }}</n-button>
-                <n-button class="mx-4" @click="showTagView = false">{{ t("Cancel") }}</n-button>
+                <n-button type="primary" @click="submitTagForm">{{ t('Add') }}</n-button>
+                <n-button class="mx-4" @click="showTagView = false">{{ t('Cancel') }}</n-button>
               </n-form-item>
             </n-form>
           </n-card>
@@ -121,33 +152,40 @@
           v-model:show="showRetentionView"
           preset="card"
           :title="t('Retention') + t('Policy')"
-          class="max-w-screen-md">
+          class="max-w-screen-md"
+        >
           <n-card class="flex-col justify-center items-center">
             <n-form
               ref="retentionFormRef"
               :label-width="200"
               label-placement="left"
               label-align="left"
-              class="w-[500px]">
+              class="w-[500px]"
+            >
               <n-form-item :label="t('Retention Mode')" path="retentionMode" class="flex-auto">
                 <n-radio-group v-model:value="retentionMode">
-                  <n-radio value="COMPLIANCE">{{ t("COMPLIANCE") }}</n-radio>
-                  <n-radio value="GOVERNANCE">{{ t("GOVERNANCE") }}</n-radio>
+                  <n-radio value="COMPLIANCE">{{ t('COMPLIANCE') }}</n-radio>
+                  <n-radio value="GOVERNANCE">{{ t('GOVERNANCE') }}</n-radio>
                 </n-radio-group>
               </n-form-item>
 
-              <n-form-item :label="t('Retention RetainUntilDate')" path="retainUntilDate" class="flex-auto">
+              <n-form-item
+                :label="t('Retention RetainUntilDate')"
+                path="retainUntilDate"
+                class="flex-auto"
+              >
                 <n-date-picker
                   v-model:formatted-value="retainUntilDate"
                   value-format="yyyy-MM-dd HH:mm:ss"
                   type="datetime"
-                  clearable />
+                  clearable
+                />
               </n-form-item>
 
               <n-form-item>
-                <n-button type="primary" @click="submitRetention">{{ t("Confirm") }}</n-button>
-                <n-button class="mx-4" @click="resetRetention">{{ t("Reset") }}</n-button>
-                <n-button @click="showRetentionView = false">{{ t("Cancel") }}</n-button>
+                <n-button type="primary" @click="submitRetention">{{ t('Confirm') }}</n-button>
+                <n-button class="mx-4" @click="resetRetention">{{ t('Reset') }}</n-button>
+                <n-button @click="showRetentionView = false">{{ t('Cancel') }}</n-button>
               </n-form-item>
             </n-form>
           </n-card>
@@ -155,16 +193,24 @@
       </n-card>
     </n-drawer-content>
   </n-drawer>
+  <VersionsModal
+    :bucketName="bucketName"
+    :objectKey="key"
+    :visible="showVersions"
+    @close="showVersions = false"
+    @preview="handlePreviewVersion"
+  />
 </template>
 
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
-import dayjs from "dayjs";
+import { useI18n } from 'vue-i18n';
+import dayjs from 'dayjs';
+import VersionsModal from './versions.vue';
 
 const { t } = useI18n();
 const visibel = ref(false);
-const bucketName = ref("");
-const key = ref("");
+const bucketName = ref('');
+const key = ref('');
 
 let objectApi: any;
 const openDrawer = (bucket: string, objName: string) => {
@@ -188,8 +234,8 @@ const showPreview = ref(false);
 //  标签
 const showTagView = ref(false);
 const tagFormValue = ref({
-  Key: "",
-  Value: "",
+  Key: '',
+  Value: '',
 });
 interface Tag {
   Key: string;
@@ -220,9 +266,9 @@ const legalHoldLoading = ref(false);
 // 获取桶的object lock
 const getObjectLockConfig = async () => {
   const { getObjectLockConfiguration } = useBucket({});
-  getObjectLockConfiguration(bucketName.value).then((res) => {
+  getObjectLockConfiguration(bucketName.value).then(res => {
     if (res.ObjectLockConfiguration?.ObjectLockEnabled) {
-      lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == "Enabled" ? true : false;
+      lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == 'Enabled' ? true : false;
       // 如果桶开启了object lock，则获取合法保留状态
       if (lockStatus.value) {
         getObjectLegalHoldFn();
@@ -241,8 +287,8 @@ const getObjectLegalHoldFn = () => {
     bucket: bucketName.value,
   });
   getObjectLegalHold(key.value)
-    .then((res) => {
-      legalHold.value = res.LegalHold?.Status == "ON" ? true : false;
+    .then(res => {
+      legalHold.value = res.LegalHold?.Status == 'ON' ? true : false;
     })
     .finally(() => {
       legalHoldLoading.value = false;
@@ -254,7 +300,7 @@ const handleChangeLegalStatus = () => {
     bucket: bucketName.value,
   });
   putObjectLegalHold(key.value, {
-    Status: legalHold.value ? "ON" : "OFF",
+    Status: legalHold.value ? 'ON' : 'OFF',
   }).finally(() => {
     getObjectLegalHoldFn();
   });
@@ -266,7 +312,7 @@ const retentionFormRef = ref();
 
 const retentionMode = ref<string | null>(null);
 const retainUntilDate = ref<string | null>(null);
-console.log("🚀 ~ retainUntilDate:", retainUntilDate.value);
+console.log('🚀 ~ retainUntilDate:', retainUntilDate.value);
 
 const retentionLoading = ref(false);
 const showRetentionView = ref(false);
@@ -275,14 +321,14 @@ const getObjectRetentionFn = () => {
   const { getObjectRetention } = useObject({
     bucket: bucketName.value,
   });
-  getObjectRetention(key.value).then((res) => {
+  getObjectRetention(key.value).then(res => {
     if (res.Retention) {
-      retentionMode.value = res.Retention.Mode || "";
+      retentionMode.value = res.Retention.Mode || '';
       retainUntilDate.value = res.Retention.RetainUntilDate
-        ? dayjs(res.Retention.RetainUntilDate).format("YYYY-MM-DD HH:mm:ss")
+        ? dayjs(res.Retention.RetainUntilDate).format('YYYY-MM-DD HH:mm:ss')
         : null;
     } else {
-      retentionMode.value = "";
+      retentionMode.value = '';
     }
   });
 };
@@ -298,7 +344,7 @@ const submitRetention = () => {
     RetainUntilDate: retainUntilDate.value ? new Date(retainUntilDate.value) : null,
   })
     .then(() => {
-      message.success(t("Retention Update Success"));
+      message.success(t('Retention Update Success'));
       getObjectRetentionFn();
     })
     .finally(() => {
@@ -318,18 +364,20 @@ const resetRetention = () => {
 const handledeleteTag = async (index: number) => {
   const { putObjectTagging } = useObject({ bucket: bucketName.value });
   dialog.error({
-    title: t("Warning"),
-    content: t("Delete Tag Confirm"),
-    positiveText: t("Confirm"),
-    negativeText: t("Cancel"),
+    title: t('Warning'),
+    content: t('Delete Tag Confirm'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
     onPositiveClick: async () => {
-      putObjectTagging(key.value, { TagSet: tags.value.filter((item, keyIndex) => keyIndex !== index) })
+      putObjectTagging(key.value, {
+        TagSet: tags.value.filter((item, keyIndex) => keyIndex !== index),
+      })
         .then(() => {
-          message.success(t("Tag Update Success"));
+          message.success(t('Tag Update Success'));
           getTags();
         })
-        .catch((error) => {
-          message.error(t("Tag Delete Failed", { error: error.message }));
+        .catch(error => {
+          message.error(t('Tag Delete Failed', { error: error.message }));
         });
     },
   });
@@ -344,19 +392,19 @@ const submitTagForm = async () => {
   putObjectTagging(key.value, {
     TagSet: [...tags.value, tag],
   }).then(() => {
-    message.success(t("Tag Set Success"));
+    message.success(t('Tag Set Success'));
     getTags();
   });
 };
 
 const object = ref();
-const loading = ref("pending");
-const signedUrl = ref("");
+const loading = ref('pending');
+const signedUrl = ref('');
 
 const getObject = () => {
   objectApi.headObject(key.value).then(async (res: any) => {
     object.value = res;
-    loading.value = "fulfilled";
+    loading.value = 'fulfilled';
     signedUrl.value = await objectApi.getSignedUrl(key.value);
   });
 };
@@ -364,24 +412,23 @@ const getObject = () => {
 const refreshSignedUrl = async () => {
   try {
     signedUrl.value = await objectApi.getSignedUrl(key.value);
-    message.success(t("Get Success"));
+    message.success(t('Get Success'));
   } catch (error) {
-    message.error(t("Get Failed"));
+    message.error(t('Get Failed'));
   } finally {
   }
 };
 const dialog = useDialog();
 
-
 // 复制
-import ClipboardJS from "clipboard";
-const clipboard = new ClipboardJS( "#signedUrlBtn");
-clipboard.on('success', function(e) {
+import ClipboardJS from 'clipboard';
+const clipboard = new ClipboardJS('#signedUrlBtn');
+clipboard.on('success', function (e) {
   message.success(t('Copy Success'));
   e.clearSelection();
 });
 // 这里成功的时候也响应error，所以这里也加上
-clipboard.on('error', function(e) {
+clipboard.on('error', function (e) {
   message.success(t('Copy Success'));
 });
 onUnmounted(() => {
@@ -389,10 +436,24 @@ onUnmounted(() => {
 });
 
 const download = async () => {
-  const msg = message.loading(t("Getting URL"));
+  const msg = message.loading(t('Getting URL'));
   await refreshSignedUrl();
   const url = await objectApi.getSignedUrl(key.value);
   msg.destroy();
-  window.open(url, "_blank");
+  window.open(url, '_blank');
 };
+
+// 版本
+
+const showVersions = ref(false);
+const previewVersionId = ref<string | null>(null);
+
+const geVersions = async () => {
+  showVersions.value = true;
+};
+
+function handlePreviewVersion(versionId: string) {
+  previewVersionId.value = versionId;
+  showPreview.value = true;
+}
 </script>

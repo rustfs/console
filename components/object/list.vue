@@ -278,6 +278,7 @@ watch(
 );
 
 const contents = computed(() => data.value?.contents || []);
+console.log('🚀 ~ contents:', contents.value);
 const commonPrefixes = computed(() => data.value?.commonPrefixes || []);
 const nextToken = computed(() => data.value?.nextContinuationToken || null);
 

@@ -53,7 +53,7 @@ class ApiClient {
       const message = useMessage();
       // 清除登录信息
       await useAuth().logout();
-      window.location.href = '/auth/login';
+      window.location.href = '/rustfs/console/auth/login';
       return;
     }
 

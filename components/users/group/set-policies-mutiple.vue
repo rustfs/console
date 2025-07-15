@@ -4,22 +4,23 @@
       v-model:show="visible"
       :mask-closable="false"
       preset="card"
-      title="批量分配策略"
+      :title="t('Batch allocation policies')"
       class="w-1/2"
       :segmented="{
         content: true,
         action: true,
-      }">
+      }"
+    >
       <n-card>
         <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
           <n-flex justify="space-between">
             <n-form-item class="!w-64" label="" path="name">
-              <n-input placeholder="搜索策略" @input="filterName" />
+              <n-input :placeholder="t('Search Policy')" @input="filterName" />
             </n-form-item>
 
             <n-space>
               <NFlex>
-                <NButton secondary @click="changePolicies">提交</NButton>
+                <NButton secondary @click="changePolicies">{{ t('Submit') }}</NButton>
               </NFlex>
             </n-space>
           </n-flex>
@@ -33,104 +34,114 @@
         :pagination="false"
         :bordered="false"
         :row-key="rowKey"
-        @update:checked-row-keys="handleCheck" />
+        @update:checked-row-keys="handleCheck"
+      />
     </n-modal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NSpace } from "naive-ui"
-const { listPolicies, setUserOrGroupPolicy } = usePolicies()
-const {t} = useI18n()
+import {
+  type DataTableColumns,
+  type DataTableInst,
+  type DataTableRowKey,
+  NButton,
+  NSpace,
+} from 'naive-ui';
+const { listPolicies, setUserOrGroupPolicy } = usePolicies();
+const { t } = useI18n();
 
 const props = defineProps({
   checkedKeys: {
     type: Array,
     required: true,
   },
-})
-const messge = useMessage()
+});
+const messge = useMessage();
 
-const visible = ref(false)
+const visible = ref(false);
 async function openDialog() {
-  visible.value = true
+  visible.value = true;
 }
 
 defineExpose({
   openDialog,
-})
+});
 
 const searchForm = reactive({
-  name: "",
-})
+  name: '',
+});
 interface RowData {
-  name: string
+  name: string;
 }
 
 const columns: DataTableColumns<RowData> = [
   {
-    type: "selection",
+    type: 'selection',
   },
   {
-    title: "策略",
-    align: "left",
-    key: "name",
+    title: '策略',
+    align: 'left',
+    key: 'name',
     filter(value, row) {
-      return !!row.name.includes(value.toString())
+      return !!row.name.includes(value.toString());
     },
   },
-]
+];
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>()
+const tableRef = ref<DataTableInst>();
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
       name: [value],
-    })
+    });
 }
-const listData = ref<any[]>([])
+const listData = ref<any[]>([]);
 const getPoliciesList = async () => {
-  const res = await listPolicies()
-  listData.value = Object.keys(res).sort((a,b)=>a.localeCompare(b)).map((key) => {
-    return {
-      name: key,
-      content: res[key],
-    }
-  })
-}
-getPoliciesList()
+  const res = await listPolicies();
+  listData.value = Object.keys(res)
+    .sort((a, b) => a.localeCompare(b))
+    .map(key => {
+      return {
+        name: key,
+        content: res[key],
+      };
+    });
+};
+getPoliciesList();
 
 /********************编辑****************/
 function rowKey(row: any): string {
-  return row.name
+  return row.name;
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([])
+const checkedKeys = ref<DataTableRowKey[]>([]);
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys
-  return checkedKeys
+  checkedKeys.value = keys;
+  return checkedKeys;
 }
 
-
-const emit = defineEmits(['changePoliciesSuccess'])
+const emit = defineEmits(['changePoliciesSuccess']);
 const changePolicies = async () => {
-    Promise.all(
-      props.checkedKeys.map((item) => {
-        return setUserOrGroupPolicy({
-          policyName: checkedKeys.value,
-          userOrGroup: item,
-          isGroup: true,
-        })
-      })
-    ).then(()=>{
-      visible.value = false
-      messge.success(t('Edit Success'))
-      emit('changePoliciesSuccess')
-    }).catch(()=>{
-      messge.error(t('Edit Failed'))
+  Promise.all(
+    props.checkedKeys.map(item => {
+      return setUserOrGroupPolicy({
+        policyName: checkedKeys.value,
+        userOrGroup: item,
+        isGroup: true,
+      });
     })
-}
+  )
+    .then(() => {
+      visible.value = false;
+      messge.success(t('Edit Success'));
+      emit('changePoliciesSuccess');
+    })
+    .catch(() => {
+      messge.error(t('Edit Failed'));
+    });
+};
 </script>
 
 <style lang="scss" scoped></style>

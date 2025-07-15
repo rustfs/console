@@ -8,10 +8,16 @@
     :segmented="{
       content: true,
       action: true,
-    }">
+    }"
+  >
     <n-card>
       <n-form class="my-4" ref="formRef" :model="formData" :rules="rules">
-        <n-tabs default-value="expire" justify-content="space-evenly" type="line" @update:value="handleUpdateValue">
+        <n-tabs
+          default-value="expire"
+          justify-content="space-evenly"
+          type="line"
+          @update:value="handleUpdateValue"
+        >
           <n-tab-pane name="expire" :tab="t('Expiration')">
             <n-form-item :label="t('Object Version')" path="versionType" v-if="versioningStatus">
               <n-select v-model:value="formData.versionType" :options="versionOptions" />
@@ -23,8 +29,9 @@
                   v-model:value="formData.days"
                   :min="1"
                   :placeholder="t('Days')"
-                  style="width: 100px" />
-                <span class="ms-4">{{ t("Days After") }}</span>
+                  style="width: 100px"
+                />
+                <span class="ms-4">{{ t('Days After') }}</span>
               </div>
             </n-form-item>
             <!-- 生命周期 -->
@@ -32,14 +39,18 @@
               <n-collapse>
                 <n-collapse-item :title="t('More Configurations')" name="advanced">
                   <n-form-item :label="t('Prefix')">
-                    <n-input v-model:value="formData.prefix" :placeholder="t('Please enter prefix')" />
+                    <n-input
+                      v-model:value="formData.prefix"
+                      :placeholder="t('Please enter prefix')"
+                    />
                   </n-form-item>
                   <n-form-item :label="t('Tags')">
                     <n-dynamic-input
                       v-model:value="formData.tags"
                       preset="pair"
                       :key-placeholder="t('Tag Name')"
-                      :value-placeholder="t('Tag Value')" />
+                      :value-placeholder="t('Tag Value')"
+                    />
                   </n-form-item>
                 </n-collapse-item>
               </n-collapse>
@@ -47,11 +58,13 @@
             <!-- 高级设置 -->
             <n-card class="my-4" v-if="formData.versionType == 'current'">
               <n-collapse>
-                <n-collapse-item title="高级设置" name="advanced">
-                  <n-form-item label="删除标记处理">
+                <n-collapse-item :title="t('Advanced Settings')" name="advanced">
+                  <n-form-item :label="t('Delete Marker Handling')">
                     <n-space>
                       <n-switch v-model:value="formData.expiredDeleteMark" :round="false" />
-                      <span class="ml-4 text-gray-500">如果没有留下任何版本，请删除对该对象的引用</span>
+                      <span class="ml-4 text-gray-500">{{
+                        t('If no versions remain, delete references to this object')
+                      }}</span>
                     </n-space>
                   </n-form-item>
 
@@ -76,8 +89,9 @@
                   v-model:value="formData.days"
                   :min="1"
                   :placeholder="t('Days')"
-                  style="width: 100px" />
-                <span class="ms-4">{{ t("Days After") }}</span>
+                  style="width: 100px"
+                />
+                <span class="ms-4">{{ t('Days After') }}</span>
               </div>
             </n-form-item>
             <n-form-item :label="t('Stroage Type')" path="storageType">
@@ -89,14 +103,18 @@
               <n-collapse>
                 <n-collapse-item :title="t('More Configurations')" name="advanced">
                   <n-form-item :label="t('Prefix')">
-                    <n-input v-model:value="formData.prefix" :placeholder="t('Please enter prefix')" />
+                    <n-input
+                      v-model:value="formData.prefix"
+                      :placeholder="t('Please enter prefix')"
+                    />
                   </n-form-item>
                   <n-form-item :label="t('Tags')">
                     <n-dynamic-input
                       v-model:value="formData.tags"
                       preset="pair"
                       :key-placeholder="t('Tag Name')"
-                      :value-placeholder="t('Tag Value')" />
+                      :value-placeholder="t('Tag Value')"
+                    />
                   </n-form-item>
                 </n-collapse-item>
               </n-collapse>
@@ -106,8 +124,8 @@
       </n-form>
 
       <n-space justify="center">
-        <n-button @click="handleCancel">{{ t("Cancel") }}</n-button>
-        <n-button type="primary" @click="handleSave">{{ t("Save") }}</n-button>
+        <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
+        <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
       </n-space>
     </n-card>
   </n-modal>
@@ -124,22 +142,23 @@ import {
   NInput,
   NInputNumber,
   NSelect,
-} from "naive-ui";
+} from 'naive-ui';
 // 使用 Web Crypto API 或 Node.js crypto 模块
 const randomUUID = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
+    return crypto.randomUUID();
   }
   // 兜底方案
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0
-    const v = c === 'x' ? r : (r & 0x3 | 0x8)
-    return v.toString(16)
-  })
-}
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-const { putBucketLifecycleConfiguration, getBucketVersioning, getBucketLifecycleConfiguration } = useBucket({});
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+const { putBucketLifecycleConfiguration, getBucketVersioning, getBucketLifecycleConfiguration } =
+  useBucket({});
 const { listTiers } = useTiers();
 const { t } = useI18n();
 const message = useMessage();
@@ -149,29 +168,29 @@ interface TierItem {
   value: string;
 }
 
-const emit = defineEmits(["search"]);
+const emit = defineEmits(['search']);
 const formRef = ref();
 const formData = ref({
-  ruleName: "",
+  ruleName: '',
   type: null,
-  versionType: "current",
+  versionType: 'current',
   days: null,
-  action: "expire",
-  prefix: "",
+  action: 'expire',
+  prefix: '',
   expiredDeleteMark: false,
   deleteAllExpired: false,
-  storageType: "",
+  storageType: '',
   tags: [
     {
-      key: "",
-      value: "",
+      key: '',
+      value: '',
     },
   ],
 });
 
 const versionOptions = ref([
-  { label: t("Current Version"), value: "current" },
-  { label: t("Non-current Version"), value: "non-current" },
+  { label: t('Current Version'), value: 'current' },
+  { label: t('Non-current Version'), value: 'non-current' },
 ]);
 
 // 表单验证规则
@@ -180,21 +199,21 @@ const rules = {
     required: true,
     validator: (rule: any, value: any) => {
       if (value === null || value === undefined || value < 1) {
-        return new Error(t("Please enter valid days"));
+        return new Error(t('Please enter valid days'));
       }
       return true;
     },
-    trigger: ["blur", "input", "change"],
+    trigger: ['blur', 'input', 'change'],
   },
   storageType: {
     validator: (rule: any, value: any) => {
       // 只在 transition 模式下验证 storageType
-      if (formData.value.action === "transition" && (!value || value === "")) {
-        return new Error(t("Please select storage type"));
+      if (formData.value.action === 'transition' && (!value || value === '')) {
+        return new Error(t('Please select storage type'));
       }
       return true;
     },
-    trigger: ["blur", "change"],
+    trigger: ['blur', 'change'],
   },
 };
 
@@ -212,7 +231,7 @@ const props = defineProps({
 
 watch(
   () => props.bucketName,
-  (newVal) => {
+  newVal => {
     // 获取是都开启版本管理
     getVersioningStatus();
   }
@@ -228,10 +247,10 @@ defineExpose({
 });
 
 const handleUpdateValue = (value: string) => {
-  if (value === "expire") {
-    formData.value.action = "expire";
+  if (value === 'expire') {
+    formData.value.action = 'expire';
   } else {
-    formData.value.action = "transition";
+    formData.value.action = 'transition';
   }
 };
 
@@ -239,32 +258,36 @@ const handleSave = () => {
   formRef.value?.validate((errors: any) => {
     if (!errors) {
       // 额外的参数验证（与表单验证保持一致）
-      if (formData.value.days === null || formData.value.days === undefined || formData.value.days < 1) {
-        message.error(t("Please enter valid days"));
+      if (
+        formData.value.days === null ||
+        formData.value.days === undefined ||
+        formData.value.days < 1
+      ) {
+        message.error(t('Please enter valid days'));
         return;
       }
 
       if (
-        formData.value.action === "transition" &&
-        (!formData.value.storageType || formData.value.storageType === "")
+        formData.value.action === 'transition' &&
+        (!formData.value.storageType || formData.value.storageType === '')
       ) {
-        message.error(t("Please select storage type"));
+        message.error(t('Please select storage type'));
         return;
       }
 
       // 先获取当前的生命周期配置
       getBucketLifecycleConfiguration(props.bucketName)
-        .then((currentConfig) => {
+        .then(currentConfig => {
           // 创建新的规则
           const newRule: any = {
             ID: randomUUID(),
-            Status: "Enabled",
+            Status: 'Enabled',
           };
 
           // 设置 Filter 或 Prefix（不能同时使用）
-          console.log("formData.value.prefix:", formData.value.prefix);
-          console.log("formData.value.tags:", formData.value.tags);
-          console.log("formData.value.expiredDeleteMark:", formData.value.expiredDeleteMark);
+          console.log('formData.value.prefix:', formData.value.prefix);
+          console.log('formData.value.tags:', formData.value.tags);
+          console.log('formData.value.expiredDeleteMark:', formData.value.expiredDeleteMark);
 
           // 检查是否有有效的标签
           const validTags = formData.value.tags.filter((item: any) => item.key && item.value);
@@ -300,8 +323,8 @@ const handleSave = () => {
           }
 
           // 根据操作类型添加相应的配置
-          if (formData.value.action === "expire") {
-            if (formData.value.versionType === "non-current") {
+          if (formData.value.action === 'expire') {
+            if (formData.value.versionType === 'non-current') {
               newRule.NoncurrentVersionExpiration = {
                 NoncurrentDays: formData.value.days,
               };
@@ -322,7 +345,7 @@ const handleSave = () => {
             }
           } else {
             // transition 操作
-            if (formData.value.versionType === "non-current") {
+            if (formData.value.versionType === 'non-current') {
               newRule.NoncurrentVersionTransitions = [
                 {
                   NoncurrentDays: formData.value.days,
@@ -339,12 +362,6 @@ const handleSave = () => {
             }
           }
 
-          console.log("formData.value.prefix:", formData.value.prefix);
-          console.log("formData.value.tags:", formData.value.tags);
-          console.log("formData.value.expiredDeleteMark:", formData.value.expiredDeleteMark);
-          console.log("Final newRule:", JSON.stringify(newRule, null, 2));
-          // return;
-
           // 合并现有规则和新规则
           const existingRules = currentConfig.Rules || [];
           const updatedRules = [...existingRules, newRule];
@@ -353,33 +370,32 @@ const handleSave = () => {
           const params = {
             Rules: updatedRules,
           };
-          console.log("🚀 ~ .then ~ params:", params);
 
           return putBucketLifecycleConfiguration(props.bucketName, params);
         })
-        .then((res) => {
+        .then(res => {
           visible.value = false;
-          emit("search");
-          message.success(t("Create Success"));
+          emit('search');
+          message.success(t('Create Success'));
           formData.value = {
-            ruleName: "",
+            ruleName: '',
             type: null,
-            versionType: "current",
+            versionType: 'current',
             days: null,
-            action: "expire",
+            action: 'expire',
             expiredDeleteMark: false,
             deleteAllExpired: false,
-            storageType: "",
-            prefix: "",
+            storageType: '',
+            prefix: '',
             tags: [
               {
-                key: "",
-                value: "",
+                key: '',
+                value: '',
               },
             ],
           };
         })
-        .catch((e) => {
+        .catch(e => {
           message.error(e.message);
         });
     }
@@ -409,9 +425,9 @@ const versioningStatus: any = ref(false);
 const getVersioningStatus = async () => {
   try {
     const resp = await getBucketVersioning(props.bucketName);
-    versioningStatus.value = resp.Status == "Enabled";
+    versioningStatus.value = resp.Status == 'Enabled';
   } catch (error) {
-    console.error("获取版本控制状态失败:", error);
+    console.error('获取版本控制状态失败:', error);
   }
 };
 

@@ -19,6 +19,7 @@ import { useMessage } from 'naive-ui';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import dayjs from 'dayjs';
+import { NButton } from 'naive-ui';
 
 const props = defineProps<{ bucketName: string; objectKey: string; visible: boolean }>();
 const emit = defineEmits(['close', 'preview']);
@@ -71,18 +72,19 @@ const columns = [
     render(row: any) {
       return [
         h(
-          'n-button',
+          'NButton',
           {
             size: 'small',
-            style: 'margin-right: 8px;',
+            style: 'margin-right: 8px;cursor: pointer;',
             onClick: () => previewVersion(row),
           },
           t('Preview')
         ),
         h(
-          'n-button',
+          'NButton',
           {
             size: 'small',
+            style: 'cursor: pointer;',
             type: 'primary',
             onClick: () => downloadVersion(row),
           },

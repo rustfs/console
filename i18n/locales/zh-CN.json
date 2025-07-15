@@ -642,5 +642,8 @@
   "Login expired, please login again": "登录信息已过期，请重新登录",
   "Batch allocation policies": "批量分配策略",
   "Add group members": "添加组成员",
-  "Search User Group": "搜索用户组"
+  "Search User Group": "搜索用户组",
+  "Object Versions": "对象版本",
+  "VersionId": "版本ID",
+  "LastModified": "最后修改时间"
 }

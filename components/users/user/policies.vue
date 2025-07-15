@@ -24,7 +24,7 @@
           </n-form-item>
           <n-space>
             <NFlex>
-              <NButton secondary @click="changeMebers">提交</NButton>
+              <NButton secondary @click="changeMebers">{{ t('Submit') }}</NButton>
             </NFlex>
           </n-space>
         </n-flex>
@@ -119,11 +119,11 @@ const changeMebers = async () => {
       userOrGroup: encodeURIComponent(props.user.accessKey),
       isGroup: false,
     });
-    messge.success('修改成功');
+    messge.success(t('Edit Success'));
     editStatus.value = false;
     emit('search');
   } catch {
-    messge.error('修改失败');
+    messge.error(t('Edit Failed'));
   }
 };
 </script>

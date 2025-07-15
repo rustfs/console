@@ -1,7 +1,7 @@
-import { defineStore } from "pinia";
-import UploadTaskManager from "~/lib/upload-task-manager";
+import { defineStore } from 'pinia';
+import UploadTaskManager from '~/lib/upload-task-manager';
 
-export const useUploadTaskManagerStore = defineStore("uploadTaskManager", {
+export const useUploadTaskManagerStore = defineStore('uploadTaskManager', {
   state: () => ({
     taskManager: new UploadTaskManager(useNuxtApp().$s3Client, {
       chunkSize: 16, // 16MB chunks for better performance
@@ -11,15 +11,19 @@ export const useUploadTaskManagerStore = defineStore("uploadTaskManager", {
     }),
   }),
   getters: {
-    tasks: (state) => state.taskManager.getTasks(),
-    pendingTasks: (state) => state.taskManager.getTasks().filter(task => task.status === "pending"),
-    uploadingTasks: (state) => state.taskManager.getTasks().filter(task => task.status === "uploading"),
-    completedTasks: (state) => state.taskManager.getTasks().filter(task => task.status === "completed"),
-    failedTasks: (state) => state.taskManager.getTasks().filter(task => task.status === "failed"),
+    tasks: state => state.taskManager.getTasks(),
+    pendingTasks: state => state.taskManager.getTasks().filter(task => task.status === 'pending'),
+    uploadingTasks: state =>
+      state.taskManager.getTasks().filter(task => task.status === 'uploading'),
+    completedTasks: state =>
+      state.taskManager.getTasks().filter(task => task.status === 'completed'),
+    failedTasks: state => state.taskManager.getTasks().filter(task => task.status === 'failed'),
+    canceledTasks: state => state.taskManager.getTasks().filter(task => task.status === 'canceled'),
+    pausedTasks: state => state.taskManager.getTasks().filter(task => task.status === 'paused'),
   },
   actions: {
     addFiles(files: File[], bucketName: string, prefix?: string) {
-      console.log("addFiles", files.length, "files to bucket", bucketName, "prefix:", prefix);
+      console.log('addFiles', files.length, 'files to bucket', bucketName, 'prefix:', prefix);
 
       // 对于大量文件，分批处理
       const batchSize = 50;
@@ -54,16 +58,24 @@ export const useUploadTaskManagerStore = defineStore("uploadTaskManager", {
       this.taskManager.clearTasks();
     },
 
+    pauseTask(taskId: string) {
+      this.taskManager.pauseTask(taskId);
+    },
+    resumeTask(taskId: string) {
+      this.taskManager.resumeTask(taskId);
+    },
+
     // 获取统计信息
     getStats() {
       const tasks = this.tasks;
       return {
         total: tasks.length,
-        pending: tasks.filter(task => task.status === "pending").length,
-        uploading: tasks.filter(task => task.status === "uploading").length,
-        completed: tasks.filter(task => task.status === "completed").length,
-        failed: tasks.filter(task => task.status === "failed").length,
-        canceled: tasks.filter(task => task.status === "canceled").length,
+        pending: tasks.filter(task => task.status === 'pending').length,
+        uploading: tasks.filter(task => task.status === 'uploading').length,
+        completed: tasks.filter(task => task.status === 'completed').length,
+        failed: tasks.filter(task => task.status === 'failed').length,
+        canceled: tasks.filter(task => task.status === 'canceled').length,
+        paused: tasks.filter(task => task.status === 'paused').length,
       };
     },
   },

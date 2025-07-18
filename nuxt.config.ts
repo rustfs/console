@@ -1,10 +1,11 @@
-import AutoImport from 'unplugin-auto-import/vite'
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
-import Components from 'unplugin-vue-components/vite'
+import AutoImport from 'unplugin-auto-import/vite';
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
+import Components from 'unplugin-vue-components/vite';
 
-const appName = process.env.APP_NAME || 'RustFS'
-const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '')
-const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.'
+const appName = process.env.APP_NAME || 'RustFS';
+const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '');
+const appDescription =
+  process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -14,11 +15,10 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   app: {
     baseURL: baseUrl,
+
     head: {
       title: appName,
-      meta: [
-        { name: 'description', content: appDescription },
-      ],
+      meta: [{ name: 'description', content: appDescription }],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: baseUrl + '/favicon.ico' },
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: baseUrl + '/favicon-32x32.png' },
@@ -28,12 +28,17 @@ export default defineNuxtConfig({
       ],
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
-    }
+    },
   },
+
   modules: [
     '@nuxtjs/tailwindcss',
     '@nuxtjs/i18n',
-    '@pinia/nuxt', '@nuxt/icon', 'nuxtjs-naive-ui', '@vueuse/nuxt', '@nuxt/image'
+    '@pinia/nuxt',
+    '@nuxt/icon',
+    'nuxtjs-naive-ui',
+    '@vueuse/nuxt',
+    '@nuxt/image',
   ],
   // Nuxt automatically reads the files in the plugins/ directory
   plugins: [],
@@ -41,7 +46,7 @@ export default defineNuxtConfig({
     public: {
       session: {
         // 临时凭证有效期
-        durationSeconds: Number(process.env.SESSION_DURATION_SECONDS) || 3600 * 12
+        durationSeconds: Number(process.env.SESSION_DURATION_SECONDS) || 3600 * 12,
       },
 
       // 服务器地址
@@ -49,27 +54,27 @@ export default defineNuxtConfig({
 
       // admin API 请求基础 URL
       api: {
-        baseURL: process.env.API_BASE_URL || ''
+        baseURL: process.env.API_BASE_URL || '',
       },
 
       // 对象存储配置
       s3: {
         region: process.env.S3_REGION || 'us-east-1',
-        endpoint: process.env.S3_ENDPOINT || process.env.API_BASE_URL || ''
+        endpoint: process.env.S3_ENDPOINT || process.env.API_BASE_URL || '',
       },
 
       // 版本信息
       release: {
         version: process.env.VERSION || 'dev-0.0.0',
-        date: process.env.RELEASE_DATE || new Date().toISOString().slice(0, 10)
+        date: process.env.RELEASE_DATE || new Date().toISOString().slice(0, 10),
       },
 
       // 授权信息
       license: {
         // "name": "Apache-2.0",
         // "expired": 4102329600
-      }
-    }
+      },
+    },
   },
   i18n: {
     defaultLocale: 'en',
@@ -79,43 +84,38 @@ export default defineNuxtConfig({
         code: 'en',
         iso: 'en-US',
         name: 'English',
-        file: 'en-US.json'
+        file: 'en-US.json',
       },
       {
         code: 'zh',
         iso: 'zh-CN',
         name: '中文',
-        file: 'zh-CN.json'
-      }
+        file: 'zh-CN.json',
+      },
     ],
     langDir: 'locales',
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: 'i18n_redirected',
       redirectOn: 'root',
-      alwaysRedirect: true
+      alwaysRedirect: true,
     },
   },
   typescript: {
-    typeCheck: true
+    typeCheck: true,
   },
   vite: {
     plugins: [
       AutoImport({
         imports: [
           {
-            'naive-ui': [
-              'useDialog',
-              'useMessage',
-              'useNotification',
-              'useLoadingBar'
-            ]
-          }
-        ]
+            'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'],
+          },
+        ],
       }),
       Components({
-        resolvers: [NaiveUiResolver()]
-      })
-    ]
+        resolvers: [NaiveUiResolver()],
+      }),
+    ],
   },
-})
+});

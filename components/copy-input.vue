@@ -34,6 +34,10 @@ clipboard.on('success', function(e) {
 
 // 这里成功的时候也响应error，所以这里也加上
 clipboard.on('error', function(e) {
+  // 如果复制失败，则使用navigator.clipboard.writeText进行复制
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(model.value || '');
+  }
   message.success(t('Copy Success'));
 });
 onUnmounted(() => {

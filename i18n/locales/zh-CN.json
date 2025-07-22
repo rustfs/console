@@ -645,5 +645,6 @@
   "Search User Group": "搜索用户组",
   "Object Versions": "对象版本",
   "VersionId": "版本ID",
-  "LastModified": "最后修改时间"
+  "LastModified": "最后修改时间",
+  "Confirm Download": "确认下载?"
 }

@@ -312,7 +312,6 @@ const retentionFormRef = ref();
 
 const retentionMode = ref<string | null>(null);
 const retainUntilDate = ref<string | null>(null);
-console.log('🚀 ~ retainUntilDate:', retainUntilDate.value);
 
 const retentionLoading = ref(false);
 const showRetentionView = ref(false);

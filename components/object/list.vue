@@ -90,7 +90,14 @@ import { useAsyncData, useRoute, useRouter } from '#app';
 import { NuxtLink } from '#components';
 import { ListObjectsV2Command, type _Object, type CommonPrefix } from '@aws-sdk/client-s3';
 import dayjs from 'dayjs';
-import type { DataTableColumns, DataTableRowKey } from 'naive-ui';
+import {
+  NButton,
+  NSpace,
+  NPopconfirm,
+  type DataTableColumns,
+  type DataTableRowKey,
+} from 'naive-ui';
+import { Icon } from '#components';
 import { joinRelativeURL } from 'ufo';
 import { computed, ref, watch, type VNode } from 'vue';
 import { useDeleteTaskManagerStore } from '~/store/delete-tasks';
@@ -229,6 +236,41 @@ const columns: DataTableColumns<RowData> = [
       return row.LastModified ? dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss') : '';
     },
   },
+  {
+    title: t('Actions'),
+    key: 'actions',
+    align: 'center',
+    width: 100,
+    render: (row: RowData) => {
+      if (row.type === 'object')
+        return h(
+          NSpace,
+          {
+            justify: 'center',
+          },
+          {
+            default: () => [
+              h(
+                NPopconfirm,
+                { onPositiveClick: () => handledownload(row) },
+                {
+                  default: () => t('Confirm Download'),
+                  trigger: () =>
+                    h(
+                      NButton,
+                      { size: 'small', secondary: true },
+                      {
+                        default: () => '',
+                        icon: () => h(Icon, { name: 'ri:download-2-line' }),
+                      }
+                    ),
+                }
+              ),
+            ],
+          }
+        );
+    },
+  },
 ];
 
 interface ListObjectsResponse {
@@ -278,7 +320,6 @@ watch(
 );
 
 const contents = computed(() => data.value?.contents || []);
-console.log('🚀 ~ contents:', contents.value);
 const commonPrefixes = computed(() => data.value?.commonPrefixes || []);
 const nextToken = computed(() => data.value?.nextContinuationToken || null);
 
@@ -370,6 +411,14 @@ function handleBatchDelete() {
     },
   });
 }
+
+// 下载
+const handledownload = async (item: any) => {
+  const msg = message.loading(t('Getting URL'));
+  const url = await objectApi.getSignedUrl(item.Key);
+  msg.destroy();
+  window.open(url, '_blank');
+};
 
 // 为了实现 "Previous" 功能，需要记录访问过的 token 列表。
 // 因为我们是通过路由导航，每次下一页时会改变 URL，从而 SSR 获取新数据。

@@ -555,5 +555,6 @@
   "Batch allocation policies": "Batch allocation policies",
   "Object Versions": "Object Versions",
   "VersionId": "VersionId",
-  "LastModified": "LastModified"
+  "LastModified": "LastModified",
+  "Confirm Download": "Confirm Download?"
 }

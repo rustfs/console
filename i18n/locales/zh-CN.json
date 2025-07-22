@@ -646,5 +646,8 @@
   "Object Versions": "对象版本",
   "VersionId": "版本ID",
   "LastModified": "最后修改时间",
-  "Confirm Download": "确认下载?"
+  "Confirm Download": "确认下载?",
+  "Collecting files": "正在收集文件...",
+  "Downloading files": "正在下载文件...",
+  "Download ready": "下载准备就绪"
 }

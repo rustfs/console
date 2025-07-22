@@ -559,5 +559,9 @@
   "Confirm Download": "Confirm Download?",
   "Collecting files": "Collecting files...",
   "Downloading files": "Downloading files...",
-  "Download ready": "Download ready"
+  "Download ready": "Download ready",
+  "Please enter Access Key": "Please enter Access Key",
+  "Access Key length must be between 3 and 20 characters": "Access Key length must be between 3 and 20 characters",
+  "Please enter Secret Key": "Please enter Secret Key",
+  "Secret Key length must be between 8 and 40 characters": "Secret Key length must be between 8 and 40 characters"
 }

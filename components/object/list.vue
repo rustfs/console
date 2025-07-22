@@ -103,6 +103,8 @@ import { computed, ref, watch, type VNode } from 'vue';
 import { useDeleteTaskManagerStore } from '~/store/delete-tasks';
 import { useUploadTaskManagerStore } from '~/store/upload-tasks';
 import { useBucket } from '~/composables/useBucket';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 const route = useRoute();
 const router = useRouter();
@@ -242,33 +244,32 @@ const columns: DataTableColumns<RowData> = [
     align: 'center',
     width: 100,
     render: (row: RowData) => {
-      if (row.type === 'object')
-        return h(
-          NSpace,
-          {
-            justify: 'center',
-          },
-          {
-            default: () => [
-              h(
-                NPopconfirm,
-                { onPositiveClick: () => handledownload(row) },
-                {
-                  default: () => t('Confirm Download'),
-                  trigger: () =>
-                    h(
-                      NButton,
-                      { size: 'small', secondary: true },
-                      {
-                        default: () => '',
-                        icon: () => h(Icon, { name: 'ri:download-2-line' }),
-                      }
-                    ),
-                }
-              ),
-            ],
-          }
-        );
+      return h(
+        NSpace,
+        {
+          justify: 'center',
+        },
+        {
+          default: () => [
+            h(
+              NPopconfirm,
+              { onPositiveClick: () => handledownload(row) },
+              {
+                default: () => t('Confirm Download'),
+                trigger: () =>
+                  h(
+                    NButton,
+                    { size: 'small', secondary: true },
+                    {
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:download-2-line' }),
+                    }
+                  ),
+              }
+            ),
+          ],
+        }
+      );
     },
   },
 ];
@@ -414,10 +415,48 @@ function handleBatchDelete() {
 
 // 下载
 const handledownload = async (item: any) => {
-  const msg = message.loading(t('Getting URL'));
-  const url = await objectApi.getSignedUrl(item.Key);
-  msg.destroy();
-  window.open(url, '_blank');
+  if (item.type === 'object') {
+    // 单文件下载
+    const msg = message.loading(t('Getting URL'));
+    const url = await objectApi.getSignedUrl(item.Key);
+    msg.destroy();
+    window.open(url, '_blank');
+  } else if (item.type === 'prefix') {
+    // 文件夹下载
+    const msg = message.loading(t('Preparing folder...'));
+    // 递归获取所有文件
+    const files: string[] = [];
+    await objectApi.mapAllFiles(bucketName.value, item.Key, (fileKey: string) => {
+      files.push(fileKey);
+    });
+
+    if (files.length === 0) {
+      msg.destroy();
+      message.warning(t('Folder is empty'));
+      return;
+    }
+
+    msg.destroy();
+    const zip = new JSZip();
+
+    // 批量获取文件内容并添加到 zip
+    const downloadMsg = message.loading(t('Downloading files...'));
+    await Promise.all(
+      files.map(async fileKey => {
+        const url = await objectApi.getSignedUrl(fileKey);
+        const response = await fetch(url);
+        const blob = await response.blob();
+        // 保持相对路径
+        zip.file(fileKey.substring(item.Key.length), blob);
+      })
+    );
+    downloadMsg.destroy();
+
+    // 生成 zip 并下载
+    const zipBlob = await zip.generateAsync({ type: 'blob' });
+    saveAs(zipBlob, `${item.Key.replace(/\/$/, '') || 'folder'}.zip`);
+    message.success(t('Download ready'));
+  }
 };
 
 // 为了实现 "Previous" 功能，需要记录访问过的 token 列表。

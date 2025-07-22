@@ -31,6 +31,10 @@
           </template>
           {{ t('Delete Selected') }}
         </n-button>
+        <n-button :disabled="!checkedKeys.length" secondary @click="downloadMultiple">
+          <Icon name="ri:download-cloud-2-line" class="mr-2" />
+          <span>{{ t('Download') }}</span>
+        </n-button>
         <n-button @click="() => refresh()">
           <Icon name="ri:refresh-line" class="mr-2" />
           <span>{{ t('Refresh') }}</span>
@@ -360,12 +364,13 @@ const filteredObjects = computed(() => {
 
 /** ************************************批量删除 */
 function rowKey(row: any): string {
-  return row.Key;
+  return row.Key || '';
 }
 
 const checkedKeys = ref<DataTableRowKey[]>([]);
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys;
+  // 过滤掉 undefined
+  checkedKeys.value = keys.filter((k): k is string => typeof k === 'string');
   return checkedKeys;
 }
 const objectApi = useObject({ bucket: bucketName.value });
@@ -457,6 +462,66 @@ const handledownload = async (item: any) => {
     saveAs(zipBlob, `${item.Key.replace(/\/$/, '') || 'folder'}.zip`);
     message.success(t('Download ready'));
   }
+};
+
+// 批量下载
+const downloadMultiple = async () => {
+  if (!checkedKeys.value.length) {
+    message.warning(t('Please select at least one item'));
+    return;
+  }
+  // 收集文件 loading
+  let collectMsg = message.loading(t('Collecting files'));
+  // 1. 找到所有选中的对象
+  const selectedItems = objects.value.filter(obj => checkedKeys.value.includes(obj.Key as string));
+  // 2. 递归收集所有文件
+  let allFiles: { key: string; relative: string }[] = [];
+  for (const item of selectedItems) {
+    if (item.type === 'object') {
+      const key = item.Key || '';
+      const rel = prefix.value ? key.substring(prefix.value.length) : key;
+      allFiles.push({ key, relative: rel });
+    } else if (item.type === 'prefix') {
+      const key = item.Key || '';
+      await objectApi.mapAllFiles(bucketName.value, key, fileKey => {
+        const rel = prefix.value ? fileKey.substring(prefix.value.length) : fileKey;
+        allFiles.push({ key: fileKey, relative: rel });
+      });
+    }
+  }
+  collectMsg.destroy();
+  if (allFiles.length === 0) {
+    message.warning(t('No files to download'));
+    return;
+  }
+  // 下载文件 loading，带进度
+  let percent = ref(0);
+  const total = allFiles.length;
+  let finished = 0;
+  let downloadMsg: any = null;
+  const updateDownloadMsg = () => {
+    if (downloadMsg) downloadMsg.destroy();
+    downloadMsg = message.loading(
+      `${t('Downloading files')} ${Math.round((finished / total) * 100)}%`,
+      { duration: 0 }
+    );
+  };
+  updateDownloadMsg();
+  const zip = new JSZip();
+  await Promise.all(
+    allFiles.map(async ({ key, relative }) => {
+      const url = await objectApi.getSignedUrl(key);
+      const response = await fetch(url);
+      const blob = await response.blob();
+      zip.file(relative, blob);
+      finished++;
+      updateDownloadMsg();
+    })
+  );
+  if (downloadMsg) downloadMsg.destroy();
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  saveAs(zipBlob, `download.zip`);
+  message.success(t('Download ready'));
 };
 
 // 为了实现 "Previous" 功能，需要记录访问过的 token 列表。

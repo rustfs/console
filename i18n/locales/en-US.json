@@ -556,5 +556,8 @@
   "Object Versions": "Object Versions",
   "VersionId": "VersionId",
   "LastModified": "LastModified",
-  "Confirm Download": "Confirm Download?"
+  "Confirm Download": "Confirm Download?",
+  "Collecting files": "Collecting files...",
+  "Downloading files": "Downloading files...",
+  "Download ready": "Download ready"
 }

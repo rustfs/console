@@ -362,7 +362,7 @@ const filteredObjects = computed(() => {
   });
 });
 
-/** ************************************批量删除 */
+/** ************************************批量删除********************************* */
 function rowKey(row: any): string {
   return row.Key || '';
 }
@@ -417,7 +417,9 @@ function handleBatchDelete() {
     },
   });
 }
+/** ************************************批量删除********************************* */
 
+/** ************************************下载********************************* */
 // 下载
 const handledownload = async (item: any) => {
   if (item.type === 'object') {
@@ -523,6 +525,7 @@ const downloadMultiple = async () => {
   saveAs(zipBlob, `download.zip`);
   message.success(t('Download ready'));
 };
+/** ************************************下载********************************* */
 
 // 为了实现 "Previous" 功能，需要记录访问过的 token 列表。
 // 因为我们是通过路由导航，每次下一页时会改变 URL，从而 SSR 获取新数据。

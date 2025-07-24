@@ -146,7 +146,7 @@
           </template>
           <template #header>{{ t('Standard Storage Parity') }}</template>
           <template #header-extra>
-            {{ stroageinfo.backend?.StandardSCParity }}
+            {{ storageinfo.backend?.StandardSCParity }}
           </template>
         </n-thing>
       </n-list-item>
@@ -157,7 +157,7 @@
           </template>
           <template #header>{{ t('Reduced Redundancy Parity') }}</template>
           <template #header-extra>
-            {{ stroageinfo.backend?.RRSCParity }}
+            {{ storageinfo.backend?.RRSCParity }}
           </template>
         </n-thing>
       </n-list-item>
@@ -337,17 +337,17 @@ const getdatausageinfo = async () => {
   datausageinfo.value = res;
 };
 
-const stroageinfo: any = ref({});
-const getstroageinfo = async () => {
+const storageinfo: any = ref({});
+const getstorageinfo = async () => {
   const res = await systemApi.getStorageInfo();
-  stroageinfo.value = res;
+  storageinfo.value = res;
 };
 
 const getPageData = async () => {
   await getSystemInfo();
   await getServerInfo();
   await getdatausageinfo();
-  await getstroageinfo();
+  await getstorageinfo();
   await getMetricsInfo();
 };
 getPageData();

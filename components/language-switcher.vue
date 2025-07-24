@@ -29,11 +29,15 @@ const options = ref<DropdownOption[]>([
   {
     label: '中文',
     key: 'zh'
+  },
+  {
+    label: 'Türkçe',
+    key: 'tr'
   }
 ])
 
 const handleSelect = async (key: string) => {
-  await setLocale(key as 'en' | 'zh')
+  await setLocale(key as 'en' | 'zh' | 'tr')
 }
 </script>
 

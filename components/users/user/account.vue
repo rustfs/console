@@ -145,12 +145,28 @@ const rules = ref({
   accessKey: {
     required: true,
     trigger: ['blur', 'input'],
-    message: t('Please enter Access Key'),
+    validator(rule: FormItemRule, value: string) {
+      if (!value) {
+        return new Error(t('Please enter Access Key'));
+      }
+      if (value.length < 3 || value.length > 20) {
+        return new Error(t('Access Key length must be between 3 and 20 characters'));
+      }
+      return true;
+    },
   },
   secretKey: {
     required: true,
     trigger: ['blur', 'input'],
-    message: t('Please enter Secret Key'),
+    validator(rule: FormItemRule, value: string) {
+      if (!value) {
+        return new Error(t('Please enter Secret Key'));
+      }
+      if (value.length < 8 || value.length > 40) {
+        return new Error(t('Secret Key length must be between 8 and 40 characters'));
+      }
+      return true;
+    },
   },
   expiry: {
     required: true,

@@ -94,7 +94,7 @@
                 <span class="ms-4">{{ t('Days After') }}</span>
               </div>
             </n-form-item>
-            <n-form-item :label="t('Stroage Type')" path="storageType">
+            <n-form-item :label="t('Storage Type')" path="storageType">
               <n-select v-model:value="formData.storageType" :options="tiers" />
             </n-form-item>
 

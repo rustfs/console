@@ -651,5 +651,6 @@
   "Downloading files": "正在下载文件...",
   "Download ready": "下载准备就绪",
   "Access Key length must be between 3 and 20 characters": "访问密钥长度必须为3到20个字符",
-  "Secret Key length must be between 8 and 40 characters": "密钥长度必须为8到40个字符"
+  "Secret Key length must be between 8 and 40 characters": "密钥长度必须为8到40个字符",
+  "Please select encryption type": "请选择加密类型"
 }

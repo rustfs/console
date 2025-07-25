@@ -353,7 +353,7 @@ const getbucketPolicy = async () => {
     }
   } catch (error: any) {
     // Handle 404 error when no policy exists
-    console.error("Error fetching bucket policy:", error);
+    console.error('Error fetching bucket policy:', error);
     // Set default values for private policy
     bucketPolicy.value = 'private';
     policyFormValue.value.policy = 'private';

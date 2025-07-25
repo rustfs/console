@@ -371,7 +371,7 @@
   "Please enter storage type": "Please enter storage type",
   "Add Replication Rule": "Add Replication Rule",
   "Click to modify": "Click to modify",
-
+  "Please select encryption type": "Please select encryption type",
   "Server Configuration": "Server Configuration",
   "Please configure your RustFS server address": "Please configure your RustFS server address",
   "Server Address": "Server Address",

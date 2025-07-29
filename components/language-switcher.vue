@@ -2,9 +2,9 @@
   <n-dropdown :options="options" trigger="click" @select="handleSelect">
     <n-button :text="true" block>
       <template #icon>
-        <Icon :name="isChineseLocale ? 'ri:translate-2' : 'ri:translate'" />
+        <Icon :name="currentLanguage.icon" />
       </template>
-      {{ isChineseLocale ? '中文' : 'English' }}
+      {{ currentLanguage.text }}
     </n-button>
   </n-dropdown>
 </template>
@@ -17,8 +17,14 @@ import { useI18n } from 'vue-i18n'
 
 const { locale, setLocale } = useI18n()
 
-const isChineseLocale = computed(() => {
-  return locale.value === 'zh'
+const languageConfig = {
+  en: { text: 'English', icon: 'ri:translate' },
+  zh: { text: '中文', icon: 'ri:translate-2' },
+  tr: { text: 'Türkçe', icon: 'ri:translate' }
+} as const
+
+const currentLanguage = computed(() => {
+  return languageConfig[locale.value as keyof typeof languageConfig] || languageConfig.en
 })
 
 const options = ref<DropdownOption[]>([

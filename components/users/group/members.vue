@@ -64,7 +64,7 @@ interface RowData {
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: '名称',
+    title: t('Name'),
     align: 'left',
     key: 'name',
     filter(value, row) {

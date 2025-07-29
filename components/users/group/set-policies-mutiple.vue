@@ -80,7 +80,7 @@ const columns: DataTableColumns<RowData> = [
     type: 'selection',
   },
   {
-    title: '策略',
+    title: t('Name'),
     align: 'left',
     key: 'name',
     filter(value, row) {

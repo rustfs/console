@@ -4,8 +4,7 @@ import Components from 'unplugin-vue-components/vite';
 
 const appName = process.env.APP_NAME || 'RustFS';
 const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '');
-const appDescription =
-  process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.';
+const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({

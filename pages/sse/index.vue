@@ -21,6 +21,9 @@
           <div class="text-sm text-gray-500">
             {{ getKmsStatusDescription() }}
           </div>
+          <div v-if="sseKmsForm.kms_backend" class="text-sm text-gray-400">
+            {{ t('Backend') }}: {{ sseKmsForm.kms_backend }}
+          </div>
         </div>
       </n-card>
 
@@ -170,7 +173,12 @@
           <!-- 操作按钮 -->
           <div class="flex justify-between items-center">
             <div class="text-sm text-gray-500">{{ t('Total Keys') }}: {{ kmsKeys.length }}</div>
-            <n-button type="primary" @click="showCreateKeyModal = true">
+            <n-button
+              type="primary"
+              @click="showCreateKeyModal = true"
+              :disabled="!canAddKeys"
+              :title="!canAddKeys ? t('KMS not available for key operations') : ''"
+            >
               <template #icon>
                 <Icon name="ri:add-line" />
               </template>
@@ -180,28 +188,39 @@
 
           <!-- 密钥列表 -->
           <div v-if="kmsKeys.length > 0" class="space-y-3">
-            <div v-for="key in kmsKeys" :key="key.id" class="border rounded-lg p-4">
+            <div v-for="key in kmsKeys" :key="key.keyId" class="border rounded-lg p-4">
               <div class="flex justify-between items-start">
                 <div class="flex-1">
-                  <div class="font-medium">{{ key.name }}</div>
+                  <div class="font-medium">{{ key.keyName }}</div>
                   <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    <div>{{ t('Key ID') }}: {{ key.id }}</div>
+                    <div>{{ t('Key ID') }}: {{ key.keyId }}</div>
                     <div>{{ t('Algorithm') }}: {{ key.algorithm }}</div>
                     <div>
                       {{ t('Status') }}:
-                      <n-tag :type="key.status === 'enabled' ? 'success' : 'default'" size="small">
-                        {{ key.status === 'enabled' ? t('Enabled') : t('Disabled') }}
+                      <n-tag :type="getKeyStatusType(key.status)" size="small">
+                        {{ getKeyStatusText(key.status) }}
                       </n-tag>
                     </div>
-                    <div>{{ t('Created') }}: {{ formatDate(key.createdAt) }}</div>
+                    <div>{{ t('Created') }}: {{ formatDate(new Date(key.createdAt)) }}</div>
                   </div>
                 </div>
                 <div class="flex space-x-2">
-                  <n-button size="small" @click="toggleKeyStatus(key)">
-                    {{ key.status === 'enabled' ? t('Disable') : t('Enable') }}
+                  <n-button
+                    size="small"
+                    @click="toggleKeyStatus(key)"
+                    :disabled="key.status === 'PendingDeletion'"
+                    :title="key.status === 'PendingDeletion' ? t('Cannot modify status while pending deletion') : ''"
+                  >
+                    {{ key.status === 'Active' ? t('Deactivate') : t('Activate') }}
                   </n-button>
-                  <n-button size="small" type="error" @click="deleteKey(key)">
-                    {{ t('Delete') }}
+                  <n-button
+                    size="small"
+                    type="error"
+                    @click="deleteKeyClick(key)"
+                    :disabled="key.status === 'PendingDeletion'"
+                    :title="key.status === 'PendingDeletion' ? t('Already pending deletion') : ''"
+                  >
+                    {{ key.status === 'PendingDeletion' ? t('Deleting...') : t('Delete') }}
                   </n-button>
                 </div>
               </div>
@@ -213,7 +232,12 @@
             <Icon name="ri:key-2-line" class="text-4xl mx-auto mb-2" />
             <div>{{ t('No KMS keys found') }}</div>
             <div class="text-sm">{{ t('Create your first KMS key to get started') }}</div>
-            <n-button @click="showCreateKeyModal = true" class="mt-2">
+            <n-button
+              @click="showCreateKeyModal = true"
+              class="mt-2"
+              :disabled="!canAddKeys"
+              :title="!canAddKeys ? t('KMS not available for key operations') : ''"
+            >
               {{ t('Create First Key') }}
             </n-button>
           </div>
@@ -251,13 +275,6 @@
                   {{ t('Encryption algorithm for the key.') }}
                 </div>
               </template>
-            </n-form-item>
-
-            <n-form-item :label="t('Initial Status')" path="status">
-              <n-radio-group v-model:value="keyForm.status">
-                <n-radio value="enabled">{{ t('Enabled') }}</n-radio>
-                <n-radio value="disabled">{{ t('Disabled') }}</n-radio>
-              </n-radio-group>
             </n-form-item>
           </n-form>
 
@@ -314,6 +331,8 @@
 import { ref, reactive, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMessage } from 'naive-ui';
+const { getKMSStatus, getConfiguration, configureKMS, createKey, enableKey, disableKey, getKeyList, deleteKey } =
+  useSSE();
 
 const { t } = useI18n();
 const message = useMessage();
@@ -341,33 +360,18 @@ const sseKmsForm = reactive({
   vault_mount_path: 'transit',
   vault_timeout_seconds: '30',
   default_key_id: '',
+  kms_status: '', // KMS状态：OK, Degraded, Failed
+  kms_backend: '', // KMS后端信息
+  kms_healthy: false, // KMS健康状态
 });
 
 // KMS 密钥列表
-const kmsKeys = ref([
-  {
-    id: 'key-001',
-    name: 'Production Key',
-    algorithm: 'AES-256',
-    status: 'enabled',
-    createdAt: new Date('2024-01-15'),
-    provider: 'hashicorp-vault',
-  },
-  {
-    id: 'key-002',
-    name: 'Development Key',
-    algorithm: 'AES-128',
-    status: 'disabled',
-    createdAt: new Date('2024-01-10'),
-    provider: 'hashicorp-vault',
-  },
-]);
+const kmsKeys = ref<any[]>([]);
 
 // 密钥表单数据
 const keyForm = reactive({
   name: '',
   algorithm: 'AES-256',
-  status: 'enabled',
 });
 
 // 算法选项
@@ -415,23 +419,97 @@ const keyFormRules = {
 
 // 计算属性
 const hasConfiguration = computed(() => {
-  return sseKmsForm.kms_type && sseKmsForm.vault_address;
+  if (sseKmsForm.kms_type === 'local') {
+    return true;
+  }
+  // 如果是Vault KMS，需要同时有kms_type和vault_address
+  return sseKmsForm.kms_type === 'vault' && sseKmsForm.vault_address;
+});
+
+// 计算属性：是否可以添加密钥
+const canAddKeys = computed(() => {
+  // 只有在配置完成且状态不是Failed时才允许添加密钥
+  // OK和Degraded状态都允许添加密钥（Degraded表示已配置但功能受限）
+  return hasConfiguration.value && sseKmsForm.kms_status !== 'Failed';
 });
 
 // 方法
 const getKmsStatusType = () => {
   if (!hasConfiguration.value) return 'default';
-  return 'success';
+
+  // 根据KMS状态返回不同的标签类型
+  switch (sseKmsForm.kms_status) {
+    case 'OK':
+      return 'success';
+    case 'Degraded':
+      return 'warning';
+    case 'Failed':
+      return 'error';
+    default:
+      return 'default';
+  }
 };
 
 const getKmsStatusText = () => {
   if (!hasConfiguration.value) return t('Not Configured');
-  return t('Available');
+
+  // 根据KMS状态返回不同的状态文本
+  switch (sseKmsForm.kms_status) {
+    case 'OK':
+      return t('Available');
+    case 'Degraded':
+      return t('Degraded');
+    case 'Failed':
+      return t('Failed');
+    default:
+      return t('Unknown');
+  }
 };
 
 const getKmsStatusDescription = () => {
   if (!hasConfiguration.value) return t('KMS server is not configured');
-  return t('KMS server is available and ready for use');
+
+  // 根据KMS状态返回不同的描述
+  switch (sseKmsForm.kms_status) {
+    case 'OK':
+      return t('KMS server is available and ready for use');
+    case 'Degraded':
+      return t('KMS server is reachable but encryption/decryption path not fully verified');
+    case 'Failed':
+      return t('KMS server is not reachable');
+    default:
+      return t('KMS server status unknown');
+  }
+};
+
+// 获取密钥状态标签类型
+const getKeyStatusType = (status: string) => {
+  switch (status) {
+    case 'Active':
+      return 'success';
+    case 'Inactive':
+      return 'default';
+    case 'PendingDeletion':
+      return 'warning';
+    default:
+      return 'default';
+  }
+};
+
+// 获取密钥状态显示文本
+const getKeyStatusText = (status: string) => {
+  switch (status) {
+    case 'Active':
+      return t('Active');
+    case 'Inactive':
+      return t('Inactive');
+    case 'PendingDeletion':
+      return t('Pending Deletion');
+    case 'Disabled':
+      return t('Disabled');
+    default:
+      return status;
+  }
 };
 
 const getKmsTypeName = (kmsType: string) => {
@@ -443,10 +521,19 @@ const getKmsTypeName = (kmsType: string) => {
 
 const toggleKeyStatus = async (key: any) => {
   try {
-    // TODO: 调用API切换密钥状态
-    // await api.toggleKeyStatus(key.id, key.status === 'enabled' ? 'disabled' : 'enabled')
+    // 不允许修改PendingDeletion状态的密钥
+    if (key.status === 'PendingDeletion') {
+      message.warning(t('Cannot modify status while pending deletion'));
+      return;
+    }
 
-    key.status = key.status === 'enabled' ? 'disabled' : 'enabled';
+    if (key.status === 'Active') {
+      await disableKey(key.keyId);
+      key.status = 'Inactive';
+    } else {
+      await enableKey(key.keyId);
+      key.status = 'Active';
+    }
     message.success(t('Key status updated successfully'));
   } catch (error) {
     message.error(t('Failed to update key status'));
@@ -475,19 +562,93 @@ const startEditing = () => {
 const cancelEditing = () => {
   isEditing.value = false;
   // 重置表单到当前配置
-  loadCurrentConfiguration();
+  loadKMSStatus();
 };
 
-const loadCurrentConfiguration = async () => {
+// 统一的KMS状态和配置获取方法
+const loadKMSStatus = async () => {
   try {
-    // TODO: 调用API获取当前SSE配置
-    // const config = await api.getSSEConfiguration()
-    // 这里暂时使用模拟数据
-    message.success(t('Configuration loaded successfully'));
+    // 获取KMS状态
+    const statusResponse = await getKMSStatus();
+    if (statusResponse && statusResponse.code === 'KMSNotConfigured') {
+      // KMS未配置，直接进入编辑模式
+      isEditing.value = true;
+      message.info(t('KMS is not configured, please configure it first'));
+      return;
+    }
+
+    if (statusResponse && statusResponse.code !== 'KMSNotConfigured') {
+      // 获取配置详情
+      const configResponse = await getConfiguration();
+      if (configResponse) {
+        // 更新表单数据
+        Object.assign(sseKmsForm, {
+          kms_type: configResponse.kms_type?.toLowerCase() || 'vault',
+          vault_address: configResponse.backend?.address || '',
+          vault_token: configResponse.backend?.auth_method === 'token' ? '***' : '',
+          vault_app_role_id: configResponse.backend?.auth_method === 'approle' ? '***' : '',
+          vault_app_role_secret_id: configResponse.backend?.auth_method === 'approle' ? '***' : '',
+          vault_namespace: configResponse.backend?.namespace || '',
+          vault_mount_path: configResponse.backend?.mount_path || 'transit',
+          vault_timeout_seconds: configResponse.timeout_secs?.toString() || '30',
+          default_key_id: configResponse.default_key_id || '',
+        });
+
+        // 设置KMS状态信息
+        if (statusResponse.status) {
+          sseKmsForm.kms_status = statusResponse.status;
+          sseKmsForm.kms_backend = statusResponse.backend;
+          sseKmsForm.kms_healthy = statusResponse.healthy;
+        }
+
+        message.success(t('Configuration loaded successfully'));
+      }
+    }
   } catch (error) {
+    console.error('Failed to load KMS status:', error);
+    // 如果API调用失败，也进入编辑模式
+    isEditing.value = true;
     message.error(t('Failed to load configuration'));
   }
 };
+
+// 加载密钥列表
+const loadKeyList = async () => {
+  try {
+    const keys = await getKeyList();
+    kmsKeys.value = keys.keys || [];
+  } catch (error) {
+    message.error(t('Failed to load key list'));
+  }
+};
+// 设置为本地开发
+const setLocalDevelopment = async () => {
+  try {
+    await configureKMS({
+      kms_type: 'Local',
+      default_key_id: null,
+      timeout_secs: 30,
+      retry_attempts: 3,
+      enable_audit: true,
+      audit_log_path: null,
+      backend: {
+        type: 'local',
+        address: null,
+        namespace: null,
+        mount_path: null,
+        auth_method: null,
+      },
+    });
+
+    message.success(t('Local development mode set successfully'));
+
+    // 重新加载配置
+    await loadKMSStatus();
+  } catch (error) {
+    message.error(t('Failed to set local development mode'));
+  }
+};
+// setLocalDevelopment();
 
 const saveConfiguration = async () => {
   try {
@@ -496,8 +657,23 @@ const saveConfiguration = async () => {
     // 验证表单
     await sseKmsFormRef.value?.validate();
 
-    // TODO: 调用API保存SSE配置
-    // await api.saveSSEConfiguration(sseKmsForm)
+    // 调用API保存KMS配置
+    await configureKMS({
+      kms_type: sseKmsForm.kms_type.charAt(0).toUpperCase() + sseKmsForm.kms_type.slice(1), // 首字母大写
+      default_key_id: sseKmsForm.default_key_id || null,
+      timeout_secs: parseInt(sseKmsForm.vault_timeout_seconds) || 30,
+      retry_attempts: 3, // 默认值
+      enable_audit: true, // 默认值
+      audit_log_path: null, // 默认值
+      backend: {
+        type: sseKmsForm.kms_type,
+        address: sseKmsForm.vault_address,
+        namespace: sseKmsForm.vault_namespace || null,
+        mount_path: sseKmsForm.vault_mount_path,
+        auth_method: sseKmsForm.vault_token ? 'token' : 'approle',
+        // 注意：这里不传递敏感信息如token和secret_id
+      },
+    });
 
     message.success(t('Configuration saved successfully'));
     isEditing.value = false;
@@ -508,25 +684,13 @@ const saveConfiguration = async () => {
   }
 };
 
-const testKmsConnection = async () => {
-  try {
-    testingConnection.value = true;
-
-    // TODO: 调用API测试KMS连接
-    // await api.testKMSConnection(sseKmsForm)
-
-    // 模拟测试延迟
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    message.success(t('KMS connection test successful'));
-  } catch (error) {
-    message.error(t('KMS connection test failed'));
-  } finally {
-    testingConnection.value = false;
+const deleteKeyClick = (key: any) => {
+  // 如果密钥已经在删除中，显示提示
+  if (key.status === 'PendingDeletion') {
+    message.info(t('Key is already pending deletion'));
+    return;
   }
-};
 
-const deleteKey = (key: any) => {
   keyToDelete.value = key;
   showDeleteModal.value = true;
 };
@@ -538,24 +702,23 @@ const saveKey = async () => {
     // 验证表单
     await keyFormRef.value?.validate();
 
-    // 创建新密钥
-    const newKey = {
-      id: `key-${Date.now()}`,
+    // 调用API创建密钥
+    await createKey({
       name: keyForm.name,
       algorithm: keyForm.algorithm,
-      status: keyForm.status,
-      createdAt: new Date(),
-      provider: 'hashicorp-vault',
-    };
-    kmsKeys.value.push(newKey);
-    message.success(t('Key created successfully'));
+    });
 
+    message.success(t('Key created successfully'));
     showCreateKeyModal.value = false;
+
+    // 重置表单
     Object.assign(keyForm, {
       name: '',
       algorithm: 'AES-256',
-      status: 'enabled',
     });
+
+    // 重新加载密钥列表
+    await loadKeyList();
   } catch (error) {
     message.error(t('Failed to save key'));
   } finally {
@@ -567,15 +730,15 @@ const confirmDeleteKey = async () => {
   try {
     deletingKey.value = true;
 
-    // 从列表中移除密钥
-    const index = kmsKeys.value.findIndex(k => k.id === keyToDelete.value.id);
-    if (index > -1) {
-      kmsKeys.value.splice(index, 1);
-      message.success(t('Key deleted successfully'));
-    }
+    // 调用API删除密钥
+    await deleteKey(keyToDelete.value.keyId);
+    message.success(t('Key deleted successfully'));
 
     showDeleteModal.value = false;
     keyToDelete.value = null;
+
+    // 重新加载密钥列表
+    await loadKeyList();
   } catch (error) {
     message.error(t('Failed to delete key'));
   } finally {
@@ -583,9 +746,10 @@ const confirmDeleteKey = async () => {
   }
 };
 
-// 页面加载时获取当前配置
-onMounted(() => {
-  loadCurrentConfiguration();
+// 页面加载时获取当前配置和密钥列表
+onMounted(async () => {
+  await loadKMSStatus();
+  await loadKeyList();
 });
 </script>
 

@@ -255,8 +255,8 @@
           aria-modal="true"
         >
           <n-form ref="keyFormRef" :model="keyForm" :rules="keyFormRules" label-placement="left" :label-width="120">
-            <n-form-item :label="t('Key Name')" path="name" required>
-              <n-input v-model:value="keyForm.name" :placeholder="t('e.g., app-default')" />
+            <n-form-item :label="t('Key Name')" path="keyName" required>
+              <n-input v-model:value="keyForm.keyName" :placeholder="t('e.g., app-default')" />
               <template #feedback>
                 <div class="text-xs text-gray-500 mt-1">
                   {{ t('Main key ID (Transit key name). Use business-related readable ID.') }}
@@ -370,7 +370,7 @@ const kmsKeys = ref<any[]>([]);
 
 // 密钥表单数据
 const keyForm = reactive({
-  name: '',
+  keyName: '',
   algorithm: 'AES-256',
 });
 
@@ -410,7 +410,7 @@ const sseKmsRules = {
 
 // 密钥表单验证规则
 const keyFormRules = {
-  name: {
+  keyName: {
     required: true,
     message: t('Please enter key name'),
     trigger: 'blur',
@@ -704,7 +704,7 @@ const saveKey = async () => {
 
     // 调用API创建密钥
     await createKey({
-      name: keyForm.name,
+      keyName: keyForm.keyName,
       algorithm: keyForm.algorithm,
     });
 
@@ -713,7 +713,7 @@ const saveKey = async () => {
 
     // 重置表单
     Object.assign(keyForm, {
-      name: '',
+      keyName: '',
       algorithm: 'AES-256',
     });
 

@@ -18,7 +18,7 @@ export const useSSE = () => {
 
     // 创建秘钥
     async createKey(data: any) {
-      return await $api.post('/kms/key/create', data);
+      return await $api.post('/kms/key/create', {}, { params: data });
     },
 
     // 启用秘钥

@@ -19,7 +19,7 @@
 
         <n-button @click="geVersions">
           <Icon name="ri:file-history-line" class="mr-2" />
-          <span>{{ t('Version') }}</span>
+          <span>{{ t('Version Control') }}</span>
         </n-button>
 
         <n-button v-if="lockStatus" @click="() => (showRetentionView = true)">

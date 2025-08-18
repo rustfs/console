@@ -22,7 +22,7 @@
             {{ getKmsStatusDescription() }}
           </div>
           <div v-if="sseKmsForm.kms_backend" class="text-sm text-gray-400">
-            {{ t('Backend') }}: {{ sseKmsForm.kms_backend }}
+            {{ t('Backend') }}: {{ sseKmsForm.kms_type }}
           </div>
         </div>
       </n-card>
@@ -37,8 +37,19 @@
                 <div class="font-medium">{{ t('Current KMS Type') }}: {{ getKmsTypeName(sseKmsForm.kms_type) }}</div>
                 <div class="text-sm text-gray-600 dark:text-gray-400">
                   <div>{{ t('Vault Server') }}: {{ sseKmsForm.vault_address }}</div>
+                  <div v-if="sseKmsForm.vault_namespace">{{ t('Namespace') }}: {{ sseKmsForm.vault_namespace }}</div>
                   <div v-if="sseKmsForm.vault_mount_path">{{ t('Mount Path') }}: {{ sseKmsForm.vault_mount_path }}</div>
+                  <div>{{ t('Authentication') }}: {{ getAuthMethodName() }}</div>
+                  <div v-if="sseKmsForm.vault_timeout_seconds">
+                    {{ t('Timeout') }}: {{ sseKmsForm.vault_timeout_seconds }}s
+                  </div>
                   <div v-if="sseKmsForm.default_key_id">{{ t('Default Key ID') }}: {{ sseKmsForm.default_key_id }}</div>
+                  <div v-if="sseKmsForm.kms_status">
+                    {{ t('Status') }}:
+                    <n-tag :type="getKmsStatusType()" size="small">
+                      {{ getKmsStatusText() }}
+                    </n-tag>
+                  </div>
                 </div>
               </div>
               <n-button @click="startEditing" size="small">
@@ -74,73 +85,68 @@
             </n-form-item>
 
             <!-- HashiCorp Vault 配置 -->
-            <div v-if="sseKmsForm.kms_type === 'vault'">
-              <n-form-item :label="t('Vault Server Address')" path="vault_address" required>
-                <n-input v-model:value="sseKmsForm.vault_address" :placeholder="t('e.g., https://vault.example.com')" />
-              </n-form-item>
+            <n-form-item :label="t('Vault Server Address')" path="vault_address" required>
+              <n-input v-model:value="sseKmsForm.vault_address" :placeholder="t('e.g., https://vault.example.com')" />
+            </n-form-item>
 
-              <n-form-item :label="t('Vault Token')" path="vault_token">
-                <n-input
-                  v-model:value="sseKmsForm.vault_token"
-                  type="password"
-                  show-password-on="mousedown"
-                  :placeholder="t('Enter your Vault authentication token')"
-                />
-                <template #feedback>
-                  <div class="text-xs text-gray-500 mt-1">
-                    {{ t('Optional: Use Token authentication') }}
-                  </div>
-                </template>
-              </n-form-item>
+            <n-form-item :label="t('Vault Token')" path="vault_token">
+              <n-input
+                v-model:value="sseKmsForm.vault_token"
+                type="password"
+                show-password-on="mousedown"
+                :placeholder="t('Enter your Vault authentication token')"
+              />
+              <template #feedback>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{ t('Optional: Use Token authentication') }}
+                </div>
+              </template>
+            </n-form-item>
 
-              <n-form-item :label="t('AppRole ID')" path="vault_app_role_id" class="mt-2">
-                <n-input v-model:value="sseKmsForm.vault_app_role_id" :placeholder="t('Enter AppRole ID')" />
-                <template #feedback>
-                  <div class="text-xs text-gray-500 mt-1">
-                    {{ t('Optional: Use AppRole authentication with Secret ID') }}
-                  </div>
-                </template>
-              </n-form-item>
+            <n-form-item :label="t('AppRole ID')" path="vault_app_role_id" class="mt-2">
+              <n-input v-model:value="sseKmsForm.vault_app_role_id" :placeholder="t('Enter AppRole ID')" />
+              <template #feedback>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{ t('Optional: Use AppRole authentication with Secret ID') }}
+                </div>
+              </template>
+            </n-form-item>
 
-              <n-form-item :label="t('AppRole Secret ID')" path="vault_app_role_secret_id" class="mt-2">
-                <n-input
-                  v-model:value="sseKmsForm.vault_app_role_secret_id"
-                  type="password"
-                  show-password-on="mousedown"
-                  :placeholder="t('Enter AppRole Secret ID')"
-                />
-              </n-form-item>
+            <n-form-item :label="t('AppRole Secret ID')" path="vault_app_role_secret_id" class="mt-2">
+              <n-input
+                v-model:value="sseKmsForm.vault_app_role_secret_id"
+                type="password"
+                show-password-on="mousedown"
+                :placeholder="t('Enter AppRole Secret ID')"
+              />
+            </n-form-item>
 
-              <n-form-item :label="t('Vault Namespace')" path="vault_namespace" class="mt-2">
-                <n-input
-                  v-model:value="sseKmsForm.vault_namespace"
-                  :placeholder="t('Leave empty for root namespace')"
-                />
-                <template #feedback>
-                  <div class="text-xs text-gray-500 mt-1">
-                    {{ t('Optional: Vault Enterprise namespace') }}
-                  </div>
-                </template>
-              </n-form-item>
+            <n-form-item :label="t('Vault Namespace')" path="vault_namespace" class="mt-2">
+              <n-input v-model:value="sseKmsForm.vault_namespace" :placeholder="t('Leave empty for root namespace')" />
+              <template #feedback>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{ t('Optional: Vault Enterprise namespace') }}
+                </div>
+              </template>
+            </n-form-item>
 
-              <n-form-item :label="t('Mount Path')" path="vault_mount_path" class="mt-2">
-                <n-input v-model:value="sseKmsForm.vault_mount_path" :placeholder="t('transit')" />
-                <template #feedback>
-                  <div class="text-xs text-gray-500 mt-1">
-                    {{ t('Transit engine mount name, default: transit') }}
-                  </div>
-                </template>
-              </n-form-item>
+            <n-form-item :label="t('Mount Path')" path="vault_mount_path" class="mt-2">
+              <n-input v-model:value="sseKmsForm.vault_mount_path" :placeholder="t('transit')" />
+              <template #feedback>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{ t('Transit engine mount name, default: transit') }}
+                </div>
+              </template>
+            </n-form-item>
 
-              <n-form-item :label="t('Timeout (seconds)')" path="vault_timeout_seconds" class="mt-2">
-                <n-input v-model:value="sseKmsForm.vault_timeout_seconds" :min="1" :max="300" placeholder="30" />
-                <template #feedback>
-                  <div class="text-xs text-gray-500 mt-1">
-                    {{ t('Request timeout in seconds, default: 30') }}
-                  </div>
-                </template>
-              </n-form-item>
-            </div>
+            <n-form-item :label="t('Timeout (seconds)')" path="vault_timeout_seconds" class="mt-2">
+              <n-input v-model:value="sseKmsForm.vault_timeout_seconds" :min="1" :max="300" placeholder="30" />
+              <template #feedback>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{ t('Request timeout in seconds, default: 30') }}
+                </div>
+              </template>
+            </n-form-item>
 
             <!-- 默认密钥ID -->
             <n-form-item :label="t('Default Key ID')" path="default_key_id" class="mt-2">
@@ -361,7 +367,13 @@ const sseKmsForm = reactive({
   vault_timeout_seconds: '30',
   default_key_id: '',
   kms_status: '', // KMS状态：OK, Degraded, Failed
-  kms_backend: '', // KMS后端信息
+  kms_backend: null as {
+    type?: string;
+    address?: string;
+    namespace?: string;
+    mount_path?: string;
+    auth_method?: string;
+  } | null, // KMS后端信息
   kms_healthy: false, // KMS健康状态
 });
 
@@ -390,21 +402,10 @@ const keyFormRef = ref();
 
 // KMS表单验证规则
 const sseKmsRules = {
-  kms_type: {
-    required: true,
-    message: t('Please select KMS type'),
-    trigger: 'change',
-  },
   vault_address: {
     required: true,
     message: t('Please enter Vault server address'),
     trigger: 'blur',
-    validator: (rule: any, value: string) => {
-      if (sseKmsForm.kms_type === 'vault' && !value) {
-        return new Error(t('Please enter Vault server address'));
-      }
-      return true;
-    },
   },
 };
 
@@ -519,6 +520,19 @@ const getKmsTypeName = (kmsType: string) => {
   return names[kmsType] || kmsType;
 };
 
+// 获取认证方式显示名称
+const getAuthMethodName = () => {
+  // 从 KMS 后端信息中获取认证方式
+  if (sseKmsForm.kms_backend && sseKmsForm.kms_backend.auth_method) {
+    if (sseKmsForm.kms_backend.auth_method === 'token') {
+      return t('Token');
+    } else if (sseKmsForm.kms_backend.auth_method === 'approle') {
+      return t('AppRole');
+    }
+  }
+  return t('Not configured');
+};
+
 const toggleKeyStatus = async (key: any) => {
   try {
     // 不允许修改PendingDeletion状态的密钥
@@ -594,11 +608,25 @@ const loadKMSStatus = async () => {
           default_key_id: configResponse.default_key_id || '',
         });
 
+        // 根据认证方式设置相应的字段
+        if (configResponse.backend?.auth_method === 'token') {
+          // 如果使用 token 认证，清空 AppRole 字段
+          sseKmsForm.vault_app_role_id = '';
+          sseKmsForm.vault_app_role_secret_id = '';
+        } else if (configResponse.backend?.auth_method === 'approle') {
+          // 如果使用 AppRole 认证，清空 token 字段
+          sseKmsForm.vault_token = '';
+        }
+
         // 设置KMS状态信息
         if (statusResponse.status) {
           sseKmsForm.kms_status = statusResponse.status;
-          sseKmsForm.kms_backend = statusResponse.backend;
           sseKmsForm.kms_healthy = statusResponse.healthy;
+        }
+
+        // 设置后端信息，使用配置响应中的完整后端信息
+        if (configResponse.backend) {
+          sseKmsForm.kms_backend = configResponse.backend;
         }
 
         message.success(t('Configuration loaded successfully'));
@@ -625,24 +653,12 @@ const loadKeyList = async () => {
 const setLocalDevelopment = async () => {
   try {
     await configureKMS({
-      kms_type: 'Local',
-      default_key_id: null,
-      timeout_secs: 30,
-      retry_attempts: 3,
-      enable_audit: true,
-      audit_log_path: null,
-      backend: {
-        type: 'local',
-        address: null,
-        namespace: null,
-        mount_path: null,
-        auth_method: null,
-      },
+      kms_type: 'local',
     });
 
     message.success(t('Local development mode set successfully'));
 
-    // 重新加载配置
+    // 重新加载配置状态
     await loadKMSStatus();
   } catch (error) {
     message.error(t('Failed to set local development mode'));
@@ -658,22 +674,28 @@ const saveConfiguration = async () => {
     await sseKmsFormRef.value?.validate();
 
     // 调用API保存KMS配置
-    await configureKMS({
-      kms_type: sseKmsForm.kms_type.charAt(0).toUpperCase() + sseKmsForm.kms_type.slice(1), // 首字母大写
-      default_key_id: sseKmsForm.default_key_id || null,
-      timeout_secs: parseInt(sseKmsForm.vault_timeout_seconds) || 30,
-      retry_attempts: 3, // 默认值
-      enable_audit: true, // 默认值
-      audit_log_path: null, // 默认值
-      backend: {
-        type: sseKmsForm.kms_type,
-        address: sseKmsForm.vault_address,
-        namespace: sseKmsForm.vault_namespace || null,
-        mount_path: sseKmsForm.vault_mount_path,
-        auth_method: sseKmsForm.vault_token ? 'token' : 'approle',
-        // 注意：这里不传递敏感信息如token和secret_id
-      },
-    });
+    const configData: any = {
+      kms_type: 'vault',
+      vault_address: sseKmsForm.vault_address,
+      vault_namespace: sseKmsForm.vault_namespace || null,
+      vault_mount_path: sseKmsForm.vault_mount_path,
+    };
+
+    // 根据认证方式添加相应的字段
+    if (sseKmsForm.vault_token) {
+      // Token 认证方式
+      configData.vault_token = sseKmsForm.vault_token;
+      configData.vault_timeout_seconds = parseInt(sseKmsForm.vault_timeout_seconds) || 30;
+    } else if (sseKmsForm.vault_app_role_id && sseKmsForm.vault_app_role_secret_id) {
+      // AppRole 认证方式
+      configData.vault_app_role_id = sseKmsForm.vault_app_role_id;
+      configData.vault_app_role_secret_id = sseKmsForm.vault_app_role_secret_id;
+    } else {
+      message.error(t('Either token or AppRole authentication is required'));
+      return;
+    }
+
+    await configureKMS(configData);
 
     message.success(t('Configuration saved successfully'));
     isEditing.value = false;
@@ -745,6 +767,18 @@ const confirmDeleteKey = async () => {
     deletingKey.value = false;
   }
 };
+
+// 监听 KMS 类型变化，重置 vault 字段为默认值
+watch(
+  () => sseKmsForm.kms_type,
+  newValue => {
+    if (newValue === 'vault') {
+      // 切换到 vault 类型时，重置 vault 字段为默认值
+      sseKmsForm.vault_mount_path = 'transit';
+      sseKmsForm.vault_timeout_seconds = '30';
+    }
+  }
+);
 
 // 页面加载时获取当前配置和密钥列表
 onMounted(async () => {

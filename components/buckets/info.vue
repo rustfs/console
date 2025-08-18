@@ -426,7 +426,14 @@ const getBucketEncryptionFn = async () => {
       if (rule.ApplyServerSideEncryptionByDefault) {
         const sseAlgorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm;
         if (sseAlgorithm) {
-          encryptFormValue.value.encrypt = sseAlgorithm;
+          // 将AWS S3算法值转换为显示值
+          if (sseAlgorithm === 'aws:kms') {
+            encryptFormValue.value.encrypt = 'SSE-KMS';
+          } else if (sseAlgorithm === 'AES256') {
+            encryptFormValue.value.encrypt = 'SSE-S3';
+          } else {
+            encryptFormValue.value.encrypt = sseAlgorithm;
+          }
         }
         const kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID;
         if (kmsKeyId) {
@@ -503,7 +510,7 @@ const submitEncryptForm = () => {
       Rules: [
         {
           ServerSideEncryptionByDefault: {
-            SSEAlgorithm: encryptFormValue.value.encrypt,
+            SSEAlgorithm: 'aws:kms',
             KMSMasterKeyID: encryptFormValue.value.kmsKeyId,
           },
         },
@@ -522,7 +529,7 @@ const submitEncryptForm = () => {
       Rules: [
         {
           ServerSideEncryptionByDefault: {
-            SSEAlgorithm: encryptFormValue.value.encrypt,
+            SSEAlgorithm: 'AES256',
           },
         },
       ],

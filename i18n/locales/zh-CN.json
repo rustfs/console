@@ -666,6 +666,8 @@
   "KMS Configuration": "KMS 配置",
   "Current KMS Type": "当前KMS类型",
   "Vault Server": "Vault 服务器",
+  "Authentication": "认证方式",
+  "Timeout": "超时时间",
   "Default Key ID": "默认密钥ID",
   "No KMS configuration found": "未找到KMS配置",
   "Configure KMS": "配置KMS",
@@ -749,5 +751,6 @@
   "Please select a KMS provider": "请选择KMS提供商",
   "Please enter Vault server address": "请输入Vault服务器地址",
   "Please enter Vault key path": "请输入Vault密钥路径",
-  "Please enter Vault token": "请输入Vault令牌"
+  "Please enter Vault token": "请输入Vault令牌",
+  "Either token or AppRole authentication is required": "需要Token或AppRole认证"
 }

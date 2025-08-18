@@ -671,6 +671,8 @@
   "KMS Configuration": "KMS Yapılandırması",
   "Current KMS Type": "Mevcut KMS Türü",
   "Vault Server": "Vault Sunucusu",
+  "Authentication": "Kimlik Doğrulama",
+  "Timeout": "Zaman Aşımı",
   "Default Key ID": "Varsayılan Anahtar ID",
   "No KMS configuration found": "KMS yapılandırması bulunamadı",
   "Configure KMS": "KMS Yapılandır",
@@ -744,7 +746,6 @@
   "KMS not available for key operations": "KMS anahtar işlemleri için mevcut değil",
   "Backend": "Arka Uç",
   "Degraded": "Düşürülmüş",
-  "Failed": "Başarısız",
   "Unknown": "Bilinmeyen",
   "KMS server is reachable but encryption/decryption path not fully verified": "KMS sunucusu erişilebilir ancak şifreleme/şifre çözme yolu tam olarak doğrulanmadı",
   "KMS server is not reachable": "KMS sunucusuna erişilemiyor",
@@ -752,5 +753,6 @@
   "Please select a KMS provider": "Lütfen bir KMS sağlayıcısı seçin",
   "Please enter Vault server address": "Lütfen Vault sunucu adresini girin",
   "Please enter Vault key path": "Lütfen Vault anahtar yolunu girin",
-  "Please enter Vault token": "Lütfen Vault token girin"
+  "Please enter Vault token": "Lütfen Vault token girin",
+  "Either token or AppRole authentication is required": "Token veya AppRole kimlik doğrulaması gereklidir"
 }

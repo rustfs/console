@@ -668,6 +668,8 @@
   "KMS Configuration": "KMS Configuration",
   "Current KMS Type": "Current KMS Type",
   "Vault Server": "Vault Server",
+  "Authentication": "Authentication",
+  "Timeout": "Timeout",
   "Mount Path": "Mount Path",
   "Default Key ID": "Default Key ID",
   "No KMS configuration found": "No KMS configuration found",
@@ -751,5 +753,6 @@
   "Please select a KMS provider": "Please select a KMS provider",
   "Please enter Vault server address": "Please enter Vault server address",
   "Please enter Vault key path": "Please enter Vault key path",
-  "Please enter Vault token": "Please enter Vault token"
+  "Please enter Vault token": "Please enter Vault token",
+  "Either token or AppRole authentication is required": "Either token or AppRole authentication is required"
 }

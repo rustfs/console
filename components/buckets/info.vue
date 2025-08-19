@@ -509,7 +509,7 @@ const submitEncryptForm = () => {
     putBucketEncryption(bucketName.value, {
       Rules: [
         {
-          ServerSideEncryptionByDefault: {
+          ApplyServerSideEncryptionByDefault: {
             SSEAlgorithm: 'aws:kms',
             KMSMasterKeyID: encryptFormValue.value.kmsKeyId,
           },
@@ -528,7 +528,7 @@ const submitEncryptForm = () => {
     putBucketEncryption(bucketName.value, {
       Rules: [
         {
-          ServerSideEncryptionByDefault: {
+          ApplyServerSideEncryptionByDefault: {
             SSEAlgorithm: 'AES256',
           },
         },

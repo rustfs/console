@@ -19,7 +19,10 @@
               <Icon name="ri:edit-2-line" class="mr-2" />
             </n-button>
           </template>
-          {{ t('Disabled') }}
+          <span v-if="encryptFormValue.encrypt === 'disabled'">{{ t('Disabled') }}</span>
+          <span v-else-if="encryptFormValue.encrypt === 'SSE-KMS'">SSE-KMS</span>
+          <span v-else-if="encryptFormValue.encrypt === 'SSE-S3'">SSE-S3</span>
+          <span v-else>{{ t('Disabled') }}</span>
         </n-descriptions-item>
         <!-- <n-descriptions-item>
         <template #label>
@@ -128,15 +131,8 @@
             :options="policyOptions"
           />
         </n-form-item>
-        <n-form-item
-          :span="24"
-          v-if="policyFormValue.policy == 'custom'"
-          :label="t('Policy Content')"
-          path="content"
-        >
-          <n-scrollbar class="w-full max-h-[60vh]"
-            ><json-editor v-model="policyFormValue.content"
-          /></n-scrollbar>
+        <n-form-item :span="24" v-if="policyFormValue.policy == 'custom'" :label="t('Policy Content')" path="content">
+          <n-scrollbar class="w-full max-h-[60vh]"><json-editor v-model="policyFormValue.content" /></n-scrollbar>
         </n-form-item>
         <n-form-item>
           <n-button type="primary" @click="submitPolicyForm">{{ t('Confirm') }}</n-button>
@@ -146,13 +142,7 @@
     </n-modal>
 
     <!-- tag -->
-    <n-modal
-      v-model:show="showTagModal"
-      :title="t('Set Tag')"
-      preset="card"
-      draggable
-      :style="{ width: '550px' }"
-    >
+    <n-modal v-model:show="showTagModal" :title="t('Set Tag')" preset="card" draggable :style="{ width: '550px' }">
       <n-form ref="formRef" inline :label-width="80" :model="tagFormValue">
         <n-form-item :label="t('Tag Key')" path="name">
           <n-input v-model:value="tagFormValue.name" :placeholder="t('Tag Key Placeholder')" />
@@ -175,13 +165,7 @@
       draggable
       :style="{ width: '550px' }"
     >
-      <n-form
-        ref="encryptFormRef"
-        label-placemen="left"
-        label-width="auto"
-        inline
-        :model="encryptFormValue"
-      >
+      <n-form ref="encryptFormRef" label-placemen="left" label-width="auto" inline :model="encryptFormValue">
         <n-form-item :label="t('Encryption Type')" path="encrypt" class="flex-auto">
           <n-select
             v-model:value="encryptFormValue.encrypt"
@@ -189,13 +173,12 @@
             :options="encryptOptions"
           />
         </n-form-item>
-        <n-form-item
-          v-if="encryptFormValue.encrypt == 'SSE-KMS'"
-          label="KMS Key ID"
-          path="kmsKeyId"
-          class="flex-auto"
-        >
-          <n-select v-model:value="encryptFormValue.kmsKeyId" placeholder="" :options="[]" />
+        <n-form-item v-if="encryptFormValue.encrypt == 'SSE-KMS'" label="KMS Key ID" path="kmsKeyId" class="flex-auto">
+          <n-select
+            v-model:value="encryptFormValue.kmsKeyId"
+            :placeholder="t('Please select KMS key')"
+            :options="kmsKeyOptions"
+          />
         </n-form-item>
 
         <n-form-item>
@@ -213,12 +196,7 @@
       draggable
       :style="{ width: '550px' }"
     >
-      <n-form
-        ref="retentionFormRef"
-        label-placemen="left"
-        label-width="auto"
-        :model="retentionFormValue"
-      >
+      <n-form ref="retentionFormRef" label-placemen="left" label-width="auto" :model="retentionFormValue">
         <n-form-item :label="t('Retention Mode')" path="retentionMode" class="flex-auto">
           <n-radio-group v-model:value="retentionFormValue.retentionMode">
             <n-radio value="COMPLIANCE">{{ t('COMPLIANCE') }}</n-radio>
@@ -266,7 +244,7 @@ const getData = async () => {
   await getTags();
   await getVersioningStatus();
   await getObjectLockConfig();
-  // await getBucketEncryptionFn();
+  await getBucketEncryptionFn();
   await getbucketPolicy();
 };
 
@@ -286,6 +264,9 @@ const {
   deleteBucketEncryption,
 } = useBucket({});
 
+// 使用 SSE 相关功能
+const { getKeyList } = useSSE();
+
 /**********object lock ***********************/
 const lockStatus = ref(false);
 const objectLockLoading = ref(false);
@@ -296,18 +277,15 @@ const getObjectLockConfig = async () => {
   getObjectLockConfiguration(bucketName.value)
     .then(res => {
       if (res.ObjectLockConfiguration?.ObjectLockEnabled) {
-        lockStatus.value =
-          res.ObjectLockConfiguration?.ObjectLockEnabled == 'Enabled' ? true : false;
+        lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == 'Enabled' ? true : false;
         if (res.ObjectLockConfiguration?.Rule) {
           retentionEnabled.value = true;
-          retentionFormValue.value.retentionMode =
-            res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Mode || null;
+          retentionFormValue.value.retentionMode = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Mode || null;
           retentionFormValue.value.retentionPeriod =
             res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days ||
             res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years ||
             null;
-          retentionFormValue.value.retentionUnit = res.ObjectLockConfiguration?.Rule
-            ?.DefaultRetention?.Years
+          retentionFormValue.value.retentionUnit = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years
             ? 'Years'
             : res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days
               ? 'Days'
@@ -338,11 +316,7 @@ const getbucketPolicy = async () => {
     if (res.Policy) {
       policyFormValue.value.content = res.Policy;
 
-      bucketPolicy.value = getBucketPolicyFn(
-        JSON.parse(res.Policy).Statement,
-        bucketName.value,
-        ''
-      );
+      bucketPolicy.value = getBucketPolicyFn(JSON.parse(res.Policy).Statement, bucketName.value, '');
       policyFormValue.value.policy = bucketPolicy.value;
       if (bucketPolicy.value == 'none') {
         bucketPolicy.value = 'custom';
@@ -384,12 +358,7 @@ const submitPolicyForm = () => {
         message.error(t('Edit Failed') + ': ' + error.message);
       });
   } else {
-    const policys = setBucketPolicy(
-      [],
-      policyFormValue.value.policy as BucketPolicyType,
-      bucketName.value,
-      ''
-    );
+    const policys = setBucketPolicy([], policyFormValue.value.policy as BucketPolicyType, bucketName.value, '');
     console.log('🚀 ~ policys:', policys);
     putBucketPolicy(bucketName.value, JSON.stringify({ Version: '2012-10-17', Statement: policys }))
       .then(() => {
@@ -426,6 +395,9 @@ const encryptFormValue = ref({
   kmsKeyId: '',
 });
 
+// KMS 密钥列表
+const kmsKeyOptions = ref([]);
+
 const encryptOptions = [
   {
     label: t('Disabled'),
@@ -442,47 +414,133 @@ const encryptOptions = [
 ];
 
 const getBucketEncryptionFn = async () => {
-  const res = await getBucketEncryption(bucketName.value);
-  console.log(res);
+  try {
+    const res = await getBucketEncryption(bucketName.value);
+    if (
+      res &&
+      res.ServerSideEncryptionConfiguration &&
+      res.ServerSideEncryptionConfiguration.Rules &&
+      res.ServerSideEncryptionConfiguration.Rules.length > 0
+    ) {
+      const rule = res.ServerSideEncryptionConfiguration.Rules[0];
+      if (rule.ApplyServerSideEncryptionByDefault) {
+        const sseAlgorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm;
+        if (sseAlgorithm) {
+          // 将AWS S3算法值转换为显示值
+          if (sseAlgorithm === 'aws:kms') {
+            encryptFormValue.value.encrypt = 'SSE-KMS';
+          } else if (sseAlgorithm === 'AES256') {
+            encryptFormValue.value.encrypt = 'SSE-S3';
+          } else {
+            encryptFormValue.value.encrypt = sseAlgorithm;
+          }
+        }
+        const kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID;
+        if (kmsKeyId) {
+          encryptFormValue.value.kmsKeyId = kmsKeyId;
+        }
+      }
+    } else {
+      encryptFormValue.value.encrypt = 'disabled';
+      encryptFormValue.value.kmsKeyId = '';
+    }
+  } catch (error: any) {
+    // 如果没有加密配置，设置为禁用状态
+    if (error.status === 404) {
+      encryptFormValue.value.encrypt = 'disabled';
+      encryptFormValue.value.kmsKeyId = '';
+    } else {
+      console.error('Failed to get bucket encryption:', error);
+    }
+  }
 };
+
+// 获取 KMS 密钥列表
+const fetchKMSKeys = async () => {
+  try {
+    const response = await getKeyList();
+    if (response && response.keys) {
+      kmsKeyOptions.value = response.keys.map((key: any) => ({
+        label: key.keyName || key.keyId,
+        value: key.keyId || key.keyName,
+      }));
+    }
+  } catch (error) {
+    console.error('Failed to fetch KMS keys:', error);
+    message.error(t('Failed to fetch KMS keys'));
+  }
+};
+
+// 监听加密类型变化，当选择 SSE-KMS 时自动获取 KMS 密钥列表
+watch(
+  () => encryptFormValue.value.encrypt,
+  newValue => {
+    if (newValue === 'SSE-KMS') {
+      fetchKMSKeys();
+    }
+  }
+);
 const editEncript = () => {
   showEncryptModal.value = true;
+  // 当选择 SSE-KMS 时，获取 KMS 密钥列表
+  if (encryptFormValue.value.encrypt === 'SSE-KMS') {
+    fetchKMSKeys();
+  }
 };
 const submitEncryptForm = () => {
-  // 处理表单提交逻辑
-  // console.log("提交表单数据:", encryptFormValue.value)
-  // showEncryptModal.value = false
-  // if (encryptFormValue.value.encrypt == "disabled") {
-  //   deleteBucketEncryption(bucketName.value).then(() => {
-  //     message.success("修改成功");
-  //     showEncryptModal.value = false;
-  //   });
-  // } else {
-  //   putBucketEncryption(bucketName.value, {
-  //     Rules: [
-  //       {
-  //         ServerSideEncryptionByDefault: {
-  //           SSEAlgorithm: encryptFormValue.value.encrypt,
-  //           KMSMasterKeyID: encryptFormValue.value.encrypt == "SSE-KMS" ? encryptFormValue.value.kmsKeyId : "",
-  //         },
-  //       },
-  //     ],
-  //   }).then(() => {
-  //     message.success("修改成功");
-  //     showEncryptModal.value = false;
-  //   });
-  // }
-  if (encryptFormValue.value.encrypt == 'SSE-KMS') {
-    message.error(
-      t(
-        'The XML format you provided is incorrect, or has not been validated against our published schema. (MasterKeyID not found aws:kms).'
-      )
-    );
-  } else if (encryptFormValue.value.encrypt == 'SSE-S3') {
-    message.error(t('Server-side encryption is specified, but S3 is not configured.'));
-  } else {
-    message.success(t('Edit Success'));
-    showEncryptModal.value = false;
+  if (encryptFormValue.value.encrypt === 'disabled') {
+    // 禁用加密
+    deleteBucketEncryption(bucketName.value)
+      .then(() => {
+        message.success(t('Edit Success'));
+        showEncryptModal.value = false;
+      })
+      .catch(error => {
+        message.error(t('Edit Failed') + ': ' + error.message);
+      });
+  } else if (encryptFormValue.value.encrypt === 'SSE-KMS') {
+    // 验证是否选择了 KMS Key
+    if (!encryptFormValue.value.kmsKeyId) {
+      message.error(t('Please select a KMS key for SSE-KMS encryption'));
+      return;
+    }
+
+    // 启用 SSE-KMS 加密
+    putBucketEncryption(bucketName.value, {
+      Rules: [
+        {
+          ApplyServerSideEncryptionByDefault: {
+            SSEAlgorithm: 'aws:kms',
+            KMSMasterKeyID: encryptFormValue.value.kmsKeyId,
+          },
+        },
+      ],
+    })
+      .then(() => {
+        message.success(t('Edit Success'));
+        showEncryptModal.value = false;
+      })
+      .catch(error => {
+        message.error(t('Edit Failed') + ': ' + error.message);
+      });
+  } else if (encryptFormValue.value.encrypt === 'SSE-S3') {
+    // 启用 SSE-S3 加密
+    putBucketEncryption(bucketName.value, {
+      Rules: [
+        {
+          ApplyServerSideEncryptionByDefault: {
+            SSEAlgorithm: 'AES256',
+          },
+        },
+      ],
+    })
+      .then(() => {
+        message.success(t('Edit Success'));
+        showEncryptModal.value = false;
+      })
+      .catch(error => {
+        message.error(t('Edit Failed') + ': ' + error.message);
+      });
   }
 };
 
@@ -636,14 +694,8 @@ const submitRetentionForm = () => {
     Rule: {
       DefaultRetention: {
         Mode: retentionFormValue.value.retentionMode,
-        Days:
-          retentionFormValue.value.retentionUnit == 'Days'
-            ? retentionFormValue.value.retentionPeriod
-            : null,
-        Years:
-          retentionFormValue.value.retentionUnit == 'Years'
-            ? retentionFormValue.value.retentionPeriod
-            : null,
+        Days: retentionFormValue.value.retentionUnit == 'Days' ? retentionFormValue.value.retentionPeriod : null,
+        Years: retentionFormValue.value.retentionUnit == 'Years' ? retentionFormValue.value.retentionPeriod : null,
       },
     },
   }).then(() => {

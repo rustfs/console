@@ -26,7 +26,7 @@ import {
   GetBucketReplicationCommand,
   PutBucketReplicationCommand,
   DeleteBucketReplicationCommand,
-} from "@aws-sdk/client-s3";
+} from '@aws-sdk/client-s3';
 
 export function useBucket({ region }: { region?: string }) {
   const $client = useNuxtApp().$s3Client;
@@ -84,7 +84,7 @@ export function useBucket({ region }: { region?: string }) {
     const params = {
       Bucket: bucket,
       VersioningConfiguration: {
-        Status: status == "Enabled" ? BucketVersioningStatus.Enabled : BucketVersioningStatus.Suspended,
+        Status: status == 'Enabled' ? BucketVersioningStatus.Enabled : BucketVersioningStatus.Suspended,
         MFADelete: MFADelete.Enabled,
       },
     };

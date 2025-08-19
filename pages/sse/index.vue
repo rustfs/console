@@ -703,6 +703,7 @@ const saveConfiguration = async () => {
     message.error(t('Failed to save configuration'));
   } finally {
     saving.value = false;
+    loadKMSStatus();
   }
 };
 

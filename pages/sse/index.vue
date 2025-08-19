@@ -699,11 +699,11 @@ const saveConfiguration = async () => {
 
     message.success(t('Configuration saved successfully'));
     isEditing.value = false;
+    loadKMSStatus();
   } catch (error) {
     message.error(t('Failed to save configuration'));
   } finally {
     saving.value = false;
-    loadKMSStatus();
   }
 };
 

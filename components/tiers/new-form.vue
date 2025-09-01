@@ -8,7 +8,8 @@
     :segmented="{
       content: true,
       action: true,
-    }">
+    }"
+  >
     <n-card v-show="!formData.type">
       <n-grid x-gap="12" y-gap="12" :cols="2">
         <n-gi v-for="item in typeOptions">
@@ -33,8 +34,8 @@
           />
         </n-form-item> -->
 
-        <n-form-item :label="t('Name')">
-          <n-input v-model:value="formData.name" :placeholder="t('Please enter name')" />
+        <n-form-item :label="t('Name') + '(A-Z,0-9,_)'">
+          <n-input v-model:value="formData.name" :allow-input="onlyAllowLetter" :placeholder="t('Please enter name')" />
         </n-form-item>
         <n-form-item :label="t('Endpoint')">
           <n-input v-model:value="formData.endpoint" :placeholder="t('Please enter endpoint')" />
@@ -58,8 +59,8 @@
           <n-input v-model:value="formData.storageclass" :placeholder="t('Please Enter storage class')" />
         </n-form-item>
         <n-space justify="center">
-          <n-button @click="handleCancel">{{ t("Cancel") }}</n-button>
-          <n-button type="primary" @click="handleSave">{{ t("Save") }}</n-button>
+          <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
+          <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
         </n-space>
       </n-form>
     </n-card>
@@ -67,19 +68,19 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-import MinioIcon from "~/assets/svg/minio.svg";
-import GoogleIcon from "~/assets/svg/google.svg";
-import AWSIcon from "~/assets/svg/aws.svg";
-import AzureIcon from "~/assets/svg/azure.svg";
-import AliyunIcon from "~/assets/svg/aliyun.svg";
-import TqyunIcon from "~/assets/svg/tenxunyun.svg";
-import HwcloudIcon from "~/assets/svg/huaweiyun.svg";
-import BaiduIcon from "~/assets/svg/baiduyun.svg";
-import RustfsIcon from "~/assets/logo.svg";
-import { NForm, NFormItem, NInput, NSelect, NButton } from "naive-ui";
-import { useTiers } from "#imports";
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import MinioIcon from '~/assets/svg/minio.svg';
+import GoogleIcon from '~/assets/svg/google.svg';
+import AWSIcon from '~/assets/svg/aws.svg';
+import AzureIcon from '~/assets/svg/azure.svg';
+import AliyunIcon from '~/assets/svg/aliyun.svg';
+import TqyunIcon from '~/assets/svg/tenxunyun.svg';
+import HwcloudIcon from '~/assets/svg/huaweiyun.svg';
+import BaiduIcon from '~/assets/svg/baiduyun.svg';
+import RustfsIcon from '~/assets/logo.svg';
+import { NForm, NFormItem, NInput, NSelect, NButton } from 'naive-ui';
+import { useTiers } from '#imports';
 
 const { t } = useI18n();
 const usetier = useTiers();
@@ -87,9 +88,9 @@ const message = useMessage();
 
 // 支持的存储类型
 const typeOptions = [
-  { label: t("RustFS"), value: "rustfs", iconUrl: RustfsIcon },
-  { label: t("Minio"), value: "minio", iconUrl: MinioIcon },
-  { label: t("AWS S3"), value: "s3", iconUrl: AWSIcon },
+  { label: t('RustFS'), value: 'rustfs', iconUrl: RustfsIcon },
+  { label: t('Minio'), value: 'minio', iconUrl: MinioIcon },
+  { label: t('AWS S3'), value: 's3', iconUrl: AWSIcon },
   // 暂未支持
   // { label: t('Google Cloud Storage'), value: 'google', iconUrl: GoogleIcon },
   // { label: t('Azure'), value: 'azure', iconUrl: AzureIcon },
@@ -101,21 +102,29 @@ const typeOptions = [
 
 const formRef = ref(null);
 const formData = ref({
-  type: "",
-  name: "",
-  endpoint: "",
-  accesskey: "",
-  secretkey: "",
-  bucket: "",
-  prefix: "",
-  region: "",
-  storageclass: "STANDARD", // 新增字段，默认值为 STANDARD
+  type: '',
+  name: '',
+  endpoint: '',
+  accesskey: '',
+  secretkey: '',
+  bucket: '',
+  prefix: '',
+  region: '',
+  storageclass: 'STANDARD', // 新增字段，默认值为 STANDARD
 });
 
 const rules = {
-  ruleName: { required: true, message: t("Please enter rule name") },
-  type: { required: true, message: t("Please select rule type") },
-  versionType: { required: true, message: t("Please select version type") },
+  name: { required: true, message: t('Please enter rule name') },
+  type: { required: true, message: t('Please select rule type') },
+  versionType: { required: true, message: t('Please select version type') },
+};
+
+// 只能是数字大写字母以及_组成,且不能以数字开头
+const onlyAllowLetter = value => {
+  if (value === '') {
+    return true;
+  }
+  return /^[A-Z_][A-Z0-9_]*$/.test(value);
 };
 
 const visible = ref(false);
@@ -128,9 +137,9 @@ defineExpose({
   open,
 });
 
-const emmit = defineEmits(["search"]);
+const emmit = defineEmits(['search']);
 const handleSave = () => {
-  formRef.value?.validate((errors) => {
+  formRef.value?.validate(errors => {
     if (!errors) {
       // {"type":"minio","minio":{"name":"COLDTIER","endpoint":"","bucket":"","prefix":"","region":"","accesskey":"","secretkey":""}}
       // 调用保存接口
@@ -149,12 +158,12 @@ const handleSave = () => {
       };
       usetier
         .addTiers(data)
-        .then((res) => {
+        .then(res => {
           visible.value = false;
-          emmit("search");
-          message.success(t("Create Success"));
+          emmit('search');
+          message.success(t('Create Success'));
         })
-        .catch((err) => {
+        .catch(err => {
           message.error(err.message);
         });
     }
@@ -164,6 +173,6 @@ const handleSave = () => {
 const handleCancel = () => {
   visible.value = false;
   // 取消逻辑
-  formData.value.type = "";
+  formData.value.type = '';
 };
 </script>

@@ -48,9 +48,11 @@ class UploadTaskManager {
   }
 
   addFiles(files: File[], bucketName: string, prefix?: string) {
-    // 队列中所有任务（不管状态）
+    // 只从未完成的任务中过滤已存在的任务
     const existKeys = new Set(
-      this.tasks.map(task => `${task.bucketName}/${task.prefix || ''}${task.file.name}`)
+      this.tasks
+        .filter(task => ['pending', 'uploading', 'failed', 'paused'].includes(task.status))
+        .map(task => `${task.bucketName}/${task.prefix || ''}${task.file.name}`)
     );
     // 过滤已存在的任务
     const newTasks = files
@@ -171,10 +173,7 @@ class UploadTaskManager {
           this.startUpload(task);
         }
       } catch (e: any) {
-        if (
-          e.name === 'NoSuchUpload' ||
-          (typeof e.message === 'string' && e.message.includes('Invalid upload id'))
-        ) {
+        if (e.name === 'NoSuchUpload' || (typeof e.message === 'string' && e.message.includes('Invalid upload id'))) {
           // uploadId 已失效，重新发起分片上传
           task.uploadId = undefined;
           task.completedParts = [];
@@ -227,10 +226,7 @@ class UploadTaskManager {
       task.progress = 100;
     } catch (error: any) {
       // 判断是否为“暂停”操作
-      if (
-        task._pauseRequested &&
-        (error.message === 'Upload paused' || error.message === 'Request aborted')
-      ) {
+      if (task._pauseRequested && (error.message === 'Upload paused' || error.message === 'Request aborted')) {
         task.status = 'paused';
         return;
       }

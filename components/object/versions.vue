@@ -13,7 +13,6 @@
 
 <script setup lang="ts">
 import { ref, watch, h } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { useObject } from '@/composables/useObject';
 import { useMessage } from 'naive-ui';
 import { GetObjectCommand } from '@aws-sdk/client-s3';
@@ -75,7 +74,7 @@ const columns = [
           'NButton',
           {
             size: 'small',
-            style: 'margin-right: 8px;cursor: pointer;',
+            style: 'cursor: pointer;',
             onClick: () => previewVersion(row),
           },
           t('Preview')
@@ -84,11 +83,21 @@ const columns = [
           'NButton',
           {
             size: 'small',
-            style: 'cursor: pointer;',
+            style: 'margin:0 8px;cursor: pointer;',
             type: 'primary',
             onClick: () => downloadVersion(row),
           },
           t('Download')
+        ),
+        h(
+          'NButton',
+          {
+            size: 'small',
+            style: 'cursor: pointer;',
+            type: 'primary',
+            onClick: () => deleteVersion(row),
+          },
+          t('Delete')
         ),
       ];
     },
@@ -134,7 +143,19 @@ async function downloadVersion(row: any) {
     const url = await getSignedUrlWithVersion(props.objectKey, row.VersionId);
     window.open(url, '_blank');
   } catch (e: any) {
-    message.error(t('Download failed'));
+    message.error(t('Download Failed'));
+  }
+}
+
+async function deleteVersion(row: any) {
+  const { deleteObject } = useObject({ bucket: props.bucketName });
+
+  try {
+    await deleteObject(props.objectKey, row.VersionId);
+    message.success(t('Delete Success'));
+    await fetchVersions();
+  } catch (e: any) {
+    message.error(t('Delete Failed'));
   }
 }
 </script>

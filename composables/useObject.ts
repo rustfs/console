@@ -46,20 +46,24 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     return await $client.send(new PutObjectCommand(params));
   };
 
-  const deleteObject = async (key: string) => {
-    const params = {
+  const deleteObject = async (key: string, versionId?: string) => {
+    const params: {
+      Bucket: string;
+      Key: string;
+      VersionId?: string;
+    } = {
       Bucket: bucket,
       Key: key,
     };
 
+    if (versionId) {
+      params.VersionId = versionId;
+    }
+
     return await $client.send(new DeleteObjectCommand(params));
   };
 
-  const listObject = async (
-    bucket: string,
-    prefix: string | undefined = undefined,
-    pageSize: number = 25
-  ) => {
+  const listObject = async (bucket: string, prefix: string | undefined = undefined, pageSize: number = 25) => {
     const params = {
       Bucket: bucket,
       Prefix: prefix,
@@ -70,11 +74,7 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     return await $client.send(new ListObjectsV2Command(params));
   };
 
-  async function mapAllFiles(
-    bucketName: string,
-    prefix: string,
-    callback: (fileKey: string) => void
-  ) {
+  async function mapAllFiles(bucketName: string, prefix: string, callback: (fileKey: string) => void) {
     let isTruncated = true;
     let continuationToken: string | undefined = undefined;
 

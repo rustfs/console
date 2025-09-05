@@ -570,6 +570,7 @@
   "Collecting files": "Dosyalar toplanıyor...",
   "Downloading files": "Dosyalar indiriliyor...",
   "Download ready": "İndirme hazır",
+  "Download failed": "İndirme başarısız",
   "Please enter Access Key": "Lütfen Erişim Anahtarını girin",
   "Access Key length must be between 3 and 20 characters": "Erişim Anahtarı uzunluğu 3 ile 20 karakter arasında olmalıdır",
   "Please enter Secret Key": "Lütfen Gizli Anahtarı girin",

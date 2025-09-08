@@ -104,7 +104,7 @@ onMounted(() => {
         class="w-full lg:w-1/2 flex flex-col justify-center items-center bg-white dark:bg-neutral-900 dark:border-neutral-700 relative"
       >
         <div class="max-w-sm w-full p-4 sm:p-7">
-          <img src="https://rustfs.com/rustfs.logo.svg" class="max-w-28" alt="" />
+          <img src="~/assets/logo.svg" class="max-w-28" alt="" />
           <div class="py-6">
             <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">
               {{ t('Server Configuration') }}

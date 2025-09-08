@@ -16,10 +16,7 @@
           <n-input v-model:value="formData.level" :placeholder="t('Please enter priority')" />
         </n-form-item>
         <n-form-item :label="t('Target Address')" path="endpoint">
-          <n-input
-            v-model:value="formData.endpoint"
-            :placeholder="t('Please enter target address')"
-          />
+          <n-input v-model:value="formData.endpoint" :placeholder="t('Please enter target address')" />
         </n-form-item>
         <n-form-item :label="t('Use TLS')" path="tls">
           <n-switch v-model:value="formData.tls" :round="false" />
@@ -28,10 +25,7 @@
           <n-input v-model:value="formData.accesskey" :placeholder="t('Please enter Access Key')" />
         </n-form-item>
         <n-form-item :label="t('Secret Key')" path="secrretkey">
-          <n-input
-            v-model:value="formData.secrretkey"
-            :placeholder="t('Please enter Secret Key')"
-          />
+          <n-input v-model:value="formData.secrretkey" :placeholder="t('Please enter Secret Key')" />
         </n-form-item>
         <n-form-item :label="t('Target Bucket')" path="bucket">
           <n-input v-model:value="formData.bucket" :placeholder="t('Please enter target bucket')" />
@@ -50,10 +44,7 @@
 
         <n-form-item v-if="formData.modeType === 'async'" :label="t('Bandwidth')" path="bandwidth">
           <n-input-group>
-            <n-input
-              v-model:value="formData.bandwidth"
-              :placeholder="t('Please enter bandwidth')"
-            />
+            <n-input v-model:value="formData.bandwidth" :placeholder="t('Please enter bandwidth')" />
             <n-select
               v-model:value="formData.unit"
               :placeholder="t('Please select unit')"
@@ -63,18 +54,12 @@
           </n-input-group>
         </n-form-item>
         <n-form-item :label="t('Health Check Duration')" path="timecheck">
-          <n-input
-            v-model:value="formData.timecheck"
-            :placeholder="t('Please enter health check duration')"
-          >
+          <n-input v-model:value="formData.timecheck" :placeholder="t('Please enter health check duration')">
             <template #suffix>s</template>
           </n-input>
         </n-form-item>
         <n-form-item :label="t('Storage Type')" path="storageType">
-          <n-input
-            v-model:value="formData.storageType"
-            :placeholder="t('Please enter storage type')"
-          />
+          <n-input v-model:value="formData.storageType" :placeholder="t('Please enter storage type')" />
         </n-form-item>
 
         <!-- 对象搜索 -->
@@ -138,16 +123,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import {
-  NForm,
-  NFormItem,
-  NInput,
-  NDynamicInput,
-  NCollapse,
-  NCollapseItem,
-  NSwitch,
-  NButton,
-} from 'naive-ui';
+import { NForm, NFormItem, NInput, NDynamicInput, NCollapse, NCollapseItem, NSwitch, NButton } from 'naive-ui';
 import { useBucket } from '@/composables/useBucket';
 import { getBytes } from '@/utils/functions';
 
@@ -252,7 +228,7 @@ const handleSave = async () => {
           api: 's3v4',
           type: 'replication',
           replicationSync: formData.value.modeType === 'sync' ? true : false,
-          healthCheckDuration: formData.value.timecheck * 1000000000 - 0,
+          healthCheckDuration: formData.value.timecheck - 0,
           disableProxy: false,
           resetBeforeDate: '0001-01-01T00:00:00Z',
           totalDowntime: 0,
@@ -270,8 +246,7 @@ const handleSave = async () => {
         // 添加带宽
         if (formData.value.modeType === 'async') {
           // 根据单位转化为字节
-          config.bandwidth =
-            Number(getBytes(formData.value.bandwidth, formData.value.unit, true)) || 0;
+          config.bandwidth = Number(getBytes(formData.value.bandwidth, formData.value.unit, true)) || 0;
         }
         const targetRESP = await setRemoteReplicationTarget(props.bucketName, config);
         if (!targetRESP) return;
@@ -328,9 +303,7 @@ const handleSave = async () => {
           },
           Destination: {
             Bucket: targetRESP,
-            StorageClass: formData.value.storageType
-              ? formData.value.storageType.toUpperCase()
-              : 'STANDARD',
+            StorageClass: formData.value.storageType ? formData.value.storageType.toUpperCase() : 'STANDARD',
             // ReplicateDelete: formData.value.deleteforever ? "Enabled" : "Disabled",
           },
         };

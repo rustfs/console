@@ -59,7 +59,7 @@ const handleLogin = async () => {
         </div>
         
         <div class="max-w-sm w-full p-4 sm:p-7">
-          <img src="https://rustfs.com/rustfs.logo.svg" class="max-w-28" alt="" />
+          <img src="~/assets/logo.svg" class="max-w-28" alt="" />
           <div class="py-6">
             <h1 class="block text-2xl font-bold text-gray-800 dark:text-white">{{ t('Login to RustFS Console') }}</h1>
             <p class="mt-2 text-sm text-gray-600 dark:text-neutral-400">

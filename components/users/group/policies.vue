@@ -118,7 +118,7 @@ const changePolicies = async () => {
   try {
     await setUserOrGroupPolicy({
       policyName: name.value || '',
-      userOrGroup: encodeURIComponent(props.group.name),
+      userOrGroup: props.group.name || '',
       isGroup: true,
     });
 

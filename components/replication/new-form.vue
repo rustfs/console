@@ -224,6 +224,7 @@ const handleSave = async () => {
           },
           targetbucket: formData.value.bucket,
           secure: formData.value.tls,
+          region: formData.value.region,
           path: 'auto',
           api: 's3v4',
           type: 'replication',

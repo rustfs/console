@@ -2,7 +2,7 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">{{ t("Event Destinations") }}</h1>
+        <h1 class="text-2xl font-bold">{{ t('Event Destinations') }}</h1>
       </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
@@ -18,11 +18,11 @@
         <div class="flex items-center gap-4">
           <n-button @click="() => addForm()">
             <Icon name="ri:add-line" class="mr-2" />
-            <span>{{ t("Add Event Destination") }}</span>
+            <span>{{ t('Add Event Destination') }}</span>
           </n-button>
           <n-button @click="async () => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
-            <span>{{ t("Refresh") }}</span>
+            <span>{{ t('Refresh') }}</span>
           </n-button>
         </div>
       </div>
@@ -31,20 +31,21 @@
         :columns="columns"
         :data="filteredData"
         :pagination="false"
-        :bordered="false" />
+        :bordered="false"
+      />
     </page-content>
     <events-target-new ref="newFormRef"></events-target-new>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Icon } from "#components";
-import { NButton, NSpace, type DataTableColumns, NPopconfirm } from "naive-ui";
-import { useI18n } from "vue-i18n";
+import { Icon } from '#components';
+import { NButton, NSpace, type DataTableColumns, NPopconfirm } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
 const message = useMessage();
 
 const { t } = useI18n();
-const searchTerm = ref("");
+const searchTerm = ref('');
 
 interface RowData {
   type: string;
@@ -52,25 +53,25 @@ interface RowData {
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: t("Status"),
-    key: "bucket",
+    title: t('Status'),
+    key: 'bucket',
     width: 180,
   },
   {
-    title: t("Service"),
-    key: "endpoint",
+    title: t('Service'),
+    key: 'endpoint',
   },
 
   {
-    title: t("Actions"),
-    key: "actions",
-    align: "center",
+    title: t('Actions'),
+    key: 'actions',
+    align: 'center',
     width: 140,
     render: (row: RowData) => {
       return h(
         NSpace,
         {
-          justify: "center",
+          justify: 'center',
         },
         {
           default: () => [
@@ -78,14 +79,14 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => t("Confirm Delete"),
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,
-                    { size: "small", secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => "",
-                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
               }
@@ -98,7 +99,7 @@ const columns: DataTableColumns<RowData> = [
 ];
 
 const { data, refresh } = await useAsyncData(
-  "tier",
+  'tier',
   async () => {
     // const response = await usetier.listTiers();
     // return response;

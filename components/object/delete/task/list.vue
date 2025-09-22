@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-import type { DeleteTask } from '~/lib/delete-task-manager'
-const { t } = useI18n()
-const props = defineProps<{ tasks: DeleteTask[] }>()
+import type { DeleteTask } from '~/lib/delete-task-manager';
+const { t } = useI18n();
+const props = defineProps<{ tasks: DeleteTask[] }>();
 </script>

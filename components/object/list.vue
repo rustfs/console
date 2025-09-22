@@ -94,13 +94,7 @@ import { useAsyncData, useRoute, useRouter } from '#app';
 import { NuxtLink } from '#components';
 import { ListObjectsV2Command, type _Object, type CommonPrefix } from '@aws-sdk/client-s3';
 import dayjs from 'dayjs';
-import {
-  NButton,
-  NSpace,
-  NPopconfirm,
-  type DataTableColumns,
-  type DataTableRowKey,
-} from 'naive-ui';
+import { NButton, NSpace, NPopconfirm, type DataTableColumns, type DataTableRowKey } from 'naive-ui';
 import { Icon } from '#components';
 import { joinRelativeURL } from 'ufo';
 import { computed, ref, watch, type VNode } from 'vue';
@@ -181,11 +175,7 @@ const bucketPath = (path?: string | Array<string>) => {
     path = path.join('/');
   }
 
-  return joinRelativeURL(
-    '/browser',
-    encodeURIComponent(bucketName.value),
-    path ? encodeURIComponent(path) : ''
-  );
+  return joinRelativeURL('/browser', encodeURIComponent(bucketName.value), path ? encodeURIComponent(path) : '');
 };
 
 interface RowData {
@@ -208,10 +198,7 @@ const columns: DataTableColumns<RowData> = [
       let label: string | VNode = displayKey || '/';
 
       if (row.type === 'prefix') {
-        label = h('span', { class: 'inline-flex items-center gap-2' }, [
-          icon('ri:folder-line'),
-          label,
-        ]);
+        label = h('span', { class: 'inline-flex items-center gap-2' }, [icon('ri:folder-line'), label]);
       }
 
       const keyInUri = row.Key;
@@ -395,13 +382,9 @@ function handleBatchDelete() {
             // 目录删除
             // 递归查询目录下的所有文件，然后删除
             if (findOne?.type === 'prefix' && findOne?.Key) {
-              return await objectApi.mapAllFiles(
-                bucketName.value,
-                findOne.Key,
-                (fileKey: string) => {
-                  deleteTaskStore.addKeys([fileKey], bucketName.value);
-                }
-              );
+              return await objectApi.mapAllFiles(bucketName.value, findOne.Key, (fileKey: string) => {
+                deleteTaskStore.addKeys([fileKey], bucketName.value);
+              });
             }
 
             return deleteTaskStore.addKeys([String(item)], bucketName.value);
@@ -503,10 +486,9 @@ const downloadMultiple = async () => {
   let downloadMsg: any = null;
   const updateDownloadMsg = () => {
     if (downloadMsg) downloadMsg.destroy();
-    downloadMsg = message.loading(
-      `${t('Downloading files')} ${Math.round((finished / total) * 100)}%`,
-      { duration: 0 }
-    );
+    downloadMsg = message.loading(`${t('Downloading files')} ${Math.round((finished / total) * 100)}%`, {
+      duration: 0,
+    });
   };
   updateDownloadMsg();
   const zip = new JSZip();

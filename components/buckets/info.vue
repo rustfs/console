@@ -460,10 +460,14 @@ const fetchKMSKeys = async () => {
   try {
     const response = await getKeyList();
     if (response && response.keys) {
-      kmsKeyOptions.value = response.keys.map((key: any) => ({
-        label: key.keyName || key.keyId,
-        value: key.keyId || key.keyName,
-      }));
+      kmsKeyOptions.value = response.keys.map((key: any) => {
+        // 优先使用 tags.name，然后是 description，最后是 key_id
+        const keyName = key.tags?.name || key.description || `Key-${key.key_id?.substring(0, 8)}`;
+        return {
+          label: keyName,
+          value: key.key_id,
+        };
+      });
     }
   } catch (error) {
     console.error('Failed to fetch KMS keys:', error);

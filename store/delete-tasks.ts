@@ -1,7 +1,7 @@
-import { defineStore } from "pinia";
-import DeleteTaskManager from "~/lib/delete-task-manager";
+import { defineStore } from 'pinia';
+import DeleteTaskManager from '~/lib/delete-task-manager';
 
-export const useDeleteTaskManagerStore = defineStore("DeleteTaskManager", {
+export const useDeleteTaskManagerStore = defineStore('DeleteTaskManager', {
   state: () => ({
     taskManager: new DeleteTaskManager(useNuxtApp().$s3Client, {
       chunkSize: 16, // Not used for delete, kept for consistency
@@ -11,15 +11,15 @@ export const useDeleteTaskManagerStore = defineStore("DeleteTaskManager", {
     }),
   }),
   getters: {
-    tasks: (state) => state.taskManager.getTasks(),
-    pendingTasks: (state) => state.taskManager.getTasks().filter(task => task.status === "pending"),
-    deletingTasks: (state) => state.taskManager.getTasks().filter(task => task.status === "deleting"),
-    completedTasks: (state) => state.taskManager.getTasks().filter(task => task.status === "completed"),
-    failedTasks: (state) => state.taskManager.getTasks().filter(task => task.status === "failed"),
+    tasks: state => state.taskManager.getTasks(),
+    pendingTasks: state => state.taskManager.getTasks().filter(task => task.status === 'pending'),
+    deletingTasks: state => state.taskManager.getTasks().filter(task => task.status === 'deleting'),
+    completedTasks: state => state.taskManager.getTasks().filter(task => task.status === 'completed'),
+    failedTasks: state => state.taskManager.getTasks().filter(task => task.status === 'failed'),
   },
   actions: {
     addKeys(keys: string[], bucketName: string, prefix?: string) {
-      console.log("addKeys", keys.length, "keys to bucket", bucketName, "prefix:", prefix);
+      console.log('addKeys', keys.length, 'keys to bucket', bucketName, 'prefix:', prefix);
 
       // 对于大量文件，分批处理
       const batchSize = 50;
@@ -59,11 +59,11 @@ export const useDeleteTaskManagerStore = defineStore("DeleteTaskManager", {
       const tasks = this.tasks;
       return {
         total: tasks.length,
-        pending: tasks.filter(task => task.status === "pending").length,
-        deleting: tasks.filter(task => task.status === "deleting").length,
-        completed: tasks.filter(task => task.status === "completed").length,
-        failed: tasks.filter(task => task.status === "failed").length,
-        canceled: tasks.filter(task => task.status === "canceled").length,
+        pending: tasks.filter(task => task.status === 'pending').length,
+        deleting: tasks.filter(task => task.status === 'deleting').length,
+        completed: tasks.filter(task => task.status === 'completed').length,
+        failed: tasks.filter(task => task.status === 'failed').length,
+        canceled: tasks.filter(task => task.status === 'canceled').length,
       };
     },
   },

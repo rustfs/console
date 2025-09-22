@@ -28,9 +28,9 @@ const props = withDefaults(defineProps<Props>(), {
   width: v-bind('props.size + "px"');
   height: v-bind('props.size + "px"');
   animation-delay: v-bind('props.animationDelay + "ms"');
-  opacity: v-bind("props.opacity");
+  opacity: v-bind('props.opacity');
   transform: translate(-50%, -50%) scale(1);
-  border-style: v-bind("props.borderStyle");
+  border-style: v-bind('props.borderStyle');
 }
 
 @keyframes ripple-effect {

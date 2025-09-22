@@ -1,9 +1,15 @@
 <template>
-  <n-modal v-model:show="visible" :mask-closable="false" preset="card" :title="t('Subscribe to event notification') + ` (${t('Bucket')}: ${bucketName})`" class="max-w-screen-md"
+  <n-modal
+    v-model:show="visible"
+    :mask-closable="false"
+    preset="card"
+    :title="t('Subscribe to event notification') + ` (${t('Bucket')}: ${bucketName})`"
+    class="max-w-screen-md"
     :segmented="{
       content: true,
       action: true,
-    }">
+    }"
+  >
     <n-card>
       <n-form :model="formData" label-placement="left" label-width="120px">
         <n-form-item :label="t('Amazon Resource Name')">
@@ -26,7 +32,11 @@
               <n-checkbox class="mt-2" value="DELETE" :label="t('DELETE - Object deletion')" />
               <n-checkbox class="mt-2" value="REPLICA" :label="t('REPLICA - Object migration')" />
               <n-checkbox class="mt-2" value="RESTORE" :label="t('ILM - Object converted')" />
-              <n-checkbox class="mt-2" value="SCANNER" :label="t('SCANNER - Object has too many versions/prefix has too many subfolders')" />
+              <n-checkbox
+                class="mt-2"
+                value="SCANNER"
+                :label="t('SCANNER - Object has too many versions/prefix has too many subfolders')"
+              />
             </n-checkbox-group>
           </n-scrollbar>
         </n-form-item>
@@ -41,50 +51,45 @@
 </template>
 
 <script setup>
-import {
-  NButton,
-  NForm,
-  NFormItem,
-  NInput,
-} from 'naive-ui'
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { NButton, NForm, NFormItem, NInput } from 'naive-ui';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n()
-const formRef = ref(null)
+const { t } = useI18n();
+const formRef = ref(null);
 const formData = ref({
   resourceName: '',
   prefix: '',
   suffix: '',
-  events: []
-})
+  events: [],
+});
 
 const props = defineProps({
   bucketName: {
     type: String,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
-const visible = ref(false)
+const visible = ref(false);
 const open = () => {
-  visible.value = true
-}
+  visible.value = true;
+};
 
 defineExpose({
-  open
-})
+  open,
+});
 const handleSubmit = () => {
-  formRef.value?.validate((errors) => {
+  formRef.value?.validate(errors => {
     if (!errors) {
-      console.log('提交数据:', formData.value)
+      console.log('提交数据:', formData.value);
       // 调用保存接口
     }
-  })
-}
+  });
+};
 
 const handleCancel = () => {
   // 取消逻辑
-  visible.value = false
-}
+  visible.value = false;
+};
 </script>

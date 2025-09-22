@@ -24,11 +24,7 @@
             <n-input v-model:value="formModel.accessKey" />
           </n-form-item-gi>
           <n-form-item-gi :span="24" :label="t('Secret Key')" path="secretKey">
-            <n-input
-              v-model:value="formModel.secretKey"
-              show-password-on="mousedown"
-              type="password"
-            />
+            <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
           </n-form-item-gi>
 
           <!-- <n-form-item-gi :span="24" label="策略" path="policy">
@@ -56,12 +52,7 @@
           <n-form-item-gi :span="24" :label="t('Use main account policy')" path="impliedPolicy">
             <n-switch v-model:value="formModel.impliedPolicy" />
           </n-form-item-gi>
-          <n-form-item-gi
-            v-if="!formModel.impliedPolicy"
-            :span="24"
-            :label="t('Current user policy')"
-            path="policy"
-          >
+          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" :label="t('Current user policy')" path="policy">
             <json-editor v-model="formModel.policy" />
           </n-form-item-gi>
         </n-grid>
@@ -181,12 +172,8 @@ async function submitForm(e: MouseEvent) {
       try {
         const res = await createServiceAccount({
           ...formModel.value,
-          policy: !formModel.value.impliedPolicy
-            ? JSON.stringify(JSON.parse(formModel.value.policy))
-            : null,
-          expiration: formModel.value.expiry
-            ? new Date(formModel.value.expiry).toISOString()
-            : null,
+          policy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
+          expiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
         });
         message.success(t('Added successfully'));
         emit('notice', res);

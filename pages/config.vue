@@ -90,9 +90,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div
-    class="lg:p-20 flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-neutral-800"
-  >
+  <div class="lg:p-20 flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-neutral-800">
     <img src="~/assets/backgrounds/scillate.svg" class="absolute inset-0 z-0 opacity-45" alt="" />
     <div
       class="flex-1 flex w-full z-10 max-w-7xl lg:max-h-[85vh] shadow-lg rounded-lg overflow-hidden mx-auto dark:bg-neutral-800 dark:border-neutral-700"
@@ -119,9 +117,7 @@ onMounted(() => {
             <form @submit.prevent="validateAndSave" autocomplete="off">
               <div class="grid gap-y-6">
                 <div>
-                  <label for="serverHost" class="block text-sm mb-2 dark:text-white">{{
-                    t('Server Address')
-                  }}</label>
+                  <label for="serverHost" class="block text-sm mb-2 dark:text-white">{{ t('Server Address') }}</label>
                   <div class="text-xs text-gray-500 mb-2">
                     {{ t('Leave empty to use current host as default') }}
                   </div>

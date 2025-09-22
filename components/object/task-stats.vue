@@ -75,14 +75,10 @@ const { t } = useI18n();
 const showDrawer = ref(false);
 
 const total = computed(() => props.tasks.length);
-const percentage = computed(() =>
-  total.value === 0 ? 100 : Math.floor((completed.value.length / total.value) * 100)
-);
+const percentage = computed(() => (total.value === 0 ? 100 : Math.floor((completed.value.length / total.value) * 100)));
 
 const pending = computed(() => props.tasks.filter(task => task.status === 'pending'));
-const processing = computed(() =>
-  props.tasks.filter(task => task.status === props.processingStatus)
-);
+const processing = computed(() => props.tasks.filter(task => task.status === props.processingStatus));
 const completed = computed(() => props.tasks.filter(task => task.status === 'completed'));
 const failed = computed(() => props.tasks.filter(task => task.status === 'failed'));
 const paused = computed(() => props.tasks.filter(task => task.status === 'paused'));

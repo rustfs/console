@@ -570,12 +570,7 @@
         <div class="space-y-4">
           <!-- 搜索和排序 -->
           <div class="flex items-center space-x-4">
-            <n-input
-              v-model:value="bucketSearchQuery"
-              :placeholder="t('Search buckets...')"
-              clearable
-              class="flex-1"
-            >
+            <n-input v-model:value="bucketSearchQuery" :placeholder="t('Search buckets...')" clearable class="flex-1">
               <template #prefix>
                 <Icon name="ri:search-line" />
               </template>
@@ -612,13 +607,13 @@
                   <!-- 加密状态显示 -->
                   <div class="text-center">
                     <div class="text-sm text-gray-500 mb-1">{{ t('Encryption Status') }}</div>
-                    <n-tag
-                      :type="bucket.encryptionStatus === 'Enabled' ? 'success' : 'default'"
-                      size="small"
-                    >
-                      {{ bucket.encryptionStatus === 'Enabled' ?
-                        (bucket.encryptionType === 'SSE-KMS' ? 'SSE-KMS' : 'SSE-S3') :
-                        t('Not configured')
+                    <n-tag :type="bucket.encryptionStatus === 'Enabled' ? 'success' : 'default'" size="small">
+                      {{
+                        bucket.encryptionStatus === 'Enabled'
+                          ? bucket.encryptionType === 'SSE-KMS'
+                            ? 'SSE-KMS'
+                            : 'SSE-S3'
+                          : t('Not configured')
                       }}
                     </n-tag>
                   </div>
@@ -650,9 +645,14 @@
               </div>
 
               <!-- 加密详细信息 -->
-              <div v-if="bucket.encryptionStatus === 'Enabled'" class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+              <div
+                v-if="bucket.encryptionStatus === 'Enabled'"
+                class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded"
+              >
                 <div class="text-sm">
-                  <div><strong>{{ t('Algorithm') }}:</strong> {{ bucket.encryptionAlgorithm }}</div>
+                  <div>
+                    <strong>{{ t('Algorithm') }}:</strong> {{ bucket.encryptionAlgorithm }}
+                  </div>
                   <div v-if="bucket.encryptionType === 'SSE-KMS' && bucket.kmsKeyId">
                     <strong>{{ t('KMS Key ID') }}:</strong> {{ bucket.kmsKeyId }}
                   </div>
@@ -669,7 +669,10 @@
           </div>
 
           <!-- 搜索无结果 -->
-          <div v-else-if="!bucketListLoading && buckets.length > 0 && filteredBuckets.length === 0" class="text-center py-8 text-gray-500">
+          <div
+            v-else-if="!bucketListLoading && buckets.length > 0 && filteredBuckets.length === 0"
+            class="text-center py-8 text-gray-500"
+          >
             <Icon name="ri:search-line" class="text-4xl mx-auto mb-2" />
             <div>{{ t('No buckets match your search') }}</div>
             <div class="text-sm">{{ t('Try adjusting your search terms') }}</div>
@@ -686,7 +689,11 @@
       <!-- 配置 Bucket 加密模态框 -->
       <n-modal v-model:show="showBucketEncryptModal" :mask-closable="false">
         <n-card
-          :title="selectedBucket ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name }) : t('Configure Bucket Encryption')"
+          :title="
+            selectedBucket
+              ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name })
+              : t('Configure Bucket Encryption')
+          "
           class="max-w-screen-md"
           :bordered="false"
           size="medium"
@@ -999,12 +1006,7 @@ const {
   getKeyDetails,
 } = useSSE();
 
-const {
-  listBuckets,
-  getBucketEncryption,
-  putBucketEncryption,
-  deleteBucketEncryption,
-} = useBucket({});
+const { listBuckets, getBucketEncryption, putBucketEncryption, deleteBucketEncryption } = useBucket({});
 
 const { t } = useI18n();
 const message = useMessage();
@@ -1246,9 +1248,7 @@ const filteredBuckets = computed(() => {
   // 搜索过滤
   if (bucketSearchQuery.value) {
     const query = bucketSearchQuery.value.toLowerCase();
-    filtered = filtered.filter(bucket =>
-      bucket.name.toLowerCase().includes(query)
-    );
+    filtered = filtered.filter(bucket => bucket.name.toLowerCase().includes(query));
   }
 
   // 排序
@@ -2060,10 +2060,12 @@ const loadBucketList = async () => {
             let encryptionAlgorithm = '';
             let kmsKeyId = '';
 
-            if (encryptionConfig &&
-                encryptionConfig.ServerSideEncryptionConfiguration &&
-                encryptionConfig.ServerSideEncryptionConfiguration.Rules &&
-                encryptionConfig.ServerSideEncryptionConfiguration.Rules.length > 0) {
+            if (
+              encryptionConfig &&
+              encryptionConfig.ServerSideEncryptionConfiguration &&
+              encryptionConfig.ServerSideEncryptionConfiguration.Rules &&
+              encryptionConfig.ServerSideEncryptionConfiguration.Rules.length > 0
+            ) {
               const rule = encryptionConfig.ServerSideEncryptionConfiguration.Rules[0];
               if (rule.ApplyServerSideEncryptionByDefault) {
                 encryptionStatus = 'Enabled';

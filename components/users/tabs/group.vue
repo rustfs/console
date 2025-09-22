@@ -1,11 +1,6 @@
 <template>
   <div>
-    <n-form
-      class="mb-4 mt-2"
-      ref="formRef"
-      :model="searchForm"
-      label-placement="left"
-      :show-feedback="false">
+    <n-form class="mb-4 mt-2" ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
       <n-flex justify="space-between">
         <n-form-item label="" path="name">
           <n-input :placeholder="t('Search User Group')" @input="filterName" />
@@ -18,10 +13,7 @@
               </template>
               删除选中项
             </NButton> -->
-            <NButton
-              :disabled="!checkedKeys.length"
-              secondary
-              @click="allocationPolicy">
+            <NButton :disabled="!checkedKeys.length" secondary @click="allocationPolicy">
               <template #icon>
                 <Icon name="ri:group-2-fill"></Icon>
               </template>
@@ -45,16 +37,15 @@
       :bordered="true"
       max-height="calc(100vh - 320px)"
       :row-key="rowKey"
-      @update:checked-row-keys="handleCheck" />
+      @update:checked-row-keys="handleCheck"
+    />
     <users-group-edit ref="editItemRef"></users-group-edit>
-    <users-group-new
-      v-model:visible="newItemVisible"
-      @search="getDataList"
-      ref="newItemRef"></users-group-new>
+    <users-group-new v-model:visible="newItemVisible" @search="getDataList" ref="newItemRef"></users-group-new>
     <users-group-set-policies-mutiple
       :checkedKeys="checkedKeys"
       @changePoliciesSuccess="changePoliciesSuccess"
-      ref="policiesRef"></users-group-set-policies-mutiple>
+      ref="policiesRef"
+    ></users-group-set-policies-mutiple>
   </div>
 </template>
 
@@ -65,38 +56,38 @@ import {
   type DataTableRowKey,
   NButton,
   NPopconfirm,
-  NSpace
-} from 'naive-ui'
-import { Icon } from '#components'
-import { useI18n } from 'vue-i18n'
+  NSpace,
+} from 'naive-ui';
+import { Icon } from '#components';
+import { useI18n } from 'vue-i18n';
 // import { groupEdit, newGroup, setPoliciesMutiple } from '../components';
 
-const messge = useMessage()
-const { t } = useI18n()
+const messge = useMessage();
+const { t } = useI18n();
 
-const { $api } = useNuxtApp()
-const dialog = useDialog()
-const message = useMessage()
-const group = useGroups()
+const { $api } = useNuxtApp();
+const dialog = useDialog();
+const message = useMessage();
+const group = useGroups();
 
 const searchForm = reactive({
-  name: ''
-})
+  name: '',
+});
 interface RowData {
-  name: string
+  name: string;
 }
 
 const columns: DataTableColumns<RowData> = [
   {
-    type: 'selection'
+    type: 'selection',
   },
   {
     title: t('Name'),
     align: 'left',
     key: 'name',
     filter(value, row) {
-      return !!row.name.includes(value.toString())
-    }
+      return !!row.name.includes(value.toString());
+    },
   },
   {
     title: t('Actions'),
@@ -107,7 +98,7 @@ const columns: DataTableColumns<RowData> = [
       return h(
         NSpace,
         {
-          justify: 'center'
+          justify: 'center',
         },
         {
           default: () => [
@@ -116,11 +107,11 @@ const columns: DataTableColumns<RowData> = [
               {
                 size: 'small',
                 secondary: true,
-                onClick: () => openEditItem(row)
+                onClick: () => openEditItem(row),
               },
               {
                 default: () => '',
-                icon: () => h(Icon, { name: 'ri:edit-2-line' })
+                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
             h(
@@ -134,102 +125,102 @@ const columns: DataTableColumns<RowData> = [
                     { size: 'small', secondary: true },
                     {
                       default: () => '',
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' })
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
-                  )
+                  ),
               }
-            )
-          ]
+            ),
+          ],
         }
-      )
-    }
-  }
-]
+      );
+    },
+  },
+];
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>()
+const tableRef = ref<DataTableInst>();
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
-      name: [value]
-    })
+      name: [value],
+    });
 }
-const listData = ref<any[]>([])
+const listData = ref<any[]>([]);
 
 onMounted(() => {
-  getDataList()
-})
+  getDataList();
+});
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await group.listGroup()
+    const res = await group.listGroup();
     listData.value =
       res?.map((item: string) => {
         return {
-          name: item
-        }
-      }) || []
-    checkedKeys.value = []
+          name: item,
+        };
+      }) || [];
+    checkedKeys.value = [];
   } catch (error) {
-    message.error(t('Failed to get data'))
+    message.error(t('Failed to get data'));
   }
-}
+};
 
 /** **********************************添加 */
-const newItemRef = ref()
-const newItemVisible = ref(false)
+const newItemRef = ref();
+const newItemVisible = ref(false);
 
 function addUserGroup() {
-  newItemVisible.value = true
+  newItemVisible.value = true;
 }
 
 /** **********************************分配策略 */
-const policiesRef = ref()
+const policiesRef = ref();
 const allocationPolicy = () => {
-  policiesRef.value.openDialog()
-}
+  policiesRef.value.openDialog();
+};
 
 const changePoliciesSuccess = () => {
-  checkedKeys.value = []
-}
+  checkedKeys.value = [];
+};
 /** **********************************修改 */
-const editItemRef = ref()
+const editItemRef = ref();
 function openEditItem(row: any) {
-  editItemRef.value.openDialog(row)
+  editItemRef.value.openDialog(row);
 }
 
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
     // 获取组的成员
-    const info = await group.getGroup(row.name)
-    if(info.members.length) {
-      messge.error("请先清空组成员")
-      return
+    const info = await group.getGroup(row.name);
+    if (info.members.length) {
+      messge.error('请先清空组成员');
+      return;
     }
     // 清空组的成员
     await group.updateGroupMembers({
       group: row.name,
       members: info.members,
       isRemove: true,
-      groupStatus: 'enabled'
-    })
-    message.success(t('Delete Success'))
-    getDataList()
+      groupStatus: 'enabled',
+    });
+    message.success(t('Delete Success'));
+    getDataList();
   } catch (error) {
-    message.error(t('Delete Failed'))
+    message.error(t('Delete Failed'));
   }
 }
 
 /** ************************************批量删除 */
 function rowKey(row: any): string {
-  return row.name
+  return row.name;
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([])
+const checkedKeys = ref<DataTableRowKey[]>([]);
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys
-  return checkedKeys
+  checkedKeys.value = keys;
+  return checkedKeys;
 }
 function deleteByList() {
   dialog.error({
@@ -239,16 +230,16 @@ function deleteByList() {
     negativeText: t('Cancel'),
     onPositiveClick: () => {
       if (!checkedKeys.value.length) {
-        message.error(t('Please select at least one item'))
-        return
+        message.error(t('Please select at least one item'));
+        return;
       }
       checkedKeys.value.forEach(async (element: any) => {
-        const res = await group.removeGroup(element)
-      })
+        const res = await group.removeGroup(element);
+      });
 
-      getDataList()
-    }
-  })
+      getDataList();
+    },
+  });
 }
 </script>
 

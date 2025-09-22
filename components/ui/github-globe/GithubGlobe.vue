@@ -1,8 +1,5 @@
 <template>
-  <canvas
-    ref="githubGlobeRef"
-    :class="cn('w-96 h-96', props.class)"
-  ></canvas>
+  <canvas ref="githubGlobeRef" :class="cn('w-96 h-96', props.class)"></canvas>
 </template>
 
 <script lang="ts" setup>
@@ -11,15 +8,7 @@
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import ThreeGlobe from 'three-globe';
-import {
-  AmbientLight,
-  Color,
-  DirectionalLight,
-  PerspectiveCamera,
-  PointLight,
-  Scene,
-  WebGLRenderer,
-} from 'three';
+import { AmbientLight, Color, DirectionalLight, PerspectiveCamera, PointLight, Scene, WebGLRenderer } from 'three';
 import contries from './globe.json';
 import { cn } from '@/lib/utils';
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
@@ -196,7 +185,7 @@ function initGlobe() {
     .showAtmosphere(defaultGlobeConfig.showAtmosphere!)
     .atmosphereColor(defaultGlobeConfig.atmosphereColor!)
     .atmosphereAltitude(defaultGlobeConfig.atmosphereAltitude!)
-    .hexPolygonColor((e) => defaultGlobeConfig.polygonColor!);
+    .hexPolygonColor(e => defaultGlobeConfig.polygonColor!);
 
   globe.rotateY(-Math.PI * (5 / 9));
   globe.rotateZ(-Math.PI / 6);
@@ -255,9 +244,7 @@ function startAnimation() {
     .ringColor((e: any) => (t: any) => e.color(t))
     .ringMaxRadius(defaultGlobeConfig.maxRings!)
     .ringPropagationSpeed(3)
-    .ringRepeatPeriod(
-      (defaultGlobeConfig.arcTime! * defaultGlobeConfig.arcLength!) / defaultGlobeConfig.rings!,
-    );
+    .ringRepeatPeriod((defaultGlobeConfig.arcTime! * defaultGlobeConfig.arcLength!) / defaultGlobeConfig.rings!);
 }
 
 function animate() {
@@ -292,10 +279,7 @@ function buildData() {
 
   // remove duplicates for same lat and lng
   const filteredPoints = points.filter(
-    (v, i, a) =>
-      a.findIndex((v2) =>
-        ['lat', 'lng'].every((k) => v2[k as 'lat' | 'lng'] === v[k as 'lat' | 'lng']),
-      ) === i,
+    (v, i, a) => a.findIndex(v2 => ['lat', 'lng'].every(k => v2[k as 'lat' | 'lng'] === v[k as 'lat' | 'lng'])) === i
   );
 
   globeData.value = filteredPoints;
@@ -308,7 +292,7 @@ function hexToRgb(color: string) {
   if (hex.length === 3) {
     hex = hex
       .split('')
-      .map((char) => char + char)
+      .map(char => char + char)
       .join('');
   }
 

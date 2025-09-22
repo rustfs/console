@@ -753,5 +753,10 @@
   "Please enter Vault server address": "请输入Vault服务器地址",
   "Please enter Vault key path": "请输入Vault密钥路径",
   "Please enter Vault token": "请输入Vault令牌",
-  "Either token or AppRole authentication is required": "需要Token或AppRole认证"
+  "Either token or AppRole authentication is required": "需要Token或AppRole认证",
+  "KMS service is stopped": "KMS服务已停止",
+  "KMS service has errors": "KMS服务出现错误",
+  "KMS service not initialized, please configure it first": "KMS服务未初始化，请先进行配置",
+  "KMS service status loaded, but configuration details unavailable": "KMS服务状态已加载，但配置详情不可用",
+  "Failed to load KMS status": "加载KMS状态失败"
 }

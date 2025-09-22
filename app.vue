@@ -15,50 +15,45 @@
 </template>
 
 <script lang="ts" setup>
-import { useColorMode } from '@vueuse/core'
-import {
-  darkTheme,
-  dateZhCN,
-  enUS,
-  zhCN
-} from 'naive-ui'
-import { computed, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { themeOverrides } from '~/config/theme'
+import { useColorMode } from '@vueuse/core';
+import { darkTheme, dateZhCN, enUS, zhCN } from 'naive-ui';
+import { computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { themeOverrides } from '~/config/theme';
 
-const { system, store } = useColorMode()
-const { locale } = useI18n()
+const { system, store } = useColorMode();
+const { locale } = useI18n();
 
 const isDark = computed(() => {
-  return store.value === 'dark' || (store.value === 'auto' && system.value === 'dark')
-})
+  return store.value === 'dark' || (store.value === 'auto' && system.value === 'dark');
+});
 
 const themeName = computed(() => {
-  return store.value === 'auto' ? system.value : store.value
-})
+  return store.value === 'auto' ? system.value : store.value;
+});
 
 const theme = computed(() => {
   if (isDark.value) {
-    return darkTheme
+    return darkTheme;
   }
 
-  return { name: themeName.value }
-})
+  return { name: themeName.value };
+});
 
 const naiveLocale = computed(() => {
   // 安全地比较locale的值，避免TypeScript类型错误
-  const currentLocale = locale.value.toString()
-  return currentLocale === 'zh-CN' || currentLocale === 'zh' ? zhCN : enUS
-})
+  const currentLocale = locale.value.toString();
+  return currentLocale === 'zh-CN' || currentLocale === 'zh' ? zhCN : enUS;
+});
 
 const dateLocale = computed(() => {
   // 安全地比较locale的值，避免TypeScript类型错误
-  const currentLocale = locale.value.toString()
-  return currentLocale === 'zh-CN' || currentLocale === 'zh' ? dateZhCN : null
-})
+  const currentLocale = locale.value.toString();
+  return currentLocale === 'zh-CN' || currentLocale === 'zh' ? dateZhCN : null;
+});
 
 // 监听语言变化
-watch(locale, (newLocale) => {
-  console.log('Language changed to:', newLocale)
-})
+watch(locale, newLocale => {
+  console.log('Language changed to:', newLocale);
+});
 </script>

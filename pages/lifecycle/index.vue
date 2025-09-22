@@ -2,7 +2,7 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">{{ t("Lifecycle") }}</h1>
+        <h1 class="text-2xl font-bold">{{ t('Lifecycle') }}</h1>
       </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
@@ -13,18 +13,19 @@
               filterable
               v-model:value="bucketName"
               :placeholder="t('Please select bucket')"
-              :options="bucketList" />
+              :options="bucketList"
+            />
           </n-form-item>
         </div>
 
         <div class="flex items-center gap-4">
           <n-button @click="() => handleNew()">
             <Icon name="ri:add-line" class="mr-2" />
-            <span>{{ t("Add Lifecycle Rule") }}</span>
+            <span>{{ t('Add Lifecycle Rule') }}</span>
           </n-button>
           <n-button @click="refresh">
             <Icon name="ri:refresh-line" class="mr-2" />
-            <span>{{ t("Refresh") }}</span>
+            <span>{{ t('Refresh') }}</span>
           </n-button>
         </div>
       </div>
@@ -35,7 +36,8 @@
         :columns="columns"
         :data="pageData"
         :pagination="false"
-        :bordered="false" />
+        :bordered="false"
+      />
 
       <n-card class="flex flex-center" style="height: 400px" v-else>
         <n-empty :description="t('No Data')"></n-empty>
@@ -47,9 +49,9 @@
 </template>
 
 <script lang="ts" setup>
-import { Icon } from "#components";
-import { NButton, NSpace, NPopconfirm, type DataTableColumns } from "naive-ui";
-import { useI18n } from "vue-i18n";
+import { Icon } from '#components';
+import { NButton, NSpace, NPopconfirm, type DataTableColumns } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const message = useMessage();
@@ -80,73 +82,73 @@ interface RowData {
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: t("Type"),
-    key: "",
-    render: (row) => {
+    title: t('Type'),
+    key: '',
+    render: row => {
       return h(NSpace, {}, () => {
         console.log(row);
         if (row?.Transitions) {
-          return t("Transition");
+          return t('Transition');
         } else {
-          return t("Expire");
+          return t('Expire');
         }
       });
     },
   },
   {
-    title: t("Version"),
-    key: "Transition",
-    render: (row) => {
-      return h(NSpace, {}, row?.NoncurrentVersionExpiration ? t("Non-current Version") : t("Current Version"));
+    title: t('Version'),
+    key: 'Transition',
+    render: row => {
+      return h(NSpace, {}, row?.NoncurrentVersionExpiration ? t('Non-current Version') : t('Current Version'));
     },
   },
   {
-    title: t("Expiration Delete Mark"),
-    key: "",
-    render: (row) => {
-      return h(NSpace, {}, row?.Expiration?.ExpiredObjectDeleteMarker ? t("On") : t("Off"));
+    title: t('Expiration Delete Mark'),
+    key: '',
+    render: row => {
+      return h(NSpace, {}, row?.Expiration?.ExpiredObjectDeleteMarker ? t('On') : t('Off'));
     },
   },
   {
-    title: t("Tier"),
-    key: "",
-    render: (row) => {
-      return h(NSpace, {}, row?.Transitions?.[0]?.StorageClass || "--");
+    title: t('Tier'),
+    key: '',
+    render: row => {
+      return h(NSpace, {}, row?.Transitions?.[0]?.StorageClass || '--');
     },
   },
   {
-    title: t("Prefix"),
-    key: "Filter",
-    render: (row) => {
-      return h(NSpace, {}, row?.Filter?.Prefix || "");
+    title: t('Prefix'),
+    key: 'Filter',
+    render: row => {
+      return h(NSpace, {}, row?.Filter?.Prefix || '');
     },
   },
 
   {
-    title: t("Time Cycle") + "(" + t("Days") + ")",
-    key: "NoncurrentVersionExpiration",
-    render: (row) => {
+    title: t('Time Cycle') + '(' + t('Days') + ')',
+    key: 'NoncurrentVersionExpiration',
+    render: row => {
       return h(
         NSpace,
         {},
-        row?.Expiration?.Days || row?.NoncurrentVersionExpiration?.NoncurrentDays || row?.Transitions?.[0]?.Days || ""
+        row?.Expiration?.Days || row?.NoncurrentVersionExpiration?.NoncurrentDays || row?.Transitions?.[0]?.Days || ''
       );
     },
   },
   {
-    title: t("Status"),
-    key: "Status",
+    title: t('Status'),
+    key: 'Status',
   },
   {
-    title: t("Actions"),
-    key: "actions",
-    align: "center",
+    title: t('Actions'),
+    key: 'actions',
+    align: 'center',
     width: 100,
     render: (row: RowData) => {
       return h(
         NSpace,
         {
-          justify: "center",
+          justify: 'center',
         },
         {
           default: () => [
@@ -154,14 +156,14 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => handleRowDelete(row) },
               {
-                default: () => t("Confirm Delete"),
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,
-                    { size: "small", secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => "",
-                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
               }
@@ -175,7 +177,7 @@ const columns: DataTableColumns<RowData> = [
 
 // 获取桶列表
 const { data } = await useAsyncData(
-  "buckets",
+  'buckets',
   async () => {
     const response = await listBuckets();
     return (
@@ -188,18 +190,18 @@ const { data } = await useAsyncData(
 );
 
 const bucketList = computed(() => {
-  return data.value.map((bucket) => ({
+  return data.value.map(bucket => ({
     label: bucket.Name,
     value: bucket.Name,
   }));
 });
 
-const bucketName = ref<string>(bucketList.value.length > 0 ? bucketList.value[0]?.value ?? "" : "");
+const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
 const pageData = ref<any[]>([]);
 const loading = ref<boolean>(false);
 watch(
   () => bucketName.value,
-  async (newVal) => {
+  async newVal => {
     if (!newVal) return;
 
     loading.value = true;
@@ -215,20 +217,20 @@ watch(
 );
 
 const handleRowDelete = (row: RowData) => {
-  const params = pageData.value.filter((item) => item.ID !== row.ID);
+  const params = pageData.value.filter(item => item.ID !== row.ID);
   console.log(params);
   if (params.length === 0) {
-    deleteBucketLifecycle(bucketName.value).then(async (res) => {
-      message.success(t("Delete Success"));
+    deleteBucketLifecycle(bucketName.value).then(async res => {
+      message.success(t('Delete Success'));
       refresh();
     });
   } else {
     putBucketLifecycleConfiguration(bucketName.value, { Rules: params })
-      .then(async (res) => {
-        message.success(t("Delete Success"));
+      .then(async res => {
+        message.success(t('Delete Success'));
         refresh();
       })
-      .catch((e) => {
+      .catch(e => {
         message.error(e.message);
       });
   }

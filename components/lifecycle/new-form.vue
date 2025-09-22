@@ -12,12 +12,7 @@
   >
     <n-card>
       <n-form class="my-4" ref="formRef" :model="formData" :rules="rules">
-        <n-tabs
-          default-value="expire"
-          justify-content="space-evenly"
-          type="line"
-          @update:value="handleUpdateValue"
-        >
+        <n-tabs default-value="expire" justify-content="space-evenly" type="line" @update:value="handleUpdateValue">
           <n-tab-pane name="expire" :tab="t('Expiration')">
             <n-form-item :label="t('Object Version')" path="versionType" v-if="versioningStatus">
               <n-select v-model:value="formData.versionType" :options="versionOptions" />
@@ -39,10 +34,7 @@
               <n-collapse>
                 <n-collapse-item :title="t('More Configurations')" name="advanced">
                   <n-form-item :label="t('Prefix')">
-                    <n-input
-                      v-model:value="formData.prefix"
-                      :placeholder="t('Please enter prefix')"
-                    />
+                    <n-input v-model:value="formData.prefix" :placeholder="t('Please enter prefix')" />
                   </n-form-item>
                   <n-form-item :label="t('Tags')">
                     <n-dynamic-input
@@ -103,10 +95,7 @@
               <n-collapse>
                 <n-collapse-item :title="t('More Configurations')" name="advanced">
                   <n-form-item :label="t('Prefix')">
-                    <n-input
-                      v-model:value="formData.prefix"
-                      :placeholder="t('Please enter prefix')"
-                    />
+                    <n-input v-model:value="formData.prefix" :placeholder="t('Please enter prefix')" />
                   </n-form-item>
                   <n-form-item :label="t('Tags')">
                     <n-dynamic-input
@@ -157,8 +146,7 @@ const randomUUID = () => {
 };
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-const { putBucketLifecycleConfiguration, getBucketVersioning, getBucketLifecycleConfiguration } =
-  useBucket({});
+const { putBucketLifecycleConfiguration, getBucketVersioning, getBucketLifecycleConfiguration } = useBucket({});
 const { listTiers } = useTiers();
 const { t } = useI18n();
 const message = useMessage();
@@ -258,11 +246,7 @@ const handleSave = () => {
   formRef.value?.validate((errors: any) => {
     if (!errors) {
       // 额外的参数验证（与表单验证保持一致）
-      if (
-        formData.value.days === null ||
-        formData.value.days === undefined ||
-        formData.value.days < 1
-      ) {
+      if (formData.value.days === null || formData.value.days === undefined || formData.value.days < 1) {
         message.error(t('Please enter valid days'));
         return;
       }

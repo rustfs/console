@@ -31,15 +31,16 @@
         :columns="columns"
         :data="pilicies"
         :pagination="false"
-        :bordered="false" />
+        :bordered="false"
+      />
     </page-content>
     <policies-form-item v-model:show="showPolicyForm" :policy="current" @saved="fetchPolicies" />
   </div>
 </template>
 <script lang="ts" setup>
-import { Icon } from "#components";
-import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from "naive-ui";
-import { useNuxtApp } from "nuxt/app";
+import { Icon } from '#components';
+import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from 'naive-ui';
+import { useNuxtApp } from 'nuxt/app';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -51,7 +52,7 @@ const tableRef = ref<DataTableInst>();
 const current = ref();
 const showPolicyForm = computed({
   get: () => !!current.value,
-  set: (val) => {
+  set: val => {
     if (!val) current.value = null;
   },
 });
@@ -62,8 +63,8 @@ const handleEdit = (item: any) => {
 
 const handleNew = () => {
   current.value = {
-    name: "",
-    content: "{}",
+    name: '',
+    content: '{}',
   };
 };
 
@@ -75,7 +76,7 @@ interface RowData {
 const columns: DataTableColumns<RowData> = [
   {
     title: t('Name'),
-    key: "name",
+    key: 'name',
     filter(value, row) {
       return !!row.name.includes(value.toString());
     },
@@ -83,27 +84,27 @@ const columns: DataTableColumns<RowData> = [
 
   {
     title: t('Actions'),
-    key: "actions",
-    align: "center",
+    key: 'actions',
+    align: 'center',
     width: 180,
     render: (row: any) => {
       return h(
         NSpace,
         {
-          justify: "center",
+          justify: 'center',
         },
         {
           default: () => [
             h(
               NButton,
               {
-                size: "small",
+                size: 'small',
                 secondary: true,
                 onClick: () => handleEdit(row),
               },
               {
-                default: () => "",
-                icon: () => h(Icon, { name: "ri:edit-2-line" }),
+                default: () => '',
+                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
             h(
@@ -114,10 +115,10 @@ const columns: DataTableColumns<RowData> = [
                 trigger: () =>
                   h(
                     NButton,
-                    { size: "small", secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => "",
-                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
               }
@@ -138,13 +139,15 @@ function filterName(value: string) {
 
 const fetchPolicies = async () => {
   try {
-    const res = await $api.get("/list-canned-policies");
-    pilicies.value = Object.keys(res).sort((a,b)=>a.localeCompare(b)).map((key) => {
-      return {
-        name: key,
-        content: res[key],
-      };
-    });
+    const res = await $api.get('/list-canned-policies');
+    pilicies.value = Object.keys(res)
+      .sort((a, b) => a.localeCompare(b))
+      .map(key => {
+        return {
+          name: key,
+          content: res[key],
+        };
+      });
   } catch (error) {
     message.error(t('Failed to fetch data'));
   }

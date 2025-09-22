@@ -13,10 +13,8 @@ export const useUploadTaskManagerStore = defineStore('uploadTaskManager', {
   getters: {
     tasks: state => state.taskManager.getTasks(),
     pendingTasks: state => state.taskManager.getTasks().filter(task => task.status === 'pending'),
-    uploadingTasks: state =>
-      state.taskManager.getTasks().filter(task => task.status === 'uploading'),
-    completedTasks: state =>
-      state.taskManager.getTasks().filter(task => task.status === 'completed'),
+    uploadingTasks: state => state.taskManager.getTasks().filter(task => task.status === 'uploading'),
+    completedTasks: state => state.taskManager.getTasks().filter(task => task.status === 'completed'),
     failedTasks: state => state.taskManager.getTasks().filter(task => task.status === 'failed'),
     canceledTasks: state => state.taskManager.getTasks().filter(task => task.status === 'canceled'),
     pausedTasks: state => state.taskManager.getTasks().filter(task => task.status === 'paused'),

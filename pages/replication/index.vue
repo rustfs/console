@@ -2,7 +2,7 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">{{ t("Bucket Replication") }}</h1>
+        <h1 class="text-2xl font-bold">{{ t('Bucket Replication') }}</h1>
       </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
@@ -13,18 +13,19 @@
               filterable
               v-model:value="bucketName"
               :placeholder="t('Please select bucket')"
-              :options="bucketList" />
+              :options="bucketList"
+            />
           </n-form-item>
         </div>
 
         <div class="flex items-center gap-4">
           <n-button @click="() => openForm()">
             <Icon name="ri:add-line" class="mr-2" />
-            <span>{{ t("Add Replication Rule") }}</span>
+            <span>{{ t('Add Replication Rule') }}</span>
           </n-button>
           <n-button @click="loadReplication">
             <Icon name="ri:refresh-line" class="mr-2" />
-            <span>{{ t("Refresh") }}</span>
+            <span>{{ t('Refresh') }}</span>
           </n-button>
         </div>
       </div>
@@ -35,7 +36,8 @@
         :data="pageData"
         :pagination="false"
         :bordered="false"
-        v-if="pageData.length > 0" />
+        v-if="pageData.length > 0"
+      />
       <n-card class="flex flex-center" style="height: 400px" v-else>
         <n-empty :description="t('No Data')"></n-empty>
       </n-card>
@@ -45,12 +47,12 @@
 </template>
 
 <script lang="ts" setup>
-import { Icon } from "#components";
-import { NButton, NSpace, type DataTableColumns } from "naive-ui";
-import { useI18n } from "vue-i18n";
-import { useBucket } from "@/composables/useBucket";
-import { h, ref, computed, watch } from "vue";
-import { useMessage } from "naive-ui";
+import { Icon } from '#components';
+import { NButton, NSpace, type DataTableColumns } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
+import { useBucket } from '@/composables/useBucket';
+import { h, ref, computed, watch } from 'vue';
+import { useMessage } from 'naive-ui';
 
 const { t } = useI18n();
 const {
@@ -61,7 +63,7 @@ const {
   deleteRemoteReplicationTarget,
 } = useBucket({});
 const formVisible = ref(false);
-const searchTerm = ref("");
+const searchTerm = ref('');
 const message = useMessage();
 
 interface RowData {
@@ -71,64 +73,64 @@ interface RowData {
 
 const columns: DataTableColumns<ReplicationRule> = [
   {
-    title: t("Rule ID"),
-    key: "ID",
-    align: "center",
+    title: t('Rule ID'),
+    key: 'ID',
+    align: 'center',
   },
   {
-    title: t("Status"),
-    key: "Status",
-    align: "center",
-    render: (row) => (row.Status === "Enabled" ? t("Enabled") : t("Disabled")),
+    title: t('Status'),
+    key: 'Status',
+    align: 'center',
+    render: row => (row.Status === 'Enabled' ? t('Enabled') : t('Disabled')),
   },
   {
-    title: t("Priority"),
-    key: "Priority",
-    align: "center",
+    title: t('Priority'),
+    key: 'Priority',
+    align: 'center',
   },
   {
-    title: t("Prefix"),
-    key: "Filter",
-    align: "center",
-    render: (row) => row.Filter?.Prefix || "-",
+    title: t('Prefix'),
+    key: 'Filter',
+    align: 'center',
+    render: row => row.Filter?.Prefix || '-',
   },
   {
-    title: t("Destination Bucket"),
-    key: "Destination",
-    align: "center",
-    render: (row) => {
+    title: t('Destination Bucket'),
+    key: 'Destination',
+    align: 'center',
+    render: row => {
       // MinIO/标准S3结构：arn:aws:s3:::bucketname
-      const bucketArn = row.Destination?.Bucket || "";
-      return bucketArn.replace(/^arn:aws:s3:::/, "");
+      const bucketArn = row.Destination?.Bucket || '';
+      return bucketArn.replace(/^arn:aws:s3:::/, '');
     },
   },
   {
-    title: t("Storage Class"),
-    key: "Destination",
-    align: "center",
-    render: (row) => row.Destination?.StorageClass || "-",
+    title: t('Storage Class'),
+    key: 'Destination',
+    align: 'center',
+    render: row => row.Destination?.StorageClass || '-',
   },
   {
-    title: t("Actions"),
-    key: "actions",
-    align: "center",
+    title: t('Actions'),
+    key: 'actions',
+    align: 'center',
     width: 100,
-    render: (row) => {
+    render: row => {
       return h(
         NSpace,
-        { justify: "center" },
+        { justify: 'center' },
         {
           default: () => [
             h(
               NButton,
               {
-                size: "small",
+                size: 'small',
                 secondary: true,
-                onClick: (e) => handleRowDelete(row, e),
+                onClick: e => handleRowDelete(row, e),
               },
               {
-                default: () => "",
-                icon: () => h(Icon, { name: "ri:delete-bin-7-line" }),
+                default: () => '',
+                icon: () => h(Icon, { name: 'ri:delete-bin-7-line' }),
               }
             ),
           ],
@@ -140,7 +142,7 @@ const columns: DataTableColumns<ReplicationRule> = [
 
 // 获取桶列表
 const { data } = await useAsyncData(
-  "buckets",
+  'buckets',
   async () => {
     const response = await listBuckets();
     return (
@@ -153,13 +155,13 @@ const { data } = await useAsyncData(
 );
 
 const bucketList = computed(() => {
-  return data.value.map((bucket) => ({
+  return data.value.map(bucket => ({
     label: bucket.Name,
     value: bucket.Name,
   }));
 });
 
-const bucketName = ref<string>(bucketList.value.length > 0 ? bucketList.value[0]?.value ?? "" : "");
+const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
 
 // 复制规则类型
 interface ReplicationRule {
@@ -203,7 +205,7 @@ const handleRowDelete = async (row: any, e: Event) => {
     // 1. 获取当前所有规则
     const res: any = await getBucketReplication(bucketName.value);
     let rules = res?.ReplicationConfiguration?.Rules || [];
-    const arn: string = res?.ReplicationConfiguration?.Role || ""; // 例如 arn:aws:s3:::bucketname
+    const arn: string = res?.ReplicationConfiguration?.Role || ''; // 例如 arn:aws:s3:::bucketname
     console.log(arn);
 
     // 2. 过滤掉要删除的规则
@@ -223,10 +225,10 @@ const handleRowDelete = async (row: any, e: Event) => {
       }
     }
 
-    message.success(t("Delete success"));
+    message.success(t('Delete success'));
     loadReplication();
   } catch (err) {
-    message.error(t("Delete failed"));
+    message.error(t('Delete failed'));
   }
 };
 

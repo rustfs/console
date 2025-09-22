@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
+import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n()
+const { t } = useI18n();
 
 const lineOptions = ref<ECOption>({
   tooltip: {
@@ -9,8 +9,8 @@ const lineOptions = ref<ECOption>({
     formatter: '{a} <br/>{b} : {c} ({d}%)',
     textStyle: {
       fontSize: 18,
-      fontWeight: 'bold'
-    }
+      fontWeight: 'bold',
+    },
   },
   legend: {
     orient: 'vertical',
@@ -18,9 +18,9 @@ const lineOptions = ref<ECOption>({
     textStyle: {
       color: '#fff', // 主题颜色
       fontSize: 18,
-      fontWeight: 'bold'
+      fontWeight: 'bold',
     },
-    data: [t('Used (7TB)'), t('Remaining (3TB)')]
+    data: [t('Used (7TB)'), t('Remaining (3TB)')],
   },
   series: [
     {
@@ -30,29 +30,24 @@ const lineOptions = ref<ECOption>({
       avoidLabelOverlap: false,
       label: {
         show: false,
-        position: 'center'
+        position: 'center',
       },
       labelLine: {
-        show: false
+        show: false,
       },
       data: [
         { value: 7, name: t('Used (7TB)'), itemStyle: { color: '#2f98ff' } },
-        { value: 3, name: t('Remaining (3TB)'), itemStyle: { color: '#61cda3' } }
-      ]
-    }
-  ]
-}) as Ref<ECOption>
+        { value: 3, name: t('Remaining (3TB)'), itemStyle: { color: '#61cda3' } },
+      ],
+    },
+  ],
+}) as Ref<ECOption>;
 
-useEcharts('lineRef', lineOptions)
+useEcharts('lineRef', lineOptions);
 </script>
 
 <template>
-  <div
-    ref="lineRef"
-    class="h-64"
-  />
+  <div ref="lineRef" class="h-64" />
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

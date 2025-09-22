@@ -1,102 +1,102 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { configManager } from '~/utils/config'
+import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { configManager } from '~/utils/config';
 
-const { t } = useI18n()
-const message = useMessage()
+const { t } = useI18n();
+const message = useMessage();
 
 // 当前配置信息
 const currentConfig = ref({
   serverHost: '',
   api: {
-    baseURL: ''
+    baseURL: '',
   },
   s3: {
     endpoint: '',
-    region: ''
-  }
-})
+    region: '',
+  },
+});
 
 // 表单数据
 const formData = ref({
-  serverHost: ''
-})
+  serverHost: '',
+});
 
-const loading = ref(false)
+const loading = ref(false);
 
 // 加载当前配置
 const loadCurrentConfig = async () => {
   try {
-    const config = await configManager.loadConfig()
-    currentConfig.value = config
-    formData.value.serverHost = config.serverHost
+    const config = await configManager.loadConfig();
+    currentConfig.value = config;
+    formData.value.serverHost = config.serverHost;
   } catch (error) {
-    message.error(t('Failed to load current configuration'))
+    message.error(t('Failed to load current configuration'));
   }
-}
+};
 
 // 保存配置
 const saveConfig = async () => {
   if (!formData.value.serverHost) {
-    message.error(t('Please enter server address'))
-    return
+    message.error(t('Please enter server address'));
+    return;
   }
 
-  loading.value = true
+  loading.value = true;
   try {
     // 更宽松的URL验证
-    let urlToValidate = formData.value.serverHost.trim()
-    
+    let urlToValidate = formData.value.serverHost.trim();
+
     // 如果没有协议，自动添加https://
     if (!urlToValidate.match(/^https?:\/\//)) {
-      urlToValidate = 'https://' + urlToValidate
+      urlToValidate = 'https://' + urlToValidate;
     }
-    
+
     // 验证URL格式
-    const url = new URL(urlToValidate)
-    
+    const url = new URL(urlToValidate);
+
     // 保存原始输入（如果用户没输入协议，就保存添加了协议的版本）
-    const urlToSave = formData.value.serverHost.match(/^https?:\/\//) ? formData.value.serverHost : urlToValidate
-    localStorage.setItem('rustfs-server-host', urlToSave)
-    
+    const urlToSave = formData.value.serverHost.match(/^https?:\/\//) ? formData.value.serverHost : urlToValidate;
+    localStorage.setItem('rustfs-server-host', urlToSave);
+
     // 如果我们自动添加了协议，更新输入框显示
     if (!formData.value.serverHost.match(/^https?:\/\//)) {
-      formData.value.serverHost = urlToValidate
+      formData.value.serverHost = urlToValidate;
     }
-    
+
     // 清除配置缓存
-    configManager.clearCache()
-    
-    message.success(t('Configuration saved successfully'))
-    
+    configManager.clearCache();
+
+    message.success(t('Configuration saved successfully'));
+
     // 延迟后刷新页面，确保配置完全生效
     setTimeout(() => {
-      window.location.reload()
-    }, 200)
+      window.location.reload();
+    }, 200);
   } catch (error) {
-    message.error(t('Invalid server address format'))
+    message.error(t('Invalid server address format'));
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // 重置配置
 const resetConfig = async () => {
-  localStorage.removeItem('rustfs-server-host')
-  configManager.clearCache()
-  
-  message.success(t('Configuration reset successfully'))
-  
+  localStorage.removeItem('rustfs-server-host');
+  configManager.clearCache();
+
+  message.success(t('Configuration reset successfully'));
+
   // 延迟后刷新页面，确保配置完全生效
   setTimeout(() => {
-    window.location.reload()
-  }, 200)
-}
+    window.location.reload();
+  }, 200);
+};
 
 onMounted(() => {
-  loadCurrentConfig()
-})
+  loadCurrentConfig();
+});
 </script>
 
 <template>
@@ -106,7 +106,7 @@ onMounted(() => {
         <h1 class="text-2xl font-bold">{{ t('Settings') }}</h1>
       </template>
     </page-header>
-    
+
     <page-content>
       <!-- 当前配置显示 -->
       <n-card :title="t('Current Configuration')" class="mb-6">
@@ -130,7 +130,7 @@ onMounted(() => {
       <n-card :title="t('Server Configuration')">
         <n-form @submit.prevent="saveConfig">
           <n-form-item :label="t('Server Address')" required>
-            <n-input 
+            <n-input
               v-model:value="formData.serverHost"
               :placeholder="t('Please enter server address (e.g., http://localhost:9000)')"
               clearable
@@ -144,14 +144,10 @@ onMounted(() => {
 
           <n-form-item>
             <n-space>
-              <n-button 
-                type="primary" 
-                @click="saveConfig"
-                :loading="loading"
-              >
+              <n-button type="primary" @click="saveConfig" :loading="loading">
                 {{ t('Save Configuration') }}
               </n-button>
-              
+
               <n-button @click="resetConfig">
                 {{ t('Reset to Default') }}
               </n-button>

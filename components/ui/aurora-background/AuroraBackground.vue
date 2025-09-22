@@ -5,7 +5,7 @@
       :class="
         cn(
           'relative flex flex-col h-[100vh] items-center justify-center bg-zinc-50 dark:bg-zinc-900 text-slate-950 transition-bg',
-          props.class,
+          props.class
         )
       "
     >
@@ -21,7 +21,7 @@
               'aurora-background-gradient-after',
               'aurora-gradient-animation',
               props.radialGradient &&
-                `[mask-image:radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]`,
+                `[mask-image:radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]`
             )
           "
         ></div>

@@ -21,11 +21,7 @@
           <n-input
             :placeholder="t('Please enter name')"
             v-model:value="objectKey"
-            :status="
-              objectKey.length > 0 && (objectKey.length < 3 || objectKey.length > 63)
-                ? 'error'
-                : undefined
-            "
+            :status="objectKey.length > 0 && (objectKey.length < 3 || objectKey.length > 63) ? 'error' : undefined"
           />
         </div>
         <div class="flex items-center justify-between gap-4">
@@ -55,11 +51,7 @@
               <n-space class="w-24">{{ t('Validity') }}*</n-space>
               <n-input-group class="justify-end">
                 <n-input-number v-model:value="retentionPeriod" :min="1" class="w-96" />
-                <n-select
-                  v-model:value="retentionUnit"
-                  :options="retentionUnitOptions"
-                  class="w-16"
-                />
+                <n-select v-model:value="retentionUnit" :options="retentionUnitOptions" class="w-16" />
               </n-input-group>
             </div>
           </div>

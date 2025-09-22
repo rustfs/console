@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { useI18n } from "vue-i18n"
-import { RouterLink } from "vue-router"
-import { useSidebarStore } from "~/store/sidebar"
-import type { AppConfig, NavItem } from "~/types/app-config"
-import type { SiteConfig } from "~/types/config"
+import { useI18n } from 'vue-i18n';
+import { RouterLink } from 'vue-router';
+import { useSidebarStore } from '~/store/sidebar';
+import type { AppConfig, NavItem } from '~/types/app-config';
+import type { SiteConfig } from '~/types/config';
 
 const { t } = useI18n();
 const appConfig = useAppConfig() as unknown as AppConfig;
@@ -24,8 +24,8 @@ try {
       endpoint: window.location.origin,
       region: 'us-east-1',
       accessKeyId: '',
-      secretAccessKey: ''
-    }
+      secretAccessKey: '',
+    },
   };
 }
 
@@ -48,24 +48,24 @@ const navOptions = computed(() => {
         nav.to
           ? nav.target
             ? h(
-              "a",
-              {
-                href: nav.to,
-                target: "_blank",
-              },
-              { default: () => t(nav.label) }
-            )
+                'a',
+                {
+                  href: nav.to,
+                  target: '_blank',
+                },
+                { default: () => t(nav.label) }
+              )
             : h(RouterLink, { to: nav.to }, { default: () => t(nav.label) })
           : t(nav.label),
       icon: nav.icon ? iconRender(nav.icon) : undefined,
       type: nav.type,
     };
 
-    if (nav["children"]) {
-      item.children = nav["children"].map((child) => {
+    if (nav['children']) {
+      item.children = nav['children'].map(child => {
         return {
           key: child.label,
-          type: "item",
+          type: 'item',
           label: () => h(RouterLink, { to: child.to || '/' }, { default: () => t(child.label) }),
           icon: child.icon ? iconRender(child.icon) : undefined,
         };
@@ -73,18 +73,28 @@ const navOptions = computed(() => {
     }
 
     return item;
-  }
-  );
+  });
 });
 
 // 直接使用计算属性，不需要 readonly 包装
 const menuOptions = navOptions;
 </script>
 <template>
-  <n-layout-sider bordered class="min-h-full" collapse-mode="width" :collapsed-width="64" :width="240" :native-scrollbar="false" :collapsed="isCollapsed"
-    v-if="route.path.startsWith('/auth') === false">
+  <n-layout-sider
+    bordered
+    class="min-h-full"
+    collapse-mode="width"
+    :collapsed-width="64"
+    :width="240"
+    :native-scrollbar="false"
+    :collapsed="isCollapsed"
+    v-if="route.path.startsWith('/auth') === false"
+  >
     <div class="flex flex-col h-screen overflow-hidden gap-2 relative">
-      <div class="border-b dark:border-neutral-800 flex flex-wrap h-16 items-center p-4" :class="isCollapsed ? 'justify-center' : 'justify-between'">
+      <div
+        class="border-b dark:border-neutral-800 flex flex-wrap h-16 items-center p-4"
+        :class="isCollapsed ? 'justify-center' : 'justify-between'"
+      >
         <div>
           <n-avatar v-if="isCollapsed" class="text-center text-2xl leading-none">
             {{ appConfig.name.substring(0, 1) }}
@@ -100,7 +110,14 @@ const menuOptions = navOptions;
       </div>
 
       <div class="overflow-y-auto flex-1">
-        <n-menu :indent="26" :root-indent="12" :collapsed-width="64" :collapsed-icon-size="22" :options="menuOptions" class="flex-1" />
+        <n-menu
+          :indent="26"
+          :root-indent="12"
+          :collapsed-width="64"
+          :collapsed-icon-size="22"
+          :options="menuOptions"
+          class="flex-1"
+        />
       </div>
 
       <div v-if="isCollapsed" class="w-full flex items-center justify-center py-4">
@@ -117,7 +134,7 @@ const menuOptions = navOptions;
                   <Icon :name="isCollapsed ? 'ri:translate-2' : 'ri:translate'" class="text-xl" />
                 </div>
               </template>
-              {{ t("Language") }}
+              {{ t('Language') }}
             </n-tooltip>
           </div>
           <language-switcher v-else />
@@ -132,7 +149,7 @@ const menuOptions = navOptions;
                   <Icon name="ri:contrast-2-line" class="text-xl" />
                 </div>
               </template>
-              {{ t("Theme") }}
+              {{ t('Theme') }}
             </n-tooltip>
           </div>
           <theme-switcher v-else />

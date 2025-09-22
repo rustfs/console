@@ -33,7 +33,7 @@ export const useTiers = () => {
    * @returns
    */
   const removeTiers = async (name: string) => {
-    return await $api.delete(`/tier/${encodeURIComponent(name)}`, {});
+    return await $api.delete(`/tier/${encodeURIComponent(name)}?force=true`, {});
   };
 
   return {

@@ -35,7 +35,22 @@
         </n-form-item> -->
 
         <n-form-item :label="t('Name') + '(A-Z,0-9,_)'">
-          <n-input v-model:value="formData.name" :allow-input="onlyAllowLetter" :placeholder="t('Please enter name')" />
+          <n-input
+            v-model:value="formData.name"
+            :allow-input="
+              value => {
+                // 只允许字母、数字、下划线
+                return /^[A-Za-z0-9_]*$/.test(value);
+              }
+            "
+            :placeholder="t('Please enter name')"
+            @input="
+              val => {
+                // 只将字母转为大写，数字和下划线不变
+                formData.name = val.replace(/[a-z]/g, c => c.toUpperCase());
+              }
+            "
+          />
         </n-form-item>
         <n-form-item :label="t('Endpoint')">
           <n-input v-model:value="formData.endpoint" :placeholder="t('Please enter endpoint')" />
@@ -117,14 +132,6 @@ const rules = {
   name: { required: true, message: t('Please enter rule name') },
   type: { required: true, message: t('Please select rule type') },
   versionType: { required: true, message: t('Please select version type') },
-};
-
-// 只能是数字大写字母以及_组成,且不能以数字开头
-const onlyAllowLetter = value => {
-  if (value === '') {
-    return true;
-  }
-  return /^[A-Z_][A-Z0-9_]*$/.test(value);
 };
 
 const visible = ref(false);

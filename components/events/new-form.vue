@@ -11,9 +11,14 @@
     }"
   >
     <n-card>
-      <n-form :model="formData" label-placement="left" label-width="120px">
+      <n-form :model="formData" label-placement="left" label-width="140px">
         <n-form-item :label="t('Amazon Resource Name')">
-          <n-input v-model="formData.resourceName" :placeholder="t('Please enter resource name')" />
+          <n-select
+            v-model:value="formData.resourceName"
+            filterable
+            :options="arnList"
+            :placeholder="t('Please select resource name')"
+          />
         </n-form-item>
 
         <n-form-item :label="t('Prefix')">
@@ -57,6 +62,13 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const formRef = ref(null);
+import { NButton, NForm, NFormItem, NInput } from 'naive-ui';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { getEventTargetArnList } = useEventTarget();
+const { t } = useI18n();
+const formRef = ref(null);
 const formData = ref({
   resourceName: '',
   prefix: '',
@@ -92,4 +104,12 @@ const handleCancel = () => {
   // 取消逻辑
   visible.value = false;
 };
+  visible.value = false;
+};
+
+// 获取arn列表
+const arnList = ref([]);
+getEventTargetArnList().then(res => {
+  arnList.value = res.notification_endpoints;
+});
 </script>

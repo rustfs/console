@@ -23,7 +23,7 @@
             <Icon name="ri:add-line" class="mr-2" />
             <span>{{ t('Add Event Subscription') }}</span>
           </n-button>
-          <n-button @click="">
+          <n-button @click="refresh">
             <Icon name="ri:refresh-line" class="mr-2" />
             <span>{{ t('Refresh') }}</span>
           </n-button>
@@ -46,6 +46,8 @@ import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
 const { listBuckets } = useBucket({});
+const { t } = useI18n();
+const { listBuckets, listBucketNotifications } = useBucket({});
 const formVisible = ref(false);
 const searchTerm = ref('');
 
@@ -139,6 +141,25 @@ const bucketList = computed(() => {
 const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
 
 const pageData = ref([]);
+const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
+const loading = ref<boolean>(false);
+const pageData = ref([]);
+watch(
+  () => bucketName.value,
+  async newVal => {
+    if (!newVal) return;
+
+    loading.value = true;
+    try {
+      refresh();
+    } catch (error) {
+      pageData.value = [];
+    } finally {
+      loading.value = false;
+    }
+  },
+  { immediate: true }
+);
 
 const handleRowDelete = (row: RowData, e: Event) => {
   e.stopPropagation();
@@ -148,5 +169,13 @@ const handleRowDelete = (row: RowData, e: Event) => {
 const newRef = ref();
 const handleNew = () => {
   newRef.value.open();
+};
+  newRef.value.open();
+};
+
+const refresh = async () => {
+  const response = await listBucketNotifications(bucketName.value);
+  console.log('🚀 ~ refresh ~ response:', response);
+  // pageData.value = response?.sort((a: any, b: any) => a.ID.localeCompare(b.ID)) || [];
 };
 </script>

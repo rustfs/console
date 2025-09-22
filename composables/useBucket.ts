@@ -26,6 +26,8 @@ import {
   GetBucketReplicationCommand,
   PutBucketReplicationCommand,
   DeleteBucketReplicationCommand,
+  PutBucketNotificationConfigurationCommand,
+  GetBucketNotificationConfigurationCommand,
 } from '@aws-sdk/client-s3';
 
 export function useBucket({ region }: { region?: string }) {
@@ -242,6 +244,22 @@ export function useBucket({ region }: { region?: string }) {
     return await $api.delete(`/remove-remote-target?bucket=${bucket}&arn=${arn}`);
   };
 
+  // 桶通知
+  const listBucketNotifications = async (bucket: string) => {
+    const params = {
+      Bucket: bucket,
+    };
+    return await $client.send(new GetBucketNotificationConfigurationCommand(params));
+  };
+
+  const putBucketNotifications = async (bucket: string, data: any) => {
+    const params = {
+      Bucket: bucket,
+      NotificationConfiguration: data,
+    };
+    return await $client.send(new PutBucketNotificationConfigurationCommand(params));
+  };
+
   /********************rustfs Replication target  end********************/
 
   return {
@@ -273,5 +291,7 @@ export function useBucket({ region }: { region?: string }) {
     setRemoteReplicationTarget,
     listRemoteReplicationTarget,
     deleteRemoteReplicationTarget,
+    listBucketNotifications,
+    putBucketNotifications,
   };
 }

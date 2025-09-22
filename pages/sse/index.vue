@@ -556,6 +556,235 @@
         </div>
       </n-card>
 
+      <!-- Bucket 加密配置管理 -->
+      <n-card :title="t('Bucket Encryption Management')" class="mt-6">
+        <template #header-extra>
+          <div class="flex items-center space-x-2">
+            <n-button size="small" type="primary" @click="refreshBucketList" :loading="bucketListLoading">
+              <Icon name="ri:refresh-line" class="mr-1" />
+              {{ t('Refresh') }}
+            </n-button>
+          </div>
+        </template>
+
+        <div class="space-y-4">
+          <!-- 搜索和排序 -->
+          <div class="flex items-center space-x-4">
+            <n-input
+              v-model:value="bucketSearchQuery"
+              :placeholder="t('Search buckets...')"
+              clearable
+              class="flex-1"
+            >
+              <template #prefix>
+                <Icon name="ri:search-line" />
+              </template>
+            </n-input>
+            <n-select
+              v-model:value="bucketSortBy"
+              :options="bucketSortOptions"
+              :placeholder="t('Sort by')"
+              class="w-40"
+            />
+          </div>
+
+          <!-- Bucket 列表 -->
+          <div v-if="filteredBuckets.length > 0" class="space-y-3">
+            <div
+              v-for="bucket in filteredBuckets"
+              :key="bucket.name"
+              class="border rounded-lg p-4 hover:shadow-md transition-shadow"
+            >
+              <div class="flex justify-between items-center">
+                <div class="flex-1">
+                  <div class="flex items-center space-x-3">
+                    <Icon name="ri:folder-3-line" class="text-lg text-blue-500" />
+                    <div>
+                      <h4 class="font-medium text-lg">{{ bucket.name }}</h4>
+                      <div class="text-sm text-gray-500">
+                        {{ t('Created') }}: {{ formatDateTime(bucket.creationDate) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                  <!-- 加密状态显示 -->
+                  <div class="text-center">
+                    <div class="text-sm text-gray-500 mb-1">{{ t('Encryption Status') }}</div>
+                    <n-tag
+                      :type="bucket.encryptionStatus === 'Enabled' ? 'success' : 'default'"
+                      size="small"
+                    >
+                      {{ bucket.encryptionStatus === 'Enabled' ?
+                        (bucket.encryptionType === 'SSE-KMS' ? 'SSE-KMS' : 'SSE-S3') :
+                        t('Not configured')
+                      }}
+                    </n-tag>
+                  </div>
+
+                  <!-- 操作按钮 -->
+                  <div class="flex space-x-2">
+                    <n-button
+                      size="small"
+                      type="primary"
+                      @click="configureBucketEncryption(bucket)"
+                      :title="t('Configure encryption for this bucket')"
+                    >
+                      <Icon name="ri:lock-line" class="mr-1" />
+                      {{ t('Configure') }}
+                    </n-button>
+                    <n-button
+                      v-if="bucket.encryptionStatus === 'Enabled'"
+                      size="small"
+                      type="error"
+                      secondary
+                      @click="removeBucketEncryption(bucket)"
+                      :title="t('Remove encryption configuration')"
+                    >
+                      <Icon name="ri:lock-unlock-line" class="mr-1" />
+                      {{ t('Remove') }}
+                    </n-button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 加密详细信息 -->
+              <div v-if="bucket.encryptionStatus === 'Enabled'" class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+                <div class="text-sm">
+                  <div><strong>{{ t('Algorithm') }}:</strong> {{ bucket.encryptionAlgorithm }}</div>
+                  <div v-if="bucket.encryptionType === 'SSE-KMS' && bucket.kmsKeyId">
+                    <strong>{{ t('KMS Key ID') }}:</strong> {{ bucket.kmsKeyId }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 空状态 -->
+          <div v-else-if="!bucketListLoading && buckets.length === 0" class="text-center py-8 text-gray-500">
+            <Icon name="ri:folder-2-line" class="text-4xl mx-auto mb-2" />
+            <div>{{ t('No buckets found') }}</div>
+            <div class="text-sm">{{ t('Create your first bucket to configure encryption') }}</div>
+          </div>
+
+          <!-- 搜索无结果 -->
+          <div v-else-if="!bucketListLoading && buckets.length > 0 && filteredBuckets.length === 0" class="text-center py-8 text-gray-500">
+            <Icon name="ri:search-line" class="text-4xl mx-auto mb-2" />
+            <div>{{ t('No buckets match your search') }}</div>
+            <div class="text-sm">{{ t('Try adjusting your search terms') }}</div>
+          </div>
+
+          <!-- 加载状态 -->
+          <div v-if="bucketListLoading" class="text-center py-8">
+            <n-spin size="medium" />
+            <div class="text-gray-500 mt-2">{{ t('Loading buckets...') }}</div>
+          </div>
+        </div>
+      </n-card>
+
+      <!-- 配置 Bucket 加密模态框 -->
+      <n-modal v-model:show="showBucketEncryptModal" :mask-closable="false">
+        <n-card
+          :title="selectedBucket ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name }) : t('Configure Bucket Encryption')"
+          class="max-w-screen-md"
+          :bordered="false"
+          size="medium"
+          role="dialog"
+          aria-modal="true"
+        >
+          <n-form
+            ref="bucketEncryptFormRef"
+            :model="bucketEncryptForm"
+            :rules="bucketEncryptFormRules"
+            label-placement="left"
+            :label-width="140"
+          >
+            <n-form-item :label="t('Encryption Type')" path="encryptionType" required>
+              <n-select
+                v-model:value="bucketEncryptForm.encryptionType"
+                :options="bucketEncryptionOptions"
+                :placeholder="t('Select encryption type')"
+              />
+              <template #feedback>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{ t('Choose the encryption method for this bucket') }}
+                </div>
+              </template>
+            </n-form-item>
+
+            <n-form-item
+              v-if="bucketEncryptForm.encryptionType === 'SSE-KMS'"
+              :label="t('KMS Key')"
+              path="kmsKeyId"
+              required
+            >
+              <n-select
+                v-model:value="bucketEncryptForm.kmsKeyId"
+                :options="kmsKeyOptions"
+                :placeholder="t('Select KMS key')"
+                :loading="kmsKeysLoading"
+              />
+              <template #feedback>
+                <div class="text-xs text-gray-500 mt-1">
+                  {{ t('Select the KMS key to use for encryption') }}
+                </div>
+              </template>
+            </n-form-item>
+          </n-form>
+
+          <template #footer>
+            <div class="flex justify-end space-x-2">
+              <n-button @click="showBucketEncryptModal = false">
+                {{ t('Cancel') }}
+              </n-button>
+              <n-button type="primary" @click="saveBucketEncryption" :loading="savingBucketEncryption">
+                {{ t('Configure Encryption') }}
+              </n-button>
+            </div>
+          </template>
+        </n-card>
+      </n-modal>
+
+      <!-- 移除加密确认模态框 -->
+      <n-modal v-model:show="showRemoveEncryptModal" :mask-closable="false">
+        <n-card
+          :title="t('Confirm Remove Encryption')"
+          class="max-w-screen-md"
+          :bordered="false"
+          size="medium"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div class="text-center py-4">
+            <Icon name="ri:alert-line" class="text-4xl text-orange-500 mx-auto mb-2" />
+            <div class="text-lg font-medium mb-2">
+              {{ t('Are you sure you want to remove encryption?') }}
+            </div>
+            <div v-if="selectedBucket" class="text-blue-600 font-medium mb-2">
+              {{ selectedBucket.name }}
+            </div>
+            <div class="text-gray-500">
+              {{ t('Future uploads to this bucket will not be encrypted by default.') }}
+            </div>
+            <div class="text-gray-500">
+              {{ t('Existing encrypted objects will remain encrypted.') }}
+            </div>
+          </div>
+
+          <template #footer>
+            <div class="flex justify-end space-x-2">
+              <n-button @click="showRemoveEncryptModal = false">
+                {{ t('Cancel') }}
+              </n-button>
+              <n-button type="warning" @click="confirmRemoveBucketEncryption" :loading="removingBucketEncryption">
+                {{ t('Remove Encryption') }}
+              </n-button>
+            </div>
+          </template>
+        </n-card>
+      </n-modal>
+
       <!-- 创建/编辑密钥模态框 -->
       <n-modal v-model:show="showCreateKeyModal" :mask-closable="false">
         <n-card
@@ -770,6 +999,13 @@ const {
   getKeyDetails,
 } = useSSE();
 
+const {
+  listBuckets,
+  getBucketEncryption,
+  putBucketEncryption,
+  deleteBucketEncryption,
+} = useBucket({});
+
 const { t } = useI18n();
 const message = useMessage();
 
@@ -797,6 +1033,18 @@ const keyToForceDelete = ref<any>(null);
 
 // 本地密钥名称映射存储
 const keyNameMapping = ref<Record<string, string>>({});
+
+// Bucket 加密管理状态
+const buckets = ref<any[]>([]);
+const bucketListLoading = ref(false);
+const bucketSearchQuery = ref('');
+const bucketSortBy = ref('name');
+const showBucketEncryptModal = ref(false);
+const showRemoveEncryptModal = ref(false);
+const savingBucketEncryption = ref(false);
+const removingBucketEncryption = ref(false);
+const selectedBucket = ref<any>(null);
+const kmsKeysLoading = ref(false);
 
 // 本地存储键名
 const KEY_NAME_MAPPING_STORAGE_KEY = 'kms_key_name_mapping';
@@ -889,6 +1137,24 @@ const keyForm = reactive({
   algorithm: 'AES-256',
 });
 
+// Bucket 加密配置表单
+const bucketEncryptForm = reactive({
+  encryptionType: '',
+  kmsKeyId: '',
+});
+
+// Bucket 排序选项
+const bucketSortOptions = computed(() => [
+  { label: t('Name'), value: 'name' },
+  { label: t('Creation Date'), value: 'creationDate' },
+]);
+
+// Bucket 加密类型选项
+const bucketEncryptionOptions = computed(() => [
+  { label: 'SSE-S3', value: 'SSE-S3' },
+  { label: 'SSE-KMS', value: 'SSE-KMS' },
+]);
+
 // 算法选项
 const algorithmOptions = [
   { label: 'AES-256', value: 'AES-256' },
@@ -902,6 +1168,9 @@ const sseKmsFormRef = ref();
 
 // 密钥表单引用
 const keyFormRef = ref();
+
+// Bucket 加密表单引用
+const bucketEncryptFormRef = ref();
 
 // KMS表单验证规则
 const sseKmsRules = {
@@ -931,6 +1200,25 @@ const keyFormRules = {
   },
 };
 
+// Bucket 加密表单验证规则
+const bucketEncryptFormRules = {
+  encryptionType: {
+    required: true,
+    message: t('Please select encryption type'),
+    trigger: 'change',
+  },
+  kmsKeyId: {
+    required: true,
+    validator: (rule: any, value: string) => {
+      if (bucketEncryptForm.encryptionType === 'SSE-KMS' && !value) {
+        return new Error(t('Please select a KMS key for SSE-KMS encryption'));
+      }
+      return true;
+    },
+    trigger: 'change',
+  },
+};
+
 // 计算属性
 const hasConfiguration = computed(() => {
   // 判断是否有KMS配置的标准：
@@ -949,6 +1237,39 @@ const hasConfiguration = computed(() => {
 const canAddKeys = computed(() => {
   // 只有在配置完成且状态为Running且健康时才允许添加密钥
   return hasConfiguration.value && sseKmsForm.kms_status === 'Running' && sseKmsForm.kms_healthy;
+});
+
+// 计算属性：过滤和排序后的bucket列表
+const filteredBuckets = computed(() => {
+  let filtered = [...buckets.value];
+
+  // 搜索过滤
+  if (bucketSearchQuery.value) {
+    const query = bucketSearchQuery.value.toLowerCase();
+    filtered = filtered.filter(bucket =>
+      bucket.name.toLowerCase().includes(query)
+    );
+  }
+
+  // 排序
+  filtered.sort((a, b) => {
+    if (bucketSortBy.value === 'name') {
+      return a.name.localeCompare(b.name);
+    } else if (bucketSortBy.value === 'creationDate') {
+      return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
+    }
+    return 0;
+  });
+
+  return filtered;
+});
+
+// 计算属性：KMS密钥选项（用于bucket加密配置）
+const kmsKeyOptions = computed(() => {
+  return getMasterKeys().map((key: any) => ({
+    label: getKeyName(key),
+    value: key.key_id,
+  }));
 });
 
 // 辅助函数：获取主密钥列表
@@ -1718,6 +2039,181 @@ const stopKMSService = async () => {
   }
 };
 
+// =========================
+// Bucket 加密管理相关方法
+// =========================
+
+// 加载bucket列表
+const loadBucketList = async () => {
+  bucketListLoading.value = true;
+  try {
+    const response = await listBuckets();
+    if (response && response.Buckets) {
+      // 并行获取每个bucket的加密配置
+      const bucketList = await Promise.all(
+        response.Buckets.map(async (bucket: any) => {
+          try {
+            const encryptionConfig = await getBucketEncryption(bucket.Name);
+
+            let encryptionStatus = 'Disabled';
+            let encryptionType = '';
+            let encryptionAlgorithm = '';
+            let kmsKeyId = '';
+
+            if (encryptionConfig &&
+                encryptionConfig.ServerSideEncryptionConfiguration &&
+                encryptionConfig.ServerSideEncryptionConfiguration.Rules &&
+                encryptionConfig.ServerSideEncryptionConfiguration.Rules.length > 0) {
+              const rule = encryptionConfig.ServerSideEncryptionConfiguration.Rules[0];
+              if (rule.ApplyServerSideEncryptionByDefault) {
+                encryptionStatus = 'Enabled';
+                const algorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm;
+
+                if (algorithm === 'aws:kms') {
+                  encryptionType = 'SSE-KMS';
+                  encryptionAlgorithm = 'AES-256 (KMS)';
+                  kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID || '';
+                } else if (algorithm === 'AES256') {
+                  encryptionType = 'SSE-S3';
+                  encryptionAlgorithm = 'AES-256 (S3)';
+                }
+              }
+            }
+
+            return {
+              name: bucket.Name,
+              creationDate: bucket.CreationDate,
+              encryptionStatus,
+              encryptionType,
+              encryptionAlgorithm,
+              kmsKeyId,
+            };
+          } catch (error) {
+            // 如果获取加密配置失败（如404），则认为未配置加密
+            return {
+              name: bucket.Name,
+              creationDate: bucket.CreationDate,
+              encryptionStatus: 'Disabled',
+              encryptionType: '',
+              encryptionAlgorithm: '',
+              kmsKeyId: '',
+            };
+          }
+        })
+      );
+
+      buckets.value = bucketList;
+    }
+  } catch (error) {
+    console.error('Failed to load bucket list:', error);
+    message.error(t('Failed to load bucket list'));
+  } finally {
+    bucketListLoading.value = false;
+  }
+};
+
+// 刷新bucket列表
+const refreshBucketList = async () => {
+  await loadBucketList();
+  message.success(t('Bucket list refreshed'));
+};
+
+// 配置bucket加密
+const configureBucketEncryption = (bucket: any) => {
+  selectedBucket.value = bucket;
+
+  // 初始化表单数据
+  if (bucket.encryptionStatus === 'Enabled') {
+    bucketEncryptForm.encryptionType = bucket.encryptionType;
+    bucketEncryptForm.kmsKeyId = bucket.kmsKeyId || '';
+  } else {
+    bucketEncryptForm.encryptionType = '';
+    bucketEncryptForm.kmsKeyId = '';
+  }
+
+  showBucketEncryptModal.value = true;
+};
+
+// 移除bucket加密
+const removeBucketEncryption = (bucket: any) => {
+  selectedBucket.value = bucket;
+  showRemoveEncryptModal.value = true;
+};
+
+// 保存bucket加密配置
+const saveBucketEncryption = async () => {
+  try {
+    await bucketEncryptFormRef.value?.validate();
+
+    if (!selectedBucket.value) {
+      message.error(t('No bucket selected'));
+      return;
+    }
+
+    savingBucketEncryption.value = true;
+
+    const encryptionConfig: any = {
+      Rules: [
+        {
+          ApplyServerSideEncryptionByDefault: {},
+        },
+      ],
+    };
+
+    if (bucketEncryptForm.encryptionType === 'SSE-KMS') {
+      encryptionConfig.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm = 'aws:kms';
+      encryptionConfig.Rules[0].ApplyServerSideEncryptionByDefault.KMSMasterKeyID = bucketEncryptForm.kmsKeyId;
+    } else if (bucketEncryptForm.encryptionType === 'SSE-S3') {
+      encryptionConfig.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm = 'AES256';
+    }
+
+    await putBucketEncryption(selectedBucket.value.name, encryptionConfig);
+
+    message.success(t('Bucket encryption configured successfully'));
+    showBucketEncryptModal.value = false;
+
+    // 刷新bucket列表
+    await loadBucketList();
+  } catch (error: any) {
+    console.error('Failed to configure bucket encryption:', error);
+    message.error(t('Failed to configure bucket encryption') + ': ' + error.message);
+  } finally {
+    savingBucketEncryption.value = false;
+  }
+};
+
+// 确认移除bucket加密
+const confirmRemoveBucketEncryption = async () => {
+  if (!selectedBucket.value) {
+    message.error(t('No bucket selected'));
+    return;
+  }
+
+  removingBucketEncryption.value = true;
+  try {
+    await deleteBucketEncryption(selectedBucket.value.name);
+    message.success(t('Bucket encryption removed successfully'));
+    showRemoveEncryptModal.value = false;
+
+    // 刷新bucket列表
+    await loadBucketList();
+  } catch (error: any) {
+    console.error('Failed to remove bucket encryption:', error);
+    message.error(t('Failed to remove bucket encryption') + ': ' + error.message);
+  } finally {
+    removingBucketEncryption.value = false;
+  }
+};
+
+// 格式化日期时间
+const formatDateTime = (dateString: string) => {
+  try {
+    return new Date(dateString).toLocaleString();
+  } catch (error) {
+    return dateString;
+  }
+};
+
 // 页面加载时获取当前配置和密钥列表
 onMounted(async () => {
   await loadKMSStatus();
@@ -1726,6 +2222,9 @@ onMounted(async () => {
   if (sseKmsForm.kms_status === 'Running' && sseKmsForm.kms_healthy) {
     await loadKeyList();
   }
+
+  // 加载bucket列表
+  await loadBucketList();
 });
 </script>
 

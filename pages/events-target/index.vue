@@ -42,24 +42,33 @@
 import { Icon } from '#components';
 import { NButton, NSpace, type DataTableColumns, NPopconfirm } from 'naive-ui';
 import { useI18n } from 'vue-i18n';
-const message = useMessage();
+const { getEventsTargetList, deleteEventTarget } = useEventTarget();
 
 const { t } = useI18n();
+const message = useMessage();
 const searchTerm = ref('');
 
 interface RowData {
-  type: string;
+  account_id: string;
+  service: string;
+  status: string;
 }
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: t('Status'),
-    key: 'bucket',
-    width: 180,
+    title: t('Event Destinations'),
+    key: 'account_id',
+    width: 220,
   },
   {
-    title: t('Service'),
-    key: 'endpoint',
+    title: t('Type'),
+    key: 'service',
+  },
+
+  {
+    title: t('Status'),
+    key: 'status',
+    width: 160,
   },
 
   {
@@ -99,11 +108,10 @@ const columns: DataTableColumns<RowData> = [
 ];
 
 const { data, refresh } = await useAsyncData(
-  'tier',
+  'events',
   async () => {
-    // const response = await usetier.listTiers();
-    // return response;
-    return [];
+    const response = await getEventsTargetList();
+    return response.notification_endpoints;
   },
   { default: () => [] }
 );
@@ -115,23 +123,22 @@ const filteredData = computed(() => {
 
   const term = searchTerm.value.toLowerCase();
   return data.value.filter(
-    (tier: any) =>
-      tier.name.toLowerCase().includes(term) ||
-      tier.endpoint.toLowerCase().includes(term) ||
-      tier.bucket.toLowerCase().includes(term)
+    (item: RowData) =>
+      item.account_id?.toLowerCase().includes(term) ||
+      item.service?.toLowerCase().includes(term) ||
+      item.status?.toLowerCase().includes(term)
   );
 });
 
 const deleteItem = async (row: RowData) => {
-  // usetier
-  //   .removeTiers(config.name)
-  //   .then(() => {
-  //     message.success(t("Delete Success"));
-  //     refresh();
-  //   })
-  //   .catch((error) => {
-  //     message.error(t("Delete Failed"));
-  //   });
+  deleteEventTarget(row.service, row.account_id)
+    .then(() => {
+      message.success(t('Delete Success'));
+      refresh();
+    })
+    .catch(error => {
+      message.error(t('Delete Failed'));
+    });
 };
 
 const newFormRef = ref();

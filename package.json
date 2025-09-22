@@ -18,6 +18,7 @@
     "@aws-sdk/s3-request-presigner": "^3.844.0",
     "@iconify-json/ri": "^1.2.5",
     "@iconify/json": "^2.2.385",
+    "@iconify/vue": "^5.0.0",
     "@nuxt/icon": "^1.15.0",
     "@nuxt/image": "^1.10.0",
     "@nuxtjs/i18n": "^9.5.6",

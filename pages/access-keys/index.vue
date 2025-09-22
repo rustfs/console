@@ -47,7 +47,8 @@
         :pagination="false"
         :bordered="true"
         :row-key="rowKey"
-        @update:checked-row-keys="handleCheck" />
+        @update:checked-row-keys="handleCheck"
+      />
     </page-content>
     <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" @notice="noticeDialog" />
     <EditItem ref="editItemRef" @search="getDataList" />
@@ -64,19 +65,19 @@ import {
   NButton,
   NPopconfirm,
   NSpace,
-} from "naive-ui";
-import { Icon } from "#components";
-import { ChangePassword, EditItem, NewItem } from "~/components/access-keys";
-import { useI18n } from 'vue-i18n'
+} from 'naive-ui';
+import { Icon } from '#components';
+import { ChangePassword, EditItem, NewItem } from '~/components/access-keys';
+import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n()
+const { t } = useI18n();
 const { $api } = useNuxtApp();
 const dialog = useDialog();
 const message = useMessage();
 const { listUserServiceAccounts, deleteServiceAccount } = useAccessKeys();
 
 const searchForm = reactive({
-  name: "",
+  name: '',
 });
 interface RowData {
   accessKey: string;
@@ -89,62 +90,62 @@ interface RowData {
 
 const columns: DataTableColumns<RowData> = [
   {
-    type: "selection",
+    type: 'selection',
   },
   {
     title: t('Access Key'),
-    align: "center",
-    key: "accessKey",
+    align: 'center',
+    key: 'accessKey',
     filter(value, row) {
       return !!row.accessKey.includes(value.toString());
     },
   },
   {
     title: t('Expiration'),
-    align: "center",
-    key: "expiration",
+    align: 'center',
+    key: 'expiration',
   },
   {
     title: t('Status'),
-    align: "center",
-    key: "accountStatus",
+    align: 'center',
+    key: 'accountStatus',
     render: (row: any) => {
-      return row.accountStatus === "on" ? t('Available') : t('Disabled');
+      return row.accountStatus === 'on' ? t('Available') : t('Disabled');
     },
   },
   {
     title: t('Name'),
-    align: "center",
-    key: "name",
+    align: 'center',
+    key: 'name',
   },
   {
     title: t('Description'),
-    align: "center",
-    key: "description",
+    align: 'center',
+    key: 'description',
   },
   {
     title: t('Actions'),
-    key: "actions",
-    align: "center",
+    key: 'actions',
+    align: 'center',
     width: 180,
     render: (row: any) => {
       return h(
         NSpace,
         {
-          justify: "center",
+          justify: 'center',
         },
         {
           default: () => [
             h(
               NButton,
               {
-                size: "small",
+                size: 'small',
                 secondary: true,
                 onClick: () => openEditItem(row),
               },
               {
-                default: () => "",
-                icon: () => h(Icon, { name: "ri:edit-2-line" }),
+                default: () => '',
+                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
             h(
@@ -155,10 +156,10 @@ const columns: DataTableColumns<RowData> = [
                 trigger: () =>
                   h(
                     NButton,
-                    { size: "small", secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => "",
-                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
               }
@@ -228,12 +229,14 @@ function changePassword() {
 
 /** ***********************************删除 */
 async function deleteItem(row: any) {
-  deleteServiceAccount(row.accessKey).then(res=>{
-    message.success(t('Delete Success'));
-    getDataList();
-  }).catch(error=>{
-    message.error(t('Delete Failed'));
-  })
+  deleteServiceAccount(row.accessKey)
+    .then(res => {
+      message.success(t('Delete Success'));
+      getDataList();
+    })
+    .catch(error => {
+      message.error(t('Delete Failed'));
+    });
 }
 
 /** ************************************批量删除 */
@@ -259,7 +262,7 @@ function deleteByList() {
         return;
       }
       try {
-         Promise.all(checkedKeys.value.map((item) => deleteServiceAccount(item as string))).then(() => {
+        Promise.all(checkedKeys.value.map(item => deleteServiceAccount(item as string))).then(() => {
           message.success(t('Delete Success'));
           checkedKeys.value = [];
           nextTick(() => {

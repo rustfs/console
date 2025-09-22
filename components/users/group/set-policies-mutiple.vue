@@ -41,13 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  type DataTableColumns,
-  type DataTableInst,
-  type DataTableRowKey,
-  NButton,
-  NSpace,
-} from 'naive-ui';
+import { type DataTableColumns, type DataTableInst, type DataTableRowKey, NButton, NSpace } from 'naive-ui';
 const { listPolicies, setUserOrGroupPolicy } = usePolicies();
 const { t } = useI18n();
 

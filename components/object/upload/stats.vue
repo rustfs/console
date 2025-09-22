@@ -7,13 +7,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useUploadTaskManagerStore } from '~/store/upload-tasks'
+import { computed } from 'vue';
+import { useUploadTaskManagerStore } from '~/store/upload-tasks';
 
-const store = useUploadTaskManagerStore()
-const tasks = computed(() => store.tasks)
+const store = useUploadTaskManagerStore();
+const tasks = computed(() => store.tasks);
 
 const clearTasks = () => {
-  store.clearTasks()
-}
+  store.clearTasks();
+};
 </script>

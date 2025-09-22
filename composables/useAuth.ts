@@ -24,8 +24,7 @@ export function useAuth() {
     return store.value;
   };
 
-  const isExpired = (expiration: string) =>
-    expiration ? new Date(expiration) < new Date() : false;
+  const isExpired = (expiration: string) => (expiration ? new Date(expiration) < new Date() : false);
 
   const isValidCredentials = (credentials: Credentials) => {
     return (
@@ -41,11 +40,7 @@ export function useAuth() {
     credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
     customConfig?: SiteConfig
   ) => {
-    const credentialsResponse = await getStsToken(
-      credentials,
-      'arn:aws:iam::*:role/Admin',
-      customConfig
-    );
+    const credentialsResponse = await getStsToken(credentials, 'arn:aws:iam::*:role/Admin', customConfig);
 
     setCredentials({
       ...credentialsResponse,

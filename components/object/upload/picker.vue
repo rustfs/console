@@ -10,14 +10,7 @@
       <div class="flex flex-col gap-4">
         <div class="flex items-center gap-4">
           <input type="file" ref="fileInput" multiple hidden @change="handleFileSelect" />
-          <input
-            type="file"
-            ref="folderInput"
-            webkitdirectory
-            directory
-            hidden
-            @change="handleFolderSelect"
-          />
+          <input type="file" ref="folderInput" webkitdirectory directory hidden @change="handleFolderSelect" />
           <n-button type="primary" @click="selectFile">{{ t('Select File') }}</n-button>
           <div>{{ t('Or') }}</div>
           <n-button @click="selectFolder">{{ t('Select Folder') }}</n-button>
@@ -75,13 +68,9 @@
 
         <div class="flex justify-center gap-4">
           <n-button type="default" :disabled="!hasFiles || isAdding">{{ t('Configure') }}</n-button>
-          <n-button
-            type="primary"
-            :disabled="!hasFiles || isAdding"
-            :loading="isAdding"
-            @click="handleUpload"
-            >{{ t('Start Upload') }}</n-button
-          >
+          <n-button type="primary" :disabled="!hasFiles || isAdding" :loading="isAdding" @click="handleUpload">{{
+            t('Start Upload')
+          }}</n-button>
         </div>
       </div>
     </n-card>

@@ -8,7 +8,8 @@
     :segmented="{
       content: true,
       action: true,
-    }">
+    }"
+  >
     <n-card v-show="!formData.type">
       <n-grid x-gap="12" y-gap="12" :cols="2">
         <n-gi v-for="item in typeOptions">
@@ -58,8 +59,8 @@
           <n-input v-model:value="formData.storageclass" :placeholder="t('Please Enter storage class')" />
         </n-form-item>
         <n-space justify="center">
-          <n-button @click="handleCancel">{{ t("Cancel") }}</n-button>
-          <n-button type="primary" @click="handleSave">{{ t("Save") }}</n-button>
+          <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
+          <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
         </n-space>
       </n-form>
     </n-card>
@@ -67,13 +68,13 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-import MqttIcon from "~/assets/svg/mqtt.svg";
-import WebhooksIcon from "~/assets/svg/webhooks.svg";
-import KafkaIcon from "~/assets/svg/kafka.svg";
-import { NForm, NFormItem, NInput, NSelect, NButton } from "naive-ui";
-import { useTiers } from "#imports";
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import MqttIcon from '~/assets/svg/mqtt.svg';
+import WebhooksIcon from '~/assets/svg/webhooks.svg';
+import KafkaIcon from '~/assets/svg/kafka.svg';
+import { NForm, NFormItem, NInput, NSelect, NButton } from 'naive-ui';
+import { useTiers } from '#imports';
 
 const { t } = useI18n();
 const usetier = useTiers();
@@ -81,28 +82,28 @@ const message = useMessage();
 
 // 支持的存储类型
 const typeOptions = [
-  { label: t("MQTT"), value: "mqtt", iconUrl: MqttIcon },
-  { label: t("Webhook"), value: "webhook", iconUrl: WebhooksIcon },
-  { label: t("Kafka"), value: "kafka", iconUrl: KafkaIcon },
+  { label: t('MQTT'), value: 'mqtt', iconUrl: MqttIcon },
+  { label: t('Webhook'), value: 'webhook', iconUrl: WebhooksIcon },
+  { label: t('Kafka'), value: 'kafka', iconUrl: KafkaIcon },
 ];
 
 const formRef = ref(null);
 const formData = ref({
-  type: "",
-  name: "",
-  endpoint: "",
-  accesskey: "",
-  secretkey: "",
-  bucket: "",
-  prefix: "",
-  region: "",
-  storageclass: "STANDARD", // 新增字段，默认值为 STANDARD
+  type: '',
+  name: '',
+  endpoint: '',
+  accesskey: '',
+  secretkey: '',
+  bucket: '',
+  prefix: '',
+  region: '',
+  storageclass: 'STANDARD', // 新增字段，默认值为 STANDARD
 });
 
 const rules = {
-  ruleName: { required: true, message: t("Please enter rule name") },
-  type: { required: true, message: t("Please select rule type") },
-  versionType: { required: true, message: t("Please select version type") },
+  ruleName: { required: true, message: t('Please enter rule name') },
+  type: { required: true, message: t('Please select rule type') },
+  versionType: { required: true, message: t('Please select version type') },
 };
 
 const visible = ref(false);
@@ -115,9 +116,9 @@ defineExpose({
   open,
 });
 
-const emmit = defineEmits(["search"]);
+const emmit = defineEmits(['search']);
 const handleSave = () => {
-  formRef.value?.validate((errors) => {
+  formRef.value?.validate(errors => {
     if (!errors) {
       // {"type":"minio","minio":{"name":"COLDTIER","endpoint":"","bucket":"","prefix":"","region":"","accesskey":"","secretkey":""}}
       // 调用保存接口
@@ -146,6 +147,6 @@ const handleSave = () => {
 const handleCancel = () => {
   visible.value = false;
   // 取消逻辑
-  formData.value.type = "";
+  formData.value.type = '';
 };
 </script>

@@ -40,19 +40,13 @@
           <n-descriptions-item :label="t('Object Name')">
             <span class="select-all">{{ key }}</span>
           </n-descriptions-item>
-          <n-descriptions-item :label="t('Object Size')">{{
-            object?.ContentLength
-          }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Object Type')">{{
-            object?.ContentType
-          }}</n-descriptions-item>
+          <n-descriptions-item :label="t('Object Size')">{{ object?.ContentLength }}</n-descriptions-item>
+          <n-descriptions-item :label="t('Object Type')">{{ object?.ContentType }}</n-descriptions-item>
           <!-- <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
           <n-descriptions-item label="ETag">
             <span class="select-all">{{ object?.ETag }}</span>
           </n-descriptions-item>
-          <n-descriptions-item :label="t('Last Modified Time')">{{
-            object?.LastModified
-          }}</n-descriptions-item>
+          <n-descriptions-item :label="t('Last Modified Time')">{{ object?.LastModified }}</n-descriptions-item>
 
           <!-- 合法保留 -->
           <n-descriptions-item :label="t('Legal Hold')">
@@ -82,9 +76,7 @@
           <!-- 保留 -->
           <n-descriptions-item :label="t('Retention') + t('Policy')">
             <n-space>
-              <span>{{
-                t('Retention Mode') + ': ' + (retentionMode ? retentionMode : t('None'))
-              }}</span>
+              <span>{{ t('Retention Mode') + ': ' + (retentionMode ? retentionMode : t('None')) }}</span>
             </n-space>
             <n-space v-if="retainUntilDate">
               <span>{{ t('Retention RetainUntilDate') + ': ' + retainUntilDate }}</span>
@@ -96,9 +88,7 @@
           <n-descriptions-item :label="t('Temporary URL')">
             <div class="flex items-center gap-2 mt-1">
               <n-input v-model:value="signedUrl" id="signedUrl" :placeholder="t('Temporary URL')" />
-              <n-button id="signedUrlBtn" data-clipboard-target="#signedUrl">{{
-                t('Copy')
-              }}</n-button>
+              <n-button id="signedUrlBtn" data-clipboard-target="#signedUrl">{{ t('Copy') }}</n-button>
             </div>
           </n-descriptions-item>
         </n-descriptions>
@@ -111,13 +101,7 @@
         />
 
         <!-- tagview -->
-        <n-modal
-          v-model:show="showTagView"
-          preset="card"
-          :title="t('Set Tags')"
-          draggable
-          class="max-w-screen-md"
-        >
+        <n-modal v-model:show="showTagView" preset="card" :title="t('Set Tags')" draggable class="max-w-screen-md">
           <n-card class="max-w-screen-md">
             <n-space class="my-4">
               <n-tag
@@ -135,10 +119,7 @@
                 <n-input v-model:value="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
               </n-form-item>
               <n-form-item :label="t('Tag Value')" path="Value">
-                <n-input
-                  v-model:value="tagFormValue.Value"
-                  :placeholder="t('Tag Value Placeholder')"
-                />
+                <n-input v-model:value="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
               </n-form-item>
               <n-form-item>
                 <n-button type="primary" @click="submitTagForm">{{ t('Add') }}</n-button>
@@ -169,11 +150,7 @@
                 </n-radio-group>
               </n-form-item>
 
-              <n-form-item
-                :label="t('Retention RetainUntilDate')"
-                path="retainUntilDate"
-                class="flex-auto"
-              >
+              <n-form-item :label="t('Retention RetainUntilDate')" path="retainUntilDate" class="flex-auto">
                 <n-date-picker
                   v-model:formatted-value="retainUntilDate"
                   value-format="yyyy-MM-dd HH:mm:ss"

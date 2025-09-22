@@ -78,15 +78,11 @@
       <n-flex vertical :size="20" class="basis-1/3">
         <n-card :title="t('Usage Report')" :bordered="false" class="report-card">
           <n-flex :size="20" justify="space-between" align="center">
-            <span class="text-3xl font-bold">{{
-              niceBytes(datausageinfo.total_used_capacity)
-            }}</span>
+            <span class="text-3xl font-bold">{{ niceBytes(datausageinfo.total_used_capacity) }}</span>
             <n-progress
               style="margin: 0 8px 12px 0; width: 90px"
               type="circle"
-              :percentage="
-                Math.round((datausageinfo.total_used_capacity / datausageinfo.total_capacity) * 100)
-              "
+              :percentage="Math.round((datausageinfo.total_used_capacity / datausageinfo.total_capacity) * 100)"
               :color="themeVars.infoColor"
               :rail-color="changeColor(themeVars.infoColor, { alpha: 0.2 })"
               :indicator-text-color="themeVars.infoColor"
@@ -163,11 +159,7 @@
       </n-list-item>
     </n-list>
     <n-space vertical :size="20">
-      <n-card
-        :title="`${t('Server List')}(${serverInfo.count})`"
-        :bordered="false"
-        class="server-list-card"
-      >
+      <n-card :title="`${t('Server List')}(${serverInfo.count})`" :bordered="false" class="server-list-card">
         <n-collapse :accordion="true" :default-expanded-names="1" class="server-list">
           <n-collapse-item
             v-for="(server, index) in systemInfo?.servers"

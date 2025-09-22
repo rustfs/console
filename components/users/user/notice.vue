@@ -15,20 +15,10 @@
         <n-form label-placement="left" label-align="right" :label-width="130">
           <n-grid :cols="24" :x-gap="18">
             <n-form-item-grid-item :span="24" label="Access Key">
-              <copy-input
-                class="w-full"
-                v-model="accessKey"
-                :readonly="true"
-                :copy-icon="true"
-              ></copy-input>
+              <copy-input class="w-full" v-model="accessKey" :readonly="true" :copy-icon="true"></copy-input>
             </n-form-item-grid-item>
             <n-form-item-grid-item :span="24" label="secretkey">
-              <copy-input
-                class="w-full"
-                v-model="secretkey"
-                :readonly="true"
-                :copy-icon="true"
-              ></copy-input>
+              <copy-input class="w-full" v-model="secretkey" :readonly="true" :copy-icon="true"></copy-input>
             </n-form-item-grid-item>
           </n-grid>
         </n-form>

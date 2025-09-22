@@ -3,15 +3,15 @@ export type S3Config = {
   endpoint: string;
   accessKeyId: string;
   secretAccessKey: string;
-}
+};
 
 export type ApiConfig = {
   baseURL: string;
-}
+};
 
 export type SessionConfig = {
   durationSeconds: number;
-}
+};
 
 export interface SiteConfig {
   serverHost: string;

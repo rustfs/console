@@ -50,29 +50,19 @@
       <n-descriptions-item :label="t('Object Name')"
         ><span class="select-all">{{ key }}</span></n-descriptions-item
       >
-      <n-descriptions-item :label="t('Object Size')">{{
-        object?.ContentLength
-      }}</n-descriptions-item>
+      <n-descriptions-item :label="t('Object Size')">{{ object?.ContentLength }}</n-descriptions-item>
       <n-descriptions-item :label="t('Object Type')">{{ object?.ContentType }}</n-descriptions-item>
       <!-- <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
       <n-descriptions-item label="ETag"
         ><span class="select-all">{{ object?.ETag }}</span></n-descriptions-item
       >
-      <n-descriptions-item :label="t('Last Modified Time')">{{
-        object?.LastModified
-      }}</n-descriptions-item>
+      <n-descriptions-item :label="t('Last Modified Time')">{{ object?.LastModified }}</n-descriptions-item>
     </n-descriptions>
 
     <object-preview-modal v-model:show="showPreview" :bucketName="bucketName" :objectKey="key" />
 
     <!-- tagview -->
-    <n-modal
-      v-model:show="showTagView"
-      preset="card"
-      :title="t('Set Tags')"
-      draggable
-      class="max-w-screen-md"
-    >
+    <n-modal v-model:show="showTagView" preset="card" :title="t('Set Tags')" draggable class="max-w-screen-md">
       <n-card class="max-w-screen-md">
         <n-space class="my-4">
           <n-tag
@@ -179,11 +169,7 @@ const submitTagForm = async () => {
 const objectApi = useObject({ bucket: bucketName.value });
 
 // 在服务端获取数据
-const {
-  data: object,
-  status,
-  refresh,
-} = useAsyncData(`head-object&${key}`, () => objectApi.headObject(key.value));
+const { data: object, status, refresh } = useAsyncData(`head-object&${key}`, () => objectApi.headObject(key.value));
 
 const download = async () => {
   const msg = message.loading(t('Getting URL'));

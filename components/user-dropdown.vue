@@ -13,30 +13,33 @@
 </template>
 
 <script lang="ts" setup>
-import { Icon } from '#components'
-import { defineProps, withDefaults } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { Icon } from '#components';
+import { defineProps, withDefaults } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n()
-const { logout } = useAuth()
-const router = useRouter()
+const { t } = useI18n();
+const { logout } = useAuth();
+const router = useRouter();
 
 const handleLogout = async () => {
-  await logout()
-  router.push('/auth/login')
-}
+  await logout();
+  router.push('/auth/login');
+};
 
 const handleDropdownClick = (key: string) => {
   if (key === 'logout') {
-    handleLogout()
+    handleLogout();
   }
-}
+};
 
-const props = withDefaults(defineProps<{
-  isCollapsed?: boolean
-}>(), {
-  isCollapsed: false
-})
+const props = withDefaults(
+  defineProps<{
+    isCollapsed?: boolean;
+  }>(),
+  {
+    isCollapsed: false,
+  }
+);
 
 const options = [
   // {
@@ -49,5 +52,5 @@ const options = [
     key: 'logout',
     icon: () => icon('ri:logout-box-r-line'),
   },
-]
+];
 </script>

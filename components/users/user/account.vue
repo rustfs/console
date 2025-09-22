@@ -1,13 +1,7 @@
 <template>
   <div>
     <n-card>
-      <n-form
-        ref="formRef"
-        :model="searchForm"
-        label-placement="left"
-        :show-feedback="false"
-        v-if="!editStatus"
-      >
+      <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false" v-if="!editStatus">
         <n-flex justify="space-between">
           <n-form-item class="!w-64" label="" path="name">
             <n-input :placeholder="t('Search Account')" @input="filterName" />
@@ -45,11 +39,7 @@
             <n-input v-model:value="formModel.accessKey" />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" :label="t('Secret Key')" path="secretKey">
-            <n-input
-              v-model:value="formModel.secretKey"
-              show-password-on="mousedown"
-              type="password"
-            />
+            <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" :label="t('Expiration')" path="expiry">
             <n-date-picker
@@ -73,12 +63,7 @@
           <n-form-item-gi :span="24" :label="t('Use main account policy')" path="impliedPolicy">
             <n-switch v-model:value="formModel.impliedPolicy" />
           </n-form-item-gi>
-          <n-form-item-gi
-            v-if="!formModel.impliedPolicy"
-            :span="24"
-            :label="t('Current User Policy')"
-            path="policy"
-          >
+          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" :label="t('Current User Policy')" path="policy">
             <json-editor v-model="formModel.policy" />
           </n-form-item-gi>
           <!-- <n-form-item-grid-item :span="24" label="状态" v-if="editType == 'edit'" path="accountStatus">
@@ -374,12 +359,8 @@ async function submitForm() {
           const res = await createServiceAccount({
             ...formModel.value,
             targetUser: props.user.accessKey,
-            policy: !formModel.value.impliedPolicy
-              ? JSON.stringify(JSON.parse(formModel.value.policy))
-              : null,
-            expiration: formModel.value.expiry
-              ? new Date(formModel.value.expiry).toISOString()
-              : null,
+            policy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
+            expiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
           });
 
           message.success(t('Add Success'));

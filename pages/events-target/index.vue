@@ -2,7 +2,7 @@
   <div>
     <page-header>
       <template #title>
-        <h1 class="text-2xl font-bold">{{ t("Event Destinations") }}</h1>
+        <h1 class="text-2xl font-bold">{{ t('Event Destinations') }}</h1>
       </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
@@ -18,11 +18,11 @@
         <div class="flex items-center gap-4">
           <n-button @click="() => addForm()">
             <Icon name="ri:add-line" class="mr-2" />
-            <span>{{ t("Add Event Destination") }}</span>
+            <span>{{ t('Add Event Destination') }}</span>
           </n-button>
           <n-button @click="async () => refresh()">
             <Icon name="ri:refresh-line" class="mr-2" />
-            <span>{{ t("Refresh") }}</span>
+            <span>{{ t('Refresh') }}</span>
           </n-button>
         </div>
       </div>
@@ -31,46 +31,56 @@
         :columns="columns"
         :data="filteredData"
         :pagination="false"
-        :bordered="false" />
+        :bordered="false"
+      />
     </page-content>
     <events-target-new ref="newFormRef"></events-target-new>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Icon } from "#components";
-import { NButton, NSpace, type DataTableColumns, NPopconfirm } from "naive-ui";
-import { useI18n } from "vue-i18n";
-const message = useMessage();
+import { Icon } from '#components';
+import { NButton, NSpace, type DataTableColumns, NPopconfirm } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
+const { getEventsTargetList, deleteEventTarget } = useEventTarget();
 
 const { t } = useI18n();
-const searchTerm = ref("");
+const message = useMessage();
+const searchTerm = ref('');
 
 interface RowData {
-  type: string;
+  account_id: string;
+  service: string;
+  status: string;
 }
 
 const columns: DataTableColumns<RowData> = [
   {
-    title: t("Status"),
-    key: "bucket",
-    width: 180,
+    title: t('Event Destinations'),
+    key: 'account_id',
+    width: 220,
   },
   {
-    title: t("Service"),
-    key: "endpoint",
+    title: t('Type'),
+    key: 'service',
   },
 
   {
-    title: t("Actions"),
-    key: "actions",
-    align: "center",
+    title: t('Status'),
+    key: 'status',
+    width: 160,
+  },
+
+  {
+    title: t('Actions'),
+    key: 'actions',
+    align: 'center',
     width: 140,
     render: (row: RowData) => {
       return h(
         NSpace,
         {
-          justify: "center",
+          justify: 'center',
         },
         {
           default: () => [
@@ -78,14 +88,14 @@ const columns: DataTableColumns<RowData> = [
               NPopconfirm,
               { onPositiveClick: () => deleteItem(row) },
               {
-                default: () => t("Confirm Delete"),
+                default: () => t('Confirm Delete'),
                 trigger: () =>
                   h(
                     NButton,
-                    { size: "small", secondary: true },
+                    { size: 'small', secondary: true },
                     {
-                      default: () => "",
-                      icon: () => h(Icon, { name: "ri:delete-bin-5-line" }),
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
               }
@@ -98,11 +108,10 @@ const columns: DataTableColumns<RowData> = [
 ];
 
 const { data, refresh } = await useAsyncData(
-  "tier",
+  'events',
   async () => {
-    // const response = await usetier.listTiers();
-    // return response;
-    return [];
+    const response = await getEventsTargetList();
+    return response.notification_endpoints;
   },
   { default: () => [] }
 );
@@ -114,23 +123,22 @@ const filteredData = computed(() => {
 
   const term = searchTerm.value.toLowerCase();
   return data.value.filter(
-    (tier: any) =>
-      tier.name.toLowerCase().includes(term) ||
-      tier.endpoint.toLowerCase().includes(term) ||
-      tier.bucket.toLowerCase().includes(term)
+    (item: RowData) =>
+      item.account_id?.toLowerCase().includes(term) ||
+      item.service?.toLowerCase().includes(term) ||
+      item.status?.toLowerCase().includes(term)
   );
 });
 
 const deleteItem = async (row: RowData) => {
-  // usetier
-  //   .removeTiers(config.name)
-  //   .then(() => {
-  //     message.success(t("Delete Success"));
-  //     refresh();
-  //   })
-  //   .catch((error) => {
-  //     message.error(t("Delete Failed"));
-  //   });
+  deleteEventTarget(row.service, row.account_id)
+    .then(() => {
+      message.success(t('Delete Success'));
+      refresh();
+    })
+    .catch(error => {
+      message.error(t('Delete Failed'));
+    });
 };
 
 const newFormRef = ref();

@@ -21,24 +21,28 @@ A modern, responsive web management console for RustFS distributed file system, 
 ## 🎯 Core Functionalities
 
 ### Storage Management
+
 - **Bucket Operations**: Create, delete, configure buckets
 - **Object Management**: Upload, download, delete objects with batch operations
 - **File Browser**: Intuitive file explorer with search and filtering
 - **Access Control**: Granular permissions and bucket policies
 
 ### User & Access Management
+
 - **User Management**: Create and manage users and groups
 - **Access Keys**: Generate and manage API credentials
 - **Policies**: Fine-grained access control policies
 - **Authentication**: Multiple authentication methods (AccessKey, STS)
 
 ### System Monitoring
+
 - **Performance Metrics**: Real-time system performance monitoring
 - **Usage Analytics**: Storage usage and bandwidth statistics
 - **Health Monitoring**: System health and status indicators
 - **Audit Logs**: Comprehensive audit trail and logging
 
 ### Advanced Features
+
 - **Lifecycle Management**: Automated data lifecycle policies
 - **Replication**: Cross-region and site replication
 - **Tiering**: Intelligent data tiering and archival
@@ -60,7 +64,7 @@ A modern, responsive web management console for RustFS distributed file system, 
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm/pnpm/yarn package manager
 - RustFS backend server running
 
@@ -75,7 +79,7 @@ cd rustfs-console
 npm install
 # or
 pnpm install
-# or 
+# or
 yarn install
 ```
 
@@ -102,7 +106,7 @@ APP_NAME=RustFS
 APP_DESCRIPTION=RustFS Console
 BASE_URL=/rustfs/console/
 
-# API Configuration  
+# API Configuration
 API_BASE_URL=http://localhost:9000/rustfs/admin/v3
 SERVER_HOST=http://localhost:9000
 
@@ -185,6 +189,7 @@ npm run lint:fix
 ### Theming
 
 The application supports light and dark themes. Customize themes in:
+
 - `assets/css/tailwind.css` - Tailwind configuration
 - `tailwind.config.ts` - Theme colors and design tokens
 - `components/theme-switcher.vue` - Theme switching logic
@@ -192,6 +197,7 @@ The application supports light and dark themes. Customize themes in:
 ### Internationalization
 
 Add new languages by:
+
 1. Creating locale files in `i18n/locales/`
 2. Updating `nuxt.config.ts` locales configuration
 3. Adding language switcher options
@@ -199,6 +205,7 @@ Add new languages by:
 ### Component Library
 
 Built on Naive UI with custom components in `components/ui/`. Extend the design system by:
+
 - Adding new components to `components/ui/`
 - Following established naming conventions
 - Including proper TypeScript definitions
@@ -234,6 +241,7 @@ Production deployment requires these environment variables:
 ### Build Optimization
 
 For optimal production builds:
+
 - Enable gzip/brotli compression
 - Configure proper caching headers
 - Use CDN for static assets

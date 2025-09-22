@@ -8,7 +8,8 @@
     :segmented="{
       content: true,
       action: true,
-    }">
+    }"
+  >
     <n-card>
       <n-form
         ref="formRef"
@@ -16,7 +17,8 @@
         :model="formModel"
         :rules="rules"
         label-align="center"
-        :label-width="130">
+        :label-width="130"
+      >
         <n-grid :cols="24" :x-gap="18">
           <n-form-item-gi :span="24" :label="t('Access Key')" path="accessKey">
             <n-input v-model:value="formModel.accessKey" />
@@ -29,16 +31,16 @@
     </n-card>
     <template #action>
       <n-space justify="center">
-        <n-button @click="closeModal()">{{ t("Cancel") }}</n-button>
-        <n-button type="primary" @click="submitForm">{{ t("Submit") }}</n-button>
+        <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
+        <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
       </n-space>
     </template>
   </n-modal>
 </template>
 <script setup lang="ts">
-import type { FormInst } from "naive-ui";
-import { computed, ref } from "vue";
-import { useI18n } from "vue-i18n";
+import type { FormInst } from 'naive-ui';
+import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 const usetier = useTiers();
 
 const { t } = useI18n();
@@ -51,8 +53,8 @@ const message = useMessage();
 
 const emit = defineEmits<Emits>();
 const defaultFormModal = {
-  accessKey: "",
-  secretKey: "",
+  accessKey: '',
+  secretKey: '',
 };
 const formModel = ref({ ...defaultFormModal });
 
@@ -60,19 +62,19 @@ const formModel = ref({ ...defaultFormModal });
 const rules = ref({
   accessKey: {
     required: true,
-    trigger: ["blur", "input"],
-    message: t("Please enter Access Key"),
+    trigger: ['blur', 'input'],
+    message: t('Please enter Access Key'),
   },
   secretKey: {
     required: true,
-    trigger: ["blur", "input"],
-    message: t("Please enter Secret Key"),
+    trigger: ['blur', 'input'],
+    message: t('Please enter Secret Key'),
   },
 });
 
 interface Emits {
-  (e: "update:visible", visible: boolean): void;
-  (e: "search"): void;
+  (e: 'update:visible', visible: boolean): void;
+  (e: 'search'): void;
 }
 
 const modalVisible = computed({
@@ -84,14 +86,14 @@ const modalVisible = computed({
   },
 });
 function closeModal(visible = false) {
-  emit("update:visible", visible);
+  emit('update:visible', visible);
   formModel.value = { ...defaultFormModal };
 }
 
 const formRef = ref<FormInst | null>(null);
 async function submitForm(e: MouseEvent) {
   // e.preventDefault()
-  formRef.value?.validate(async (errors) => {
+  formRef.value?.validate(async errors => {
     if (!errors) {
       try {
         // const res = await createServiceAccount({
@@ -102,16 +104,16 @@ async function submitForm(e: MouseEvent) {
         const res = await usetier.updateTiers(name, {
           ...formModel.value,
         });
-        message.success(t("Update Success"));
+        message.success(t('Update Success'));
         closeModal();
-        emit("search");
+        emit('search');
       } catch (error) {
-        console.log("🚀 ~ submitForm ~ error:", error);
-        message.error(t("Update Failed"));
+        console.log('🚀 ~ submitForm ~ error:', error);
+        message.error(t('Update Failed'));
       }
     } else {
       console.log(errors);
-      message.error(t("Please fill in the correct format"));
+      message.error(t('Please fill in the correct format'));
     }
   });
 }

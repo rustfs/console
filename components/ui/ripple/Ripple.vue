@@ -1,13 +1,19 @@
 <template>
   <div class="absolute inset-0">
-    <RippleCircle v-for="index in numberOfCircles" :key="index" :opacity="baseCircleOpacity - index * circleOpacityDowngradeRatio"
-      :size="baseCircleSize + index * spaceBetweenCircle" :animation-delay="index * waveSpeed" :border-style="index === numberOfCircles - 1 ? 'dashed' : 'solid'"
-      :class="circleClass" />
+    <RippleCircle
+      v-for="index in numberOfCircles"
+      :key="index"
+      :opacity="baseCircleOpacity - index * circleOpacityDowngradeRatio"
+      :size="baseCircleSize + index * spaceBetweenCircle"
+      :animation-delay="index * waveSpeed"
+      :border-style="index === numberOfCircles - 1 ? 'dashed' : 'solid'"
+      :class="circleClass"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import RippleCircle from './RippleCircle.vue'
+import RippleCircle from './RippleCircle.vue';
 interface Props {
   baseCircleSize?: number;
   baseCircleOpacity?: number;

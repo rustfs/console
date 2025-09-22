@@ -32,12 +32,7 @@
             </n-form-item-grid-item>
 
             <n-form-item-grid-item :span="24" :label="t('Policy')" path="policies">
-              <n-select
-                v-model:value="editForm.policies"
-                filterable
-                multiple
-                :options="policiesList"
-              />
+              <n-select v-model:value="editForm.policies" filterable multiple :options="policiesList" />
             </n-form-item-grid-item>
           </n-grid>
         </n-form>

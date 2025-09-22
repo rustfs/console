@@ -11,7 +11,6 @@
   @apply flex-wrap flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between;
 }
 
-
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
@@ -22,6 +21,8 @@ input[data-autocompleted] {
 
 input:-webkit-autofill,
 input:-webkit-autofill:focus {
-  transition: background-color 0s 0s, color 0s 0s;
+  transition:
+    background-color 0s 0s,
+    color 0s 0s;
   transition-delay: calc(infinity * 1s);
 }

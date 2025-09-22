@@ -755,5 +755,10 @@
   "Please enter Vault server address": "Please enter Vault server address",
   "Please enter Vault key path": "Please enter Vault key path",
   "Please enter Vault token": "Please enter Vault token",
-  "Either token or AppRole authentication is required": "Either token or AppRole authentication is required"
+  "Either token or AppRole authentication is required": "Either token or AppRole authentication is required",
+  "KMS service is stopped": "KMS service is stopped",
+  "KMS service has errors": "KMS service has errors",
+  "KMS service not initialized, please configure it first": "KMS service not initialized, please configure it first",
+  "KMS service status loaded, but configuration details unavailable": "KMS service status loaded, but configuration details unavailable",
+  "Failed to load KMS status": "Failed to load KMS status"
 }

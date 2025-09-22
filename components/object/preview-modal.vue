@@ -20,12 +20,7 @@
       >
         <template v-if="canPreview">
           <img v-if="isImage" :src="previewUrl" alt="preview" />
-          <iframe
-            v-else-if="isPdf"
-            :src="previewUrl"
-            class="w-full min-h-[70vh]"
-            frameborder="0"
-          ></iframe>
+          <iframe v-else-if="isPdf" :src="previewUrl" class="w-full min-h-[70vh]" frameborder="0"></iframe>
           <pre v-else-if="isText" class="w-full selea">{{ fileContent }}</pre>
           <video v-else-if="isVideo" controls class="w-full">
             <source :src="previewUrl" type="video/mp4" />
@@ -154,11 +149,7 @@ const fileTypeConfig = {
 };
 
 // 文件类型判断函数
-function isFileType(
-  contentType: string | undefined,
-  fileName: string,
-  type: keyof typeof fileTypeConfig
-): boolean {
+function isFileType(contentType: string | undefined, fileName: string, type: keyof typeof fileTypeConfig): boolean {
   if (type === 'text') {
     return (
       contentType?.startsWith('text/') ||
@@ -168,24 +159,15 @@ function isFileType(
   }
 
   if (type === 'image') {
-    return (
-      contentType?.startsWith('image/') ||
-      fileTypeConfig.image.extensions.some(ext => fileName.endsWith(ext))
-    );
+    return contentType?.startsWith('image/') || fileTypeConfig.image.extensions.some(ext => fileName.endsWith(ext));
   }
 
   if (type === 'audio') {
-    return (
-      contentType?.startsWith('audio/') ||
-      fileTypeConfig.audio.extensions.some(ext => fileName.endsWith(ext))
-    );
+    return contentType?.startsWith('audio/') || fileTypeConfig.audio.extensions.some(ext => fileName.endsWith(ext));
   }
 
   if (type === 'pdf') {
-    return (
-      contentType === 'application/pdf' ||
-      fileTypeConfig.pdf.extensions.some(ext => fileName.endsWith(ext))
-    );
+    return contentType === 'application/pdf' || fileTypeConfig.pdf.extensions.some(ext => fileName.endsWith(ext));
   }
 
   return false;
@@ -198,9 +180,7 @@ const isAudio = computed(() => isFileType(contentType.value, props.objectKey, 'a
 const isPdf = computed(() => isFileType(contentType.value, props.objectKey, 'pdf'));
 const isText = computed(() => isFileType(contentType.value, props.objectKey, 'text'));
 
-const canPreview = computed(
-  () => isImage.value || isPdf.value || isText.value || isVideo.value || isAudio.value
-);
+const canPreview = computed(() => isImage.value || isPdf.value || isText.value || isVideo.value || isAudio.value);
 
 // 当 show 为 true 时触发加载逻辑
 watch(

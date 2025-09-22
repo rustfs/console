@@ -1,5 +1,5 @@
-import { setupInspiraUI } from "@inspira-ui/plugins";
-import animate from "tailwindcss-animate";
+import { setupInspiraUI } from '@inspira-ui/plugins';
+import animate from 'tailwindcss-animate';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -9,7 +9,7 @@ export default {
     './pages/**/*.vue',
     './plugins/**/*.{js,ts}',
     './nuxt.config.{js,ts}',
-    './app.vue'
+    './app.vue',
   ],
   darkMode: ['class'], // or 'media' or 'class'
   theme: {
@@ -22,31 +22,31 @@ export default {
         foreground: 'hsl(var(--foreground))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))'
+          foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))'
+          foreground: 'hsl(var(--secondary-foreground))',
         },
         destructive: {
           DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))'
+          foreground: 'hsl(var(--destructive-foreground))',
         },
         muted: {
           DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))'
+          foreground: 'hsl(var(--muted-foreground))',
         },
         accent: {
           DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))'
+          foreground: 'hsl(var(--accent-foreground))',
         },
         popover: {
           DEFAULT: 'hsl(var(--popover))',
-          foreground: 'hsl(var(--popover-foreground))'
+          foreground: 'hsl(var(--popover-foreground))',
         },
         card: {
           DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))'
+          foreground: 'hsl(var(--card-foreground))',
         },
         'primary-1': 'rgba(var(--n-primary-color-1))',
         'primary-2': 'rgba(var(--n-primary-color-2))',
@@ -61,16 +61,16 @@ export default {
           '2': 'hsl(var(--chart-2))',
           '3': 'hsl(var(--chart-3))',
           '4': 'hsl(var(--chart-4))',
-          '5': 'hsl(var(--chart-5))'
-        }
+          '5': 'hsl(var(--chart-5))',
+        },
       },
       borderRadius: {
         xl: 'calc(var(--radius) + 4px)',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)'
-      }
-    }
+        sm: 'calc(var(--radius) - 4px)',
+      },
+    },
   },
   plugins: [animate, setupInspiraUI],
-}
+};

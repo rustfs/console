@@ -7,9 +7,14 @@
     </page-header>
     <page-content class="flex flex-col gap-4">
       <div class="flex items-center justify-between">
-        <div style="width:300px">
+        <div style="width: 300px">
           <n-form-item :label="t('Bucket')" path="" class="flex-auto" label-placement="left">
-            <n-select filterable v-model:value="bucketName" :placeholder="t('Please select bucket')" :options="bucketList" />
+            <n-select
+              filterable
+              v-model:value="bucketName"
+              :placeholder="t('Please select bucket')"
+              :options="bucketList"
+            />
           </n-form-item>
         </div>
 
@@ -25,22 +30,21 @@
         </div>
       </div>
 
-      <n-card class="flex flex-center" style="height:400px">
-        <n-empty :description="t('No Data')" ></n-empty>
+      <n-card class="flex flex-center" style="height: 400px">
+        <n-empty :description="t('No Data')"></n-empty>
       </n-card>
       <!-- <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false" :bordered="false" /> -->
-       <events-new-form ref="newRef" :bucketName="bucketName"></events-new-form>
+      <events-new-form ref="newRef" :bucketName="bucketName"></events-new-form>
     </page-content>
-
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Icon } from '#components'
-import { NButton, NSpace, type DataTableColumns } from 'naive-ui'
-import { useI18n } from 'vue-i18n'
+import { Icon } from '#components';
+import { NButton, NSpace, type DataTableColumns } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n()
+const { t } = useI18n();
 const { listBuckets } = useBucket({});
 const formVisible = ref(false);
 const searchTerm = ref('');
@@ -54,29 +58,28 @@ const columns: DataTableColumns<RowData> = [
   {
     title: t('Type'),
     key: '',
-
   },
   {
     title: t('Version'),
     key: '',
   },
-   {
+  {
     title: t('Expiration Delete Mark'),
     key: '',
   },
-   {
+  {
     title: t('Tier'),
     key: '',
   },
-   {
+  {
     title: t('Prefix'),
     key: '',
   },
-   {
+  {
     title: t('Time'),
     key: '',
   },
-   {
+  {
     title: t('Status'),
     key: '',
   },
@@ -98,7 +101,7 @@ const columns: DataTableColumns<RowData> = [
               {
                 size: 'small',
                 secondary: true,
-                onClick: (e) => handleRowDelete(row,e),
+                onClick: e => handleRowDelete(row, e),
               },
               {
                 default: () => '',
@@ -117,31 +120,33 @@ const { data } = await useAsyncData(
   'buckets',
   async () => {
     const response = await listBuckets();
-    return response.Buckets?.sort((a:any, b:any) => {return a.Name.localeCompare(b.Name)  }) || [];
+    return (
+      response.Buckets?.sort((a: any, b: any) => {
+        return a.Name.localeCompare(b.Name);
+      }) || []
+    );
   },
   { default: () => [] }
 );
 
 const bucketList = computed(() => {
-  return data.value.map((bucket) => ({
+  return data.value.map(bucket => ({
     label: bucket.Name,
     value: bucket.Name,
   }));
 });
 
-const bucketName = ref<string>(
-  bucketList.value.length > 0 ? bucketList.value[0]?.value ?? '' : ''
-);
+const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
 
-const pageData = ref([])
+const pageData = ref([]);
 
 const handleRowDelete = (row: RowData, e: Event) => {
   e.stopPropagation();
   console.log(row);
 };
 
-const newRef= ref()
+const newRef = ref();
 const handleNew = () => {
-  newRef.value.open()
-}
+  newRef.value.open();
+};
 </script>

@@ -14,16 +14,10 @@
       <n-card>
         <n-tabs type="card">
           <n-tab-pane name="groups" :tab="t('Groups')">
-            <users-user-groups
-              :user="user"
-              @search="getUserData(user.accessKey)"
-            ></users-user-groups>
+            <users-user-groups :user="user" @search="getUserData(user.accessKey)"></users-user-groups>
           </n-tab-pane>
           <n-tab-pane name="policy" :tab="t('Policies')">
-            <users-user-policies
-              :user="user"
-              @search="getUserData(user.accessKey)"
-            ></users-user-policies>
+            <users-user-policies :user="user" @search="getUserData(user.accessKey)"></users-user-policies>
           </n-tab-pane>
           <n-tab-pane name="accesskey" :tab="t('Account')">
             <users-user-account
@@ -43,10 +37,7 @@
             ></n-switch>
           </template>
         </n-tabs>
-        <users-user-notice
-          ref="noticeRef"
-          @search="getUserData(user.accessKey)"
-        ></users-user-notice>
+        <users-user-notice ref="noticeRef" @search="getUserData(user.accessKey)"></users-user-notice>
       </n-card>
     </n-modal>
   </div>

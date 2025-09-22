@@ -15,8 +15,8 @@
 </template>
 
 <script lang="ts" setup>
-import { useRoute } from '#app'
-import { computed } from 'vue'
+import { useRoute } from '#app';
+import { computed } from 'vue';
 
 // 从路由参数中获取 bucketName, pageSize, continuationToken
 const route = useRoute();

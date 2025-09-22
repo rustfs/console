@@ -1,5 +1,5 @@
 <template>
-   <n-modal
+  <n-modal
     v-model:show="visible"
     :mask-closable="false"
     preset="card"
@@ -8,14 +8,17 @@
     :segmented="{
       content: true,
       action: true,
-    }">
+    }"
+  >
     <n-card :title="t('Add Replication Site')">
-      <p>{{ t('Note: AccessKey and SecretKey values are required for each site when adding or editing peer sites') }}</p>
+      <p>
+        {{ t('Note: AccessKey and SecretKey values are required for each site when adding or editing peer sites') }}
+      </p>
       <n-form ref="currentFormRef" :model="currentSite" :rules="rules">
         <!-- 当前站点 -->
-        <n-flex  style="margin-top: 16px;">
-          <n-card  :title="t('Current Site')"  >
-            <n-space direction="vertical" >
+        <n-flex style="margin-top: 16px">
+          <n-card :title="t('Current Site')">
+            <n-space direction="vertical">
               <n-form-item :label="t('Site Name')" path="name">
                 <n-input v-model:value="currentSite.name" :placeholder="t('Site Name')" />
               </n-form-item>
@@ -33,12 +36,12 @@
         </n-flex>
 
         <!-- 远程站点 -->
-        <n-flex direction="vertical" style="margin-top: 16px;">
+        <n-flex direction="vertical" style="margin-top: 16px">
           <n-card :title="t('Remote Site')">
             <n-space direction="vertical">
-               <n-dynamic-input :min='1' v-model:value="remoteSite" :on-create="onCreate">
-                <template #default="{ value }" >
-                   <n-grid x-gap="12" :cols="4">
+              <n-dynamic-input :min="1" v-model:value="remoteSite" :on-create="onCreate">
+                <template #default="{ value }">
+                  <n-grid x-gap="12" :cols="4">
                     <n-gi>
                       <n-form-item :label="t('Site Name')" path="name">
                         <n-input v-model:value="value.name" :placeholder="t('Site Name')" />
@@ -50,9 +53,9 @@
                       </n-form-item>
                     </n-gi>
                     <n-gi>
-                        <n-form-item :label="t('Access Key *')" path="accessKey">
-                          <n-input v-model:value="value.accessKey" :placeholder="t('Access Key')" />
-                        </n-form-item>
+                      <n-form-item :label="t('Access Key *')" path="accessKey">
+                        <n-input v-model:value="value.accessKey" :placeholder="t('Access Key')" />
+                      </n-form-item>
                     </n-gi>
                     <n-gi>
                       <n-form-item :label="t('Secret Key *')" path="secretKey">
@@ -61,13 +64,13 @@
                     </n-gi>
                   </n-grid>
                 </template>
-                </n-dynamic-input>
+              </n-dynamic-input>
             </n-space>
           </n-card>
         </n-flex>
       </n-form>
       <!-- 按钮 -->
-      <n-space justify="center" style="margin-top: 16px;">
+      <n-space justify="center" style="margin-top: 16px">
         <n-button type="primary" @click="save">{{ t('Save') }}</n-button>
         <n-button @click="cancel">{{ t('Cancel') }}</n-button>
       </n-space>
@@ -85,35 +88,31 @@ const currentSite = ref({
   name: '',
   endpoint: 'http://127.0.0.1:7000',
   accessKey: 'rusyfsadmin',
-  secretKey: ''
+  secretKey: '',
 });
 
-const remoteSite = ref([{
-  name: '',
-  endpoint: '',
-  accessKey: '',
-  secretKey: ''
-}]);
+const remoteSite = ref([
+  {
+    name: '',
+    endpoint: '',
+    accessKey: '',
+    secretKey: '',
+  },
+]);
 
 const onCreate = () => {
   return {
     name: '',
     endpoint: '',
     accessKey: '',
-    secretKey: ''
+    secretKey: '',
   };
 };
 
 const rules = {
-  endpoint: [
-    { required: true, message: t('Endpoint is required'), trigger: 'blur' }
-  ],
-  accessKey: [
-    { required: true, message: t('Access Key is required'), trigger: 'blur' }
-  ],
-  secretKey: [
-    { required: true, message: t('Secret Key is required'), trigger: 'blur' }
-  ]
+  endpoint: [{ required: true, message: t('Endpoint is required'), trigger: 'blur' }],
+  accessKey: [{ required: true, message: t('Access Key is required'), trigger: 'blur' }],
+  secretKey: [{ required: true, message: t('Secret Key is required'), trigger: 'blur' }],
 };
 
 const currentFormRef = ref(null);
@@ -129,16 +128,16 @@ const cancel = () => {
 
 const visible = ref(false);
 const open = () => {
-  visible.value = true
-}
+  visible.value = true;
+};
 
 defineExpose({
-  open
-})
+  open,
+});
 </script>
 
-<style scoped >
-:deep(.n-dynamic-input-item__action){
+<style scoped>
+:deep(.n-dynamic-input-item__action) {
   align-self: center !important;
 }
 </style>

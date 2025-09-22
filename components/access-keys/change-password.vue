@@ -100,21 +100,53 @@ function closeModal(visible = false) {
 </script>
 
 <template>
-  <n-modal v-model:show="modalVisible" :mask-closable="false" preset="card" :title="t('Change current account password')" class="max-w-screen-md" sizer="huge" :segmented="{
-    content: true,
-    action: true,
-  }">
+  <n-modal
+    v-model:show="modalVisible"
+    :mask-closable="false"
+    preset="card"
+    :title="t('Change current account password')"
+    class="max-w-screen-md"
+    sizer="huge"
+    :segmented="{
+      content: true,
+      action: true,
+    }"
+  >
     <n-card>
-      <n-form ref="formRef" label-placement="left" :model="formModel" :rules="rules" label-align="left" :label-width="130">
+      <n-form
+        ref="formRef"
+        label-placement="left"
+        :model="formModel"
+        :rules="rules"
+        label-align="left"
+        :label-width="130"
+      >
         <n-grid :cols="24" :x-gap="18">
           <n-form-item-grid-item :span="24" :label="t('Current Password')" path="current_secret_key">
             <n-input v-model:value="formModel.current_secret_key" show-password-on="mousedown" type="password" />
           </n-form-item-grid-item>
           <n-form-item-grid-item :span="24" :label="t('New Password')" path="new_secret_key">
-            <n-input ref="nPasswordFormItemRef" v-model:value="formModel.new_secret_key" show-password-on="mousedown" type="password" @input="handlePasswordInput" />
+            <n-input
+              ref="nPasswordFormItemRef"
+              v-model:value="formModel.new_secret_key"
+              show-password-on="mousedown"
+              type="password"
+              @input="handlePasswordInput"
+            />
           </n-form-item-grid-item>
-          <n-form-item-grid-item ref="rPasswordFormItemRef" :span="24" :label="t('Confirm New Password')" path="re_new_secret_key">
-            <n-input v-model:value="formModel.re_new_secret_key" :disabled="!formModel.new_secret_key" show-password-on="mousedown" type="password" @keydown.enter.prevent />
+          <n-form-item-grid-item
+            ref="rPasswordFormItemRef"
+            :span="24"
+            :label="t('Confirm New Password')"
+            path="re_new_secret_key"
+          >
+            <n-input
+              v-model:value="formModel.re_new_secret_key"
+              :disabled="!formModel.new_secret_key"
+              show-password-on="mousedown"
+              type="password"
+              @keydown.enter.prevent
+            />
           </n-form-item-grid-item>
         </n-grid>
       </n-form>

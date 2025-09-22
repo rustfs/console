@@ -138,7 +138,7 @@ const bucketList = computed(() => {
 
 const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
 const loading = ref<boolean>(false);
-const pageData = ref([]);
+const pageData = ref<any[]>([]);
 watch(
   () => bucketName.value,
   async newVal => {
@@ -158,7 +158,6 @@ watch(
 
 const handleRowDelete = (row: RowData, e: Event) => {
   e.stopPropagation();
-  console.log(row);
 };
 
 const newRef = ref();
@@ -168,7 +167,6 @@ const handleNew = () => {
 
 const refresh = async () => {
   const response = await listBucketNotifications(bucketName.value);
-  console.log('🚀 ~ refresh ~ response:', response);
-  // pageData.value = response?.sort((a: any, b: any) => a.ID.localeCompare(b.ID)) || [];
+  pageData.value = response?.TopicConfigurations || [];
 };
 </script>

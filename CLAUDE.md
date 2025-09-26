@@ -59,7 +59,11 @@ Domain-specific logic is organized in composables (`composables/`):
 - `useAPI.ts` - Base API wrapper using custom `$apiFetch`
 - `useAuth.ts` - Authentication and session management
 - `useBucket.ts`, `useObject.ts` - Object storage operations
-- `useUsers.ts`, `useAccessKeys.ts` - User and access management
+- `useUsers.ts`, `useAccessKeys.ts`, `useGroups.ts` - User and access management
+- `usePolicies.ts`, `usePools.ts`, `useTiers.ts` - Policy and storage management
+- `useSystem.ts` - System monitoring and health checks
+- `useSSE.ts` - Server-sent events for real-time updates
+- `useEcharts.ts` - Chart and visualization utilities
 
 #### Component Architecture
 
@@ -115,3 +119,27 @@ Required environment variables:
 - TypeScript interfaces and types go in `types/` directory
 - Utility functions organized by domain in `utils/`
 - Follow Vue 3 Composition API patterns with `<script setup>`
+
+## Development Workflow
+
+### Common Development Tasks
+
+- **Starting Development**: Run `npm run dev` to start the development server at localhost:3000
+- **Code Quality Checks**: Always run `npm run type-check` and `npm run lint` before committing
+- **Production Testing**: Use `npm run build && npm run preview` to test production builds locally
+
+### Debugging and Troubleshooting
+
+- **Configuration Issues**: Check browser console for config loading errors; configuration is loaded via `01.config.ts` plugin
+- **API Authentication**: Verify credentials in browser storage and check network tab for authentication failures
+- **Type Errors**: Use `vue-tsc --noEmit` for detailed TypeScript error reporting
+- **Performance Issues**: Monitor network requests and check for unnecessary re-renders in Vue DevTools
+
+### Key Utilities
+
+The `utils/` directory contains domain-specific helpers:
+
+- `config.ts` - Configuration management with priority system
+- `error-handler.ts` - Global error handling and user notifications
+- `logger.ts` - Logging utilities for debugging
+- `functions.ts` - Common utility functions and data transformations

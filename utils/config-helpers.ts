@@ -59,10 +59,8 @@ export const fetchConfigFromServer = async (): Promise<SiteConfig | null> => {
 
   try {
     const currentHost = window.location.hostname;
-    const currentPort = window.location.port;
     const protocol = window.location.protocol;
-    const serverHost = `${protocol}//${currentHost}${currentPort ? `:${currentPort}` : ':9000'}`;
-    const configUrl = `${serverHost}/config.json`;
+    const configUrl = `${protocol}//${currentHost}/config.json`;
 
     const response = await fetch(configUrl, {
       method: 'GET',

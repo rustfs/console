@@ -60,6 +60,7 @@ export const fetchConfigFromServer = async (): Promise<SiteConfig | null> => {
   try {
     const currentHost = window.location.hostname;
     const protocol = window.location.protocol;
+    const serverHost = `${protocol}://${currentHost}`;
     const configUrl = `${protocol}//${currentHost}/config.json`;
 
     const response = await fetch(configUrl, {

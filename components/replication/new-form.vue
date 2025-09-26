@@ -176,7 +176,7 @@ const formData = ref({
   timecheck: '60',
   unit: 'Gi',
   bandwidth: 100,
-  storageType: '',
+  storageType: 'STANDARD',
   prefix: '',
   tags: [
     {
@@ -316,7 +316,20 @@ const handleSave = async () => {
           oldConfig.ReplicationConfiguration &&
           Array.isArray(oldConfig.ReplicationConfiguration.Rules)
         ) {
-          rules = [...oldConfig.ReplicationConfiguration.Rules, newRule];
+          // 如果有 oldConfig.ReplicationConfiguration.Rules
+          targetRESP = null;
+          // 查找是否有存在的Destination Bucket,如果存在则替换整个规则
+          const findOne = oldConfig.ReplicationConfiguration.Rules.find(rule => rule.Destination.Bucket === targetRESP);
+          if (findOne) {
+            // 如果有则替换
+            rules = [...oldConfig.ReplicationConfiguration.Rules].splice(
+              oldConfig.ReplicationConfiguration.Rules.indexOf(findOne),
+              1,
+              newRule
+            );
+          } else {
+            rules = [...oldConfig.ReplicationConfiguration.Rules, newRule];
+          }
         } else {
           rules = [newRule];
         }
@@ -330,7 +343,7 @@ const handleSave = async () => {
         await putBucketReplication(props.bucketName, params);
 
         emit('success');
-        visible.value = false;
+        handleCancel();
       } catch (e) {
         window.$message?.error?.(t('Save failed'));
       }
@@ -341,5 +354,31 @@ const handleSave = async () => {
 const handleCancel = () => {
   // 取消逻辑
   visible.value = false;
+  formData = ref({
+    level: '1',
+    endpoint: '',
+    tls: false,
+    accesskey: '',
+    secrretkey: '',
+    bucket: '',
+    region: '',
+    modeType: 'async',
+    timecheck: '60',
+    unit: 'Gi',
+    bandwidth: 100,
+    storageType: 'STANDARD',
+    prefix: '',
+    tags: [
+      {
+        key: '',
+        value: '',
+      },
+    ],
+    existingObject: true,
+    expiredDeleteMark: true,
+    // deleteAllExpired: false,
+    delete: false,
+    deleteforever: false,
+  });
 };
 </script>

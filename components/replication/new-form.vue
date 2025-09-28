@@ -16,7 +16,10 @@
           <n-input v-model:value="formData.level" :placeholder="t('Please enter priority')" />
         </n-form-item>
         <n-form-item :label="t('Target Address')" path="endpoint">
-          <n-input v-model:value="formData.endpoint" :placeholder="t('Please enter target address')" />
+          <n-input
+            v-model:value="formData.endpoint"
+            :placeholder="t('Please enter target address') + ':127.0.0.1:9000'"
+          />
         </n-form-item>
         <n-form-item :label="t('Use TLS')" path="tls">
           <n-switch v-model:value="formData.tls" :round="false" />
@@ -171,7 +174,7 @@ const formData = ref({
   accesskey: '',
   secrretkey: '',
   bucket: '',
-  region: '',
+  region: 'us-east-1',
   modeType: 'async',
   timecheck: '60',
   unit: 'Gi',
@@ -249,14 +252,16 @@ const handleSave = async () => {
           // 根据单位转化为字节
           config.bandwidth = Number(getBytes(formData.value.bandwidth, formData.value.unit, true)) || 0;
         }
-        const targetRESP = await setRemoteReplicationTarget(props.bucketName, config);
-        if (!targetRESP) return;
+        let targetRESP = await setRemoteReplicationTarget(props.bucketName, config);
+
+        if (!targetRESP) {
+          return;
+        }
 
         // 获取已有的 replication 配置
         let oldConfig = null;
         try {
           oldConfig = await getBucketReplication(props.bucketName);
-          console.log(oldConfig);
         } catch (e) {
           console.log(e);
           // 没有配置时会报错，忽略即可
@@ -345,6 +350,7 @@ const handleSave = async () => {
         emit('success');
         handleCancel();
       } catch (e) {
+        console.log('🚀 ~ handleSave ~ e:', e);
         window.$message?.error?.(t('Save failed'));
       }
     }
@@ -361,7 +367,7 @@ const handleCancel = () => {
     accesskey: '',
     secrretkey: '',
     bucket: '',
-    region: '',
+    region: 'us-east-1',
     modeType: 'async',
     timecheck: '60',
     unit: 'Gi',

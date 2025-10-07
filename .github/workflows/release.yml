@@ -3,26 +3,26 @@ name: 🚀 Release & Deploy
 on:
   push:
     tags:
-      - "v*"
+      - 'v*'
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version (e.g., v1.0.0)"
+        description: 'Release version (e.g., v1.0.0)'
         required: true
         type: string
       environment:
-        description: "Deployment environment"
+        description: 'Deployment environment'
         required: true
-        default: "staging"
+        default: 'staging'
         type: choice
         options:
           - staging
           - production
 
 env:
-  NODE_VERSION: "18"
+  NODE_VERSION: '18'
 
 jobs:
   # ============================================================================
@@ -47,7 +47,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: 📥 Install dependencies
         run: |
@@ -112,7 +112,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: 'npm'
 
       - name: 📥 Install dependencies
         run: npm ci

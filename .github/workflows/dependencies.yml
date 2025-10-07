@@ -314,13 +314,8 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: |
-            🔄 chore: update dependencies (${{ github.event.inputs.update_type || 'patch' }})
-
-            - Updated ${{ github.event.inputs.update_type || 'patch' }} versions of dependencies
-            - All tests pass with updated dependencies
-            - Security audit: ${{ needs.check-updates.outputs.update-summary }}
-          title: '🔄 Dependency Updates (${{ github.event.inputs.update_type || 'patch' }})'
+          commit-message: "🔄 chore: update dependencies (${{ github.event.inputs.update_type || 'patch' }})"
+          title: "🔄 Dependency Updates (${{ github.event.inputs.update_type || 'patch' }})"
           body: |
             ## 🔄 Automated Dependency Update
 
@@ -351,8 +346,7 @@ jobs:
             dependencies
             automated
             ${{ github.event.inputs.update_type || 'patch' }}
-          reviewers: |
-            # 添加默认审查者
+          reviewers: ''
           draft: false
 
       - name: ❌ Report failed update

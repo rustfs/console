@@ -758,5 +758,18 @@
   "KMS service has errors": "KMS服务出现错误",
   "KMS service not initialized, please configure it first": "KMS服务未初始化，请先进行配置",
   "KMS service status loaded, but configuration details unavailable": "KMS服务状态已加载，但配置详情不可用",
-  "Failed to load KMS status": "加载KMS状态失败"
+  "Failed to load KMS status": "加载KMS状态失败",
+  "Large File Count Warning": "文件数量过多警告，{count} / {max}",
+  "File Count Limit Exceeded": "文件数量超出限制：{current}/{max}",
+  "Memory Warning": "内存警告：当前 {count} 个文件，建议少于 {threshold} 个",
+  "High Memory Usage Warning": "内存使用过高警告：{memory}MB，文件数：{files}",
+  "Reading Folder Files": "正在读取文件夹文件",
+  "Total Files": "总文件数",
+  "Memory Usage": "内存使用",
+  "Clear All": "清空所有",
+  "Memory Low": "低",
+  "Memory Medium": "中",
+  "Memory High": "高",
+  "Memory Critical": "严重",
+  "Folder Processing Error": "文件夹处理错误"
 }

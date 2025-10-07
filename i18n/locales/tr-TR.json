@@ -380,7 +380,6 @@
   "Please enter storage type": "Lütfen depolama türünü girin",
   "Add Replication Rule": "Çoğaltma Kuralı Ekle",
   "Click to modify": "Değiştirmek için tıklayın",
-
   "Server Configuration": "Sunucu Yapılandırması",
   "Please configure your RustFS server address": "Lütfen RustFS sunucu adresinizi yapılandırın",
   "Server Address": "Sunucu Adresi",
@@ -755,5 +754,18 @@
   "Please enter Vault server address": "Lütfen Vault sunucu adresini girin",
   "Please enter Vault key path": "Lütfen Vault anahtar yolunu girin",
   "Please enter Vault token": "Lütfen Vault token girin",
-  "Either token or AppRole authentication is required": "Token veya AppRole kimlik doğrulaması gereklidir"
+  "Either token or AppRole authentication is required": "Token veya AppRole kimlik doğrulaması gereklidir",
+  "Large File Count Warning": "Büyük dosya sayısı uyarısı, {count} / {max}",
+  "File Count Limit Exceeded": "Dosya sayısı sınırı aşıldı: {current}/{max}",
+  "Memory Warning": "Bellek uyarısı: {count} dosya seçildi, {threshold}'den az önerilir",
+  "High Memory Usage Warning": "Yüksek bellek kullanımı uyarısı: {memory}MB, dosyalar: {files}",
+  "Reading Folder Files": "Klasör dosyaları okunuyor",
+  "Total Files": "Toplam Dosyalar",
+  "Memory Usage": "Bellek Kullanımı",
+  "Clear All": "Tümünü Temizle",
+  "Memory Low": "Düşük",
+  "Memory Medium": "Orta",
+  "Memory High": "Yüksek",
+  "Memory Critical": "Kritik",
+  "Folder Processing Error": "Klasör işleme hatası"
 }

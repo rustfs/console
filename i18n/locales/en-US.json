@@ -678,7 +678,6 @@
   "Edit Configuration": "Edit Configuration",
   "KMS Type": "KMS Type",
   "HashiCorp Vault Transit Engine": "HashiCorp Vault Transit Engine",
-
   "Vault Server Address": "Vault Server Address",
   "e.g., https://vault.example.com": "e.g., https://vault.example.com",
   "Vault Token": "Vault Token",
@@ -760,5 +759,18 @@
   "KMS service has errors": "KMS service has errors",
   "KMS service not initialized, please configure it first": "KMS service not initialized, please configure it first",
   "KMS service status loaded, but configuration details unavailable": "KMS service status loaded, but configuration details unavailable",
-  "Failed to load KMS status": "Failed to load KMS status"
+  "Failed to load KMS status": "Failed to load KMS status",
+  "Large File Count Warning": "Large file count warning, {count} / {max}",
+  "File Count Limit Exceeded": "File count limit exceeded: {current}/{max}",
+  "Memory Warning": "Memory warning: {count} files selected, recommend less than {threshold}",
+  "High Memory Usage Warning": "High memory usage warning: {memory}MB, files: {files}",
+  "Reading Folder Files": "Reading folder files",
+  "Total Files": "Total Files",
+  "Memory Usage": "Memory Usage",
+  "Clear All": "Clear All",
+  "Memory Low": "Low",
+  "Memory Medium": "Medium",
+  "Memory High": "High",
+  "Memory Critical": "Critical",
+  "Folder Processing Error": "Folder processing error"
 }

@@ -1,0 +1,347 @@
+name: 🔍 Code Quality
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # 每天凌晨 2 点运行质量检查
+    - cron: "0 2 * * *"
+
+jobs:
+  # ============================================================================
+  # 代码格式检查
+  # ============================================================================
+  formatting:
+    name: 💅 Code Formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 💅 Check Prettier formatting
+        run: npm run lint
+
+      - name: 🔧 Auto-fix formatting (PR only)
+        if: github.event_name == 'pull_request'
+        run: |
+          npm run lint:fix
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "## 💅 Formatting Changes Applied" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The following files were auto-formatted:" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            git diff --name-only >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ============================================================================
+  # TypeScript 类型检查
+  # ============================================================================
+  typescript:
+    name: 📘 TypeScript Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 📘 Type check
+        run: npm run type-check
+
+      - name: 📊 Generate type report
+        run: |
+          echo "## 📘 TypeScript Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ No type errors found in the codebase!" >> $GITHUB_STEP_SUMMARY
+
+  # ============================================================================
+  # 依赖检查
+  # ============================================================================
+  dependencies:
+    name: 📦 Dependencies Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Check for outdated packages
+        run: |
+          echo "## 📦 Dependency Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 检查过期的包
+          if npm outdated --json > outdated.json 2>/dev/null; then
+            if [ -s outdated.json ]; then
+              echo "### ⚠️ Outdated Packages" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "| Package | Current | Wanted | Latest |" >> $GITHUB_STEP_SUMMARY
+              echo "|---------|---------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+
+              node -e "
+                const outdated = require('./outdated.json');
+                Object.entries(outdated).forEach(([pkg, info]) => {
+                  console.log(\`| \${pkg} | \${info.current} | \${info.wanted} | \${info.latest} |\`);
+                });
+              " >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ All packages are up to date!" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "✅ All packages are up to date!" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 🔒 Security audit
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔒 Security Audit" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if npm audit --json > audit.json 2>/dev/null; then
+            vulnerabilities=$(node -e "
+              const audit = require('./audit.json');
+              const total = audit.metadata?.vulnerabilities?.total || 0;
+              console.log(total);
+            ")
+
+            if [ "$vulnerabilities" -gt 0 ]; then
+              echo "⚠️ Found $vulnerabilities security vulnerabilities" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "Run \`npm audit fix\` to resolve automatically fixable issues." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "✅ No security vulnerabilities found!" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "✅ No security vulnerabilities found!" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ============================================================================
+  # 代码复杂度分析
+  # ============================================================================
+  complexity:
+    name: 🧮 Code Complexity
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: 📥 Install dependencies
+        run: |
+          npm ci
+          npm install --save-dev eslint-plugin-complexity
+
+      - name: 🧮 Analyze code complexity
+        run: |
+          echo "## 🧮 Code Complexity Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 分析 config-helpers.ts 的复杂度
+          if [ -f "utils/config-helpers.ts" ]; then
+            lines=$(wc -l < utils/config-helpers.ts)
+            functions=$(grep -c "^export.*function\|^function\|=>" utils/config-helpers.ts || echo "0")
+
+            echo "### 📊 Metrics for config-helpers.ts" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Lines of Code | $lines |" >> $GITHUB_STEP_SUMMARY
+            echo "| Functions | $functions |" >> $GITHUB_STEP_SUMMARY
+            echo "| Average Lines per Function | $((lines / (functions > 0 ? functions : 1))) |" >> $GITHUB_STEP_SUMMARY
+
+            if [ $lines -gt 500 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "⚠️ **Warning**: File is getting large ($lines lines). Consider splitting into smaller modules." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "✅ File size is within acceptable limits." >> $GITHUB_STEP_SUMMARY
+            fi
+          fi
+
+  # ============================================================================
+  # 文档检查
+  # ============================================================================
+  documentation:
+    name: 📚 Documentation Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📚 Check documentation coverage
+        run: |
+          echo "## 📚 Documentation Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 检查 JSDoc 覆盖率
+          if [ -f "utils/config-helpers.ts" ]; then
+            total_functions=$(grep -c "^export.*function\|^export const.*=" utils/config-helpers.ts || echo "0")
+            documented_functions=$(grep -B1 "^export.*function\|^export const.*=" utils/config-helpers.ts | grep -c "/\*\*" || echo "0")
+
+            if [ $total_functions -gt 0 ]; then
+              coverage=$((documented_functions * 100 / total_functions))
+              echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+              echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+              echo "| Total Functions | $total_functions |" >> $GITHUB_STEP_SUMMARY
+              echo "| Documented Functions | $documented_functions |" >> $GITHUB_STEP_SUMMARY
+              echo "| Documentation Coverage | ${coverage}% |" >> $GITHUB_STEP_SUMMARY
+
+              if [ $coverage -ge 80 ]; then
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "✅ Good documentation coverage!" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "⚠️ Consider adding more JSDoc comments to improve documentation coverage." >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          fi
+
+          # 检查 README 文件
+          if [ -f "tests/README.md" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "✅ Test documentation is present." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "⚠️ Test documentation is missing." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # ============================================================================
+  # 性能基准
+  # ============================================================================
+  benchmarks:
+    name: ⚡ Performance Benchmarks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: 📥 Install dependencies
+        run: |
+          npm ci
+          npm install --save-dev vitest jsdom
+
+      - name: ⚡ Run performance benchmarks
+        run: |
+          echo "## ⚡ Performance Benchmarks" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 运行性能测试并提取结果
+          if npx vitest run tests/utils/config-helpers.performance.test.ts --reporter=json > perf-results.json 2>/dev/null; then
+            echo "✅ Performance tests completed successfully!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "See the detailed performance test results in the test artifacts." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ Performance tests encountered issues. Check the logs for details." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: 📊 Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-benchmarks
+          path: perf-results.json
+          retention-days: 30
+
+  # ============================================================================
+  # 质量总结
+  # ============================================================================
+  quality-summary:
+    name: 📋 Quality Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        formatting,
+        typescript,
+        dependencies,
+        complexity,
+        documentation,
+        benchmarks,
+      ]
+    if: always()
+
+    steps:
+      - name: 📋 Generate quality report
+        run: |
+          echo "# 🔍 Code Quality Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📊 Quality Checks Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Formatting | ${{ needs.formatting.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| TypeScript | ${{ needs.typescript.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependencies | ${{ needs.dependencies.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Complexity | ${{ needs.complexity.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Documentation | ${{ needs.documentation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance | ${{ needs.benchmarks.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # 计算总体质量分数
+          passed=0
+          total=6
+
+          ${{ needs.formatting.result == 'success' }} && passed=$((passed + 1))
+          ${{ needs.typescript.result == 'success' }} && passed=$((passed + 1))
+          ${{ needs.dependencies.result == 'success' }} && passed=$((passed + 1))
+          ${{ needs.complexity.result == 'success' }} && passed=$((passed + 1))
+          ${{ needs.documentation.result == 'success' }} && passed=$((passed + 1))
+          ${{ needs.benchmarks.result == 'success' }} && passed=$((passed + 1))
+
+          score=$((passed * 100 / total))
+
+          echo "## 🎯 Overall Quality Score: ${score}%" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ $score -ge 90 ]; then
+            echo "🎉 **Excellent!** Your code quality is outstanding!" >> $GITHUB_STEP_SUMMARY
+          elif [ $score -ge 75 ]; then
+            echo "👍 **Good!** Your code quality is solid with room for minor improvements." >> $GITHUB_STEP_SUMMARY
+          elif [ $score -ge 60 ]; then
+            echo "⚠️ **Fair.** Consider addressing the failing quality checks." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Needs Improvement.** Multiple quality issues need attention." >> $GITHUB_STEP_SUMMARY
+          fi

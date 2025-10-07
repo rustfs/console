@@ -2,7 +2,7 @@
  * @fileoverview 测试辅助工具和 Mock 函数
  */
 
-import { vi } from 'vitest'
+import { expect, vi } from 'vitest'
 import type { SiteConfig } from '~/types/config'
 
 // ============================================================================
@@ -147,21 +147,22 @@ export class LocalStorageMock {
   }
 
   private createMockStorage() {
+    const self = this
     return {
-      getItem: (key: string) => this.store[key] || null,
+      getItem: (key: string) => self.store[key] || null,
       setItem: (key: string, value: string) => {
-        this.store[key] = value
+        self.store[key] = value
       },
       removeItem: (key: string) => {
-        delete this.store[key]
+        delete self.store[key]
       },
       clear: () => {
-        this.store = {}
+        self.store = {}
       },
       get length() {
-        return Object.keys(this.store).length
+        return Object.keys(self.store).length
       },
-      key: (index: number) => Object.keys(this.store)[index] || null,
+      key: (index: number) => Object.keys(self.store)[index] || null,
     }
   }
 }

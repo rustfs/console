@@ -2,7 +2,7 @@
  * 测试环境设置
  */
 
-import { vi } from 'vitest'
+import { beforeEach, vi } from 'vitest'
 
 // Mock console methods to avoid noise in tests
 global.console = {

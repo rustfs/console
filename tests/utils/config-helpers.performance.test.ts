@@ -2,7 +2,7 @@
  * @fileoverview config-helpers.ts 模块的性能和压力测试
  */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   fetchConfigFromServer,
   getConfig,

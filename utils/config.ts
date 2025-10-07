@@ -29,19 +29,20 @@ export const configManager = {
   // 获取当前host配置
   getCurrentHostConfig(): SiteConfig {
     // 优先使用localStorage中保存的配置
-    const storedConfig = getStoredHostConfig();
-    if (storedConfig) {
-      return storedConfig;
+    const storedResult = getStoredHostConfig();
+    if (storedResult.config) {
+      return storedResult.config;
     }
 
     // 使用当前浏览器地址
-    const browserConfig = getCurrentBrowserConfig();
-    if (browserConfig) {
-      return browserConfig;
+    const browserResult = getCurrentBrowserConfig();
+    if (browserResult.config) {
+      return browserResult.config;
     }
 
     // 服务端fallback
-    return getServerDefaultConfig();
+    const defaultResult = getServerDefaultConfig();
+    return defaultResult.config!;
   },
 
   // 从 nuxt runtimeconfig 读取配置
@@ -78,7 +79,8 @@ export const configManager = {
   // 从服务器获取配置 (当前浏览器host:9001/config.json)
   async loadConfigFromServer(): Promise<SiteConfig | null> {
     try {
-      return await fetchConfigFromServer();
+      const result = await fetchConfigFromServer();
+      return result.config;
     } catch (error) {
       const configError = handleConfigError(error, 'server config loading');
       logger.warn('Failed to load config from server:', configError.message);
@@ -97,9 +99,9 @@ export const configManager = {
     let config: SiteConfig;
 
     // 1. 优先使用localStorage中保存的配置
-    const storedConfig = getStoredHostConfig();
-    if (storedConfig) {
-      config = storedConfig;
+    const storedResult = getStoredHostConfig();
+    if (storedResult.config) {
+      config = storedResult.config;
     } else {
       // 2. 尝试从服务器获取配置 (当前浏览器host:9001/config.json)
       const serverConfig = await this.loadConfigFromServer();
@@ -107,9 +109,9 @@ export const configManager = {
         config = serverConfig;
       } else {
         // 3. 使用当前浏览器地址
-        const browserConfig = getCurrentBrowserConfig();
-        if (browserConfig) {
-          config = browserConfig;
+        const browserResult = getCurrentBrowserConfig();
+        if (browserResult.config) {
+          config = browserResult.config;
         } else {
           // 4. 使用 runtimeconfig
           const runtimeConfig = this.loadRuntimeConfig();
@@ -117,7 +119,8 @@ export const configManager = {
             config = runtimeConfig;
           } else {
             // 5. 最后使用服务端默认值
-            config = getServerDefaultConfig();
+            const defaultResult = getServerDefaultConfig();
+            config = defaultResult.config!;
           }
         }
       }

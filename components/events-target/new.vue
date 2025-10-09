@@ -98,25 +98,26 @@ const typeOptions = [
 
 const configOptions = {
   MQTT: [
-    { label: t('MQTT_BROKER'), name: 'MQTT_BROKER', type: 'text' },
-    { label: t('MQTT_TOPIC'), name: 'MQTT_TOPIC', type: 'text' },
-    { label: t('MQTT_USERNAME'), name: 'MQTT_USERNAME', type: 'text' },
-    { label: t('MQTT_PASSWORD'), name: 'MQTT_PASSWORD', type: 'password' },
-    { label: t('MQTT_QOS'), name: 'MQTT_QOS', type: 'number' },
-    { label: t('MQTT_RECONNECT_INTERVAL'), name: 'MQTT_RECONNECT_INTERVAL', type: 'number' },
-    { label: t('MQTT_KEEP_ALIVE_INTERVAL'), name: 'MQTT_KEEP_ALIVE_INTERVAL', type: 'number' },
-    { label: t('MQTT_QUEUE_DIR'), name: 'MQTT_QUEUE_DIR', type: 'text' },
-    { label: t('MQTT_QUEUE_LIMIT'), name: 'MQTT_QUEUE_LIMIT', type: 'number' },
-    { label: t('COMMENT_KEY'), name: 'COMMENT_KEY', type: 'text' },
+    { label: t('MQTT_BROKER'), name: 'broker', type: 'text' },
+    // { label: t('MQTT_ENDPOINT'), name: 'endpoint', type: 'text' },
+    { label: t('MQTT_TOPIC'), name: 'topic', type: 'text' },
+    { label: t('MQTT_USERNAME'), name: 'username', type: 'text' },
+    { label: t('MQTT_PASSWORD'), name: 'password', type: 'password' },
+    { label: t('MQTT_QOS'), name: 'qos', type: 'number' },
+    { label: t('MQTT_RECONNECT_INTERVAL'), name: 'reconnect_interval', type: 'number' },
+    { label: t('MQTT_KEEP_ALIVE_INTERVAL'), name: 'keep_alive_interval', type: 'number' },
+    { label: t('MQTT_QUEUE_DIR'), name: 'queue_dir', type: 'text' },
+    { label: t('MQTT_QUEUE_LIMIT'), name: 'queue_limit', type: 'number' },
+    { label: t('COMMENT_KEY'), name: 'comment', type: 'text' },
   ],
   Webhook: [
-    { label: t('WEBHOOK_ENDPOINT'), name: 'WEBHOOK_ENDPOINT', type: 'text' },
+    { label: t('WEBHOOK_ENDPOINT'), name: 'endpoint', type: 'text' },
     { label: t('WEBHOOK_AUTH_TOKEN'), name: 'WEBHOOK_AUTH_TOKEN', type: 'text' },
     { label: t('WEBHOOK_QUEUE_LIMIT'), name: 'WEBHOOK_QUEUE_LIMIT', type: 'number' },
     { label: t('WEBHOOK_QUEUE_DIR'), name: 'WEBHOOK_QUEUE_DIR', type: 'text' },
     { label: t('WEBHOOK_CLIENT_CERT'), name: 'WEBHOOK_CLIENT_CERT', type: 'text' },
     { label: t('WEBHOOK_CLIENT_KEY'), name: 'WEBHOOK_CLIENT_KEY', type: 'text' },
-    { label: t('COMMENT_KEY'), name: 'COMMENT_KEY', type: 'text' },
+    { label: t('COMMENT_KEY'), name: 'comment', type: 'text' },
   ],
 };
 
@@ -179,11 +180,11 @@ const handleSave = () => {
       const key_values = Object.entries(formData.value.config)
         // .filter(([key, value]) => value !== '' && value != null) // 过滤空值
         .map(([key, value]) => ({
-          key: key.toLowerCase(), // 转换为小写
+          key: key, // 转换为小写
           value: String(value),
         }));
 
-      key_values.enable_key = 'enable';
+      key_values.enable = 'enable';
       // 检查是否有配置项
       if (key_values.length === 0) {
         message.error(t('Please fill in at least one configuration item'));

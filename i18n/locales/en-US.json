@@ -745,7 +745,6 @@
   "KMS not available for key operations": "KMS not available for key operations",
   "Backend": "Backend",
   "Degraded": "Degraded",
-  "Failed": "Failed",
   "Unknown": "Unknown",
   "KMS server is reachable but encryption/decryption path not fully verified": "KMS server is reachable but encryption/decryption path not fully verified",
   "KMS server is not reachable": "KMS server is not reachable",
@@ -772,5 +771,16 @@
   "Memory Medium": "Medium",
   "Memory High": "High",
   "Memory Critical": "Critical",
-  "Folder Processing Error": "Folder processing error"
+  "Folder Processing Error": "Folder processing error",
+  "Delete All Versions": "Delete All Versions",
+  "Delete All Versions Confirm": "Are you sure you want to permanently delete this file? This will delete all versions of the file and cannot be recovered.",
+  "Delete All Versions Warning": "Delete All Versions Warning",
+  "Delete All Versions Description": "This operation will delete all versions of the file, including historical versions. If you only want to delete a specific version, please delete it in the version list.",
+  "Delete All Versions Success": "File and all its versions have been deleted",
+  "Delete All Versions Failed": "Failed to delete all versions",
+  "User Name": "User Name",
+  "Please enter username": "Please enter username",
+  "username length cannot be less than 8 characters and greater than 16 characters": "username length cannot be less than 8 characters and greater than 16 characters",
+  "Please enter password": "Please enter password",
+  "password length cannot be less than 8 characters and greater than 16 characters": "password length cannot be less than 8 characters and greater than 16 characters"
 }

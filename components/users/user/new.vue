@@ -21,10 +21,10 @@
           :label-width="130"
         >
           <n-grid :cols="24" :x-gap="18">
-            <n-form-item-grid-item :span="24" :label="t('Access Key')" path="accessKey">
+            <n-form-item-grid-item :span="24" :label="t('User Name')" path="accessKey">
               <n-input v-model:value="editForm.accessKey" />
             </n-form-item-grid-item>
-            <n-form-item-grid-item :span="24" :label="t('Secret Key')" path="secretKey">
+            <n-form-item-grid-item :span="24" :label="t('Password')" path="secretKey">
               <n-input v-model:value="editForm.secretKey" type="password" />
             </n-form-item-grid-item>
             <n-form-item-grid-item :span="24" :label="t('Groups')" path="groups">
@@ -70,17 +70,22 @@ const rules: FormRules = {
       required: true,
       message: t('Please enter username'),
     },
+    {
+      type: 'string',
+      pattern: /^.{8,16}$/,
+      message: t('username length cannot be less than 8 characters and greater than 16 characters'),
+    },
   ],
   secretKey: [
     {
       required: true,
-      message: t('Please enter secret key'),
+      message: t('Please enter password'),
     },
-    // length>=8
+    // length>=8    // length<=40
     {
       type: 'string',
-      pattern: /^.{8,}$/,
-      message: t('Secret key length cannot be less than 8 characters'),
+      pattern: /^.{8,16}$/,
+      message: t('password length cannot be less than 8 characters and greater than 16 characters'),
     },
   ],
 };

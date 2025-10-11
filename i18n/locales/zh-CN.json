@@ -771,5 +771,16 @@
   "Memory Medium": "中",
   "Memory High": "高",
   "Memory Critical": "严重",
-  "Folder Processing Error": "文件夹处理错误"
+  "Folder Processing Error": "文件夹处理错误",
+  "Delete All Versions": "彻底删除",
+  "Delete All Versions Confirm": "确定要彻底删除这个文件吗？这将删除该文件的所有版本，无法恢复。",
+  "Delete All Versions Warning": "彻底删除警告",
+  "Delete All Versions Description": "此操作将删除该文件的所有版本，包括历史版本。如果只想删除特定版本，请在版本列表中进行删除。",
+  "Delete All Versions Success": "文件及其所有版本已删除",
+  "Delete All Versions Failed": "彻底删除失败",
+  "User Name": "用户名",
+  "Please enter username": "请输入用户名",
+  "username length cannot be less than 8 characters and greater than 16 characters": "用户名长度不能小于8个字符且不能大于16个字符",
+  "Please enter password": "请输入密码",
+  "password length cannot be less than 8 characters and greater than 16 characters": "密码长度不能小于8个字符且不能大于16个字符"
 }

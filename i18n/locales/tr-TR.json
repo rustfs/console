@@ -767,5 +767,16 @@
   "Memory Medium": "Orta",
   "Memory High": "Yüksek",
   "Memory Critical": "Kritik",
-  "Folder Processing Error": "Klasör işleme hatası"
+  "Folder Processing Error": "Klasör işleme hatası",
+  "Delete All Versions": "Tüm Sürümleri Sil",
+  "Delete All Versions Confirm": "Bu dosyayı kalıcı olarak silmek istediğinizden emin misiniz? Bu, dosyanın tüm sürümlerini silecek ve kurtarılamayacaktır.",
+  "Delete All Versions Warning": "Tüm Sürümleri Silme Uyarısı",
+  "Delete All Versions Description": "Bu işlem dosyanın tüm sürümlerini silecek, tarihsel sürümler dahil. Yalnızca belirli bir sürümü silmek istiyorsanız, lütfen sürüm listesinden silin.",
+  "Delete All Versions Success": "Dosya ve tüm sürümleri silindi",
+  "Delete All Versions Failed": "Tüm sürümleri silme başarısız",
+  "User Name": "Kullanıcı Adı",
+  "Please enter username": "Lütfen kullanıcı adını girin",
+  "username length cannot be less than 8 characters and greater than 16 characters": "Kullanıcı adı uzunluğu 8 karakterden az ve 16 karakterden fazla olamaz",
+  "Please enter password": "Lütfen şifreyi girin",
+  "password length cannot be less than 8 characters and greater than 16 characters": "Şifre uzunluğu 8 karakterden az ve 16 karakterden fazla olamaz"
 }

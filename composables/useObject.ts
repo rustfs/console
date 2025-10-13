@@ -56,6 +56,7 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
       Key: key,
     };
 
+    // 如果版本ID存在且不是null版本ID，则传递版本ID
     if (versionId) {
       params.VersionId = versionId;
     }
@@ -191,6 +192,28 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     return await $client.send(new ListObjectVersionsCommand(params));
   }
 
+  async function deleteAllVersions(key: string) {
+    try {
+      // 获取对象的所有版本
+      const versions = await getObjectVersions(key);
+      const versionsToDelete = versions.Versions || [];
+      const deleteMarkers = versions.DeleteMarkers || [];
+
+      // 删除所有版本
+      const deletePromises = versionsToDelete.map(version => deleteObject(key, version.VersionId));
+
+      // 删除所有删除标记
+      const deleteMarkerPromises = deleteMarkers.map(marker => deleteObject(key, marker.VersionId));
+
+      await Promise.all([...deletePromises, ...deleteMarkerPromises]);
+
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting all versions:', error);
+      throw error;
+    }
+  }
+
   return {
     headObject,
     putObject,
@@ -206,5 +229,6 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     getObjectLegalHold,
     putObjectLegalHold,
     getObjectVersions,
+    deleteAllVersions,
   };
 }

@@ -84,7 +84,7 @@
       <Icon name="ri:arrow-right-s-line" class="ml-2" />
     </n-button>
   </n-button-group>
-  <object-info ref="infoRef" />
+  <object-info ref="infoRef" @refresh-parent="handleObjectDeleted" />
 </template>
 
 <script setup lang="ts">
@@ -233,7 +233,7 @@ const columns: DataTableColumns<RowData> = [
     title: t('Actions'),
     key: 'actions',
     align: 'center',
-    width: 100,
+    width: 150,
     render: (row: RowData) => {
       return h(
         NSpace,
@@ -254,6 +254,37 @@ const columns: DataTableColumns<RowData> = [
                     {
                       default: () => '',
                       icon: () => h(Icon, { name: 'ri:download-2-line' }),
+                    }
+                  ),
+              }
+            ),
+            // 删除按钮 - 文件和文件夹都显示
+            h(
+              NPopconfirm,
+              { onPositiveClick: () => handleDeleteAllVersions(row) },
+              {
+                default: () =>
+                  h('div', [
+                    h(
+                      'div',
+                      { style: 'margin-bottom: 8px;' },
+                      row.type === 'object' ? t('Delete All Versions Warning') : t('Warning')
+                    ),
+                    h(
+                      'div',
+                      { style: 'color: #666; font-size: 12px;' },
+                      row.type === 'object'
+                        ? t('Delete All Versions Description')
+                        : t('Are you sure you want to delete this folder and all its contents?')
+                    ),
+                  ]),
+                trigger: () =>
+                  h(
+                    NButton,
+                    { size: 'small', type: 'error', secondary: true },
+                    {
+                      default: () => '',
+                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
               }
@@ -348,6 +379,51 @@ const filteredObjects = computed(() => {
     return displayKey?.toLowerCase().includes(term);
   });
 });
+
+/** ************************************处理对象删除********************************* */
+// 处理对象被删除（从版本组件触发）
+const handleObjectDeleted = () => {
+  // 刷新文件列表
+  salt.value = randomString();
+  refresh();
+};
+
+/** ************************************删除所有版本********************************* */
+// 删除文件的所有版本或文件夹及其内容
+const handleDeleteAllVersions = async (row: RowData) => {
+  try {
+    if (row.type === 'object') {
+      // 删除文件的所有版本
+      const { deleteAllVersions } = useObject({ bucket: bucketName.value });
+      await deleteAllVersions(row.Key);
+      message.success(t('Delete All Versions Success'));
+    } else if (row.type === 'prefix') {
+      // 删除文件夹及其所有内容
+      const { mapAllFiles } = useObject({ bucket: bucketName.value });
+      const files: string[] = [];
+
+      // 递归收集文件夹下的所有文件
+      await mapAllFiles(bucketName.value, row.Key, (fileKey: string) => {
+        files.push(fileKey);
+      });
+
+      if (files.length > 0) {
+        // 使用删除任务管理器删除所有文件
+        deleteTaskStore.addKeys(files, bucketName.value);
+        message.success(t('Delete task created'));
+      } else {
+        message.success(t('Delete Success'));
+      }
+    }
+
+    // 刷新数据
+    salt.value = randomString();
+    refresh();
+  } catch (error: any) {
+    console.error('Delete failed:', error);
+    message.error(t('Delete Failed'));
+  }
+};
 
 /** ************************************批量删除********************************* */
 function rowKey(row: any): string {

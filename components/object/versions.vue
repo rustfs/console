@@ -21,7 +21,7 @@ import dayjs from 'dayjs';
 import { NButton } from 'naive-ui';
 
 const props = defineProps<{ bucketName: string; objectKey: string; visible: boolean }>();
-const emit = defineEmits(['close', 'preview']);
+const emit = defineEmits(['close', 'preview', 'refresh-parent']);
 const { t } = useI18n();
 const message = useMessage();
 
@@ -153,7 +153,10 @@ async function deleteVersion(row: any) {
   try {
     await deleteObject(props.objectKey, row.VersionId);
     message.success(t('Delete Success'));
+
+    // 重新获取版本列表
     await fetchVersions();
+    emit('refresh-parent');
   } catch (e: any) {
     message.error(t('Delete Failed'));
   }

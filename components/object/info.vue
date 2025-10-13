@@ -176,6 +176,7 @@
     :visible="showVersions"
     @close="showVersions = false"
     @preview="handlePreviewVersion"
+    @refresh-parent="handleRefreshParent"
   />
 </template>
 
@@ -199,9 +200,20 @@ const openDrawer = (bucket: string, objName: string) => {
   getObject();
   getObjectLockConfig();
 };
+
+// 处理版本组件请求刷新父组件
+const handleRefreshParent = () => {
+  // 通知父组件（文件列表）刷新
+  emit('refresh-parent');
+};
+
+// 暴露方法给父组件
 defineExpose({
   openDrawer,
 });
+
+// 定义emit事件
+const emit = defineEmits(['refresh-parent']);
 
 const message = useMessage();
 

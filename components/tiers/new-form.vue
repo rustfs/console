@@ -13,7 +13,7 @@
     <n-card v-show="!formData.type">
       <n-grid x-gap="12" y-gap="12" :cols="2">
         <n-gi v-for="item in typeOptions">
-          <n-card class="cursor-pointer" @click="formData.type = item.value">
+          <n-card class="cursor-pointer" @click="chooseType(item.value)">
             <div class="flex flex-center leading-8">
               <img :src="item.iconUrl" class="w-8 h-8" />
               <span class="ms-2">{{ item.label }}</span>
@@ -23,7 +23,12 @@
       </n-grid>
     </n-card>
     <n-card v-show="formData.type">
-      <n-card class="mb-4">{{ formData.type }}</n-card>
+      <n-card class="mb-4">
+        <div class="flex flex-center leading-8" @click="formData.type = ''">
+          <img :src="iconUrl" class="w-8 h-8" />
+          <span class="ms-2"> {{ formData.type }}</span>
+        </div>
+      </n-card>
       <n-form ref="formRef" :model="formData" :rules="rules">
         <!-- 规则类型 -->
         <!-- <n-form-item label="分层类型" path="type">
@@ -127,6 +132,12 @@ const formData = ref({
   region: '',
   storageclass: 'STANDARD', // 新增字段，默认值为 STANDARD
 });
+const iconUrl = ref(MinioIcon);
+
+const chooseType = type => {
+  formData.value.type = type;
+  iconUrl.value = typeOptions.find(item => item.value === type)?.iconUrl || '';
+};
 
 const rules = {
   name: { required: true, message: t('Please enter rule name') },

@@ -34,7 +34,7 @@
         :bordered="false"
       />
     </page-content>
-    <events-target-new ref="newFormRef"></events-target-new>
+    <events-target-new ref="newFormRef" @search="refresh"></events-target-new>
   </div>
 </template>
 
@@ -131,7 +131,7 @@ const filteredData = computed(() => {
 });
 
 const deleteItem = async (row: RowData) => {
-  deleteEventTarget(row.service, row.account_id)
+  deleteEventTarget('notify_' + row.service, row.account_id)
     .then(() => {
       message.success(t('Delete Success'));
       refresh();

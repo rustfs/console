@@ -23,7 +23,14 @@
       </n-grid>
     </n-card>
     <n-card v-show="formData.type">
-      <n-card class="mb-4 cursor-pointer" @click="formData.type = ''">{{ formData.type }}</n-card>
+      <n-card class="mb-4 cursor-pointer" @click="formData.type = ''">
+        <div class="flex flex-center leading-8">
+          <img :src="iconUrl" class="w-8 h-8 me-2" />
+          <span>
+            {{ formData.type }}
+          </span>
+        </div>
+      </n-card>
       <n-form ref="formRef" :model="formData" :rules="rules">
         <!-- Name 字段单独处理 -->
         <n-form-item :label="t('Name') + '(a_zA_Z0-9_-)'" path="name">
@@ -112,11 +119,11 @@ const configOptions = {
   ],
   Webhook: [
     { label: t('WEBHOOK_ENDPOINT'), name: 'endpoint', type: 'text' },
-    { label: t('WEBHOOK_AUTH_TOKEN'), name: 'WEBHOOK_AUTH_TOKEN', type: 'text' },
-    { label: t('WEBHOOK_QUEUE_LIMIT'), name: 'WEBHOOK_QUEUE_LIMIT', type: 'number' },
-    { label: t('WEBHOOK_QUEUE_DIR'), name: 'WEBHOOK_QUEUE_DIR', type: 'text' },
-    { label: t('WEBHOOK_CLIENT_CERT'), name: 'WEBHOOK_CLIENT_CERT', type: 'text' },
-    { label: t('WEBHOOK_CLIENT_KEY'), name: 'WEBHOOK_CLIENT_KEY', type: 'text' },
+    { label: t('WEBHOOK_AUTH_TOKEN'), name: 'auth_token', type: 'text' },
+    { label: t('WEBHOOK_QUEUE_LIMIT'), name: 'queue_limit', type: 'number' },
+    { label: t('WEBHOOK_QUEUE_DIR'), name: 'queue_dir', type: 'text' },
+    { label: t('WEBHOOK_CLIENT_CERT'), name: 'client_cert', type: 'text' },
+    { label: t('WEBHOOK_CLIENT_KEY'), name: 'client_key', type: 'text' },
     { label: t('COMMENT_KEY'), name: 'comment', type: 'text' },
   ],
 };
@@ -146,6 +153,11 @@ watch(
     }
   }
 );
+// 设置一个计算属性，用于通过typeOptions 以及当前选中的类型，返回一个图标
+const iconUrl = computed(() => {
+  const type = formData.value.type;
+  return typeOptions.find(item => item.value === type)?.iconUrl || '';
+});
 
 const rules = {
   name: { required: true, message: t('Please enter name') },

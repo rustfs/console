@@ -122,8 +122,8 @@ const configOptions = {
     { label: t('WEBHOOK_AUTH_TOKEN'), name: 'auth_token', type: 'text' },
     { label: t('WEBHOOK_QUEUE_LIMIT'), name: 'queue_limit', type: 'number' },
     { label: t('WEBHOOK_QUEUE_DIR'), name: 'queue_dir', type: 'text' },
-    { label: t('WEBHOOK_CLIENT_CERT'), name: 'client_cert', type: 'text' },
-    { label: t('WEBHOOK_CLIENT_KEY'), name: 'client_key', type: 'text' },
+    // { label: t('WEBHOOK_CLIENT_CERT'), name: 'client_cert', type: 'text' },
+    // { label: t('WEBHOOK_CLIENT_KEY'), name: 'client_key', type: 'text' },
     { label: t('COMMENT_KEY'), name: 'comment', type: 'text' },
   ],
 };
@@ -193,7 +193,7 @@ const handleSave = () => {
         // .filter(([key, value]) => value !== '' && value != null) // 过滤空值
         .map(([key, value]) => ({
           key: key, // 转换为小写
-          value: String(value),
+          value: String(value || ''),
         }));
 
       key_values.enable = 'enable';
@@ -206,12 +206,6 @@ const handleSave = () => {
       const targetData = {
         key_values: key_values,
       };
-
-      console.log('保存数据:', {
-        target_type,
-        target_name,
-        targetData,
-      });
 
       // 调用保存接口
       updateEventTarget(target_type, target_name, targetData)

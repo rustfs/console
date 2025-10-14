@@ -205,9 +205,6 @@ const bucketList = computed(() => {
 });
 
 const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
-
-const pageData = ref([]);
-const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
 const loading = ref<boolean>(false);
 const pageData = ref<NotificationItem[]>([]);
 watch(
@@ -296,8 +293,6 @@ const handleRowDelete = async (row: NotificationItem, e: Event) => {
 
 const newRef = ref();
 const handleNew = () => {
-  newRef.value.open();
-};
   newRef.value.open();
 };
 

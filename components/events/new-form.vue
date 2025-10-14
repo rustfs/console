@@ -60,13 +60,6 @@ import type { FormItemRule, FormInst } from 'naive-ui';
 import { NButton, NForm, NFormItem, NInput } from 'naive-ui';
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-
-const { t } = useI18n();
-const formRef = ref(null);
-import { NButton, NForm, NFormItem, NInput } from 'naive-ui';
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-
 const { getEventTargetArnList } = useEventTarget();
 const { putBucketNotifications, listBucketNotifications } = useBucket({});
 const { t } = useI18n();
@@ -306,8 +299,6 @@ const handleCancel = () => {
   visible.value = false;
   // 重置表单验证状态
   formRef.value?.restoreValidation();
-};
-  visible.value = false;
 };
 
 // 获取arn列表

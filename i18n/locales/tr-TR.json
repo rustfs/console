@@ -791,5 +791,8 @@
   "Failed to update event target": "Etkinlik hedefi güncellenemedi",
   "Failed to delete event target": "Etkinlik hedefi silinemedi",
   "Are you sure you want to delete this event target?": "Bu etkinlik hedefini silmek istediğinizden emin misiniz?",
-  "Please fill in at least one configuration item": "Lütfen en az bir yapılandırma öğesi doldurun"
+  "Please fill in at least one configuration item": "Lütfen en az bir yapılandırma öğesi doldurun",
+  "Please select resource name": "Lütfen kaynak adını seçin",
+  "Please select at least one event": "Lütfen en az bir etkinlik seçin",
+  "Are you sure you want to delete this notification configuration?": "Bu bildirim yapılandırmasını silmek istediğinizden emin misiniz?"
 }

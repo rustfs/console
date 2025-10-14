@@ -790,5 +790,8 @@
   "Failed to update event target": "Failed to update event target",
   "Failed to delete event target": "Failed to delete event target",
   "Are you sure you want to delete this event target?": "Are you sure you want to delete this event target?",
-  "Please fill in at least one configuration item": "Please fill in at least one configuration item"
+  "Please fill in at least one configuration item": "Please fill in at least one configuration item",
+  "Please select resource name": "Please select resource name",
+  "Please select at least one event": "Please select at least one event",
+  "Are you sure you want to delete this notification configuration?": "Are you sure you want to delete this notification configuration?"
 }

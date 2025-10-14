@@ -791,5 +791,8 @@
   "Failed to update event target": "更新事件目标失败",
   "Failed to delete event target": "删除事件目标失败",
   "Are you sure you want to delete this event target?": "您确定要删除此事件目标吗？",
-  "Please fill in at least one configuration item": "请至少填写一个配置项"
+  "Please fill in at least one configuration item": "请至少填写一个配置项",
+  "Please select resource name": "请选择资源名称",
+  "Please select at least one event": "请至少选择一个事件",
+  "Are you sure you want to delete this notification configuration?": "您确定要删除此通知配置吗？"
 }

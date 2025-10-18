@@ -23,6 +23,11 @@ export default [
     icon: 'ri:file-user-line',
   },
   {
+    label: 'Import/Export',
+    to: '/import-export',
+    icon: 'ri:download-2-line',
+  },
+  {
     label: 'Performance',
     to: '/performance',
     icon: 'ri:bar-chart-box-line',

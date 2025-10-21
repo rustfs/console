@@ -27,8 +27,15 @@ class ApiClient {
   async request(url: string, options: RequestOptions = {}, parseJson: boolean = true) {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url;
     options.headers = { ...this.config?.headers, ...options.headers };
-    // 处理body的数据格式
-    options.body ? (options.body = JSON.stringify(options.body)) : null;
+    // 处理body的数据格式，只对普通对象序列化
+    if (options.body &&
+        !(options.body instanceof FormData) &&
+        !(options.body instanceof Blob) &&
+        !(options.body instanceof ArrayBuffer) &&
+        !(options.body instanceof Uint8Array) &&
+        !(options.body instanceof File)) {
+      options.body = JSON.stringify(options.body);
+    }
 
     if (options.params) {
       const queryString = new URLSearchParams(options.params).toString();

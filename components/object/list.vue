@@ -17,21 +17,17 @@
           <Icon name="ri:add-line" class="mr-2" />
           <span>{{ t('New Folder') }}</span>
         </n-button>
-        <n-button @click="() => handleNewObject(false)">
-          <Icon name="ri:add-line" class="mr-2" />
-          <span>{{ t('New File') }}</span>
-        </n-button>
         <n-button @click="() => (uploadPickerVisible = true)">
           <Icon name="ri:file-add-line" class="mr-2" />
           <span>{{ t('Upload File') + '/' + t('Folder') }}</span>
         </n-button>
-        <n-button :disabled="!checkedKeys.length" secondary @click="handleBatchDelete">
+        <n-button v-show="checkedKeys.length > 0" :disabled="!checkedKeys.length" type="error" @click="handleBatchDelete">
           <template #icon>
             <Icon name="ri:delete-bin-5-line"></Icon>
           </template>
           {{ t('Delete Selected') }}
         </n-button>
-        <n-button :disabled="!checkedKeys.length" secondary @click="downloadMultiple">
+        <n-button v-show="checkedKeys.length > 0" :disabled="!checkedKeys.length" @click="downloadMultiple">
           <Icon name="ri:download-cloud-2-line" class="mr-2" />
           <span>{{ t('Download') }}</span>
         </n-button>
@@ -42,38 +38,20 @@
       </div>
     </template>
   </n-page-header>
-  <n-data-table
-    class="border dark:border-neutral-700 rounded overflow-hidden"
-    :columns="columns"
-    :data="filteredObjects"
-    :row-key="rowKey"
-    @update:checked-row-keys="handleCheck"
-    :pagination="false"
-    :bordered="false"
-  />
-  <object-upload-picker
-    :show="uploadPickerVisible"
-    @update:show="
-      val => {
-        uploadPickerVisible = val;
-        refresh();
-      }
-    "
-    :bucketName="bucketName"
-    :prefix="prefix"
-  />
-  <object-new-form
-    :show="newObjectFormVisible"
-    :asPrefix="newObjectAsPrefix"
-    @update:show="
-      val => {
-        newObjectFormVisible = val;
-        refresh();
-      }
-    "
-    :bucketName="bucketName"
-    :prefix="prefix"
-  />
+  <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredObjects" :row-key="rowKey" @update:checked-row-keys="handleCheck"
+    :pagination="false" :bordered="false" />
+  <object-upload-picker :show="uploadPickerVisible" @update:show="
+    val => {
+      uploadPickerVisible = val
+      refresh()
+    }
+  " :bucketName="bucketName" :prefix="prefix" />
+  <object-new-form :show="newObjectFormVisible" :asPrefix="newObjectAsPrefix" @update:show="
+    val => {
+      newObjectFormVisible = val
+      refresh()
+    }
+  " :bucketName="bucketName" :prefix="prefix" />
   <n-button-group class="ml-auto">
     <n-button @click="goToPreviousPage" :disabled="!continuationToken">
       <Icon name="ri:arrow-left-s-line" class="mr-2" />
@@ -88,104 +66,103 @@
 </template>
 
 <script setup lang="ts">
-const { $s3Client } = useNuxtApp();
-const { t } = useI18n();
-import { useAsyncData, useRoute, useRouter } from '#app';
-import { NuxtLink } from '#components';
-import { ListObjectsV2Command, type _Object, type CommonPrefix } from '@aws-sdk/client-s3';
-import dayjs from 'dayjs';
-import { NButton, NSpace, NPopconfirm, type DataTableColumns, type DataTableRowKey } from 'naive-ui';
-import { Icon } from '#components';
-import { joinRelativeURL } from 'ufo';
-import { computed, ref, watch, type VNode } from 'vue';
-import { useDeleteTaskManagerStore } from '~/store/delete-tasks';
-import { useUploadTaskManagerStore } from '~/store/upload-tasks';
-import { useBucket } from '~/composables/useBucket';
-import JSZip from 'jszip';
-import { saveAs } from 'file-saver';
+const { $s3Client } = useNuxtApp()
+const { t } = useI18n()
+import { useAsyncData, useRoute, useRouter } from '#app'
+import { Icon, NuxtLink } from '#components'
+import { ListObjectsV2Command, type _Object, type CommonPrefix } from '@aws-sdk/client-s3'
+import dayjs from 'dayjs'
+import { saveAs } from 'file-saver'
+import JSZip from 'jszip'
+import { NButton, NPopconfirm, NSpace, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
+import { joinRelativeURL } from 'ufo'
+import { computed, ref, watch, type VNode } from 'vue'
+import { useBucket } from '~/composables/useBucket'
+import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
+import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
-const route = useRoute();
-const router = useRouter();
-const dialog = useDialog();
-const message = useMessage();
-const props = defineProps<{ bucket: string; path: string }>();
+const route = useRoute()
+const router = useRouter()
+const dialog = useDialog()
+const message = useMessage()
+const props = defineProps<{ bucket: string; path: string }>()
 
-const uploadPickerVisible = ref(false);
-const newObjectFormVisible = ref(false);
-const newObjectAsPrefix = ref(false);
-const searchTerm = ref('');
+const uploadPickerVisible = ref(false)
+const newObjectFormVisible = ref(false)
+const newObjectAsPrefix = ref(false)
+const searchTerm = ref('')
 
 // Add debounce function for search
 const debounce = (fn: Function, delay: number) => {
-  let timer: NodeJS.Timeout | null = null;
+  let timer: NodeJS.Timeout | null = null
   return (...args: any[]) => {
-    if (timer) clearTimeout(timer);
+    if (timer) clearTimeout(timer)
     timer = setTimeout(() => {
-      fn(...args);
-    }, delay);
-  };
-};
+      fn(...args)
+    }, delay)
+  }
+}
 
 const handleSearch = debounce(() => {
   // Reset pagination when searching
   if (continuationToken.value) {
-    continuationToken.value = undefined;
-    tokenHistory.value = [];
+    continuationToken.value = undefined
+    tokenHistory.value = []
   }
-}, 300);
+}, 300)
 
 // 上传任务
-const uploadTaskStore = useUploadTaskManagerStore();
-const uploadTasks = computed(() => uploadTaskStore.tasks);
+const uploadTaskStore = useUploadTaskManagerStore()
+const uploadTasks = computed(() => uploadTaskStore.tasks)
 
 // 删除任务
-const deleteTaskStore = useDeleteTaskManagerStore();
-const deleteTasks = computed(() => deleteTaskStore.tasks);
+const deleteTaskStore = useDeleteTaskManagerStore()
+const deleteTasks = computed(() => deleteTaskStore.tasks)
 
 // 当任务变化时，刷新数据
 watch(
   () => uploadTasks,
   () => setTimeout(refresh, 500),
   { deep: true }
-);
+)
 watch(
   () => deleteTasks,
   () => setTimeout(refresh, 500),
   { deep: true }
-);
+)
 
 // bucketName
-const bucketName = computed(() => props.bucket as string);
+const bucketName = computed(() => props.bucket as string)
 // 当前路径的前缀, example: '/folder1/folder2/'
-const prefix = computed(() => decodeURIComponent(props.path as string));
+const prefix = computed(() => decodeURIComponent(props.path as string))
 
 // query 参数
-const pageSize = computed(() => parseInt(route.query.pageSize as string, 10));
+const pageSize = computed(() => parseInt(route.query.pageSize as string, 10))
 // 将 continuationToken 改为 ref
-const continuationToken = ref<string | undefined>(undefined);
+const continuationToken = ref<string | undefined>(undefined)
 
 // 新建文件夹
 const handleNewObject = (asPrefix: boolean) => {
-  newObjectFormVisible.value = true;
-  newObjectAsPrefix.value = asPrefix;
-};
+  newObjectFormVisible.value = true
+  newObjectAsPrefix.value = asPrefix
+}
 
 const bucketPath = (path?: string | Array<string>) => {
   if (Array.isArray(path)) {
-    path = path.join('/');
+    path = path.join('/')
   }
 
-  return joinRelativeURL('/browser', encodeURIComponent(bucketName.value), path ? encodeURIComponent(path) : '');
-};
-
-interface RowData {
-  Key: string;
-  type: 'prefix' | 'object';
-  Size: number;
-  LastModified: string;
+  return joinRelativeURL('/browser', encodeURIComponent(bucketName.value), path ? encodeURIComponent(path) : '')
 }
 
-const infoRef = ref();
+interface RowData {
+  Key: string
+  type: 'prefix' | 'object'
+  Size: number
+  LastModified: string
+}
+
+const infoRef = ref()
 const columns: DataTableColumns<RowData> = [
   {
     type: 'selection',
@@ -194,27 +171,27 @@ const columns: DataTableColumns<RowData> = [
     key: 'Key',
     title: t('Object'),
     render: (row: { Key: string; type: 'prefix' | 'object' }) => {
-      const displayKey = prefix.value ? row.Key.substring(prefix.value.length) : row.Key;
-      let label: string | VNode = displayKey || '/';
+      const displayKey = prefix.value ? row.Key.substring(prefix.value.length) : row.Key
+      let label: string | VNode = displayKey || '/'
 
       if (row.type === 'prefix') {
-        label = h('span', { class: 'inline-flex items-center gap-2' }, [icon('ri:folder-line'), label]);
+        label = h('span', { class: 'inline-flex items-center gap-2' }, [icon('ri:folder-line'), label])
       }
 
-      const keyInUri = row.Key;
+      const keyInUri = row.Key
       return h(
         NuxtLink,
         {
           href: row.type === 'prefix' ? bucketPath(keyInUri) : '',
           class: 'block text-cyan-400 cursor-pointer',
           onClick: (e: MouseEvent) => {
-            if (row.type === 'prefix') return;
-            infoRef.value.openDrawer(bucketName.value, row.Key);
-            return;
+            if (row.type === 'prefix') return
+            infoRef.value.openDrawer(bucketName.value, row.Key)
+            return
           },
         },
         () => label
-      );
+      )
     },
   },
   {
@@ -226,14 +203,14 @@ const columns: DataTableColumns<RowData> = [
     key: 'LastModified',
     title: t('Update Time'),
     render: (row: { LastModified: string }) => {
-      return row.LastModified ? dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss') : '';
+      return row.LastModified ? dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss') : ''
     },
   },
   {
     title: t('Actions'),
     key: 'actions',
     align: 'center',
-    width: 150,
+    width: 250,
     render: (row: RowData) => {
       return h(
         NSpace,
@@ -252,7 +229,7 @@ const columns: DataTableColumns<RowData> = [
                     NButton,
                     { size: 'small', secondary: true },
                     {
-                      default: () => '',
+                      default: () => t('Download'),
                       icon: () => h(Icon, { name: 'ri:download-2-line' }),
                     }
                   ),
@@ -283,7 +260,7 @@ const columns: DataTableColumns<RowData> = [
                     NButton,
                     { size: 'small', type: 'error', secondary: true },
                     {
-                      default: () => '',
+                      default: () => t('Delete'),
                       icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
@@ -291,26 +268,26 @@ const columns: DataTableColumns<RowData> = [
             ),
           ],
         }
-      );
+      )
     },
   },
-];
+]
 
 interface ListObjectsResponse {
-  contents: _Object[];
-  commonPrefixes: CommonPrefix[];
-  nextContinuationToken: string | null;
-  isTruncated: boolean;
+  contents: _Object[]
+  commonPrefixes: CommonPrefix[]
+  nextContinuationToken: string | null
+  isTruncated: boolean
 }
 const randomString = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  let result = ''
   for (let i = 0; i < 8; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += chars.charAt(Math.floor(Math.random() * chars.length))
   }
-  return result;
-};
-const salt = ref(randomString());
+  return result
+}
+const salt = ref(randomString())
 // 在服务端获取数据
 const { data, refresh } = await useAsyncData<ListObjectsResponse>(
   `objectsData-${salt.value}&${prefix.value}&${pageSize.value}&${continuationToken.value}`,
@@ -321,30 +298,30 @@ const { data, refresh } = await useAsyncData<ListObjectsResponse>(
       Delimiter: '/',
       Prefix: prefix.value || undefined,
       ContinuationToken: continuationToken.value,
-    };
+    }
 
-    const result = await $s3Client.send(new ListObjectsV2Command(params));
+    const result = await $s3Client.send(new ListObjectsV2Command(params))
 
     return {
       contents: result.Contents || [],
       commonPrefixes: result.CommonPrefixes || [],
       nextContinuationToken: result.NextContinuationToken || null,
       isTruncated: result.IsTruncated ?? false,
-    };
+    }
   }
-);
+)
 
 watch(
   continuationToken,
   () => {
-    refresh();
+    refresh()
   },
   { deep: true }
-);
+)
 
-const contents = computed(() => data.value?.contents || []);
-const commonPrefixes = computed(() => data.value?.commonPrefixes || []);
-const nextToken = computed(() => data.value?.nextContinuationToken || null);
+const contents = computed(() => data.value?.contents || [])
+const commonPrefixes = computed(() => data.value?.commonPrefixes || [])
+const nextToken = computed(() => data.value?.nextContinuationToken || null)
 
 const objects = computed(() => {
   return commonPrefixes.value
@@ -353,7 +330,7 @@ const objects = computed(() => {
         Key: prefix.Prefix,
         type: 'prefix',
         Size: 0,
-      };
+      }
     })
     .concat(
       contents.value.map(object => {
@@ -362,31 +339,31 @@ const objects = computed(() => {
           type: 'object',
           Size: object.Size ?? 0,
           LastModified: object.LastModified ?? new Date(0),
-        };
+        }
       })
-    );
-});
+    )
+})
 
 // New computed property to filter objects based on search term
 const filteredObjects = computed(() => {
   if (!searchTerm.value.trim()) {
-    return objects.value;
+    return objects.value
   }
 
-  const term = searchTerm.value.toLowerCase();
+  const term = searchTerm.value.toLowerCase()
   return objects.value.filter(obj => {
-    const displayKey = prefix.value ? obj.Key?.substring(prefix.value.length) : obj.Key;
-    return displayKey?.toLowerCase().includes(term);
-  });
-});
+    const displayKey = prefix.value ? obj.Key?.substring(prefix.value.length) : obj.Key
+    return displayKey?.toLowerCase().includes(term)
+  })
+})
 
 /** ************************************处理对象删除********************************* */
 // 处理对象被删除（从版本组件触发）
 const handleObjectDeleted = () => {
   // 刷新文件列表
-  salt.value = randomString();
-  refresh();
-};
+  salt.value = randomString()
+  refresh()
+}
 
 /** ************************************删除所有版本********************************* */
 // 删除文件的所有版本或文件夹及其内容
@@ -394,50 +371,50 @@ const handleDeleteAllVersions = async (row: RowData) => {
   try {
     if (row.type === 'object') {
       // 删除文件的所有版本
-      const { deleteAllVersions } = useObject({ bucket: bucketName.value });
-      await deleteAllVersions(row.Key);
-      message.success(t('Delete All Versions Success'));
+      const { deleteAllVersions } = useObject({ bucket: bucketName.value })
+      await deleteAllVersions(row.Key)
+      message.success(t('Delete All Versions Success'))
     } else if (row.type === 'prefix') {
       // 删除文件夹及其所有内容
-      const { mapAllFiles } = useObject({ bucket: bucketName.value });
-      const files: string[] = [];
+      const { mapAllFiles } = useObject({ bucket: bucketName.value })
+      const files: string[] = []
 
       // 递归收集文件夹下的所有文件
       await mapAllFiles(bucketName.value, row.Key, (fileKey: string) => {
-        files.push(fileKey);
-      });
+        files.push(fileKey)
+      })
 
       if (files.length > 0) {
         // 使用删除任务管理器删除所有文件
-        deleteTaskStore.addKeys(files, bucketName.value);
-        message.success(t('Delete task created'));
+        deleteTaskStore.addKeys(files, bucketName.value)
+        message.success(t('Delete task created'))
       } else {
-        message.success(t('Delete Success'));
+        message.success(t('Delete Success'))
       }
     }
 
     // 刷新数据
-    salt.value = randomString();
-    refresh();
+    salt.value = randomString()
+    refresh()
   } catch (error: any) {
-    console.error('Delete failed:', error);
-    message.error(t('Delete Failed'));
+    console.error('Delete failed:', error)
+    message.error(t('Delete Failed'))
   }
-};
+}
 
 /** ************************************批量删除********************************* */
 function rowKey(row: any): string {
-  return row.Key || '';
+  return row.Key || ''
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([]);
+const checkedKeys = ref<DataTableRowKey[]>([])
 function handleCheck(keys: DataTableRowKey[]) {
   // 过滤掉 undefined
-  checkedKeys.value = keys.filter((k): k is string => typeof k === 'string');
-  return checkedKeys;
+  checkedKeys.value = keys.filter((k): k is string => typeof k === 'string')
+  return checkedKeys
 }
-const objectApi = useObject({ bucket: bucketName.value });
-const bucketApi = useBucket({});
+const objectApi = useObject({ bucket: bucketName.value })
+const bucketApi = useBucket({})
 
 // 批量删除
 function handleBatchDelete() {
@@ -448,33 +425,33 @@ function handleBatchDelete() {
     negativeText: t('Cancel'),
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error(t('Please select at least one item'));
-        return;
+        message.error(t('Please select at least one item'))
+        return
       }
       try {
         await Promise.all(
           checkedKeys.value.map(async item => {
-            const findOne = objects.value.find(obj => obj.Key === item);
+            const findOne = objects.value.find(obj => obj.Key === item)
             // 目录删除
             // 递归查询目录下的所有文件，然后删除
             if (findOne?.type === 'prefix' && findOne?.Key) {
               return await objectApi.mapAllFiles(bucketName.value, findOne.Key, (fileKey: string) => {
-                deleteTaskStore.addKeys([fileKey], bucketName.value);
-              });
+                deleteTaskStore.addKeys([fileKey], bucketName.value)
+              })
             }
 
-            return deleteTaskStore.addKeys([String(item)], bucketName.value);
+            return deleteTaskStore.addKeys([String(item)], bucketName.value)
           })
-        );
+        )
 
-        message.success(t('Delete task created'));
-        salt.value = randomString();
-        refresh();
+        message.success(t('Delete task created'))
+        salt.value = randomString()
+        refresh()
       } catch (error) {
-        message.error(t('Delete Failed'));
+        message.error(t('Delete Failed'))
       }
     },
-  });
+  })
 }
 /** ************************************批量删除********************************* */
 
@@ -483,106 +460,106 @@ function handleBatchDelete() {
 const handledownload = async (item: any) => {
   if (item.type === 'object') {
     // 单文件下载
-    const msg = message.loading(t('Getting URL'));
-    const url = await objectApi.getSignedUrl(item.Key);
-    msg.destroy();
-    window.open(url, '_blank');
+    const msg = message.loading(t('Getting URL'))
+    const url = await objectApi.getSignedUrl(item.Key)
+    msg.destroy()
+    window.open(url, '_blank')
   } else if (item.type === 'prefix') {
     // 文件夹下载
-    const msg = message.loading(t('Preparing folder...'));
+    const msg = message.loading(t('Preparing folder...'))
     // 递归获取所有文件
-    const files: string[] = [];
+    const files: string[] = []
     await objectApi.mapAllFiles(bucketName.value, item.Key, (fileKey: string) => {
-      files.push(fileKey);
-    });
+      files.push(fileKey)
+    })
 
     if (files.length === 0) {
-      msg.destroy();
-      message.warning(t('Folder is empty'));
-      return;
+      msg.destroy()
+      message.warning(t('Folder is empty'))
+      return
     }
 
-    msg.destroy();
-    const zip = new JSZip();
+    msg.destroy()
+    const zip = new JSZip()
 
     // 批量获取文件内容并添加到 zip
-    const downloadMsg = message.loading(t('Downloading files...'));
+    const downloadMsg = message.loading(t('Downloading files...'))
     await Promise.all(
       files.map(async fileKey => {
-        const url = await objectApi.getSignedUrl(fileKey);
-        const response = await fetch(url);
-        const blob = await response.blob();
+        const url = await objectApi.getSignedUrl(fileKey)
+        const response = await fetch(url)
+        const blob = await response.blob()
         // 保持相对路径
-        zip.file(fileKey.substring(item.Key.length), blob);
+        zip.file(fileKey.substring(item.Key.length), blob)
       })
-    );
-    downloadMsg.destroy();
+    )
+    downloadMsg.destroy()
 
     // 生成 zip 并下载
-    const zipBlob = await zip.generateAsync({ type: 'blob' });
-    saveAs(zipBlob, `${item.Key.replace(/\/$/, '') || 'folder'}.zip`);
-    message.success(t('Download ready'));
+    const zipBlob = await zip.generateAsync({ type: 'blob' })
+    saveAs(zipBlob, `${item.Key.replace(/\/$/, '') || 'folder'}.zip`)
+    message.success(t('Download ready'))
   }
-};
+}
 
 // 批量下载
 const downloadMultiple = async () => {
   if (!checkedKeys.value.length) {
-    message.warning(t('Please select at least one item'));
-    return;
+    message.warning(t('Please select at least one item'))
+    return
   }
   // 收集文件 loading
-  let collectMsg = message.loading(t('Collecting files'));
+  let collectMsg = message.loading(t('Collecting files'))
   // 1. 找到所有选中的对象
-  const selectedItems = objects.value.filter(obj => checkedKeys.value.includes(obj.Key as string));
+  const selectedItems = objects.value.filter(obj => checkedKeys.value.includes(obj.Key as string))
   // 2. 递归收集所有文件
-  let allFiles: { key: string; relative: string }[] = [];
+  let allFiles: { key: string; relative: string }[] = []
   for (const item of selectedItems) {
     if (item.type === 'object') {
-      const key = item.Key || '';
-      const rel = prefix.value ? key.substring(prefix.value.length) : key;
-      allFiles.push({ key, relative: rel });
+      const key = item.Key || ''
+      const rel = prefix.value ? key.substring(prefix.value.length) : key
+      allFiles.push({ key, relative: rel })
     } else if (item.type === 'prefix') {
-      const key = item.Key || '';
+      const key = item.Key || ''
       await objectApi.mapAllFiles(bucketName.value, key, fileKey => {
-        const rel = prefix.value ? fileKey.substring(prefix.value.length) : fileKey;
-        allFiles.push({ key: fileKey, relative: rel });
-      });
+        const rel = prefix.value ? fileKey.substring(prefix.value.length) : fileKey
+        allFiles.push({ key: fileKey, relative: rel })
+      })
     }
   }
-  collectMsg.destroy();
+  collectMsg.destroy()
   if (allFiles.length === 0) {
-    message.warning(t('No files to download'));
-    return;
+    message.warning(t('No files to download'))
+    return
   }
   // 下载文件 loading，带进度
-  let percent = ref(0);
-  const total = allFiles.length;
-  let finished = 0;
-  let downloadMsg: any = null;
+  let percent = ref(0)
+  const total = allFiles.length
+  let finished = 0
+  let downloadMsg: any = null
   const updateDownloadMsg = () => {
-    if (downloadMsg) downloadMsg.destroy();
+    if (downloadMsg) downloadMsg.destroy()
     downloadMsg = message.loading(`${t('Downloading files')} ${Math.round((finished / total) * 100)}%`, {
       duration: 0,
-    });
-  };
-  updateDownloadMsg();
-  const zip = new JSZip();
+    })
+  }
+  updateDownloadMsg()
+  const zip = new JSZip()
   await Promise.all(
     allFiles.map(async ({ key, relative }) => {
-      const url = await objectApi.getSignedUrl(key);
-      const response = await fetch(url);
-      const blob = await response.blob();
-      zip.file(relative, blob);
-      finished++;
-      updateDownloadMsg();
+      const url = await objectApi.getSignedUrl(key)
+      const response = await fetch(url)
+      const blob = await response.blob()
+      zip.file(relative, blob)
+      finished++
+      updateDownloadMsg()
     })
-  );
-  if (downloadMsg) downloadMsg.destroy();
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
-  saveAs(zipBlob, `download.zip`);
-  message.success(t('Download ready'));
-};
+  )
+  if (downloadMsg) downloadMsg.destroy()
+  const zipBlob = await zip.generateAsync({ type: 'blob' })
+  saveAs(zipBlob, `download.zip`)
+  message.success(t('Download ready'))
+}
 /** ************************************下载********************************* */
 
 // 为了实现 "Previous" 功能，需要记录访问过的 token 列表。
@@ -592,40 +569,40 @@ const downloadMultiple = async () => {
 // 因此"上一页"可以通过浏览器后退实现，也可以在数据中保存 token 来人工实现。
 // 这里演示一个简化版本——在客户端保存 tokenHistory。
 // 请注意：刷新后 tokenHistory 会丢失，因为它是前端状态。
-const tokenHistory = ref<string[]>([]);
+const tokenHistory = ref<string[]>([])
 
 // 当页面加载后，如果 continuationToken 有值，就表示不是第一页
 // 将当前 continuationToken 添加到历史中
 if (continuationToken.value && !tokenHistory.value.includes(continuationToken.value)) {
-  tokenHistory.value.push(continuationToken.value);
+  tokenHistory.value.push(continuationToken.value)
 }
 
 // previousToken 根据 tokenHistory 来确定
 // tokenHistory 中最后一个是当前页的 token，上一个则是 previousToken
 const previousToken = computed(() => {
-  if (tokenHistory.value.length < 2) return null;
+  if (tokenHistory.value.length < 2) return null
   // 倒数第二个是上一页的 token
-  return tokenHistory.value[tokenHistory.value.length - 2];
-});
+  return tokenHistory.value[tokenHistory.value.length - 2]
+})
 
 // 修改分页方法
 function goToNextPage() {
   if (nextToken.value) {
-    continuationToken.value = nextToken.value;
-    tokenHistory.value.push(nextToken.value);
+    continuationToken.value = nextToken.value
+    tokenHistory.value.push(nextToken.value)
   }
 }
 
 function goToPreviousPage() {
   if (previousToken.value) {
-    continuationToken.value = previousToken.value;
+    continuationToken.value = previousToken.value
     // 将上一页 token 之后的记录删除
-    const prevIndex = tokenHistory.value.indexOf(previousToken.value);
-    tokenHistory.value.splice(prevIndex + 1);
+    const prevIndex = tokenHistory.value.indexOf(previousToken.value)
+    tokenHistory.value.splice(prevIndex + 1)
   } else {
     // 回到第一页
-    continuationToken.value = undefined;
-    tokenHistory.value = [];
+    continuationToken.value = undefined
+    tokenHistory.value = []
   }
 }
 </script>

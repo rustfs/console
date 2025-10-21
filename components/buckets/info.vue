@@ -7,9 +7,10 @@
             <span>{{ t('Access Policy') }}</span>
             <n-button class="align-middle" quaternary round type="primary" @click="editPolicy">
               <Icon name="ri:edit-2-line" class="mr-2" />
+              <span>{{ t('Edit') }}</span>
             </n-button>
           </template>
-          {{ policyOptions.find(item => item.value === bucketPolicy)?.label }}
+          {{policyOptions.find(item => item.value === bucketPolicy)?.label}}
         </n-descriptions-item>
 
         <n-descriptions-item>
@@ -17,6 +18,7 @@
             <span class="mr-2">{{ t('Encryption') }}</span>
             <n-button class="align-middle" quaternary round type="primary" @click="editEncript">
               <Icon name="ri:edit-2-line" class="mr-2" />
+              <span>{{ t('Edit') }}</span>
             </n-button>
           </template>
           <span v-if="encryptFormValue.encrypt === 'disabled'">{{ t('Disabled') }}</span>
@@ -38,42 +40,23 @@
             {{ t('Tag') }}
             <n-button class="align-middle" round quaternary type="primary" @click="addTag">
               <Icon name="ri:add-line" size="16" class="mr-2" />
+              <span>{{ t('Add') }}</span>
             </n-button>
           </template>
-          <n-tag
-            class="m-2"
-            v-for="(tag, index) in tags"
-            type="info"
-            @click="editTag(index)"
-            closable
-            @close="handledeleteTag(index)"
-          >
+          <n-tag class="m-2" v-for="(tag, index) in tags" type="info" @click="editTag(index)" closable @close="handledeleteTag(index)">
             {{ tag.Key }}:{{ tag.Value }}
           </n-tag>
         </n-descriptions-item>
 
         <n-descriptions-item>
           <template #label>{{ t('Object Lock') }}</template>
-          <n-switch
-            :disabled="true"
-            v-model:value="lockStatus"
-            :loading="objectLockLoading"
-            :round="false"
-            @update:value="handleChangeVersionStatus"
-          />
+          <n-switch :disabled="true" v-model:value="lockStatus" :loading="objectLockLoading" :round="false" @update:value="handleChangeVersionStatus" />
         </n-descriptions-item>
 
         <n-descriptions-item>
           <template #label>{{ t('Version Control') }}</template>
-          <n-switch
-            v-model:value="versioningStatus"
-            :disabled="lockStatus == true"
-            checked-value="Enabled"
-            unchecked-value="Suspended"
-            :round="false"
-            :loading="statusLoading"
-            @update:value="handleChangeVersionStatus"
-          />
+          <n-switch v-model:value="versioningStatus" :disabled="lockStatus == true" checked-value="Enabled" unchecked-value="Suspended" :round="false" :loading="statusLoading"
+            @update:value="handleChangeVersionStatus" />
         </n-descriptions-item>
       </n-descriptions>
 
@@ -111,25 +94,10 @@
     </n-drawer-content>
 
     <!-- policy -->
-    <n-modal
-      v-model:show="showPolicyModal"
-      :title="t('Set Policy')"
-      preset="card"
-      draggable
-      :style="{ width: '750px' }"
-    >
-      <n-form
-        ref="policyFormRef"
-        :inline="policyFormValue.policy !== 'custom'"
-        :label-width="80"
-        :model="policyFormValue"
-      >
+    <n-modal v-model:show="showPolicyModal" :title="t('Set Policy')" preset="card" draggable :style="{ width: '750px' }">
+      <n-form ref="policyFormRef" :inline="policyFormValue.policy !== 'custom'" :label-width="80" :model="policyFormValue">
         <n-form-item :label="t('Policy')" path="" class="flex-auto">
-          <n-select
-            v-model:value="policyFormValue.policy"
-            :placeholder="t('Please select policy')"
-            :options="policyOptions"
-          />
+          <n-select v-model:value="policyFormValue.policy" :placeholder="t('Please select policy')" :options="policyOptions" />
         </n-form-item>
         <n-form-item :span="24" v-if="policyFormValue.policy == 'custom'" :label="t('Policy Content')" path="content">
           <n-scrollbar class="w-full max-h-[60vh]"><json-editor v-model="policyFormValue.content" /></n-scrollbar>
@@ -158,27 +126,13 @@
     </n-modal>
 
     <!-- Encrypt -->
-    <n-modal
-      v-model:show="showEncryptModal"
-      :title="t('Enable Storage Encryption')"
-      preset="card"
-      draggable
-      :style="{ width: '550px' }"
-    >
+    <n-modal v-model:show="showEncryptModal" :title="t('Enable Storage Encryption')" preset="card" draggable :style="{ width: '550px' }">
       <n-form ref="encryptFormRef" label-placemen="left" label-width="auto" inline :model="encryptFormValue">
         <n-form-item :label="t('Encryption Type')" path="encrypt" class="flex-auto">
-          <n-select
-            v-model:value="encryptFormValue.encrypt"
-            :placeholder="t('Please select encryption type')"
-            :options="encryptOptions"
-          />
+          <n-select v-model:value="encryptFormValue.encrypt" :placeholder="t('Please select encryption type')" :options="encryptOptions" />
         </n-form-item>
         <n-form-item v-if="encryptFormValue.encrypt == 'SSE-KMS'" label="KMS Key ID" path="kmsKeyId" class="flex-auto">
-          <n-select
-            v-model:value="encryptFormValue.kmsKeyId"
-            :placeholder="t('Please select KMS key')"
-            :options="kmsKeyOptions"
-          />
+          <n-select v-model:value="encryptFormValue.kmsKeyId" :placeholder="t('Please select KMS key')" :options="kmsKeyOptions" />
         </n-form-item>
 
         <n-form-item>
@@ -189,13 +143,7 @@
     </n-modal>
 
     <!-- retention -->
-    <n-modal
-      v-model:show="showRetentionModal"
-      :title="t('Set Retention')"
-      preset="card"
-      draggable
-      :style="{ width: '550px' }"
-    >
+    <n-modal v-model:show="showRetentionModal" :title="t('Set Retention')" preset="card" draggable :style="{ width: '550px' }">
       <n-form ref="retentionFormRef" label-placemen="left" label-width="auto" :model="retentionFormValue">
         <n-form-item :label="t('Retention Mode')" path="retentionMode" class="flex-auto">
           <n-radio-group v-model:value="retentionFormValue.retentionMode">
@@ -225,30 +173,30 @@
 </template>
 
 <script setup lang="ts">
-import { Icon } from '#components';
-const { t } = useI18n();
-const dialog = useDialog();
-const visibel = ref(false);
-const bucketName = ref('');
+import { Icon } from '#components'
+const { t } = useI18n()
+const dialog = useDialog()
+const visibel = ref(false)
+const bucketName = ref('')
 const openDrawer = (bucket: string) => {
-  visibel.value = true;
-  bucketName.value = bucket;
+  visibel.value = true
+  bucketName.value = bucket
   // 在服务端获取数据
-  getData();
-};
+  getData()
+}
 defineExpose({
   openDrawer,
-});
+})
 
 const getData = async () => {
-  await getTags();
-  await getVersioningStatus();
-  await getObjectLockConfig();
-  await getBucketEncryptionFn();
-  await getbucketPolicy();
-};
+  await getTags()
+  await getVersioningStatus()
+  await getObjectLockConfig()
+  await getBucketEncryptionFn()
+  await getbucketPolicy()
+}
 
-const message = useMessage();
+const message = useMessage()
 const {
   getBucketTagging,
   deleteBucket,
@@ -262,115 +210,115 @@ const {
   getBucketEncryption,
   putBucketEncryption,
   deleteBucketEncryption,
-} = useBucket({});
+} = useBucket({})
 
 // 使用 SSE 相关功能
-const { getKeyList } = useSSE();
+const { getKeyList } = useSSE()
 
 /**********object lock ***********************/
-const lockStatus = ref(false);
-const objectLockLoading = ref(false);
-const retentionEnabled = ref(false);
+const lockStatus = ref(false)
+const objectLockLoading = ref(false)
+const retentionEnabled = ref(false)
 
 const getObjectLockConfig = async () => {
-  objectLockLoading.value = true;
+  objectLockLoading.value = true
   getObjectLockConfiguration(bucketName.value)
     .then(res => {
       if (res.ObjectLockConfiguration?.ObjectLockEnabled) {
-        lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == 'Enabled' ? true : false;
+        lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == 'Enabled' ? true : false
         if (res.ObjectLockConfiguration?.Rule) {
-          retentionEnabled.value = true;
-          retentionFormValue.value.retentionMode = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Mode || null;
+          retentionEnabled.value = true
+          retentionFormValue.value.retentionMode = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Mode || null
           retentionFormValue.value.retentionPeriod =
             res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days ||
             res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years ||
-            null;
+            null
           retentionFormValue.value.retentionUnit = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years
             ? 'Years'
             : res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days
               ? 'Days'
-              : '';
+              : ''
         }
       } else {
-        lockStatus.value = false;
-        retentionEnabled.value = false;
-        retentionFormValue.value.retentionMode = null;
-        retentionFormValue.value.retentionPeriod = null;
-        retentionFormValue.value.retentionUnit = null;
+        lockStatus.value = false
+        retentionEnabled.value = false
+        retentionFormValue.value.retentionMode = null
+        retentionFormValue.value.retentionPeriod = null
+        retentionFormValue.value.retentionUnit = null
       }
     })
     .finally(() => {
-      objectLockLoading.value = false;
-    });
-};
+      objectLockLoading.value = false
+    })
+}
 
 /**********object lock ***********************/
 
 /******** policy ***********************/
-import { setBucketPolicy, getBucketPolicy as getBucketPolicyFn } from '~/utils/bucket-policy';
+import { getBucketPolicy as getBucketPolicyFn, setBucketPolicy } from '~/utils/bucket-policy'
 
-const bucketPolicy = ref('public');
+const bucketPolicy = ref('public')
 const getbucketPolicy = async () => {
   try {
-    const res = await getBucketPolicy(bucketName.value);
+    const res = await getBucketPolicy(bucketName.value)
     if (res.Policy) {
-      policyFormValue.value.content = res.Policy;
+      policyFormValue.value.content = res.Policy
 
-      bucketPolicy.value = getBucketPolicyFn(JSON.parse(res.Policy).Statement, bucketName.value, '');
-      policyFormValue.value.policy = bucketPolicy.value;
+      bucketPolicy.value = getBucketPolicyFn(JSON.parse(res.Policy).Statement, bucketName.value, '')
+      policyFormValue.value.policy = bucketPolicy.value
       if (bucketPolicy.value == 'none') {
-        bucketPolicy.value = 'custom';
-        policyFormValue.value.policy = 'custom';
+        bucketPolicy.value = 'custom'
+        policyFormValue.value.policy = 'custom'
       }
     } else {
-      bucketPolicy.value = 'public';
+      bucketPolicy.value = 'public'
     }
   } catch (error: any) {
     // Handle 404 error when no policy exists
-    console.error('Error fetching bucket policy:', error);
+    console.error('Error fetching bucket policy:', error)
     // Set default values for private policy
-    bucketPolicy.value = 'private';
-    policyFormValue.value.policy = 'private';
-    policyFormValue.value.content = '{}';
+    bucketPolicy.value = 'private'
+    policyFormValue.value.policy = 'private'
+    policyFormValue.value.content = '{}'
   }
-};
+}
 
 const policyFormValue = ref({
   policy: 'private',
   content: '{}',
-});
-const showPolicyModal = ref(false);
+})
+const showPolicyModal = ref(false)
 const editPolicy = () => {
-  showPolicyModal.value = true;
-};
+  showPolicyModal.value = true
+}
 
 const submitPolicyForm = () => {
   if (policyFormValue.value.policy == 'custom') {
-    let polictStr = JSON.stringify(JSON.parse(policyFormValue.value.content));
-    console.log(polictStr);
+    let polictStr = JSON.stringify(JSON.parse(policyFormValue.value.content))
+    console.log(polictStr)
     putBucketPolicy(bucketName.value, polictStr)
       .then(() => {
-        message.success(t('Edit Success'));
-        showPolicyModal.value = false;
-        getbucketPolicy();
+        message.success(t('Edit Success'))
+        showPolicyModal.value = false
+        getbucketPolicy()
       })
       .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message);
-      });
+        message.error(t('Edit Failed') + ': ' + error.message)
+      })
   } else {
-    const policys = setBucketPolicy([], policyFormValue.value.policy as BucketPolicyType, bucketName.value, '');
-    console.log('🚀 ~ policys:', policys);
+    const policys = setBucketPolicy([], policyFormValue.value.policy as BucketPolicyType, bucketName.value, '')
+    console.log('🚀 ~ policys:', policys)
     putBucketPolicy(bucketName.value, JSON.stringify({ Version: '2012-10-17', Statement: policys }))
       .then(() => {
-        message.success(t('Edit Success'));
-        showPolicyModal.value = false;
-        getbucketPolicy();
+        message.success(t('Edit Success'))
+        showPolicyModal.value = false
+        getbucketPolicy()
       })
       .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message);
-      });
+        message.error(t('Edit Failed') + ': ' + error.message)
+      })
   }
-};
+}
 const policyOptions = [
   {
     label: t('Public'),
@@ -384,19 +332,19 @@ const policyOptions = [
     label: t('Custom'),
     value: 'custom',
   },
-];
+]
 
 /******** policy ***********************/
 
 /********Encrypt ***********************/
-const showEncryptModal = ref(false);
+const showEncryptModal = ref(false)
 const encryptFormValue = ref({
   encrypt: 'disabled',
   kmsKeyId: '',
-});
+})
 
 // KMS 密钥列表
-const kmsKeyOptions = ref([]);
+const kmsKeyOptions = ref([])
 
 const encryptOptions = [
   {
@@ -411,102 +359,102 @@ const encryptOptions = [
     label: 'SSE-S3',
     value: 'SSE-S3',
   },
-];
+]
 
 const getBucketEncryptionFn = async () => {
   try {
-    const res = await getBucketEncryption(bucketName.value);
+    const res = await getBucketEncryption(bucketName.value)
     if (
       res &&
       res.ServerSideEncryptionConfiguration &&
       res.ServerSideEncryptionConfiguration.Rules &&
       res.ServerSideEncryptionConfiguration.Rules.length > 0
     ) {
-      const rule = res.ServerSideEncryptionConfiguration.Rules[0];
+      const rule = res.ServerSideEncryptionConfiguration.Rules[0]
       if (rule.ApplyServerSideEncryptionByDefault) {
-        const sseAlgorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm;
+        const sseAlgorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm
         if (sseAlgorithm) {
           // 将AWS S3算法值转换为显示值
           if (sseAlgorithm === 'aws:kms') {
-            encryptFormValue.value.encrypt = 'SSE-KMS';
+            encryptFormValue.value.encrypt = 'SSE-KMS'
           } else if (sseAlgorithm === 'AES256') {
-            encryptFormValue.value.encrypt = 'SSE-S3';
+            encryptFormValue.value.encrypt = 'SSE-S3'
           } else {
-            encryptFormValue.value.encrypt = sseAlgorithm;
+            encryptFormValue.value.encrypt = sseAlgorithm
           }
         }
-        const kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID;
+        const kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID
         if (kmsKeyId) {
-          encryptFormValue.value.kmsKeyId = kmsKeyId;
+          encryptFormValue.value.kmsKeyId = kmsKeyId
         }
       }
     } else {
-      encryptFormValue.value.encrypt = 'disabled';
-      encryptFormValue.value.kmsKeyId = '';
+      encryptFormValue.value.encrypt = 'disabled'
+      encryptFormValue.value.kmsKeyId = ''
     }
   } catch (error: any) {
     // 如果没有加密配置，设置为禁用状态
     if (error.status === 404) {
-      encryptFormValue.value.encrypt = 'disabled';
-      encryptFormValue.value.kmsKeyId = '';
+      encryptFormValue.value.encrypt = 'disabled'
+      encryptFormValue.value.kmsKeyId = ''
     } else {
-      console.error('Failed to get bucket encryption:', error);
+      console.error('Failed to get bucket encryption:', error)
     }
   }
-};
+}
 
 // 获取 KMS 密钥列表
 const fetchKMSKeys = async () => {
   try {
-    const response = await getKeyList();
+    const response = await getKeyList()
     if (response && response.keys) {
       kmsKeyOptions.value = response.keys.map((key: any) => {
         // 优先使用 tags.name，然后是 description，最后是 key_id
-        const keyName = key.tags?.name || key.description || `Key-${key.key_id?.substring(0, 8)}`;
+        const keyName = key.tags?.name || key.description || `Key-${key.key_id?.substring(0, 8)}`
         return {
           label: keyName,
           value: key.key_id,
-        };
-      });
+        }
+      })
     }
   } catch (error) {
-    console.error('Failed to fetch KMS keys:', error);
-    message.error(t('Failed to fetch KMS keys'));
+    console.error('Failed to fetch KMS keys:', error)
+    message.error(t('Failed to fetch KMS keys'))
   }
-};
+}
 
 // 监听加密类型变化，当选择 SSE-KMS 时自动获取 KMS 密钥列表
 watch(
   () => encryptFormValue.value.encrypt,
   newValue => {
     if (newValue === 'SSE-KMS') {
-      fetchKMSKeys();
+      fetchKMSKeys()
     }
   }
-);
+)
 const editEncript = () => {
-  showEncryptModal.value = true;
+  showEncryptModal.value = true
   // 当选择 SSE-KMS 时，获取 KMS 密钥列表
   if (encryptFormValue.value.encrypt === 'SSE-KMS') {
-    fetchKMSKeys();
+    fetchKMSKeys()
   }
-};
+}
 const submitEncryptForm = () => {
   if (encryptFormValue.value.encrypt === 'disabled') {
     // 禁用加密
     deleteBucketEncryption(bucketName.value)
       .then(() => {
-        message.success(t('Edit Success'));
-        showEncryptModal.value = false;
+        message.success(t('Edit Success'))
+        showEncryptModal.value = false
       })
       .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message);
-      });
+        message.error(t('Edit Failed') + ': ' + error.message)
+      })
   } else if (encryptFormValue.value.encrypt === 'SSE-KMS') {
     // 验证是否选择了 KMS Key
     if (!encryptFormValue.value.kmsKeyId) {
-      message.error(t('Please select a KMS key for SSE-KMS encryption'));
-      return;
+      message.error(t('Please select a KMS key for SSE-KMS encryption'))
+      return
     }
 
     // 启用 SSE-KMS 加密
@@ -521,12 +469,12 @@ const submitEncryptForm = () => {
       ],
     })
       .then(() => {
-        message.success(t('Edit Success'));
-        showEncryptModal.value = false;
+        message.success(t('Edit Success'))
+        showEncryptModal.value = false
       })
       .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message);
-      });
+        message.error(t('Edit Failed') + ': ' + error.message)
+      })
   } else if (encryptFormValue.value.encrypt === 'SSE-S3') {
     // 启用 SSE-S3 加密
     putBucketEncryption(bucketName.value, {
@@ -539,104 +487,104 @@ const submitEncryptForm = () => {
       ],
     })
       .then(() => {
-        message.success(t('Edit Success'));
-        showEncryptModal.value = false;
+        message.success(t('Edit Success'))
+        showEncryptModal.value = false
       })
       .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message);
-      });
+        message.error(t('Edit Failed') + ': ' + error.message)
+      })
   }
-};
+}
 
 /********Encrypt ***********************/
 
 /********versioning ***********************/
-const versioningStatus: any = ref('');
-const statusLoading = ref(false);
+const versioningStatus: any = ref('')
+const statusLoading = ref(false)
 // 获取版本控制状态
 const getVersioningStatus = async () => {
   try {
-    const resp = await getBucketVersioning(bucketName.value);
-    versioningStatus.value = resp.Status;
+    const resp = await getBucketVersioning(bucketName.value)
+    versioningStatus.value = resp.Status
   } catch (error) {
-    console.error('get version fail:', error);
+    console.error('get version fail:', error)
   }
-};
+}
 
 const handleChangeVersionStatus = async (value: string) => {
-  statusLoading.value = true;
+  statusLoading.value = true
   putBucketVersioning(bucketName.value, value)
     .then(() => {
-      message.success(t('Edit Success'));
-      getVersioningStatus();
+      message.success(t('Edit Success'))
+      getVersioningStatus()
     })
     .finally(() => {
-      statusLoading.value = false;
-      versioningStatus.value = versioningStatus.value == 'Suspended' ? 'Enabled' : 'Suspended';
-    });
-};
+      statusLoading.value = false
+      versioningStatus.value = versioningStatus.value == 'Suspended' ? 'Enabled' : 'Suspended'
+    })
+}
 
 /********versioning ***********************/
 
 /********tag ***********************/
 // 定义标签的类型
 interface Tag {
-  Key: string;
-  Value: string;
+  Key: string
+  Value: string
 }
-const showTagModal = ref(false);
+const showTagModal = ref(false)
 
 const tagFormValue = ref({
   name: '',
   value: '',
-});
+})
 // 获取标签
-const tags = ref<Tag[]>([]);
+const tags = ref<Tag[]>([])
 const getTags = async () => {
-  const resp: any = await getBucketTagging(bucketName.value);
-  tags.value = resp.TagSet || [];
-};
+  const resp: any = await getBucketTagging(bucketName.value)
+  tags.value = resp.TagSet || []
+}
 
 const addTag = () => {
-  nowTagIndex.value = -1;
-  tagFormValue.value = { name: '', value: '' }; // 清空表单
-  showTagModal.value = true;
-};
+  nowTagIndex.value = -1
+  tagFormValue.value = { name: '', value: '' } // 清空表单
+  showTagModal.value = true
+}
 
 const submitTagForm = () => {
   if (!tagFormValue.value.name || !tagFormValue.value.value) {
-    message.error(t('Please fill in complete tag information'));
-    return;
+    message.error(t('Please fill in complete tag information'))
+    return
   }
 
   if (nowTagIndex.value === -1) {
-    tags.value.push({ Key: tagFormValue.value.name, Value: tagFormValue.value.value });
+    tags.value.push({ Key: tagFormValue.value.name, Value: tagFormValue.value.value })
   }
   if (nowTagIndex.value !== -1) {
     tags.value[nowTagIndex.value] = {
       Key: tagFormValue.value.name,
       Value: tagFormValue.value.value,
-    };
+    }
   }
   // 调用 putBucketTagging 接口
   putBucketTagging(bucketName.value, { TagSet: tags.value })
     .then(() => {
-      showTagModal.value = false; // 关闭模态框
-      message.success(t('Tag Update Success'));
+      showTagModal.value = false // 关闭模态框
+      message.success(t('Tag Update Success'))
     })
     .catch(error => {
-      message.error(t('Tag Update Failed') + ': ' + error.message);
-    });
-};
+      message.error(t('Tag Update Failed') + ': ' + error.message)
+    })
+}
 
-const nowTagIndex = ref(-1);
+const nowTagIndex = ref(-1)
 // 编辑标签
 const editTag = (index: number) => {
-  nowTagIndex.value = index;
-  const nowTag = tags.value[index];
-  tagFormValue.value = { name: nowTag.Key, value: nowTag.Value }; // 填充表单
-  showTagModal.value = true; // 打开模态框
-};
+  nowTagIndex.value = index
+  const nowTag = tags.value[index]
+  tagFormValue.value = { name: nowTag.Key, value: nowTag.Value } // 填充表单
+  showTagModal.value = true // 打开模态框
+}
 const handledeleteTag = (index: number) => {
   dialog.error({
     title: t('Warning'),
@@ -644,53 +592,53 @@ const handledeleteTag = (index: number) => {
     positiveText: t('Confirm'),
     negativeText: t('Cancel'),
     onPositiveClick: async () => {
-      nowTagIndex.value = index;
-      tags.value.splice(index, 1); // 从标签列表中删除
+      nowTagIndex.value = index
+      tags.value.splice(index, 1) // 从标签列表中删除
 
       // 调用 putBucketTagging 接口
       putBucketTagging(bucketName.value, { TagSet: tags.value })
         .then(() => {
-          message.success(t('Tag Update Success'));
+          message.success(t('Tag Update Success'))
         })
         .catch(error => {
-          message.error(t('Tag Delete Failed') + ': ' + error.message);
-        });
+          message.error(t('Tag Delete Failed') + ': ' + error.message)
+        })
     },
-  });
-};
+  })
+}
 /********tag ***********************/
 
 /********retention ***********************/
 interface RetentionFormValue {
-  retentionMode: string | null;
-  retentionPeriod: number | null;
-  retentionUnit: string | null;
+  retentionMode: string | null
+  retentionPeriod: number | null
+  retentionUnit: string | null
 }
 
-const showRetentionModal = ref(false);
+const showRetentionModal = ref(false)
 const retentionFormValue = ref<RetentionFormValue>({
   retentionMode: null,
   retentionPeriod: null,
   retentionUnit: null,
-});
+})
 
 const editRetention = () => {
   if (!lockStatus.value) {
-    message.error(t('Object lock is not enabled, cannot set retention'));
-    return;
+    message.error(t('Object lock is not enabled, cannot set retention'))
+    return
   }
-  showRetentionModal.value = true;
-};
+  showRetentionModal.value = true
+}
 
 const submitRetentionForm = () => {
-  console.log(retentionFormValue.value);
+  console.log(retentionFormValue.value)
   if (
     retentionFormValue.value.retentionMode == null ||
     retentionFormValue.value.retentionPeriod == null ||
     retentionFormValue.value.retentionUnit == null
   ) {
-    message.error(t('Please fill in complete retention information'));
-    return;
+    message.error(t('Please fill in complete retention information'))
+    return
   }
 
   putObjectLockConfiguration(bucketName.value, {
@@ -703,10 +651,10 @@ const submitRetentionForm = () => {
       },
     },
   }).then(() => {
-    message.success(t('Edit Success'));
-    showRetentionModal.value = false;
-    getObjectLockConfig();
-  });
+    message.success(t('Edit Success'))
+    showRetentionModal.value = false
+    getObjectLockConfig()
+  })
 };
 
 /********retention ***********************/

@@ -9,12 +9,7 @@
       <div class="flex items-center justify-between">
         <div style="width: 300px">
           <n-form-item :label="t('Bucket')" path="" class="flex-auto" label-placement="left">
-            <n-select
-              filterable
-              v-model:value="bucketName"
-              :placeholder="t('Please select bucket')"
-              :options="bucketList"
-            />
+            <n-select filterable v-model:value="bucketName" :placeholder="t('Please select bucket')" :options="bucketList" />
           </n-form-item>
         </div>
 
@@ -30,15 +25,8 @@
         </div>
       </div>
 
-      <n-data-table
-        v-if="pageData.length > 0"
-        class="border dark:border-neutral-700 rounded overflow-hidden"
-        :columns="columns"
-        :data="pageData"
-        :pagination="false"
-        :bordered="false"
-        :loading="loading"
-      />
+      <n-data-table v-if="pageData.length > 0" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false"
+        :bordered="false" :loading="loading" />
       <n-card v-else class="flex flex-center" style="height: 400px">
         <n-empty :description="t('No Data')"></n-empty>
       </n-card>
@@ -48,23 +36,23 @@
 </template>
 
 <script lang="ts" setup>
-import { Icon } from '#components';
-import { NButton, NSpace, NTag, type DataTableColumns } from 'naive-ui';
-import { useI18n } from 'vue-i18n';
+import { Icon } from '#components'
+import { NButton, NSpace, NTag, type DataTableColumns } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
-const { listBuckets, listBucketNotifications, putBucketNotifications } = useBucket({});
-const dialog = useDialog();
-const message = useMessage();
+const { t } = useI18n()
+const { listBuckets, listBucketNotifications, putBucketNotifications } = useBucket({})
+const dialog = useDialog()
+const message = useMessage()
 
 interface NotificationItem {
-  id: string;
-  type: 'Lambda' | 'SQS' | 'SNS' | 'Topic';
-  arn: string;
-  events: string[];
-  prefix?: string;
-  suffix?: string;
-  filterRules?: Array<{ Name: string; Value: string }>;
+  id: string
+  type: 'Lambda' | 'SQS' | 'SNS' | 'Topic'
+  arn: string
+  events: string[]
+  prefix?: string
+  suffix?: string
+  filterRules?: Array<{ Name: string; Value: string }>
 }
 
 // 事件映射：将 S3 标准事件映射回简化的显示名称
@@ -88,12 +76,12 @@ const eventDisplayMapping: Record<string, string> = {
   // SCANNER 相关事件
   's3:Scanner:ManyVersions': 'SCANNER',
   's3:Scanner:BigPrefix': 'SCANNER',
-};
+}
 
 // 将 S3 事件转换为显示名称
 const getEventDisplayName = (s3Event: string): string => {
-  return eventDisplayMapping[s3Event] || s3Event;
-};
+  return eventDisplayMapping[s3Event] || s3Event
+}
 
 const columns: DataTableColumns<NotificationItem> = [
   {
@@ -106,7 +94,7 @@ const columns: DataTableColumns<NotificationItem> = [
         SQS: 'primary',
         SNS: 'success',
         Topic: 'info',
-      };
+      }
       return h(
         NTag,
         {
@@ -114,7 +102,7 @@ const columns: DataTableColumns<NotificationItem> = [
           size: 'small',
         },
         { default: () => row.type }
-      );
+      )
     },
   },
   {
@@ -130,13 +118,13 @@ const columns: DataTableColumns<NotificationItem> = [
     width: 200,
     render: (row: NotificationItem) => {
       // 将 S3 事件转换为显示名称并去重
-      const displayEvents = [...new Set(row.events.map(getEventDisplayName))];
+      const displayEvents = [...new Set(row.events.map(getEventDisplayName))]
 
       return h(
         'div',
         { class: 'flex flex-wrap gap-1' },
         displayEvents.map(event => h('n-tag', { size: 'tiny', type: 'info' }, { default: () => event }))
-      );
+      )
     },
   },
   {
@@ -172,60 +160,60 @@ const columns: DataTableColumns<NotificationItem> = [
                 onClick: e => handleRowDelete(row, e),
               },
               {
-                default: () => '',
+                default: () => t('Delete'),
                 icon: () => h(Icon, { name: 'ri:delete-bin-7-line' }),
               }
             ),
           ],
         }
-      );
+      )
     },
   },
-];
+]
 
 // 获取桶列表
 const { data } = await useAsyncData(
   'buckets',
   async () => {
-    const response = await listBuckets();
+    const response = await listBuckets()
     return (
       response.Buckets?.sort((a: any, b: any) => {
-        return a.Name.localeCompare(b.Name);
+        return a.Name.localeCompare(b.Name)
       }) || []
-    );
+    )
   },
   { default: () => [] }
-);
+)
 
 const bucketList = computed(() => {
   return data.value.map(bucket => ({
     label: bucket.Name,
     value: bucket.Name,
-  }));
-});
+  }))
+})
 
-const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
-const loading = ref<boolean>(false);
-const pageData = ref<NotificationItem[]>([]);
+const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '')
+const loading = ref<boolean>(false)
+const pageData = ref<NotificationItem[]>([])
 watch(
   () => bucketName.value,
   async newVal => {
-    if (!newVal) return;
+    if (!newVal) return
 
-    loading.value = true;
+    loading.value = true
     try {
-      refresh();
+      refresh()
     } catch (error) {
-      pageData.value = [];
+      pageData.value = []
     } finally {
-      loading.value = false;
+      loading.value = false
     }
   },
   { immediate: true }
-);
+)
 
 const handleRowDelete = async (row: NotificationItem, e: Event) => {
-  e.stopPropagation();
+  e.stopPropagation()
 
   // 显示确认对话框
   const confirmed = await new Promise<boolean>(resolve => {
@@ -236,81 +224,81 @@ const handleRowDelete = async (row: NotificationItem, e: Event) => {
       negativeText: t('Cancel'),
       onPositiveClick: () => resolve(true),
       onNegativeClick: () => resolve(false),
-    });
-  });
+    })
+  })
 
-  if (!confirmed) return;
+  if (!confirmed) return
 
   try {
-    loading.value = true;
+    loading.value = true
 
     // 获取当前的通知配置
-    const currentResponse = await listBucketNotifications(bucketName.value);
-    const currentNotifications = currentResponse || {};
+    const currentResponse = await listBucketNotifications(bucketName.value)
+    const currentNotifications = currentResponse || {}
 
     // 根据类型从对应数组中移除配置
-    let updatedConfigurations: any[] = [];
+    let updatedConfigurations: any[] = []
 
     if (row.type === 'Lambda' && currentNotifications.LambdaFunctionConfigurations) {
       updatedConfigurations = currentNotifications.LambdaFunctionConfigurations.filter(
         (config: any) => config.Id !== row.id
-      );
+      )
     } else if (row.type === 'SQS' && currentNotifications.QueueConfigurations) {
-      updatedConfigurations = currentNotifications.QueueConfigurations.filter((config: any) => config.Id !== row.id);
+      updatedConfigurations = currentNotifications.QueueConfigurations.filter((config: any) => config.Id !== row.id)
     } else if (row.type === 'SNS' && currentNotifications.TopicConfigurations) {
-      updatedConfigurations = currentNotifications.TopicConfigurations.filter((config: any) => config.Id !== row.id);
+      updatedConfigurations = currentNotifications.TopicConfigurations.filter((config: any) => config.Id !== row.id)
     }
 
     // 构建新的通知配置
     const newNotificationConfig = {
       ...currentNotifications,
-    };
+    }
 
     // 更新对应类型的配置数组
     if (row.type === 'Lambda') {
-      newNotificationConfig.LambdaFunctionConfigurations = updatedConfigurations;
+      newNotificationConfig.LambdaFunctionConfigurations = updatedConfigurations
     } else if (row.type === 'SQS') {
-      newNotificationConfig.QueueConfigurations = updatedConfigurations;
+      newNotificationConfig.QueueConfigurations = updatedConfigurations
     } else if (row.type === 'SNS') {
-      newNotificationConfig.TopicConfigurations = updatedConfigurations;
+      newNotificationConfig.TopicConfigurations = updatedConfigurations
     }
 
     // 提交更新后的配置
-    await putBucketNotifications(bucketName.value, newNotificationConfig);
+    await putBucketNotifications(bucketName.value, newNotificationConfig)
 
     // 显示成功消息
-    message.success(t('Delete Success'));
+    message.success(t('Delete Success'))
 
     // 刷新列表
-    await refresh();
+    await refresh()
   } catch (error: any) {
-    console.error('删除通知配置失败:', error);
-    message.error(t('Delete Failed') + ': ' + (error.message || error));
+    console.error('删除通知配置失败:', error)
+    message.error(t('Delete Failed') + ': ' + (error.message || error))
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-const newRef = ref();
+const newRef = ref()
 const handleNew = () => {
-  newRef.value.open();
-};
+  newRef.value.open()
+}
 
 const refresh = async () => {
   if (!bucketName.value) {
-    pageData.value = [];
-    return;
+    pageData.value = []
+    return
   }
 
   try {
-    const response = await listBucketNotifications(bucketName.value);
-    const notifications: NotificationItem[] = [];
+    const response = await listBucketNotifications(bucketName.value)
+    const notifications: NotificationItem[] = []
 
     // 处理 Lambda 函数配置
     if (response.LambdaFunctionConfigurations) {
       response.LambdaFunctionConfigurations.forEach((config: any) => {
-        const prefix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Prefix')?.Value;
-        const suffix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Suffix')?.Value;
+        const prefix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Prefix')?.Value
+        const suffix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Suffix')?.Value
 
         notifications.push({
           id: config.Id,
@@ -320,15 +308,15 @@ const refresh = async () => {
           prefix,
           suffix,
           filterRules: config.Filter?.Key?.FilterRules || [],
-        });
-      });
+        })
+      })
     }
 
     // 处理 SQS 队列配置
     if (response.QueueConfigurations) {
       response.QueueConfigurations.forEach((config: any) => {
-        const prefix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Prefix')?.Value;
-        const suffix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Suffix')?.Value;
+        const prefix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Prefix')?.Value
+        const suffix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Suffix')?.Value
 
         notifications.push({
           id: config.Id,
@@ -338,15 +326,15 @@ const refresh = async () => {
           prefix,
           suffix,
           filterRules: config.Filter?.Key?.FilterRules || [],
-        });
-      });
+        })
+      })
     }
 
     // 处理 SNS 主题配置
     if (response.TopicConfigurations) {
       response.TopicConfigurations.forEach((config: any) => {
-        const prefix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Prefix')?.Value;
-        const suffix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Suffix')?.Value;
+        const prefix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Prefix')?.Value
+        const suffix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Suffix')?.Value
 
         notifications.push({
           id: config.Id,
@@ -356,14 +344,14 @@ const refresh = async () => {
           prefix,
           suffix,
           filterRules: config.Filter?.Key?.FilterRules || [],
-        });
-      });
+        })
+      })
     }
 
-    pageData.value = notifications;
+    pageData.value = notifications
   } catch (error) {
-    console.error('获取通知配置失败:', error);
-    pageData.value = [];
+    console.error('获取通知配置失败:', error)
+    pageData.value = []
   }
-};
+}
 </script>

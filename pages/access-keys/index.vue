@@ -40,15 +40,7 @@
         </n-flex>
       </n-form>
 
-      <n-data-table
-        ref="tableRef"
-        :columns="columns"
-        :data="listData"
-        :pagination="false"
-        :bordered="true"
-        :row-key="rowKey"
-        @update:checked-row-keys="handleCheck"
-      />
+      <n-data-table ref="tableRef" :columns="columns" :data="listData" :pagination="false" :bordered="true" :row-key="rowKey" @update:checked-row-keys="handleCheck" />
     </page-content>
     <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" @notice="noticeDialog" />
     <EditItem ref="editItemRef" @search="getDataList" />
@@ -58,6 +50,7 @@
 </template>
 
 <script lang="ts" setup>
+import { Icon } from '#components'
 import {
   type DataTableColumns,
   type DataTableInst,
@@ -65,27 +58,26 @@ import {
   NButton,
   NPopconfirm,
   NSpace,
-} from 'naive-ui';
-import { Icon } from '#components';
-import { ChangePassword, EditItem, NewItem } from '~/components/access-keys';
-import { useI18n } from 'vue-i18n';
+} from 'naive-ui'
+import { useI18n } from 'vue-i18n'
+import { ChangePassword, EditItem, NewItem } from '~/components/access-keys'
 
-const { t } = useI18n();
-const { $api } = useNuxtApp();
-const dialog = useDialog();
-const message = useMessage();
-const { listUserServiceAccounts, deleteServiceAccount } = useAccessKeys();
+const { t } = useI18n()
+const { $api } = useNuxtApp()
+const dialog = useDialog()
+const message = useMessage()
+const { listUserServiceAccounts, deleteServiceAccount } = useAccessKeys()
 
 const searchForm = reactive({
   name: '',
-});
+})
 interface RowData {
-  accessKey: string;
-  expiration: string;
-  name: string;
-  description: string;
-  accountStatus: string;
-  actions: string;
+  accessKey: string
+  expiration: string
+  name: string
+  description: string
+  accountStatus: string
+  actions: string
 }
 
 const columns: DataTableColumns<RowData> = [
@@ -97,7 +89,7 @@ const columns: DataTableColumns<RowData> = [
     align: 'center',
     key: 'accessKey',
     filter(value, row) {
-      return !!row.accessKey.includes(value.toString());
+      return !!row.accessKey.includes(value.toString())
     },
   },
   {
@@ -110,7 +102,7 @@ const columns: DataTableColumns<RowData> = [
     align: 'center',
     key: 'accountStatus',
     render: (row: any) => {
-      return row.accountStatus === 'on' ? t('Available') : t('Disabled');
+      return row.accountStatus === 'on' ? t('Available') : t('Disabled')
     },
   },
   {
@@ -144,7 +136,7 @@ const columns: DataTableColumns<RowData> = [
                 onClick: () => openEditItem(row),
               },
               {
-                default: () => '',
+                default: () => t('Edit'),
                 icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
@@ -158,7 +150,7 @@ const columns: DataTableColumns<RowData> = [
                     NButton,
                     { size: 'small', secondary: true },
                     {
-                      default: () => '',
+                      default: () => t('Delete'),
                       icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
@@ -166,88 +158,88 @@ const columns: DataTableColumns<RowData> = [
             ),
           ],
         }
-      );
+      )
     },
   },
-];
+]
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>();
+const tableRef = ref<DataTableInst>()
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
       accessKey: [value],
-    });
+    })
 }
-const listData = ref<any[]>([]);
+const listData = ref<any[]>([])
 
 onMounted(() => {
-  getDataList();
-});
+  getDataList()
+})
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await listUserServiceAccounts({});
-    listData.value = res.accounts || [];
+    const res = await listUserServiceAccounts({})
+    listData.value = res.accounts || []
   } catch (error) {
-    message.error(t('Get Data Failed'));
+    message.error(t('Get Data Failed'))
   }
-};
+}
 
 // 刷新
 const refresh = () => {
-  getDataList();
-};
+  getDataList()
+}
 
 /** **********************************添加 */
-const newItemRef = ref();
-const newItemVisible = ref(false);
+const newItemRef = ref()
+const newItemVisible = ref(false)
 
 function addItem() {
-  newItemVisible.value = true;
+  newItemVisible.value = true
 }
 
 // 添加之后的反馈弹窗
-const noticeRef = ref();
+const noticeRef = ref()
 function noticeDialog(data: any) {
-  console.log(data);
-  noticeRef.value.openDialog(data);
+  console.log(data)
+  noticeRef.value.openDialog(data)
 }
 
 /** **********************************修改 */
-const editItemRef = ref();
+const editItemRef = ref()
 function openEditItem(row: any) {
-  editItemRef.value.openDialog(row);
+  editItemRef.value.openDialog(row)
 }
 /** **********************************修改密码 */
-const changePasswordModalRef = ref();
-const changePasswordVisible = ref(false);
+const changePasswordModalRef = ref()
+const changePasswordVisible = ref(false)
 
 function changePassword() {
-  changePasswordVisible.value = true;
+  changePasswordVisible.value = true
 }
 
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   deleteServiceAccount(row.accessKey)
     .then(res => {
-      message.success(t('Delete Success'));
-      getDataList();
+      message.success(t('Delete Success'))
+      getDataList()
     })
     .catch(error => {
-      message.error(t('Delete Failed'));
-    });
+      message.error(t('Delete Failed'))
+    })
 }
 
 /** ************************************批量删除 */
 function rowKey(row: any): string {
-  return row.accessKey;
+  return row.accessKey
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([]);
+const checkedKeys = ref<DataTableRowKey[]>([])
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys;
-  return checkedKeys;
+  checkedKeys.value = keys
+  return checkedKeys
 }
 // 批量删除
 function deleteByList() {
@@ -258,21 +250,21 @@ function deleteByList() {
     negativeText: t('Cancel'),
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error(t('Please select at least one item'));
-        return;
+        message.error(t('Please select at least one item'))
+        return
       }
       try {
         Promise.all(checkedKeys.value.map(item => deleteServiceAccount(item as string))).then(() => {
-          message.success(t('Delete Success'));
-          checkedKeys.value = [];
+          message.success(t('Delete Success'))
+          checkedKeys.value = []
           nextTick(() => {
-            getDataList();
-          });
-        });
+            getDataList()
+          })
+        })
       } catch (error) {
-        message.error(t('Delete Failed'));
+        message.error(t('Delete Failed'))
       }
     },
-  });
+  })
 }
 </script>

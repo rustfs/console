@@ -25,52 +25,45 @@
           </n-button>
         </div>
       </div>
-      <n-data-table
-        ref="tableRef"
-        class="border dark:border-neutral-700 rounded overflow-hidden"
-        :columns="columns"
-        :data="pilicies"
-        :pagination="false"
-        :bordered="false"
-      />
+      <n-data-table ref="tableRef" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pilicies" :pagination="false" :bordered="false" />
     </page-content>
     <policies-form-item v-model:show="showPolicyForm" :policy="current" @saved="fetchPolicies" />
   </div>
 </template>
 <script lang="ts" setup>
-import { Icon } from '#components';
-import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from 'naive-ui';
-import { useNuxtApp } from 'nuxt/app';
-import { useI18n } from 'vue-i18n';
+import { Icon } from '#components'
+import { type DataTableColumns, type DataTableInst, NButton, NPopconfirm, NSpace } from 'naive-ui'
+import { useNuxtApp } from 'nuxt/app'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
-const { $api } = useNuxtApp();
-const message = useMessage();
+const { t } = useI18n()
+const { $api } = useNuxtApp()
+const message = useMessage()
 
-const pilicies = ref<any[]>([]);
-const tableRef = ref<DataTableInst>();
-const current = ref();
+const pilicies = ref<any[]>([])
+const tableRef = ref<DataTableInst>()
+const current = ref()
 const showPolicyForm = computed({
   get: () => !!current.value,
   set: val => {
-    if (!val) current.value = null;
+    if (!val) current.value = null
   },
-});
+})
 
 const handleEdit = (item: any) => {
-  current.value = item;
-};
+  current.value = item
+}
 
 const handleNew = () => {
   current.value = {
     name: '',
     content: '{}',
-  };
-};
+  }
+}
 
 interface RowData {
-  name: string;
-  content: string;
+  name: string
+  content: string
 }
 
 const columns: DataTableColumns<RowData> = [
@@ -78,7 +71,7 @@ const columns: DataTableColumns<RowData> = [
     title: t('Name'),
     key: 'name',
     filter(value, row) {
-      return !!row.name.includes(value.toString());
+      return !!row.name.includes(value.toString())
     },
   },
 
@@ -103,7 +96,7 @@ const columns: DataTableColumns<RowData> = [
                 onClick: () => handleEdit(row),
               },
               {
-                default: () => '',
+                default: () => t('Edit'),
                 icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
@@ -117,7 +110,7 @@ const columns: DataTableColumns<RowData> = [
                     NButton,
                     { size: 'small', secondary: true },
                     {
-                      default: () => '',
+                      default: () => t('Delete'),
                       icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
@@ -125,49 +118,49 @@ const columns: DataTableColumns<RowData> = [
             ),
           ],
         }
-      );
+      )
     },
   },
-];
+]
 
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
       name: [value],
-    });
+    })
 }
 
 const fetchPolicies = async () => {
   try {
-    const res = await $api.get('/list-canned-policies');
+    const res = await $api.get('/list-canned-policies')
     pilicies.value = Object.keys(res)
       .sort((a, b) => a.localeCompare(b))
       .map(key => {
         return {
           name: key,
           content: res[key],
-        };
-      });
+        }
+      })
   } catch (error) {
-    message.error(t('Failed to fetch data'));
+    message.error(t('Failed to fetch data'))
   }
-};
+}
 
 onMounted(() => {
-  fetchPolicies();
-});
+  fetchPolicies()
+})
 
 const refresh = () => {
-  fetchPolicies();
-};
+  fetchPolicies()
+}
 
 async function deleteItem(row: any) {
   try {
-    await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(row.name)}`);
-    message.success(t('Delete Success'));
-    fetchPolicies();
+    await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(row.name)}`)
+    message.success(t('Delete Success'))
+    fetchPolicies()
   } catch (error) {
-    message.error(t('Delete Failed'));
+    message.error(t('Delete Failed'))
   }
 }
 </script>

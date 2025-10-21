@@ -29,21 +29,14 @@
         </n-space>
       </n-flex>
     </n-form>
-    <n-data-table
-      ref="tableRef"
-      :columns="columns"
-      :data="listData"
-      :pagination="false"
-      :bordered="true"
-      :row-key="rowKey"
-      @update:checked-row-keys="handleCheck"
-    />
+    <n-data-table ref="tableRef" :columns="columns" :data="listData" :pagination="false" :bordered="true" :row-key="rowKey" @update:checked-row-keys="handleCheck" />
     <users-user-new @search="getDataList" ref="newItemRef"></users-user-new>
     <users-user-edit @search="getDataList" :checkedKeys="checkedKeys" ref="editItemRef"></users-user-edit>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Icon } from '#components'
 import {
   type DataTableColumns,
   type DataTableInst,
@@ -51,22 +44,21 @@ import {
   NButton,
   NPopconfirm,
   NSpace,
-} from 'naive-ui';
-import { Icon } from '#components';
-import { useI18n } from 'vue-i18n';
+} from 'naive-ui'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
+const { t } = useI18n()
 
-const { $api } = useNuxtApp();
-const { listUsers, deleteUser } = useUsers();
-const dialog = useDialog();
-const message = useMessage();
+const { $api } = useNuxtApp()
+const { listUsers, deleteUser } = useUsers()
+const dialog = useDialog()
+const message = useMessage()
 
 const searchForm = reactive({
   accessKey: '',
-});
+})
 interface RowData {
-  accessKey: string;
+  accessKey: string
 }
 
 const columns: DataTableColumns<RowData> = [
@@ -78,7 +70,7 @@ const columns: DataTableColumns<RowData> = [
     align: 'left',
     key: 'accessKey',
     filter(value, row) {
-      return !!row.accessKey.includes(value.toString());
+      return !!row.accessKey.includes(value.toString())
     },
   },
   {
@@ -102,7 +94,7 @@ const columns: DataTableColumns<RowData> = [
                 onClick: () => openEditItem(row),
               },
               {
-                default: () => '',
+                default: () => t('Edit'),
                 icon: () => h(Icon, { name: 'ri:edit-2-line' }),
               }
             ),
@@ -116,7 +108,7 @@ const columns: DataTableColumns<RowData> = [
                     NButton,
                     { size: 'small', secondary: true },
                     {
-                      default: () => '',
+                      default: () => t('Delete'),
                       icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
@@ -124,74 +116,74 @@ const columns: DataTableColumns<RowData> = [
             ),
           ],
         }
-      );
+      )
     },
   },
-];
+]
 
 // 搜索过滤
-const tableRef = ref<DataTableInst>();
+const tableRef = ref<DataTableInst>()
 function filterName(value: string) {
   tableRef.value &&
     tableRef.value.filter({
       accessKey: [value],
-    });
+    })
 }
-const listData = ref<any[]>([]);
+const listData = ref<any[]>([])
 
 onMounted(() => {
-  getDataList();
-});
+  getDataList()
+})
 
 // 获取数据
 const getDataList = async () => {
   try {
-    const res = await listUsers();
+    const res = await listUsers()
 
     listData.value = Object.entries(res).map(([username, info]) => ({
       accessKey: username, // 添加用户名
       ...(typeof info === 'object' ? info : {}), // 展开用户信息
-    }));
+    }))
   } catch (error) {
-    message.error(t('Failed to get data'));
+    message.error(t('Failed to get data'))
   }
-};
+}
 
 /** **********************************添加 */
-const newItemRef = ref();
+const newItemRef = ref()
 
 function addUserItem() {
-  newItemRef.value.openDialog();
+  newItemRef.value.openDialog()
 }
 
 /** **********************************添加到的分组 */
-const addToGroup = () => {};
+const addToGroup = () => { }
 
 /** **********************************修改 */
-const editItemRef = ref();
+const editItemRef = ref()
 function openEditItem(row: any) {
-  editItemRef.value.openDialog(row);
+  editItemRef.value.openDialog(row)
 }
 /** ***********************************删除 */
 async function deleteItem(row: any) {
   try {
-    const res = await deleteUser(row.accessKey);
-    message.success(t('Delete Success'));
-    getDataList();
+    const res = await deleteUser(row.accessKey)
+    message.success(t('Delete Success'))
+    getDataList()
   } catch (error) {
-    message.error(t('Delete Failed'));
+    message.error(t('Delete Failed'))
   }
 }
 
 /** ************************************批量删除 */
 function rowKey(row: any): string {
-  return row.accessKey;
+  return row.accessKey
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([]);
+const checkedKeys = ref<DataTableRowKey[]>([])
 function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys;
-  return checkedKeys;
+  checkedKeys.value = keys
+  return checkedKeys
 }
 function deleteByList() {
   dialog.error({
@@ -201,22 +193,22 @@ function deleteByList() {
     negativeText: t('Cancel'),
     onPositiveClick: async () => {
       if (!checkedKeys.value.length) {
-        message.error(t('Please select at least one item'));
-        return;
+        message.error(t('Please select at least one item'))
+        return
       }
       try {
         // 循环遍历删除
-        await Promise.all(checkedKeys.value.map(item => deleteUser(item as string)));
-        checkedKeys.value = [];
-        message.success(t('Delete Success'));
+        await Promise.all(checkedKeys.value.map(item => deleteUser(item as string)))
+        checkedKeys.value = []
+        message.success(t('Delete Success'))
         nextTick(() => {
-          getDataList();
-        });
+          getDataList()
+        })
       } catch (error) {
-        message.error(t('Delete Failed'));
+        message.error(t('Delete Failed'))
       }
     },
-  });
+  })
 }
 </script>
 

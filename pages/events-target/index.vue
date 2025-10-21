@@ -26,32 +26,26 @@
           </n-button>
         </div>
       </div>
-      <n-data-table
-        class="border dark:border-neutral-700 rounded overflow-hidden"
-        :columns="columns"
-        :data="filteredData"
-        :pagination="false"
-        :bordered="false"
-      />
+      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredData" :pagination="false" :bordered="false" />
     </page-content>
     <events-target-new ref="newFormRef" @search="refresh"></events-target-new>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Icon } from '#components';
-import { NButton, NSpace, type DataTableColumns, NPopconfirm } from 'naive-ui';
-import { useI18n } from 'vue-i18n';
-const { getEventsTargetList, deleteEventTarget } = useEventTarget();
+import { Icon } from '#components'
+import { NButton, NPopconfirm, NSpace, type DataTableColumns } from 'naive-ui'
+import { useI18n } from 'vue-i18n'
+const { getEventsTargetList, deleteEventTarget } = useEventTarget()
 
-const { t } = useI18n();
-const message = useMessage();
-const searchTerm = ref('');
+const { t } = useI18n()
+const message = useMessage()
+const searchTerm = ref('')
 
 interface RowData {
-  account_id: string;
-  service: string;
-  status: string;
+  account_id: string
+  service: string
+  status: string
 }
 
 const columns: DataTableColumns<RowData> = [
@@ -94,7 +88,7 @@ const columns: DataTableColumns<RowData> = [
                     NButton,
                     { size: 'small', secondary: true },
                     {
-                      default: () => '',
+                      default: () => t('Delete'),
                       icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
                     }
                   ),
@@ -102,49 +96,49 @@ const columns: DataTableColumns<RowData> = [
             ),
           ],
         }
-      );
+      )
     },
   },
-];
+]
 
 const { data, refresh } = await useAsyncData(
   'events',
   async () => {
-    const response = await getEventsTargetList();
-    return response.notification_endpoints;
+    const response = await getEventsTargetList()
+    return response.notification_endpoints
   },
   { default: () => [] }
-);
+)
 
 const filteredData = computed(() => {
   if (!searchTerm.value) {
-    return data.value;
+    return data.value
   }
 
-  const term = searchTerm.value.toLowerCase();
+  const term = searchTerm.value.toLowerCase()
   return data.value.filter(
     (item: RowData) =>
       item.account_id?.toLowerCase().includes(term) ||
       item.service?.toLowerCase().includes(term) ||
       item.status?.toLowerCase().includes(term)
-  );
-});
+  )
+})
 
 const deleteItem = async (row: RowData) => {
   deleteEventTarget('notify_' + row.service, row.account_id)
     .then(() => {
-      message.success(t('Delete Success'));
-      refresh();
+      message.success(t('Delete Success'))
+      refresh()
     })
     .catch(error => {
-      message.error(t('Delete Failed'));
-    });
-};
+      message.error(t('Delete Failed'))
+    })
+}
 
-const newFormRef = ref();
+const newFormRef = ref()
 const addForm = async () => {
-  newFormRef.value.open();
-};
+  newFormRef.value.open()
+}
 </script>
 
 <style lang="scss" scoped></style>

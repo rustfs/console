@@ -1,7 +1,8 @@
 import { setupInspiraUI } from '@inspira-ui/plugins';
+import colors from 'tailwindcss/colors';
+import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
 
-/** @type {import('tailwindcss').Config} */
 export default {
   content: [
     './components/**/*.{js,vue,ts}',
@@ -11,7 +12,7 @@ export default {
     './nuxt.config.{js,ts}',
     './app.vue',
   ],
-  darkMode: ['class'], // or 'media' or 'class'
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -20,6 +21,7 @@ export default {
         ring: 'hsl(var(--ring))',
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        neutral: colors.neutral,
         primary: {
           DEFAULT: 'hsl(var(--primary))',
           foreground: 'hsl(var(--primary-foreground))',
@@ -73,4 +75,4 @@ export default {
     },
   },
   plugins: [animate, setupInspiraUI],
-};
+} satisfies Config;

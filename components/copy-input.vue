@@ -1,5 +1,10 @@
 <script lang="ts" setup>
+import { Icon } from '#components'
 import ClipboardJS from 'clipboard'
+import AppButton from '@/components/app/AppButton.vue'
+import AppInput from '@/components/app/AppInput.vue'
+import { useMessage } from '@/lib/ui/message'
+import { onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -26,7 +31,7 @@ const model = defineModel<string>()
 
 const message = useMessage()
 
-const clipboard = new ClipboardJS(props.copyIcon ? '#' + props.id + 'btn' : '#' + props.id + 'btn2')
+const clipboard = new ClipboardJS(props.copyIcon ? `#${props.id}-btn-icon` : `#${props.id}-btn`)
 clipboard.on('success', function (e) {
   message.success(t('Copy Success'))
   e.clearSelection()
@@ -46,15 +51,32 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-full">
-    <NInputGroup>
-      <n-input v-model:value="model" :readonly="props.readonly" :id="props.id" />
-      <n-input-group-label v-if="props.copyIcon" class="flex items-center cursor-pointer" :id="props.id + 'btn'" :data-clipboard-target="`#${props.id}`" :title="t('Copy')">
-        <Icon :size="25" name="ri:file-copy-line"></Icon>
-      </n-input-group-label>
-      <NButton type="primary" v-else :id="props.id + 'btn2'" :data-clipboard-target="`#${props.id}`">{{
-        t('Copy')
-        }}</NButton>
-    </NInputGroup>
+  <div class="flex h-full items-center gap-2">
+    <AppInput
+      v-model="model"
+      :readonly="props.readonly"
+      :id="props.id"
+      class="flex-1"
+    />
+    <AppButton
+      v-if="!props.copyIcon"
+      :id="`${props.id}-btn`"
+      :data-clipboard-target="`#${props.id}`"
+      variant="primary"
+    >
+      {{ t('Copy') }}
+    </AppButton>
+    <AppButton
+      v-else
+      :id="`${props.id}-btn-icon`"
+      variant="ghost"
+      size="sm"
+      class="shrink-0"
+      :data-clipboard-target="`#${props.id}`"
+      :title="t('Copy')"
+    >
+      <Icon :size="18" name="ri:file-copy-line" />
+      <span class="sr-only">{{ t('Copy') }}</span>
+    </AppButton>
   </div>
 </template>

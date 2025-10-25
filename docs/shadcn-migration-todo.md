@@ -4,6 +4,9 @@
 - [x] Build `components/app/AppSidebar.vue` and supporting subcomponents to render navigation, language/theme controls, and user menu with ShadCN UI widgets.
 - [x] Replace Naive UI providers in `app.vue` with ShadCN-friendly structure, wiring toast/dialog replacements and preserving color mode handling.
 - [ ] Convert shared form components and high-use Naive UI elements (buttons, inputs, tables, etc.) to their ShadCN equivalents, introducing reusable wrappers under `components/app-` when helpful.
+  - [x] Establish shared wrappers (`AppButton`, `AppCard`, `AppInput`, `AppSelect`, `AppSwitch`, etc.) under `components/app`.
+  - [x] Build reusable data table primitives (`AppDataTable`, pagination, `useDataTable`) powered by TanStack.
+  - [x] Convert `components/copy-input.vue` to the new wrappers and toast API.
   - [x] Rebuild the users list tab (`components/users/tabs/user.vue`) with ShadCN table, checkbox, dialog, and button primitives.
   - [x] Rebuild the user groups tab (`components/users/tabs/group.vue`) with ShadCN input, table, checkbox, and dialog primitives.
   - [x] Rebuild the group members management view (`components/users/group/members.vue`) with ShadCN card, input, table, and multi-select patterns.

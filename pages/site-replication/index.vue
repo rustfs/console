@@ -6,30 +6,35 @@
       </template>
     </page-header>
     <page-content class="flex flex-col gap-4">
-      <n-flex justify="end">
-        <n-button @click="() => openForm()">
-          <Icon name="ri:add-line" class="mr-2" />
+      <div class="flex justify-end">
+        <Button type="button" variant="secondary" class="inline-flex items-center gap-2" @click="openForm">
+          <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('Add Site') }}</span>
-        </n-button>
-      </n-flex>
+        </Button>
+      </div>
 
-      <n-card class="flex flex-center" style="height: 400px">
-        <n-empty :description="t('No Data')"></n-empty>
-      </n-card>
-      <!-- <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false" :bordered="false" /> -->
+      <Card class="min-h-[400px]">
+        <CardContent class="flex h-full items-center justify-center">
+          <p class="text-sm text-muted-foreground">{{ t('No Data') }}</p>
+        </CardContent>
+      </Card>
+
       <site-replication-new-form ref="addFormRef"></site-replication-new-form>
     </page-content>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Icon } from '#components';
-import { NButton } from 'naive-ui';
-import { useI18n } from 'vue-i18n';
+import { Icon } from '#components'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
-const addFormRef = ref();
+const { t } = useI18n()
+const addFormRef = ref<{ open: () => void } | null>(null)
+
 const openForm = () => {
-  addFormRef.value.open();
-};
+  addFormRef.value?.open()
+}
 </script>

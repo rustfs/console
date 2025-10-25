@@ -1,10 +1,10 @@
-import AutoImport from 'unplugin-auto-import/vite';
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
-import Components from 'unplugin-vue-components/vite';
+import AutoImport from 'unplugin-auto-import/vite'
+import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
 
-const appName = process.env.APP_NAME || 'RustFS';
-const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '');
-const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.';
+const appName = process.env.APP_NAME || 'RustFS'
+const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '')
+const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -38,6 +38,7 @@ export default defineNuxtConfig({
     'nuxtjs-naive-ui',
     '@vueuse/nuxt',
     '@nuxt/image',
+    'shadcn-nuxt',
   ],
   // Nuxt automatically reads the files in the plugins/ directory
   plugins: [],
@@ -123,4 +124,15 @@ export default defineNuxtConfig({
       }),
     ],
   },
-});
+  shadcn: {
+    /**
+     * Prefix for all the imported component
+     */
+    prefix: '',
+    /**
+     * Directory that the component lives in.
+     * @default "./components/ui"
+     */
+    componentDir: './components/ui'
+  },
+})

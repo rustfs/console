@@ -1,202 +1,218 @@
 <template>
-  <n-modal
-    v-model:show="modalVisible"
-    :mask-closable="false"
-    preset="card"
+  <AppModal
+    v-model="modalVisible"
     :title="t('Create Key')"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }"
+    size="lg"
+    :close-on-backdrop="false"
   >
-    <n-card>
-      <n-form
-        ref="formRef"
-        label-placement="left"
-        :model="formModel"
-        :rules="rules"
-        label-align="center"
-        :label-width="130"
-      >
-        <n-grid :cols="24" :x-gap="18">
-          <n-form-item-gi :span="24" :label="t('Access Key')" path="accessKey">
-            <n-input v-model:value="formModel.accessKey" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" :label="t('Secret Key')" path="secretKey">
-            <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
-          </n-form-item-gi>
+    <AppCard padded class="space-y-4">
+      <div class="grid gap-2">
+        <Label for="create-access-key">{{ t('Access Key') }}</Label>
+        <AppInput id="create-access-key" v-model="formModel.accessKey" autocomplete="off" />
+        <p v-if="errors.accessKey" class="text-sm text-destructive">{{ errors.accessKey }}</p>
+      </div>
 
-          <!-- <n-form-item-gi :span="24" label="策略" path="policy">
-            <n-select v-model:value="formModel.policy" filterable multiple :options="polices" />
-          </n-form-item-gi> -->
+      <div class="grid gap-2">
+        <Label for="create-secret-key">{{ t('Secret Key') }}</Label>
+        <AppInput id="create-secret-key" v-model="formModel.secretKey" type="password" autocomplete="off" />
+        <p v-if="errors.secretKey" class="text-sm text-destructive">{{ errors.secretKey }}</p>
+      </div>
 
-          <n-form-item-gi :span="24" :label="t('Expiry')" path="expiry">
-            <n-date-picker
-              class="!w-full"
-              v-model:value="formModel.expiry"
-              :is-date-disabled="dateDisabled"
-              type="datetime"
-              clearable
-            />
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" :label="t('Name')" path="name">
-            <n-input v-model:value="formModel.name" />
-          </n-form-item-gi>
-          <!-- <n-form-item-gi :span="24" label="描述" path="comment">
-            <n-input v-model:value="formModel.comment" />
-          </n-form-item-gi> -->
-          <n-form-item-gi :span="24" :label="t('Description')" path="description">
-            <n-input v-model:value="formModel.description" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" :label="t('Use main account policy')" path="impliedPolicy">
-            <n-switch v-model:value="formModel.impliedPolicy" />
-          </n-form-item-gi>
-          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" :label="t('Current user policy')" path="policy">
-            <json-editor v-model="formModel.policy" />
-          </n-form-item-gi>
-        </n-grid>
-      </n-form>
-    </n-card>
-    <template #action>
-      <n-space justify="center">
-        <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
-        <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
-      </n-space>
+      <div class="grid gap-2">
+        <Label for="create-expiry">{{ t('Expiry') }}</Label>
+        <AppDateTimePicker
+          id="create-expiry"
+          v-model="formModel.expiry"
+          :min="minExpiry"
+          :placeholder="t('Please select expiry date')"
+        />
+        <p v-if="errors.expiry" class="text-sm text-destructive">{{ errors.expiry }}</p>
+      </div>
+
+      <div class="grid gap-2">
+        <Label for="create-name">{{ t('Name') }}</Label>
+        <AppInput id="create-name" v-model="formModel.name" autocomplete="off" />
+        <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
+      </div>
+
+      <div class="grid gap-2">
+        <Label for="create-description">{{ t('Description') }}</Label>
+        <AppTextarea id="create-description" v-model="formModel.description" :rows="3" />
+      </div>
+
+      <div class="flex items-start justify-between gap-3 rounded-md border border-border/60 p-3">
+        <div>
+          <p class="text-sm font-medium">{{ t('Use main account policy') }}</p>
+          <p class="text-xs text-muted-foreground">
+            {{ t('Automatically inherit the main account policy when enabled.') }}
+          </p>
+        </div>
+        <AppSwitch v-model="formModel.impliedPolicy" />
+      </div>
+
+      <div v-if="!formModel.impliedPolicy" class="grid gap-2">
+        <Label>{{ t('Current user policy') }}</Label>
+        <json-editor v-model="formModel.policy" />
+      </div>
+    </AppCard>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <AppButton variant="outline" @click="closeModal()">
+          {{ t('Cancel') }}
+        </AppButton>
+        <AppButton variant="primary" :loading="submitting" @click="submitForm">
+          {{ t('Submit') }}
+        </AppButton>
+      </div>
     </template>
-  </n-modal>
+  </AppModal>
 </template>
+
 <script setup lang="ts">
-import type { FormInst, FormItemRule } from 'naive-ui';
-import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { makeRandomString } from '~/utils/functions';
+import { AppButton, AppCard, AppInput, AppModal, AppSwitch, AppTextarea } from '@/components/app'
+import AppDateTimePicker from '@/components/app/AppDateTimePicker.vue'
+import { Label } from '@/components/ui/label'
+import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { makeRandomString } from '~/utils/functions'
 
-const { t } = useI18n();
+const { t } = useI18n()
 interface Props {
-  visible: boolean;
+  visible: boolean
 }
-const { visible } = defineProps<Props>();
-const message = useMessage();
-const { $api } = useNuxtApp();
-const { createServiceAccount } = useAccessKeys();
+const { visible } = defineProps<Props>()
+const message = useMessage()
+const { $api } = useNuxtApp()
+const { createServiceAccount } = useAccessKeys()
 
-const emit = defineEmits<Emits>();
-const defaultFormModal = {
+const emit = defineEmits<Emits>()
+const defaultFormModal = () => ({
   accessKey: makeRandomString(20),
   secretKey: makeRandomString(40),
   name: '',
   description: '',
-  // comment: "",
-  expiry: null,
+  expiry: null as string | null,
   policy: '',
   impliedPolicy: true,
-};
-const formModel = ref({ ...defaultFormModal });
+})
+const formModel = reactive(defaultFormModal())
 
-// 验证
-const rules = ref({
-  accessKey: {
-    required: true,
-    trigger: ['blur', 'input'],
-    validator(rule: FormItemRule, value: string) {
-      if (!value) {
-        return new Error(t('Please enter Access Key'));
-      }
-      if (value.length < 3 || value.length > 20) {
-        return new Error(t('Access Key length must be between 3 and 20 characters'));
-      }
-      return true;
-    },
-  },
-  secretKey: {
-    required: true,
-    trigger: ['blur', 'input'],
-    validator(rule: FormItemRule, value: string) {
-      if (!value) {
-        return new Error(t('Please enter Secret Key'));
-      }
-      if (value.length < 8 || value.length > 40) {
-        return new Error(t('Secret Key length must be between 8 and 40 characters'));
-      }
-      return true;
-    },
-  },
-  expiry: {
-    required: true,
-    trigger: ['blur', 'change'],
-    // message: "请选择有效期",
-    validator(rule: FormItemRule, value: string) {
-      if (!value) {
-        return new Error(t('Please select expiry date'));
-      }
-      return true;
-    },
-  },
-});
+const errors = reactive({
+  accessKey: '',
+  secretKey: '',
+  expiry: '',
+  name: '',
+})
+
+const submitting = ref(false)
 
 interface Emits {
-  (e: 'update:visible', visible: boolean): void;
-  (e: 'search'): void;
-  (e: 'notice', data: object): void;
+  (e: 'update:visible', visible: boolean): void
+  (e: 'search'): void
+  (e: 'notice', data: object): void
 }
 
 const modalVisible = computed({
   get() {
-    return visible;
+    return visible
   },
   set(visible) {
-    closeModal(visible);
+    closeModal(visible)
   },
-});
+})
+
+const minExpiry = computed(() => new Date().toISOString())
+
+function resetForm() {
+  Object.assign(formModel, defaultFormModal())
+  formModel.policy = JSON.stringify(parentPolicy.value)
+  clearErrors()
+}
+
+function clearErrors() {
+  errors.accessKey = ''
+  errors.secretKey = ''
+  errors.expiry = ''
+  errors.name = ''
+}
+
 function closeModal(visible = false) {
-  emit('update:visible', visible);
-  formModel.value = {
-    ...defaultFormModal,
-    accessKey: makeRandomString(20),
-    secretKey: makeRandomString(40),
-    policy: JSON.stringify(parentPolicy.value),
-  };
+  emit('update:visible', visible)
+  if (!visible) {
+    resetForm()
+  }
 }
 
-function dateDisabled(ts: number) {
-  const date = new Date(ts);
-  return date < new Date();
+function validate() {
+  clearErrors()
+
+  if (!formModel.accessKey) {
+    errors.accessKey = t('Please enter Access Key')
+  } else if (formModel.accessKey.length < 3 || formModel.accessKey.length > 20) {
+    errors.accessKey = t('Access Key length must be between 3 and 20 characters')
+  }
+
+  if (!formModel.secretKey) {
+    errors.secretKey = t('Please enter Secret Key')
+  } else if (formModel.secretKey.length < 8 || formModel.secretKey.length > 40) {
+    errors.secretKey = t('Secret Key length must be between 8 and 40 characters')
+  }
+
+  if (!formModel.expiry) {
+    errors.expiry = t('Please select expiry date')
+  }
+
+  if (!formModel.name) {
+    errors.name = t('Please enter name')
+  }
+
+  return !errors.accessKey && !errors.secretKey && !errors.expiry && !errors.name
 }
 
-const formRef = ref<FormInst | null>(null);
-async function submitForm(e: MouseEvent) {
-  // e.preventDefault()
-  formRef.value?.validate(async errors => {
-    if (!errors) {
+async function submitForm() {
+  if (!validate()) {
+    message.error(t('Please fill in the correct format'))
+    return
+  }
+
+  submitting.value = true
+  try {
+    let customPolicy: string | null = null
+    if (!formModel.impliedPolicy) {
       try {
-        const res = await createServiceAccount({
-          ...formModel.value,
-          policy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
-          expiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
-        });
-        message.success(t('Added successfully'));
-        emit('notice', res);
-        closeModal();
-        emit('search');
+        customPolicy = JSON.stringify(JSON.parse(formModel.policy || '{}'))
       } catch (error) {
-        message.error(t('Add failed'));
+        message.error(t('Policy format invalid'))
+        submitting.value = false
+        return
       }
-    } else {
-      console.log(errors);
-      message.error(t('Please fill in the correct format'));
     }
-  });
+
+    const payload = {
+      ...formModel,
+      policy: customPolicy,
+      expiration: formModel.expiry,
+    }
+
+    const res = await createServiceAccount(payload)
+    message.success(t('Added successfully'))
+    emit('notice', res)
+    closeModal()
+    emit('search')
+  } catch (error) {
+    console.error(error)
+    message.error(t('Add failed'))
+  } finally {
+    submitting.value = false
+  }
 }
 
-const parentPolicy = ref('');
-// 默认策略原文
-const getPolicie = async () => {
-  const userInfo = await $api.get(`/accountinfo`);
-  parentPolicy.value = userInfo.Policy;
-  formModel.value.policy = JSON.stringify(userInfo.Policy);
-};
-getPolicie();
+const parentPolicy = ref('')
+const getPolicy = async () => {
+  const userInfo = await $api.get(`/accountinfo`)
+  parentPolicy.value = userInfo.Policy
+  formModel.policy = JSON.stringify(userInfo.Policy)
+}
+getPolicy()
 </script>
-
-<style scoped></style>

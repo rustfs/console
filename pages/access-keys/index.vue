@@ -1,267 +1,250 @@
 <template>
-  <div>
+  <div class="flex flex-col gap-6">
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Access Keys') }}</h1>
       </template>
-      <template #actions></template>
     </page-header>
 
-    <page-content>
-      <n-form class="mb-4" ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false">
-        <n-flex justify="space-between">
-          <n-form-item label="" path="name">
-            <n-input :placeholder="t('Search Access Key')" @input="filterName" />
-          </n-form-item>
-          <!-- <n-button @click="() => refresh()">
-            <Icon name="ri:refresh-line" class="mr-2" />
-            <span>刷新</span>
-          </n-button> -->
-          <NFlex>
-            <NButton :disabled="!checkedKeys.length" secondary @click="deleteByList">
-              <template #icon>
-                <Icon name="ri:delete-bin-5-line"></Icon>
-              </template>
-              {{ t('Delete Selected') }}
-            </NButton>
-            <!-- <NButton secondary @click="changePassword">
-            <template #icon>
-              <Icon name="ri:key-2-line"></Icon>
-            </template>
-            修改秘钥
-          </NButton> -->
-            <NButton secondary @click="addItem">
-              <template #icon>
-                <Icon name="ri:add-line"></Icon>
-              </template>
-              {{ t('Add Access Key') }}
-            </NButton>
-          </NFlex>
-        </n-flex>
-      </n-form>
+    <page-content class="flex flex-col gap-4">
+      <div class="rounded-lg border border-border/60 bg-background/80 p-4 shadow-sm">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div class="flex w-full max-w-sm items-center gap-2">
+            <Icon name="ri:search-line" class="size-4 text-muted-foreground" />
+            <AppInput
+              v-model="searchTerm"
+              :placeholder="t('Search Access Key')"
+            />
+          </div>
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <AppButton variant="outline" @click="changePasswordVisible = true">
+              <Icon name="ri:key-2-line" class="size-4" />
+              <span>{{ t('Change Password') }}</span>
+            </AppButton>
+            <AppButton
+              variant="outline"
+              :disabled="!selectedKeys.length"
+              @click="deleteSelected"
+            >
+              <Icon name="ri:delete-bin-5-line" class="size-4" />
+              <span>{{ t('Delete Selected') }}</span>
+            </AppButton>
+            <AppButton variant="secondary" @click="addItem">
+              <Icon name="ri:add-line" class="size-4" />
+              <span>{{ t('Add Access Key') }}</span>
+            </AppButton>
+          </div>
+        </div>
+      </div>
 
-      <n-data-table ref="tableRef" :columns="columns" :data="listData" :pagination="false" :bordered="true" :row-key="rowKey" @update:checked-row-keys="handleCheck" />
+      <div class="rounded-lg border border-border/60 bg-background/60 p-2">
+        <AppDataTable
+          :table="table"
+          :is-loading="loading"
+          :empty-title="t('No Access Keys')"
+          :empty-description="t('Create a new access key to get started.')"
+          class="overflow-hidden"
+          table-class="min-w-full"
+        />
+        <AppDataTablePagination :table="table" class="px-2 py-3" />
+      </div>
     </page-content>
-    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" @notice="noticeDialog" />
-    <EditItem ref="editItemRef" @search="getDataList" />
-    <ChangePassword ref="changePasswordModalRef" v-model:visible="changePasswordVisible" @search="getDataList" />
-    <users-user-notice ref="noticeRef" @search="getDataList"></users-user-notice>
+
+    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="refresh" @notice="noticeDialog" />
+    <EditItem ref="editItemRef" @search="refresh" />
+    <ChangePassword ref="changePasswordModalRef" v-model:visible="changePasswordVisible" />
+    <users-user-notice ref="noticeRef" @search="refresh" />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { Icon } from '#components'
-import {
-  type DataTableColumns,
-  type DataTableInst,
-  type DataTableRowKey,
-  NButton,
-  NPopconfirm,
-  NSpace,
-} from 'naive-ui'
+import type { ColumnDef } from '@tanstack/vue-table'
+import dayjs from 'dayjs'
+import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { AppButton, AppInput, AppTag } from '@/components/app'
+import { AppDataTable, AppDataTablePagination, useDataTable } from '@/components/app/data-table'
+import { Checkbox } from '@/components/ui/checkbox'
 import { ChangePassword, EditItem, NewItem } from '~/components/access-keys'
 
 const { t } = useI18n()
-const { $api } = useNuxtApp()
 const dialog = useDialog()
 const message = useMessage()
 const { listUserServiceAccounts, deleteServiceAccount } = useAccessKeys()
 
-const searchForm = reactive({
-  name: '',
-})
 interface RowData {
   accessKey: string
-  expiration: string
+  expiration: string | null
   name: string
   description: string
   accountStatus: string
-  actions: string
 }
 
-const columns: DataTableColumns<RowData> = [
+const data = ref<RowData[]>([])
+const loading = ref(false)
+const searchTerm = ref('')
+
+const openEditItem = (row: RowData) => {
+  editItemRef.value?.openDialog(row)
+}
+
+const confirmDeleteSingle = (row: RowData) => {
+  dialog.error({
+    title: t('Warning'),
+    content: t('Are you sure you want to delete this key?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
+    onPositiveClick: () => deleteItem(row.accessKey),
+  })
+}
+
+const columns: ColumnDef<RowData>[] = [
   {
-    type: 'selection',
+    id: 'select',
+    enableSorting: false,
+    enableHiding: false,
+    header: ({ table }) =>
+      h(Checkbox, {
+        checked: table.getIsAllPageRowsSelected(),
+        indeterminate: table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected(),
+        'onUpdate:checked': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
+        class: 'translate-y-[2px]'
+      }),
+    cell: ({ row }) =>
+      h(Checkbox, {
+        checked: row.getIsSelected(),
+        'onUpdate:checked': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
+        class: 'translate-y-[2px]'
+      }),
+    size: 48,
   },
   {
-    title: t('Access Key'),
-    align: 'center',
-    key: 'accessKey',
-    filter(value, row) {
-      return !!row.accessKey.includes(value.toString())
-    },
+    accessorKey: 'accessKey',
+    header: () => t('Access Key'),
+    cell: ({ row }) => h('span', { class: 'font-mono text-sm' }, row.original.accessKey),
+    filterFn: 'includesString',
   },
   {
-    title: t('Expiration'),
-    align: 'center',
-    key: 'expiration',
+    accessorKey: 'expiration',
+    header: () => t('Expiration'),
+    cell: ({ row }) =>
+      h('span', row.original.expiration ? dayjs(row.original.expiration).format('YYYY-MM-DD HH:mm') : '-'),
   },
   {
-    title: t('Status'),
-    align: 'center',
-    key: 'accountStatus',
-    render: (row: any) => {
-      return row.accountStatus === 'on' ? t('Available') : t('Disabled')
-    },
+    accessorKey: 'accountStatus',
+    header: () => t('Status'),
+    cell: ({ row }) =>
+      h(AppTag, { tone: row.original.accountStatus === 'on' ? 'success' : 'danger' }, () =>
+        row.original.accountStatus === 'on' ? t('Available') : t('Disabled')),
   },
   {
-    title: t('Name'),
-    align: 'center',
-    key: 'name',
+    accessorKey: 'name',
+    header: () => t('Name'),
+    cell: ({ row }) => h('span', row.original.name || '-'),
   },
   {
-    title: t('Description'),
-    align: 'center',
-    key: 'description',
+    accessorKey: 'description',
+    header: () => t('Description'),
+    cell: ({ row }) => h('span', row.original.description || '-'),
   },
   {
-    title: t('Actions'),
-    key: 'actions',
-    align: 'center',
-    width: 180,
-    render: (row: any) => {
-      return h(
-        NSpace,
-        {
-          justify: 'center',
-        },
-        {
-          default: () => [
-            h(
-              NButton,
-              {
-                size: 'small',
-                secondary: true,
-                onClick: () => openEditItem(row),
-              },
-              {
-                default: () => t('Edit'),
-                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
-              }
-            ),
-            h(
-              NPopconfirm,
-              { onPositiveClick: () => deleteItem(row) },
-              {
-                default: () => t('Confirm Delete'),
-                trigger: () =>
-                  h(
-                    NButton,
-                    { size: 'small', secondary: true },
-                    {
-                      default: () => t('Delete'),
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
-                    }
-                  ),
-              }
-            ),
-          ],
-        }
-      )
-    },
+    id: 'actions',
+    header: () => t('Actions'),
+    enableSorting: false,
+    enableHiding: false,
+    cell: ({ row }) =>
+      h('div', { class: 'flex justify-center gap-2' }, [
+        h(AppButton, {
+          variant: 'outline',
+          size: 'sm',
+          onClick: () => openEditItem(row.original),
+        }, () => [h(Icon, { name: 'ri:edit-2-line', class: 'size-4' }), h('span', t('Edit'))]),
+        h(AppButton, {
+          variant: 'outline',
+          size: 'sm',
+          onClick: () => confirmDeleteSingle(row.original),
+        }, () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))])
+      ]),
   },
 ]
 
-// 搜索过滤
-const tableRef = ref<DataTableInst>()
-function filterName(value: string) {
-  tableRef.value &&
-    tableRef.value.filter({
-      accessKey: [value],
-    })
-}
-const listData = ref<any[]>([])
-
-onMounted(() => {
-  getDataList()
+const { table } = useDataTable<RowData>({
+  data,
+  columns,
+  getRowId: row => row.accessKey,
 })
-// 获取数据
-const getDataList = async () => {
+
+watch(searchTerm, value => {
+  table.getColumn('accessKey')?.setFilterValue(value || undefined)
+})
+
+const selectedKeys = computed(() => table.getSelectedRowModel().rows.map(row => row.original.accessKey))
+
+const listUserAccounts = async () => {
+  loading.value = true
   try {
     const res = await listUserServiceAccounts({})
-    listData.value = res.accounts || []
+    data.value = res.accounts || []
   } catch (error) {
+    console.error(error)
     message.error(t('Get Data Failed'))
+  } finally {
+    loading.value = false
   }
 }
 
-// 刷新
+onMounted(listUserAccounts)
+
 const refresh = () => {
-  getDataList()
+  listUserAccounts()
 }
 
-/** **********************************添加 */
 const newItemRef = ref()
 const newItemVisible = ref(false)
+const editItemRef = ref()
+const changePasswordModalRef = ref()
+const changePasswordVisible = ref(false)
+const noticeRef = ref()
 
 function addItem() {
   newItemVisible.value = true
 }
 
-// 添加之后的反馈弹窗
-const noticeRef = ref()
 function noticeDialog(data: any) {
-  console.log(data)
-  noticeRef.value.openDialog(data)
+  noticeRef.value?.openDialog(data)
 }
 
-/** **********************************修改 */
-const editItemRef = ref()
-function openEditItem(row: any) {
-  editItemRef.value.openDialog(row)
-}
-/** **********************************修改密码 */
-const changePasswordModalRef = ref()
-const changePasswordVisible = ref(false)
-
-function changePassword() {
-  changePasswordVisible.value = true
+async function deleteItem(accessKey: string) {
+  try {
+    await deleteServiceAccount(accessKey)
+    message.success(t('Delete Success'))
+    await listUserAccounts()
+  } catch (error) {
+    console.error(error)
+    message.error(t('Delete Failed'))
+  }
 }
 
-/** ***********************************删除 */
-async function deleteItem(row: any) {
-  deleteServiceAccount(row.accessKey)
-    .then(res => {
-      message.success(t('Delete Success'))
-      getDataList()
-    })
-    .catch(error => {
-      message.error(t('Delete Failed'))
-    })
-}
+function deleteSelected() {
+  if (!selectedKeys.value.length) {
+    message.error(t('Please select at least one item'))
+    return
+  }
 
-/** ************************************批量删除 */
-function rowKey(row: any): string {
-  return row.accessKey
-}
-
-const checkedKeys = ref<DataTableRowKey[]>([])
-function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys
-  return checkedKeys
-}
-// 批量删除
-function deleteByList() {
   dialog.error({
     title: t('Warning'),
     content: t('Are you sure you want to delete all selected keys?'),
     positiveText: t('Confirm'),
     negativeText: t('Cancel'),
     onPositiveClick: async () => {
-      if (!checkedKeys.value.length) {
-        message.error(t('Please select at least one item'))
-        return
-      }
       try {
-        Promise.all(checkedKeys.value.map(item => deleteServiceAccount(item as string))).then(() => {
-          message.success(t('Delete Success'))
-          checkedKeys.value = []
-          nextTick(() => {
-            getDataList()
-          })
-        })
+        await Promise.all(selectedKeys.value.map(key => deleteServiceAccount(key)))
+        message.success(t('Delete Success'))
+        table.resetRowSelection()
+        await listUserAccounts()
       } catch (error) {
+        console.error(error)
         message.error(t('Delete Failed'))
       }
     },

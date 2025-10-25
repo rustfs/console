@@ -1,7 +1,7 @@
 # ShadCN Vue Migration Todo
 
-- [x] Replace global layout shell (`layouts/default.vue`) to use `components/AppSidebar` built with ShadCN Sidebar primitives and update the layout structure similar to Sidebar07.
-- [x] Build `components/AppSidebar.vue` and supporting subcomponents to render navigation, language/theme controls, and user menu with ShadCN UI widgets.
+- [x] Replace global layout shell (`layouts/default.vue`) to use `components/app/AppSidebar` built with ShadCN Sidebar primitives and update the layout structure similar to Sidebar07.
+- [x] Build `components/app/AppSidebar.vue` and supporting subcomponents to render navigation, language/theme controls, and user menu with ShadCN UI widgets.
 - [x] Replace Naive UI providers in `app.vue` with ShadCN-friendly structure, wiring toast/dialog replacements and preserving color mode handling.
 - [ ] Convert shared form components and high-use Naive UI elements (buttons, inputs, tables, etc.) to their ShadCN equivalents, introducing reusable wrappers under `components/app-` when helpful.
   - [x] Rebuild the users list tab (`components/users/tabs/user.vue`) with ShadCN table, checkbox, dialog, and button primitives.

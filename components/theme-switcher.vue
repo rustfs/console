@@ -1,9 +1,12 @@
 <template>
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
-      <Button variant="ghost" class="w-full justify-start gap-2 px-2">
-        <Icon :name="themeIcon" class="h-4 w-4" />
-        <span class="truncate">{{ t(themeName) }}</span>
+      <Button
+        variant="ghost"
+        class="w-full justify-start gap-2 px-2 transition-[padding] duration-200 group-data-[collapsible=icon]:h-9 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+      >
+        <Icon :name="themeIcon" class="h-4 w-4 shrink-0" />
+        <span class="truncate group-data-[collapsible=icon]:hidden">{{ t(themeName) }}</span>
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent class="w-40" align="start">

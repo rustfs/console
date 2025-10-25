@@ -1,33 +1,32 @@
+<script setup lang="ts">
+import AppSidebar from '@/components/app/AppSidebar.vue'
+import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
+import { Separator } from '@/components/ui/separator'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const showSidebar = computed(() => !route.path.startsWith('/auth'))
+</script>
+
 <template>
-  <div v-if="isAuthRoute" class="min-h-screen">
+  <SidebarProvider v-if="showSidebar">
+    <AppSidebar />
+    <SidebarInset class="bg-background">
+      <header
+        class="flex h-16 shrink-0 items-center gap-2 border-b border-border/60 bg-background/80 px-4 transition-[height] ease-linear backdrop-blur group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+      >
+        <SidebarTrigger class="-ml-1" />
+        <Separator orientation="vertical" class="h-4" />
+      </header>
+      <div class="flex flex-1 flex-col overflow-hidden">
+        <div class="flex-1 overflow-y-auto">
+          <slot />
+        </div>
+      </div>
+    </SidebarInset>
+  </SidebarProvider>
+  <div v-else class="min-h-screen bg-background">
     <slot />
   </div>
-  <SidebarProvider v-else>
-    <div class="flex min-h-screen w-full">
-      <AppSidebar />
-      <SidebarInset>
-        <div class="flex min-h-screen flex-1 flex-col">
-          <header class="sticky top-0 z-10 flex h-14 items-center gap-2 border-b bg-background px-4 shadow-sm md:hidden">
-            <SidebarTrigger />
-            <span class="text-sm font-semibold">{{ appConfig.name }}</span>
-          </header>
-          <div class="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-8">
-            <slot />
-          </div>
-        </div>
-      </SidebarInset>
-    </div>
-  </SidebarProvider>
 </template>
-
-<script setup lang="ts">
-import AppSidebar from '@/components/AppSidebar.vue';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { computed } from 'vue';
-import type { AppConfig } from '~/types/app-config';
-
-const route = useRoute();
-const appConfig = useAppConfig() as unknown as AppConfig;
-
-const isAuthRoute = computed(() => route.path.startsWith('/auth'));
-</script>

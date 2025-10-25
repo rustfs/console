@@ -3,7 +3,7 @@
     <DropdownMenuTrigger as-child>
       <Button
         variant="ghost"
-        class="w-full items-center justify-between gap-2 rounded-none border-t border-sidebar-border px-4 py-3 text-left"
+        class="w-full items-center justify-between gap-2 rounded-none border-t border-sidebar-border px-4 py-3 text-left transition-[padding] duration-200 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
       >
         <div class="flex items-center gap-3">
           <span class="flex h-9 w-9 items-center justify-center rounded-full border bg-muted">

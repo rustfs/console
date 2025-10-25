@@ -1,17 +1,34 @@
 <template>
-  <n-dropdown :options="themeOptions" trigger="click" @select="handleSelect">
-    <n-button :text="true" block>
-      <template #icon>
-        <Icon :name="themeIcon" />
-      </template>
-      {{ t(themeName) }}
-    </n-button>
-  </n-dropdown>
+  <DropdownMenu>
+    <DropdownMenuTrigger as-child>
+      <Button variant="ghost" class="w-full justify-start gap-2 px-2">
+        <Icon :name="themeIcon" class="h-4 w-4" />
+        <span class="truncate">{{ t(themeName) }}</span>
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent class="w-40" align="start">
+      <DropdownMenuItem
+        v-for="option in themeOptions"
+        :key="option.key"
+        @select="() => handleSelect(option.key)"
+      >
+        <Icon :name="option.icon" class="mr-2 h-4 w-4" />
+        {{ option.label }}
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '#components';
 import { useColorMode } from '@vueuse/core';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
@@ -40,23 +57,11 @@ const themeIcon = computed(() => {
   }
 });
 
-const themeOptions = [
-  {
-    label: () =>
-      h('div', { class: 'flex items-center' }, [h(Icon, { name: 'ri:sun-fill', class: 'mr-2' }), t('Light')]),
-    key: 'light',
-  },
-  {
-    label: () =>
-      h('div', { class: 'flex items-center' }, [h(Icon, { name: 'ri:moon-fill', class: 'mr-2' }), t('Dark')]),
-    key: 'dark',
-  },
-  {
-    label: () =>
-      h('div', { class: 'flex items-center' }, [h(Icon, { name: 'ri:contrast-2-line', class: 'mr-2' }), t('Auto')]),
-    key: 'auto',
-  },
-];
+const themeOptions = computed(() => [
+  { label: t('Light'), key: 'light', icon: 'ri:sun-fill' },
+  { label: t('Dark'), key: 'dark', icon: 'ri:moon-fill' },
+  { label: t('Auto'), key: 'auto', icon: 'ri:contrast-2-line' },
+]);
 
 const handleSelect = (key: string) => {
   if (key === 'light' || key === 'dark' || key === 'auto') {

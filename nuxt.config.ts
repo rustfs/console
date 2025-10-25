@@ -115,7 +115,7 @@ export default defineNuxtConfig({
       AutoImport({
         imports: [
           {
-            'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'],
+            '~/composables/ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'],
           },
         ],
       }),

@@ -1,43 +1,133 @@
 <template>
-  <div>
+  <div class="space-y-4">
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Events') }}</h1>
       </template>
     </page-header>
-    <page-content class="flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <div style="width: 300px">
-          <n-form-item :label="t('Bucket')" path="" class="flex-auto" label-placement="left">
-            <n-select filterable v-model:value="bucketName" :placeholder="t('Please select bucket')" :options="bucketList" />
-          </n-form-item>
+
+    <page-content class="space-y-6">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div class="w-full max-w-sm space-y-2">
+          <Label for="bucket-select">{{ t('Bucket') }}</Label>
+          <Select id="bucket-select" v-model="bucketName" :disabled="!bucketList.length">
+            <SelectTrigger>
+              <SelectValue :placeholder="t('Please select bucket')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="bucket in bucketList"
+                :key="bucket.value"
+                :value="bucket.value"
+              >
+                {{ bucket.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div class="flex items-center gap-4">
-          <n-button @click="() => handleNew()">
-            <Icon name="ri:add-line" class="mr-2" />
+        <div class="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="secondary" @click="handleNew">
+            <Icon class="size-4" name="ri:add-line" />
             <span>{{ t('Add Event Subscription') }}</span>
-          </n-button>
-          <n-button @click="refresh">
-            <Icon name="ri:refresh-line" class="mr-2" />
+          </Button>
+          <Button type="button" variant="secondary" @click="handleRefresh" :disabled="loading">
+            <Icon class="size-4" name="ri:refresh-line" />
             <span>{{ t('Refresh') }}</span>
-          </n-button>
+          </Button>
         </div>
       </div>
 
-      <n-data-table v-if="pageData.length > 0" class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="pageData" :pagination="false"
-        :bordered="false" :loading="loading" />
-      <n-card v-else class="flex flex-center" style="height: 400px">
-        <n-empty :description="t('No Data')"></n-empty>
-      </n-card>
-      <events-new-form ref="newRef" :bucketName="bucketName" @success="refresh"></events-new-form>
+      <div class="relative">
+        <div
+          v-if="loading"
+          class="absolute inset-0 z-10 flex items-center justify-center rounded-lg border bg-background/70 backdrop-blur-sm"
+        >
+          <Spinner class="size-6 text-muted-foreground" />
+        </div>
+
+        <div v-if="pageData.length" class="overflow-hidden rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead class="w-28">{{ t('Type') }}</TableHead>
+                <TableHead class="min-w-[180px]">{{ t('ARN') }}</TableHead>
+                <TableHead class="w-52">{{ t('Events') }}</TableHead>
+                <TableHead class="w-36">{{ t('Prefix') }}</TableHead>
+                <TableHead class="w-36">{{ t('Suffix') }}</TableHead>
+                <TableHead class="w-24 text-center">{{ t('Actions') }}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="row in pageData" :key="row.id">
+                <TableCell>
+                  <Badge :class="typeBadgeClasses[row.type]">
+                    {{ row.type }}
+                  </Badge>
+                </TableCell>
+                <TableCell class="font-medium">
+                  <span class="line-clamp-2 break-all">{{ row.arn }}</span>
+                </TableCell>
+                <TableCell>
+                  <div class="flex flex-wrap gap-1">
+                    <Badge
+                      v-for="event in getDisplayEvents(row.events)"
+                      :key="event"
+                      variant="secondary"
+                    >
+                      {{ event }}
+                    </Badge>
+                  </div>
+                </TableCell>
+                <TableCell>{{ row.prefix || '-' }}</TableCell>
+                <TableCell>{{ row.suffix || '-' }}</TableCell>
+                <TableCell>
+                  <div class="flex justify-center">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      class="gap-2"
+                      @click="event => handleRowDelete(row, event)"
+                    >
+                      <Icon class="size-4" name="ri:delete-bin-7-line" />
+                      {{ t('Delete') }}
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+
+        <Card v-else class="relative">
+          <CardContent class="py-16">
+            <Empty class="mx-auto max-w-sm text-center">
+              <EmptyHeader>
+                <EmptyTitle>{{ t('No Data') }}</EmptyTitle>
+                <EmptyDescription>{{ t('Add Event Subscription to get started') }}</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          </CardContent>
+        </Card>
+      </div>
+
+      <events-new-form ref="newRef" :bucketName="bucketName" @success="refresh" />
     </page-content>
   </div>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import { Icon } from '#components'
-import { NButton, NSpace, NTag, type DataTableColumns } from 'naive-ui'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Spinner } from '@/components/ui/spinner'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -55,123 +145,28 @@ interface NotificationItem {
   filterRules?: Array<{ Name: string; Value: string }>
 }
 
-// 事件映射：将 S3 标准事件映射回简化的显示名称
 const eventDisplayMapping: Record<string, string> = {
-  // PUT 相关事件
   's3:0bjectCreated:*': 'PUT',
-
-  // GET 相关事件
   's3:0bjectAccessed:*': 'GET',
-
-  // DELETE 相关事件
   's3:0bjectRemoved:*': 'DELETE',
-
-  // REPLICA 相关事件
   's3:Replication:*': 'REPLICA',
-
-  // RESTORE 相关事件
   's3:ObjectRestore:*': 'RESTORE',
   's3:0bjectTransition:*': 'RESTORE',
-
-  // SCANNER 相关事件
   's3:Scanner:ManyVersions': 'SCANNER',
   's3:Scanner:BigPrefix': 'SCANNER',
 }
 
-// 将 S3 事件转换为显示名称
-const getEventDisplayName = (s3Event: string): string => {
-  return eventDisplayMapping[s3Event] || s3Event
+const getDisplayEvents = (events: string[]) => {
+  return [...new Set(events.map(event => eventDisplayMapping[event] || event))]
 }
 
-const columns: DataTableColumns<NotificationItem> = [
-  {
-    title: t('Type'),
-    key: 'type',
-    width: 100,
-    render: (row: NotificationItem) => {
-      const typeColors = {
-        Lambda: 'warning',
-        SQS: 'primary',
-        SNS: 'success',
-        Topic: 'info',
-      }
-      return h(
-        NTag,
-        {
-          type: typeColors[row.type] as any,
-          size: 'small',
-        },
-        { default: () => row.type }
-      )
-    },
-  },
-  {
-    title: t('ARN'),
-    key: 'arn',
-    ellipsis: {
-      tooltip: true,
-    },
-  },
-  {
-    title: t('Events'),
-    key: 'events',
-    width: 200,
-    render: (row: NotificationItem) => {
-      // 将 S3 事件转换为显示名称并去重
-      const displayEvents = [...new Set(row.events.map(getEventDisplayName))]
+const typeBadgeClasses: Record<NotificationItem['type'], string> = {
+  Lambda: 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-100',
+  SQS: 'bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-100',
+  SNS: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-100',
+  Topic: 'bg-indigo-100 text-indigo-900 dark:bg-indigo-900/40 dark:text-indigo-100',
+}
 
-      return h(
-        'div',
-        { class: 'flex flex-wrap gap-1' },
-        displayEvents.map(event => h('n-tag', { size: 'tiny', type: 'info' }, { default: () => event }))
-      )
-    },
-  },
-  {
-    title: t('Prefix'),
-    key: 'prefix',
-    width: 120,
-    render: (row: NotificationItem) => row.prefix || '-',
-  },
-  {
-    title: t('Suffix'),
-    key: 'suffix',
-    width: 120,
-    render: (row: NotificationItem) => row.suffix || '-',
-  },
-  {
-    title: t('Actions'),
-    key: 'actions',
-    align: 'center',
-    width: 100,
-    render: (row: NotificationItem) => {
-      return h(
-        NSpace,
-        {
-          justify: 'center',
-        },
-        {
-          default: () => [
-            h(
-              NButton,
-              {
-                size: 'small',
-                secondary: true,
-                onClick: e => handleRowDelete(row, e),
-              },
-              {
-                default: () => t('Delete'),
-                icon: () => h(Icon, { name: 'ri:delete-bin-7-line' }),
-              }
-            ),
-          ],
-        }
-      )
-    },
-  },
-]
-
-// 获取桶列表
 const { data } = await useAsyncData(
   'buckets',
   async () => {
@@ -182,40 +177,45 @@ const { data } = await useAsyncData(
       }) || []
     )
   },
-  { default: () => [] }
+  { default: () => [] },
 )
 
 const bucketList = computed(() => {
-  return data.value.map(bucket => ({
+  return data.value.map((bucket: any) => ({
     label: bucket.Name,
     value: bucket.Name,
   }))
 })
 
-const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '')
-const loading = ref<boolean>(false)
+const bucketName = ref<string>(bucketList.value.length > 0 ? bucketList.value[0]?.value ?? '' : '')
+const loading = ref(false)
 const pageData = ref<NotificationItem[]>([])
+
 watch(
   () => bucketName.value,
   async newVal => {
-    if (!newVal) return
-
-    loading.value = true
-    try {
-      refresh()
-    } catch (error) {
+    if (!newVal) {
       pageData.value = []
-    } finally {
-      loading.value = false
+      return
     }
+
+    await refresh()
   },
-  { immediate: true }
+  { immediate: true },
 )
 
-const handleRowDelete = async (row: NotificationItem, e: Event) => {
-  e.stopPropagation()
+watch(
+  () => bucketList.value,
+  newBuckets => {
+    if (!bucketName.value && newBuckets.length) {
+      bucketName.value = newBuckets[0].value
+    }
+  },
+)
 
-  // 显示确认对话框
+const handleRowDelete = async (row: NotificationItem, event: Event) => {
+  event.stopPropagation()
+
   const confirmed = await new Promise<boolean>(resolve => {
     dialog.warning({
       title: t('Confirm Delete'),
@@ -232,29 +232,29 @@ const handleRowDelete = async (row: NotificationItem, e: Event) => {
   try {
     loading.value = true
 
-    // 获取当前的通知配置
     const currentResponse = await listBucketNotifications(bucketName.value)
     const currentNotifications = currentResponse || {}
 
-    // 根据类型从对应数组中移除配置
     let updatedConfigurations: any[] = []
 
     if (row.type === 'Lambda' && currentNotifications.LambdaFunctionConfigurations) {
       updatedConfigurations = currentNotifications.LambdaFunctionConfigurations.filter(
-        (config: any) => config.Id !== row.id
+        (config: any) => config.Id !== row.id,
       )
     } else if (row.type === 'SQS' && currentNotifications.QueueConfigurations) {
-      updatedConfigurations = currentNotifications.QueueConfigurations.filter((config: any) => config.Id !== row.id)
+      updatedConfigurations = currentNotifications.QueueConfigurations.filter(
+        (config: any) => config.Id !== row.id,
+      )
     } else if (row.type === 'SNS' && currentNotifications.TopicConfigurations) {
-      updatedConfigurations = currentNotifications.TopicConfigurations.filter((config: any) => config.Id !== row.id)
+      updatedConfigurations = currentNotifications.TopicConfigurations.filter(
+        (config: any) => config.Id !== row.id,
+      )
     }
 
-    // 构建新的通知配置
     const newNotificationConfig = {
       ...currentNotifications,
     }
 
-    // 更新对应类型的配置数组
     if (row.type === 'Lambda') {
       newNotificationConfig.LambdaFunctionConfigurations = updatedConfigurations
     } else if (row.type === 'SQS') {
@@ -263,30 +263,33 @@ const handleRowDelete = async (row: NotificationItem, e: Event) => {
       newNotificationConfig.TopicConfigurations = updatedConfigurations
     }
 
-    // 提交更新后的配置
     await putBucketNotifications(bucketName.value, newNotificationConfig)
 
-    // 显示成功消息
     message.success(t('Delete Success'))
-
-    // 刷新列表
     await refresh()
   } catch (error: any) {
     console.error('删除通知配置失败:', error)
-    message.error(t('Delete Failed') + ': ' + (error.message || error))
+    message.error(`${t('Delete Failed')}: ${error.message || error}`)
   } finally {
     loading.value = false
   }
 }
 
 const newRef = ref()
+
 const handleNew = () => {
-  newRef.value.open()
+  newRef.value?.open()
+}
+
+const handleRefresh = async () => {
+  await refresh()
 }
 
 const refresh = async () => {
+  loading.value = true
   if (!bucketName.value) {
     pageData.value = []
+    loading.value = false
     return
   }
 
@@ -294,7 +297,6 @@ const refresh = async () => {
     const response = await listBucketNotifications(bucketName.value)
     const notifications: NotificationItem[] = []
 
-    // 处理 Lambda 函数配置
     if (response.LambdaFunctionConfigurations) {
       response.LambdaFunctionConfigurations.forEach((config: any) => {
         const prefix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Prefix')?.Value
@@ -312,7 +314,6 @@ const refresh = async () => {
       })
     }
 
-    // 处理 SQS 队列配置
     if (response.QueueConfigurations) {
       response.QueueConfigurations.forEach((config: any) => {
         const prefix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Prefix')?.Value
@@ -330,7 +331,6 @@ const refresh = async () => {
       })
     }
 
-    // 处理 SNS 主题配置
     if (response.TopicConfigurations) {
       response.TopicConfigurations.forEach((config: any) => {
         const prefix = config.Filter?.Key?.FilterRules?.find((rule: any) => rule.Name === 'Prefix')?.Value
@@ -352,6 +352,8 @@ const refresh = async () => {
   } catch (error) {
     console.error('获取通知配置失败:', error)
     pageData.value = []
+  } finally {
+    loading.value = false
   }
 }
 </script>

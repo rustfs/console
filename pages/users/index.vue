@@ -6,22 +6,30 @@
       </template>
     </page-header>
     <page-content>
-      <n-tabs type="card">
-        <n-tab-pane name="users" :tab="t('Users')">
-          <users-tabs-user></users-tabs-user>
-        </n-tab-pane>
-        <n-tab-pane name="userGroup" :tab="t('User Groups')">
-          <users-tabs-group></users-tabs-group>
-        </n-tab-pane>
-      </n-tabs>
+      <AppTabs :tabs="tabs" v-model="activeTab">
+        <template #users>
+          <users-tabs-user />
+        </template>
+        <template #userGroup>
+          <users-tabs-group />
+        </template>
+      </AppTabs>
     </page-content>
   </div>
 </template>
 
 <script setup>
 import { useI18n } from 'vue-i18n';
+import { ref, computed } from 'vue';
+import { AppTabs } from '@/components/app';
 
 const { t } = useI18n();
+const activeTab = ref('users');
+
+const tabs = computed(() => [
+  { key: 'users', label: t('Users') },
+  { key: 'userGroup', label: t('User Groups') },
+]);
 </script>
 
 <style lang="scss" scoped></style>

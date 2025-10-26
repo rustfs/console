@@ -1,106 +1,173 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
+import { Icon } from '#components'
+import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 interface Props {
-  visible: boolean;
+  visible: boolean
 }
-const { visible } = defineProps<Props>();
-const message = useMessage();
-const { $api } = useNuxtApp();
-const group = useGroups();
-const user = useUsers();
 
-const emit = defineEmits<Emits>();
-const defaultFormModal = {
+const props = defineProps<Props>()
+const emit = defineEmits<{
+  (e: 'update:visible', visible: boolean): void
+  (e: 'search'): void
+}>()
+
+const { t } = useI18n()
+const message = useMessage()
+const { updateGroupMembers } = useGroups()
+const { listUsers } = useUsers()
+
+const defaultFormModel = () => ({
   group: '',
-  members: [],
-};
-const formModel = ref({ ...defaultFormModal });
+  members: [] as string[],
+})
 
-interface Emits {
-  (e: 'update:visible', visible: boolean): void;
-  (e: 'search'): void;
-}
-
-// 用户列表
-const users = ref<any[]>([]);
-const getUserList = async () => {
-  const res = await user.listUsers();
-
-  users.value = Object.entries(res).map(([username, info]) => ({
-    label: username, // 添加用户名
-    value: username, // 添加用户名
-  }));
-};
-getUserList();
+const formModel = reactive(defaultFormModel())
+const submitting = ref(false)
+const memberSelectorOpen = ref(false)
+const users = ref<{ label: string; value: string }[]>([])
 
 const modalVisible = computed({
-  get() {
-    return visible;
-  },
-  set(visible) {
-    closeModal(visible);
-  },
-});
-function closeModal(visible = false) {
-  formModel.value = { ...defaultFormModal };
-  emit('update:visible', visible);
+  get: () => props.visible,
+  set: value => closeModal(value),
+})
+
+const selectedMemberLabels = computed(() => {
+  const map = users.value.reduce<Record<string, string>>((acc, option) => {
+    acc[option.value] = option.label
+    return acc
+  }, {})
+
+  return formModel.members.map(value => map[value] ?? value)
+})
+
+const loadUsers = async () => {
+  try {
+    const res = await listUsers()
+    users.value = Object.entries(res ?? {}).map(([username]) => ({
+      label: username,
+      value: username,
+    }))
+  } catch (error) {
+    message.error(t('Failed to get data'))
+  }
 }
 
-async function submitForm() {
-  if (formModel.value.group.trim() === '') {
-    message.error(t('Please enter user group name'));
-    return;
+loadUsers()
+
+const toggleMember = (value: string) => {
+  if (formModel.members.includes(value)) {
+    formModel.members = formModel.members.filter(item => item !== value)
+  } else {
+    formModel.members = [...formModel.members, value]
   }
+}
+
+const closeModal = (visible = false) => {
+  Object.assign(formModel, defaultFormModel())
+  memberSelectorOpen.value = false
+  emit('update:visible', visible)
+}
+
+const submitForm = async () => {
+  if (!formModel.group.trim()) {
+    message.error(t('Please enter user group name'))
+    return
+  }
+
+  submitting.value = true
   try {
-    const res = await group.updateGroupMembers({
-      ...formModel.value,
+    await updateGroupMembers({
+      ...formModel,
       groupStatus: 'enabled',
       isRemove: false,
-    });
+    })
 
-    message.success(t('Add success'));
-    closeModal();
-    emit('search');
+    message.success(t('Add success'))
+    closeModal()
+    emit('search')
   } catch (error) {
-    message.error(t('Add failed'));
+    message.error(t('Add failed'))
+  } finally {
+    submitting.value = false
   }
 }
 </script>
 
 <template>
-  <n-modal
-    v-model:show="modalVisible"
-    :mask-closable="false"
-    preset="card"
-    :title="t('Add group members')"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }"
-  >
-    <n-card>
-      <n-form label-placement="left" :model="formModel" label-align="right" :label-width="130">
-        <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item :span="24" :label="t('Name')" path="group" required>
-            <n-input v-model:value="formModel.group" />
-          </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" :label="t('Users')" path="members">
-            <n-select v-model:value="formModel.members" filterable multiple :options="users" />
-          </n-form-item-grid-item>
-        </n-grid>
-      </n-form>
-    </n-card>
-    <template #action>
-      <n-space justify="center">
-        <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
-        <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
-      </n-space>
-    </template>
-  </n-modal>
-</template>
+  <AppModal v-model="modalVisible" :title="t('Add group members')" size="lg" :close-on-backdrop="false">
+    <AppCard padded class="space-y-6">
+      <div class="space-y-2">
+        <Label class="text-sm font-medium">{{ t('Name') }}</Label>
+        <AppInput v-model="formModel.group" autocomplete="off" />
+      </div>
 
-<style scoped></style>
+      <div class="space-y-2">
+        <Label class="text-sm font-medium">{{ t('Users') }}</Label>
+        <Popover v-model:open="memberSelectorOpen">
+          <PopoverTrigger as-child>
+            <Button
+              type="button"
+              variant="outline"
+              class="min-h-10 w-full justify-between gap-2"
+              :aria-label="t('Users')"
+            >
+              <span class="truncate">
+                {{
+                  selectedMemberLabels.length ? selectedMemberLabels.join(', ') : t('Select user group members')
+                }}
+              </span>
+              <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-72 p-0" align="start">
+            <Command>
+              <CommandInput :placeholder="t('Search User')" />
+              <CommandList>
+                <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    v-for="option in users"
+                    :key="option.value"
+                    :value="option.label"
+                    @select="() => toggleMember(option.value)"
+                  >
+                    <Icon
+                      name="ri:check-line"
+                      class="mr-2 size-4"
+                      :class="formModel.members.includes(option.value) ? 'opacity-100' : 'opacity-0'"
+                    />
+                    <span>{{ option.label }}</span>
+                  </CommandItem>
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        <div v-if="formModel.members.length" class="flex flex-wrap gap-2">
+          <Badge v-for="value in formModel.members" :key="value" variant="secondary">
+            {{ value }}
+          </Badge>
+        </div>
+      </div>
+    </AppCard>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <AppButton variant="outline" @click="closeModal()">
+          {{ t('Cancel') }}
+        </AppButton>
+        <AppButton variant="primary" :loading="submitting" @click="submitForm">
+          {{ t('Submit') }}
+        </AppButton>
+      </div>
+    </template>
+  </AppModal>
+</template>

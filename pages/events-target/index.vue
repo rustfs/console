@@ -1,46 +1,57 @@
 <template>
-  <div>
+  <div class="flex flex-col gap-6">
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Event Destinations') }}</h1>
       </template>
     </page-header>
-    <page-content class="flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center justify-between">
-          <n-input v-model:value="searchTerm" :placeholder="t('Search')">
-            <template #prefix>
-              <Icon name="ri:search-2-line" />
-            </template>
-          </n-input>
-        </div>
 
-        <div class="flex items-center gap-4">
-          <n-button @click="() => addForm()">
-            <Icon name="ri:add-line" class="mr-2" />
+    <page-content class="flex flex-col gap-4">
+      <div
+        class="flex flex-col gap-4 rounded-lg border border-border/60 bg-background/80 p-4 shadow-sm md:flex-row md:items-center md:justify-between"
+      >
+        <div class="flex w-full max-w-sm items-center gap-2">
+          <Icon name="ri:search-2-line" class="size-4 text-muted-foreground" />
+          <AppInput v-model="searchTerm" :placeholder="t('Search')" />
+        </div>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <AppButton variant="secondary" @click="addForm">
+            <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Event Destination') }}</span>
-          </n-button>
-          <n-button @click="async () => refresh()">
-            <Icon name="ri:refresh-line" class="mr-2" />
+          </AppButton>
+          <AppButton variant="outline" @click="refresh">
+            <Icon name="ri:refresh-line" class="size-4" />
             <span>{{ t('Refresh') }}</span>
-          </n-button>
+          </AppButton>
         </div>
       </div>
-      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredData" :pagination="false" :bordered="false" />
+
+      <AppCard padded class="border border-border/60">
+        <AppDataTable
+          :table="table"
+          :is-loading="pending"
+          :empty-title="t('No Destinations')"
+          :empty-description="t('Create an event destination to forward notifications.')"
+        />
+      </AppCard>
     </page-content>
-    <events-target-new ref="newFormRef" @search="refresh"></events-target-new>
+
+    <events-target-new ref="newFormRef" @search="refresh" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '#components'
-import { NButton, NPopconfirm, NSpace, type DataTableColumns } from 'naive-ui'
+import type { ColumnDef } from '@tanstack/vue-table'
+import { AppButton, AppCard, AppInput, AppTag } from '@/components/app'
+import { AppDataTable, useDataTable } from '@/components/app/data-table'
+import { h, computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-const { getEventsTargetList, deleteEventTarget } = useEventTarget()
 
 const { t } = useI18n()
 const message = useMessage()
-const searchTerm = ref('')
+const dialog = useDialog()
+const { getEventsTargetList, deleteEventTarget } = useEventTarget()
 
 interface RowData {
   account_id: string
@@ -48,97 +59,106 @@ interface RowData {
   status: string
 }
 
-const columns: DataTableColumns<RowData> = [
-  {
-    title: t('Event Destinations'),
-    key: 'account_id',
-    width: 220,
-  },
-  {
-    title: t('Type'),
-    key: 'service',
-  },
+const searchTerm = ref('')
 
+const columns: ColumnDef<RowData>[] = [
   {
-    title: t('Status'),
-    key: 'status',
-    width: 160,
+    accessorKey: 'account_id',
+    header: () => t('Event Destinations'),
+    cell: ({ row }) => h('span', { class: 'font-mono text-sm' }, row.original.account_id),
+    filterFn: 'includesString',
   },
-
   {
-    title: t('Actions'),
-    key: 'actions',
-    align: 'center',
-    width: 140,
-    render: (row: RowData) => {
-      return h(
-        NSpace,
+    accessorKey: 'service',
+    header: () => t('Type'),
+    cell: ({ row }) => h('span', row.original.service),
+  },
+  {
+    accessorKey: 'status',
+    header: () => t('Status'),
+    cell: ({ row }) =>
+      h(
+        AppTag,
         {
-          justify: 'center',
+          tone: row.original.status === 'enable' ? 'success' : 'warning',
         },
-        {
-          default: () => [
-            h(
-              NPopconfirm,
-              { onPositiveClick: () => deleteItem(row) },
-              {
-                default: () => t('Confirm Delete'),
-                trigger: () =>
-                  h(
-                    NButton,
-                    { size: 'small', secondary: true },
-                    {
-                      default: () => t('Delete'),
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
-                    }
-                  ),
-              }
-            ),
-          ],
-        }
-      )
-    },
+        () => (row.original.status === 'enable' ? t('Enabled') : row.original.status || '-')
+      ),
+  },
+  {
+    id: 'actions',
+    header: () => t('Actions'),
+    enableSorting: false,
+    enableHiding: false,
+    cell: ({ row }) =>
+      h('div', { class: 'flex justify-center gap-2' }, [
+        h(
+          AppButton,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => confirmDelete(row.original),
+          },
+          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
+        ),
+      ]),
   },
 ]
 
-const { data, refresh } = await useAsyncData(
-  'events',
-  async () => {
-    const response = await getEventsTargetList()
-    return response.notification_endpoints
-  },
-  { default: () => [] }
-)
-
-const filteredData = computed(() => {
-  if (!searchTerm.value) {
-    return data.value
-  }
-
-  const term = searchTerm.value.toLowerCase()
-  return data.value.filter(
-    (item: RowData) =>
-      item.account_id?.toLowerCase().includes(term) ||
-      item.service?.toLowerCase().includes(term) ||
-      item.status?.toLowerCase().includes(term)
-  )
+const endpoints = ref<RowData[]>([])
+const { table } = useDataTable<RowData>({
+  data: endpoints,
+  columns,
+  getRowId: row => `${row.service}-${row.account_id}`,
 })
 
-const deleteItem = async (row: RowData) => {
-  deleteEventTarget('notify_' + row.service, row.account_id)
-    .then(() => {
-      message.success(t('Delete Success'))
-      refresh()
-    })
-    .catch(error => {
-      message.error(t('Delete Failed'))
-    })
+watch(searchTerm, value => {
+  table.getColumn('account_id')?.setFilterValue(value || undefined)
+})
+
+const { data, pending, refresh } = await useAsyncData(
+  'events-targets',
+  async () => {
+    const response = await getEventsTargetList()
+    return (response.notification_endpoints ?? []) as RowData[]
+  },
+  {
+    default: () => [],
+    server: false,
+  }
+)
+
+watch(
+  () => data.value,
+  value => {
+    endpoints.value = value ?? []
+  },
+  { immediate: true }
+)
+
+const confirmDelete = (row: RowData) => {
+  dialog.error({
+    title: t('Warning'),
+    content: t('Are you sure you want to delete this destination?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
+    onPositiveClick: () => deleteItem(row),
+  })
 }
 
-const newFormRef = ref()
-const addForm = async () => {
-  newFormRef.value.open()
+const deleteItem = async (row: RowData) => {
+  try {
+    await deleteEventTarget(`notify_${row.service}`, row.account_id)
+    message.success(t('Delete Success'))
+    refresh()
+  } catch (error) {
+    console.error(error)
+    message.error(t('Delete Failed'))
+  }
+}
+
+const newFormRef = ref<{ open: () => void }>()
+const addForm = () => {
+  newFormRef.value?.open()
 }
 </script>
-
-<style lang="scss" scoped></style>

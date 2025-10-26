@@ -1,112 +1,117 @@
 <template>
-  <n-modal
-    v-model:show="visible"
-    :mask-closable="false"
-    preset="card"
-    :title="t('Add Event Destination')"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }"
+  <AppModal
+    v-model="visible"
+    :title="formData.type ? t('Add {type} Destination', { type: formData.type }) : t('Add Event Destination')"
+    size="lg"
+    :close-on-backdrop="false"
   >
-    <n-card v-show="!formData.type">
-      <n-grid x-gap="12" y-gap="12" :cols="2">
-        <n-gi v-for="item in typeOptions">
-          <n-card class="cursor-pointer" @click="formData.type = item.value">
-            <div class="flex flex-center leading-8">
-              <img :src="item.iconUrl" class="w-8 h-8" />
-              <span class="ms-2">{{ item.label }}</span>
-            </div>
-          </n-card>
-        </n-gi>
-      </n-grid>
-    </n-card>
-    <n-card v-show="formData.type">
-      <n-card class="mb-4 cursor-pointer" @click="formData.type = ''">
-        <div class="flex flex-center leading-8">
-          <img :src="iconUrl" class="w-8 h-8 me-2" />
-          <span>
-            {{ formData.type }}
-          </span>
-        </div>
-      </n-card>
-      <n-form ref="formRef" :model="formData" :rules="rules">
-        <!-- Name 字段单独处理 -->
-        <n-form-item :label="t('Name') + '(a_zA_Z0-9_-)'" path="name">
-          <n-input
-            v-model:value="formData.name"
-            :allow-input="
-              value => {
-                // 只允许字母、数字、下划线
-                return /^[A-Za-z0-9_]*$/.test(value);
-              }
-            "
-            :placeholder="t('Please enter name')"
-          />
-        </n-form-item>
-
-        <!-- 根据类型动态生成配置项 -->
-        <n-form-item
-          v-for="config in currentConfigOptions"
-          :key="config.name"
-          :label="config.label"
-          :path="config.name"
+    <div class="space-y-6">
+      <div v-if="!formData.type" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <AppCard
+          v-for="option in typeOptions"
+          :key="option.value"
+          class="cursor-pointer border border-border/70 transition hover:border-primary"
+          @click="chooseType(option.value)"
         >
-          <n-input
-            v-if="config.type === 'text'"
-            v-model:value="formData.config[config.name]"
-            :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
-          />
-          <n-input
-            v-else-if="config.type === 'password'"
-            v-model:value="formData.config[config.name]"
-            type="password"
-            :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
-          />
-          <n-input-number
-            v-else-if="config.type === 'number'"
-            v-model:value="formData.config[config.name]"
-            :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
-            class="w-full"
-          />
-        </n-form-item>
+          <div class="flex items-center gap-3">
+            <img :src="option.iconUrl" class="h-10 w-10" alt="" />
+            <div>
+              <p class="text-base font-semibold">{{ option.label }}</p>
+              <p class="text-sm text-muted-foreground">{{ option.description }}</p>
+            </div>
+          </div>
+        </AppCard>
+      </div>
 
-        <n-space justify="center">
-          <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
-          <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
-        </n-space>
-      </n-form>
-    </n-card>
-  </n-modal>
+      <div v-else class="space-y-4">
+        <AppCard
+          class="flex cursor-pointer items-center gap-3 border border-border/60 transition hover:border-primary"
+          @click="resetType"
+        >
+          <img :src="iconUrl" class="h-10 w-10" alt="" />
+          <div class="flex flex-col">
+            <span class="text-sm text-muted-foreground">{{ t('Selected Type') }}</span>
+            <span class="text-base font-semibold">{{ formData.type }}</span>
+          </div>
+        </AppCard>
+
+        <div class="grid gap-4">
+          <div class="grid gap-2">
+            <Label for="target-name">{{ t('Name') }} (A-Z,0-9,_)</Label>
+            <AppInput
+              id="target-name"
+              v-model="formData.name"
+              :placeholder="t('Please enter name')"
+              autocomplete="off"
+              @input="validateNameFormat"
+            />
+            <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
+          </div>
+
+          <div
+            v-for="config in currentConfigOptions"
+            :key="config.name"
+            class="grid gap-2"
+          >
+            <Label :for="`config-${config.name}`">{{ config.label }}</Label>
+            <AppInput
+              v-if="config.type === 'text'"
+              :id="`config-${config.name}`"
+              v-model="formData.config[config.name]"
+              :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
+            />
+            <AppInput
+              v-else-if="config.type === 'password'"
+              :id="`config-${config.name}`"
+              v-model="formData.config[config.name]"
+              type="password"
+              autocomplete="off"
+              :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
+            />
+            <AppInput
+              v-else-if="config.type === 'number'"
+              :id="`config-${config.name}`"
+              v-model="formData.config[config.name]"
+              type="number"
+              :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <AppButton variant="outline" @click="handleCancel">{{ t('Cancel') }}</AppButton>
+        <AppButton variant="primary" :loading="submitting" :disabled="!formData.type" @click="handleSave">
+          {{ t('Save') }}
+        </AppButton>
+      </div>
+    </template>
+  </AppModal>
 </template>
 
-<script setup>
-import { ref, computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import MqttIcon from '~/assets/svg/mqtt.svg';
-import WebhooksIcon from '~/assets/svg/webhooks.svg';
-import KafkaIcon from '~/assets/svg/kafka.svg';
-import { NForm, NFormItem, NInput, NInputNumber, NSelect, NButton } from 'naive-ui';
-import { useEventTarget } from '#imports';
+<script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+import MqttIcon from '~/assets/svg/mqtt.svg'
+import WebhooksIcon from '~/assets/svg/webhooks.svg'
+import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { Label } from '@/components/ui/label'
+import { computed, reactive, ref, watch } from 'vue'
+import { useEventTarget } from '#imports'
 
-const { t } = useI18n();
-const { updateEventTarget } = useEventTarget();
-const message = useMessage();
+const { t } = useI18n()
+const { updateEventTarget } = useEventTarget()
+const message = useMessage()
 
-// 支持的存储类型
 const typeOptions = [
-  { label: t('MQTT'), value: 'MQTT', iconUrl: MqttIcon },
-  { label: t('Webhook'), value: 'Webhook', iconUrl: WebhooksIcon },
-  // { label: t('Kafka'), value: 'kafka', iconUrl: KafkaIcon },
-];
+  { label: t('MQTT'), value: 'MQTT', iconUrl: MqttIcon, description: t('Send events via MQTT broker') },
+  { label: t('Webhook'), value: 'Webhook', iconUrl: WebhooksIcon, description: t('Trigger custom HTTP endpoints') },
+]
 
-// 不同类型的配置项
-
-const configOptions = {
+const configOptions: Record<string, Array<{ label: string; name: string; type: 'text' | 'password' | 'number' }>> = {
   MQTT: [
     { label: t('MQTT_BROKER'), name: 'broker', type: 'text' },
-    // { label: t('MQTT_ENDPOINT'), name: 'endpoint', type: 'text' },
     { label: t('MQTT_TOPIC'), name: 'topic', type: 'text' },
     { label: t('MQTT_USERNAME'), name: 'username', type: 'text' },
     { label: t('MQTT_PASSWORD'), name: 'password', type: 'password' },
@@ -122,119 +127,135 @@ const configOptions = {
     { label: t('WEBHOOK_AUTH_TOKEN'), name: 'auth_token', type: 'text' },
     { label: t('WEBHOOK_QUEUE_LIMIT'), name: 'queue_limit', type: 'number' },
     { label: t('WEBHOOK_QUEUE_DIR'), name: 'queue_dir', type: 'text' },
-    // { label: t('WEBHOOK_CLIENT_CERT'), name: 'client_cert', type: 'text' },
-    // { label: t('WEBHOOK_CLIENT_KEY'), name: 'client_key', type: 'text' },
     { label: t('COMMENT_KEY'), name: 'comment', type: 'text' },
   ],
-};
+}
 
-const formRef = ref(null);
-const formData = ref({
+const visible = ref(false)
+const submitting = ref(false)
+
+const formData = reactive({
   type: '',
   name: '',
-  config: {},
-});
+  config: {} as Record<string, string | number>,
+})
 
-// 计算当前类型的配置选项
-const currentConfigOptions = computed(() => {
-  return formData.value.type ? configOptions[formData.value.type] || [] : [];
-});
+const errors = reactive({
+  name: '',
+})
 
-// 监听类型变化，初始化配置字段
+const currentConfigOptions = computed(() => (formData.type ? configOptions[formData.type] ?? [] : []))
+
 watch(
-  () => formData.value.type,
+  () => formData.type,
   newType => {
     if (newType && configOptions[newType]) {
-      const newConfig = {};
+      const nextConfig: Record<string, string | number> = {}
       configOptions[newType].forEach(item => {
-        newConfig[item.name] = '';
-      });
-      formData.value.config = newConfig;
+        nextConfig[item.name] = ''
+      })
+      formData.config = nextConfig
     }
   }
-);
-// 设置一个计算属性，用于通过typeOptions 以及当前选中的类型，返回一个图标
+)
+
 const iconUrl = computed(() => {
-  const type = formData.value.type;
-  return typeOptions.find(item => item.value === type)?.iconUrl || '';
-});
+  return typeOptions.find(item => item.value === formData.type)?.iconUrl || ''
+})
 
-const rules = {
-  name: { required: true, message: t('Please enter name') },
-  type: { required: true, message: t('Please select event target type') },
-};
+const chooseType = (type: string) => {
+  formData.type = type
+}
 
-const visible = ref(false);
+const resetType = () => {
+  formData.type = ''
+  formData.name = ''
+  formData.config = {}
+  clearErrors()
+}
 
-const open = () => {
-  visible.value = true;
-};
+const clearErrors = () => {
+  errors.name = ''
+}
 
-defineExpose({
-  open,
-});
+const validateNameFormat = () => {
+  if (!formData.name) {
+    errors.name = t('Please enter name')
+    return
+  }
 
-const emmit = defineEmits(['search']);
-const handleSave = () => {
-  formRef.value?.validate(errors => {
-    if (!errors) {
-      // 验证名称格式
-      if (!formData.value.name || !/^[A-Za-z0-9_]+$/.test(formData.value.name)) {
-        message.error(t('Please enter name') + ' (a_zA_Z0-9_-)');
-        return;
-      }
+  if (!/^[A-Za-z0-9_]+$/.test(formData.name)) {
+    errors.name = t('Please enter name') + ' (A-Z,0-9,_)'
+  } else {
+    errors.name = ''
+  }
+}
 
-      // 根据类型确定 target_type
-      const target_type = formData.value.type === 'MQTT' ? 'notify_mqtt' : 'notify_webhook';
-      const target_name = formData.value.name;
+const validateForm = () => {
+  validateNameFormat()
 
-      // 将配置数据转换为 key_values 格式
-      const key_values = Object.entries(formData.value.config)
-        // .filter(([key, value]) => value !== '' && value != null) // 过滤空值
-        .map(([key, value]) => ({
-          key: key, // 转换为小写
-          value: String(value || ''),
-        }));
+  if (!formData.type) {
+    message.error(t('Please select event target type'))
+    return false
+  }
 
-      key_values.enable = 'enable';
-      // 检查是否有配置项
-      if (key_values.length === 0) {
-        message.error(t('Please fill in at least one configuration item'));
-        return;
-      }
+  if (errors.name) {
+    message.error(errors.name)
+    return false
+  }
 
-      const targetData = {
-        key_values: key_values,
-      };
+  const hasConfig = Object.values(formData.config).some(value => value !== '' && value !== null && value !== undefined)
+  if (!hasConfig) {
+    message.error(t('Please fill in at least one configuration item'))
+    return false
+  }
 
-      // 调用保存接口
-      updateEventTarget(target_type, target_name, targetData)
-        .then(res => {
-          visible.value = false;
-          // 重置表单
-          formData.value = {
-            type: '',
-            name: '',
-            config: {},
-          };
-          emmit('search');
-          message.success(t('Event Target created successfully'));
-        })
-        .catch(error => {
-          console.error('保存失败:', error);
-          message.error(t('Failed to create event target'));
-        });
-    }
-  });
-};
+  return true
+}
+
+const handleSave = async () => {
+  if (!validateForm()) {
+    return
+  }
+
+  submitting.value = true
+  try {
+    const targetType = formData.type === 'MQTT' ? 'notify_mqtt' : 'notify_webhook'
+    const targetName = formData.name
+    const keyValues = Object.entries(formData.config).map(([key, value]) => ({
+      key,
+      value: String(value ?? ''),
+    }))
+
+    const payload = { key_values: keyValues }
+
+    await updateEventTarget(targetType, targetName, payload)
+    message.success(t('Event Target created successfully'))
+    emitSearch()
+    handleCancel()
+  } catch (error) {
+    console.error(error)
+    message.error(t('Failed to create event target'))
+  } finally {
+    submitting.value = false
+  }
+}
+
+const emit = defineEmits<{
+  (e: 'search'): void
+}>()
+
+const emitSearch = () => emit('search')
 
 const handleCancel = () => {
-  visible.value = false;
-  // 重置表单数据
-  formData.value = {
-    type: '',
-    name: '',
-    config: {},
-  };
-};
+  visible.value = false
+  resetType()
+}
+
+defineExpose({
+  open: () => {
+    visible.value = true
+    resetType()
+  },
+})
 </script>

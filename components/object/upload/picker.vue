@@ -1,439 +1,551 @@
 <template>
-  <n-modal :show="show" @update:show="(val: boolean) => $emit('update:show', val)" size="huge">
-    <n-card class="max-w-screen-md">
-      <template #header>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>{{ t('Upload File') }}</span>
-          <n-button size="small" ghost @click="closeModal">{{ t('Close') }}</n-button>
+  <AppModal v-model="visible" :title="t('Upload File')" size="xl" :close-on-backdrop="false">
+    <div class="space-y-5">
+      <input ref="fileInput" type="file" multiple class="hidden" @change="handleFileSelect" />
+      <input
+        ref="folderInput"
+        type="file"
+        webkitdirectory
+        directory
+        class="hidden"
+        @change="handleFolderSelect"
+      />
+
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="space-y-1">
+          <p class="text-sm font-medium text-muted-foreground">
+            {{ t('Target Bucket') }}: {{ bucketName }}
+          </p>
+          <p class="text-xs text-muted-foreground">
+            {{ t('Current Prefix') }}: {{ prefix || '/' }}
+          </p>
         </div>
-      </template>
-      <div class="flex flex-col gap-4">
-        <div class="flex items-center gap-4">
-          <input type="file" ref="fileInput" multiple hidden @change="handleFileSelect" />
-          <input type="file" ref="folderInput" webkitdirectory directory hidden @change="handleFolderSelect" />
-          <n-button type="primary" :disabled="isFolderLoading" @click="selectFile">{{ t('Select File') }}</n-button>
-          <div>{{ t('Or') }}</div>
-          <n-button :disabled="isFolderLoading" @click="selectFolder">{{ t('Select Folder') }}</n-button>
-          <div>{{ t('Upload To') }}</div>
-          <div class="text-cyan-600">{{ bucketName }}{{ prefix || '/' }}</div>
-        </div>
-
-        <n-alert title="" type="info">
-          {{ t('Overwrite Warning') }}
-        </n-alert>
-
-        <!-- 内存警告 -->
-        <n-alert v-if="isMemoryWarning" title="" type="warning" style="margin-bottom: 16px">
-          {{ t('Large File Count Warning', { count: totalFileCount, max: MAX_FILES_LIMIT }) }}
-        </n-alert>
-
-        <!-- 文件统计信息 -->
-        <div v-if="totalFileCount > 0" class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-4 text-sm text-gray-600">
-            <span>{{ t('Total Files') }}: {{ totalFileCount.toLocaleString() }}</span>
-            <span>{{ t('Memory Usage') }}: {{ getMemoryUsageLevel() }}</span>
-          </div>
-          <n-button size="small" type="warning" ghost @click="clearAllFiles" :disabled="isFolderLoading || isAdding">
-            {{ t('Clear All') }}
-          </n-button>
-        </div>
-
-        <!-- 文件夹读取 loading -->
-        <n-progress
-          v-if="isFolderLoading"
-          :percentage="folderLoadingProgress"
-          type="line"
-          :show-indicator="true"
-          style="margin-bottom: 16px"
-        >
-          <template #default> {{ t('Reading Folder Files') }} ({{ folderLoadingProgress }}%) </template>
-        </n-progress>
-
-        <div @dragover.prevent @drop.prevent="handleDrop">
-          <div
-            v-if="selectedItems.length === 0"
-            class="flex flex-col gap-6 items-center justify-center border border-dashed border-muted rounded p-4 h-[40vh]"
-          >
-            <div class="text-gray-500 font-bold">{{ t('No Selection') }}</div>
-            <div class="text-muted-foreground text-center">
-              {{ t('Drag Drop Info') }}<br />
-              {{ t('File Size Limit') }}
-            </div>
-          </div>
-
-          <!-- 虚拟滚动文件与文件夹列表 -->
-          <n-virtual-list
-            v-if="selectedItems.length"
-            :items="selectedItems"
-            :item-size="60"
-            class="h-[40vh] overflow-y-auto border rounded"
-          >
-            <template #default="{ item, index }">
-              <div class="flex items-center gap-2 w-full border-b p-1">
-                <div class="flex-1">
-                  <div>
-                    <span v-if="item.type === 'folder'">{{ item.name }}/</span>
-                    <span v-else>{{ item.name }}</span>
-                  </div>
-                  <div v-if="item.type === 'folder' && item.fileCount" class="text-xs text-gray-500">
-                    {{ item.fileCount }} 个文件
-                  </div>
-                </div>
-                <div class="w-32 text-center">{{ formatBytes(item.size) }}</div>
-                <div class="w-32 text-center">
-                  <n-button text type="info" @click="removeItem(index)">{{ t('Delete') }}</n-button>
-                </div>
-              </div>
-            </template>
-          </n-virtual-list>
-        </div>
-
-        <n-progress
-          v-if="isAdding"
-          :percentage="addProgress"
-          type="line"
-          :show-indicator="true"
-          style="margin-bottom: 16px"
-        >
-          <template #default> {{ t('Adding to Upload Queue') }} ({{ addProgress }}%) </template>
-        </n-progress>
-
-        <div class="flex justify-center gap-4">
-          <n-button type="default" :disabled="!hasFiles || isAdding || isFolderLoading">{{ t('Configure') }}</n-button>
-          <n-button
-            type="primary"
-            :disabled="!hasFiles || isAdding || isFolderLoading"
-            :loading="isAdding"
-            @click="handleUpload"
-            >{{ t('Start Upload') }}</n-button
-          >
+        <div class="flex flex-wrap items-center gap-2">
+          <AppButton variant="outline" size="sm" :disabled="isFolderLoading" @click="selectFile">
+            <Icon name="ri:file-add-line" class="size-4" />
+            {{ t('Select File') }}
+          </AppButton>
+          <AppButton variant="outline" size="sm" :disabled="isFolderLoading" @click="selectFolder">
+            <Icon name="ri:folder-add-line" class="size-4" />
+            {{ t('Select Folder') }}
+          </AppButton>
+          <AppButton variant="secondary" size="sm" @click="closeModal">
+            <Icon name="ri:close-line" class="size-4" />
+            {{ t('Close') }}
+          </AppButton>
         </div>
       </div>
-    </n-card>
-  </n-modal>
+
+      <Alert class="border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100">
+        <AlertDescription>
+          {{ t('Overwrite Warning') }}
+        </AlertDescription>
+      </Alert>
+
+      <Alert
+        v-if="isMemoryWarning"
+        class="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
+      >
+        <AlertDescription>
+          {{ t('Large File Count Warning', { count: totalFileCount.toLocaleString(), max: MAX_FILES_LIMIT }) }}
+        </AlertDescription>
+      </Alert>
+
+      <AppCard padded class="space-y-4 border border-border/60">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="space-y-1 text-sm text-muted-foreground">
+            <p v-if="totalFileCount > 0">
+              {{ t('Total Files') }}: {{ totalFileCount.toLocaleString() }}
+            </p>
+            <p v-if="totalFileCount > 0">
+              {{ t('Memory Usage') }}: {{ getMemoryUsageLevel() }}
+            </p>
+          </div>
+          <AppButton
+            variant="outline"
+            size="sm"
+            :disabled="!hasFiles || isFolderLoading || isAdding"
+            @click="clearAllFiles"
+          >
+            <Icon name="ri:delete-bin-line" class="size-4" />
+            {{ t('Clear All') }}
+          </AppButton>
+        </div>
+
+        <div
+          class="rounded-md border border-dashed border-border/60 transition"
+          :class="isDragOver ? 'border-primary bg-primary/5' : ''"
+          @dragenter.prevent="handleDragEnter"
+          @dragover.prevent="handleDragOver"
+          @dragleave.prevent="handleDragLeave"
+          @drop.prevent="handleDrop"
+        >
+          <div
+            v-if="!selectedItems.length"
+            class="flex h-[42vh] flex-col items-center justify-center gap-4 p-6 text-center"
+          >
+            <Icon name="ri:cloud-upload-line" class="size-10 text-muted-foreground" />
+            <p class="text-base font-medium text-muted-foreground">{{ t('No Selection') }}</p>
+            <p class="max-w-[320px] text-sm text-muted-foreground">
+              {{ t('Drag Drop Info') }}<br />
+              {{ t('File Size Limit') }}
+            </p>
+          </div>
+          <div v-else class="max-h-[42vh] overflow-auto">
+            <table class="w-full text-sm">
+              <thead class="sticky top-0 bg-muted/60 text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium">
+                    {{ t('Name') }}
+                  </th>
+                  <th class="px-3 py-2 text-left font-medium">
+                    {{ t('Size') }}
+                  </th>
+                  <th class="px-3 py-2 text-right font-medium">
+                    {{ t('Actions') }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in selectedItems" :key="item.uid" class="border-b last:border-b-0">
+                  <td class="px-3 py-2">
+                    <div class="flex items-start gap-2">
+                      <Icon
+                        :name="item.type === 'folder' ? 'ri:folder-3-line' : 'ri:file-line'"
+                        class="mt-0.5 size-4 text-muted-foreground"
+                      />
+                      <div>
+                        <div class="font-medium text-foreground">
+                          {{ item.name }}<span v-if="item.type === 'folder'">/</span>
+                        </div>
+                        <div v-if="item.type === 'folder' && item.fileCount" class="text-xs text-muted-foreground">
+                          {{ item.fileCount.toLocaleString() }} {{ t('Files') }}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-3 py-2 text-sm text-muted-foreground">
+                    {{ formatBytes(item.size) }}
+                  </td>
+                  <td class="px-3 py-2 text-right">
+                    <AppButton variant="ghost" size="sm" class="h-auto px-2" @click="removeItem(index)">
+                      <Icon name="ri:delete-bin-line" class="size-4" />
+                      {{ t('Delete') }}
+                    </AppButton>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div v-if="isFolderLoading" class="space-y-2 rounded-md border border-dashed border-border/60 p-3">
+          <div class="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{{ t('Reading Folder Files') }}</span>
+            <span>{{ folderLoadingProgress }}%</span>
+          </div>
+          <AppProgress :value="folderLoadingProgress" :processing="true" />
+        </div>
+
+        <div v-if="isAdding" class="space-y-2 rounded-md border border-dashed border-border/60 p-3">
+          <div class="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{{ t('Adding to Upload Queue') }}</span>
+            <span>{{ addProgress }}%</span>
+          </div>
+          <AppProgress :value="addProgress" :processing="true" />
+        </div>
+      </AppCard>
+
+      <div class="flex justify-end gap-2">
+        <AppButton variant="outline" :disabled="!hasFiles || isAdding || isFolderLoading">
+          {{ t('Configure') }}
+        </AppButton>
+        <AppButton
+          variant="primary"
+          :disabled="!hasFiles || isAdding || isFolderLoading"
+          :loading="isAdding"
+          @click="handleUpload"
+        >
+          {{ t('Start Upload') }}
+        </AppButton>
+      </div>
+    </div>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
-import { useMessage } from 'naive-ui';
-import { computed, defineEmits, defineProps, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useUploadTaskManagerStore } from '~/store/upload-tasks';
+import { Icon } from '#components'
+import { AppButton, AppCard, AppModal, AppProgress } from '@/components/app'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
-const { t } = useI18n();
-const message = useMessage();
-const uploadTaskManagerStore = useUploadTaskManagerStore();
+const props = defineProps<{
+  show: boolean
+  bucketName: string
+  prefix: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:show', value: boolean): void
+  (e: 'submit'): void
+}>()
 
 interface FileItem {
-  file: File;
-  prefix: string;
-}
-
-interface OptimizedFileGroup {
-  files: File[];
-  totalSize: number;
-  fileCount: number;
+  file: File
+  prefix: string
 }
 
 interface SelectedItem {
-  type: 'file' | 'folder';
-  name: string;
-  size: number;
-  fileCount?: number;
-  files?: FileItem[];
+  uid: string
+  type: 'file' | 'folder'
+  name: string
+  size: number
+  fileCount?: number
+  files: FileItem[]
 }
 
-const emit = defineEmits(['update:show', 'submit']);
+interface OptimizedFileGroup {
+  files: File[]
+  totalSize: number
+  fileCount: number
+}
 
-const props = defineProps<{ show: boolean; bucketName: string; prefix: string }>();
+const { t } = useI18n()
+const message = useMessage()
+const uploadTaskManagerStore = useUploadTaskManagerStore()
 
-const fileInput = ref<HTMLInputElement | null>(null);
-const folderInput = ref<HTMLInputElement | null>(null);
+const visible = computed({
+  get: () => props.show,
+  set: value => emit('update:show', value),
+})
 
-// 待上传的文件/文件夹列表
-const selectedItems = ref<SelectedItem[]>([]);
+const fileInput = ref<HTMLInputElement | null>(null)
+const folderInput = ref<HTMLInputElement | null>(null)
 
-const isAdding = ref(false);
-const addProgress = ref(0);
-const isFolderLoading = ref(false);
-const folderLoadingProgress = ref(0);
+const selectedItems = ref<SelectedItem[]>([])
+const isMemoryWarning = ref(false)
+const totalFileCount = ref(0)
+const isFolderLoading = ref(false)
+const folderLoadingProgress = ref(0)
+const isAdding = ref(false)
+const addProgress = ref(0)
+const isDragOver = ref(false)
 
-// 内存优化配置
-const MAX_FILES_LIMIT = 10000; // 最大文件数限制
-const MEMORY_WARNING_THRESHOLD = 5000; // 内存警告阈值
-const isMemoryWarning = ref(false);
-const totalFileCount = ref(0);
+const MAX_FILES_LIMIT = 10_000
+const MEMORY_WARNING_THRESHOLD = 5_000
 
-// 清理内存函数
+const hasFiles = computed(() => selectedItems.value.length > 0)
+const allFiles = computed(() => selectedItems.value.flatMap(item => item.files))
+
+const selectFile = () => fileInput.value?.click()
+const selectFolder = () => folderInput.value?.click()
+
 const clearAllFiles = () => {
-  selectedItems.value = [];
-  totalFileCount.value = 0;
-  isMemoryWarning.value = false;
+  selectedItems.value = []
+  totalFileCount.value = 0
+  isMemoryWarning.value = false
+  addProgress.value = 0
+  folderLoadingProgress.value = 0
 
-  // 强制垃圾回收（如果支持）
-  if (window.gc) {
-    window.gc();
+  if (typeof window !== 'undefined' && 'gc' in window && typeof (window as any).gc === 'function') {
+    try {
+      ;(window as any).gc()
+    } catch {
+      // ignore
+    }
   }
-};
+}
 
 const closeModal = () => {
-  // 关闭时清理内存
-  clearAllFiles();
-  emit('update:show', false);
-};
+  clearAllFiles()
+  emit('update:show', false)
+}
 
-const selectFile = () => fileInput.value?.click();
-const selectFolder = () => folderInput.value?.click();
+const createUid = () =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`
 
-// 内存监控
-const checkMemoryUsage = () => {
-  if ('memory' in performance) {
-    const memInfo = (performance as any).memory;
-    const usedMB = memInfo.usedJSHeapSize / 1024 / 1024;
-
-    // 如果内存使用超过 100MB 且文件数量很大，建议清理
-    if (usedMB > 100 && totalFileCount.value > MEMORY_WARNING_THRESHOLD) {
-      message.warning(
-        t('High Memory Usage Warning', {
-          memory: Math.round(usedMB),
-          files: totalFileCount.value,
-        })
-      );
-    }
-  }
-};
-
-const handleFileSelect = (e: Event) => {
-  const input = e.target as HTMLInputElement;
-  if (input.files) {
-    const fileCount = input.files.length;
-    const currentTotal = totalFileCount.value + fileCount;
-
-    // 检查文件数量限制
-    if (currentTotal > MAX_FILES_LIMIT) {
-      message.error(
-        t('File Count Limit Exceeded', {
-          current: currentTotal,
-          max: MAX_FILES_LIMIT,
-        })
-      );
-      input.value = '';
-      return;
-    }
-
-    // 内存警告
-    if (currentTotal > MEMORY_WARNING_THRESHOLD && !isMemoryWarning.value) {
-      isMemoryWarning.value = true;
-      message.warning(
-        t('Memory Warning', {
-          count: currentTotal,
-          threshold: MEMORY_WARNING_THRESHOLD,
-        })
-      );
-    }
-
-    // 更新展示列表
-    Array.from(input.files).forEach(f =>
-      selectedItems.value.push({
-        type: 'file',
-        name: f.name,
-        size: f.size,
-        files: [{ file: f, prefix: props.prefix }],
-      })
-    );
-
-    // 更新总文件数
-    totalFileCount.value = currentTotal;
-  }
-};
-
-const handleFolderSelect = async (e: Event) => {
-  const input = e.target as HTMLInputElement;
-
-  if (!input.files || input.files.length === 0) return;
-
-  const fileCount = input.files.length;
-  const currentTotal = totalFileCount.value + fileCount;
-
-  // 检查文件数量限制
-  if (currentTotal > MAX_FILES_LIMIT) {
+const ensureCapacity = (incoming: number) => {
+  const nextTotal = totalFileCount.value + incoming
+  if (nextTotal > MAX_FILES_LIMIT) {
     message.error(
       t('File Count Limit Exceeded', {
-        current: currentTotal,
-        max: MAX_FILES_LIMIT,
+        current: nextTotal.toLocaleString(),
+        max: MAX_FILES_LIMIT.toLocaleString(),
       })
-    );
-    input.value = '';
-    return;
+    )
+    return false
   }
 
-  // 内存警告
-  if (currentTotal > MEMORY_WARNING_THRESHOLD && !isMemoryWarning.value) {
-    isMemoryWarning.value = true;
+  if (nextTotal > MEMORY_WARNING_THRESHOLD && !isMemoryWarning.value) {
+    isMemoryWarning.value = true
     message.warning(
       t('Memory Warning', {
-        count: currentTotal,
-        threshold: MEMORY_WARNING_THRESHOLD,
+        count: nextTotal.toLocaleString(),
+        threshold: MEMORY_WARNING_THRESHOLD.toLocaleString(),
       })
-    );
+    )
   }
 
-  // 开始 loading
-  isFolderLoading.value = true;
-  folderLoadingProgress.value = 0;
+  totalFileCount.value = nextTotal
+  return true
+}
+
+const handleFileSelect = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const files = input.files ? Array.from(input.files) : []
+  if (!files.length) return
+
+  if (!ensureCapacity(files.length)) {
+    input.value = ''
+    return
+  }
+
+  const items = files.map(file => ({
+    uid: createUid(),
+    type: 'file' as const,
+    name: file.name,
+    size: file.size,
+    files: [{ file, prefix: props.prefix }],
+  }))
+
+  selectedItems.value.push(...items)
+  setTimeout(checkMemoryUsage, 500)
+  input.value = ''
+}
+
+const handleFolderSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const files = input.files ? Array.from(input.files) : []
+  if (!files.length) return
+
+  const nextTotal = totalFileCount.value + files.length
+  if (nextTotal > MAX_FILES_LIMIT) {
+    message.error(
+      t('File Count Limit Exceeded', {
+        current: nextTotal.toLocaleString(),
+        max: MAX_FILES_LIMIT.toLocaleString(),
+      })
+    )
+    input.value = ''
+    return
+  }
+
+  if (nextTotal > MEMORY_WARNING_THRESHOLD && !isMemoryWarning.value) {
+    isMemoryWarning.value = true
+    message.warning(
+      t('Memory Warning', {
+        count: nextTotal.toLocaleString(),
+        threshold: MEMORY_WARNING_THRESHOLD.toLocaleString(),
+      })
+    )
+  }
+
+  isFolderLoading.value = true
+  folderLoadingProgress.value = 0
 
   try {
-    const folderFiles = Array.from(input.files);
-    const folderMap = new Map<string, OptimizedFileGroup>();
-    const batchSize = 200; // 增加批处理大小以提高性能
+    const folderMap = new Map<string, OptimizedFileGroup>()
+    const batchSize = 200
 
-    // 分批处理文件，避免阻塞主线程
-    for (let i = 0; i < folderFiles.length; i += batchSize) {
-      const batch = folderFiles.slice(i, i + batchSize);
+    for (let i = 0; i < files.length; i += batchSize) {
+      const batch = files.slice(i, i + batchSize)
 
-      // 处理当前批次的文件
       for (const file of batch) {
-        // 保留完整目录路径（去掉最后的文件名）
-        const pathParts = file.webkitRelativePath.split('/');
-        pathParts.pop(); // 移除文件名
-        const folderPath = pathParts.join('/') || t('Unknown Folder');
+        const pathParts = file.webkitRelativePath.split('/')
+        pathParts.pop()
+        const folderPath = pathParts.join('/') || t('Unknown Folder')
 
         if (!folderMap.has(folderPath)) {
-          folderMap.set(folderPath, {
-            files: [],
-            totalSize: 0,
-            fileCount: 0,
-          });
+          folderMap.set(folderPath, { files: [], totalSize: 0, fileCount: 0 })
         }
 
-        const group = folderMap.get(folderPath)!;
-        group.files.push(file);
-        group.totalSize += file.size;
-        group.fileCount++;
+        const group = folderMap.get(folderPath)!
+        group.files.push(file)
+        group.totalSize += file.size
+        group.fileCount++
       }
 
-      // 更新进度
-      folderLoadingProgress.value = Math.round(((i + batch.length) / folderFiles.length) * 100);
-
-      // 让出主线程，保证 UI 可响应
-      await new Promise(resolve => setTimeout(resolve, 1));
+      folderLoadingProgress.value = Math.round(((i + batch.length) / files.length) * 100)
+      await new Promise(resolve => setTimeout(resolve, 1))
     }
 
-    // 将每个完整路径和对应文件放到 selectedItems
     for (const [folderPath, group] of folderMap.entries()) {
       selectedItems.value.push({
+        uid: createUid(),
         type: 'folder',
         name: folderPath,
         size: group.totalSize,
         fileCount: group.fileCount,
-        files: group.files.map(file => ({ file, prefix: `${props.prefix}${folderPath}/` })),
-      });
-    }
-
-    // 更新总文件数
-    totalFileCount.value = currentTotal;
-
-    // 检查内存使用情况
-    setTimeout(checkMemoryUsage, 1000);
-  } catch (error) {
-    console.error('处理文件夹时出错:', error);
-    message.error(t('Folder Processing Error'));
-  } finally {
-    // 结束 loading
-    isFolderLoading.value = false;
-    folderLoadingProgress.value = 100;
-
-    // 重置文件输入，允许重复选择同一文件夹
-    input.value = '';
-  }
-};
-
-const handleDrop = (e: DragEvent) => {
-  if (e.dataTransfer?.files) {
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    droppedFiles.forEach(file =>
-      selectedItems.value.push({
-        type: 'file',
-        name: file.name,
-        size: file.size,
-        files: [{ file, prefix: props.prefix }],
+        files: group.files.map(file => ({
+          file,
+          prefix: `${props.prefix}${folderPath ? `${folderPath}/` : ''}`,
+        })),
       })
-    );
-  }
-};
+    }
 
-const hasFiles = computed(() => selectedItems.value.length > 0);
-const allFiles = computed(() => selectedItems.value.flatMap(item => item.files || []));
-
-// 内存使用级别计算
-const getMemoryUsageLevel = () => {
-  const count = totalFileCount.value;
-  if (count < 1000) return t('Memory Low');
-  if (count < MEMORY_WARNING_THRESHOLD) return t('Memory Medium');
-  if (count < MAX_FILES_LIMIT) return t('Memory High');
-  return t('Memory Critical');
-};
-
-// 格式化字节大小
-const formatBytes = (bytes: number) => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-};
-
-function removeItem(index: number) {
-  const item = selectedItems.value[index];
-  if (item.type === 'folder' && item.fileCount) {
-    totalFileCount.value -= item.fileCount;
-  } else if (item.type === 'file') {
-    totalFileCount.value -= 1;
-  }
-
-  selectedItems.value.splice(index, 1);
-
-  // 如果文件数量降低，重置内存警告
-  if (totalFileCount.value <= MEMORY_WARNING_THRESHOLD) {
-    isMemoryWarning.value = false;
+    totalFileCount.value = nextTotal
+    setTimeout(checkMemoryUsage, 1000)
+  } catch (error) {
+    console.error('Failed to process folder:', error)
+    message.error(t('Folder Processing Error'))
+  } finally {
+    isFolderLoading.value = false
+    folderLoadingProgress.value = 100
+    input.value = ''
   }
 }
 
-async function handleUpload() {
-  const filesToUpload = allFiles.value;
-  if (!filesToUpload.length) return;
+const handleDragEnter = () => {
+  if (!isFolderLoading.value && !isAdding.value) {
+    isDragOver.value = true
+  }
+}
 
-  isAdding.value = true;
-  addProgress.value = 0;
+const handleDragOver = () => {
+  if (!isFolderLoading.value && !isAdding.value) {
+    isDragOver.value = true
+  }
+}
 
-  // 分组
-  const uploadGroups = new Map<string, File[]>();
-  filesToUpload.forEach(fileItem => {
-    const key = `${props.bucketName}:${fileItem.prefix}`;
-    if (!uploadGroups.has(key)) uploadGroups.set(key, []);
-    uploadGroups.get(key)!.push(fileItem.file);
-  });
+const handleDragLeave = () => {
+  isDragOver.value = false
+}
 
-  // 统计总数
-  const total = Array.from(uploadGroups.values()).reduce((sum, arr) => sum + arr.length, 0);
-  let done = 0;
+const handleDrop = (event: DragEvent) => {
+  if (isFolderLoading.value || isAdding.value) return
+  isDragOver.value = false
 
-  // 分批异步添加，避免阻塞主线程
-  for (const [key, files] of uploadGroups.entries()) {
-    const [bucketName, prefix] = key.split(':');
-    for (let i = 0; i < files.length; i += 50) {
-      const batch = files.slice(i, i + 50);
-      // 让出主线程，保证 UI 可响应
-      await new Promise(resolve => setTimeout(resolve, 0));
-      await uploadTaskManagerStore.addFiles(batch, bucketName, prefix);
-      done += batch.length;
-      addProgress.value = Math.round((done / total) * 100);
+  const droppedFiles = event.dataTransfer?.files ? Array.from(event.dataTransfer.files) : []
+  if (!droppedFiles.length) return
+
+  if (!ensureCapacity(droppedFiles.length)) return
+
+  const items = droppedFiles.map(file => ({
+    uid: createUid(),
+    type: 'file' as const,
+    name: file.name,
+    size: file.size,
+    files: [{ file, prefix: props.prefix }],
+  }))
+
+  selectedItems.value.push(...items)
+  setTimeout(checkMemoryUsage, 500)
+}
+
+const removeItem = (index: number) => {
+  const item = selectedItems.value[index]
+  if (!item) return
+
+  if (item.type === 'folder' && item.fileCount) {
+    totalFileCount.value = Math.max(0, totalFileCount.value - item.fileCount)
+  } else {
+    totalFileCount.value = Math.max(0, totalFileCount.value - 1)
+  }
+
+  selectedItems.value.splice(index, 1)
+
+  if (totalFileCount.value <= MEMORY_WARNING_THRESHOLD) {
+    isMemoryWarning.value = false
+  }
+}
+
+const handleUpload = async () => {
+  const filesToUpload = allFiles.value
+  if (!filesToUpload.length) return
+
+  isAdding.value = true
+  addProgress.value = 0
+
+  try {
+    const groups = new Map<
+      string,
+      {
+        bucket: string
+        prefix: string
+        files: File[]
+      }
+    >()
+
+    filesToUpload.forEach(item => {
+      const prefix = item.prefix ?? ''
+      const key = JSON.stringify([props.bucketName, prefix])
+      if (!groups.has(key)) {
+        groups.set(key, { bucket: props.bucketName, prefix, files: [] })
+      }
+      groups.get(key)!.files.push(item.file)
+    })
+
+    const totals = Array.from(groups.values()).reduce((sum, group) => sum + group.files.length, 0)
+    let processed = 0
+
+    for (const group of groups.values()) {
+      const { bucket, prefix, files } = group
+
+      for (let i = 0; i < files.length; i += 50) {
+        const batch = files.slice(i, i + 50)
+        await new Promise(resolve => setTimeout(resolve, 0))
+        await Promise.resolve(uploadTaskManagerStore.addFiles(batch, bucket, prefix))
+        processed += batch.length
+        addProgress.value = Math.round((processed / totals) * 100)
+      }
+    }
+
+    emit('submit')
+    closeModal()
+  } catch (error) {
+    console.error('Failed to enqueue upload tasks:', error)
+    message.error(t('Add Failed'))
+  } finally {
+    isAdding.value = false
+  }
+}
+
+const checkMemoryUsage = () => {
+  if (typeof performance === 'undefined' || !('memory' in performance)) return
+
+  const memInfo = (performance as any).memory
+  if (!memInfo) return
+
+  const usedMB = memInfo.usedJSHeapSize / 1024 / 1024
+  if (usedMB > 100 && totalFileCount.value > MEMORY_WARNING_THRESHOLD) {
+    message.warning(
+      t('High Memory Usage Warning', {
+        memory: Math.round(usedMB),
+        files: totalFileCount.value.toLocaleString(),
+      })
+    )
+  }
+}
+
+const formatBytes = (bytes: number) => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${(bytes / k ** i).toFixed(2)} ${sizes[i]}`
+}
+
+const getMemoryUsageLevel = () => {
+  const count = totalFileCount.value
+  if (count < 1_000) return t('Memory Low')
+  if (count < MEMORY_WARNING_THRESHOLD) return t('Memory Medium')
+  if (count < MAX_FILES_LIMIT) return t('Memory High')
+  return t('Memory Critical')
+}
+
+watch(
+  () => props.show,
+  value => {
+    if (!value) {
+      clearAllFiles()
+      isFolderLoading.value = false
+      isAdding.value = false
+      isDragOver.value = false
     }
   }
-
-  isAdding.value = false;
-  addProgress.value = 100;
-  selectedItems.value = [];
-  emit('submit');
-  closeModal();
-}
+)
 </script>

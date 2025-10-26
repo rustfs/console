@@ -9,7 +9,7 @@
   </AppModal>
 </template>
 
-<script setup lang="ts">
+<script setup lang="tsx">
 import { AppButton, AppCard, AppDataTable, AppModal } from '@/components/app'
 import { useDataTable } from '@/components/app/data-table'
 import { GetObjectCommand } from '@aws-sdk/client-s3'

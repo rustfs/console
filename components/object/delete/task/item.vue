@@ -1,16 +1,12 @@
 <template>
   <div class="flex flex-col gap-1">
-    <div class="flex items-center justify-between">
-      <div>{{ task.key }}</div>
-      <n-button text @click="handleDeleteTask" type="info">{{ t('Delete Record') }}</n-button>
+    <div class="flex items-center justify-between gap-3">
+      <div class="truncate text-sm font-medium text-foreground">{{ task.key }}</div>
+      <AppButton variant="ghost" size="xs" class="h-auto px-2 text-xs" @click="handleDeleteTask">
+        {{ t('Delete Record') }}
+      </AppButton>
     </div>
-    <n-progress
-      type="line"
-      :height="2"
-      :percentage="task.progress"
-      :show-indicator="false"
-      :processing="task.status == 'deleting'"
-    />
+    <AppProgress :value="task.progress" :processing="task.status === 'deleting'" :height="2" />
     <div class="flex items-center justify-between text-muted-foreground">
       <div></div>
       <div class="text-muted-foreground">
@@ -25,14 +21,16 @@
 </template>
 
 <script setup lang="ts">
-import type { DeleteTask } from '~/lib/delete-task-manager';
-import { useDeleteTaskManagerStore } from '~/store/delete-tasks';
-const { t } = useI18n();
-const store = useDeleteTaskManagerStore();
+import { AppButton, AppProgress } from '@/components/app'
+import type { DeleteTask } from '~/lib/delete-task-manager'
+import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
 
-const props = defineProps<{ task: DeleteTask }>();
+const { t } = useI18n()
+const store = useDeleteTaskManagerStore()
+
+const props = defineProps<{ task: DeleteTask }>()
 
 const handleDeleteTask = () => {
-  store.removeTask(props.task.id);
-};
+  store.removeTask(props.task.id)
+}
 </script>

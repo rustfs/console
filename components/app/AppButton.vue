@@ -5,7 +5,15 @@ import Spinner from '@/components/ui/spinner/Spinner.vue'
 import { cn } from '@/lib/utils'
 import type { HTMLAttributes } from 'vue'
 
-type AppButtonVariant = 'default' | 'primary' | 'secondary' | 'outline' | 'ghost' | 'link' | 'danger'
+type AppButtonVariant =
+  | 'default'
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'ghost'
+  | 'link'
+  | 'danger'
+  | 'destructive'
 type AppButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
 const variantMap: Record<AppButtonVariant, ButtonVariants['variant']> = {
@@ -16,6 +24,7 @@ const variantMap: Record<AppButtonVariant, ButtonVariants['variant']> = {
   ghost: 'ghost',
   link: 'link',
   danger: 'destructive',
+  destructive: 'destructive',
 }
 
 const sizeMap: Record<AppButtonSize, ButtonVariants['size']> = {

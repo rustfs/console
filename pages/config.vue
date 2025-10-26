@@ -4,6 +4,7 @@ await setPageLayout('plain');
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+import { AppButton, AppInput } from '@/components/app';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -121,8 +122,8 @@ onMounted(() => {
                   <div class="text-xs text-gray-500 mb-2">
                     {{ t('Leave empty to use current host as default') }}
                   </div>
-                  <n-input
-                    v-model:value="serverHost"
+                  <AppInput
+                    v-model="serverHost"
                     type="text"
                     :placeholder="t('Please enter server address (e.g., http://localhost:9000)')"
                   />
@@ -132,28 +133,17 @@ onMounted(() => {
                 </div>
 
                 <div class="flex gap-3">
-                  <button
-                    type="submit"
-                    class="flex-1 py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-                  >
+                  <AppButton type="submit" class="flex-1">
                     {{ t('Save Configuration') }}
-                  </button>
+                  </AppButton>
 
-                  <button
-                    type="button"
-                    @click="resetToCurrentHost"
-                    class="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800"
-                  >
+                  <AppButton type="button" variant="outline" @click="resetToCurrentHost">
                     {{ t('Reset') }}
-                  </button>
+                  </AppButton>
 
-                  <button
-                    type="button"
-                    @click="skipConfig"
-                    class="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800"
-                  >
+                  <AppButton type="button" variant="outline" @click="skipConfig">
                     {{ t('Skip') }}
-                  </button>
+                  </AppButton>
                 </div>
               </div>
             </form>

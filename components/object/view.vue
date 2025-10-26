@@ -3,7 +3,12 @@
     <AppCard padded class="space-y-4">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-col">
-          <h2 class="text-lg font-semibold">{{ object?.Key }}</h2>
+          <div class="flex items-center gap-2">
+            <AppButton variant="ghost" size="sm" @click="router.back">
+              <Icon name="ri:arrow-left-line" class="size-4" />
+            </AppButton>
+            <h2 class="text-lg font-semibold">{{ object?.Key }}</h2>
+          </div>
           <p class="text-sm text-muted-foreground">{{ t('Object Detail Description', { bucket: bucketName }) }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
@@ -36,11 +41,26 @@
     </AppCard>
 
     <AppCard padded class="space-y-3 text-sm">
-      <KeyValue label="{{ t('Object Name') }}" :value="object?.Key" />
-      <KeyValue label="{{ t('Object Size') }}" :value="object?.ContentLength" />
-      <KeyValue label="{{ t('Object Type') }}" :value="object?.ContentType" />
-      <KeyValue label="ETag" :value="object?.ETag" />
-      <KeyValue label="{{ t('Last Modified Time') }}" :value="object?.LastModified" />
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-muted-foreground">{{ t('Object Name') }}</span>
+        <span>{{ object?.Key }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-muted-foreground">{{ t('Object Size') }}</span>
+        <span>{{ object?.ContentLength }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-muted-foreground">{{ t('Object Type') }}</span>
+        <span>{{ object?.ContentType }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-muted-foreground">ETag</span>
+        <span>{{ object?.ETag }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="font-medium text-muted-foreground">{{ t('Last Modified Time') }}</span>
+        <span>{{ object?.LastModified }}</span>
+      </div>
     </AppCard>
 
     <AppModal v-model="showTagView" :title="t('Set Tags')" size="lg">
@@ -59,19 +79,16 @@
       </AppCard>
     </AppModal>
 
-    <AppModal v-model="showPreview" :title="t('Preview')" size="xl">
-      <AppCard padded>
-        <object-preview-modal :show="true" :object="object" @update:show="showPreview = $event" />
-      </AppCard>
-    </AppModal>
+    <object-preview-modal :show="showPreview" :object="object" @update:show="showPreview = $event" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { Icon } from '#components'
 import { AppButton, AppCard, AppInput, AppModal, AppTag } from '@/components/app'
-import { KeyValue } from '@/components/ui/key-value'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import ClipboardJS from 'clipboard'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   bucketName: string
@@ -81,6 +98,7 @@ const props = defineProps<{
 const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
+const router = useRouter()
 
 const object = ref<any>(null)
 const tags = ref<Array<{ Key: string; Value: string }>>([])
@@ -112,14 +130,14 @@ watch(
 
 const refresh = () => loadObjectInfo()
 
-const copySignedUrl = () => {
+const copySignedUrl = async () => {
   if (!signedUrl.value) return
-  const clipboard = new ClipboardJS(document.createElement('button'), {
-    text: () => signedUrl.value,
-  })
-  clipboard.on('success', () => message.success(t('Copy Success')))
-  clipboard.on('error', () => message.error(t('Copy Failed')))
-  clipboard.destroy()
+  try {
+    await navigator.clipboard.writeText(signedUrl.value)
+    message.success(t('Copy Success'))
+  } catch (error) {
+    message.error(t('Copy Failed'))
+  }
 }
 
 const submitTagForm = async () => {

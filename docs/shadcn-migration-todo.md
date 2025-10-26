@@ -19,5 +19,6 @@
   - [x] Migrate Replication management (list + creation modal) onto shared ShadCN components.
   - [x] Migrate Tier management (list + modals) onto shared ShadCN components.
   - [x] Migrate IAM import/export workflows to ShadCN components and new upload zone.
+  - [x] Migrate Settings page to shared ShadCN components.
 - [ ] Migrate feature-specific views to consume the new shared components, auditing for leftover Naive UI imports and styles.
 - [ ] Remove Naive UI dependencies and configuration, ensuring ESLint/Vitest/build succeed.

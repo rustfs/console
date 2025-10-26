@@ -13,75 +13,73 @@
 
     <page-content>
       <!-- KMS 状态显示 -->
-      <n-card :title="t('KMS Status')" class="mb-6">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-4">
-            <n-tag :type="getKmsStatusType()" size="large">
-              {{ getKmsStatusText() }}
-            </n-tag>
-            <div class="text-sm text-gray-500">
-              {{ getKmsStatusDescription() }}
-            </div>
-            <div v-if="sseKmsForm.kms_backend" class="text-sm text-gray-400">
-              {{ t('Backend') }}: {{ sseKmsForm.backend_type }}
+      <AppCard class="mb-6 space-y-4">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap items-center gap-3">
+              <AppBadge :variant="kmsStatusVariant" class="text-sm uppercase">
+                {{ getKmsStatusText() }}
+              </AppBadge>
+              <span class="text-sm text-muted-foreground">{{ getKmsStatusDescription() }}</span>
+              <span v-if="sseKmsForm.kms_backend" class="text-xs text-foreground/70">
+                {{ t('Backend') }}: {{ sseKmsForm.backend_type }}
+              </span>
             </div>
           </div>
-          <div class="flex space-x-2">
-            <n-button size="small" @click="refreshStatus" :loading="refreshingStatus">
-              <template #icon>
-                <Icon name="ri:refresh-line" />
-              </template>
+          <div class="flex flex-wrap items-center gap-2">
+            <AppButton
+              size="sm"
+              variant="outline"
+              :loading="refreshingStatus"
+              @click="refreshStatus"
+            >
+              <Icon name="ri:refresh-line" class="mr-2 size-4" />
               {{ t('Refresh') }}
-            </n-button>
-            <n-button
-              size="small"
-              @click="clearKMSCache"
+            </AppButton>
+            <AppButton
+              size="sm"
+              variant="outline"
               :disabled="sseKmsForm.kms_status !== 'Running'"
               :loading="clearingCache"
+              @click="clearKMSCache"
             >
-              <template #icon>
-                <Icon name="ri:delete-bin-line" />
-              </template>
+              <Icon name="ri:delete-bin-line" class="mr-2 size-4" />
               {{ t('Clear Cache') }}
-            </n-button>
-            <n-button size="small" @click="viewDetailedStatus" :disabled="sseKmsForm.kms_status !== 'Running'">
-              <template #icon>
-                <Icon name="ri:eye-line" />
-              </template>
+            </AppButton>
+            <AppButton
+              size="sm"
+              variant="outline"
+              :disabled="sseKmsForm.kms_status !== 'Running'"
+              @click="viewDetailedStatus"
+            >
+              <Icon name="ri:eye-line" class="mr-2 size-4" />
               {{ t('Details') }}
-            </n-button>
+            </AppButton>
 
-            <!-- KMS 启动/停止按钮 -->
-            <n-button
-              v-if="
-                hasConfiguration && (sseKmsForm.kms_status === 'Configured' || isErrorStatus(sseKmsForm.kms_status))
-              "
-              size="small"
-              type="primary"
-              @click="startKMSService"
+            <AppButton
+              v-if="hasConfiguration && (sseKmsForm.kms_status === 'Configured' || isErrorStatus(sseKmsForm.kms_status))"
+              size="sm"
+              variant="primary"
               :loading="startingKMS"
+              @click="startKMSService"
             >
-              <template #icon>
-                <Icon name="ri:play-line" />
-              </template>
+              <Icon name="ri:play-line" class="mr-2 size-4" />
               {{ t('Start KMS') }}
-            </n-button>
+            </AppButton>
 
-            <n-button
+            <AppButton
               v-if="hasConfiguration && sseKmsForm.kms_status === 'Running'"
-              size="small"
-              type="warning"
-              @click="stopKMSService"
+              size="sm"
+              variant="outline"
               :loading="stoppingKMS"
+              @click="stopKMSService"
             >
-              <template #icon>
-                <Icon name="ri:stop-line" />
-              </template>
+              <Icon name="ri:stop-line" class="mr-2 size-4" />
               {{ t('Stop KMS') }}
-            </n-button>
+            </AppButton>
           </div>
         </div>
-      </n-card>
+      </AppCard>
 
       <!-- KMS 配置区域 -->
       <n-card :title="t('KMS Configuration')" class="mb-6">
@@ -989,6 +987,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useMessage } from 'naive-ui';
+import { AppBadge, AppButton, AppCard } from '@/components/app';
 const {
   getKMSStatus,
   getConfiguration,
@@ -1021,6 +1020,14 @@ const showDetailedStatusModal = ref(false);
 const startingKMS = ref(false);
 const stoppingKMS = ref(false);
 const detailedStatusData = ref<any>(null);
+
+const kmsStatusVariant = computed(() => {
+  const type = getKmsStatusType();
+  if (type === 'success') return 'primary';
+  if (type === 'warning') return 'warning';
+  if (type === 'error' || type === 'danger') return 'danger';
+  return 'secondary';
+});
 
 // 密钥管理状态
 const showCreateKeyModal = ref(false);

@@ -1,187 +1,197 @@
 <template>
-  <div>
-    <n-card>
-      <n-form
-        ref="subFormRef"
-        label-placement="left"
-        :model="formModel"
-        :rules="rules"
-        label-align="right"
-        :label-width="130"
-      >
-        <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item :span="24" :label="t('Access Key')" path="accessKey">
-            <n-input v-model:value="formModel.accessKey" :disabled="true" />
-          </n-form-item-grid-item>
-          <!-- <n-form-item-grid-item :span="24" label="Secret Key" path="secretKey">
-            <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
-          </n-form-item-grid-item> -->
-          <n-form-item-grid-item :span="24" :label="t('Expiration')" path="expiry">
-            <n-date-picker
-              class="!w-full"
-              v-model:value="formModel.expiry"
-              :is-date-disabled="dateDisabled"
-              value-format="yyyy-MM-ddTkk:mm:SSS"
-              type="datetime"
-              clearable
-            />
-          </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" :label="t('Name')" path="name">
-            <n-input v-model:value="formModel.name" />
-          </n-form-item-grid-item>
+  <AppCard padded class="space-y-4">
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="space-y-2">
+        <Label>{{ t('Access Key') }}</Label>
+        <AppInput v-model="formModel.accessKey" disabled />
+      </div>
 
-          <n-form-item-grid-item :span="24" :label="t('Description')" path="description">
-            <n-input v-model:value="formModel.description" />
-          </n-form-item-grid-item>
+      <div class="space-y-2">
+        <Label>{{ t('Expiration') }}</Label>
+        <AppDateTimePicker
+          v-model="formModel.expiry"
+          :min="minExpiry"
+          :placeholder="t('Please select expiration date')"
+        />
+      </div>
 
-          <n-form-item-gi :span="24">
-            <n-form-item-gi :span="24" :label="t('Use Main Account Policy')" path="impliedPolicy">
-              <n-switch v-model:value="formModel.impliedPolicy" />
-            </n-form-item-gi>
-            <n-form-item-grid-item :span="24" :label="t('Status')" path="accountStatus">
-              <n-switch v-model:value="formModel.accountStatus" checked-value="on" unchecked-value="off" />
-            </n-form-item-grid-item>
-          </n-form-item-gi>
-          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" :label="t('Current User Policy')" path="policy">
-            <json-editor v-model="formModel.policy" />
-          </n-form-item-gi>
-        </n-grid>
-        <n-space>
-          <NFlex justify="center">
-            <NButton secondary @click="cancelEdit">{{ t('Cancel') }}</NButton>
-            <NButton secondary @click="submitForm">{{ t('Submit') }}</NButton>
-          </NFlex>
-        </n-space>
-      </n-form>
-    </n-card>
-  </div>
+      <div class="space-y-2">
+        <Label>{{ t('Name') }}</Label>
+        <AppInput v-model="formModel.name" autocomplete="off" />
+      </div>
+
+      <div class="space-y-2">
+        <Label>{{ t('Description') }}</Label>
+        <AppInput v-model="formModel.description" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <div class="flex flex-col gap-3 rounded-md border border-border/60 p-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium">{{ t('Use Main Account Policy') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('Automatically inherit the main account policy when enabled.') }}
+            </p>
+          </div>
+          <AppSwitch v-model="formModel.impliedPolicy" />
+        </div>
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium">{{ t('Status') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ formModel.accountStatus === 'on' ? t('Available') : t('Disabled') }}
+            </p>
+          </div>
+          <AppSwitch v-model="statusBoolean" />
+        </div>
+      </div>
+    </div>
+
+    <div v-if="!formModel.impliedPolicy" class="space-y-2">
+      <Label>{{ t('Current User Policy') }}</Label>
+      <json-editor v-model="formModel.policy" />
+    </div>
+
+    <div class="flex justify-end gap-2">
+      <AppButton variant="outline" @click="cancelEdit">
+        {{ t('Cancel') }}
+      </AppButton>
+      <AppButton variant="primary" :loading="submitting" @click="submitForm">
+        {{ t('Submit') }}
+      </AppButton>
+    </div>
+  </AppCard>
 </template>
 
 <script setup lang="ts">
-import { type FormItemRule, type FormInst, NButton, NSpace } from 'naive-ui';
-import { useI18n } from 'vue-i18n';
+import { AppButton, AppCard, AppDateTimePicker, AppInput, AppSwitch } from '@/components/app'
+import { Label } from '@/components/ui/label'
+import dayjs from 'dayjs'
+import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
-const { updateServiceAccount } = useAccessKeys();
-const { $api } = useNuxtApp();
-const { getPolicyByUserName } = usePolicies();
+const { t } = useI18n()
+const message = useMessage()
+const { updateServiceAccount } = useAccessKeys()
+const { getPolicyByUserName } = usePolicies()
 
-// 验证
-const rules = ref({
-  accessKey: {
-    required: true,
-    trigger: ['blur', 'input'],
-    message: t('Please enter Access Key'),
-  },
-  secretKey: {
-    required: true,
-    trigger: ['blur', 'input'],
-    message: t('Please enter Secret Key'),
-  },
-  expiry: {
-    required: true,
-    trigger: ['blur', 'change'],
-    validator(rule: FormItemRule, value: string) {
-      if (!value) {
-        return new Error(t('Please select expiration date'));
-      }
-      return true;
-    },
-  },
-});
-
-const message = useMessage();
-const props = defineProps({
+const props = defineProps<{
   user: {
-    type: Object,
-    required: true,
-  },
-});
+    accessKey: string
+    name?: string
+    description?: string
+    impliedPolicy?: boolean
+    expiration?: string | null
+    policy?: string
+    accountStatus?: string
+    parentUser?: string
+  }
+}>()
 
-const formModel = ref({
+const emit = defineEmits<{
+  (e: 'search'): void
+}>()
+
+const submitting = ref(false)
+const parentPolicy = ref('{}')
+
+const formModel = reactive({
   accessKey: '',
   name: '',
   description: '',
   impliedPolicy: true,
-  expiry: null,
+  expiry: null as string | null,
   policy: '',
   accountStatus: 'on',
-});
+})
+
+const statusBoolean = computed({
+  get: () => formModel.accountStatus === 'on',
+  set: value => {
+    formModel.accountStatus = value ? 'on' : 'off'
+  },
+})
+
+const minExpiry = computed(() => new Date().toISOString())
+
+const loadParentPolicy = async () => {
+  if (!props.user?.parentUser) return
+  try {
+    const policy = await getPolicyByUserName(props.user.parentUser)
+    parentPolicy.value = JSON.stringify(policy ?? {})
+    if (formModel.impliedPolicy) {
+      formModel.policy = parentPolicy.value
+    }
+  } catch (error) {
+    parentPolicy.value = '{}'
+  }
+}
 
 watch(
   () => props.user,
   () => {
-    formModel.value = {
-      accessKey: props.user.accessKey,
-      name: props.user.name,
-      description: props.user.description,
-      impliedPolicy: props.user.impliedPolicy,
-      expiry: props.user.expiration,
-      policy: props.user.policy,
-      accountStatus: props.user.accountStatus,
-    };
-    // 如果没有默认策略，则获取默认策略
-    if (props.user.impliedPolicy) getPolicie();
+    formModel.accessKey = props.user.accessKey ?? ''
+    formModel.name = props.user.name ?? ''
+    formModel.description = props.user.description ?? ''
+    formModel.impliedPolicy = props.user.impliedPolicy ?? true
+    formModel.expiry = props.user.expiration ?? null
+    formModel.policy = props.user.policy ?? '{}'
+    formModel.accountStatus = props.user.accountStatus ?? 'on'
+    loadParentPolicy()
   },
-  {
-    deep: true,
-  }
-);
+  { immediate: true, deep: true }
+)
 
-const parentPolicy = ref('');
-// 默认策略原文
-const getPolicie = async () => {
-  parentPolicy.value = JSON.stringify(await getPolicyByUserName(props.user.parentUser));
-  formModel.value.policy = parentPolicy.value;
-};
-
-function cancelEdit() {
-  formModel.value = {
-    accessKey: '',
-    name: '',
-    description: '',
-    impliedPolicy: true,
-    expiry: null,
-    policy: '',
-    accountStatus: 'on',
-  };
-  emit('search');
-}
-
-interface Emits {
-  (e: 'search'): void;
-}
-const emit = defineEmits<Emits>();
-const subFormRef = ref<FormInst | null>(null);
-async function submitForm() {
-  subFormRef.value?.validate(async errors => {
-    if (!errors) {
-      try {
-        const res = await updateServiceAccount(props.user.accessKey, {
-          newStatus: formModel.value.accountStatus,
-          newName: formModel.value.name,
-          newDescription: formModel.value.description,
-          newPolicy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
-          newExpiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
-        });
-
-        message.success(t('Update Success'));
-        emit('search');
-        cancelEdit();
-      } catch (error) {
-        console.log(error);
-        message.error(t('Update Failed'));
-      }
-    } else {
-      console.log(errors);
-      message.error(t('Please fill in the correct format'));
+watch(
+  () => formModel.impliedPolicy,
+  implied => {
+    if (implied) {
+      formModel.policy = parentPolicy.value
     }
-  });
+  }
+)
+
+const cancelEdit = () => {
+  emit('search')
 }
-function dateDisabled(ts: number) {
-  const date = new Date(ts);
-  return date < new Date();
+
+const validateForm = () => {
+  if (!formModel.expiry) {
+    message.error(t('Please select expiration date'))
+    return false
+  }
+  if (!formModel.impliedPolicy) {
+    try {
+      JSON.parse(formModel.policy || '{}')
+    } catch {
+      message.error(t('Policy format invalid'))
+      return false
+    }
+  }
+  return true
+}
+
+const submitForm = async () => {
+  if (!validateForm()) return
+
+  submitting.value = true
+  try {
+    await updateServiceAccount(props.user.accessKey, {
+      newStatus: formModel.accountStatus,
+      newName: formModel.name,
+      newDescription: formModel.description,
+      newPolicy: formModel.impliedPolicy ? null : JSON.stringify(JSON.parse(formModel.policy || '{}')),
+      newExpiration: formModel.expiry ? new Date(formModel.expiry).toISOString() : null,
+    })
+
+    message.success(t('Update Success'))
+    emit('search')
+  } catch (error) {
+    message.error(t('Update Failed'))
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
-
-<style lang="scss" scoped></style>

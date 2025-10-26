@@ -1,5 +1,5 @@
 <template>
-  <div class="license-article">
+  <div class="space-y-6">
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('License') }}</h1>
@@ -7,34 +7,29 @@
     </page-header>
 
     <page-content>
-      <n-card size="large">
-        <template #header>
-          <h1 class="text-2xl font-bold text-center">{{ t('Apache License') }}</h1>
-        </template>
-
-        <article class="max-w-4xl mx-auto">
-          <div class="license-content">
-            <pre
-              class="whitespace-pre-wrap font-mono text-sm leading-6 bg-gray-50 dark:bg-gray-800 p-6 rounded-lg overflow-auto"
-              >{{ licenseContent }}</pre
-            >
-          </div>
-        </article>
-      </n-card>
+      <AppCard class="space-y-4">
+        <div class="text-center">
+          <h2 class="text-2xl font-bold">{{ t('Apache License') }}</h2>
+          <p class="mt-2 text-sm text-muted-foreground">
+            {{ t('Version 2.0, January 2004') }}
+          </p>
+        </div>
+        <ScrollArea class="h-[70vh] rounded-lg border border-border/60">
+          <pre class="whitespace-pre-wrap p-6 text-sm leading-6 text-muted-foreground">
+{{ licenseContent }}
+          </pre>
+        </ScrollArea>
+      </AppCard>
     </page-content>
   </div>
 </template>
 
-<script lang="ts" setup>
-import { useI18n } from 'vue-i18n';
-import licenseText from '~/LICENSE?raw';
+<script setup lang="ts">
+import { AppCard } from '@/components/app'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { useI18n } from 'vue-i18n'
+import licenseText from '~/LICENSE?raw'
 
-const { t } = useI18n();
-const licenseContent = licenseText;
+const { t } = useI18n()
+const licenseContent = licenseText
 </script>
-
-<style scoped>
-.license-content {
-  line-height: 1.6;
-}
-</style>

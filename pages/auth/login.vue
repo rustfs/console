@@ -1,15 +1,17 @@
 <script lang="ts" setup>
 await setPageLayout('plain');
 
-import { onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
+import { AppButton, AppInput } from '@/components/app';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 
-const method = ref('accessKeyAndSecretKey');
+const method = ref<'accessKeyAndSecretKey' | 'sts'>('accessKeyAndSecretKey');
 const accessKeyAndSecretKey = ref({
   accessKeyId: '',
   secretAccessKey: '',
@@ -77,10 +79,12 @@ const handleLogin = async () => {
           </div>
 
           <div class="mt-5 space-y-4">
-            <n-tabs type="segment" animated size="small" v-model:value="method">
-              <n-tab-pane name="accessKeyAndSecretKey" :tab="t('Key Login')" />
-              <n-tab-pane name="sts" :tab="t('STS Login')" />
-            </n-tabs>
+            <Tabs v-model="method" class="flex flex-col gap-4">
+              <TabsList class="w-full">
+                <TabsTrigger value="accessKeyAndSecretKey">{{ t('Key Login') }}</TabsTrigger>
+                <TabsTrigger value="sts">{{ t('STS Login') }}</TabsTrigger>
+              </TabsList>
+            </Tabs>
 
             <!-- Form -->
             <form @submit.prevent="handleLogin" autocomplete="off">
@@ -88,8 +92,8 @@ const handleLogin = async () => {
                 <template v-if="method == 'accessKeyAndSecretKey'">
                   <div>
                     <label for="accessKey" class="block text-sm mb-2 dark:text-white">{{ t('Account') }}</label>
-                    <n-input
-                      v-model:value="accessKeyAndSecretKey.accessKeyId"
+                    <AppInput
+                      v-model="accessKeyAndSecretKey.accessKeyId"
                       autocomplete="new-password"
                       type="text"
                       :placeholder="t('Please enter account')"
@@ -99,8 +103,8 @@ const handleLogin = async () => {
                     <div class="flex justify-between items-center">
                       <label for="secretKey" class="block text-sm mb-2 dark:text-white">{{ t('Key') }}</label>
                     </div>
-                    <n-input
-                      v-model:value="accessKeyAndSecretKey.secretAccessKey"
+                    <AppInput
+                      v-model="accessKeyAndSecretKey.secretAccessKey"
                       autocomplete="new-password"
                       type="password"
                       :placeholder="t('Please enter key')"
@@ -111,8 +115,8 @@ const handleLogin = async () => {
                 <template v-else>
                   <div>
                     <label for="accessKey" class="block text-sm mb-2 dark:text-white">{{ t('STS Username') }}</label>
-                    <n-input
-                      v-model:value="sts.accessKeyId"
+                    <AppInput
+                      v-model="sts.accessKeyId"
                       autocomplete="new-password"
                       type="text"
                       :placeholder="t('Please enter STS username')"
@@ -122,8 +126,8 @@ const handleLogin = async () => {
                     <label for="sts.secretAccessKey" class="block text-sm mb-2 dark:text-white">{{
                       t('STS Key')
                     }}</label>
-                    <n-input
-                      v-model:value="sts.secretAccessKey"
+                    <AppInput
+                      v-model="sts.secretAccessKey"
                       autocomplete="new-password"
                       type="password"
                       :placeholder="t('Please enter STS key')"
@@ -133,8 +137,8 @@ const handleLogin = async () => {
                     <label for="sessionToken" class="block text-sm mb-2 dark:text-white">{{
                       t('STS Session Token')
                     }}</label>
-                    <n-input
-                      v-model:value="sts.sessionToken"
+                    <AppInput
+                      v-model="sts.sessionToken"
                       autocomplete="new-password"
                       type="text"
                       :placeholder="t('Please enter STS session token')"
@@ -142,12 +146,9 @@ const handleLogin = async () => {
                   </div>
                 </template>
 
-                <button
-                  type="submit"
-                  class="w-full py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-                >
+                <AppButton type="submit" variant="primary" class="w-full justify-center">
                   {{ t('Login') }}
-                </button>
+                </AppButton>
               </div>
             </form>
             <!-- End Form -->

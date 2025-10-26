@@ -1,193 +1,166 @@
 <template>
-  <n-page-header @back="router.back()">
-    <template #title>
-      {{ t('Object Details') }}
-    </template>
-    <template #extra>
-      <div class="flex items-center gap-4 ml-auto">
-        <n-button @click="() => download()">
-          <Icon name="ri:download-line" class="mr-2" />
-          <span>{{ t('Download') }}</span>
-        </n-button>
-
-        <n-button @click="() => copySignedUrl()">
-          <Icon name="ri:file-copy-line" class="mr-2" />
-          <span>{{ t('Copy URL') }}</span>
-        </n-button>
-
-        <n-button @click="() => (showPreview = true)">
-          <Icon name="ri:eye-line" class="mr-2" />
-          <span>{{ t('Preview') }}</span>
-        </n-button>
-
-        <n-button @click="() => (showTagView = true)">
-          <Icon name="ri:price-tag-3-line" class="mr-2" />
-          <span>{{ t('Tags') }}</span>
-        </n-button>
-
-        <n-popconfirm @positive-click="deleteObject">
-          <template #trigger>
-            <n-button ghost type="error">
-              <Icon name="ri:delete-bin-7-line" class="mr-2" />
-              <span>{{ t('Delete') }}</span>
-            </n-button>
-          </template>
-          {{ t('Delete Confirm', { key }) }}
-        </n-popconfirm>
-
-        <n-button @click="() => refresh()">
-          <Icon name="ri:refresh-line" class="mr-2" />
-          <span>{{ t('Refresh') }}</span>
-        </n-button>
+  <div class="space-y-4">
+    <AppCard padded class="space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex flex-col">
+          <h2 class="text-lg font-semibold">{{ object?.Key }}</h2>
+          <p class="text-sm text-muted-foreground">{{ t('Object Detail Description', { bucket: bucketName }) }}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <AppButton variant="outline" size="sm" @click="download">
+            <Icon name="ri:download-line" class="size-4" />
+            {{ t('Download') }}
+          </AppButton>
+          <AppButton variant="outline" size="sm" @click="copySignedUrl">
+            <Icon name="ri:file-copy-line" class="size-4" />
+            {{ t('Copy Temporary URL') }}
+          </AppButton>
+          <AppButton variant="outline" size="sm" @click="() => (showPreview = true)">
+            <Icon name="ri:eye-line" class="size-4" />
+            {{ t('Preview') }}
+          </AppButton>
+          <AppButton variant="outline" size="sm" @click="() => (showTagView = true)">
+            <Icon name="ri:price-tag-3-line" class="size-4" />
+            {{ t('Set Tags') }}
+          </AppButton>
+          <AppButton variant="destructive" size="sm" @click="confirmDelete">
+            <Icon name="ri:delete-bin-5-line" class="size-4" />
+            {{ t('Delete') }}
+          </AppButton>
+          <AppButton variant="outline" size="sm" @click="refresh">
+            <Icon name="ri:refresh-line" class="size-4" />
+            {{ t('Refresh') }}
+          </AppButton>
+        </div>
       </div>
-    </template>
-  </n-page-header>
-  <n-card :title="t('Info')">
-    <div v-if="status === 'pending'" class="flex items-center justify-center">
-      <n-spin size="small" />
-    </div>
-    <n-descriptions :column="1">
-      <n-descriptions-item :label="t('Object Name')"
-        ><span class="select-all">{{ key }}</span></n-descriptions-item
-      >
-      <n-descriptions-item :label="t('Object Size')">{{ object?.ContentLength }}</n-descriptions-item>
-      <n-descriptions-item :label="t('Object Type')">{{ object?.ContentType }}</n-descriptions-item>
-      <!-- <n-descriptions-item label="存储类型">{{ object?.StorageClass }}</n-descriptions-item> -->
-      <n-descriptions-item label="ETag"
-        ><span class="select-all">{{ object?.ETag }}</span></n-descriptions-item
-      >
-      <n-descriptions-item :label="t('Last Modified Time')">{{ object?.LastModified }}</n-descriptions-item>
-    </n-descriptions>
+    </AppCard>
 
-    <object-preview-modal v-model:show="showPreview" :bucketName="bucketName" :objectKey="key" />
+    <AppCard padded class="space-y-3 text-sm">
+      <KeyValue label="{{ t('Object Name') }}" :value="object?.Key" />
+      <KeyValue label="{{ t('Object Size') }}" :value="object?.ContentLength" />
+      <KeyValue label="{{ t('Object Type') }}" :value="object?.ContentType" />
+      <KeyValue label="ETag" :value="object?.ETag" />
+      <KeyValue label="{{ t('Last Modified Time') }}" :value="object?.LastModified" />
+    </AppCard>
 
-    <!-- tagview -->
-    <n-modal v-model:show="showTagView" preset="card" :title="t('Set Tags')" draggable class="max-w-screen-md">
-      <n-card class="max-w-screen-md">
-        <n-space class="my-4">
-          <n-tag
-            class="m-2 align-middle"
-            v-for="(tag, index) in tags"
-            type="info"
-            closable
-            @close="handledeleteTag(index)"
-          >
-            {{ tag.Key }}:{{ tag.Value }}
-          </n-tag>
-        </n-space>
-        <n-form ref="formRef" inline class="flex" :label-width="80" :model="tagFormValue">
-          <n-form-item :label="t('Tag Key')" path="Key">
-            <n-input v-model:value="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
-          </n-form-item>
-          <n-form-item :label="t('Tag Value')" path="Value">
-            <n-input v-model:value="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
-          </n-form-item>
-          <n-form-item>
-            <n-button type="primary" @click="submitTagForm">{{ t('Add') }}</n-button>
-            <n-button class="mx-4" @click="showTagView = false">{{ t('Cancel') }}</n-button>
-          </n-form-item>
-        </n-form>
-      </n-card>
-    </n-modal>
-  </n-card>
+    <AppModal v-model="showTagView" :title="t('Set Tags')" size="lg">
+      <AppCard class="space-y-4">
+        <div class="flex flex-wrap gap-2">
+          <AppTag v-for="tag in tags" :key="tag.Key" tone="info">
+            {{ tag.Key }}: {{ tag.Value }}
+          </AppTag>
+        </div>
+        <form class="flex flex-wrap gap-3" @submit.prevent="submitTagForm">
+          <AppInput v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
+          <AppInput v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
+          <AppButton type="submit" variant="primary">{{ t('Add') }}</AppButton>
+          <AppButton variant="outline" @click="showTagView = false">{{ t('Cancel') }}</AppButton>
+        </form>
+      </AppCard>
+    </AppModal>
+
+    <AppModal v-model="showPreview" :title="t('Preview')" size="xl">
+      <AppCard padded>
+        <object-preview-modal :show="true" :object="object" @update:show="showPreview = $event" />
+      </AppCard>
+    </AppModal>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { AppButton, AppCard, AppInput, AppModal, AppTag } from '@/components/app'
+import { KeyValue } from '@/components/ui/key-value'
+import { useI18n } from 'vue-i18n'
+import ClipboardJS from 'clipboard'
 
-const { t } = useI18n();
-const router = useRouter();
-const { $s3Client } = useNuxtApp();
-const message = useMessage();
-const props = defineProps<{ bucket: string; objectKey: string }>();
+const props = defineProps<{
+  bucketName: string
+  objectKey: string
+}>()
 
-const bucketName = computed(() => props.bucket as string);
-const { getObjectTagging, putObjectTagging, deleteObjectTagging } = useObject({
-  bucket: bucketName.value,
-});
+const { t } = useI18n()
+const message = useMessage()
+const dialog = useDialog()
 
-// 当前路径的前缀, example: '/folder1/folder2/'
-const key = computed(() => decodeURIComponent(props.objectKey as string));
+const object = ref<any>(null)
+const tags = ref<Array<{ Key: string; Value: string }>>([])
+const signedUrl = ref('')
+const showTagView = ref(false)
+const showPreview = ref(false)
+const tagFormValue = ref({ Key: '', Value: '' })
 
-// 预览内容
-const showPreview = ref(false);
-//  标签
-const showTagView = ref(false);
-const tagFormValue = ref({
-  Key: '',
-  Value: '',
-});
-interface Tag {
-  Key: string;
-  Value: string;
+const { getObjectInfo, getObjectTags, putObjectTags, deleteObject } = useObject({ bucket: props.bucketName })
+
+const loadObjectInfo = async () => {
+  try {
+    object.value = await getObjectInfo(props.objectKey)
+    signedUrl.value = object.value?.SignedUrl || ''
+    const response = await getObjectTags(props.objectKey)
+    tags.value = response.TagSet || []
+  } catch (error) {
+    message.error(t('Failed to fetch object info'))
+  }
 }
-// 获取tags
-const tags = ref<Tag[]>([]);
-const getTags = async () => {
-  const resp: any = await getObjectTagging(key.value);
-  tags.value = resp.TagSet || [];
-};
-getTags();
 
-const dialog = useDialog();
-// 删除标签
-const handledeleteTag = async (index: number) => {
-  dialog.error({
-    title: t('Warning'),
-    content: t('Delete Tag Confirm'),
-    positiveText: t('Confirm'),
-    negativeText: t('Cancel'),
-    onPositiveClick: async () => {
-      putObjectTagging(key.value, {
-        TagSet: tags.value.filter((item, keyIndex) => keyIndex !== index),
-      })
-        .then(() => {
-          message.success(t('Tag Update Success'));
-          getTags();
-        })
-        .catch(error => {
-          message.error(t('Tag Delete Failed', { error: error.message }));
-        });
-    },
-  });
-};
+watch(
+  () => props.objectKey,
+  () => {
+    loadObjectInfo()
+  },
+  { immediate: true }
+)
+
+const refresh = () => loadObjectInfo()
+
+const copySignedUrl = () => {
+  if (!signedUrl.value) return
+  const clipboard = new ClipboardJS(document.createElement('button'), {
+    text: () => signedUrl.value,
+  })
+  clipboard.on('success', () => message.success(t('Copy Success')))
+  clipboard.on('error', () => message.error(t('Copy Failed')))
+  clipboard.destroy()
+}
 
 const submitTagForm = async () => {
-  const tag = {
-    Key: tagFormValue.value.Key,
-    Value: tagFormValue.value.Value,
-  };
-  putObjectTagging(key.value, {
-    TagSet: [...tags.value, tag],
-  }).then(() => {
-    message.success(t('Tag Set Success'));
-    getTags();
-  });
-};
+  if (!tagFormValue.value.Key || !tagFormValue.value.Value) {
+    message.error(t('Please fill in the correct format'))
+    return
+  }
+  try {
+    const nextTags = [...tags.value, { ...tagFormValue.value }]
+    await putObjectTags(props.objectKey, nextTags)
+    tags.value = nextTags
+    tagFormValue.value = { Key: '', Value: '' }
+    message.success(t('Create Success'))
+  } catch (error: any) {
+    message.error(error?.message || t('Create Failed'))
+  }
+}
 
-const objectApi = useObject({ bucket: bucketName.value });
+const confirmDelete = () => {
+  dialog.error({
+    title: t('Warning'),
+    content: t('Are you sure you want to delete this object?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
+    onPositiveClick: deleteObjectHandler,
+  })
+}
 
-// 在服务端获取数据
-const { data: object, status, refresh } = useAsyncData(`head-object&${key}`, () => objectApi.headObject(key.value));
+const deleteObjectHandler = async () => {
+  try {
+    await deleteObject(props.objectKey)
+    message.success(t('Delete Success'))
+  } catch (error: any) {
+    message.error(error?.message || t('Delete Failed'))
+  }
+}
 
-const download = async () => {
-  const msg = message.loading(t('Getting URL'));
-  const url = await objectApi.getSignedUrl(key.value);
-  msg.destroy();
-  window.open(url, '_blank');
-};
+const download = () => {
+  if (!signedUrl.value) return
+  window.open(signedUrl.value, '_blank')
+}
 
-const copySignedUrl = async () => {
-  const msg = message.loading(t('Getting URL'));
-  const url = await objectApi.getSignedUrl(key.value);
-  await navigator.clipboard.writeText(url);
-  msg.destroy();
-  message.success(t('URL Copied'));
-};
-const deleteObject = async () => {
-  await objectApi.deleteObject(key.value);
-  message.success(t('Delete Success'));
-  router.back();
-};
+defineExpose({ refresh })
 </script>

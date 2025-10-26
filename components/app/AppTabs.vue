@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '#components'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { watch } from 'vue'
 import type { HTMLAttributes } from 'vue'
 
 interface TabItem {
@@ -15,7 +16,17 @@ const props = defineProps<{
   class?: HTMLAttributes['class']
 }>()
 
-const value = defineModel<string>({ default: props.tabs?.[0]?.key ?? '' })
+const value = defineModel<string>({ default: '' })
+
+watch(
+  () => props.tabs,
+  tabs => {
+    if (!value.value && tabs?.length) {
+      value.value = tabs[0]?.key ?? ''
+    }
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <template>

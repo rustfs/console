@@ -1,176 +1,299 @@
 <template>
-  <div>
-    <n-modal
-      v-model:show="visible"
-      :mask-closable="false"
-      preset="card"
-      :title="t('Create User')"
-      class="max-w-screen-md"
-      :segmented="{
-        content: true,
-        action: true,
-      }"
-    >
-      <n-card>
-        <n-form
-          ref="newformRef"
-          :model="editForm"
-          label-placement="left"
-          :rules="rules"
-          label-align="right"
-          :label-width="130"
-        >
-          <n-grid :cols="24" :x-gap="18">
-            <n-form-item-grid-item :span="24" :label="t('User Name')" path="accessKey">
-              <n-input v-model:value="editForm.accessKey" />
-            </n-form-item-grid-item>
-            <n-form-item-grid-item :span="24" :label="t('Password')" path="secretKey">
-              <n-input v-model:value="editForm.secretKey" type="password" />
-            </n-form-item-grid-item>
-            <n-form-item-grid-item :span="24" :label="t('Groups')" path="groups">
-              <n-select v-model:value="editForm.groups" filterable multiple :options="groupsList" />
-            </n-form-item-grid-item>
+  <AppModal v-model="visible" :title="t('Create User')" size="lg" :close-on-backdrop="false">
+    <AppCard padded class="space-y-6">
+      <div class="grid gap-4 md:grid-cols-2">
+        <div class="space-y-2">
+          <Label>{{ t('User Name') }}</Label>
+          <AppInput v-model="editForm.accessKey" autocomplete="off" />
+          <p v-if="errors.accessKey" class="text-xs text-destructive">{{ errors.accessKey }}</p>
+        </div>
+        <div class="space-y-2">
+          <Label>{{ t('Password') }}</Label>
+          <AppInput v-model="editForm.secretKey" type="password" autocomplete="off" />
+          <p v-if="errors.secretKey" class="text-xs text-destructive">{{ errors.secretKey }}</p>
+        </div>
+      </div>
 
-            <n-form-item-grid-item :span="24" :label="t('Policy')" path="policies">
-              <n-select v-model:value="editForm.policies" filterable multiple :options="policiesList" />
-            </n-form-item-grid-item>
-          </n-grid>
-        </n-form>
-      </n-card>
-      <template #action>
-        <n-space justify="center">
-          <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
-          <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
-        </n-space>
-      </template>
-    </n-modal>
-  </div>
+      <div class="space-y-2">
+        <Label>{{ t('Groups') }}</Label>
+        <Popover v-model:open="groupSelectorOpen">
+          <PopoverTrigger as-child>
+            <Button
+              type="button"
+              variant="outline"
+              class="min-h-10 justify-between gap-2"
+              :aria-label="t('Groups')"
+            >
+              <span class="truncate">
+                {{ selectedGroupLabels.length ? selectedGroupLabels.join(', ') : t('Select Group') }}
+              </span>
+              <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-72 p-0" align="start">
+            <Command>
+              <CommandInput :placeholder="t('Search Group')" />
+              <CommandList>
+                <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    v-for="option in groupsList"
+                    :key="option.value"
+                    :value="option.label"
+                    @select="() => toggleGroup(option.value)"
+                  >
+                    <Icon
+                      name="ri:check-line"
+                      class="mr-2 size-4"
+                      :class="editForm.groups.includes(option.value) ? 'opacity-100' : 'opacity-0'"
+                    />
+                    <span>{{ option.label }}</span>
+                  </CommandItem>
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        <div v-if="editForm.groups.length" class="flex flex-wrap gap-2">
+          <Badge v-for="value in editForm.groups" :key="value" variant="secondary">{{ value }}</Badge>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <Label>{{ t('Policy') }}</Label>
+        <Popover v-model:open="policySelectorOpen">
+          <PopoverTrigger as-child>
+            <Button
+              type="button"
+              variant="outline"
+              class="min-h-10 justify-between gap-2"
+              :aria-label="t('Policy')"
+            >
+              <span class="truncate">
+                {{ selectedPolicyLabels.length ? selectedPolicyLabels.join(', ') : t('Select user group policies') }}
+              </span>
+              <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-72 p-0" align="start">
+            <Command>
+              <CommandInput :placeholder="t('Search Policy')" />
+              <CommandList>
+                <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
+                <CommandGroup>
+                  <CommandItem
+                    v-for="option in policiesList"
+                    :key="option.value"
+                    :value="option.label"
+                    @select="() => togglePolicy(option.value)"
+                  >
+                    <Icon
+                      name="ri:check-line"
+                      class="mr-2 size-4"
+                      :class="editForm.policies.includes(option.value) ? 'opacity-100' : 'opacity-0'"
+                    />
+                    <span>{{ option.label }}</span>
+                  </CommandItem>
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        <div v-if="editForm.policies.length" class="flex flex-wrap gap-2">
+          <Badge v-for="value in editForm.policies" :key="value" variant="secondary">{{ value }}</Badge>
+        </div>
+      </div>
+    </AppCard>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <AppButton variant="outline" @click="closeModal">
+          {{ t('Cancel') }}
+        </AppButton>
+        <AppButton variant="primary" :loading="submitting" @click="submitForm">
+          {{ t('Submit') }}
+        </AppButton>
+      </div>
+    </template>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
-import { type FormRules } from 'naive-ui';
-import { useI18n } from 'vue-i18n';
-const { t } = useI18n();
-const { listPolicies, setUserOrGroupPolicy } = usePolicies();
-const { listGroup } = useGroups();
-const message = useMessage();
-const { createUser } = useUsers();
-const visible = ref(false);
+import { Icon } from '#components'
+import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+const message = useMessage()
+const { createUser } = useUsers()
+const { listPolicies, setUserOrGroupPolicy } = usePolicies()
+const { listGroup, updateGroupMembers } = useGroups()
+
+const emit = defineEmits<{
+  (e: 'search'): void
+}>()
+
+const visible = ref(false)
+const submitting = ref(false)
 
 const editForm = reactive({
   accessKey: '',
   secretKey: '',
-  groups: [],
-  policies: [],
-});
+  groups: [] as string[],
+  policies: [] as string[],
+})
 
-const rules: FormRules = {
-  accessKey: [
-    {
-      required: true,
-      message: t('Please enter username'),
-    },
-    {
-      type: 'string',
-      pattern: /^.{8,16}$/,
-      message: t('username length cannot be less than 8 characters and greater than 16 characters'),
-    },
-  ],
-  secretKey: [
-    {
-      required: true,
-      message: t('Please enter password'),
-    },
-    // length>=8    // length<=40
-    {
-      type: 'string',
-      pattern: /^.{8,16}$/,
-      message: t('password length cannot be less than 8 characters and greater than 16 characters'),
-    },
-  ],
-};
+const errors = reactive({
+  accessKey: '',
+  secretKey: '',
+})
 
-function openDialog() {
-  // 获取策略列表
-  getPoliciesList();
-  // 获取分组列表
-  getGroupsList();
-  visible.value = true;
+const groupsList = ref<{ label: string; value: string }[]>([])
+const policiesList = ref<{ label: string; value: string }[]>([])
+const groupSelectorOpen = ref(false)
+const policySelectorOpen = ref(false)
+
+const selectedGroupLabels = computed(() => {
+  const map = groupsList.value.reduce<Record<string, string>>((acc, option) => {
+    acc[option.value] = option.label
+    return acc
+  }, {})
+  return editForm.groups.map(value => map[value] ?? value)
+})
+
+const selectedPolicyLabels = computed(() => {
+  const map = policiesList.value.reduce<Record<string, string>>((acc, option) => {
+    acc[option.value] = option.label
+    return acc
+  }, {})
+  return editForm.policies.map(value => map[value] ?? value)
+})
+
+const resetForm = () => {
+  editForm.accessKey = ''
+  editForm.secretKey = ''
+  editForm.groups = []
+  editForm.policies = []
+  errors.accessKey = ''
+  errors.secretKey = ''
+  groupSelectorOpen.value = false
+  policySelectorOpen.value = false
 }
 
-function closeModal() {
-  visible.value = false;
-  editForm.accessKey = '';
-  editForm.secretKey = '';
-  editForm.groups = [];
-  editForm.policies = [];
+const openDialog = async () => {
+  await Promise.all([getGroupsList(), getPoliciesList()])
+  visible.value = true
+}
+
+const closeModal = () => {
+  visible.value = false
+  resetForm()
 }
 
 defineExpose({
   openDialog,
-});
+})
 
-const newformRef = ref();
-const emit = defineEmits(['search']);
-function submitForm(e: MouseEvent) {
-  e.preventDefault();
-  newformRef.value?.validate(async (errors: any) => {
-    if (errors) {
-      return;
-    }
+const validate = () => {
+  errors.accessKey = ''
+  errors.secretKey = ''
 
-    try {
-      const res = await createUser({
-        accessKey: editForm.accessKey,
-        secretKey: editForm.secretKey,
-        status: 'enabled',
-      });
+  if (!editForm.accessKey.trim()) {
+    errors.accessKey = t('Please enter username')
+  } else if (!/^.{8,16}$/.test(editForm.accessKey)) {
+    errors.accessKey = t('username length cannot be less than 8 characters and greater than 16 characters')
+  }
 
-      // 添加完成之后设置policy
-      setUserOrGroupPolicy({
+  if (!editForm.secretKey.trim()) {
+    errors.secretKey = t('Please enter password')
+  } else if (!/^.{8,16}$/.test(editForm.secretKey)) {
+    errors.secretKey = t('password length cannot be less than 8 characters and greater than 16 characters')
+  }
+
+  return !errors.accessKey && !errors.secretKey
+}
+
+const submitForm = async () => {
+  if (!validate()) {
+    message.error(t('Please fill in the correct format'))
+    return
+  }
+
+  submitting.value = true
+  try {
+    await createUser({
+      accessKey: editForm.accessKey,
+      secretKey: editForm.secretKey,
+      status: 'enabled',
+    })
+
+    if (editForm.policies.length) {
+      await setUserOrGroupPolicy({
         policyName: editForm.policies,
         userOrGroup: editForm.accessKey,
         isGroup: false,
-      });
-
-      // 添加完成之后设置Group
-
-      message.success(t('Add Success'));
-      emit('search');
-      closeModal();
-    } catch (error) {
-      message.error(t('Add Failed'));
+      })
     }
-  });
+
+    if (editForm.groups.length) {
+      await Promise.all(
+        editForm.groups.map(group =>
+          updateGroupMembers({
+            group,
+            members: [editForm.accessKey],
+            isRemove: false,
+            groupStatus: 'enabled',
+          })
+        )
+      )
+    }
+
+    message.success(t('Add Success'))
+    emit('search')
+    closeModal()
+  } catch (error) {
+    console.error(error)
+    message.error(t('Add Failed'))
+    submitting.value = false
+  }
 }
 
-// 获取策略列表
-const policiesList = ref<any[]>([]);
-
 const getPoliciesList = async () => {
-  const res = await listPolicies();
-  policiesList.value = Object.keys(res)
+  const res = await listPolicies()
+  policiesList.value = Object.keys(res ?? {})
     .sort((a, b) => a.localeCompare(b))
-    .map(key => {
-      return {
-        label: key,
-        value: key,
-      };
-    });
-};
+    .map(key => ({
+      label: key,
+      value: key,
+    }))
+}
 
-// 获取用户组列表
-const groupsList = ref([]);
 const getGroupsList = async () => {
-  const res = await listGroup();
-  groupsList.value =
-    res?.map((item: any) => {
-      return {
-        label: item,
-        value: item,
-      };
-    }) || [];
-};
-</script>
+  const res = await listGroup()
+  groupsList.value = (res ?? []).map((item: string) => ({
+    label: item,
+    value: item,
+  }))
+}
 
-<style lang="scss" scoped></style>
+const toggleGroup = (value: string) => {
+  if (editForm.groups.includes(value)) {
+    editForm.groups = editForm.groups.filter(item => item !== value)
+  } else {
+    editForm.groups = [...editForm.groups, value]
+  }
+}
+
+const togglePolicy = (value: string) => {
+  if (editForm.policies.includes(value)) {
+    editForm.policies = editForm.policies.filter(item => item !== value)
+  } else {
+    editForm.policies = [...editForm.policies, value]
+  }
+}
+</script>

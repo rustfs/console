@@ -1,244 +1,226 @@
 <template>
-  <div>
+  <div class="flex flex-col gap-6">
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Bucket Replication') }}</h1>
       </template>
     </page-header>
-    <page-content class="flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <div style="width: 300px">
-          <n-form-item :label="t('Bucket')" path="" class="flex-auto" label-placement="left">
-            <n-select
-              filterable
-              v-model:value="bucketName"
-              :placeholder="t('Please select bucket')"
-              :options="bucketList"
-            />
-          </n-form-item>
-        </div>
 
-        <div class="flex items-center gap-4">
-          <n-button @click="() => openForm()">
-            <Icon name="ri:add-line" class="mr-2" />
+    <page-content class="flex flex-col gap-4">
+      <div
+        class="flex flex-col gap-4 rounded-lg border border-border/60 bg-background/80 p-4 shadow-sm md:flex-row md:items-end md:justify-between"
+      >
+        <div class="w-full max-w-sm">
+          <Label class="mb-2 block text-sm font-medium text-muted-foreground">{{ t('Bucket') }}</Label>
+          <AppSelect
+            v-model="bucketName"
+            :options="bucketList"
+            :placeholder="t('Please select bucket')"
+            class="w-full"
+          />
+        </div>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <AppButton variant="secondary" @click="openForm">
+            <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Replication Rule') }}</span>
-          </n-button>
-          <n-button @click="loadReplication">
-            <Icon name="ri:refresh-line" class="mr-2" />
+          </AppButton>
+          <AppButton variant="outline" @click="loadReplication">
+            <Icon name="ri:refresh-line" class="size-4" />
             <span>{{ t('Refresh') }}</span>
-          </n-button>
+          </AppButton>
         </div>
       </div>
 
-      <n-data-table
-        class="border dark:border-neutral-700 rounded overflow-hidden"
-        :columns="columns"
-        :data="pageData"
-        :pagination="false"
-        :bordered="false"
-        v-if="pageData.length > 0"
-      />
-      <n-card class="flex flex-center" style="height: 400px" v-else>
-        <n-empty :description="t('No Data')"></n-empty>
-      </n-card>
-      <replication-new-form :bucketName="bucketName" ref="addFromRef" @success="onAddSuccess"></replication-new-form>
+      <AppCard padded class="border border-border/60">
+        <AppDataTable
+          :table="table"
+          :is-loading="loading"
+          :empty-title="t('No Data')"
+          :empty-description="t('Add replication rules to sync objects across buckets.')"
+        />
+      </AppCard>
+
+      <replication-new-form ref="addFormRef" :bucketName="bucketName" @success="loadReplication" />
     </page-content>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { Icon } from '#components';
-import { NButton, NSpace, type DataTableColumns } from 'naive-ui';
-import { useI18n } from 'vue-i18n';
-import { useBucket } from '@/composables/useBucket';
-import { h, ref, computed, watch } from 'vue';
-import { useMessage } from 'naive-ui';
+import { Icon } from '#components'
+import type { ColumnDef } from '@tanstack/vue-table'
+import { AppButton, AppCard, AppSelect, AppTag } from '@/components/app'
+import { AppDataTable, useDataTable } from '@/components/app/data-table'
+import { Label } from '@/components/ui/label'
+import { computed, h, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useBucket } from '@/composables/useBucket'
 
-const { t } = useI18n();
+const { t } = useI18n()
+const message = useMessage()
+const dialog = useDialog()
+
 const {
   listBuckets,
   getBucketReplication,
   putBucketReplication,
   deleteBucketReplication,
   deleteRemoteReplicationTarget,
-} = useBucket({});
-const formVisible = ref(false);
-const searchTerm = ref('');
-const message = useMessage();
+} = useBucket({})
 
-interface RowData {
-  Name: string;
-  CreationDate: string;
+interface ReplicationRule {
+  ID?: string
+  Status?: string
+  Priority?: number
+  Filter?: {
+    Prefix?: string
+  }
+  Destination?: {
+    Bucket?: string
+    StorageClass?: string
+  }
 }
 
-const columns: DataTableColumns<ReplicationRule> = [
-  {
-    title: t('Rule ID'),
-    key: 'ID',
-    align: 'center',
-  },
-  {
-    title: t('Status'),
-    key: 'Status',
-    align: 'center',
-    render: row => (row.Status === 'Enabled' ? t('Enabled') : t('Disabled')),
-  },
-  {
-    title: t('Priority'),
-    key: 'Priority',
-    align: 'center',
-  },
-  {
-    title: t('Prefix'),
-    key: 'Filter',
-    align: 'center',
-    render: row => row.Filter?.Prefix || '-',
-  },
-  {
-    title: t('Destination Bucket'),
-    key: 'Destination',
-    align: 'center',
-    render: row => {
-      // MinIO/标准S3结构：arn:aws:s3:::bucketname
-      const bucketArn = row.Destination?.Bucket || '';
-      return bucketArn.replace(/^arn:aws:s3:::/, '');
-    },
-  },
-  {
-    title: t('Storage Class'),
-    key: 'Destination',
-    align: 'center',
-    render: row => row.Destination?.StorageClass || '-',
-  },
-  {
-    title: t('Actions'),
-    key: 'actions',
-    align: 'center',
-    width: 100,
-    render: row => {
-      return h(
-        NSpace,
-        { justify: 'center' },
-        {
-          default: () => [
-            h(
-              NButton,
-              {
-                size: 'small',
-                secondary: true,
-                onClick: e => handleRowDelete(row, e),
-              },
-              {
-                default: () => '',
-                icon: () => h(Icon, { name: 'ri:delete-bin-7-line' }),
-              }
-            ),
-          ],
-        }
-      );
-    },
-  },
-];
-
-// 获取桶列表
-const { data } = await useAsyncData(
-  'buckets',
+const { data: bucketData } = await useAsyncData(
+  'replication-buckets',
   async () => {
-    const response = await listBuckets();
+    const response = await listBuckets()
     return (
-      response.Buckets?.sort((a: any, b: any) => {
-        return a.Name.localeCompare(b.Name);
-      }) || []
-    );
+      response.Buckets?.sort((a: any, b: any) => a.Name.localeCompare(b.Name)) ?? []
+    )
   },
   { default: () => [] }
-);
+)
 
-const bucketList = computed(() => {
-  return data.value.map(bucket => ({
+const bucketList = computed(() =>
+  bucketData.value.map(bucket => ({
     label: bucket.Name,
     value: bucket.Name,
-  }));
-});
+  }))
+)
 
-const bucketName = ref<string>(bucketList.value.length > 0 ? (bucketList.value[0]?.value ?? '') : '');
+const bucketName = ref<string>(bucketList.value[0]?.value ?? '')
+const rules = ref<ReplicationRule[]>([])
+const loading = ref(false)
 
-// 复制规则类型
-interface ReplicationRule {
-  [key: string]: any;
-}
-const pageData = ref<ReplicationRule[]>([]);
+const columns: ColumnDef<ReplicationRule>[] = [
+  {
+    accessorKey: 'ID',
+    header: () => t('Rule ID'),
+    cell: ({ row }) => h('span', row.original.ID || '-'),
+  },
+  {
+    accessorKey: 'Status',
+    header: () => t('Status'),
+    cell: ({ row }) =>
+      h(
+        AppTag,
+        { tone: row.original.Status === 'Enabled' ? 'success' : 'warning' },
+        () => (row.original.Status === 'Enabled' ? t('Enabled') : t('Disabled'))
+      ),
+  },
+  {
+    accessorKey: 'Priority',
+    header: () => t('Priority'),
+    cell: ({ row }) => h('span', String(row.original.Priority ?? '-')),
+  },
+  {
+    accessorKey: 'Filter',
+    header: () => t('Prefix'),
+    cell: ({ row }) => h('span', row.original.Filter?.Prefix || '-'),
+  },
+  {
+    id: 'destination-bucket',
+    header: () => t('Destination Bucket'),
+    cell: ({ row }) => {
+      const bucketArn = row.original.Destination?.Bucket || ''
+      return h('span', bucketArn.replace(/^arn:aws:s3:::/, '') || '-')
+    },
+  },
+  {
+    id: 'destination-storage',
+    header: () => t('Storage Class'),
+    cell: ({ row }) => h('span', row.original.Destination?.StorageClass || '-'),
+  },
+  {
+    id: 'actions',
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: ({ row }) =>
+      h('div', { class: 'flex justify-center gap-2' }, [
+        h(
+          AppButton,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => confirmDelete(row.original),
+          },
+          () => [h(Icon, { name: 'ri:delete-bin-7-line', class: 'size-4' }), h('span', t('Delete'))]
+        ),
+      ]),
+  },
+]
 
-// 加载复制规则
+const { table } = useDataTable<ReplicationRule>({
+  data: rules,
+  columns,
+  getRowId: row => row.ID ?? JSON.stringify(row),
+})
+
 const loadReplication = async () => {
   if (!bucketName.value) {
-    pageData.value = [];
-    return;
+    rules.value = []
+    return
   }
+  loading.value = true
   try {
-    const res = await getBucketReplication(bucketName.value);
-    if (!res) {
-      pageData.value = [];
-      return;
-    }
-
-    // 兼容无规则时返回空对象
-    pageData.value = res?.ReplicationConfiguration?.Rules || [];
-  } catch (e) {
-    pageData.value = [];
+    const res = await getBucketReplication(bucketName.value)
+    rules.value = res?.ReplicationConfiguration?.Rules ?? []
+  } catch (error) {
+    rules.value = []
+  } finally {
+    loading.value = false
   }
-};
+}
 
-// 监听 bucketName 变化自动加载
 watch(
-  bucketName,
+  () => bucketName.value,
   () => {
-    loadReplication();
+    loadReplication()
   },
   { immediate: true }
-);
+)
 
-// 删除规则
-const handleRowDelete = async (row: any, e: Event) => {
-  e.stopPropagation();
+const confirmDelete = (rule: ReplicationRule) => {
+  dialog.error({
+    title: t('Warning'),
+    content: t('Are you sure you want to delete this replication rule?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
+    onPositiveClick: () => handleRowDelete(rule),
+  })
+}
+
+const handleRowDelete = async (rule: ReplicationRule) => {
+  const remaining = rules.value.filter(item => item !== rule)
+
   try {
-    // 1. 获取当前所有规则
-    const res: any = await getBucketReplication(bucketName.value);
-    let rules = res?.ReplicationConfiguration?.Rules || [];
-    const arn: string = res?.ReplicationConfiguration?.Role || ''; // 例如 arn:aws:s3:::bucketname
-    console.log(arn);
-
-    // 2. 过滤掉要删除的规则
-    const newRules = rules.filter((r: any) => r.ID !== row.ID);
-    if (newRules.length === 0) {
-      // 如果删除后没有规则，直接删除整个配置
-      await deleteBucketReplication(bucketName.value);
+    if (remaining.length === 0) {
+      await deleteBucketReplication(bucketName.value)
+      await deleteRemoteReplicationTarget(bucketName.value, rule.Destination?.Bucket ?? '')
     } else {
-      // 否则 put 新规则集
       await putBucketReplication(bucketName.value, {
-        Role: res?.ReplicationConfiguration?.Role,
-        Rules: newRules,
-      });
-      // 4. 删除远程目标
-      if (arn) {
-        deleteRemoteReplicationTarget(bucketName.value, arn);
-      }
+        Rules: remaining,
+      })
     }
-
-    message.success(t('Delete success'));
-    loadReplication();
-  } catch (err) {
-    message.error(t('Delete failed'));
+    message.success(t('Delete Success'))
+    loadReplication()
+  } catch (error: any) {
+    message.error(error?.message || t('Delete Failed'))
   }
-};
+}
 
-const addFromRef = ref();
+const addFormRef = ref<{ open: () => void }>()
 const openForm = () => {
-  addFromRef.value.open();
-};
-
-// 新增成功后刷新
-const onAddSuccess = () => {
-  loadReplication();
-};
+  addFormRef.value?.open()
+}
 </script>

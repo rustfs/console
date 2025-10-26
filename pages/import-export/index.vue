@@ -1,234 +1,217 @@
 <template>
-  <div>
+  <div class="flex flex-col gap-6">
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Import/Export') }}</h1>
       </template>
     </page-header>
-    <page-content>
-      <n-tabs type="card">
-        <!-- IAM标签页 -->
-        <n-tab-pane name="iam" :tab="t('IAM')">
+
+    <page-content class="flex flex-col gap-6">
+      <AppTabs :tabs="tabs" v-model="activeTab">
+        <template #iam>
           <div class="space-y-6">
-            <!-- IAM导出功能 -->
-            <n-card :title="t('IAM Configuration Export')" class="shadow-sm">
-              <div class="space-y-4">
-                <p class="text-gray-600 dark:text-gray-300">
-                  {{ t('Export all IAM configurations including users, groups, policies, and access keys in a ZIP file.') }}
+            <AppCard padded class="space-y-6">
+              <div class="space-y-2">
+                <h2 class="text-lg font-semibold">{{ t('IAM Configuration Export') }}</h2>
+                <p class="text-sm text-muted-foreground">
+                  {{
+                    t(
+                      'Export all IAM configurations including users, groups, policies, and access keys in a ZIP file.'
+                    )
+                  }}
                 </p>
+              </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div class="flex items-center space-x-2">
-                    <Icon name="ri:user-line" class="text-blue-500" />
-                    <span>{{ t('Users') }}</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <Icon name="ri:group-line" class="text-green-500" />
-                    <span>{{ t('User Groups') }}</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <Icon name="ri:shield-line" class="text-purple-500" />
-                    <span>{{ t('IAM Policies') }}</span>
-                  </div>
-                  <div class="flex items-center space-x-2">
-                    <Icon name="ri:key-line" class="text-orange-500" />
-                    <span>{{ t('AK/SK') }}</span>
-                  </div>
+              <div class="grid gap-3 md:grid-cols-2">
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Icon name="ri:user-line" class="text-blue-500" />
+                  <span>{{ t('Users') }}</span>
                 </div>
-
-                <n-alert type="info" :show-icon="false">
-                  <template #icon>
-                    <Icon name="ri:information-line" />
-                  </template>
-                  {{ t('The exported file contains sensitive information. Please keep it secure.') }}
-                </n-alert>
-
-                <!-- 导出操作区域 -->
-                <div class="flex items-center justify-between pt-4 border-t">
-                  <div>
-                    <h4 class="font-medium">{{ t('Export IAM Configuration') }}</h4>
-                    <p class="text-sm text-gray-500 mt-1">
-                      {{ t('Download complete IAM configuration as ZIP file') }}
-                    </p>
-                  </div>
-                  <n-button
-                    type="primary"
-                    size="large"
-                    :loading="isLoading"
-                    :disabled="isLoading"
-                    @click="handleExportIam"
-                  >
-                    <template #icon>
-                      <Icon name="ri:download-2-line" />
-                    </template>
-                    {{ isLoading ? t('Exporting...') : t('Export Now') }}
-                  </n-button>
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Icon name="ri:group-line" class="text-green-500" />
+                  <span>{{ t('User Groups') }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Icon name="ri:shield-line" class="text-purple-500" />
+                  <span>{{ t('IAM Policies') }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Icon name="ri:key-line" class="text-orange-500" />
+                  <span>{{ t('AK/SK') }}</span>
                 </div>
               </div>
-            </n-card>
 
-            <!-- IAM导入功能 -->
-            <n-card :title="t('IAM Configuration Import')" class="shadow-sm">
-              <div class="space-y-4">
-                <p class="text-gray-600 dark:text-gray-300">
+              <Alert>
+                <Icon name="ri:information-line" class="h-4 w-4" />
+                <AlertTitle>{{ t('Notice') }}</AlertTitle>
+                <AlertDescription>
+                  {{ t('The exported file contains sensitive information. Please keep it secure.') }}
+                </AlertDescription>
+              </Alert>
+
+              <div class="flex flex-col gap-2 rounded-lg border border-border/60 p-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <h3 class="text-sm font-semibold">{{ t('Export IAM Configuration') }}</h3>
+                  <p class="text-xs text-muted-foreground">
+                    {{ t('Download complete IAM configuration as ZIP file') }}
+                  </p>
+                </div>
+                <AppButton variant="primary" size="lg" :loading="isLoading" :disabled="isLoading" @click="handleExportIam">
+                  <Icon name="ri:download-2-line" class="size-4" />
+                  <span>{{ isLoading ? t('Exporting...') : t('Export Now') }}</span>
+                </AppButton>
+              </div>
+            </AppCard>
+
+            <AppCard padded class="space-y-6">
+              <div class="space-y-2">
+                <h2 class="text-lg font-semibold">{{ t('IAM Configuration Import') }}</h2>
+                <p class="text-sm text-muted-foreground">
                   {{ t('Import IAM configurations from a previously exported ZIP file.') }}
                 </p>
+              </div>
 
-                <!-- 文件上传区域 -->
-                <div class="space-y-4">
-                  <div>
-                    <h4 class="font-medium mb-2">{{ t('Select ZIP File') }}</h4>
-                    <n-upload
-                      ref="uploadRef"
-                      :max="1"
-                      :file-list="fileList"
-                      @update:file-list="handleFileListChange"
-                      @before-upload="beforeUpload"
-                      accept=".zip"
-                      :disabled="isLoading"
-                    >
-                      <n-upload-dragger>
-                        <div style="margin-bottom: 12px">
-                          <Icon name="ri:upload-cloud-2-line" size="48" depth="3" />
-                        </div>
-                        <n-text style="font-size: 16px">
-                          {{ t('Click or drag ZIP file to this area to upload') }}
-                        </n-text>
-                        <n-p depth="3" style="margin: 8px 0 0 0">
-                          {{ t('Only ZIP files are supported, and file size should not exceed 10MB') }}
-                        </n-p>
-                      </n-upload-dragger>
-                    </n-upload>
-                  </div>
-
-                  <!-- 导入操作区域 -->
-                  <div class="flex items-center justify-between pt-4 border-t">
+              <div class="space-y-4">
+                <div class="space-y-3">
+                  <h3 class="text-sm font-medium">{{ t('Select ZIP File') }}</h3>
+                  <AppUploadZone
+                    :accept="'.zip'"
+                    :disabled="isLoading"
+                    @change="handleFileSelect"
+                  >
+                    <p class="text-base font-medium">{{ t('Click or drag ZIP file to this area to upload') }}</p>
+                    <p class="text-sm text-muted-foreground">
+                      {{ t('Only ZIP files are supported, and file size should not exceed 10MB') }}
+                    </p>
+                  </AppUploadZone>
+                  <p v-if="uploadError" class="text-sm text-destructive">{{ uploadError }}</p>
+                  <div v-if="selectedFile" class="flex items-center justify-between rounded-md border border-border/60 p-3">
                     <div>
-                      <h4 class="font-medium">{{ t('Import IAM Configuration') }}</h4>
-                      <p class="text-sm text-gray-500 mt-1">
-                        {{ selectedFile ? t('Ready to import: {filename}', { filename: selectedFile.name }) : t('Please select a ZIP file to import') }}
+                      <p class="text-sm font-medium">{{ selectedFile.name }}</p>
+                      <p class="text-xs text-muted-foreground">
+                        {{ formatSize(selectedFile.size) }}
                       </p>
                     </div>
-                    <n-button
-                      type="primary"
-                      size="large"
-                      :loading="isLoading"
-                      :disabled="isLoading || !selectedFile"
-                      @click="handleImportIam"
-                    >
-                      <template #icon>
-                        <Icon name="ri:upload-2-line" />
-                      </template>
-                      {{ isLoading ? t('Importing...') : t('Import Now') }}
-                    </n-button>
+                    <AppButton variant="ghost" size="sm" class="text-destructive" @click="clearSelectedFile">
+                      <Icon name="ri:close-line" class="size-4" />
+                    </AppButton>
                   </div>
                 </div>
+
+                <div class="flex flex-col gap-2 rounded-lg border border-border/60 p-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h3 class="text-sm font-semibold">{{ t('Import IAM Configuration') }}</h3>
+                    <p class="text-xs text-muted-foreground">
+                      {{
+                        selectedFile
+                          ? t('Ready to import: {filename}', { filename: selectedFile.name })
+                          : t('Please select a ZIP file to import')
+                      }}
+                    </p>
+                  </div>
+                  <AppButton
+                    variant="primary"
+                    size="lg"
+                    :loading="isLoading"
+                    :disabled="isLoading || !selectedFile"
+                    @click="handleImportIam"
+                  >
+                    <Icon name="ri:upload-2-line" class="size-4" />
+                    <span>{{ isLoading ? t('Importing...') : t('Import Now') }}</span>
+                  </AppButton>
+                </div>
               </div>
-            </n-card>
+            </AppCard>
           </div>
-        </n-tab-pane>
-
-        <!-- 预留其他功能的标签页 -->
-        <!-- <n-tab-pane name="bucket" :tab="t('Bucket')">
-          <div class="text-center py-12">
-            <Icon name="ri:box-3-line" size="48" depth="3" class="mx-auto mb-4 text-gray-400" />
-            <h3 class="text-lg font-medium text-gray-600 mb-2">{{ t('Coming soon...') }}</h3>
-            <p class="text-gray-500">{{ t('Bucket import/export features will be available soon.') }}</p>
-          </div>
-        </n-tab-pane>
-
-        <n-tab-pane name="logs" :tab="t('Logs')">
-          <div class="text-center py-12">
-            <Icon name="ri:file-text-line" size="48" depth="3" class="mx-auto mb-4 text-gray-400" />
-            <h3 class="text-lg font-medium text-gray-600 mb-2">{{ t('Coming soon...') }}</h3>
-            <p class="text-gray-500">{{ t('Logs import/export features will be available soon.') }}</p>
-          </div>
-        </n-tab-pane> -->
-      </n-tabs>
+        </template>
+      </AppTabs>
     </page-content>
   </div>
 </template>
 
-<script setup>
-import { Icon } from '#components';
-import { useI18n } from 'vue-i18n';
+<script setup lang="ts">
+import { Icon } from '#components'
+import { AppButton, AppCard, AppTabs, AppUploadZone } from '@/components/app'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
+const { t } = useI18n()
+const message = useMessage()
 
-// SEO设置
 definePageMeta({
   title: 'Import/Export',
-});
+})
 
-// 使用导入导出功能composable
-const { isLoading, exportIamConfig, importIamConfig } = useImportExport();
+const { isLoading, exportIamConfig, importIamConfig } = useImportExport()
 
-// 文件上传相关状态
-const uploadRef = ref();
-const fileList = ref([]);
-const selectedFile = ref(null);
+const activeTab = ref('iam')
+const tabs = computed(() => [{ key: 'iam', label: t('IAM') }])
 
-/**
- * 处理IAM导出
- */
+const selectedFile = ref<File | null>(null)
+const uploadError = ref('')
+
+const MAX_SIZE = 10 * 1024 * 1024
+
+const clearSelectedFile = () => {
+  selectedFile.value = null
+  uploadError.value = ''
+}
+
+const validateFile = (file: File | null) => {
+  if (!file) return false
+  if (!file.name.toLowerCase().endsWith('.zip')) {
+    uploadError.value = t('Only ZIP files are supported, and file size should not exceed 10MB')
+    return false
+  }
+  if (file.size > MAX_SIZE) {
+    uploadError.value = t('File size exceeds limit (10MB)')
+    return false
+  }
+  uploadError.value = ''
+  return true
+}
+
+const handleFileSelect = (file: File | null) => {
+  if (!file) {
+    clearSelectedFile()
+    return
+  }
+  if (validateFile(file)) {
+    selectedFile.value = file
+  } else {
+    selectedFile.value = null
+  }
+}
+
 const handleExportIam = async () => {
   try {
-    await exportIamConfig();
+    await exportIamConfig()
   } catch (error) {
-    // 错误已在composable中处理
-    console.error('Export failed:', error);
+    console.error('Export failed:', error)
   }
-};
+}
 
-/**
- * 处理文件列表变化
- */
-const handleFileListChange = (fileList) => {
-  if (fileList && Array.isArray(fileList)) {
-    fileList.value = fileList;
-    selectedFile.value = fileList.length > 0 ? fileList[0].file : null;
-  }
-};
-
-/**
- * 上传前的文件验证
- */
-const beforeUpload = (data) => {
-  const file = data.file || data;
-
-  // 检查文件类型
-  if (!file.name.toLowerCase().endsWith('.zip')) {
-    return false;
-  }
-
-  // 检查文件大小 (10MB)
-  const fileSize = file.file?.size || file.size || 0;
-  if (fileSize > 10 * 1024 * 1024) {
-    return false;
-  }
-
-  return true;
-};
-
-/**
- * 处理IAM导入
- */
 const handleImportIam = async () => {
-  if (!selectedFile.value) {
-    return;
-  }
-
+  if (!selectedFile.value) return
   try {
-    await importIamConfig(selectedFile.value);
-    // 导入成功后清空文件选择
-    fileList.value = [];
-    selectedFile.value = null;
-    if (uploadRef.value) {
-      uploadRef.value.clear();
-    }
+    await importIamConfig(selectedFile.value)
+    message.success(t('Import Success'))
+    clearSelectedFile()
   } catch (error) {
-    // 错误已在composable中处理
-    console.error('Import failed:', error);
+    console.error('Import failed:', error)
   }
-};
+}
+
+const formatSize = (bytes: number) => {
+  if (bytes < 1024) return `${bytes} B`
+  const units = ['KB', 'MB', 'GB']
+  let size = bytes
+  let unitIndex = -1
+  do {
+    size /= 1024
+    unitIndex++
+  } while (size >= 1024 && unitIndex < units.length - 1)
+  return `${size.toFixed(1)} ${units[unitIndex]}`
+}
 </script>

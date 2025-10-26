@@ -1,59 +1,50 @@
 <template>
-  <div>
-    <n-modal
-      v-model:show="visible"
-      :mask-closable="false"
-      preset="card"
-      :title="user.accessKey"
-      class="max-w-screen-md"
-      :segmented="{
-        content: true,
-        action: true,
-      }"
-    >
-      <n-card>
-        <n-tabs type="card">
-          <n-tab-pane name="groups" :tab="t('Groups')">
-            <users-user-groups :user="user" @search="getUserData(user.accessKey)"></users-user-groups>
-          </n-tab-pane>
-          <n-tab-pane name="policy" :tab="t('Policies')">
-            <users-user-policies :user="user" @search="getUserData(user.accessKey)"></users-user-policies>
-          </n-tab-pane>
-          <n-tab-pane name="accesskey" :tab="t('Account')">
-            <users-user-account
-              :user="user"
-              @search="getUserData(user.accessKey)"
-              @notice="noticeDialog"
-            ></users-user-account>
-          </n-tab-pane>
-          <template #suffix>
-            {{ t('Status') }}
-            <n-switch
-              class="ml-2"
-              checked-value="enabled"
-              unchecked-value="disabled"
-              v-model:value="user.status"
-              :on-update:value="handerUserStatusChange"
-            ></n-switch>
-          </template>
-        </n-tabs>
-        <users-user-notice ref="noticeRef" @search="getUserData(user.accessKey)"></users-user-notice>
-      </n-card>
-    </n-modal>
-  </div>
+  <AppModal v-model="visible" :title="user.accessKey || t('Account')" size="lg" :close-on-backdrop="false">
+    <AppCard padded class="space-y-4">
+      <div class="flex items-center justify-between rounded-md border border-border/60 px-3 py-2">
+        <span class="text-sm text-muted-foreground">{{ t('Status') }}</span>
+        <AppSwitch v-model="statusBoolean" />
+      </div>
+
+      <Tabs v-model="activeTab" class="flex flex-col gap-4">
+        <TabsList class="w-full justify-start overflow-x-auto">
+          <TabsTrigger value="groups">{{ t('Groups') }}</TabsTrigger>
+          <TabsTrigger value="policy">{{ t('Policies') }}</TabsTrigger>
+          <TabsTrigger value="account">{{ t('Account') }}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="groups" class="mt-0">
+          <users-user-groups :user="user" @search="refreshUser" />
+        </TabsContent>
+        <TabsContent value="policy" class="mt-0">
+          <users-user-policies :user="user" @search="refreshUser" />
+        </TabsContent>
+        <TabsContent value="account" class="mt-0">
+          <users-user-account :user="user" @search="refreshUser" @notice="noticeDialog" />
+        </TabsContent>
+      </Tabs>
+
+      <users-user-notice ref="noticeRef" @search="refreshUser" />
+    </AppCard>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+import { AppCard, AppModal, AppSwitch } from '@/components/app'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
-const visible = ref(false);
-const { getUser, updateUser, changeUserStatus } = useUsers();
+const { t } = useI18n()
+const visible = ref(false)
+const activeTab = ref('groups')
+const { getUser, changeUserStatus } = useUsers()
+
 interface UserInfo {
-  accessKey: string;
-  memberOf: string[];
-  policy: string[];
-  status: string;
+  accessKey: string
+  memberOf: string[]
+  policy: string[]
+  status: string
 }
 
 const user = ref<UserInfo>({
@@ -61,39 +52,51 @@ const user = ref<UserInfo>({
   memberOf: [],
   policy: [],
   status: 'enabled',
-});
+})
 
-// 用户的状态发生变化
-const handerUserStatusChange = async (val: string) => {
-  await changeUserStatus(user.value.accessKey, {
+const statusBoolean = computed({
+  get: () => user.value.status === 'enabled',
+  set: async value => {
+    const nextStatus = value ? 'enabled' : 'disabled'
+    if (user.value.accessKey) {
+      await changeUserStatus(user.value.accessKey, {
+        accessKey: user.value.accessKey,
+        status: nextStatus,
+      })
+      await refreshUser()
+    }
+  },
+})
+
+const refreshUser = async () => {
+  if (!user.value.accessKey) return
+  const latest = await getUser(user.value.accessKey)
+  user.value = {
     accessKey: user.value.accessKey,
-    status: val,
-  });
-  await getUserData(user.value.accessKey);
-};
-async function openDialog(row: any) {
-  user.value = row;
-  console.log('🚀 ~ openDialog ~ row:', row);
-  await getUserData(row.accessKey);
-  visible.value = true;
+    memberOf: latest.memberOf ?? [],
+    policy: latest.policy ?? [],
+    status: latest.status ?? 'enabled',
+  }
 }
 
-// 获取用户信息
-async function getUserData(name: string) {
-  setTimeout(async () => {
-    user.value = await getUser(name);
-    user.value.accessKey = name;
-  }, 200);
+const noticeRef = ref()
+const noticeDialog = (data: any) => {
+  noticeRef.value?.openDialog(data)
 }
-// 添加之后的反馈弹窗
-const noticeRef = ref();
-function noticeDialog(data: any) {
-  noticeRef.value.openDialog(data);
+
+async function openDialog(row: any) {
+  user.value = {
+    accessKey: row.accessKey,
+    memberOf: row.memberOf ?? [],
+    policy: row.policy ?? [],
+    status: row.status ?? 'enabled',
+  }
+  activeTab.value = 'groups'
+  visible.value = true
+  await refreshUser()
 }
 
 defineExpose({
   openDialog,
-});
+})
 </script>
-
-<style lang="scss" scoped></style>

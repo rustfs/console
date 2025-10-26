@@ -17,5 +17,6 @@
   - [x] Migrate Event Destinations list and creation modal to shared ShadCN wrappers.
   - [x] Migrate Lifecycle management (list + creation modal) onto shared ShadCN components.
   - [x] Migrate Replication management (list + creation modal) onto shared ShadCN components.
+  - [x] Migrate Tier management (list + modals) onto shared ShadCN components.
 - [ ] Migrate feature-specific views to consume the new shared components, auditing for leftover Naive UI imports and styles.
 - [ ] Remove Naive UI dependencies and configuration, ensuring ESLint/Vitest/build succeed.

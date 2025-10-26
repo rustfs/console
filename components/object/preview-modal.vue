@@ -1,264 +1,64 @@
 <template>
-  <n-modal :show="show" @update:show="(val: boolean) => $emit('update:show', val)" size="huge">
-    <n-card class="max-w-screen-md">
-      <template #header>
-        <div class="flex items-center justify-between gap-4 truncate">
-          <div>
-            {{ t('Preview Content') }} <small class="text-gray-300">{{ objectKey }}</small>
-          </div>
-          <n-button type="default" size="small" ghost @click="closeModal">
-            <Icon name="ri:close-line" class="mr-2" />
-            <span>{{ t('Close') }}</span>
-          </n-button>
-        </div>
-      </template>
-      <n-spin v-if="loading" size="large"></n-spin>
-      <div
-        v-else
-        class="min-h-64 max-h-[80vh] overflow-y-auto flex-1 flex flex-col items-center"
-        :class="{ 'justify-center': !canPreview }"
-      >
-        <template v-if="canPreview">
-          <img v-if="isImage" :src="previewUrl" alt="preview" />
-          <iframe v-else-if="isPdf" :src="previewUrl" class="w-full min-h-[70vh]" frameborder="0"></iframe>
-          <pre v-else-if="isText" class="w-full selea">{{ fileContent }}</pre>
-          <video v-else-if="isVideo" controls class="w-full">
-            <source :src="previewUrl" type="video/mp4" />
-            {{ t('Your browser does not support the video tag') }}
-          </video>
-          <audio v-else-if="isAudio" controls class="w-full">
-            <source :src="previewUrl" type="audio/mpeg" />
-            {{ t('Your browser does not support the audio tag') }}
-          </audio>
-        </template>
-        <div v-else class="text-center text-gray-500 min-h-full">
-          {{ t('Cannot Preview', { contentType: contentType }) }}
-        </div>
+  <AppModal v-model="visibleProxy" :title="t('Preview')" size="xl" :close-on-backdrop="false">
+    <div class="flex flex-col gap-4">
+      <div class="flex items-center justify-end gap-2">
+        <AppButton variant="outline" size="sm" @click="closeModal">
+          <Icon name="ri:close-line" class="size-4" />
+          {{ t('Close') }}
+        </AppButton>
       </div>
-    </n-card>
-  </n-modal>
+      <div class="min-h-[300px] rounded-md border border-border/60 p-4">
+        <AppSpinner v-if="loading" class="mx-auto size-8" />
+        <div v-else v-html="content" class="prose dark:prose-invert max-w-none" />
+      </div>
+    </div>
+  </AppModal>
 </template>
 
 <script setup lang="ts">
-import { useMessage } from 'naive-ui';
-import { computed, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { AppButton, AppModal, AppSpinner } from '@/components/app'
+import { Icon } from '#components'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
+const { t } = useI18n()
+
 const props = defineProps<{
-  show: boolean;
-  bucketName: string;
-  objectKey: string;
-  versionId?: string | null;
-}>();
+  show: boolean
+  object: any
+}>()
 
-const emit = defineEmits(['update:show']);
-const { getSignedUrl, headObject } = useObject({ bucket: props.bucketName });
+const emit = defineEmits<{
+  (e: 'update:show', value: boolean): void
+}>()
 
-// 内部状态
-const previewUrl = ref<string | undefined>(undefined);
-const contentType = ref<string | undefined>(undefined);
-const fileContent = ref<string | undefined>(undefined);
-const loading = ref<boolean>(false);
+const visibleProxy = computed({
+  get: () => props.show,
+  set: value => emit('update:show', value),
+})
 
-const message = useMessage();
+const loading = ref(false)
+const content = ref('')
 
-// 文件类型配置
-const fileTypeConfig = {
-  text: {
-    mimes: [
-      'application/json',
-      'application/xml',
-      'application/javascript',
-      'application/x-sh',
-      'application/x-csh',
-      'application/x-python',
-      'application/x-php',
-      'application/x-perl',
-      'application/x-shellscript',
-      'application/x-ruby',
-      'application/x-java',
-      'application/x-cpp',
-    ],
-    extensions: [
-      '.txt',
-      '.json',
-      '.xml',
-      '.js',
-      '.sh',
-      '.csh',
-      '.py',
-      '.php',
-      '.pl',
-      '.sh',
-      '.rb',
-      '.java',
-      '.cpp',
-      '.h',
-      '.hpp',
-      '.c',
-      '.cc',
-      '.hh',
-      '.hxx',
-      '.cxx',
-      '.java',
-      '.kt',
-      '.scala',
-      '.groovy',
-      '.rs',
-      '.go',
-      '.dart',
-      '.swift',
-      '.m',
-      '.mm',
-      '.cs',
-      '.ts',
-      '.jsx',
-      '.tsx',
-      '.html',
-      '.htm',
-      '.css',
-      '.scss',
-      '.sass',
-      '.less',
-      '.styl',
-      '.yaml',
-      '.yml',
-      '.toml',
-      '.ini',
-      '.cfg',
-      '.conf',
-      '.properties',
-      '.md',
-      '.markdown',
-      '.rst',
-      '.r',
-    ],
-  },
-  image: {
-    extensions: ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.svg'],
-  },
-  audio: {
-    extensions: ['.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma'],
-  },
-  pdf: {
-    extensions: ['.pdf'],
-  },
-};
-
-// 文件类型判断函数
-function isFileType(contentType: string | undefined, fileName: string, type: keyof typeof fileTypeConfig): boolean {
-  if (type === 'text') {
-    return (
-      contentType?.startsWith('text/') ||
-      fileTypeConfig.text.mimes.some(mime => contentType?.includes(mime)) ||
-      fileTypeConfig.text.extensions.some(ext => fileName.endsWith(ext))
-    );
-  }
-
-  if (type === 'image') {
-    return contentType?.startsWith('image/') || fileTypeConfig.image.extensions.some(ext => fileName.endsWith(ext));
-  }
-
-  if (type === 'audio') {
-    return contentType?.startsWith('audio/') || fileTypeConfig.audio.extensions.some(ext => fileName.endsWith(ext));
-  }
-
-  if (type === 'pdf') {
-    return contentType === 'application/pdf' || fileTypeConfig.pdf.extensions.some(ext => fileName.endsWith(ext));
-  }
-
-  return false;
-}
-
-// 使用新的判断函数
-const isImage = computed(() => isFileType(contentType.value, props.objectKey, 'image'));
-const isVideo = computed(() => contentType.value?.startsWith('video/') || false);
-const isAudio = computed(() => isFileType(contentType.value, props.objectKey, 'audio'));
-const isPdf = computed(() => isFileType(contentType.value, props.objectKey, 'pdf'));
-const isText = computed(() => isFileType(contentType.value, props.objectKey, 'text'));
-
-const canPreview = computed(() => isImage.value || isPdf.value || isText.value || isVideo.value || isAudio.value);
-
-// 当 show 为 true 时触发加载逻辑
 watch(
   () => props.show,
-  async newVal => {
-    if (newVal) {
-      await loadPreview();
-    } else {
-      resetState();
-    }
+  value => {
+    if (value) fetchContent()
   }
-);
+)
 
-async function loadPreview() {
-  loading.value = true;
-  previewUrl.value = undefined;
-  fileContent.value = undefined;
-  contentType.value = undefined;
-
+const fetchContent = async () => {
+  if (!props.object) return
+  loading.value = true
   try {
-    // 获取预签名URL，支持 versionId
-    let url: string;
-    if (props.versionId) {
-      const $client = useNuxtApp().$s3Client;
-      const command = new GetObjectCommand({
-        Bucket: props.bucketName,
-        Key: props.objectKey,
-        VersionId: props.versionId,
-      });
-      url = await _getSignedUrl($client, command, { expiresIn: 3600 });
-    } else {
-      url = await getSignedUrl(props.objectKey);
-    }
-    previewUrl.value = url;
-
-    // 先使用 HEAD 请求获取 Content-Type，支持 versionId
-    let response: any;
-    if (props.versionId) {
-      const $client = useNuxtApp().$s3Client;
-      response = await $client.send(
-        new HeadObjectCommand({
-          Bucket: props.bucketName,
-          Key: props.objectKey,
-          VersionId: props.versionId,
-        })
-      );
-    } else {
-      response = await headObject(props.objectKey);
-    }
-    const ctype = response?.ContentType;
-    contentType.value = ctype || 'application/octet-stream';
-
-    // 根据 MIME 类型决定是否加载内容
-    if (isText.value) {
-      // 加载文本内容
-      const response = await fetch(url);
-      const text = await response.text();
-      fileContent.value = text;
-    }
-  } catch (err) {
-    console.error(err);
-    message.error(t('Preview Failed'));
-    closeModal();
+    const response = await fetch(props.object.SignedUrl)
+    content.value = await response.text()
+  } catch (error) {
+    content.value = t('Preview unavailable')
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-function resetState() {
-  previewUrl.value = undefined;
-  fileContent.value = undefined;
-  contentType.value = undefined;
-  loading.value = false;
-}
-
-function closeModal() {
-  emit('update:show', false);
-}
-
-const objectKey = computed(() => props.objectKey);
+const closeModal = () => emit('update:show', false)
 </script>

@@ -1,445 +1,334 @@
 <template>
-  <div>
-    <n-card>
-      <n-form ref="formRef" :model="searchForm" label-placement="left" :show-feedback="false" v-if="!editStatus">
-        <n-flex justify="space-between">
-          <n-form-item class="!w-64" label="" path="name">
-            <n-input :placeholder="t('Search Account')" @input="filterName" />
-          </n-form-item>
+  <div class="space-y-4">
+    <template v-if="!editStatus">
+      <AppCard padded class="space-y-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="w-full sm:max-w-xs">
+            <AppInput v-model="searchTerm" :placeholder="t('Search Account')" />
+          </div>
+          <AppButton variant="secondary" class="inline-flex items-center gap-2" @click="addItem">
+            <Icon class="size-4" name="ri:add-line" />
+            {{ t('Add Account') }}
+          </AppButton>
+        </div>
 
-          <n-space>
-            <NFlex>
-              <!-- <NButton secondary @click="deleteByList" :disabled="checkedKeys.length == 0">
-                <template #icon>
-                  <Icon name="ri:delete-bin-5-line"></Icon>
-                </template>
-                删除所选
-              </NButton> -->
-              <NButton secondary @click="addItem">
-                <template #icon>
-                  <Icon name="ri:add-line"></Icon>
-                </template>
-                {{ t('Add Account') }}
-              </NButton>
-            </NFlex>
-          </n-space>
-        </n-flex>
-      </n-form>
-      <n-form
-        ref="subFormRef"
-        v-if="editStatus && editType == 'add'"
-        label-placement="left"
-        :model="formModel"
-        :rules="rules"
-        label-align="right"
-        :label-width="130"
-      >
-        <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item :span="24" :label="t('Access Key')" path="accessKey">
-            <n-input v-model:value="formModel.accessKey" />
-          </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" :label="t('Secret Key')" path="secretKey">
-            <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
-          </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" :label="t('Expiration')" path="expiry">
-            <n-date-picker
-              class="!w-full"
-              v-model:value="formModel.expiry"
-              :is-date-disabled="dateDisabled"
-              value-format="yyyy-MM-ddTkk:mm:SSS"
-              type="datetime"
-              clearable
-            />
-          </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" :label="t('Name')" path="name">
-            <n-input v-model:value="formModel.name" />
-          </n-form-item-grid-item>
-          <!-- <n-form-item-grid-item :span="24" label="描述" path="comment" v-if="editType == 'add'">
-            <n-input v-model:value="formModel.comment" />
-          </n-form-item-grid-item> -->
-          <n-form-item-grid-item :span="24" :label="t('Description')" path="description">
-            <n-input v-model:value="formModel.description" />
-          </n-form-item-grid-item>
-          <n-form-item-gi :span="24" :label="t('Use main account policy')" path="impliedPolicy">
-            <n-switch v-model:value="formModel.impliedPolicy" />
-          </n-form-item-gi>
-          <n-form-item-gi v-if="!formModel.impliedPolicy" :span="24" :label="t('Current User Policy')" path="policy">
-            <json-editor v-model="formModel.policy" />
-          </n-form-item-gi>
-          <!-- <n-form-item-grid-item :span="24" label="状态" v-if="editType == 'edit'" path="accountStatus">
-            <n-switch v-model:value="formModel.accountStatus" checked-value="on" unchecked-value="off" />
-          </n-form-item-grid-item> -->
-        </n-grid>
-        <n-space>
-          <NFlex justify="center">
-            <NButton secondary @click="cancelAdd">{{ t('Cancel') }}</NButton>
-            <NButton secondary @click="submitForm">{{ t('Submit') }}</NButton>
-          </NFlex>
-        </n-space>
-      </n-form>
-    </n-card>
-    <n-data-table
-      v-if="!editStatus"
-      class="my-4"
-      ref="tableRef"
-      :columns="columns"
-      :data="listData"
-      :row-key="rowKey"
-      @update:checked-row-keys="handleCheck"
-      :pagination="false"
-      :bordered="false"
-    />
-    <!-- 引入account-edit -->
+        <Table class="overflow-hidden rounded-lg border">
+          <TableHeader>
+            <TableRow>
+              <TableHead class="text-center">{{ t('Access Key') }}</TableHead>
+              <TableHead class="text-center">{{ t('Expiration') }}</TableHead>
+              <TableHead class="text-center">{{ t('Status') }}</TableHead>
+              <TableHead class="text-center">{{ t('Name') }}</TableHead>
+              <TableHead class="w-32 text-center">{{ t('Actions') }}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody v-if="filteredAccounts.length">
+            <TableRow v-for="account in filteredAccounts" :key="account.accessKey">
+              <TableCell class="text-center font-medium">{{ account.accessKey }}</TableCell>
+              <TableCell class="text-center">{{ formatExpiration(account.expiration) }}</TableCell>
+              <TableCell class="text-center">
+                <span class="text-sm">
+                  {{ account.accountStatus === 'on' ? t('Available') : t('Disabled') }}
+                </span>
+              </TableCell>
+              <TableCell class="text-center">{{ account.name || '-' }}</TableCell>
+              <TableCell>
+                <div class="flex justify-center gap-2">
+                  <AppButton variant="ghost" size="sm" class="h-8 w-8 p-0" @click="openEditItem(account)">
+                    <Icon class="size-4" name="ri:edit-2-line" />
+                  </AppButton>
+                  <AppButton
+                    variant="ghost"
+                    size="sm"
+                    class="h-8 w-8 p-0 text-destructive"
+                    @click="confirmDelete(account)"
+                  >
+                    <Icon class="size-4" name="ri:delete-bin-5-line" />
+                  </AppButton>
+                </div>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+          <TableBody v-else>
+            <TableRow>
+              <TableCell class="text-center" colspan="5">
+                <p class="py-6 text-sm text-muted-foreground">{{ t('No Data') }}</p>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </AppCard>
+    </template>
+
+    <template v-else-if="editType === 'add'">
+      <AppCard padded class="space-y-4">
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="space-y-2">
+            <Label>{{ t('Access Key') }}</Label>
+            <AppInput v-model="formModel.accessKey" autocomplete="off" />
+          </div>
+          <div class="space-y-2">
+            <Label>{{ t('Secret Key') }}</Label>
+            <AppInput v-model="formModel.secretKey" type="password" autocomplete="off" />
+          </div>
+          <div class="space-y-2">
+            <Label>{{ t('Expiration') }}</Label>
+            <AppDateTimePicker v-model="formModel.expiry" :min="minExpiry" :placeholder="t('Please select expiration date')" />
+          </div>
+          <div class="space-y-2">
+            <Label>{{ t('Name') }}</Label>
+            <AppInput v-model="formModel.name" autocomplete="off" />
+          </div>
+          <div class="space-y-2 md:col-span-2">
+            <Label>{{ t('Description') }}</Label>
+            <AppTextarea v-model="formModel.description" :rows="3" />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center justify-between rounded-md border border-border/60 px-3 py-2">
+            <div>
+              <p class="text-sm font-medium">{{ t('Use main account policy') }}</p>
+              <p class="text-xs text-muted-foreground">
+                {{ t('Automatically inherit the main account policy when enabled.') }}
+              </p>
+            </div>
+            <AppSwitch v-model="formModel.impliedPolicy" />
+          </div>
+        </div>
+
+        <div v-if="!formModel.impliedPolicy" class="space-y-2">
+          <Label>{{ t('Current User Policy') }}</Label>
+          <json-editor v-model="formModel.policy" />
+        </div>
+
+        <div class="flex justify-end gap-2">
+          <AppButton variant="outline" @click="cancelAdd">{{ t('Cancel') }}</AppButton>
+          <AppButton variant="primary" :loading="submitting" @click="submitForm">{{ t('Submit') }}</AppButton>
+        </div>
+      </AppCard>
+    </template>
+
     <users-user-acedit
       v-if="editStatus && editType === 'edit'"
       :user="editData"
-      @search="cancelAdd"
-    ></users-user-acedit>
+      @search="handleEditFinished"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  type DataTableColumns,
-  type DataTableInst,
-  type DataTableRowKey,
-  type FormItemRule,
-  type FormInst,
-  NButton,
-  NPopconfirm,
-  NSpace,
-} from 'naive-ui';
-import { Icon } from '#components';
-import { useI18n } from 'vue-i18n';
-// 随机字符串函数
-import { makeRandomString } from '~/utils/functions';
-const { t } = useI18n();
-const { listUserServiceAccounts, createServiceAccount } = useAccessKeys();
-const { $api } = useNuxtApp();
+import { Icon } from '#components'
+import { AppButton, AppCard, AppDateTimePicker, AppInput, AppSwitch, AppTextarea } from '@/components/app'
+import { Label } from '@/components/ui/label'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import dayjs from 'dayjs'
+import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { makeRandomString } from '~/utils/functions'
+import { useDialog, useMessage } from '~/composables/ui'
 
-const {
-  getServiceAccount,
-  updateServiceAccount,
-  deleteServiceAccount,
-  // deleteMultipleServiceAccounts
-} = useAccessKeys();
+const { t } = useI18n()
+const message = useMessage()
+const dialog = useDialog()
+const { listUserServiceAccounts, createServiceAccount, getServiceAccount, deleteServiceAccount } = useAccessKeys()
+const { getPolicyByUserName } = usePolicies()
 
-const { getPolicyByUserName } = usePolicies();
-// 验证
-const rules = ref({
-  accessKey: {
-    required: true,
-    trigger: ['blur', 'input'],
-    validator(rule: FormItemRule, value: string) {
-      if (!value) {
-        return new Error(t('Please enter Access Key'));
-      }
-      if (value.length < 3 || value.length > 20) {
-        return new Error(t('Access Key length must be between 3 and 20 characters'));
-      }
-      return true;
-    },
-  },
-  secretKey: {
-    required: true,
-    trigger: ['blur', 'input'],
-    validator(rule: FormItemRule, value: string) {
-      if (!value) {
-        return new Error(t('Please enter Secret Key'));
-      }
-      if (value.length < 8 || value.length > 40) {
-        return new Error(t('Secret Key length must be between 8 and 40 characters'));
-      }
-      return true;
-    },
-  },
-  expiry: {
-    required: true,
-    trigger: ['blur', 'change'],
-    validator(rule: FormItemRule, value: string) {
-      if (!value) {
-        return new Error(t('Please select expiration date'));
-      }
-      return true;
-    },
-  },
-});
-const dialog = useDialog();
-const message = useMessage();
-const props = defineProps({
+const props = defineProps<{
   user: {
-    type: Object,
-    required: true,
-  },
-});
+    accessKey: string
+  }
+}>()
 
-const searchForm = reactive({
-  name: '',
-});
-interface RowData {
-  accessKey: string;
-  expiration: string;
-  name: string;
-  description: string;
-  accountStatus: string;
-  actions: string;
-}
-const columns: DataTableColumns<RowData> = [
-  {
-    type: 'selection',
-  },
-  {
-    title: t('Access Key'),
-    align: 'center',
-    key: 'accessKey',
-    filter(value, row) {
-      return !!row.accessKey.includes(value.toString());
-    },
-  },
-  {
-    title: t('Expiration'),
-    align: 'center',
-    key: 'expiration',
-  },
-  {
-    title: t('Status'),
-    align: 'center',
-    key: 'accountStatus',
-    render: (row: any) => {
-      return row.accountStatus === 'on' ? t('Available') : t('Disabled');
-    },
-  },
-  {
-    title: t('Name'),
-    align: 'center',
-    key: 'name',
-  },
-  // {
-  //   title: "描述",
-  //   align: "center",
-  //   key: "description",
-  // },
-  {
-    title: t('Actions'),
-    key: 'actions',
-    align: 'center',
-    width: 125,
-    render: (row: any) => {
-      return h(
-        NSpace,
-        {
-          justify: 'center',
-        },
-        {
-          default: () => [
-            h(
-              NButton,
-              {
-                size: 'small',
-                secondary: true,
-                onClick: () => openEditItem(row),
-              },
-              {
-                default: () => '',
-                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
-              }
-            ),
-            h(
-              NPopconfirm,
-              { onPositiveClick: () => deleteItem(row) },
-              {
-                default: () => t('Confirm Delete'),
-                trigger: () =>
-                  h(
-                    NButton,
-                    { size: 'small', secondary: true },
-                    {
-                      default: () => '',
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
-                    }
-                  ),
-              }
-            ),
-          ],
-        }
-      );
-    },
-  },
-];
+const emit = defineEmits<{
+  (e: 'search'): void
+  (e: 'notice', data: object): void
+}>()
 
-// 搜索过滤
-const tableRef = ref<DataTableInst>();
-function filterName(value: string) {
-  tableRef.value &&
-    tableRef.value.filter({
-      name: [value],
-    });
-}
-const listData = ref([]);
-const getUserList = async () => {
-  const res = await listUserServiceAccounts({ user: props.user.accessKey });
-  listData.value = res.accounts;
-  console.log('🚀 ~ getUserList ~ listData.value:', listData.value);
-};
-getUserList();
-
-/** ***********************************编辑、新增 */
-const editStatus = ref(false);
-const editType = ref('add');
-
-const formModel = ref({
+const searchTerm = ref('')
+const listData = ref<any[]>([])
+const editStatus = ref(false)
+const editType = ref<'add' | 'edit'>('add')
+const submitting = ref(false)
+const formModel = reactive({
   accessKey: makeRandomString(20),
   secretKey: makeRandomString(40),
   name: '',
   description: '',
   impliedPolicy: true,
-  expiry: null,
+  expiry: null as string | null,
   policy: '',
   accountStatus: 'on',
-});
+})
 
-const parentPolicy = ref('');
-// 默认策略原文
-const getPolicie = async () => {
-  parentPolicy.value = JSON.stringify(await getPolicyByUserName(props.user.accessKey));
-};
-getPolicie();
+const editData = ref<any>({})
+const parentPolicy = ref('')
 
-// 新增
-function addItem() {
-  editType.value = 'add';
-  editStatus.value = true;
-  formModel.value = {
-    accessKey: makeRandomString(20),
-    secretKey: makeRandomString(40),
-    name: '',
-    description: '',
-    impliedPolicy: true,
-    expiry: null,
-    accountStatus: 'on',
-    policy: parentPolicy.value,
-  };
-}
-// 编辑
-const editData = ref({});
-async function openEditItem(row: any) {
-  editType.value = 'edit';
-  editStatus.value = true;
-  const res = await getServiceAccount(row.accessKey);
-  editData.value = { ...res, accessKey: row.accessKey };
+const minExpiry = computed(() => new Date().toISOString())
+
+const filteredAccounts = computed(() => {
+  const keyword = searchTerm.value.trim().toLowerCase()
+  if (!keyword) return listData.value
+  return listData.value.filter((item: any) => item.accessKey.toLowerCase().includes(keyword))
+})
+
+const formatExpiration = (value?: string) => {
+  if (!value) return '-'
+  const date = dayjs(value)
+  if (!date.isValid()) return '-'
+  return date.format('YYYY-MM-DD HH:mm')
 }
 
-function cancelAdd() {
-  editStatus.value = false;
-  editType.value === 'add';
-  formModel.value = {
-    accessKey: makeRandomString(20),
-    secretKey: makeRandomString(40),
-    name: '',
-    description: '',
-    impliedPolicy: true,
-    expiry: null,
-    policy: '',
-    accountStatus: 'on',
-  };
-  getUserList();
+const resetForm = () => {
+  formModel.accessKey = makeRandomString(20)
+  formModel.secretKey = makeRandomString(40)
+  formModel.name = ''
+  formModel.description = ''
+  formModel.impliedPolicy = true
+  formModel.expiry = null
+  formModel.policy = parentPolicy.value
+  formModel.accountStatus = 'on'
 }
 
-interface Emits {
-  (e: 'search'): void;
-  (e: 'notice', data: object): void;
+const loadAccounts = async () => {
+  if (!props.user?.accessKey) return
+  const res = await listUserServiceAccounts({ user: props.user.accessKey })
+  listData.value = res?.accounts ?? []
 }
-const emit = defineEmits<Emits>();
-const subFormRef = ref<FormInst | null>(null);
-async function submitForm() {
-  if (editType.value === 'add') {
-    subFormRef.value?.validate(async errors => {
-      if (!errors) {
-        try {
-          const res = await createServiceAccount({
-            ...formModel.value,
-            targetUser: props.user.accessKey,
-            policy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
-            expiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
-          });
 
-          message.success(t('Add Success'));
-          cancelAdd();
-          emit('notice', res);
-          getUserList();
-        } catch (error) {
-          console.log(error);
-          message.error(t('Add Failed'));
-        }
-      } else {
-        console.log(errors);
-        message.error(t('Please fill in the correct format'));
-      }
-    });
-  } else {
-    try {
-      const res = await updateServiceAccount(formModel.value.secretKey, {
-        ...formModel.value,
-        policy: formModel.value.policy || '{}',
-        expiry: new Date(formModel.value.expiry || 0).toISOString(),
-      });
-      message.success(t('Edit Success'));
-      cancelAdd();
-      getUserList();
-    } catch (error) {
-      message.error(t('Edit Failed'));
+const loadParentPolicy = async () => {
+  if (!props.user?.accessKey) return
+  const policy = await getPolicyByUserName(props.user.accessKey)
+  parentPolicy.value = JSON.stringify(policy ?? {})
+  if (formModel.impliedPolicy) {
+    formModel.policy = parentPolicy.value
+  }
+}
+
+watch(
+  () => props.user.accessKey,
+  () => {
+    loadAccounts()
+    loadParentPolicy()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => formModel.impliedPolicy,
+  implied => {
+    if (implied) {
+      formModel.policy = parentPolicy.value
     }
   }
+)
+
+const addItem = () => {
+  editType.value = 'add'
+  editStatus.value = true
+  resetForm()
 }
-function dateDisabled(ts: number) {
-  const date = new Date(ts);
-  return date < new Date();
+
+const openEditItem = async (row: any) => {
+  editType.value = 'edit'
+  editStatus.value = true
+  const res = await getServiceAccount(row.accessKey)
+  editData.value = { ...res, accessKey: row.accessKey }
 }
-/** ***********************************删除 */
-async function deleteItem(row: any) {
+
+const cancelAdd = () => {
+  editStatus.value = false
+  submitting.value = false
+  resetForm()
+  loadAccounts()
+}
+
+const handleEditFinished = () => {
+  editStatus.value = false
+  loadAccounts()
+  emit('search')
+}
+
+const validateForm = () => {
+  if (!formModel.accessKey.trim()) {
+    message.error(t('Please enter Access Key'))
+    return false
+  }
+  if (formModel.accessKey.length < 3 || formModel.accessKey.length > 20) {
+    message.error(t('Access Key length must be between 3 and 20 characters'))
+    return false
+  }
+  if (!formModel.secretKey.trim()) {
+    message.error(t('Please enter Secret Key'))
+    return false
+  }
+  if (formModel.secretKey.length < 8 || formModel.secretKey.length > 40) {
+    message.error(t('Secret Key length must be between 8 and 40 characters'))
+    return false
+  }
+  if (!formModel.expiry) {
+    message.error(t('Please select expiration date'))
+    return false
+  }
+  if (!formModel.impliedPolicy) {
+    try {
+      JSON.parse(formModel.policy || '{}')
+    } catch {
+      message.error(t('Policy format invalid'))
+      return false
+    }
+  }
+  return true
+}
+
+const submitForm = async () => {
+  if (editType.value === 'edit') {
+    // 交由 users-user-acedit 处理
+    return
+  }
+
+  if (!validateForm()) {
+    return
+  }
+
+  submitting.value = true
   try {
-    const res = await deleteServiceAccount(row.accessKey);
-    message.success(t('Delete Success'));
-    getUserList();
+    const payload = {
+      ...formModel,
+      targetUser: props.user.accessKey,
+      policy: formModel.impliedPolicy ? null : JSON.stringify(JSON.parse(formModel.policy || '{}')),
+      expiration: formModel.expiry ? new Date(formModel.expiry).toISOString() : null,
+    }
+    const res = await createServiceAccount(payload)
+    message.success(t('Add Success'))
+  cancelAdd()
+  emit('search')
+  emit('notice', res)
+  loadAccounts()
   } catch (error) {
-    message.error(t('Delete Failed'));
+    console.error(error)
+    message.error(t('Add Failed'))
+    submitting.value = false
   }
 }
 
-/** ************************************批量删除 */
-function rowKey(row: any): string {
-  return row.accessKey;
-}
-
-const checkedKeys = ref<DataTableRowKey[]>([]);
-function handleCheck(keys: DataTableRowKey[]) {
-  checkedKeys.value = keys;
-  return checkedKeys;
-}
-function deleteByList() {
-  dialog.error({
+const confirmDelete = (row: any) => {
+  dialog.warning({
     title: t('Warning'),
-    content: t('Are you sure you want to delete all selected keys?'),
+    content: t('Confirm Delete'),
     positiveText: t('Confirm'),
     negativeText: t('Cancel'),
-    onPositiveClick: async () => {
-      if (!checkedKeys.value.length) {
-        message.error(t('Please select at least one item'));
-        return;
-      }
-      try {
-        // const res = await deleteMultipleServiceAccounts({
-        //   body: checkedKeys.value
-        // })
-        checkedKeys.value = [];
-        getUserList();
-        message.success(t('Delete Success'));
-      } catch (error) {
-        message.error(t('Delete Failed'));
-      }
-    },
-  });
+    onPositiveClick: () => deleteItem(row),
+  })
+}
+
+const deleteItem = async (row: any) => {
+  try {
+    await deleteServiceAccount(row.accessKey)
+    message.success(t('Delete Success'))
+    loadAccounts()
+  } catch (error) {
+    message.error(t('Delete Failed'))
+  }
 }
 </script>
-
-<style lang="scss" scoped></style>

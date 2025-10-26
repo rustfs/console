@@ -12,5 +12,7 @@
   - [x] Rebuild the group members management view (`components/users/group/members.vue`) with ShadCN card, input, table, and multi-select patterns.
   - [x] Rebuild the site replication management page (`pages/site-replication/index.vue`) and creation form (`components/site-replication/new-form.vue`) with ShadCN dialog, card, input, and button primitives.
   - [x] Rebuild the event subscription management page (`pages/events/index.vue`) and creation form (`components/events/new-form.vue`) with ShadCN dialog, table, select, and checkbox primitives.
+  - [x] Migrate Access Keys management (list + modals) to shared ShadCN wrappers and data table.
+  - [x] Migrate IAM Policies list and editor modal to shared ShadCN wrappers.
 - [ ] Migrate feature-specific views to consume the new shared components, auditing for leftover Naive UI imports and styles.
 - [ ] Remove Naive UI dependencies and configuration, ensuring ESLint/Vitest/build succeed.

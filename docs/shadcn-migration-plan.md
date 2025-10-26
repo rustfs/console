@@ -63,8 +63,8 @@ After each page group migrates, commit & push to `refactor/shadcn-vue`.
 
 ## Remaining TODO (2025-10-27)
 
-- [ ] Object task management: `components/object/task-stats.vue`, `components/object/upload/task/item.vue`, `components/object/delete/task/item.vue`, and finish `components/object/upload/picker.vue`.
-- [ ] Bucket dialogs: migrate `components/buckets/new-form.vue` and `components/buckets/info.vue`.
+- [x] Object task management: `components/object/task-stats.vue`, `components/object/upload/task/item.vue`, `components/object/delete/task/item.vue`, and finish `components/object/upload/picker.vue`.
+- [x] Bucket dialogs: migrate `components/buckets/new-form.vue` and `components/buckets/info.vue`.
 - [ ] User management suite: group/user edit & policy components under `components/users/**` (forms, tables, modals).
 - [ ] Performance dashboard: refactor `pages/performance/index.vue` to shadcn primitives.
 - [ ] License center: migrate `pages/license/index.vue` & `pages/license/components/license-article.vue`.

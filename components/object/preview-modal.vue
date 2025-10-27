@@ -2,19 +2,19 @@
   <AppModal v-model="visibleProxy" :title="t('Preview')" size="xl" :close-on-backdrop="false">
     <div class="flex flex-col gap-4">
       <div class="flex items-center justify-end gap-2">
-        <AppButton variant="outline" size="sm" @click="closeModal">
+        <Button variant="outline" size="sm" @click="closeModal">
           <Icon name="ri:close-line" class="size-4" />
           {{ t('Close') }}
-        </AppButton>
+        </Button>
       </div>
-      <div class="min-h-[300px] rounded-md border border-border/60 p-4">
+      <div class="min-h-[300px] rounded-md border p-4">
         <AppSpinner v-if="loading" class="mx-auto size-8" />
         <template v-else>
           <div v-if="isImage" class="flex justify-center">
             <img :src="previewUrl" alt="preview" class="max-h-[60vh]" />
           </div>
           <iframe v-else-if="isPdf" :src="previewUrl" class="h-[70vh] w-full" frameborder="0" />
-          <pre v-else-if="isText" class="max-h-[70vh] overflow-auto whitespace-pre-wrap break-words">{{ textContent }}</pre>
+          <pre v-else-if="isText" class="max-h-[70vh] overflow-auto whitespace-pre-wrap wrap-break-word">{{ textContent }}</pre>
           <video v-else-if="isVideo" controls class="w-full">
             <source :src="previewUrl" :type="contentType" />
             {{ t('Your browser does not support the video tag') }}
@@ -33,7 +33,9 @@
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppModal, AppSpinner } from '@/components/app'
+import { Button } from '@/components/ui/button'
+
+import { AppModal, AppSpinner } from '@/components/app'
 import { Icon } from '#components'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

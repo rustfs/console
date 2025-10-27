@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { Icon } from '#components'
+import LanguageSwitcher from '@/components/language-switcher.vue'
+import ThemeSwitcher from '@/components/theme-switcher.vue'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   Sidebar,
   SidebarContent,
@@ -17,14 +21,10 @@ import {
   SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import LanguageSwitcher from '@/components/language-switcher.vue'
-import ThemeSwitcher from '@/components/theme-switcher.vue'
 import UserDropdown from '@/components/user-dropdown.vue'
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import type { AppConfig, NavItem } from '~/types/app-config'
 
 const appConfig = useAppConfig() as unknown as AppConfig
@@ -80,78 +80,46 @@ const getLabel = (item: NavItem) => t(item.label)
 </script>
 
 <template>
-  <Sidebar collapsible="icon" class="bg-sidebar text-sidebar-foreground">
-    <SidebarHeader class="border-b border-sidebar-border px-4 py-4">
+  <Sidebar collapsible="icon">
+    <SidebarHeader>
       <NuxtLink to="/" class="flex items-center gap-3">
-        <div
-          class="flex size-10 items-center justify-center rounded-lg bg-primary text-lg font-semibold text-primary-foreground"
-        >
-          <span v-if="isCollapsed">{{ brandInitial }}</span>
-          <img v-else src="~/assets/logo.svg" alt="RustFS" class="h-8" />
+        <div v-if="isCollapsed" class="flex size-8 items-center justify-center rounded-lg bg-primary text-md font-semibold text-primary-foreground">
+          <span>{{ brandInitial }}</span>
         </div>
-        <div v-if="!isCollapsed" class="flex min-w-0 flex-col">
-          <span class="truncate text-sm font-semibold leading-tight">{{ appConfig.name }}</span>
-          <span class="truncate text-xs text-muted-foreground">{{ appConfig.description }}</span>
+        <div v-if="!isCollapsed" class="flex min-w-0 flex-col px-3 py-4">
+          <img src="~/assets/logo.svg" alt="RustFS" class="h-6" />
         </div>
       </NuxtLink>
     </SidebarHeader>
 
-    <SidebarContent class="px-2">
+    <SidebarContent>
       <ScrollArea class="flex-1 pr-1">
         <div class="flex flex-col gap-4">
           <SidebarGroup v-for="(group, groupIndex) in navGroups" :key="groupIndex" class="gap-1">
             <SidebarGroupContent>
               <SidebarMenu>
                 <template v-for="item in group" :key="item.label">
-                  <Collapsible
-                    v-if="hasChildren(item)"
-                    as-child
-                    :default-open="isRouteActive(item)"
-                    class="group/collapsible"
-                  >
+                  <Collapsible v-if="hasChildren(item)" as-child :default-open="isRouteActive(item)" class="group/collapsible">
                     <SidebarMenuItem>
                       <CollapsibleTrigger as-child>
-                        <SidebarMenuButton
-                          :is-active="isRouteActive(item)"
-                          :tooltip="getLabel(item)"
-                        >
+                        <SidebarMenuButton :is-active="isRouteActive(item)" :tooltip="getLabel(item)">
                           <Icon v-if="item.icon" :name="item.icon" class="size-4 shrink-0" />
                           <span class="flex-1 truncate">{{ getLabel(item) }}</span>
-                          <Icon
-                            name="ri:arrow-right-s-line"
-                            class="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
-                          />
+                          <Icon name="ri:arrow-right-s-line" class="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
                           <SidebarMenuSubItem v-for="child in item.children" :key="child.label">
-                            <SidebarMenuSubButton
-                              v-if="isExternal(child)"
-                              as-child
-                              size="sm"
-                            >
-                              <a
-                                :href="normalizedTo(child)"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                class="flex w-full items-center gap-2"
-                              >
+                            <SidebarMenuSubButton v-if="isExternal(child)" as-child size="sm">
+                              <a :href="normalizedTo(child)" target="_blank" rel="noopener noreferrer" class="flex w-full items-center gap-2">
                                 <Icon v-if="child.icon" :name="child.icon" class="size-3.5 shrink-0" />
                                 <span class="truncate">{{ getLabel(child) }}</span>
                                 <Icon name="ri:external-link-line" class="ml-auto size-3 text-muted-foreground" />
                               </a>
                             </SidebarMenuSubButton>
-                            <SidebarMenuSubButton
-                              v-else
-                              as-child
-                              size="sm"
-                              :is-active="isRouteActive(child)"
-                            >
-                              <NuxtLink
-                                :to="normalizedTo(child)"
-                                class="flex w-full items-center gap-2"
-                              >
+                            <SidebarMenuSubButton v-else as-child size="sm" :is-active="isRouteActive(child)">
+                              <NuxtLink :to="normalizedTo(child)" class="flex w-full items-center gap-2">
                                 <Icon v-if="child.icon" :name="child.icon" class="size-3.5 shrink-0" />
                                 <span class="truncate">{{ getLabel(child) }}</span>
                               </NuxtLink>
@@ -162,32 +130,15 @@ const getLabel = (item: NavItem) => t(item.label)
                     </SidebarMenuItem>
                   </Collapsible>
                   <SidebarMenuItem v-else>
-                    <SidebarMenuButton
-                      v-if="isExternal(item)"
-                      as-child
-                      :tooltip="getLabel(item)"
-                    >
-                      <a
-                        :href="normalizedTo(item)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="flex w-full items-center gap-3"
-                      >
+                    <SidebarMenuButton v-if="isExternal(item)" as-child :tooltip="getLabel(item)">
+                      <a :href="normalizedTo(item)" target="_blank" rel="noopener noreferrer" class="flex w-full items-center gap-3">
                         <Icon v-if="item.icon" :name="item.icon" class="size-4 shrink-0" />
                         <span class="flex-1 truncate">{{ getLabel(item) }}</span>
                         <Icon name="ri:external-link-line" class="size-3.5 text-muted-foreground" />
                       </a>
                     </SidebarMenuButton>
-                    <SidebarMenuButton
-                      v-else
-                      as-child
-                      :is-active="isRouteActive(item)"
-                      :tooltip="getLabel(item)"
-                    >
-                      <NuxtLink
-                        :to="normalizedTo(item)"
-                        class="flex w-full items-center gap-3"
-                      >
+                    <SidebarMenuButton v-else as-child :is-active="isRouteActive(item)" :tooltip="getLabel(item)">
+                      <NuxtLink :to="normalizedTo(item)" class="flex w-full items-center gap-3">
                         <Icon v-if="item.icon" :name="item.icon" class="size-4 shrink-0" />
                         <span class="flex-1 truncate">{{ getLabel(item) }}</span>
                       </NuxtLink>
@@ -203,7 +154,7 @@ const getLabel = (item: NavItem) => t(item.label)
     </SidebarContent>
 
     <SidebarFooter class="mt-auto flex flex-col gap-3 px-2 pb-2">
-      <div class="border-t border-sidebar-border pt-3">
+      <div class="pt-3">
         <div class="flex flex-col gap-2">
           <LanguageSwitcher />
           <ThemeSwitcher />

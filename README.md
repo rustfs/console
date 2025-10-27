@@ -54,7 +54,7 @@ A modern, responsive web management console for RustFS distributed file system, 
 - **Frontend Framework**: [Vue 3](https://vuejs.org/) with Composition API
 - **Meta Framework**: [Nuxt 3](https://nuxt.com/) for SSR/SPA
 - **Language**: [TypeScript](https://www.typescriptlang.org/) for type safety
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [Naive UI](https://www.naiveui.com/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) + [shadcn-vue](https://www.shadcn-vue.com/)
 - **State Management**: [Pinia](https://pinia.vuejs.org/) for reactive state
 - **HTTP Client**: Custom AWS-compatible client with automatic signing
 - **Build Tool**: [Vite](https://vitejs.dev/) for fast development and building
@@ -204,7 +204,7 @@ Add new languages by:
 
 ### Component Library
 
-Built on Naive UI with custom components in `components/ui/`. Extend the design system by:
+Built on shadcn-vue primitives with custom wrappers in `components/ui/` and `components/app`. Extend the design system by:
 
 - Adding new components to `components/ui/`
 - Following established naming conventions
@@ -341,7 +341,7 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 - [Vue.js](https://vuejs.org/) - The progressive JavaScript framework
 - [Nuxt](https://nuxt.com/) - The intuitive Vue framework
-- [Naive UI](https://www.naiveui.com/) - A Vue 3 component library
+- [shadcn-vue](https://www.shadcn-vue.com/) - Headless, accessible Vue UI components built on Radix
 - [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework
 - [Iconify](https://iconify.design/) - Universal icon framework
 

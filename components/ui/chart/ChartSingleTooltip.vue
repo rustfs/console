@@ -16,7 +16,7 @@ const props = defineProps<{
 
 // Use weakmap to store reference to each datapoint for Tooltip
 const wm = new WeakMap()
-function template(d: any, i: number, elements: (HTMLElement | SVGElement)[]) {
+function template(d: any, i: number, elements: (HTMLElement | SVGElement)[] = []) {
   const valueFormatter = props.valueFormatter ?? ((tick: number) => `${tick}`)
   if (props.index in d) {
     if (wm.has(d)) {
@@ -42,8 +42,12 @@ function template(d: any, i: number, elements: (HTMLElement | SVGElement)[]) {
       return wm.get(data)
     }
     else {
-      const style = getComputedStyle(elements[i])
-      const omittedData = [{ name: data.name, value: valueFormatter(data[props.index]), color: style.fill }]
+      const element = elements[i]
+      if (!element) {
+        return ""
+      }
+      const style = getComputedStyle(element)
+      const omittedData = [{ name: data?.name, value: valueFormatter(data?.[props.index]), color: style.fill }]
       const componentDiv = document.createElement("div")
       const TooltipComponent = props.customTooltip ?? ChartTooltip
       createApp(TooltipComponent, { title: d[props.index], data: omittedData }).mount(componentDiv)

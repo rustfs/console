@@ -14,7 +14,7 @@
             {{ t('Version 2.0, January 2004') }}
           </p>
         </div>
-        <ScrollArea class="h-[70vh] rounded-lg border border-border/60">
+        <ScrollArea class="h-[70vh] rounded-lg border">
           <pre class="whitespace-pre-wrap p-6 text-sm leading-6 text-muted-foreground">
 {{ licenseContent }}
           </pre>

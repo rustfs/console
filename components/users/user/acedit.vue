@@ -3,7 +3,7 @@
     <div class="grid gap-4 md:grid-cols-2">
       <div class="space-y-2">
         <Label>{{ t('Access Key') }}</Label>
-        <AppInput v-model="formModel.accessKey" disabled />
+        <Input v-model="formModel.accessKey" disabled />
       </div>
 
       <div class="space-y-2">
@@ -17,17 +17,17 @@
 
       <div class="space-y-2">
         <Label>{{ t('Name') }}</Label>
-        <AppInput v-model="formModel.name" autocomplete="off" />
+        <Input v-model="formModel.name" autocomplete="off" />
       </div>
 
       <div class="space-y-2">
         <Label>{{ t('Description') }}</Label>
-        <AppInput v-model="formModel.description" autocomplete="off" />
+        <Input v-model="formModel.description" autocomplete="off" />
       </div>
     </div>
 
     <div class="space-y-4">
-      <div class="flex flex-col gap-3 rounded-md border border-border/60 p-3">
+      <div class="flex flex-col gap-3 rounded-md border p-3">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium">{{ t('Use Main Account Policy') }}</p>
@@ -55,18 +55,21 @@
     </div>
 
     <div class="flex justify-end gap-2">
-      <AppButton variant="outline" @click="cancelEdit">
+      <Button variant="outline" @click="cancelEdit">
         {{ t('Cancel') }}
-      </AppButton>
-      <AppButton variant="primary" :loading="submitting" @click="submitForm">
+      </Button>
+      <Button variant="default" :loading="submitting" @click="submitForm">
         {{ t('Submit') }}
-      </AppButton>
+      </Button>
     </div>
   </AppCard>
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppCard, AppDateTimePicker, AppInput, AppSwitch } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppDateTimePicker, AppSwitch } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import dayjs from 'dayjs'
 import { computed, reactive, ref, watch } from 'vue'

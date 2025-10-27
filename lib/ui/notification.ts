@@ -1,4 +1,4 @@
-import type { ExternalToast, ToastT } from 'vue-sonner'
+import type { ExternalToast } from 'vue-sonner'
 import { toast } from 'vue-sonner'
 
 export interface NotificationOptions {
@@ -27,7 +27,7 @@ const mapOptions = (options?: NotificationOptions): ExternalToast => {
   return mapped
 }
 
-const show = (options: NotificationOptions): ToastT => {
+const show = (options: NotificationOptions): string | number => {
   const { title = '', type = 'default' } = options
   const mapped = mapOptions(options)
 

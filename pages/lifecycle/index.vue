@@ -7,8 +7,9 @@
     </page-header>
 
     <page-content class="flex flex-col gap-4">
-      <div
-        class="flex flex-col gap-4 rounded-lg border border-border/60 bg-background/80 p-4 shadow-sm md:flex-row md:items-end md:justify-between"
+      <AppCard
+        :padded="false"
+        :content-class="'flex flex-col gap-4 p-4 md:flex-row md:items-end md:justify-between'"
       >
         <div class="w-full max-w-sm">
           <Label class="mb-2 block text-sm font-medium text-muted-foreground">{{ t('Bucket') }}</Label>
@@ -20,36 +21,39 @@
           />
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2">
-          <AppButton variant="secondary" @click="handleNew">
+          <Button variant="secondary" @click="handleNew">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Lifecycle Rule') }}</span>
-          </AppButton>
-          <AppButton variant="outline" @click="refresh">
+          </Button>
+          <Button variant="outline" @click="() => refresh()">
             <Icon name="ri:refresh-line" class="size-4" />
             <span>{{ t('Refresh') }}</span>
-          </AppButton>
+          </Button>
         </div>
-      </div>
-
-      <AppCard padded class="border border-border/60">
-        <AppDataTable
-          :table="table"
-          :is-loading="loading"
-          :empty-title="t('No Data')"
-          :empty-description="t('Create lifecycle rules to automate object transitions and expiration.')"
-        />
       </AppCard>
 
-      <lifecycle-new-form ref="newRef" :bucketName="bucketName" @search="refresh" />
+      <AppDataTable
+        :table="table"
+        :is-loading="loading"
+        :empty-title="t('No Data')"
+        :empty-description="t('Create lifecycle rules to automate object transitions and expiration.')"
+      />
+
+      <lifecycle-new-form ref="newRef" :bucketName="bucketName" @search="() => refresh()" />
     </page-content>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
+import type { Bucket } from '@aws-sdk/client-s3'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { AppButton, AppCard, AppSelect, AppTag } from '@/components/app'
-import { AppDataTable, useDataTable } from '@/components/app/data-table'
+import { AppCard, AppSelect, AppTag } from '@/components/app'
+import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
+import { useDataTable } from '@/components/app/data-table'
+import type { SelectOption } from '@/components/app/AppSelect.vue'
 import { Label } from '@/components/ui/label'
 import { h, computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -86,26 +90,33 @@ interface LifecycleRule {
 
 const columns: ColumnDef<LifecycleRule>[] = [
   {
+    id: 'type',
     header: () => t('Type'),
     accessorFn: row => (row.Transitions || row.NoncurrentVersionTransitions ? 'Transition' : 'Expire'),
   },
   {
+    id: 'version',
     header: () => t('Version'),
-    accessorFn: row => (row.NoncurrentVersionExpiration || row.NoncurrentVersionTransitions ? t('Non-current Version') : t('Current Version')),
+    accessorFn: row =>
+      row.NoncurrentVersionExpiration || row.NoncurrentVersionTransitions ? t('Non-current Version') : t('Current Version'),
   },
   {
+    id: 'deleteMarker',
     header: () => t('Expiration Delete Mark'),
     accessorFn: row => (row.Expiration?.ExpiredObjectDeleteMarker ? t('On') : t('Off')),
   },
   {
+    id: 'tier',
     header: () => t('Tier'),
     accessorFn: row => row.Transitions?.[0]?.StorageClass || row.NoncurrentVersionTransitions?.[0]?.StorageClass || '--',
   },
   {
+    id: 'prefix',
     header: () => t('Prefix'),
     accessorFn: row => row.Filter?.Prefix || row.Filter?.And?.Prefix || '',
   },
   {
+    id: 'timeCycle',
     header: () => `${t('Time Cycle')} (${t('Days')})`,
     accessorFn: row =>
       row.Expiration?.Days ||
@@ -115,6 +126,7 @@ const columns: ColumnDef<LifecycleRule>[] = [
       '',
   },
   {
+    id: 'status',
     header: () => t('Status'),
     accessorFn: row => row.Status || '-',
     cell: ({ row }) =>
@@ -123,7 +135,7 @@ const columns: ColumnDef<LifecycleRule>[] = [
         {
           tone: row.original.Status === 'Enabled' ? 'success' : 'danger',
         },
-        () => row.original.Status || '-'
+        () => row.original.Status || '-',
       ),
   },
   {
@@ -133,39 +145,43 @@ const columns: ColumnDef<LifecycleRule>[] = [
     cell: ({ row }) =>
       h('div', { class: 'flex justify-center gap-2' }, [
         h(
-          AppButton,
+          Button,
           {
             variant: 'outline',
             size: 'sm',
             onClick: () => confirmDelete(row.original),
           },
-          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
+          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))],
         ),
       ]),
   },
 ]
 
-const bucketOptions = await useAsyncData(
+const bucketOptions = await useAsyncData<Bucket[]>(
   'lifecycle-buckets',
   async () => {
     const response = await listBuckets()
-    return (
-      response.Buckets?.sort((a: any, b: any) => {
-        return a.Name.localeCompare(b.Name)
-      }) || []
-    )
+    const buckets = (response.Buckets ?? []).filter((bucket): bucket is Bucket => Boolean(bucket?.Name))
+    return buckets.sort((a, b) => (a.Name ?? '').localeCompare(b.Name ?? ''))
   },
-  { default: () => [] }
+  { default: () => [] as Bucket[] },
 )
 
-const bucketList = computed(() =>
-  bucketOptions.data.value.map(bucket => ({
-    label: bucket.Name,
-    value: bucket.Name,
-  }))
-)
+const bucketList = computed<SelectOption[]>(() => {
+  const buckets = bucketOptions.data.value ?? []
+  return buckets.reduce<SelectOption[]>((acc, bucket) => {
+    const name = bucket.Name ?? ''
+    if (!name) {
+      return acc
+    }
+    acc.push({ label: name, value: name })
+    return acc
+  }, [])
+})
 
-const bucketName = ref<string>(bucketList.value.length > 0 ? bucketList.value[0]?.value ?? '' : '')
+const initialBucketOption = bucketList.value[0]?.value
+const initialBucket = typeof initialBucketOption === 'string' ? initialBucketOption : ''
+const bucketName = ref<string>(initialBucket)
 const pageData = ref<LifecycleRule[]>([])
 const loading = ref(false)
 
@@ -184,7 +200,10 @@ const fetchLifecycle = async () => {
   loading.value = true
   try {
     const response = await getBucketLifecycleConfiguration(bucketName.value)
-    pageData.value = response.Rules?.sort((a: any, b: any) => (a.ID || '').localeCompare(b.ID || '')) ?? []
+    const sortedRules: LifecycleRule[] = [...(response.Rules ?? [])]
+      .map(rule => rule as LifecycleRule)
+      .sort((a, b) => (a.ID ?? '').localeCompare(b.ID ?? ''))
+    pageData.value = sortedRules
   } catch (error) {
     pageData.value = []
   } finally {
@@ -192,12 +211,14 @@ const fetchLifecycle = async () => {
   }
 }
 
-const refresh = () => fetchLifecycle()
+const refresh = async () => {
+  await fetchLifecycle()
+}
 
 watch(
   () => bucketName.value,
   () => {
-    fetchLifecycle()
+    refresh()
   },
   { immediate: true }
 )
@@ -222,7 +243,7 @@ const handleRowDelete = async (row: LifecycleRule) => {
       await putBucketLifecycleConfiguration(bucketName.value, { Rules: remaining })
     }
     message.success(t('Delete Success'))
-    fetchLifecycle()
+    await refresh()
   } catch (error: any) {
     message.error(error?.message || t('Delete Failed'))
   }

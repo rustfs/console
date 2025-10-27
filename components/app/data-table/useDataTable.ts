@@ -16,11 +16,11 @@ import {
   useVueTable,
 } from '@tanstack/vue-table'
 import type { MaybeRefOrGetter } from 'vue'
-import { computed, reactive, ref, toValue, unref, watch, type Ref } from 'vue'
+import { computed, reactive, ref, toValue, watch, type Ref } from 'vue'
 
 export interface UseDataTableOptions<TData extends RowData> {
   data: MaybeRefOrGetter<TData[]>
-  columns: ColumnDef<TData, any>[]
+  columns: MaybeRefOrGetter<ColumnDef<TData, any>[]>
   pageSize?: number
   manualPagination?: boolean
   manualSorting?: boolean
@@ -58,10 +58,11 @@ export function useDataTable<TData extends RowData>(
   })
 
   const dataRef = computed(() => toValue(options.data))
+  const columnsRef = computed(() => toValue(options.columns))
 
   const table = useVueTable({
-    data: dataRef,
-    columns: options.columns,
+    data: dataRef.value,
+    columns: columnsRef.value,
     state: reactive({
       get sorting() {
         return sorting.value
@@ -96,6 +97,20 @@ export function useDataTable<TData extends RowData>(
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: options.manualPagination ? undefined : getPaginationRowModel(),
+  })
+
+  watch(dataRef, value => {
+    table.setOptions(prev => ({
+      ...prev,
+      data: value,
+    }))
+  })
+
+  watch(columnsRef, value => {
+    table.setOptions(prev => ({
+      ...prev,
+      columns: value,
+    }))
   })
 
   return {

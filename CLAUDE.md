@@ -24,7 +24,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Frontend**: Vue 3 with Composition API and `<script setup>` syntax
 - **Framework**: Nuxt 3 (SSR disabled, SPA mode)
 - **Language**: TypeScript with strict type checking enabled
-- **Styling**: Tailwind CSS + Naive UI component library
+- **Styling**: Tailwind CSS + shadcn-vue component library
 - **State Management**: Pinia stores
 - **Internationalization**: @nuxtjs/i18n with English, Chinese, and Turkish support
 - **HTTP Client**: Custom AWS-compatible client with automatic request signing

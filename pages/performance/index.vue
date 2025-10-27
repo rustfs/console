@@ -4,10 +4,10 @@
       <h1 class="text-2xl font-bold">{{ t('Server Information') }}</h1>
     </template>
     <template #actions>
-      <AppButton variant="outline" @click="getPageData">
+      <Button variant="outline" @click="getPageData">
         <Icon name="ri:refresh-line" class="mr-2 size-4" />
         {{ t('Sync') }}
-      </AppButton>
+      </Button>
     </template>
   </page-header>
 
@@ -31,7 +31,7 @@
           </div>
         </div>
         <div class="space-y-3">
-          <div v-for="item in usageStats" :key="item.label" class="flex items-start gap-3 rounded-lg border border-border/60 p-3">
+          <div v-for="item in usageStats" :key="item.label" class="flex items-start gap-3 rounded-lg border p-3">
             <Icon :name="item.icon" class="size-5 text-muted-foreground" />
             <div class="flex-1">
               <p class="text-sm font-medium text-foreground">{{ item.label }}</p>
@@ -46,11 +46,11 @@
       <AppCard class="space-y-4">
         <p class="text-sm font-medium text-muted-foreground">{{ t('Servers') }}</p>
         <div class="grid gap-3 sm:grid-cols-2">
-          <div class="rounded-lg border border-border/60 p-4">
+          <div class="rounded-lg border p-4">
             <p class="text-sm text-muted-foreground">{{ t('Online') }}</p>
             <p class="text-2xl font-semibold">{{ onlineServers }}</p>
           </div>
-          <div class="rounded-lg border border-border/60 p-4">
+          <div class="rounded-lg border p-4">
             <p class="text-sm text-muted-foreground">{{ t('Offline') }}</p>
             <p class="text-2xl font-semibold">{{ offlineServers }}</p>
           </div>
@@ -59,11 +59,11 @@
       <AppCard class="space-y-4">
         <p class="text-sm font-medium text-muted-foreground">{{ t('Disks') }}</p>
         <div class="grid gap-3 sm:grid-cols-2">
-          <div class="rounded-lg border border-border/60 p-4">
+          <div class="rounded-lg border p-4">
             <p class="text-sm text-muted-foreground">{{ t('Online') }}</p>
             <p class="text-2xl font-semibold">{{ systemInfo?.backend?.onlineDisks ?? 0 }}</p>
           </div>
-          <div class="rounded-lg border border-border/60 p-4">
+          <div class="rounded-lg border p-4">
             <p class="text-sm text-muted-foreground">{{ t('Offline') }}</p>
             <p class="text-2xl font-semibold">{{ systemInfo?.backend?.offlineDisks ?? 0 }}</p>
           </div>
@@ -75,7 +75,7 @@
       <div
         v-for="item in backendInfo"
         :key="item.title"
-        class="rounded-lg border border-border/60 p-4"
+        class="rounded-lg border p-4"
       >
         <div class="flex items-center gap-3 text-sm font-medium text-muted-foreground">
           <Icon :name="item.icon" class="size-5" />
@@ -127,7 +127,7 @@
                 <div
                   v-for="drive in server.drives"
                   :key="drive.uuid"
-                  class="min-w-[260px] rounded-lg border border-border/60 p-4"
+                  class="min-w-[260px] rounded-lg border p-4"
                 >
                   <p class="text-sm font-medium text-muted-foreground">{{ drive.drive_path }}</p>
                   <p class="mt-1 text-xs text-muted-foreground">
@@ -154,12 +154,14 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
+
 import dayjs from 'dayjs'
 import zhCn from 'dayjs/locale/zh-cn'
 import en from 'dayjs/locale/en'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { Icon } from '#components'
-import { AppButton, AppCard, AppProgress } from '@/components/app'
+import { AppCard, AppProgress } from '@/components/app'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { computed, ref, watch } from 'vue'

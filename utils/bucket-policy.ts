@@ -193,8 +193,12 @@ export function validatePolicy(policy: BucketPolicy): boolean {
  * 格式化资源 ARN
  */
 export function formatResourceArn(resource: PolicyResource): string {
-  const { bucket, object } = resource;
-  return object ? `${awsResourcePrefix}${bucket}/${object}` : `${awsResourcePrefix}${bucket}`;
+  const bucketName = resource.bucket;
+  if (!bucketName) {
+    throw new Error('Invalid resource: bucket is required');
+  }
+  const objectKey = resource.object;
+  return objectKey ? `${awsResourcePrefix}${bucketName}/${objectKey}` : `${awsResourcePrefix}${bucketName}`;
 }
 
 /**
@@ -213,17 +217,27 @@ export function resourceMatch(pattern: string, resource: string): boolean {
   }
   const tGlob = pattern.endsWith('*');
   const end = parts.length - 1;
-  if (!resource.startsWith(parts[0])) {
+  const firstPart = parts[0] ?? '';
+  if (!resource.startsWith(firstPart)) {
     return false;
   }
+  let remainingResource = resource.slice(firstPart.length);
   for (let i = 1; i < end; i++) {
-    if (!resource.includes(parts[i])) {
+    const part = parts[i];
+    if (!part) {
+      continue;
+    }
+    if (!remainingResource.includes(part)) {
       return false;
     }
-    const idx = resource.indexOf(parts[i]) + parts[i].length;
-    resource = resource.slice(idx);
+    const idx = remainingResource.indexOf(part) + part.length;
+    remainingResource = remainingResource.slice(idx);
   }
-  return tGlob || resource.endsWith(parts[end]);
+  const lastPart = parts[end] ?? '';
+  if (tGlob) {
+    return true;
+  }
+  return remainingResource.endsWith(lastPart) || resource.endsWith(lastPart);
 }
 
 /**
@@ -295,48 +309,55 @@ export function createDenyStatement(
  */
 function appendStatement(statements: PolicyStatement[], statement: PolicyStatement): PolicyStatement[] {
   for (let i = 0; i < statements.length; i++) {
-    const s = statements[i];
+    const existing = statements[i];
+    if (!existing) {
+      continue;
+    }
+
+    const existingActions = existing.Action ?? [];
+    const existingResources = existing.Resource ?? [];
+    const existingPrincipals = existing.Principal?.AWS ?? [];
 
     // 检查是否可以合并动作
     if (
-      areSetsEqual(new Set(s.Action), new Set(statement.Action)) &&
-      s.Effect === statement.Effect &&
-      areSetsEqual(new Set(s.Principal.AWS), new Set(statement.Principal.AWS)) &&
-      deepEqual(s.Conditions, statement.Conditions)
+      areSetsEqual(new Set(existingActions), new Set(statement.Action)) &&
+      existing.Effect === statement.Effect &&
+      areSetsEqual(new Set(existingPrincipals), new Set(statement.Principal.AWS)) &&
+      deepEqual(existing.Conditions, statement.Conditions)
     ) {
-      statements[i].Resource = [...new Set([...s.Resource, ...statement.Resource])];
+      existing.Resource = [...new Set([...existingResources, ...statement.Resource])];
       return statements;
     }
 
     // 检查是否可以合并资源
     if (
-      areSetsEqual(new Set(s.Resource), new Set(statement.Resource)) &&
-      s.Effect === statement.Effect &&
-      areSetsEqual(new Set(s.Principal.AWS), new Set(statement.Principal.AWS)) &&
-      deepEqual(s.Conditions, statement.Conditions)
+      areSetsEqual(new Set(existingResources), new Set(statement.Resource)) &&
+      existing.Effect === statement.Effect &&
+      areSetsEqual(new Set(existingPrincipals), new Set(statement.Principal.AWS)) &&
+      deepEqual(existing.Conditions, statement.Conditions)
     ) {
-      statements[i].Action = [...new Set([...s.Action, ...statement.Action])];
+      existing.Action = [...new Set([...existingActions, ...statement.Action])];
       return statements;
     }
 
     // 检查资源交集
-    const resourceIntersection = setIntersection(new Set(s.Resource), new Set(statement.Resource));
-    const actionIntersection = setIntersection(new Set(s.Action), new Set(statement.Action));
-    const principalIntersection = setIntersection(new Set(s.Principal.AWS), new Set(statement.Principal.AWS));
+    const resourceIntersection = setIntersection(new Set(existingResources), new Set(statement.Resource));
+    const actionIntersection = setIntersection(new Set(existingActions), new Set(statement.Action));
+    const principalIntersection = setIntersection(new Set(existingPrincipals), new Set(statement.Principal.AWS));
 
     if (
       areSetsEqual(resourceIntersection, new Set(statement.Resource)) &&
       areSetsEqual(actionIntersection, new Set(statement.Action)) &&
-      s.Effect === statement.Effect &&
+      existing.Effect === statement.Effect &&
       areSetsEqual(principalIntersection, new Set(statement.Principal.AWS))
     ) {
-      if (deepEqual(s.Conditions, statement.Conditions)) {
+      if (deepEqual(existing.Conditions, statement.Conditions)) {
         return statements;
       }
 
-      if (s.Conditions && statement.Conditions) {
-        if (areSetsEqual(new Set(s.Resource), new Set(statement.Resource))) {
-          statements[i].Conditions = mergeConditionMap(s.Conditions, statement.Conditions);
+      if (existing.Conditions && statement.Conditions) {
+        if (areSetsEqual(new Set(existingResources), new Set(statement.Resource))) {
+          existing.Conditions = mergeConditionMap(existing.Conditions, statement.Conditions);
           return statements;
         }
       }

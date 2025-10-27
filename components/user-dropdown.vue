@@ -1,10 +1,8 @@
 <template>
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
-      <Button
-        variant="ghost"
-        class="w-full items-center justify-between gap-2 rounded-none border-t border-sidebar-border px-4 py-3 text-left transition-[padding] duration-200 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
-      >
+      <Button variant="ghost"
+        class="w-full items-center justify-between gap-2 rounded-none px-4 py-3 text-left transition-[padding] duration-200 group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
         <div class="flex items-center gap-3">
           <span class="flex h-9 w-9 items-center justify-center rounded-full border bg-muted">
             <img src="~/assets/img/rustfs.png" alt="RustFS" class="h-8 w-8 rounded-full object-cover" />
@@ -24,34 +22,34 @@
 </template>
 
 <script lang="ts" setup>
-import { Icon } from '#components';
-import { Button } from '@/components/ui/button';
+import { Icon } from '#components'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { defineProps, toRef, withDefaults } from 'vue';
-import { useI18n } from 'vue-i18n';
+} from '@/components/ui/dropdown-menu'
+import { defineProps, toRef, withDefaults } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
-const { logout } = useAuth();
-const router = useRouter();
+const { t } = useI18n()
+const { logout } = useAuth()
+const router = useRouter()
 
 const props = withDefaults(
   defineProps<{
-    isCollapsed?: boolean;
+    isCollapsed?: boolean
   }>(),
   {
     isCollapsed: false,
   }
-);
+)
 
-const isCollapsed = toRef(props, 'isCollapsed');
+const isCollapsed = toRef(props, 'isCollapsed')
 
 const handleLogout = async () => {
-  await logout();
-  router.push('/auth/login');
-};
+  await logout()
+  router.push('/auth/login')
+}
 </script>

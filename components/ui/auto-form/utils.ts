@@ -9,10 +9,11 @@ export type ZodObjectOrWrapped
  * Beautify a camelCase string.
  * e.g. "myString" -> "My String"
  */
-export function beautifyObjectName(string: string) {
+export function beautifyObjectName(value?: string) {
+  const input = value ?? ""
   // Remove bracketed indices
   // if numbers only return the string
-  let output = string.replace(/\[\d+\]/g, "").replace(/([A-Z])/g, " $1")
+  let output = input.replace(/\[\d+\]/g, "").replace(/([A-Z])/g, " $1")
   output = output.charAt(0).toUpperCase() + output.slice(1)
   return output
 }
@@ -27,7 +28,10 @@ export function getIndexIfArray(string: string) {
   // Match the index
   const match = string.match(indexRegex)
   // Extract the index (number)
-  const index = match ? Number.parseInt(match[1]) : undefined
+  if (!match || match[1] === undefined) {
+    return undefined
+  }
+  const index = Number.parseInt(match[1])
   return index
 }
 

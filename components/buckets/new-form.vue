@@ -3,7 +3,7 @@
     <AppCard padded class="space-y-6">
       <div class="space-y-2">
         <Label for="bucket-name">{{ t('Please enter name') }}</Label>
-        <AppInput
+        <Input
           id="bucket-name"
           v-model="objectKey"
           autocomplete="off"
@@ -16,19 +16,19 @@
 
       <div class="space-y-2">
         <Label>{{ t('Version') }}</Label>
-        <div class="flex items-center justify-between rounded-md border border-border/60 p-3">
+        <div class="flex items-center justify-between rounded-md border p-3">
           <AppSwitch v-model="version" />
         </div>
       </div>
 
       <div class="space-y-2">
         <Label>{{ t('Object Lock') }}</Label>
-        <div class="flex items-center justify-between rounded-md border border-border/60 p-3">
+        <div class="flex items-center justify-between rounded-md border p-3">
           <AppSwitch v-model="objectLock" />
         </div>
       </div>
 
-      <div v-if="objectLock" class="space-y-4 rounded-lg border border-border/60 p-4">
+      <div v-if="objectLock" class="space-y-4 rounded-lg border p-4">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium text-foreground">{{ t('Retention') }}</p>
@@ -50,7 +50,7 @@
           <div class="space-y-2">
             <Label>{{ t('Validity') }}</Label>
             <div class="flex flex-col gap-2 sm:flex-row">
-              <AppInput
+              <Input
                 v-model="retentionPeriod"
                 type="number"
                 class="sm:w-32"
@@ -68,24 +68,27 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal">
+        <Button variant="outline" @click="closeModal">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton
-          variant="primary"
+        </Button>
+        <Button
+          variant="default"
           :loading="creating"
           :disabled="isSubmitDisabled"
           @click="handleCreateBucket"
         >
           {{ t('Create') }}
-        </AppButton>
+        </Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppCard, AppInput, AppModal, AppRadioGroup, AppSelect, AppSwitch } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppModal, AppRadioGroup, AppSelect, AppSwitch } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

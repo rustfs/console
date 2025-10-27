@@ -3,11 +3,11 @@
     <AppCard padded class="space-y-4">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="w-full sm:max-w-xs">
-          <AppInput v-model="searchTerm" :placeholder="t('Search Policy')" />
+          <Input v-model="searchTerm" :placeholder="t('Search Policy')" />
         </div>
-        <AppButton variant="secondary" :disabled="!checkedKeys.length || submitting" @click="changePolicies">
+        <Button variant="secondary" :disabled="!checkedKeys.length || submitting" @click="changePolicies">
           {{ t('Submit') }}
-        </AppButton>
+        </Button>
       </div>
 
       <Table class="overflow-hidden rounded-lg border">
@@ -26,7 +26,10 @@
         <TableBody v-if="filteredPolicies.length">
           <TableRow v-for="policy in filteredPolicies" :key="policy.name">
             <TableCell>
-              <AppCheckbox :checked="isSelected(policy.name)" @update:checked="value => toggleSelection(policy.name, value)" />
+              <AppCheckbox
+                :checked="isSelected(policy.name)"
+                @update:checked="(value: boolean) => toggleSelection(policy.name, value)"
+              />
             </TableCell>
             <TableCell class="font-medium">{{ policy.name }}</TableCell>
           </TableRow>
@@ -44,7 +47,10 @@
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppCard, AppCheckbox, AppInput, AppModal } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppCheckbox, AppModal } from '@/components/app'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

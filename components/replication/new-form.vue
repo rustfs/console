@@ -10,7 +10,7 @@
         <div class="grid gap-3 md:grid-cols-2">
           <div class="grid gap-2">
             <Label>{{ t('Priority') }}</Label>
-            <AppInput v-model="formData.level" type="number" min="1" />
+            <Input v-model="formData.level" type="number" min="1" />
           </div>
           <div class="grid gap-2">
             <Label>{{ t('Mode') }}</Label>
@@ -18,53 +18,53 @@
           </div>
           <div class="grid gap-2">
             <Label>{{ t('Endpoint') }}</Label>
-            <AppInput v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
+            <Input v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
           </div>
           <div class="grid gap-2">
             <Label>{{ t('Bucket') }}</Label>
-            <AppInput v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
+            <Input v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
           </div>
           <div class="grid gap-2">
             <Label>{{ t('Access Key') }}</Label>
-            <AppInput v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
+            <Input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
           </div>
           <div class="grid gap-2">
             <Label>{{ t('Secret Key') }}</Label>
-            <AppInput v-model="formData.secrretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+            <Input v-model="formData.secrretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
           </div>
           <div class="grid gap-2">
             <Label>{{ t('Region') }}</Label>
-            <AppInput v-model="formData.region" :placeholder="t('Please enter region')" />
+            <Input v-model="formData.region" :placeholder="t('Please enter region')" />
           </div>
           <div class="grid gap-2">
             <Label>{{ t('Storage Class') }}</Label>
-            <AppInput v-model="formData.storageType" :placeholder="t('Please enter storage class')" />
+            <Input v-model="formData.storageType" :placeholder="t('Please enter storage class')" />
           </div>
         </div>
 
         <div class="grid gap-2">
           <Label>{{ t('Prefix') }}</Label>
-          <AppInput v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+          <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
         </div>
 
         <div class="space-y-3">
           <div class="flex items-center justify-between">
             <Label class="text-sm font-medium">{{ t('Tags') }}</Label>
-            <AppButton variant="outline" size="sm" @click="addTag">
+            <Button variant="outline" size="sm" @click="addTag">
               <Icon name="ri:add-line" class="size-4" />
               {{ t('Add Tag') }}
-            </AppButton>
+            </Button>
           </div>
           <div v-if="formData.tags.length" class="space-y-3">
             <div
               v-for="(tag, index) in formData.tags"
               :key="index"
-              class="grid gap-2 rounded-md border border-border/60 p-3 md:grid-cols-2 md:items-center md:gap-4"
+              class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
             >
-              <AppInput v-model="tag.key" :placeholder="t('Tag Name')" />
+              <Input v-model="tag.key" :placeholder="t('Tag Name')" />
               <div class="flex items-center gap-2">
-                <AppInput v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
-                <AppButton
+                <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
+                <Button
                   variant="ghost"
                   size="sm"
                   class="text-destructive"
@@ -72,7 +72,7 @@
                   @click="removeTag(index)"
                 >
                   <Icon name="ri:delete-bin-line" class="size-4" />
-                </AppButton>
+                </Button>
               </div>
             </div>
           </div>
@@ -107,7 +107,7 @@
         <div class="space-y-3" v-if="formData.modeType === 'async'">
           <div class="grid gap-2">
             <Label>{{ t('Health Check Interval (seconds)') }}</Label>
-            <AppInput
+            <Input
               v-model="formData.timecheck"
               type="number"
               min="1"
@@ -117,7 +117,7 @@
           <div class="grid gap-2">
             <Label>{{ t('Bandwidth Limit') }}</Label>
             <div class="flex items-center gap-2">
-              <AppInput v-model="formData.bandwidth" type="number" min="0" class="w-32" />
+              <Input v-model="formData.bandwidth" type="number" min="0" class="w-32" />
               <AppSelect v-model="formData.unit" :options="unitOptions" class="w-28" />
             </div>
           </div>
@@ -127,16 +127,19 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="handleCancel">{{ t('Cancel') }}</AppButton>
-        <AppButton variant="primary" :loading="submitting" @click="handleSave">{{ t('Save') }}</AppButton>
+        <Button variant="outline" @click="handleCancel">{{ t('Cancel') }}</Button>
+        <Button variant="default" :loading="submitting" @click="handleSave">{{ t('Save') }}</Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
-import { AppButton, AppCard, AppInput, AppModal, AppSelect, AppSwitch } from '@/components/app'
+import { AppCard, AppModal, AppSelect, AppSwitch } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -285,7 +288,6 @@ const handleSave = async () => {
       ID: `replication-rule-${Date.now()}`,
       Status: 'Enabled',
       Priority: Number.parseInt(formData.level) || 1,
-      Filter: {},
       SourceSelectionCriteria: {
         SseKmsEncryptedObjects: { Status: 'Enabled' },
       },
@@ -301,18 +303,28 @@ const handleSave = async () => {
       },
     }
 
+    const validTags = formData.tags.filter(tag => tag.key && tag.value)
+    const filter: any = {}
+
     if (formData.prefix) {
-      newRule.Filter.Prefix = formData.prefix
+      filter.Prefix = formData.prefix
     }
 
-    const validTags = formData.tags.filter(tag => tag.key && tag.value)
     if (validTags.length === 1) {
-      newRule.Filter.Tag = { Key: validTags[0].key, Value: validTags[0].value }
+      const [singleTag] = validTags
+      if (singleTag) {
+        filter.Tag = { Key: singleTag.key, Value: singleTag.value }
+      }
     } else if (validTags.length > 1) {
-      newRule.Filter.And = {
-        Prefix: formData.prefix || '',
+      filter.And = {
+        ...(formData.prefix ? { Prefix: formData.prefix } : {}),
         Tags: validTags.map(tag => ({ Key: tag.key, Value: tag.value })),
       }
+      delete filter.Prefix
+    }
+
+    if (Object.keys(filter).length > 0) {
+      newRule.Filter = filter
     }
 
     const existingRules = oldConfig?.ReplicationConfiguration?.Rules ?? []

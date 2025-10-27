@@ -24,14 +24,14 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-3">
-            <AppButton variant="primary" @click="updateLicense">
+            <Button variant="default" @click="updateLicense">
               <Icon name="ri:upload-fill" class="mr-2 size-4" />
               {{ t('Update License') }}
-            </AppButton>
-            <AppButton variant="outline" @click="contactSupport">
+            </Button>
+            <Button variant="outline" @click="contactSupport">
               <Icon name="ri:customer-service-2-line" class="mr-2 size-4" />
               {{ t('Contact Support') }}
-            </AppButton>
+            </Button>
           </div>
         </div>
       </AppCard>
@@ -60,7 +60,7 @@
 
       <AppCard class="space-y-4">
         <p class="text-base font-semibold">{{ t('Feature Permissions') }}</p>
-        <div class="overflow-hidden rounded-lg border border-border/60">
+        <div class="overflow-hidden rounded-lg border">
           <table class="w-full text-sm">
             <thead class="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
               <tr>
@@ -98,9 +98,11 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
 import dayjs from 'dayjs'
-import { AppBadge, AppButton, AppCard } from '@/components/app'
+import { AppBadge, AppCard } from '@/components/app'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SiteConfig } from '~/types/config'

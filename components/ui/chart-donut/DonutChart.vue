@@ -40,24 +40,51 @@ const props = withDefaults(defineProps<Pick<BaseChartProps<T>, "data" | "colors"
 })
 
 type KeyOfT = Extract<keyof T, string>
-type Data = typeof props.data[number]
+type Data = T
 
 const valueFormatter = props.valueFormatter ?? ((tick: number) => `${tick}`)
 const category = computed(() => props.category as KeyOfT)
 const index = computed(() => props.index as KeyOfT)
+const chartData = computed(() => props.data ?? [])
 
 const isMounted = useMounted()
 const activeSegmentKey = ref<string>()
-const colors = computed(() => props.colors?.length ? props.colors : defaultColors(props.data.filter(d => d[props.category]).filter(Boolean).length))
-const legendItems = computed(() => props.data.map((item, i) => ({
-  name: item[props.index],
+const colors = computed(() => props.colors?.length ? props.colors : defaultColors(chartData.value.filter(d => d[category.value]).length))
+const legendItems = computed(() => chartData.value.map((item, i) => ({
+  name: item[index.value],
   color: colors.value[i],
   inactive: false,
 })))
 
-const totalValue = computed(() => props.data.reduce((prev, curr) => {
-  return prev + curr[props.category]
-}, 0))
+const segmentEvents = computed(() => ({
+  [Donut.selectors.segment]: {
+    click: (d: Data, _ev: PointerEvent, elementIndex: number, elements: HTMLElement[] = []) => {
+      const segmentKey = d?.data?.[index.value as keyof Data] as unknown as string | undefined
+      if (!elements.length) {
+        return
+      }
+
+      if (segmentKey && activeSegmentKey.value === segmentKey) {
+        activeSegmentKey.value = undefined
+        elements.forEach(el => {
+          el.style.opacity = "1"
+        })
+        return
+      }
+
+      activeSegmentKey.value = segmentKey
+      elements.forEach(el => {
+        el.style.opacity = `${props.filterOpacity}`
+      })
+      const target = elements[elementIndex]
+      if (target) {
+        target.style.opacity = "1"
+      }
+    },
+  },
+}))
+
+const totalValue = computed(() => chartData.value.reduce((prev, curr) => prev + (Number(curr[category.value]) || 0), 0))
 </script>
 
 <template>
@@ -78,21 +105,7 @@ const totalValue = computed(() => props.data.reduce((prev, curr) => {
         :arc-width="type === 'donut' ? 20 : 0"
         :show-background="false"
         :central-label="type === 'donut' ? valueFormatter(totalValue) : ''"
-        :events="{
-          [Donut.selectors.segment]: {
-            click: (d: Data, ev: PointerEvent, i: number, elements: HTMLElement[]) => {
-              if (d?.data?.[index] === activeSegmentKey) {
-                activeSegmentKey = undefined
-                elements.forEach(el => el.style.opacity = '1')
-              }
-              else {
-                activeSegmentKey = d?.data?.[index]
-                elements.forEach(el => el.style.opacity = `${filterOpacity}`)
-                elements[i].style.opacity = '1'
-              }
-            },
-          },
-        }"
+        :events="segmentEvents"
       />
 
       <slot />

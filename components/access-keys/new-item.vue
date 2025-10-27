@@ -8,13 +8,13 @@
     <AppCard padded class="space-y-4">
       <div class="grid gap-2">
         <Label for="create-access-key">{{ t('Access Key') }}</Label>
-        <AppInput id="create-access-key" v-model="formModel.accessKey" autocomplete="off" />
+        <Input id="create-access-key" v-model="formModel.accessKey" autocomplete="off" />
         <p v-if="errors.accessKey" class="text-sm text-destructive">{{ errors.accessKey }}</p>
       </div>
 
       <div class="grid gap-2">
         <Label for="create-secret-key">{{ t('Secret Key') }}</Label>
-        <AppInput id="create-secret-key" v-model="formModel.secretKey" type="password" autocomplete="off" />
+        <Input id="create-secret-key" v-model="formModel.secretKey" type="password" autocomplete="off" />
         <p v-if="errors.secretKey" class="text-sm text-destructive">{{ errors.secretKey }}</p>
       </div>
 
@@ -31,7 +31,7 @@
 
       <div class="grid gap-2">
         <Label for="create-name">{{ t('Name') }}</Label>
-        <AppInput id="create-name" v-model="formModel.name" autocomplete="off" />
+        <Input id="create-name" v-model="formModel.name" autocomplete="off" />
         <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
       </div>
 
@@ -40,7 +40,7 @@
         <AppTextarea id="create-description" v-model="formModel.description" :rows="3" />
       </div>
 
-      <div class="flex items-start justify-between gap-3 rounded-md border border-border/60 p-3">
+      <div class="flex items-start justify-between gap-3 rounded-md border p-3">
         <div>
           <p class="text-sm font-medium">{{ t('Use main account policy') }}</p>
           <p class="text-xs text-muted-foreground">
@@ -58,19 +58,24 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal()">
+        <Button variant="outline" @click="closeModal()">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="primary" :loading="submitting" @click="submitForm">
-          {{ t('Submit') }}
-        </AppButton>
+        </Button>
+        <Button variant="default" :disabled="submitting" @click="submitForm">
+          <Spinner v-if="submitting" class="size-4" />
+          <span>{{ t('Submit') }}</span>
+        </Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppCard, AppInput, AppModal, AppSwitch, AppTextarea } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import Spinner from '@/components/ui/spinner/Spinner.vue'
+
+import { AppCard, AppModal, AppSwitch, AppTextarea } from '@/components/app'
 import AppDateTimePicker from '@/components/app/AppDateTimePicker.vue'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref } from 'vue'

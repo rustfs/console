@@ -25,7 +25,7 @@
 
       <div v-else class="space-y-4">
         <AppCard
-          class="flex cursor-pointer items-center gap-3 border border-border/60 transition hover:border-primary"
+          class="flex cursor-pointer items-center gap-3 border transition hover:border-primary"
           @click="resetType"
         >
           <img :src="iconUrl" class="h-10 w-10" alt="" />
@@ -38,7 +38,7 @@
         <div class="grid gap-4">
           <div class="grid gap-2">
             <Label for="target-name">{{ t('Name') }} (A-Z,0-9,_)</Label>
-            <AppInput
+            <Input
               id="target-name"
               v-model="formData.name"
               :placeholder="t('Please enter name')"
@@ -54,13 +54,13 @@
             class="grid gap-2"
           >
             <Label :for="`config-${config.name}`">{{ config.label }}</Label>
-            <AppInput
+            <Input
               v-if="config.type === 'text'"
               :id="`config-${config.name}`"
               v-model="formData.config[config.name]"
               :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
             />
-            <AppInput
+            <Input
               v-else-if="config.type === 'password'"
               :id="`config-${config.name}`"
               v-model="formData.config[config.name]"
@@ -68,7 +68,7 @@
               autocomplete="off"
               :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
             />
-            <AppInput
+            <Input
               v-else-if="config.type === 'number'"
               :id="`config-${config.name}`"
               v-model="formData.config[config.name]"
@@ -82,20 +82,23 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="handleCancel">{{ t('Cancel') }}</AppButton>
-        <AppButton variant="primary" :loading="submitting" :disabled="!formData.type" @click="handleSave">
+        <Button variant="outline" @click="handleCancel">{{ t('Cancel') }}</Button>
+        <Button variant="default" :loading="submitting" :disabled="!formData.type" @click="handleSave">
           {{ t('Save') }}
-        </AppButton>
+        </Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { useI18n } from 'vue-i18n'
 import MqttIcon from '~/assets/svg/mqtt.svg'
 import WebhooksIcon from '~/assets/svg/webhooks.svg'
-import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { AppCard, AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref, watch } from 'vue'
 import { useEventTarget } from '#imports'

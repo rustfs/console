@@ -4,38 +4,38 @@
       <div class="flex flex-wrap items-center justify-between gap-2">
         <div class="flex flex-col">
           <div class="flex items-center gap-2">
-            <AppButton variant="ghost" size="sm" @click="router.back">
+            <Button variant="ghost" size="sm" @click="router.back">
               <Icon name="ri:arrow-left-line" class="size-4" />
-            </AppButton>
+            </Button>
             <h2 class="text-lg font-semibold">{{ object?.Key }}</h2>
           </div>
           <p class="text-sm text-muted-foreground">{{ t('Object Detail Description', { bucket: bucketName }) }}</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <AppButton variant="outline" size="sm" @click="download">
+          <Button variant="outline" size="sm" @click="download">
             <Icon name="ri:download-line" class="size-4" />
             {{ t('Download') }}
-          </AppButton>
-          <AppButton variant="outline" size="sm" @click="copySignedUrl">
+          </Button>
+          <Button variant="outline" size="sm" @click="copySignedUrl">
             <Icon name="ri:file-copy-line" class="size-4" />
             {{ t('Copy Temporary URL') }}
-          </AppButton>
-          <AppButton variant="outline" size="sm" @click="() => (showPreview = true)">
+          </Button>
+          <Button variant="outline" size="sm" @click="() => (showPreview = true)">
             <Icon name="ri:eye-line" class="size-4" />
             {{ t('Preview') }}
-          </AppButton>
-          <AppButton variant="outline" size="sm" @click="() => (showTagView = true)">
+          </Button>
+          <Button variant="outline" size="sm" @click="() => (showTagView = true)">
             <Icon name="ri:price-tag-3-line" class="size-4" />
             {{ t('Set Tags') }}
-          </AppButton>
-          <AppButton variant="destructive" size="sm" @click="confirmDelete">
+          </Button>
+          <Button variant="destructive" size="sm" @click="confirmDelete">
             <Icon name="ri:delete-bin-5-line" class="size-4" />
             {{ t('Delete') }}
-          </AppButton>
-          <AppButton variant="outline" size="sm" @click="refresh">
+          </Button>
+          <Button variant="outline" size="sm" @click="refresh">
             <Icon name="ri:refresh-line" class="size-4" />
             {{ t('Refresh') }}
-          </AppButton>
+          </Button>
         </div>
       </div>
     </AppCard>
@@ -71,10 +71,10 @@
           </AppTag>
         </div>
         <form class="flex flex-wrap gap-3" @submit.prevent="submitTagForm">
-          <AppInput v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
-          <AppInput v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
-          <AppButton type="submit" variant="primary">{{ t('Add') }}</AppButton>
-          <AppButton variant="outline" @click="showTagView = false">{{ t('Cancel') }}</AppButton>
+          <Input v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
+          <Input v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
+          <Button type="submit" variant="default">{{ t('Add') }}</Button>
+          <Button variant="outline" @click="showTagView = false">{{ t('Cancel') }}</Button>
         </form>
       </AppCard>
     </AppModal>
@@ -84,8 +84,11 @@
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
-import { AppButton, AppCard, AppInput, AppModal, AppTag } from '@/components/app'
+import { AppCard, AppModal, AppTag } from '@/components/app'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -114,7 +117,7 @@ const loadObjectInfo = async () => {
     object.value = await getObjectInfo(props.objectKey)
     signedUrl.value = object.value?.SignedUrl || ''
     const response = await getObjectTags(props.objectKey)
-    tags.value = response.TagSet || []
+    tags.value = response
   } catch (error) {
     message.error(t('Failed to fetch object info'))
   }

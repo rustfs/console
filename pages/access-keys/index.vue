@@ -7,37 +7,38 @@
     </page-header>
 
     <page-content class="flex flex-col gap-4">
-      <div class="rounded-lg border border-border/60 bg-background/80 p-4 shadow-sm">
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div class="flex w-full max-w-sm items-center gap-2">
-            <Icon name="ri:search-line" class="size-4 text-muted-foreground" />
-            <AppInput
-              v-model="searchTerm"
-              :placeholder="t('Search Access Key')"
-            />
-          </div>
-          <div class="flex flex-wrap items-center justify-end gap-2">
-            <AppButton variant="outline" @click="changePasswordVisible = true">
-              <Icon name="ri:key-2-line" class="size-4" />
-              <span>{{ t('Change Password') }}</span>
-            </AppButton>
-            <AppButton
-              variant="outline"
-              :disabled="!selectedKeys.length"
-              @click="deleteSelected"
-            >
-              <Icon name="ri:delete-bin-5-line" class="size-4" />
-              <span>{{ t('Delete Selected') }}</span>
-            </AppButton>
-            <AppButton variant="secondary" @click="addItem">
-              <Icon name="ri:add-line" class="size-4" />
-              <span>{{ t('Add Access Key') }}</span>
-            </AppButton>
-          </div>
+      <AppCard
+        :padded="false"
+        :content-class="'flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-4'"
+      >
+        <div class="flex w-full max-w-sm items-center gap-2">
+          <Icon name="ri:search-line" class="size-4 text-muted-foreground" />
+          <Input
+            v-model="searchTerm"
+            :placeholder="t('Search Access Key')"
+          />
         </div>
-      </div>
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <Button variant="outline" @click="changePasswordVisible = true">
+            <Icon name="ri:key-2-line" class="size-4" />
+            <span>{{ t('Change Password') }}</span>
+          </Button>
+          <Button
+            variant="outline"
+            :disabled="!selectedKeys.length"
+            @click="deleteSelected"
+          >
+            <Icon name="ri:delete-bin-5-line" class="size-4" />
+            <span>{{ t('Delete Selected') }}</span>
+          </Button>
+          <Button variant="secondary" @click="addItem">
+            <Icon name="ri:add-line" class="size-4" />
+            <span>{{ t('Add Access Key') }}</span>
+          </Button>
+        </div>
+      </AppCard>
 
-      <div class="rounded-lg border border-border/60 bg-background/60 p-2">
+      <div class="space-y-3">
         <AppDataTable
           :table="table"
           :is-loading="loading"
@@ -58,13 +59,18 @@
 </template>
 
 <script lang="ts" setup>
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { computed, h, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AppButton, AppInput, AppTag } from '@/components/app'
-import { AppDataTable, AppDataTablePagination, useDataTable } from '@/components/app/data-table'
+import { AppTag } from '@/components/app'
+import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
+import AppDataTablePagination from '@/components/app/data-table/AppDataTablePagination.vue'
+import { useDataTable } from '@/components/app/data-table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ChangePassword, EditItem, NewItem } from '~/components/access-keys'
 
@@ -84,6 +90,8 @@ interface RowData {
 const data = ref<RowData[]>([])
 const loading = ref(false)
 const searchTerm = ref('')
+
+const TableButton = Button as unknown as any
 
 const openEditItem = (row: RowData) => {
   editItemRef.value?.openDialog(row)
@@ -155,12 +163,12 @@ const columns: ColumnDef<RowData>[] = [
     enableHiding: false,
     cell: ({ row }) =>
       h('div', { class: 'flex justify-center gap-2' }, [
-        h(AppButton, {
+        h(TableButton, {
           variant: 'outline',
           size: 'sm',
           onClick: () => openEditItem(row.original),
         }, () => [h(Icon, { name: 'ri:edit-2-line', class: 'size-4' }), h('span', t('Edit'))]),
-        h(AppButton, {
+        h(TableButton, {
           variant: 'outline',
           size: 'sm',
           onClick: () => confirmDeleteSingle(row.original),

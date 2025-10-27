@@ -2,9 +2,9 @@
   <div class="flex flex-col gap-1">
     <div class="flex items-center justify-between gap-3">
       <div class="truncate text-sm font-medium text-foreground">{{ task.key }}</div>
-      <AppButton variant="ghost" size="xs" class="h-auto px-2 text-xs" @click="handleDeleteTask">
+      <Button variant="ghost" size="sm" class="h-auto px-2 text-xs" @click="handleDeleteTask">
         {{ t('Delete Record') }}
-      </AppButton>
+      </Button>
     </div>
     <AppProgress :value="task.progress" :processing="task.status === 'deleting'" :height="2" />
     <div class="flex items-center justify-between text-muted-foreground">
@@ -21,7 +21,9 @@
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppProgress } from '@/components/app'
+import { Button } from '@/components/ui/button'
+
+import { AppProgress } from '@/components/app'
 import type { DeleteTask } from '~/lib/delete-task-manager'
 import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
 

@@ -49,17 +49,17 @@
                 </AlertDescription>
               </Alert>
 
-              <div class="flex flex-col gap-2 rounded-lg border border-border/60 p-4 md:flex-row md:items-center md:justify-between">
+              <div class="flex flex-col gap-2 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <h3 class="text-sm font-semibold">{{ t('Export IAM Configuration') }}</h3>
                   <p class="text-xs text-muted-foreground">
                     {{ t('Download complete IAM configuration as ZIP file') }}
                   </p>
                 </div>
-                <AppButton variant="primary" size="lg" :loading="isLoading" :disabled="isLoading" @click="handleExportIam">
+                <Button variant="default" size="lg" :loading="isLoading" :disabled="isLoading" @click="handleExportIam">
                   <Icon name="ri:download-2-line" class="size-4" />
                   <span>{{ isLoading ? t('Exporting...') : t('Export Now') }}</span>
-                </AppButton>
+                </Button>
               </div>
             </AppCard>
 
@@ -85,20 +85,20 @@
                     </p>
                   </AppUploadZone>
                   <p v-if="uploadError" class="text-sm text-destructive">{{ uploadError }}</p>
-                  <div v-if="selectedFile" class="flex items-center justify-between rounded-md border border-border/60 p-3">
+                  <div v-if="selectedFile" class="flex items-center justify-between rounded-md border p-3">
                     <div>
                       <p class="text-sm font-medium">{{ selectedFile.name }}</p>
                       <p class="text-xs text-muted-foreground">
                         {{ formatSize(selectedFile.size) }}
                       </p>
                     </div>
-                    <AppButton variant="ghost" size="sm" class="text-destructive" @click="clearSelectedFile">
+                    <Button variant="ghost" size="sm" class="text-destructive" @click="clearSelectedFile">
                       <Icon name="ri:close-line" class="size-4" />
-                    </AppButton>
+                    </Button>
                   </div>
                 </div>
 
-                <div class="flex flex-col gap-2 rounded-lg border border-border/60 p-4 md:flex-row md:items-center md:justify-between">
+                <div class="flex flex-col gap-2 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
                   <div>
                     <h3 class="text-sm font-semibold">{{ t('Import IAM Configuration') }}</h3>
                     <p class="text-xs text-muted-foreground">
@@ -109,8 +109,8 @@
                       }}
                     </p>
                   </div>
-                  <AppButton
-                    variant="primary"
+                  <Button
+                    variant="default"
                     size="lg"
                     :loading="isLoading"
                     :disabled="isLoading || !selectedFile"
@@ -118,7 +118,7 @@
                   >
                     <Icon name="ri:upload-2-line" class="size-4" />
                     <span>{{ isLoading ? t('Importing...') : t('Import Now') }}</span>
-                  </AppButton>
+                  </Button>
                 </div>
               </div>
             </AppCard>
@@ -130,8 +130,10 @@
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
-import { AppButton, AppCard, AppTabs, AppUploadZone } from '@/components/app'
+import { AppCard, AppTabs, AppUploadZone } from '@/components/app'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'

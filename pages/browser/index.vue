@@ -7,31 +7,24 @@
     </page-header>
 
     <page-content class="flex flex-col gap-4 overflow-y-auto">
-      <div class="flex flex-wrap items-center justify-between gap-3">
+      <AppCard :padded="false" :content-class="'flex flex-wrap items-center justify-between gap-3 p-4'">
         <div class="flex w-full max-w-sm items-center gap-2">
           <Icon name="ri:search-2-line" class="size-4 text-muted-foreground" />
-          <AppInput v-model="searchTerm" :placeholder="t('Search')" />
+          <Input v-model="searchTerm" :placeholder="t('Search')" />
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <AppButton variant="secondary" @click="formVisible = true">
+          <Button variant="secondary" @click="formVisible = true">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Create Bucket') }}</span>
-          </AppButton>
-          <AppButton variant="outline" @click="refresh">
+          </Button>
+          <Button variant="outline" @click="() => refresh()">
             <Icon name="ri:refresh-line" class="size-4" />
             <span>{{ t('Refresh') }}</span>
-          </AppButton>
+          </Button>
         </div>
-      </div>
-
-      <AppCard padded class="border border-border/60">
-        <AppDataTable
-          :table="table"
-          :is-loading="pending"
-          :empty-title="t('No Buckets')"
-          :empty-description="t('Create a bucket to start storing objects.')"
-        />
       </AppCard>
+
+      <AppDataTable :table="table" :is-loading="pending" :empty-title="t('No Buckets')" :empty-description="t('Create a bucket to start storing objects.')" />
     </page-content>
 
     <buckets-new-form :show="formVisible" @update:show="handleFormClosed" />
@@ -40,14 +33,18 @@
 </template>
 
 <script lang="ts" setup>
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
 import { Icon, NuxtLink } from '#components'
+import { AppCard } from '@/components/app'
+import { useDataTable } from '@/components/app/data-table'
+import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
+import { niceBytes } from '@/utils/functions'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
-import { AppButton, AppCard, AppDataTable, AppInput } from '@/components/app'
-import { useDataTable } from '@/components/app/data-table'
 import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { niceBytes } from '@/utils/functions'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -65,29 +62,47 @@ interface BucketRow {
   Size?: string
 }
 
-const { data, pending, refresh } = await useAsyncData(
+type BucketUsageMap = Record<string, { objects_count?: number; size?: number } | undefined>
+
+const { data, pending, refresh } = await useAsyncData<BucketRow[]>(
   'buckets',
   async () => {
     const response = await listBuckets()
     const usage = await systemApi.getDataUsageInfo()
-    const bucketUsage = usage?.buckets_usage || {}
+    const bucketUsage = (usage?.buckets_usage ?? {}) as BucketUsageMap
 
-    return (
-      response.Buckets?.map(item => ({
-        Name: item.Name,
-        CreationDate: item.CreationDate,
-        Count: bucketUsage[item.Name]?.objects_count ?? 0,
-        Size: niceBytes(String(bucketUsage[item.Name]?.size ?? 0)),
-      }))?.sort((a, b) => a.Name.localeCompare(b.Name)) ?? []
-    )
+    const buckets = (response.Buckets ?? [])
+      .map(item => {
+        const name = item?.Name
+        if (!name) {
+          return null
+        }
+        const stats = bucketUsage[name]
+        const objectsCount = typeof stats?.objects_count === 'number' ? stats.objects_count : 0
+        const totalSize = typeof stats?.size === 'number' ? stats.size : 0
+
+        const bucketRow: BucketRow = {
+          Name: name,
+          CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : '',
+          Count: objectsCount,
+          Size: niceBytes(String(totalSize)),
+        }
+
+        return bucketRow
+      })
+      .filter((bucket): bucket is BucketRow => bucket !== null)
+      .sort((a, b) => a.Name.localeCompare(b.Name))
+
+    return buckets
   },
-  { default: () => [] }
+  { default: () => [] as BucketRow[] }
 )
 
 const filteredData = computed(() => {
-  if (!searchTerm.value) return data.value
+  const buckets = (data.value ?? []) as BucketRow[]
+  if (!searchTerm.value) return buckets
   const term = searchTerm.value.toLowerCase()
-  return data.value.filter(bucket => bucket.Name?.toLowerCase().includes(term))
+  return buckets.filter(bucket => bucket.Name.toLowerCase().includes(term))
 })
 
 const columns: ColumnDef<BucketRow>[] = [
@@ -125,7 +140,7 @@ const columns: ColumnDef<BucketRow>[] = [
     cell: ({ row }) =>
       h('div', { class: 'flex justify-center gap-2' }, [
         h(
-          AppButton,
+          Button,
           {
             variant: 'outline',
             size: 'sm',
@@ -134,7 +149,7 @@ const columns: ColumnDef<BucketRow>[] = [
           () => [h(Icon, { name: 'ri:settings-5-line', class: 'size-4' }), h('span', t('Settings'))]
         ),
         h(
-          AppButton,
+          Button,
           {
             variant: 'outline',
             size: 'sm',
@@ -176,8 +191,11 @@ const confirmDelete = (row: BucketRow) => {
 const deleteItem = async (row: BucketRow) => {
   const objectApi = useObject({ bucket: row.Name })
 
-  const files = await objectApi.listObject(row.Name)
-  if ((files?.object_list?.length ?? 0) > 0) {
+  const files = await objectApi.listObject(row.Name, undefined, 1)
+  const hasObjects = Boolean(files?.Contents?.some(item => Boolean(item?.Key)))
+    || Boolean(files?.CommonPrefixes?.length)
+
+  if (hasObjects) {
     message.error(t('Bucket is not empty'))
     return
   }
@@ -185,7 +203,7 @@ const deleteItem = async (row: BucketRow) => {
   try {
     await deleteBucket(row.Name)
     message.success(t('Delete Success'))
-    refresh()
+    await refresh()
   } catch (error: any) {
     message.error(error?.response?.data?.message || t('Delete Failed'))
   }

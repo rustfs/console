@@ -8,35 +8,41 @@
 
     <page-content class="flex flex-col gap-4">
       <div class="flex flex-wrap items-center justify-end gap-2">
-        <AppButton variant="secondary" @click="openNewForm">
+        <Button variant="secondary" @click="openNewForm">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('Add Tier') }}</span>
-        </AppButton>
-        <AppButton variant="outline" @click="refresh">
+        </Button>
+        <Button variant="outline" @click="() => refresh()">
           <Icon name="ri:refresh-line" class="size-4" />
           <span>{{ t('Refresh') }}</span>
-        </AppButton>
+        </Button>
       </div>
 
-      <AppCard padded class="border border-border/60">
-        <AppDataTable
-          :table="table"
-          :is-loading="loading"
-          :empty-title="t('No Tiers')"
-          :empty-description="t('Add tiers to configure remote storage destinations.')"
-        />
-      </AppCard>
+      <AppDataTable
+        :table="table"
+        :is-loading="loading"
+        :empty-title="t('No Tiers')"
+        :empty-description="t('Add tiers to configure remote storage destinations.')"
+      />
 
-      <tiers-new-form ref="newFormRef" @search="refresh" />
-      <tiers-change-key ref="changeKeyRef" v-model:visible="changeKeyVisible" v-model:name="selectedTier" @search="refresh" />
+      <tiers-new-form ref="newFormRef" @search="() => refresh()" />
+      <tiers-change-key
+        ref="changeKeyRef"
+        v-model:visible="changeKeyVisible"
+        v-model:name="selectedTier"
+        @search="() => refresh()"
+      />
     </page-content>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { AppButton, AppCard, AppDataTable, AppTag } from '@/components/app'
+import { AppCard, AppTag } from '@/components/app'
+import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
 import { useDataTable } from '@/components/app/data-table'
 import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -54,66 +60,6 @@ interface TierRow {
 const tiersData = ref<TierRow[]>([])
 const loading = ref(false)
 
-const columns: ColumnDef<TierRow>[] = [
-  {
-    header: () => t('Tier Type'),
-    accessorKey: 'type',
-    cell: ({ row }) => h('span', { class: 'capitalize' }, row.original.type || '-'),
-  },
-  {
-    header: () => t('Name'),
-    accessorFn: row => getConfig(row)?.name || '-',
-  },
-  {
-    header: () => t('Endpoint'),
-    accessorFn: row => getConfig(row)?.endpoint || '-',
-  },
-  {
-    header: () => t('Bucket'),
-    accessorFn: row => getConfig(row)?.bucket || '-',
-  },
-  {
-    header: () => t('Prefix'),
-    accessorFn: row => getConfig(row)?.prefix || '-',
-  },
-  {
-    header: () => t('Region'),
-    accessorFn: row => getConfig(row)?.region || '-',
-  },
-  {
-    id: 'actions',
-    header: () => t('Actions'),
-    enableSorting: false,
-    cell: ({ row }) =>
-      h('div', { class: 'flex justify-center gap-2' }, [
-        h(
-          AppButton,
-          {
-            variant: 'outline',
-            size: 'sm',
-            onClick: () => openChangeKey(row),
-          },
-          () => [h(Icon, { name: 'ri:key-2-line', class: 'size-4' }), h('span', t('Update Key'))]
-        ),
-        h(
-          AppButton,
-          {
-            variant: 'outline',
-            size: 'sm',
-            onClick: () => confirmDelete(row),
-          },
-          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
-        ),
-      ]),
-  },
-]
-
-const { table } = useDataTable<TierRow>({
-  data: tiersData,
-  columns,
-  getRowId: row => `${row.type}-${getConfig(row)?.name}`,
-})
-
 const getConfig = (row: TierRow) => {
   switch (row.type) {
     case 'rustfs':
@@ -127,6 +73,71 @@ const getConfig = (row: TierRow) => {
   }
 }
 
+const columns: ColumnDef<TierRow>[] = [
+  {
+    header: () => t('Tier Type'),
+    accessorKey: 'type',
+    cell: ({ row }) => h('span', { class: 'capitalize' }, row.original.type || '-'),
+  },
+  {
+    id: 'name',
+    header: () => t('Name'),
+    accessorFn: row => getConfig(row)?.name || '-',
+  },
+  {
+    id: 'endpoint',
+    header: () => t('Endpoint'),
+    accessorFn: row => getConfig(row)?.endpoint || '-',
+  },
+  {
+    id: 'bucket',
+    header: () => t('Bucket'),
+    accessorFn: row => getConfig(row)?.bucket || '-',
+  },
+  {
+    id: 'prefix',
+    header: () => t('Prefix'),
+    accessorFn: row => getConfig(row)?.prefix || '-',
+  },
+  {
+    id: 'region',
+    header: () => t('Region'),
+    accessorFn: row => getConfig(row)?.region || '-',
+  },
+  {
+    id: 'actions',
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: ({ row }) =>
+      h('div', { class: 'flex justify-center gap-2' }, [
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => openChangeKey(row.original),
+          },
+          () => [h(Icon, { name: 'ri:key-2-line', class: 'size-4' }), h('span', t('Update Key'))]
+        ),
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => confirmDelete(row.original),
+          },
+          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
+        ),
+      ]),
+  },
+]
+
+const { table } = useDataTable<TierRow>({
+  data: tiersData,
+  columns,
+  getRowId: row => `${row.type}-${getConfig(row)?.name}`,
+})
+
 const loadTiers = async () => {
   loading.value = true
   try {
@@ -139,8 +150,8 @@ const loadTiers = async () => {
   }
 }
 
-const refresh = () => {
-  loadTiers()
+const refresh = async () => {
+  await loadTiers()
 }
 
 loadTiers()
@@ -169,7 +180,7 @@ const confirmDelete = (row: TierRow) => {
 
 const deleteTier = async (row: TierRow) => {
   try {
-    await usetier.deleteTiers(getConfig(row)?.name || '')
+    await usetier.removeTiers(getConfig(row)?.name || '')
     message.success(t('Delete Success'))
     refresh()
   } catch (error: any) {

@@ -21,7 +21,7 @@ function keepStyling() {
   nextTick(() => {
     const elements = elRef.value?.querySelectorAll(selector)
     const classes = buttonVariants({ variant: "ghost", size: "sm" }).split(" ")
-    elements?.forEach(el => el.classList.add(...classes, "!inline-flex", "!mr-2"))
+    elements?.forEach(el => el.classList.add(...classes, "inline-flex!", "mr-2!"))
   })
 }
 
@@ -30,8 +30,12 @@ onMounted(() => {
 })
 
 function onLegendItemClick(d: BulletLegendItemInterface, i: number) {
+  const targetItem = props.items[i]
+  if (!targetItem) {
+    return
+  }
   emits("legendItemClick", d, i)
-  const isBulletActive = !props.items[i].inactive
+  const isBulletActive = !targetItem.inactive
   const isFilterApplied = props.items.some(i => i.inactive)
   if (isFilterApplied && isBulletActive) {
     // reset filter

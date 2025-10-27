@@ -5,27 +5,30 @@
         <AlertDescription>{{ t('Overwrite Warning') }}</AlertDescription>
       </Alert>
 
-      <AppInput
+      <Input
         v-model="objectKey"
         :placeholder="t('Name Placeholder', { type: displayType })"
         autocomplete="off"
       />
 
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal">{{ t('Close') }}</AppButton>
-        <AppButton variant="primary" :disabled="objectKey.trim().length < 1" @click="handlePutObject">
+        <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
+        <Button variant="default" :disabled="objectKey.trim().length < 1" @click="handlePutObject">
           {{ t('Create') }}
-        </AppButton>
+        </Button>
       </div>
     </div>
   </AppModal>
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { joinRelativeURL } from 'ufo'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AppButton, AppInput, AppModal } from '@/components/app'
+import { AppModal } from '@/components/app'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const { t } = useI18n()

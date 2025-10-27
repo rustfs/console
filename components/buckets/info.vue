@@ -6,10 +6,10 @@
           <div class="space-y-1">
             <p class="text-sm font-medium text-foreground">{{ t('Access Policy') }}</p>
           </div>
-          <AppButton variant="outline" size="sm" class="shrink-0" @click="editPolicy">
+          <Button variant="outline" size="sm" class="shrink-0" @click="editPolicy">
             <Icon name="ri:edit-2-line" class="mr-2 size-4" />
             <span>{{ t('Edit') }}</span>
-          </AppButton>
+          </Button>
         </div>
         <p class="text-sm text-muted-foreground">{{ currentPolicyLabel }}</p>
       </AppCard>
@@ -20,38 +20,38 @@
             <p class="text-sm font-medium text-foreground">{{ t('Encryption') }}</p>
             <p class="text-xs text-muted-foreground">{{ encryptionLabel }}</p>
           </div>
-          <AppButton variant="outline" size="sm" class="shrink-0" @click="editEncrypt">
+          <Button variant="outline" size="sm" class="shrink-0" @click="editEncrypt">
             <Icon name="ri:edit-2-line" class="mr-2 size-4" />
             <span>{{ t('Edit') }}</span>
-          </AppButton>
+          </Button>
         </div>
       </AppCard>
 
       <AppCard padded class="space-y-3">
         <div class="flex items-start justify-between gap-3">
           <p class="text-sm font-medium text-foreground">{{ t('Tag') }}</p>
-          <AppButton variant="outline" size="sm" class="shrink-0" @click="addTag">
+          <Button variant="outline" size="sm" class="shrink-0" @click="addTag">
             <Icon name="ri:add-line" class="mr-2 size-4" />
             <span>{{ t('Add') }}</span>
-          </AppButton>
+          </Button>
         </div>
         <div v-if="tags.length" class="flex flex-wrap gap-2">
           <div
             v-for="(tag, index) in tags"
             :key="`${tag.Key}-${index}`"
-            class="flex items-center gap-2 rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-xs"
+            class="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs"
           >
             <button type="button" class="text-left" @click="editTag(index)">
               {{ tag.Key }}:{{ tag.Value }}
             </button>
-            <AppButton
+            <Button
               variant="ghost"
-              size="xs"
+              size="sm"
               class="h-6 w-6 p-0"
               @click.stop="handleDeleteTag(index)"
             >
               <Icon name="ri:close-line" class="size-3.5" />
-            </AppButton>
+            </Button>
           </div>
         </div>
         <p v-else class="text-sm text-muted-foreground">
@@ -88,9 +88,9 @@
               {{ retentionEnabled ? t('Enabled') : t('Disabled') }}
             </p>
           </div>
-          <AppButton variant="outline" size="sm" class="shrink-0" @click="editRetention">
+          <Button variant="outline" size="sm" class="shrink-0" @click="editRetention">
             <span>{{ t('Edit') }}</span>
-          </AppButton>
+          </Button>
         </div>
         <div class="grid gap-3 sm:grid-cols-2">
           <div>
@@ -128,19 +128,19 @@
       </div>
       <div v-if="policyFormValue.policy === 'custom'" class="space-y-2">
         <Label>{{ t('Policy Content') }}</Label>
-        <div class="max-h-[60vh] overflow-y-auto rounded-md border border-border/60 p-2">
+        <div class="max-h-[60vh] overflow-y-auto rounded-md border p-2">
           <json-editor v-model="policyFormValue.content" />
         </div>
       </div>
     </AppCard>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="showPolicyModal = false">
+        <Button variant="outline" @click="showPolicyModal = false">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="primary" @click="submitPolicyForm">
+        </Button>
+        <Button variant="default" @click="submitPolicyForm">
           {{ t('Confirm') }}
-        </AppButton>
+        </Button>
       </div>
     </template>
   </AppModal>
@@ -149,21 +149,21 @@
     <AppCard padded class="space-y-4">
       <div class="space-y-2">
         <Label>{{ t('Tag Key') }}</Label>
-        <AppInput v-model="tagFormValue.name" :placeholder="t('Tag Key Placeholder')" />
+        <Input v-model="tagFormValue.name" :placeholder="t('Tag Key Placeholder')" />
       </div>
       <div class="space-y-2">
         <Label>{{ t('Tag Value') }}</Label>
-        <AppInput v-model="tagFormValue.value" :placeholder="t('Please enter tag value')" />
+        <Input v-model="tagFormValue.value" :placeholder="t('Please enter tag value')" />
       </div>
     </AppCard>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="showTagModal = false">
+        <Button variant="outline" @click="showTagModal = false">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="primary" @click="submitTagForm">
+        </Button>
+        <Button variant="default" @click="submitTagForm">
           {{ t('Confirm') }}
-        </AppButton>
+        </Button>
       </div>
     </template>
   </AppModal>
@@ -189,12 +189,12 @@
     </AppCard>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="showEncryptModal = false">
+        <Button variant="outline" @click="showEncryptModal = false">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="primary" @click="submitEncryptForm">
+        </Button>
+        <Button variant="default" @click="submitEncryptForm">
           {{ t('Confirm') }}
-        </AppButton>
+        </Button>
       </div>
     </template>
   </AppModal>
@@ -219,24 +219,27 @@
       </div>
       <div class="space-y-2">
         <Label>{{ t('Retention Period') }}</Label>
-        <AppInput v-model="retentionPeriodInput" type="number" />
+        <Input v-model="retentionPeriodInput" type="number" />
       </div>
     </AppCard>
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="showRetentionModal = false">
+        <Button variant="outline" @click="showRetentionModal = false">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="primary" @click="submitRetentionForm">
+        </Button>
+        <Button variant="default" @click="submitRetentionForm">
           {{ t('Confirm') }}
-        </AppButton>
+        </Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppCard, AppDrawer, AppInput, AppModal, AppRadioGroup, AppSelect, AppSwitch, AppSpinner } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppDrawer, AppModal, AppRadioGroup, AppSelect, AppSwitch, AppSpinner } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { Icon } from '#components'
 import { computed, ref, watch } from 'vue'

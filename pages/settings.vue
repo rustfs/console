@@ -1,8 +1,11 @@
 <script lang="ts" setup>
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { configManager } from '~/utils/config'
-import { AppButton, AppCard, AppInput } from '@/components/app'
+import { AppCard } from '@/components/app'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 const { t } = useI18n()
@@ -103,7 +106,7 @@ const currentItems = computed(() => [
           <div
             v-for="item in currentItems"
             :key="item.label"
-            class="rounded-md border border-border/60 p-3"
+            class="rounded-md border p-3"
           >
             <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {{ item.label }}
@@ -118,7 +121,7 @@ const currentItems = computed(() => [
         <form class="space-y-4" @submit.prevent="saveConfig">
           <div class="space-y-2">
             <Label class="text-sm font-medium">{{ t('Server Address') }}</Label>
-            <AppInput
+            <Input
               v-model="formData.serverHost"
               :placeholder="t('Please enter server address (e.g., http://localhost:9000)')"
               autocomplete="off"
@@ -129,12 +132,12 @@ const currentItems = computed(() => [
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <AppButton type="submit" variant="primary" :loading="loading">
+            <Button type="submit" variant="default" :loading="loading">
               {{ t('Save Configuration') }}
-            </AppButton>
-            <AppButton type="button" variant="outline" @click="resetConfig">
+            </Button>
+            <Button type="button" variant="outline" @click="resetConfig">
               {{ t('Reset to Default') }}
-            </AppButton>
+            </Button>
           </div>
         </form>
 

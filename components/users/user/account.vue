@@ -4,12 +4,12 @@
       <AppCard padded class="space-y-4">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="w-full sm:max-w-xs">
-            <AppInput v-model="searchTerm" :placeholder="t('Search Account')" />
+            <Input v-model="searchTerm" :placeholder="t('Search Account')" />
           </div>
-          <AppButton variant="secondary" class="inline-flex items-center gap-2" @click="addItem">
+          <Button variant="secondary" class="inline-flex items-center gap-2" @click="addItem">
             <Icon class="size-4" name="ri:add-line" />
             {{ t('Add Account') }}
-          </AppButton>
+          </Button>
         </div>
 
         <Table class="overflow-hidden rounded-lg border">
@@ -34,17 +34,17 @@
               <TableCell class="text-center">{{ account.name || '-' }}</TableCell>
               <TableCell>
                 <div class="flex justify-center gap-2">
-                  <AppButton variant="ghost" size="sm" class="h-8 w-8 p-0" @click="openEditItem(account)">
+                  <Button variant="ghost" size="sm" class="h-8 w-8 p-0" @click="openEditItem(account)">
                     <Icon class="size-4" name="ri:edit-2-line" />
-                  </AppButton>
-                  <AppButton
+                  </Button>
+                  <Button
                     variant="ghost"
                     size="sm"
                     class="h-8 w-8 p-0 text-destructive"
                     @click="confirmDelete(account)"
                   >
                     <Icon class="size-4" name="ri:delete-bin-5-line" />
-                  </AppButton>
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
@@ -65,11 +65,11 @@
         <div class="grid gap-4 md:grid-cols-2">
           <div class="space-y-2">
             <Label>{{ t('Access Key') }}</Label>
-            <AppInput v-model="formModel.accessKey" autocomplete="off" />
+            <Input v-model="formModel.accessKey" autocomplete="off" />
           </div>
           <div class="space-y-2">
             <Label>{{ t('Secret Key') }}</Label>
-            <AppInput v-model="formModel.secretKey" type="password" autocomplete="off" />
+            <Input v-model="formModel.secretKey" type="password" autocomplete="off" />
           </div>
           <div class="space-y-2">
             <Label>{{ t('Expiration') }}</Label>
@@ -77,7 +77,7 @@
           </div>
           <div class="space-y-2">
             <Label>{{ t('Name') }}</Label>
-            <AppInput v-model="formModel.name" autocomplete="off" />
+            <Input v-model="formModel.name" autocomplete="off" />
           </div>
           <div class="space-y-2 md:col-span-2">
             <Label>{{ t('Description') }}</Label>
@@ -86,7 +86,7 @@
         </div>
 
         <div class="space-y-2">
-          <div class="flex items-center justify-between rounded-md border border-border/60 px-3 py-2">
+          <div class="flex items-center justify-between rounded-md border px-3 py-2">
             <div>
               <p class="text-sm font-medium">{{ t('Use main account policy') }}</p>
               <p class="text-xs text-muted-foreground">
@@ -103,8 +103,8 @@
         </div>
 
         <div class="flex justify-end gap-2">
-          <AppButton variant="outline" @click="cancelAdd">{{ t('Cancel') }}</AppButton>
-          <AppButton variant="primary" :loading="submitting" @click="submitForm">{{ t('Submit') }}</AppButton>
+          <Button variant="outline" @click="cancelAdd">{{ t('Cancel') }}</Button>
+          <Button variant="default" :loading="submitting" @click="submitForm">{{ t('Submit') }}</Button>
         </div>
       </AppCard>
     </template>
@@ -118,8 +118,11 @@
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
-import { AppButton, AppCard, AppDateTimePicker, AppInput, AppSwitch, AppTextarea } from '@/components/app'
+import { AppCard, AppDateTimePicker, AppSwitch, AppTextarea } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import dayjs from 'dayjs'

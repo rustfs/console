@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { AppButton, AppCard, AppInput, AppModal, AppSwitch, AppTextarea } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import Spinner from '@/components/ui/spinner/Spinner.vue'
+
+import { AppCard, AppModal, AppSwitch, AppTextarea } from '@/components/app'
 import AppDateTimePicker from '@/components/app/AppDateTimePicker.vue'
 import { Label } from '@/components/ui/label'
 import dayjs from 'dayjs'
@@ -96,7 +100,7 @@ async function submitForm() {
     <AppCard padded class="space-y-4">
       <div class="grid gap-2">
         <Label>{{ t('Access Key') }}</Label>
-        <AppInput v-model="formModel.accesskey" disabled />
+        <Input v-model="formModel.accesskey" disabled />
       </div>
 
       <div class="grid gap-2">
@@ -111,7 +115,7 @@ async function submitForm() {
 
       <div class="grid gap-2">
         <Label>{{ t('Name') }}</Label>
-        <AppInput v-model="formModel.name" />
+        <Input v-model="formModel.name" />
       </div>
 
       <div class="grid gap-2">
@@ -119,7 +123,7 @@ async function submitForm() {
         <AppTextarea v-model="formModel.description" :rows="3" />
       </div>
 
-      <div class="flex items-center justify-between rounded-md border border-border/60 p-3">
+      <div class="flex items-center justify-between rounded-md border p-3">
         <span class="text-sm font-medium">{{ t('Status') }}</span>
         <AppSwitch v-model="statusBoolean" />
       </div>
@@ -127,12 +131,13 @@ async function submitForm() {
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal()">
+        <Button variant="outline" @click="closeModal()">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="primary" :loading="submitting" @click="submitForm">
-          {{ t('Submit') }}
-        </AppButton>
+        </Button>
+        <Button variant="default" :disabled="submitting" @click="submitForm">
+          <Spinner v-if="submitting" class="size-4" />
+          <span>{{ t('Submit') }}</span>
+        </Button>
       </div>
     </template>
   </AppModal>

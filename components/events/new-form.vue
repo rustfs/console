@@ -72,7 +72,7 @@
                   <Checkbox
                     :checked="formData.events.includes(event.value)"
                     class="mt-1"
-                    @update:checked="value => toggleEvent(event.value, value)"
+                    @update:checked="handleEventChecked(event.value, $event)"
                   />
                   <span>{{ t(event.labelKey) }}</span>
                 </label>
@@ -211,6 +211,10 @@ const toggleEvent = (event: string, value: boolean | 'indeterminate') => {
   } else if (!checked) {
     formData.value.events = formData.value.events.filter(item => item !== event)
   }
+}
+
+const handleEventChecked = (eventValue: string, value: boolean | 'indeterminate') => {
+  toggleEvent(eventValue, value)
 }
 
 const validate = () => {

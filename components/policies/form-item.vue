@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -120,13 +123,13 @@ const submitForm = async () => {
     <AppCard padded class="space-y-4">
       <div class="grid gap-2">
         <Label for="policy-name">{{ t('Policy Name') }}</Label>
-        <AppInput id="policy-name" v-model="form.name" autocomplete="off" />
+        <Input id="policy-name" v-model="form.name" autocomplete="off" />
         <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
       </div>
 
       <div class="grid gap-2">
         <Label for="policy-content">{{ t('Policy Original') }}</Label>
-        <div class="max-h-[60vh] overflow-auto rounded-md border border-border/60">
+        <div class="max-h-[60vh] overflow-auto rounded-md border">
           <json-editor id="policy-content" v-model="form.content" />
         </div>
         <p v-if="errors.content" class="text-sm text-destructive">{{ errors.content }}</p>
@@ -135,8 +138,8 @@ const submitForm = async () => {
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal()">{{ t('Cancel') }}</AppButton>
-        <AppButton variant="primary" :loading="submitting" @click="submitForm">{{ t('Submit') }}</AppButton>
+        <Button variant="outline" @click="closeModal()">{{ t('Cancel') }}</Button>
+        <Button variant="default" :loading="submitting" @click="submitForm">{{ t('Submit') }}</Button>
       </div>
     </template>
   </AppModal>

@@ -19,7 +19,7 @@
       </div>
 
       <div v-else class="space-y-5">
-        <AppCard class="cursor-pointer border border-border/60 transition hover:border-primary" @click="resetType">
+        <AppCard class="cursor-pointer border transition hover:border-primary" @click="resetType">
           <div class="flex items-center gap-3">
             <img :src="iconUrl" class="h-10 w-10" alt="" />
             <div>
@@ -32,7 +32,7 @@
         <AppCard padded class="space-y-4">
           <div class="grid gap-2">
             <Label>{{ t('Name') }} (A-Z,0-9,_)</Label>
-            <AppInput
+            <Input
               v-model="formData.name"
               :placeholder="t('Please enter name')"
               autocomplete="off"
@@ -43,37 +43,37 @@
 
           <div class="grid gap-2">
             <Label>{{ t('Endpoint') }}</Label>
-            <AppInput v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
+            <Input v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
           </div>
 
           <div class="grid gap-2">
             <Label>{{ t('Access Key') }}</Label>
-            <AppInput v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
+            <Input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
           </div>
 
           <div class="grid gap-2">
             <Label>{{ t('Secret Key') }}</Label>
-            <AppInput v-model="formData.secretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+            <Input v-model="formData.secretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
           </div>
 
           <div class="grid gap-2">
             <Label>{{ t('Bucket') }}</Label>
-            <AppInput v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
+            <Input v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
           </div>
 
           <div class="grid gap-2">
             <Label>{{ t('Prefix') }}</Label>
-            <AppInput v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+            <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
           </div>
 
           <div class="grid gap-2">
             <Label>{{ t('Region') }}</Label>
-            <AppInput v-model="formData.region" :placeholder="t('Please enter region')" />
+            <Input v-model="formData.region" :placeholder="t('Please enter region')" />
           </div>
 
           <div class="grid gap-2">
             <Label>{{ t('Storage Class') }}</Label>
-            <AppInput v-model="formData.storageclass" :placeholder="t('Please Enter storage class')" />
+            <Input v-model="formData.storageclass" :placeholder="t('Please Enter storage class')" />
           </div>
         </AppCard>
       </div>
@@ -81,17 +81,20 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="handleCancel">{{ t('Cancel') }}</AppButton>
-        <AppButton variant="primary" :disabled="!formData.type" :loading="submitting" @click="handleSave">
+        <Button variant="outline" @click="handleCancel">{{ t('Cancel') }}</Button>
+        <Button variant="default" :disabled="!formData.type" :loading="submitting" @click="handleSave">
           {{ t('Save') }}
-        </AppButton>
+        </Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

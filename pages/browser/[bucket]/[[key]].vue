@@ -11,7 +11,7 @@
       </page-header>
       <page-content class="flex flex-col gap-4">
         <object-list v-if="isObjectList" :bucket="bucketName" :path="key" />
-        <object-view v-else :bucket="bucketName" :object-key="key" />
+        <object-view v-else :bucket-name="bucketName" :object-key="key" />
       </page-content>
     </div>
     <footer />
@@ -48,7 +48,10 @@ const isBucketExist = () => {
 isBucketExist()
 
 // 当前路径的前缀, example: 'folder1/folder2/'
-const key = computed(() => decodeURIComponent(route.params.key as string))
+const key = computed(() => {
+  const rawKey = route.params.key
+  return rawKey ? decodeURIComponent(String(rawKey)) : ''
+})
 
 const bucketPath = (path: string | Array<string> = '') => {
   if (Array.isArray(path)) {

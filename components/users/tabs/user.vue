@@ -50,7 +50,7 @@
             <Checkbox
               :checked="checkedKeys.includes(rowKey(row))"
               aria-label="Select user"
-              @update:checked="value => toggleRow(rowKey(row), value)"
+              @update:checked="(value: boolean) => toggleRow(rowKey(row), value)"
             />
           </TableCell>
           <TableCell class="font-medium">{{ row.accessKey }}</TableCell>

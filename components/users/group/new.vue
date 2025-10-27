@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+
 import { Icon } from '#components'
-import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { AppCard, AppModal } from '@/components/app'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
@@ -106,7 +108,7 @@ const submitForm = async () => {
     <AppCard padded class="space-y-6">
       <div class="space-y-2">
         <Label class="text-sm font-medium">{{ t('Name') }}</Label>
-        <AppInput v-model="formModel.group" autocomplete="off" />
+        <Input v-model="formModel.group" autocomplete="off" />
       </div>
 
       <div class="space-y-2">
@@ -161,12 +163,12 @@ const submitForm = async () => {
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal()">
+        <Button variant="outline" @click="closeModal()">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="primary" :loading="submitting" @click="submitForm">
+        </Button>
+        <Button variant="default" :loading="submitting" @click="submitForm">
           {{ t('Submit') }}
-        </AppButton>
+        </Button>
       </div>
     </template>
   </AppModal>

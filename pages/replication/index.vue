@@ -7,8 +7,9 @@
     </page-header>
 
     <page-content class="flex flex-col gap-4">
-      <div
-        class="flex flex-col gap-4 rounded-lg border border-border/60 bg-background/80 p-4 shadow-sm md:flex-row md:items-end md:justify-between"
+      <AppCard
+        :padded="false"
+        :content-class="'flex flex-col gap-4 p-4 md:flex-row md:items-end md:justify-between'"
       >
         <div class="w-full max-w-sm">
           <Label class="mb-2 block text-sm font-medium text-muted-foreground">{{ t('Bucket') }}</Label>
@@ -20,36 +21,39 @@
           />
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2">
-          <AppButton variant="secondary" @click="openForm">
+          <Button variant="secondary" @click="openForm">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Replication Rule') }}</span>
-          </AppButton>
-          <AppButton variant="outline" @click="loadReplication">
+          </Button>
+          <Button variant="outline" @click="() => loadReplication()">
             <Icon name="ri:refresh-line" class="size-4" />
             <span>{{ t('Refresh') }}</span>
-          </AppButton>
+          </Button>
         </div>
-      </div>
-
-      <AppCard padded class="border border-border/60">
-        <AppDataTable
-          :table="table"
-          :is-loading="loading"
-          :empty-title="t('No Data')"
-          :empty-description="t('Add replication rules to sync objects across buckets.')"
-        />
       </AppCard>
 
-      <replication-new-form ref="addFormRef" :bucketName="bucketName" @success="loadReplication" />
+      <AppDataTable
+        :table="table"
+        :is-loading="loading"
+        :empty-title="t('No Data')"
+        :empty-description="t('Add replication rules to sync objects across buckets.')"
+      />
+
+      <replication-new-form ref="addFormRef" :bucketName="bucketName" @success="() => loadReplication()" />
     </page-content>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
+import type { Bucket } from '@aws-sdk/client-s3'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { AppButton, AppCard, AppSelect, AppTag } from '@/components/app'
-import { AppDataTable, useDataTable } from '@/components/app/data-table'
+import { AppCard, AppSelect, AppTag } from '@/components/app'
+import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
+import { useDataTable } from '@/components/app/data-table'
+import type { SelectOption } from '@/components/app/AppSelect.vue'
 import { Label } from '@/components/ui/label'
 import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -80,25 +84,31 @@ interface ReplicationRule {
   }
 }
 
-const { data: bucketData } = await useAsyncData(
+const { data: bucketData } = await useAsyncData<Bucket[]>(
   'replication-buckets',
   async () => {
     const response = await listBuckets()
-    return (
-      response.Buckets?.sort((a: any, b: any) => a.Name.localeCompare(b.Name)) ?? []
-    )
+    const buckets = (response.Buckets ?? []).filter((bucket): bucket is Bucket => Boolean(bucket?.Name))
+    return buckets.sort((a, b) => (a.Name ?? '').localeCompare(b.Name ?? ''))
   },
-  { default: () => [] }
+  { default: () => [] as Bucket[] }
 )
 
-const bucketList = computed(() =>
-  bucketData.value.map(bucket => ({
-    label: bucket.Name,
-    value: bucket.Name,
-  }))
-)
+const bucketList = computed<SelectOption[]>(() => {
+  const buckets = bucketData.value ?? []
+  return buckets.reduce<SelectOption[]>((acc, bucket) => {
+    const name = bucket.Name ?? ''
+    if (!name) {
+      return acc
+    }
+    acc.push({ label: name, value: name })
+    return acc
+  }, [])
+})
 
-const bucketName = ref<string>(bucketList.value[0]?.value ?? '')
+const initialBucketOption = bucketList.value[0]?.value
+const initialBucket = typeof initialBucketOption === 'string' ? initialBucketOption : ''
+const bucketName = ref<string>(initialBucket)
 const rules = ref<ReplicationRule[]>([])
 const loading = ref(false)
 
@@ -148,7 +158,7 @@ const columns: ColumnDef<ReplicationRule>[] = [
     cell: ({ row }) =>
       h('div', { class: 'flex justify-center gap-2' }, [
         h(
-          AppButton,
+          Button,
           {
             variant: 'outline',
             size: 'sm',
@@ -213,7 +223,7 @@ const handleRowDelete = async (rule: ReplicationRule) => {
       })
     }
     message.success(t('Delete Success'))
-    loadReplication()
+    await loadReplication()
   } catch (error: any) {
     message.error(error?.message || t('Delete Failed'))
   }

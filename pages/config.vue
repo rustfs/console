@@ -1,11 +1,12 @@
 <script lang="ts" setup>
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 await setPageLayout('plain');
 
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
-import { AppButton, AppInput } from '@/components/app';
-
 const { t } = useI18n();
 const router = useRouter();
 const message = useMessage();
@@ -122,7 +123,7 @@ onMounted(() => {
                   <div class="text-xs text-gray-500 mb-2">
                     {{ t('Leave empty to use current host as default') }}
                   </div>
-                  <AppInput
+                  <Input
                     v-model="serverHost"
                     type="text"
                     :placeholder="t('Please enter server address (e.g., http://localhost:9000)')"
@@ -133,17 +134,17 @@ onMounted(() => {
                 </div>
 
                 <div class="flex gap-3">
-                  <AppButton type="submit" class="flex-1">
+                  <Button type="submit" class="flex-1">
                     {{ t('Save Configuration') }}
-                  </AppButton>
+                  </Button>
 
-                  <AppButton type="button" variant="outline" @click="resetToCurrentHost">
+                  <Button type="button" variant="outline" @click="resetToCurrentHost">
                     {{ t('Reset') }}
-                  </AppButton>
+                  </Button>
 
-                  <AppButton type="button" variant="outline" @click="skipConfig">
+                  <Button type="button" variant="outline" @click="skipConfig">
                     {{ t('Skip') }}
-                  </AppButton>
+                  </Button>
                 </div>
               </div>
             </form>

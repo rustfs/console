@@ -16,9 +16,37 @@ function isValidConfig(config: any): config is ConfigItem {
 }
 
 const delegatedProps = computed(() => {
-  if (["ZodObject", "ZodArray"].includes(props.shape?.type))
-    return { schema: props.shape?.schema }
+  if (props.shape && ["ZodObject", "ZodArray"].includes(props.shape.type)) {
+    return { schema: props.shape.schema }
+  }
   return undefined
+})
+
+const resolvedComponent = computed(() => {
+  if (isValidConfig(props.config)) {
+    if (typeof props.config.component === "string") {
+      return INPUT_COMPONENTS[props.config.component] ?? INPUT_COMPONENTS.string
+    }
+    return props.config.component
+  }
+
+  if (!props.shape) {
+    throw new Error("Shape is required for auto form field")
+  }
+
+  const handlerKey = DEFAULT_ZOD_HANDLERS[props.shape.type]
+
+  if (!handlerKey) {
+    throw new Error(`Unsupported schema type: ${String(props.shape.type)}`)
+  }
+
+  const component = INPUT_COMPONENTS[handlerKey] ?? INPUT_COMPONENTS.string
+
+  if (!component) {
+    throw new Error(`Component not registered for handler: ${handlerKey}`)
+  }
+
+  return component
 })
 
 const { isDisabled, isHidden, isRequired, overrideOptions } = useDependencies(props.fieldName)
@@ -26,11 +54,7 @@ const { isDisabled, isHidden, isRequired, overrideOptions } = useDependencies(pr
 
 <template>
   <component
-    :is="isValidConfig(config)
-      ? typeof config.component === 'string'
-        ? INPUT_COMPONENTS[config.component!]
-        : config.component
-      : INPUT_COMPONENTS[DEFAULT_ZOD_HANDLERS[shape.type]] "
+    :is="resolvedComponent"
     v-if="!isHidden"
     :field-name="fieldName"
     :label="shape.schema?.description"

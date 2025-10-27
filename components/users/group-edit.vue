@@ -1,7 +1,7 @@
 <template>
   <AppModal v-model="visible" :title="group.name || t('Members')" size="lg" :close-on-backdrop="false">
     <AppCard padded class="space-y-4">
-      <div class="flex items-center justify-between rounded-md border border-border/60 px-3 py-2">
+      <div class="flex items-center justify-between rounded-md border px-3 py-2">
         <span class="text-sm text-muted-foreground">{{ t('Status') }}</span>
         <AppSwitch v-model="statusBoolean" />
       </div>

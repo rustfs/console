@@ -13,15 +13,17 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal">{{ t('Cancel') }}</AppButton>
-        <AppButton variant="primary" @click="exportFile">{{ t('Export') }}</AppButton>
+        <Button variant="outline" @click="closeModal">{{ t('Cancel') }}</Button>
+        <Button variant="default" @click="exportFile">{{ t('Export') }}</Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppCard, AppModal } from '@/components/app'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { download } from '@/utils/export-file'
 import { ref } from 'vue'

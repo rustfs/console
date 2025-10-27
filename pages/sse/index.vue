@@ -27,7 +27,7 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <AppButton
+            <Button
               size="sm"
               variant="outline"
               :loading="refreshingStatus"
@@ -35,8 +35,8 @@
             >
               <Icon name="ri:refresh-line" class="mr-2 size-4" />
               {{ t('Refresh') }}
-            </AppButton>
-            <AppButton
+            </Button>
+            <Button
               size="sm"
               variant="outline"
               :disabled="sseKmsForm.kms_status !== 'Running'"
@@ -45,8 +45,8 @@
             >
               <Icon name="ri:delete-bin-line" class="mr-2 size-4" />
               {{ t('Clear Cache') }}
-            </AppButton>
-            <AppButton
+            </Button>
+            <Button
               size="sm"
               variant="outline"
               :disabled="sseKmsForm.kms_status !== 'Running'"
@@ -54,20 +54,20 @@
             >
               <Icon name="ri:eye-line" class="mr-2 size-4" />
               {{ t('Details') }}
-            </AppButton>
+            </Button>
 
-            <AppButton
+            <Button
               v-if="hasConfiguration && (sseKmsForm.kms_status === 'Configured' || isErrorStatus(sseKmsForm.kms_status))"
               size="sm"
-              variant="primary"
+              variant="default"
               :loading="startingKMS"
               @click="startKMSService"
             >
               <Icon name="ri:play-line" class="mr-2 size-4" />
               {{ t('Start KMS') }}
-            </AppButton>
+            </Button>
 
-            <AppButton
+            <Button
               v-if="hasConfiguration && sseKmsForm.kms_status === 'Running'"
               size="sm"
               variant="outline"
@@ -76,27 +76,30 @@
             >
               <Icon name="ri:stop-line" class="mr-2 size-4" />
               {{ t('Stop KMS') }}
-            </AppButton>
+            </Button>
           </div>
         </div>
       </AppCard>
 
       <!-- KMS 配置区域 -->
-      <n-card :title="t('KMS Configuration')" class="mb-6">
+      <AppCard :title="t('KMS Configuration')" class="mb-6" content-class="space-y-6">
         <div v-if="!isEditing" class="space-y-4">
           <!-- 当前配置显示 -->
-          <div v-if="sseKmsForm.backend_type" class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-            <div class="flex justify-between items-start">
+          <div
+            v-if="sseKmsForm.backend_type"
+            class="rounded-lg border bg-muted/30 p-4 dark:bg-muted/10"
+          >
+            <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div class="space-y-2">
-                <div class="font-medium">
+                <p class="text-sm font-semibold text-foreground">
                   {{ t('Current KMS Type') }}: {{ getKmsTypeName(sseKmsForm.backend_type) }}
-                </div>
-                <div class="text-sm text-gray-600 dark:text-gray-400">
+                </p>
+                <div class="space-y-2 text-sm text-muted-foreground">
                   <!-- Vault backend specific fields -->
-                  <div v-if="sseKmsForm.backend_type === 'vault'">
+                  <template v-if="sseKmsForm.backend_type === 'vault'">
                     <div>
                       {{ t('Vault Server') }}:
-                      <span v-if="sseKmsForm.address === 'configured-but-hidden'" class="italic text-gray-500">
+                      <span v-if="sseKmsForm.address === 'configured-but-hidden'" class="italic">
                         {{ t('(Configuration details are private)') }}
                       </span>
                       <span v-else>{{ sseKmsForm.address || t('Not specified') }}</span>
@@ -109,15 +112,15 @@
                     <div v-if="sseKmsForm.auth_type">
                       {{ t('Auth Method') }}: {{ sseKmsForm.auth_type === 'approle' ? 'AppRole' : 'Token' }}
                     </div>
-                  </div>
+                  </template>
 
                   <!-- Local backend specific fields -->
-                  <div v-if="sseKmsForm.backend_type === 'local'">
+                  <template v-if="sseKmsForm.backend_type === 'local'">
                     <div v-if="sseKmsForm.key_directory">{{ t('Key Directory') }}: {{ sseKmsForm.key_directory }}</div>
                     <div v-if="sseKmsForm.has_master_key !== undefined">
                       {{ t('Master Key') }}: {{ sseKmsForm.has_master_key ? t('Configured') : t('Not configured') }}
                     </div>
-                  </div>
+                  </template>
                   <div v-if="sseKmsForm.timeout_seconds">{{ t('Timeout') }}: {{ sseKmsForm.timeout_seconds }}s</div>
                   <div v-if="sseKmsForm.retry_attempts">{{ t('Retry Attempts') }}: {{ sseKmsForm.retry_attempts }}</div>
                   <div v-if="sseKmsForm.enable_cache !== undefined">
@@ -130,208 +133,221 @@
                     {{ t('Default Key ID') }}: {{ sseKmsForm.default_key_id }}
                   </div>
                   <div v-else-if="sseKmsForm.default_key_id === 'configured-but-hidden'">
-                    {{ t('Default Key ID') }}: <span class="italic text-gray-500">{{ t('(Configured)') }}</span>
+                    {{ t('Default Key ID') }}: <span class="italic">{{ t('(Configured)') }}</span>
                   </div>
                   <div v-if="sseKmsForm.kms_status">
                     {{ t('Status') }}:
-                    <n-tag :type="getKmsStatusType()" size="small">
+                    <AppTag :tone="kmsStatusTone" class="text-xs uppercase">
                       {{ getKmsStatusText() }}
-                    </n-tag>
+                    </AppTag>
                   </div>
                 </div>
               </div>
-              <n-button @click="startEditing" size="small">
+              <Button size="sm" variant="outline" @click="startEditing">
                 {{ t('Edit Configuration') }}
-              </n-button>
+              </Button>
             </div>
           </div>
 
           <!-- 未配置状态 -->
-          <div v-else class="text-center py-8 text-gray-500">
-            <Icon name="ri:key-2-line" class="text-4xl mx-auto mb-2" />
-            <div>{{ t('No KMS configuration found') }}</div>
-            <n-button @click="startEditing" class="mt-2">
+          <div
+            v-else
+            class="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-8 text-muted-foreground"
+          >
+            <Icon name="ri:key-2-line" class="mb-2 text-4xl" />
+            <div class="text-sm">{{ t('No KMS configuration found') }}</div>
+            <Button size="sm" variant="default" @click="startEditing">
               {{ t('Configure KMS') }}
-            </n-button>
+            </Button>
           </div>
         </div>
 
         <!-- 编辑模式表单 -->
-        <div v-else>
-          <n-form
-            ref="sseKmsFormRef"
-            :model="sseKmsForm"
-            :rules="sseKmsRules"
-            label-placement="left"
-            :label-width="150"
-          >
-            <!-- KMS 类型显示 -->
-            <n-form-item :label="t('KMS Type')" path="backend_type">
-              <div class="text-gray-700 dark:text-gray-300">
-                {{ t('HashiCorp Vault Transit Engine') }}
-              </div>
-            </n-form-item>
+        <form v-else class="space-y-6" @submit.prevent="saveConfiguration">
+          <div>
+            <p class="text-sm font-medium text-foreground">{{ t('KMS Type') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('HashiCorp Vault Transit Engine') }}
+            </p>
+          </div>
 
-            <!-- HashiCorp Vault 配置 -->
-            <n-form-item :label="t('Vault Server Address')" path="address" required>
-              <n-input v-model:value="sseKmsForm.address" :placeholder="t('e.g., https://vault.example.com:8200')" />
-            </n-form-item>
+          <div class="space-y-2">
+            <Label for="kms-address">{{ t('Vault Server Address') }}</Label>
+            <Input
+              id="kms-address"
+              v-model="sseKmsForm.address"
+              :placeholder="t('e.g., https://vault.example.com:8200')"
+              autocomplete="off"
+            />
+          </div>
 
-            <!-- 认证方式选择 -->
-            <n-form-item :label="t('Authentication Method')" path="auth_type" required>
-              <n-radio-group v-model:value="sseKmsForm.auth_type">
-                <n-radio value="token">
-                  <div class="flex flex-col">
-                    <span class="font-medium">Token</span>
-                    <span class="text-xs text-gray-500">{{ t('Use Vault token for authentication') }}</span>
-                  </div>
-                </n-radio>
-                <n-radio value="approle" class="mt-2">
-                  <div class="flex flex-col">
-                    <span class="font-medium">AppRole</span>
-                    <span class="text-xs text-gray-500">{{ t('Use AppRole authentication') }}</span>
-                  </div>
-                </n-radio>
-              </n-radio-group>
-            </n-form-item>
+          <div class="space-y-3">
+            <Label>{{ t('Authentication Method') }}</Label>
+            <AppRadioGroup
+              v-model="sseKmsForm.auth_type"
+              :options="authTypeOptions"
+              class="grid gap-3 md:grid-cols-2"
+              item-class="h-full"
+            />
+          </div>
 
-            <!-- Token认证字段 -->
-            <n-form-item v-if="sseKmsForm.auth_type === 'token'" :label="t('Vault Token')" path="vault_token" required>
-              <n-input
-                v-model:value="sseKmsForm.vault_token"
-                type="password"
-                show-password-on="mousedown"
-                :placeholder="t('Enter your Vault authentication token')"
+          <div v-if="sseKmsForm.auth_type === 'token'" class="space-y-2">
+            <Label for="kms-token">{{ t('Vault Token') }}</Label>
+            <Input
+              id="kms-token"
+              v-model="sseKmsForm.vault_token"
+              type="password"
+              autocomplete="off"
+              :placeholder="t('Enter your Vault authentication token')"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ t('Required: Vault authentication token') }}
+            </p>
+          </div>
+
+          <div v-if="sseKmsForm.auth_type === 'approle'" class="grid gap-4 md:grid-cols-2">
+            <div class="space-y-2">
+              <Label for="kms-role-id">{{ t('Role ID') }}</Label>
+              <Input
+                id="kms-role-id"
+                v-model="sseKmsForm.vault_app_role_id"
+                :placeholder="t('Enter AppRole Role ID')"
+                autocomplete="off"
               />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Required: Vault authentication token') }}
-                </div>
-              </template>
-            </n-form-item>
-
-            <!-- AppRole认证字段 -->
-            <div v-if="sseKmsForm.auth_type === 'approle'" class="space-y-4">
-              <n-form-item :label="t('Role ID')" path="vault_app_role_id" required>
-                <n-input v-model:value="sseKmsForm.vault_app_role_id" :placeholder="t('Enter AppRole Role ID')" />
-                <template #feedback>
-                  <div class="text-xs text-gray-500 mt-1">
-                    {{ t('AppRole Role ID from Vault') }}
-                  </div>
-                </template>
-              </n-form-item>
-
-              <n-form-item :label="t('Secret ID')" path="vault_app_role_secret_id" required>
-                <n-input
-                  v-model:value="sseKmsForm.vault_app_role_secret_id"
-                  type="password"
-                  show-password-on="mousedown"
-                  :placeholder="t('Enter AppRole Secret ID')"
-                />
-                <template #feedback>
-                  <div class="text-xs text-gray-500 mt-1">
-                    {{ t('AppRole Secret ID from Vault') }}
-                  </div>
-                </template>
-              </n-form-item>
+              <p class="text-xs text-muted-foreground">
+                {{ t('AppRole Role ID from Vault') }}
+              </p>
             </div>
+            <div class="space-y-2">
+              <Label for="kms-secret-id">{{ t('Secret ID') }}</Label>
+              <Input
+                id="kms-secret-id"
+                v-model="sseKmsForm.vault_app_role_secret_id"
+                type="password"
+                autocomplete="off"
+                :placeholder="t('Enter AppRole Secret ID')"
+              />
+              <p class="text-xs text-muted-foreground">
+                {{ t('AppRole Secret ID from Vault') }}
+              </p>
+            </div>
+          </div>
 
-            <n-form-item :label="t('Transit Mount Path')" path="mount_path" class="mt-2">
-              <n-input v-model:value="sseKmsForm.mount_path" :placeholder="t('transit')" />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Transit engine mount path, default: transit') }}
-                </div>
-              </template>
-            </n-form-item>
+          <div class="space-y-2">
+            <Label for="kms-mount-path">{{ t('Transit Mount Path') }}</Label>
+            <Input
+              id="kms-mount-path"
+              v-model="sseKmsForm.mount_path"
+              :placeholder="t('transit')"
+              autocomplete="off"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ t('Transit engine mount path, default: transit') }}
+            </p>
+          </div>
 
-            <n-form-item :label="t('KV Mount Path')" path="kv_mount" class="mt-2">
-              <n-input v-model:value="sseKmsForm.kv_mount" :placeholder="t('secret')" />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('KV storage mount path, default: secret') }}
-                </div>
-              </template>
-            </n-form-item>
+          <div class="space-y-2">
+            <Label for="kms-kv-mount">{{ t('KV Mount Path') }}</Label>
+            <Input
+              id="kms-kv-mount"
+              v-model="sseKmsForm.kv_mount"
+              :placeholder="t('secret')"
+              autocomplete="off"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ t('KV storage mount path, default: secret') }}
+            </p>
+          </div>
 
-            <n-form-item :label="t('Key Path Prefix')" path="key_path_prefix" class="mt-2">
-              <n-input v-model:value="sseKmsForm.key_path_prefix" :placeholder="t('rustfs/kms/keys')" />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Key storage path prefix in KV store') }}
-                </div>
-              </template>
-            </n-form-item>
+          <div class="space-y-2">
+            <Label for="kms-key-prefix">{{ t('Key Path Prefix') }}</Label>
+            <Input
+              id="kms-key-prefix"
+              v-model="sseKmsForm.key_path_prefix"
+              :placeholder="t('rustfs/kms/keys')"
+              autocomplete="off"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ t('Key storage path prefix in KV store') }}
+            </p>
+          </div>
 
-            <n-form-item :label="t('Timeout (seconds)')" path="timeout_seconds" class="mt-2">
-              <n-input-number v-model:value="sseKmsForm.timeout_seconds" :min="1" :max="300" placeholder="30" />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Request timeout in seconds, default: 30') }}
-                </div>
-              </template>
-            </n-form-item>
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="space-y-2">
+              <Label for="kms-timeout">{{ t('Timeout (seconds)') }}</Label>
+              <Input
+                id="kms-timeout"
+                v-model="sseKmsForm.timeout_seconds"
+                type="number"
+                placeholder="30"
+              />
+              <p class="text-xs text-muted-foreground">
+                {{ t('Request timeout in seconds, default: 30') }}
+              </p>
+            </div>
+            <div class="space-y-2">
+              <Label for="kms-retry">{{ t('Retry Attempts') }}</Label>
+              <Input
+                id="kms-retry"
+                v-model="sseKmsForm.retry_attempts"
+                type="number"
+                placeholder="3"
+              />
+              <p class="text-xs text-muted-foreground">
+                {{ t('Number of retry attempts, default: 3') }}
+              </p>
+            </div>
+          </div>
 
-            <n-form-item :label="t('Retry Attempts')" path="retry_attempts" class="mt-2">
-              <n-input-number v-model:value="sseKmsForm.retry_attempts" :min="1" :max="10" placeholder="3" />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Number of retry attempts, default: 3') }}
-                </div>
-              </template>
-            </n-form-item>
+          <div class="space-y-2">
+            <Label for="kms-default-key">{{ t('Default Key ID') }}</Label>
+            <Input
+              id="kms-default-key"
+              v-model="sseKmsForm.default_key_id"
+              :placeholder="t('rustfs-master')"
+              autocomplete="off"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ t('Default master key ID for SSE-KMS') }}
+            </p>
+          </div>
 
-            <!-- 默认密钥ID -->
-            <n-form-item :label="t('Default Key ID')" path="default_key_id" required class="mt-2">
-              <n-input v-model:value="sseKmsForm.default_key_id" :placeholder="t('rustfs-master')" />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Default master key ID for SSE-KMS') }}
-                </div>
-              </template>
-            </n-form-item>
+          <div class="space-y-2">
+            <Label>{{ t('Enable Cache') }}</Label>
+            <div class="flex items-center justify-between rounded-md border p-3">
+              <AppSwitch v-model="sseKmsForm.enable_cache" />
+            </div>
+            <p class="text-xs text-muted-foreground">
+              {{ t('Enable caching for better performance, default: true') }}
+            </p>
+          </div>
 
-            <!-- 缓存配置 -->
-            <n-form-item :label="t('Enable Cache')" path="enable_cache" class="mt-2">
-              <n-switch v-model:value="sseKmsForm.enable_cache" />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Enable caching for better performance, default: true') }}
-                </div>
-              </template>
-            </n-form-item>
+          <div v-if="sseKmsForm.enable_cache" class="space-y-2">
+            <Label for="kms-cache-ttl">{{ t('Cache TTL (seconds)') }}</Label>
+            <Input
+              id="kms-cache-ttl"
+              v-model="sseKmsForm.cache_ttl_seconds"
+              type="number"
+              placeholder="600"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ t('Cache time-to-live in seconds, default: 600') }}
+            </p>
+          </div>
 
-            <n-form-item
-              v-if="sseKmsForm.enable_cache"
-              :label="t('Cache TTL (seconds)')"
-              path="cache_ttl_seconds"
-              class="mt-2"
-            >
-              <n-input-number v-model:value="sseKmsForm.cache_ttl_seconds" :min="60" :max="3600" placeholder="600" />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Cache time-to-live in seconds, default: 600') }}
-                </div>
-              </template>
-            </n-form-item>
-
-            <!-- 操作按钮 -->
-            <n-form-item class="flex justify-end">
-              <div class="flex space-x-2">
-                <n-button @click="cancelEditing">
-                  {{ t('Cancel') }}
-                </n-button>
-                <n-button type="primary" @click="saveConfiguration" :loading="saving">
-                  {{ t('Save Configuration') }}
-                </n-button>
-              </div>
-            </n-form-item>
-          </n-form>
-        </div>
-      </n-card>
+          <div class="flex justify-end gap-2">
+            <Button type="button" variant="outline" @click="cancelEditing">
+              {{ t('Cancel') }}
+            </Button>
+            <Button type="submit" variant="default" :loading="saving">
+              {{ t('Save Configuration') }}
+            </Button>
+          </div>
+        </form>
+      </AppCard>
 
       <!-- KMS 密钥列表 -->
-      <n-card :title="t('KMS Keys Management')" class="mb-6">
+      <AppCard :title="t('KMS Keys Management')" class="mb-6" content-class="space-y-6">
         <div class="space-y-6">
           <!-- 密钥类型说明 -->
           <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
@@ -368,36 +384,32 @@
               <div class="flex items-center space-x-3">
                 <div class="w-4 h-4 bg-purple-500 rounded-full"></div>
                 <h3 class="text-lg font-medium">{{ t('Master Keys (CMK)') }}</h3>
-                <n-tag type="info" size="small">
+                <AppTag tone="info">
                   {{
                     kmsKeys.filter(key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK').length
                   }}
-                </n-tag>
+                </AppTag>
               </div>
-              <div class="flex space-x-2">
-                <n-button
-                  size="small"
-                  @click="refreshKeyList"
+              <div class="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
                   :loading="refreshingKeys"
                   :disabled="sseKmsForm.kms_status !== 'Running'"
-                  :title="sseKmsForm.kms_status !== 'Running' ? t('KMS not running') : t('Refresh key list')"
+                  @click="refreshKeyList"
                 >
-                  <template #icon>
-                    <Icon name="ri:refresh-line" />
-                  </template>
+                  <Icon name="ri:refresh-line" class="size-4" />
                   {{ t('Refresh') }}
-                </n-button>
-                <n-button
-                  type="primary"
-                  @click="showCreateKeyModal = true"
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
                   :disabled="!canAddKeys"
-                  :title="!canAddKeys ? t('KMS not available for key operations') : ''"
+                  @click="showCreateKeyModal = true"
                 >
-                  <template #icon>
-                    <Icon name="ri:add-line" />
-                  </template>
+                  <Icon name="ri:add-line" class="size-4" />
                   {{ t('Create Master Key') }}
-                </n-button>
+                </Button>
               </div>
             </div>
 
@@ -429,9 +441,9 @@
                       <div v-if="key.algorithm">{{ t('Algorithm') }}: {{ key.algorithm }}</div>
                       <div>
                         {{ t('Status') }}:
-                        <n-tag :type="getKeyStatusType(key)" size="small">
+                        <AppTag :tone="getKeyStatusType(key)">
                           {{ getKeyStatusText(key) }}
-                        </n-tag>
+                        </AppTag>
                       </div>
                       <div v-if="key.createdAt">{{ t('Created') }}: {{ formatDate(new Date(key.createdAt)) }}</div>
                       <div v-else-if="key.creation_date">
@@ -439,30 +451,28 @@
                       </div>
                     </div>
                   </div>
-                  <div class="flex space-x-2">
-                    <n-button size="small" @click="showKeyDetails(key.key_id)" type="info">
+                  <div class="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" @click="showKeyDetails(key.key_id)">
                       {{ t('Details') }}
-                    </n-button>
-                    <n-button
-                      size="small"
-                      type="error"
-                      @click="deleteKeyClick(key)"
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
                       :disabled="mapKeyState(key) === 'PendingDeletion'"
-                      :title="mapKeyState(key) === 'PendingDeletion' ? t('Already pending deletion') : ''"
+                      @click="deleteKeyClick(key)"
                     >
                       {{ mapKeyState(key) === 'PendingDeletion' ? t('Deleting...') : t('Delete') }}
-                    </n-button>
-                    <n-button
+                    </Button>
+                    <Button
                       v-if="mapKeyState(key) === 'PendingDeletion'"
-                      size="small"
-                      type="error"
-                      secondary
-                      @click="forceDeleteKeyClick(key)"
+                      size="sm"
+                      variant="destructive"
+                      class="bg-destructive/10 text-destructive hover:bg-destructive/20"
                       :disabled="forceDeleting"
-                      :title="t('Force delete this key immediately')"
+                      @click="forceDeleteKeyClick(key)"
                     >
                       {{ t('Force Delete') }}
-                    </n-button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -477,9 +487,9 @@
             <div class="flex items-center space-x-3">
               <div class="w-4 h-4 bg-green-500 rounded-full"></div>
               <h3 class="text-lg font-medium">{{ t('Data Keys (DEK)') }}</h3>
-              <n-tag type="success" size="small">
+              <AppTag tone="success">
                 {{ kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length }}
-              </n-tag>
+              </AppTag>
             </div>
 
             <!-- 数据密钥说明 -->
@@ -517,9 +527,9 @@
                       <div v-if="key.algorithm">{{ t('Algorithm') }}: {{ key.algorithm }}</div>
                       <div>
                         {{ t('Status') }}:
-                        <n-tag :type="getKeyStatusType(key)" size="small">
+                        <AppTag :tone="getKeyStatusType(key)">
                           {{ getKeyStatusText(key) }}
-                        </n-tag>
+                        </AppTag>
                       </div>
                       <div v-if="key.createdAt">{{ t('Created') }}: {{ formatDate(new Date(key.createdAt)) }}</div>
                       <div v-else-if="key.creation_date">
@@ -527,10 +537,10 @@
                       </div>
                     </div>
                   </div>
-                  <div class="flex space-x-2">
-                    <n-button size="small" @click="showKeyDetails(key.key_id)" type="info">
+                  <div class="flex flex-wrap gap-2">
+                    <Button size="sm" variant="outline" @click="showKeyDetails(key.key_id)">
                       {{ t('Details') }}
-                    </n-button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -542,42 +552,56 @@
             <Icon name="ri:key-2-line" class="text-4xl mx-auto mb-2" />
             <div>{{ t('No KMS keys found') }}</div>
             <div class="text-sm">{{ t('Create your first KMS key to get started') }}</div>
-            <n-button
-              @click="showCreateKeyModal = true"
+            <Button
               class="mt-2"
               :disabled="!canAddKeys"
-              :title="!canAddKeys ? t('KMS not available for key operations') : ''"
+              @click="showCreateKeyModal = true"
             >
               {{ t('Create First Key') }}
-            </n-button>
+            </Button>
           </div>
         </div>
-      </n-card>
+      </AppCard>
 
       <!-- Bucket 加密配置管理 -->
-      <n-card :title="t('Bucket Encryption Management')" class="mt-6">
-        <template #header-extra>
-          <div class="flex items-center space-x-2">
-            <n-button size="small" type="primary" @click="refreshBucketList" :loading="bucketListLoading">
-              <Icon name="ri:refresh-line" class="mr-1" />
+      <AppCard class="mt-6" content-class="space-y-4">
+        <template #header>
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="text-lg font-semibold">{{ t('Bucket Encryption Management') }}</h3>
+            <Button size="sm" :loading="bucketListLoading" @click="refreshBucketList">
+              <Icon name="ri:refresh-line" class="size-4" />
               {{ t('Refresh') }}
-            </n-button>
+            </Button>
           </div>
         </template>
 
         <div class="space-y-4">
           <!-- 搜索和排序 -->
-          <div class="flex items-center space-x-4">
-            <n-input v-model:value="bucketSearchQuery" :placeholder="t('Search buckets...')" clearable class="flex-1">
-              <template #prefix>
-                <Icon name="ri:search-line" />
-              </template>
-            </n-input>
-            <n-select
-              v-model:value="bucketSortBy"
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="relative flex-1">
+              <Icon
+                name="ri:search-line"
+                class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                v-model="bucketSearchQuery"
+                :placeholder="t('Search buckets...')"
+                class="pl-10"
+              />
+              <button
+                v-if="bucketSearchQuery"
+                type="button"
+                class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+                @click="bucketSearchQuery = ''"
+              >
+                <Icon name="ri:close-circle-line" class="size-4" />
+              </button>
+            </div>
+            <AppSelect
+              v-model="bucketSortBy"
               :options="bucketSortOptions"
               :placeholder="t('Sort by')"
-              class="w-40"
+              class="w-full sm:w-40"
             />
           </div>
 
@@ -605,7 +629,7 @@
                   <!-- 加密状态显示 -->
                   <div class="text-center">
                     <div class="text-sm text-gray-500 mb-1">{{ t('Encryption Status') }}</div>
-                    <n-tag :type="bucket.encryptionStatus === 'Enabled' ? 'success' : 'default'" size="small">
+                    <AppTag :tone="bucket.encryptionStatus === 'Enabled' ? 'success' : 'default'">
                       {{
                         bucket.encryptionStatus === 'Enabled'
                           ? bucket.encryptionType === 'SSE-KMS'
@@ -613,31 +637,29 @@
                             : 'SSE-S3'
                           : t('Not configured')
                       }}
-                    </n-tag>
+                    </AppTag>
                   </div>
 
                   <!-- 操作按钮 -->
-                  <div class="flex space-x-2">
-                    <n-button
-                      size="small"
-                      type="primary"
+                  <div class="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="default"
                       @click="configureBucketEncryption(bucket)"
-                      :title="t('Configure encryption for this bucket')"
                     >
-                      <Icon name="ri:lock-line" class="mr-1" />
+                      <Icon name="ri:lock-line" class="size-4" />
                       {{ t('Configure') }}
-                    </n-button>
-                    <n-button
+                    </Button>
+                    <Button
                       v-if="bucket.encryptionStatus === 'Enabled'"
-                      size="small"
-                      type="error"
-                      secondary
+                      size="sm"
+                      variant="destructive"
+                      class="bg-destructive/10 text-destructive hover:bg-destructive/20"
                       @click="removeBucketEncryption(bucket)"
-                      :title="t('Remove encryption configuration')"
                     >
-                      <Icon name="ri:lock-unlock-line" class="mr-1" />
+                      <Icon name="ri:lock-unlock-line" class="size-4" />
                       {{ t('Remove') }}
-                    </n-button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -678,279 +700,242 @@
 
           <!-- 加载状态 -->
           <div v-if="bucketListLoading" class="text-center py-8">
-            <n-spin size="medium" />
+            <AppSpinner size="lg" class="mx-auto" />
             <div class="text-gray-500 mt-2">{{ t('Loading buckets...') }}</div>
           </div>
         </div>
-      </n-card>
+      </AppCard>
 
       <!-- 配置 Bucket 加密模态框 -->
-      <n-modal v-model:show="showBucketEncryptModal" :mask-closable="false">
-        <n-card
-          :title="
-            selectedBucket
-              ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name })
-              : t('Configure Bucket Encryption')
-          "
-          class="max-w-screen-md"
-          :bordered="false"
-          size="medium"
-          role="dialog"
-          aria-modal="true"
-        >
-          <n-form
-            ref="bucketEncryptFormRef"
-            :model="bucketEncryptForm"
-            :rules="bucketEncryptFormRules"
-            label-placement="left"
-            :label-width="140"
-          >
-            <n-form-item :label="t('Encryption Type')" path="encryptionType" required>
-              <n-select
-                v-model:value="bucketEncryptForm.encryptionType"
-                :options="bucketEncryptionOptions"
-                :placeholder="t('Select encryption type')"
-              />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Choose the encryption method for this bucket') }}
-                </div>
-              </template>
-            </n-form-item>
+      <AppModal
+        v-model="showBucketEncryptModal"
+        :title="
+          selectedBucket
+            ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name })
+            : t('Configure Bucket Encryption')
+        "
+        size="lg"
+        :close-on-backdrop="false"
+      >
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <Label>{{ t('Encryption Type') }}</Label>
+            <AppSelect
+              v-model="bucketEncryptForm.encryptionType"
+              :options="bucketEncryptionOptions"
+              :placeholder="t('Select encryption type')"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ t('Choose the encryption method for this bucket') }}
+            </p>
+          </div>
 
-            <n-form-item
-              v-if="bucketEncryptForm.encryptionType === 'SSE-KMS'"
-              :label="t('KMS Key')"
-              path="kmsKeyId"
-              required
-            >
-              <n-select
-                v-model:value="bucketEncryptForm.kmsKeyId"
-                :options="kmsKeyOptions"
-                :placeholder="t('Select KMS key')"
-                :loading="kmsKeysLoading"
-              />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Select the KMS key to use for encryption') }}
-                </div>
-              </template>
-            </n-form-item>
-          </n-form>
-
-          <template #footer>
-            <div class="flex justify-end space-x-2">
-              <n-button @click="showBucketEncryptModal = false">
-                {{ t('Cancel') }}
-              </n-button>
-              <n-button type="primary" @click="saveBucketEncryption" :loading="savingBucketEncryption">
-                {{ t('Configure Encryption') }}
-              </n-button>
+          <div v-if="bucketEncryptForm.encryptionType === 'SSE-KMS'" class="space-y-2">
+            <Label>{{ t('KMS Key') }}</Label>
+            <AppSelect
+              v-model="bucketEncryptForm.kmsKeyId"
+              :options="kmsKeyOptions"
+              :placeholder="t('Select KMS key')"
+              :disabled="kmsKeysLoading"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ t('Select the KMS key to use for encryption') }}
+            </p>
+            <div v-if="kmsKeysLoading" class="text-xs text-muted-foreground">
+              {{ t('Loading keys...') }}
             </div>
-          </template>
-        </n-card>
-      </n-modal>
+          </div>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <Button variant="outline" @click="showBucketEncryptModal = false">
+              {{ t('Cancel') }}
+            </Button>
+            <Button variant="default" :loading="savingBucketEncryption" @click="saveBucketEncryption">
+              {{ t('Configure Encryption') }}
+            </Button>
+          </div>
+        </template>
+      </AppModal>
 
       <!-- 移除加密确认模态框 -->
-      <n-modal v-model:show="showRemoveEncryptModal" :mask-closable="false">
-        <n-card
-          :title="t('Confirm Remove Encryption')"
-          class="max-w-screen-md"
-          :bordered="false"
-          size="medium"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div class="text-center py-4">
-            <Icon name="ri:alert-line" class="text-4xl text-orange-500 mx-auto mb-2" />
-            <div class="text-lg font-medium mb-2">
-              {{ t('Are you sure you want to remove encryption?') }}
-            </div>
-            <div v-if="selectedBucket" class="text-blue-600 font-medium mb-2">
-              {{ selectedBucket.name }}
-            </div>
-            <div class="text-gray-500">
-              {{ t('Future uploads to this bucket will not be encrypted by default.') }}
-            </div>
-            <div class="text-gray-500">
-              {{ t('Existing encrypted objects will remain encrypted.') }}
-            </div>
+      <AppModal
+        v-model="showRemoveEncryptModal"
+        :title="t('Confirm Remove Encryption')"
+        size="lg"
+        :close-on-backdrop="false"
+      >
+        <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
+          <Icon name="ri:alert-line" class="text-4xl text-orange-500" />
+          <div class="text-lg font-medium text-foreground">
+            {{ t('Are you sure you want to remove encryption?') }}
           </div>
+          <div v-if="selectedBucket" class="text-blue-600 font-medium">
+            {{ selectedBucket.name }}
+          </div>
+          <p>{{ t('Future uploads to this bucket will not be encrypted by default.') }}</p>
+          <p>{{ t('Existing encrypted objects will remain encrypted.') }}</p>
+        </div>
 
-          <template #footer>
-            <div class="flex justify-end space-x-2">
-              <n-button @click="showRemoveEncryptModal = false">
-                {{ t('Cancel') }}
-              </n-button>
-              <n-button type="warning" @click="confirmRemoveBucketEncryption" :loading="removingBucketEncryption">
-                {{ t('Remove Encryption') }}
-              </n-button>
-            </div>
-          </template>
-        </n-card>
-      </n-modal>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <Button variant="outline" @click="showRemoveEncryptModal = false">
+              {{ t('Cancel') }}
+            </Button>
+            <Button variant="destructive" :loading="removingBucketEncryption" @click="confirmRemoveBucketEncryption">
+              {{ t('Remove Encryption') }}
+            </Button>
+          </div>
+        </template>
+      </AppModal>
 
       <!-- 创建/编辑密钥模态框 -->
-      <n-modal v-model:show="showCreateKeyModal" :mask-closable="false">
-        <n-card
-          :title="t('Create New Key')"
-          class="max-w-screen-md"
-          :bordered="false"
-          size="medium"
-          role="dialog"
-          aria-modal="true"
-        >
-          <n-form ref="keyFormRef" :model="keyForm" :rules="keyFormRules" label-placement="left" :label-width="120">
-            <n-form-item :label="t('Key Name')" path="keyName" required>
-              <n-input v-model:value="keyForm.keyName" :placeholder="t('e.g., app-default')" />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Main key ID (Transit key name). Use business-related readable ID.') }}
-                </div>
-              </template>
-            </n-form-item>
+      <AppModal
+        v-model="showCreateKeyModal"
+        :title="t('Create New Key')"
+        size="lg"
+        :close-on-backdrop="false"
+      >
+        <div class="space-y-4">
+          <div class="space-y-2">
+            <Label>{{ t('Key Name') }}</Label>
+            <Input v-model="keyForm.keyName" :placeholder="t('e.g., app-default')" autocomplete="off" />
+            <p class="text-xs text-muted-foreground">
+              {{ t('Main key ID (Transit key name). Use business-related readable ID.') }}
+            </p>
+          </div>
 
-            <n-form-item :label="t('Algorithm')" path="algorithm">
-              <n-select
-                v-model:value="keyForm.algorithm"
-                :options="algorithmOptions"
-                :placeholder="t('Select encryption algorithm')"
-              />
-              <template #feedback>
-                <div class="text-xs text-gray-500 mt-1">
-                  {{ t('Encryption algorithm for the key.') }}
-                </div>
-              </template>
-            </n-form-item>
-          </n-form>
+          <div class="space-y-2">
+            <Label>{{ t('Algorithm') }}</Label>
+            <AppSelect
+              v-model="keyForm.algorithm"
+              :options="algorithmOptions"
+              :placeholder="t('Select encryption algorithm')"
+            />
+            <p class="text-xs text-muted-foreground">
+              {{ t('Encryption algorithm for the key.') }}
+            </p>
+          </div>
+        </div>
 
-          <template #footer>
-            <div class="flex justify-end space-x-2">
-              <n-button @click="showCreateKeyModal = false">
-                {{ t('Cancel') }}
-              </n-button>
-              <n-button type="primary" @click="saveKey" :loading="savingKey">
-                {{ t('Create Key') }}
-              </n-button>
-            </div>
-          </template>
-        </n-card>
-      </n-modal>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <Button variant="outline" @click="showCreateKeyModal = false">
+              {{ t('Cancel') }}
+            </Button>
+            <Button variant="default" :loading="savingKey" @click="saveKey">
+              {{ t('Create Key') }}
+            </Button>
+          </div>
+        </template>
+      </AppModal>
 
       <!-- 删除确认模态框 -->
-      <n-modal v-model:show="showDeleteModal" :mask-closable="false">
-        <n-card
-          :title="t('Confirm Delete')"
-          class="max-w-screen-md"
-          :bordered="false"
-          size="huge"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div class="text-center py-4">
-            <Icon name="ri:alert-line" class="text-4xl text-red-500 mx-auto mb-2" />
-            <div class="text-lg font-medium mb-2">
-              {{ t('Are you sure you want to delete this key?') }}
-            </div>
-            <div v-if="keyToDelete" class="text-blue-600 font-medium mb-2">
-              {{ getKeyName(keyToDelete) }}
-            </div>
-            <div class="text-gray-500">
-              {{ t('This action cannot be undone.') }}
-            </div>
+      <AppModal
+        v-model="showDeleteModal"
+        :title="t('Confirm Delete')"
+        size="lg"
+        :close-on-backdrop="false"
+      >
+        <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
+          <Icon name="ri:alert-line" class="text-4xl text-red-500" />
+          <div class="text-lg font-medium text-foreground">
+            {{ t('Are you sure you want to delete this key?') }}
           </div>
+          <div v-if="keyToDelete" class="text-blue-600 font-medium">
+            {{ getKeyName(keyToDelete) }}
+          </div>
+          <p>{{ t('This action cannot be undone.') }}</p>
+        </div>
 
-          <template #footer>
-            <div class="flex justify-end space-x-2">
-              <n-button @click="showDeleteModal = false">
-                {{ t('Cancel') }}
-              </n-button>
-              <n-button type="error" @click="confirmDeleteKey" :loading="deletingKey">
-                {{ t('Delete Key') }}
-              </n-button>
-            </div>
-          </template>
-        </n-card>
-      </n-modal>
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <Button variant="outline" @click="showDeleteModal = false">
+              {{ t('Cancel') }}
+            </Button>
+            <Button variant="destructive" :loading="deletingKey" @click="confirmDeleteKey">
+              {{ t('Delete Key') }}
+            </Button>
+          </div>
+        </template>
+      </AppModal>
 
       <!-- 强制删除确认模态框 -->
-      <n-modal v-model:show="showForceDeleteModal" :mask-closable="false">
-        <n-card
-          :title="t('Confirm Force Delete')"
-          class="max-w-screen-md"
-          :bordered="false"
-          size="huge"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div class="text-center py-4">
-            <Icon name="ri:alert-line" class="text-4xl text-red-500 mx-auto mb-2" />
-            <div class="text-lg font-medium mb-2">
-              {{ t('Are you sure you want to force delete this key?') }}
+      <AppModal
+        v-model="showForceDeleteModal"
+        :title="t('Confirm Force Delete')"
+        size="lg"
+        :close-on-backdrop="false"
+      >
+        <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
+          <Icon name="ri:alert-line" class="text-4xl text-red-500" />
+          <div class="text-lg font-medium text-foreground">
+            {{ t('Are you sure you want to force delete this key?') }}
+          </div>
+          <div v-if="keyToForceDelete" class="text-blue-600 font-medium">
+            {{ getKeyName(keyToForceDelete) }}
+          </div>
+          <div class="text-red-600 font-semibold">
+            {{ t('WARNING: This will immediately delete the key') }}
+          </div>
+          <p>{{ t('This action cannot be undone and will bypass the normal deletion process.') }}</p>
+        </div>
+
+        <template #footer>
+          <div class="flex justify-end gap-2">
+            <Button variant="outline" @click="showForceDeleteModal = false">
+              {{ t('Cancel') }}
+            </Button>
+            <Button variant="destructive" :loading="forceDeleting" @click="confirmForceDeleteKey">
+              {{ t('Force Delete') }}
+            </Button>
+          </div>
+        </template>
+      </AppModal>
+
+      <!-- 详细状态查看模态框 -->
+      <AppModal
+        v-model="showDetailedStatusModal"
+        :title="t('Detailed KMS Status')"
+        size="lg"
+      >
+        <div v-if="detailedStatusData" class="space-y-6">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="space-y-1">
+              <p class="text-xs font-semibold uppercase text-muted-foreground">{{ t('Backend Type') }}</p>
+              <p class="text-sm text-foreground">{{ detailedStatusData.backend_type || 'N/A' }}</p>
             </div>
-            <div v-if="keyToForceDelete" class="text-blue-600 font-medium mb-2">
-              {{ getKeyName(keyToForceDelete) }}
+            <div class="space-y-1">
+              <p class="text-xs font-semibold uppercase text-muted-foreground">{{ t('Backend Status') }}</p>
+              <p class="text-sm text-foreground">{{ detailedStatusData.backend_status || 'N/A' }}</p>
             </div>
-            <div class="text-red-600 font-medium mb-2">
-              {{ t('WARNING: This will immediately delete the key') }}
+            <div class="space-y-1">
+              <p class="text-xs font-semibold uppercase text-muted-foreground">{{ t('Cache Enabled') }}</p>
+              <AppTag :tone="detailedStatusData.cache_enabled ? 'success' : 'default'">
+                {{ detailedStatusData.cache_enabled ? t('Enabled') : t('Disabled') }}
+              </AppTag>
             </div>
-            <div class="text-gray-500">
-              {{ t('This action cannot be undone and will bypass the normal deletion process.') }}
+            <div class="space-y-1">
+              <p class="text-xs font-semibold uppercase text-muted-foreground">{{ t('Default Key ID') }}</p>
+              <p class="text-sm text-foreground">{{ detailedStatusData.default_key_id || 'N/A' }}</p>
             </div>
           </div>
 
-          <template #footer>
-            <div class="flex justify-end space-x-2">
-              <n-button @click="showForceDeleteModal = false">
-                {{ t('Cancel') }}
-              </n-button>
-              <n-button type="error" @click="confirmForceDeleteKey" :loading="forceDeleting">
-                {{ t('Force Delete') }}
-              </n-button>
-            </div>
-          </template>
-        </n-card>
-      </n-modal>
-
-      <!-- 详细状态查看模态框 -->
-      <n-modal v-model:show="showDetailedStatusModal" :mask-closable="true">
-        <n-card
-          :title="t('Detailed KMS Status')"
-          class="max-w-screen-md"
-          :bordered="false"
-          size="medium"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div v-if="detailedStatusData" class="space-y-4">
-            <n-descriptions :column="2" label-placement="left" bordered>
-              <n-descriptions-item :label="t('Backend Type')">
-                {{ detailedStatusData.backend_type || 'N/A' }}
-              </n-descriptions-item>
-              <n-descriptions-item :label="t('Backend Status')">
-                {{ detailedStatusData.backend_status || 'N/A' }}
-              </n-descriptions-item>
-              <n-descriptions-item :label="t('Cache Enabled')">
-                <n-tag :type="detailedStatusData.cache_enabled ? 'success' : 'default'" size="small">
-                  {{ detailedStatusData.cache_enabled ? t('Enabled') : t('Disabled') }}
-                </n-tag>
-              </n-descriptions-item>
-              <n-descriptions-item :label="t('Default Key ID')">
-                {{ detailedStatusData.default_key_id || 'N/A' }}
-              </n-descriptions-item>
-            </n-descriptions>
-
-            <!-- 缓存统计信息 -->
-            <div v-if="detailedStatusData.cache_stats" class="mt-4">
-              <h4 class="text-lg font-medium mb-2">{{ t('Cache Statistics') }}</h4>
-              <n-descriptions :column="2" label-placement="left" bordered>
-                <n-descriptions-item :label="t('Cache Hits')">
-                  {{ detailedStatusData.cache_stats.hit_count || 0 }}
-                </n-descriptions-item>
-                <n-descriptions-item :label="t('Cache Misses')">
-                  {{ detailedStatusData.cache_stats.miss_count || 0 }}
-                </n-descriptions-item>
-                <n-descriptions-item :label="t('Hit Rate')">
+          <div v-if="detailedStatusData.cache_stats" class="space-y-3">
+            <h4 class="text-sm font-semibold text-foreground">{{ t('Cache Statistics') }}</h4>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div class="rounded-lg border p-3">
+                <p class="text-xs uppercase text-muted-foreground">{{ t('Cache Hits') }}</p>
+                <p class="text-lg font-semibold text-foreground">{{ detailedStatusData.cache_stats.hit_count || 0 }}</p>
+              </div>
+              <div class="rounded-lg border p-3">
+                <p class="text-xs uppercase text-muted-foreground">{{ t('Cache Misses') }}</p>
+                <p class="text-lg font-semibold text-foreground">{{ detailedStatusData.cache_stats.miss_count || 0 }}</p>
+              </div>
+              <div class="rounded-lg border p-3">
+                <p class="text-xs uppercase text-muted-foreground">{{ t('Hit Rate') }}</p>
+                <p class="text-lg font-semibold text-foreground">
                   {{
                     detailedStatusData.cache_stats.hit_count && detailedStatusData.cache_stats.miss_count
                       ? (
@@ -960,34 +945,44 @@
                         ).toFixed(1) + '%'
                       : 'N/A'
                   }}
-                </n-descriptions-item>
-                <n-descriptions-item :label="t('Total Requests')">
+                </p>
+              </div>
+              <div class="rounded-lg border p-3">
+                <p class="text-xs uppercase text-muted-foreground">{{ t('Total Requests') }}</p>
+                <p class="text-lg font-semibold text-foreground">
                   {{
                     (detailedStatusData.cache_stats.hit_count || 0) + (detailedStatusData.cache_stats.miss_count || 0)
                   }}
-                </n-descriptions-item>
-              </n-descriptions>
+                </p>
+              </div>
             </div>
           </div>
+        </div>
+        <div v-else class="py-6 text-center text-muted-foreground">
+          {{ t('No status data available') }}
+        </div>
 
-          <template #footer>
-            <div class="flex justify-end">
-              <n-button @click="showDetailedStatusModal = false">
-                {{ t('Close') }}
-              </n-button>
-            </div>
-          </template>
-        </n-card>
-      </n-modal>
+        <template #footer>
+          <div class="flex justify-end">
+            <Button variant="outline" @click="showDetailedStatusModal = false">
+              {{ t('Close') }}
+            </Button>
+          </div>
+        </template>
+      </AppModal>
     </page-content>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useMessage } from 'naive-ui';
-import { AppBadge, AppButton, AppCard } from '@/components/app';
+import { useMessage } from '@/composables/ui';
+import { AppBadge, AppCard, AppRadioGroup, AppSelect, AppSpinner, AppSwitch, AppTag } from '@/components/app'
+import { Label } from '@/components/ui/label';
 const {
   getKMSStatus,
   getConfiguration,
@@ -1023,10 +1018,34 @@ const detailedStatusData = ref<any>(null);
 
 const kmsStatusVariant = computed(() => {
   const type = getKmsStatusType();
-  if (type === 'success') return 'primary';
-  if (type === 'warning') return 'warning';
-  if (type === 'error' || type === 'danger') return 'danger';
-  return 'secondary';
+  switch (type) {
+    case 'success':
+      return 'primary';
+    case 'warning':
+      return 'outline';
+    case 'danger':
+      return 'danger';
+    case 'info':
+      return 'secondary';
+    default:
+      return 'secondary';
+  }
+});
+
+const kmsStatusTone = computed(() => {
+  const type = getKmsStatusType();
+  switch (type) {
+    case 'success':
+      return 'success';
+    case 'warning':
+      return 'warning';
+    case 'danger':
+      return 'danger';
+    case 'info':
+      return 'info';
+    default:
+      return 'default';
+  }
 });
 
 // 密钥管理状态
@@ -1172,62 +1191,6 @@ const algorithmOptions = [
   { label: 'RSA-4096', value: 'RSA-4096' },
 ];
 
-// 表单引用
-const sseKmsFormRef = ref();
-
-// 密钥表单引用
-const keyFormRef = ref();
-
-// Bucket 加密表单引用
-const bucketEncryptFormRef = ref();
-
-// KMS表单验证规则
-const sseKmsRules = {
-  address: {
-    required: true,
-    message: t('Please enter Vault server address'),
-    trigger: 'blur',
-  },
-  vault_token: {
-    required: true,
-    message: t('Please enter Vault token'),
-    trigger: 'blur',
-  },
-  default_key_id: {
-    required: true,
-    message: t('Please enter default key ID'),
-    trigger: 'blur',
-  },
-};
-
-// 密钥表单验证规则
-const keyFormRules = {
-  keyName: {
-    required: true,
-    message: t('Please enter key name'),
-    trigger: 'blur',
-  },
-};
-
-// Bucket 加密表单验证规则
-const bucketEncryptFormRules = {
-  encryptionType: {
-    required: true,
-    message: t('Please select encryption type'),
-    trigger: 'change',
-  },
-  kmsKeyId: {
-    required: true,
-    validator: (rule: any, value: string) => {
-      if (bucketEncryptForm.encryptionType === 'SSE-KMS' && !value) {
-        return new Error(t('Please select a KMS key for SSE-KMS encryption'));
-      }
-      return true;
-    },
-    trigger: 'change',
-  },
-};
-
 // 计算属性
 const hasConfiguration = computed(() => {
   // 判断是否有KMS配置的标准：
@@ -1241,6 +1204,19 @@ const hasConfiguration = computed(() => {
       sseKmsForm.default_key_id)
   );
 });
+
+const authTypeOptions = computed(() => [
+  {
+    label: t('Token'),
+    value: 'token',
+    description: t('Use Vault token for authentication'),
+  },
+  {
+    label: t('AppRole'),
+    value: 'approle',
+    description: t('Use AppRole authentication'),
+  },
+]);
 
 // 计算属性：是否可以添加密钥
 const canAddKeys = computed(() => {
@@ -1347,7 +1323,7 @@ const getKmsStatusType = () => {
 
   // 处理Error状态（可能是对象格式）
   if (isErrorStatus(sseKmsForm.kms_status)) {
-    return 'error';
+    return 'danger';
   }
 
   // 根据KMS状态返回不同的标签类型
@@ -1356,6 +1332,10 @@ const getKmsStatusType = () => {
       return sseKmsForm.kms_healthy ? 'success' : 'warning';
     case 'Configured':
       return 'info';
+    case 'Stopped':
+      return 'warning';
+    case 'Error':
+      return 'danger';
     case 'NotConfigured':
       return 'default';
     default:
@@ -1746,12 +1726,70 @@ const setLocalDevelopment = async () => {
 };
 // setLocalDevelopment();
 
+const validateSseKmsForm = () => {
+  if (!sseKmsForm.address || !String(sseKmsForm.address).trim()) {
+    message.error(t('Please enter Vault server address'));
+    return false;
+  }
+
+  if (!sseKmsForm.default_key_id || !String(sseKmsForm.default_key_id).trim()) {
+    message.error(t('Please enter default key ID'));
+    return false;
+  }
+
+  if (sseKmsForm.auth_type === 'token' && (!sseKmsForm.vault_token || !String(sseKmsForm.vault_token).trim())) {
+    message.error(t('Please enter Vault token'));
+    return false;
+  }
+
+  if (
+    sseKmsForm.auth_type === 'approle' &&
+    (!sseKmsForm.vault_app_role_id ||
+      !String(sseKmsForm.vault_app_role_id).trim() ||
+      !sseKmsForm.vault_app_role_secret_id ||
+      !String(sseKmsForm.vault_app_role_secret_id).trim())
+  ) {
+    message.error(t('Please enter both Role ID and Secret ID'));
+    return false;
+  }
+
+  return true;
+};
+
+const validateKeyForm = () => {
+  if (!keyForm.keyName || !keyForm.keyName.toString().trim()) {
+    message.error(t('Please enter key name'));
+    return false;
+  }
+  return true;
+};
+
+const validateBucketEncryptForm = () => {
+  if (!bucketEncryptForm.encryptionType) {
+    message.error(t('Please select encryption type'));
+    return false;
+  }
+
+  if (bucketEncryptForm.encryptionType === 'SSE-KMS' && !bucketEncryptForm.kmsKeyId) {
+    message.error(t('Please select a KMS key for SSE-KMS encryption'));
+    return false;
+  }
+
+  if (!selectedBucket.value) {
+    message.error(t('No bucket selected'));
+    return false;
+  }
+
+  return true;
+};
+
 const saveConfiguration = async () => {
+  if (!validateSseKmsForm()) {
+    return;
+  }
+
   try {
     saving.value = true;
-
-    // 验证表单
-    await sseKmsFormRef.value?.validate();
 
     // 调用API保存KMS配置 - 适配新的平铺参数格式
     const configData: any = {
@@ -1865,11 +1903,12 @@ const forceDeleteKeyClick = (key: any) => {
 };
 
 const saveKey = async () => {
+  if (!validateKeyForm()) {
+    return;
+  }
+
   try {
     savingKey.value = true;
-
-    // 验证表单
-    await keyFormRef.value?.validate();
 
     // 调用API创建密钥 - 适配新的参数格式
     const createKeyData = {
@@ -2067,30 +2106,25 @@ const loadBucketList = async () => {
             let encryptionAlgorithm = '';
             let kmsKeyId = '';
 
-            if (
-              encryptionConfig &&
-              encryptionConfig.ServerSideEncryptionConfiguration &&
-              encryptionConfig.ServerSideEncryptionConfiguration.Rules &&
-              encryptionConfig.ServerSideEncryptionConfiguration.Rules.length > 0
-            ) {
-              const rule = encryptionConfig.ServerSideEncryptionConfiguration.Rules[0];
-              if (rule.ApplyServerSideEncryptionByDefault) {
-                encryptionStatus = 'Enabled';
-                const algorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm;
+            const rules = encryptionConfig?.ServerSideEncryptionConfiguration?.Rules ?? [];
+            const rule = rules[0];
 
-                if (algorithm === 'aws:kms') {
-                  encryptionType = 'SSE-KMS';
-                  encryptionAlgorithm = 'AES-256 (KMS)';
-                  kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID || '';
-                } else if (algorithm === 'AES256') {
-                  encryptionType = 'SSE-S3';
-                  encryptionAlgorithm = 'AES-256 (S3)';
-                }
+            if (rule?.ApplyServerSideEncryptionByDefault) {
+              encryptionStatus = 'Enabled';
+              const algorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm;
+
+              if (algorithm === 'aws:kms') {
+                encryptionType = 'SSE-KMS';
+                encryptionAlgorithm = 'AES-256 (KMS)';
+                kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID || '';
+              } else if (algorithm === 'AES256') {
+                encryptionType = 'SSE-S3';
+                encryptionAlgorithm = 'AES-256 (S3)';
               }
             }
 
             return {
-              name: bucket.Name,
+              name: bucket.Name ?? '',
               creationDate: bucket.CreationDate,
               encryptionStatus,
               encryptionType,
@@ -2100,7 +2134,7 @@ const loadBucketList = async () => {
           } catch (error) {
             // 如果获取加密配置失败（如404），则认为未配置加密
             return {
-              name: bucket.Name,
+              name: bucket.Name ?? '',
               creationDate: bucket.CreationDate,
               encryptionStatus: 'Disabled',
               encryptionType: '',
@@ -2151,14 +2185,11 @@ const removeBucketEncryption = (bucket: any) => {
 
 // 保存bucket加密配置
 const saveBucketEncryption = async () => {
+  if (!validateBucketEncryptForm()) {
+    return;
+  }
+
   try {
-    await bucketEncryptFormRef.value?.validate();
-
-    if (!selectedBucket.value) {
-      message.error(t('No bucket selected'));
-      return;
-    }
-
     savingBucketEncryption.value = true;
 
     const encryptionConfig: any = {

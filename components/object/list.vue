@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-4">
-    <PageHeader class="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <PageHeader class="sticky top-0 z-10 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <AppInput
+        <Input
           v-model="searchTerm"
           :placeholder="t('Search')"
           class="max-w-md"
@@ -11,15 +11,15 @@
         <div class="flex flex-wrap items-center gap-2">
           <object-upload-stats />
           <object-delete-stats />
-          <AppButton variant="secondary" @click="() => handleNewObject(true)">
+          <Button variant="secondary" @click="() => handleNewObject(true)">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('New Folder') }}</span>
-          </AppButton>
-          <AppButton variant="secondary" @click="() => (uploadPickerVisible = true)">
+          </Button>
+          <Button variant="secondary" @click="() => (uploadPickerVisible = true)">
             <Icon name="ri:file-add-line" class="size-4" />
             <span>{{ t('Upload File') }}/{{ t('Folder') }}</span>
-          </AppButton>
-          <AppButton
+          </Button>
+          <Button
             variant="destructive"
             :disabled="!checkedKeys.length"
             v-show="checkedKeys.length"
@@ -27,8 +27,8 @@
           >
             <Icon name="ri:delete-bin-5-line" class="size-4" />
             <span>{{ t('Delete Selected') }}</span>
-          </AppButton>
-          <AppButton
+          </Button>
+          <Button
             variant="outline"
             :disabled="!checkedKeys.length"
             v-show="checkedKeys.length"
@@ -36,16 +36,16 @@
           >
             <Icon name="ri:download-cloud-2-line" class="size-4" />
             <span>{{ t('Download') }}</span>
-          </AppButton>
-          <AppButton variant="outline" @click="refresh">
+          </Button>
+          <Button variant="outline" @click="handleRefresh">
             <Icon name="ri:refresh-line" class="size-4" />
             <span>{{ t('Refresh') }}</span>
-          </AppButton>
+          </Button>
         </div>
       </div>
     </PageHeader>
 
-    <AppCard padded class="border border-border/60">
+    <AppCard padded class="border">
       <AppDataTable
         :table="table"
         :is-loading="loading"
@@ -55,14 +55,14 @@
     </AppCard>
 
     <div class="flex justify-end gap-2">
-      <AppButton variant="outline" :disabled="!continuationToken" @click="goToPreviousPage">
+      <Button variant="outline" :disabled="!continuationToken" @click="goToPreviousPage">
         <Icon name="ri:arrow-left-s-line" class="mr-2" />
         <span>{{ t('Previous Page') }}</span>
-      </AppButton>
-      <AppButton variant="outline" :disabled="!nextToken" @click="goToNextPage">
+      </Button>
+      <Button variant="outline" :disabled="!nextToken" @click="goToNextPage">
         <span>{{ t('Next Page') }}</span>
         <Icon name="ri:arrow-right-s-line" class="ml-2" />
-      </AppButton>
+      </Button>
     </div>
 
     <object-upload-picker
@@ -84,26 +84,36 @@
         refresh()
       }"
     />
-    <object-info ref="infoRef" @refresh-parent="handleObjectDeleted" />
+    <object-info
+      ref="infoRef"
+      :bucket-name="bucketName"
+      @refresh-parent="handleObjectDeleted"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { icon } from '@/utils/ui'
-import { AppButton, AppCard, AppDataTable, AppInput } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+import { AppCard } from '@/components/app'
+import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
 import { useDataTable } from '@/components/app/data-table'
 import PageHeader from '@/components/page/header.vue'
-import { ListObjectsV2Command, type CommonPrefix, type _Object } from '@aws-sdk/client-s3'
+import { ListObjectsV2Command } from '@aws-sdk/client-s3'
 import dayjs from 'dayjs'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import { joinRelativeURL } from 'ufo'
 import { computed, h, ref, watch } from 'vue'
+import type { ColumnDef } from '@tanstack/vue-table'
+import { useUploadTaskManagerStore } from '~/store/upload-tasks'
+import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
+import { Icon, NuxtLink } from '#components'
 
 const { $s3Client } = useNuxtApp()
 const { t } = useI18n()
 const route = useRoute()
-const router = useRouter()
 const dialog = useDialog()
 const message = useMessage()
 const props = defineProps<{ bucket: string; path: string }>()
@@ -133,6 +143,13 @@ const handleSearch = debounce(() => {
 const uploadTaskStore = useUploadTaskManagerStore()
 const deleteTaskStore = useDeleteTaskManagerStore()
 
+type ObjectRow = {
+  Key: string
+  type: 'prefix' | 'object'
+  Size: number
+  LastModified: string
+}
+
 const bucketName = computed(() => props.bucket)
 const prefix = computed(() => decodeURIComponent(props.path))
 
@@ -156,7 +173,7 @@ const handleObjectDeleted = () => {
   refresh()
 }
 
-const fetchObjects = async () => {
+const fetchObjects = async (): Promise<ObjectRow[]> => {
   loading.value = true
   try {
     const params: any = {
@@ -169,14 +186,14 @@ const fetchObjects = async () => {
     const response = await $s3Client.send(new ListObjectsV2Command(params))
     nextToken.value = response.NextContinuationToken
 
-    const prefixData = (response.CommonPrefixes ?? []).map(item => ({
+    const prefixData: ObjectRow[] = (response.CommonPrefixes ?? []).map(item => ({
       Key: item.Prefix ?? '',
       type: 'prefix' as const,
       Size: 0,
       LastModified: '',
     }))
 
-    const objectData = (response.Contents ?? []).map(item => ({
+    const objectData: ObjectRow[] = (response.Contents ?? []).map(item => ({
       Key: item.Key ?? '',
       type: 'object' as const,
       Size: item.Size ?? 0,
@@ -189,20 +206,23 @@ const fetchObjects = async () => {
   }
 }
 
-const { data, refresh } = await useAsyncData(
-  () => ['objects', bucketName.value, prefix.value, continuationToken.value, searchTerm.value],
+const { data, refresh } = await useAsyncData<ObjectRow[]>(
+  'objects',
   async () => {
     const objects = await fetchObjects()
     if (!searchTerm.value) return objects
     const term = searchTerm.value.toLowerCase()
     return objects.filter(item => item.Key.toLowerCase().includes(term))
   },
-  { default: () => [] }
+  {
+    default: () => [],
+    watch: [bucketName, prefix, continuationToken, searchTerm],
+  }
 )
 
 const checkedKeys = ref<string[]>([])
 
-const columns = computed(() => {
+const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
   return [
     {
       id: 'select',
@@ -222,6 +242,7 @@ const columns = computed(() => {
         }),
     },
     {
+      id: 'object',
       header: () => t('Object'),
       cell: ({ row }: any) => {
         const displayKey = prefix.value ? row.original.Key.substring(prefix.value.length) : row.original.Key
@@ -247,10 +268,12 @@ const columns = computed(() => {
       },
     },
     {
+      id: 'size',
       header: () => t('Size'),
       cell: ({ row }: any) => (row.original.type === 'object' ? formatBytes(row.original.Size) : ''),
     },
     {
+      id: 'lastModified',
       header: () => t('Last Modified'),
       cell: ({ row }: any) => (row.original.LastModified ? dayjs(row.original.LastModified).format('YYYY-MM-DD HH:mm:ss') : ''),
     },
@@ -262,7 +285,7 @@ const columns = computed(() => {
         h('div', { class: 'flex justify-center gap-2' }, [
           row.original.type === 'object'
             ? h(
-                AppButton,
+                Button,
                 {
                   variant: 'outline',
                   size: 'sm',
@@ -272,7 +295,7 @@ const columns = computed(() => {
               )
             : null,
           h(
-            AppButton,
+            Button,
             {
               variant: 'outline',
               size: 'sm',
@@ -285,31 +308,29 @@ const columns = computed(() => {
   ]
 })
 
-const { table } = useDataTable({
+const { table } = useDataTable<ObjectRow>({
   data,
   columns,
   getRowId: (row: any) => row.Key,
-  state: computed(() => ({
-    rowSelection: checkedKeys.value.reduce((acc: Record<string, boolean>, key) => {
-      acc[key] = true
-      return acc
-    }, {}),
-  })),
-  onRowSelectionChange: updater => {
-    const next = typeof updater === 'function' ? updater({}) : updater
-    checkedKeys.value = Object.keys(next).filter(key => next[key])
-  },
 })
 
 watch(
+  () => table.getState().rowSelection,
+  selection => {
+    checkedKeys.value = Object.keys(selection).filter(key => selection[key])
+  },
+  { deep: true }
+)
+
+watch(
   () => uploadTaskStore.tasks,
-  () => setTimeout(refresh, 500),
+  () => setTimeout(() => refresh(), 500),
   { deep: true }
 )
 
 watch(
   () => deleteTaskStore.tasks,
-  () => setTimeout(refresh, 500),
+  () => setTimeout(() => refresh(), 500),
   { deep: true }
 )
 
@@ -325,6 +346,10 @@ const goToNextPage = () => {
 const goToPreviousPage = () => {
   const prev = tokenHistory.value.pop()
   continuationToken.value = prev
+  refresh()
+}
+
+const handleRefresh = () => {
   refresh()
 }
 
@@ -369,12 +394,9 @@ const confirmDelete = (keys: string[]) => {
 }
 
 const handleDelete = async (keys: string[]) => {
-  const bucket = bucketName.value
-  const taskStore = useDeleteTaskManagerStore()
-  for (const key of keys) {
-    await taskStore.addTask({ bucket, key })
-  }
+  deleteTaskStore.addKeys(keys, bucketName.value, prefix.value)
   checkedKeys.value = []
+  table.resetRowSelection()
   refresh()
 }
 

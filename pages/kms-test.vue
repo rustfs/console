@@ -10,67 +10,66 @@
     </page-header>
 
     <page-content>
-      <n-card title="KMS API Test Suite" class="mb-6">
-        <div class="space-y-4">
-          <!-- Test Buttons -->
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <n-button @click="testServiceStatus" :loading="testing.status"> Test Service Status </n-button>
-            <n-button @click="testConfiguration" :loading="testing.config"> Test Configuration </n-button>
-            <n-button @click="testKeyList" :loading="testing.keys"> Test Key List </n-button>
-            <n-button @click="testClearCache" :loading="testing.cache"> Test Clear Cache </n-button>
-          </div>
+      <AppCard title="KMS API Test Suite" class="mb-6" content-class="space-y-4">
+        <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Button @click="testServiceStatus" :loading="testing.status">Test Service Status</Button>
+          <Button @click="testConfiguration" :loading="testing.config">Test Configuration</Button>
+          <Button @click="testKeyList" :loading="testing.keys">Test Key List</Button>
+          <Button @click="testClearCache" :loading="testing.cache">Test Clear Cache</Button>
+        </div>
 
-          <!-- Test Results -->
-          <n-card title="Test Results" v-if="testResults.length > 0">
-            <div class="space-y-2">
-              <div
-                v-for="(result, index) in testResults"
-                :key="index"
-                class="border-l-4 p-3 rounded"
-                :class="{
-                  'border-green-500 bg-green-50': result.success,
-                  'border-red-500 bg-red-50': !result.success,
-                }"
-              >
-                <div class="flex justify-between items-start">
-                  <div>
-                    <h4 class="font-medium">{{ result.test }}</h4>
-                    <p class="text-sm text-gray-600">{{ result.message }}</p>
-                    <div v-if="result.data" class="mt-2">
-                      <details>
-                        <summary class="cursor-pointer text-sm text-blue-600">View Response Data</summary>
-                        <pre class="mt-2 p-2 bg-gray-100 rounded text-xs overflow-auto">{{
-                          JSON.stringify(result.data, null, 2)
-                        }}</pre>
-                      </details>
-                    </div>
-                  </div>
-                  <n-tag :type="result.success ? 'success' : 'error'" size="small">
-                    {{ result.success ? 'PASS' : 'FAIL' }}
-                  </n-tag>
+        <AppCard v-if="testResults.length > 0" title="Test Results" content-class="space-y-2">
+          <div
+            v-for="(result, index) in testResults"
+            :key="index"
+            class="rounded border-l-4 p-3"
+            :class="result.success ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/10' : 'border-rose-500 bg-rose-50 dark:bg-rose-900/10'"
+          >
+            <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+              <div>
+                <h4 class="font-medium">{{ result.test }}</h4>
+                <p class="text-sm text-muted-foreground">{{ result.message }}</p>
+                <div v-if="result.data" class="mt-2 text-sm text-muted-foreground">
+                  <details>
+                    <summary class="cursor-pointer text-sm text-primary">View Response Data</summary>
+                    <pre class="mt-2 max-h-64 overflow-auto rounded bg-muted p-2 text-xs">{{ JSON.stringify(result.data, null, 2) }}</pre>
+                  </details>
                 </div>
               </div>
+              <AppTag :tone="result.success ? 'success' : 'danger'" class="self-start">
+                {{ result.success ? 'PASS' : 'FAIL' }}
+              </AppTag>
             </div>
-          </n-card>
+          </div>
+        </AppCard>
 
-          <!-- API Documentation Link -->
-          <n-card title="API Documentation">
-            <p>Updated KMS API documentation is available in the project's docs folder.</p>
-            <n-button tag="a" href="/docs/kms/frontend-api-guide-zh.md" target="_blank" class="mt-2">
-              View API Documentation
-            </n-button>
-          </n-card>
-        </div>
-      </n-card>
+        <AppCard title="API Documentation">
+          <p class="text-sm text-muted-foreground">
+            Updated KMS API documentation is available in the project's docs folder.
+          </p>
+          <Button
+            as="a"
+            href="/docs/kms/frontend-api-guide-zh.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="outline"
+            class="mt-2 w-fit"
+          >
+            View API Documentation
+          </Button>
+        </AppCard>
+      </AppCard>
     </page-content>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
-import { useMessage } from 'naive-ui';
+import { AppCard, AppTag } from '@/components/app'
+import { Button } from '@/components/ui/button';
+import { useMessage } from '@/composables/ui';
+import { reactive, ref } from 'vue';
 
-const { getKMSStatus, getConfiguration, getKeyList, clearCache, validateConfiguration } = useSSE();
+const { getKMSStatus, getConfiguration, getKeyList, clearCache } = useSSE();
 const message = useMessage();
 
 // Test states

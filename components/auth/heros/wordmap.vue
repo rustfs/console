@@ -2,7 +2,7 @@
   <div class="w-full bg-gray-50 dark:bg-black h-full p-16 flex flex-col justify-center gap-8">
     <div class="max-w-7xl flex flex-col">
       <img src="~/assets/logo.svg" class="max-w-28" alt="" />
-      <div class="text-4xl my-6 font-semibold !text-primary px-0">
+      <div class="text-4xl my-6 font-semibold text-primary! px-0">
         <span :class="{ 'pr-1': locale !== 'zh' }">{{ t('Rust-based') }} </span>
         <FlipWords
           :words="[
@@ -13,7 +13,7 @@
             t('S3 Compatible'),
           ]"
           :duration="3000"
-          class="text-4xl font-semibold !text-primary px-0"
+          class="text-4xl font-semibold text-primary! px-0"
         />
         <div class="text-muted-foreground mt-2">
           {{ t('Reliable distributed file system') }}

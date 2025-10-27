@@ -1,28 +1,25 @@
 <template>
-  <div class="min-h-screen" :class="{ dark: isDark }">
-    <AppUiProvider>
+
+  <Body class="bg-background overscroll-none font-sans antialiased" :class="[
+    activeTheme ? `theme-${activeTheme}` : '',
+    isScaled ? 'theme-scaled' : '',
+  ]">
+    <ProvidersAppUiProvider>
       <NuxtLayout>
         <NuxtPage />
       </NuxtLayout>
-    </AppUiProvider>
-  </div>
+    </ProvidersAppUiProvider>
+
+    <Toaster :theme="colorMode as any || 'system'" />
+  </Body>
 </template>
 
 <script lang="ts" setup>
-import AppUiProvider from '@/components/providers/AppUiProvider.vue';
-import { useColorMode } from '@vueuse/core';
-import { computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { useColorMode } from '@vueuse/core'
+import { computed } from 'vue'
 
-const { system, store } = useColorMode();
-const { locale } = useI18n();
-
-const isDark = computed(() => {
-  return store.value === 'dark' || (store.value === 'auto' && system.value === 'dark');
-});
-
-// 监听语言变化
-watch(locale, newLocale => {
-  console.log('Language changed to:', newLocale);
-});
+import { Toaster } from '@/components/ui/sonner'
+const activeTheme = useCookie<string>('active_theme', { readonly: true })
+const isScaled = computed(() => !!activeTheme.value?.endsWith('-scaled'))
+const colorMode = useColorMode()
 </script>

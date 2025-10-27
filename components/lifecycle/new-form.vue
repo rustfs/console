@@ -22,7 +22,7 @@
             <div class="grid gap-2">
               <Label>{{ t('Time Cycle') }}</Label>
               <div class="flex items-center gap-3">
-                <AppInput
+                <Input
                   v-model="formData.days"
                   type="number"
                   min="1"
@@ -40,27 +40,27 @@
               <div class="mt-4 space-y-4">
                 <div class="grid gap-2">
                   <Label>{{ t('Prefix') }}</Label>
-                  <AppInput v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+                  <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
                 </div>
 
                 <div class="space-y-3">
                   <div class="flex items-center justify-between">
                     <Label class="text-sm font-medium">{{ t('Tags') }}</Label>
-                    <AppButton variant="outline" size="sm" @click="addTag">
+                    <Button variant="outline" size="sm" @click="addTag">
                       <Icon name="ri:add-line" class="size-4" />
                       {{ t('Add Tag') }}
-                    </AppButton>
+                    </Button>
                   </div>
                   <div v-if="formData.tags.length" class="space-y-3">
                     <div
                       v-for="(tag, index) in formData.tags"
                       :key="index"
-                      class="grid gap-2 rounded-md border border-border/60 p-3 md:grid-cols-2 md:items-center md:gap-4"
+                      class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
                     >
-                      <AppInput v-model="tag.key" :placeholder="t('Tag Name')" />
+                      <Input v-model="tag.key" :placeholder="t('Tag Name')" />
                       <div class="flex items-center gap-2">
-                        <AppInput v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
-                        <AppButton
+                        <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
+                        <Button
                           variant="ghost"
                           size="sm"
                           class="text-destructive"
@@ -68,7 +68,7 @@
                           @click="removeTag(index)"
                         >
                           <Icon name="ri:delete-bin-line" class="size-4" />
-                        </AppButton>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -103,7 +103,7 @@
             <div class="grid gap-2">
               <Label>{{ t('Time Cycle') }}</Label>
               <div class="flex items-center gap-3">
-                <AppInput
+                <Input
                   v-model="formData.days"
                   type="number"
                   min="1"
@@ -130,27 +130,27 @@
               <div class="mt-4 space-y-4">
                 <div class="grid gap-2">
                   <Label>{{ t('Prefix') }}</Label>
-                  <AppInput v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+                  <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
                 </div>
 
                 <div class="space-y-3">
                   <div class="flex items-center justify-between">
                     <Label class="text-sm font-medium">{{ t('Tags') }}</Label>
-                    <AppButton variant="outline" size="sm" @click="addTag">
+                    <Button variant="outline" size="sm" @click="addTag">
                       <Icon name="ri:add-line" class="size-4" />
                       {{ t('Add Tag') }}
-                    </AppButton>
+                    </Button>
                   </div>
                   <div v-if="formData.tags.length" class="space-y-3">
                     <div
                       v-for="(tag, index) in formData.tags"
                       :key="index"
-                      class="grid gap-2 rounded-md border border-border/60 p-3 md:grid-cols-2 md:items-center md:gap-4"
+                      class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
                     >
-                      <AppInput v-model="tag.key" :placeholder="t('Tag Name')" />
+                      <Input v-model="tag.key" :placeholder="t('Tag Name')" />
                       <div class="flex items-center gap-2">
-                        <AppInput v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
-                        <AppButton
+                        <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
+                        <Button
                           variant="ghost"
                           size="sm"
                           class="text-destructive"
@@ -158,7 +158,7 @@
                           @click="removeTag(index)"
                         >
                           <Icon name="ri:delete-bin-line" class="size-4" />
-                        </AppButton>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -172,16 +172,19 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="handleCancel">{{ t('Cancel') }}</AppButton>
-        <AppButton variant="primary" :loading="submitting" @click="handleSave">{{ t('Save') }}</AppButton>
+        <Button variant="outline" @click="handleCancel">{{ t('Cancel') }}</Button>
+        <Button variant="default" :loading="submitting" @click="handleSave">{{ t('Save') }}</Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
-import { AppButton, AppCard, AppInput, AppModal, AppSelect, AppSwitch } from '@/components/app'
+import { AppCard, AppModal, AppSelect, AppSwitch } from '@/components/app'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
@@ -247,7 +250,7 @@ const loadTiers = async () => {
     }))
   }
   if (!formData.storageType && tiers.value.length > 0) {
-    formData.storageType = tiers.value[0].value
+    formData.storageType = tiers.value[0]?.value ?? ''
   }
 }
 
@@ -327,11 +330,12 @@ const buildFilter = () => {
   }
 
   const filter: any = {}
+  const [firstTag] = validTags
 
-  if (validTags.length === 1 && !formData.prefix) {
+  if (firstTag && validTags.length === 1 && !formData.prefix) {
     filter.Tag = {
-      Key: validTags[0].key,
-      Value: validTags[0].value,
+      Key: firstTag.key,
+      Value: firstTag.value,
     }
   } else if (validTags.length > 0) {
     filter.And = {
@@ -347,11 +351,11 @@ const buildFilter = () => {
     filter.Prefix = formData.prefix
   }
 
-  if (formData.prefix && validTags.length === 1 && !filter.And) {
+  if (formData.prefix && firstTag && validTags.length === 1 && !filter.And) {
     filter.Prefix = formData.prefix
     filter.Tag = {
-      Key: validTags[0].key,
-      Value: validTags[0].value,
+      Key: firstTag.key,
+      Value: firstTag.value,
     }
   } else if (formData.prefix && validTags.length === 0) {
     filter.Prefix = formData.prefix

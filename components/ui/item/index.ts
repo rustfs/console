@@ -34,7 +34,7 @@ export const itemVariants = cva(
 )
 
 export const itemMediaVariants = cva(
-  "flex shrink-0 items-center justify-center gap-2 group-has-[[data-slot=item-description]]/item:self-start [&_svg]:pointer-events-none group-has-[[data-slot=item-description]]/item:translate-y-0.5",
+  "flex shrink-0 items-center justify-center gap-2 group-has-data-[slot=item-description]/item:self-start [&_svg]:pointer-events-none group-has-data-[slot=item-description]/item:translate-y-0.5",
   {
     variants: {
       variant: {

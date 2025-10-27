@@ -208,7 +208,10 @@ watch(
   () => bucketList.value,
   newBuckets => {
     if (!bucketName.value && newBuckets.length) {
-      bucketName.value = newBuckets[0].value
+      const firstBucket = newBuckets[0]
+      if (firstBucket?.value) {
+        bucketName.value = firstBucket.value
+      }
     }
   },
 )

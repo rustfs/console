@@ -21,7 +21,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'change', file: File | null): void
-}>
+}>()
 
 const hovering = ref(false)
 

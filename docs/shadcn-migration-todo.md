@@ -3,8 +3,8 @@
 - [x] Replace global layout shell (`layouts/default.vue`) to use `components/app/AppSidebar` built with ShadCN Sidebar primitives and update the layout structure similar to Sidebar07.
 - [x] Build `components/app/AppSidebar.vue` and supporting subcomponents to render navigation, language/theme controls, and user menu with ShadCN UI widgets.
 - [x] Replace Naive UI providers in `app.vue` with ShadCN-friendly structure, wiring toast/dialog replacements and preserving color mode handling.
-- [ ] Convert shared form components and high-use Naive UI elements (buttons, inputs, tables, etc.) to their ShadCN equivalents, introducing reusable wrappers under `components/app-` when helpful.
-  - [x] Establish shared wrappers (`AppButton`, `AppCard`, `AppInput`, `AppSelect`, `AppSwitch`, etc.) under `components/app`.
+- [x] Convert shared form components and high-use Naive UI elements (buttons, inputs, tables, etc.) to their ShadCN equivalents, introducing reusable wrappers under `components/app-` when helpful.
+  - [x] Establish shared wrappers (`AppCard`, `AppSelect`, `AppSwitch`, etc.) under `components/app`; buttons/inputs now import shadcn primitives directly.
   - [x] Build reusable data table primitives (`AppDataTable`, pagination, `useDataTable`) powered by TanStack.
   - [x] Convert `components/copy-input.vue` to the new wrappers and toast API.
   - [x] Rebuild the users list tab (`components/users/tabs/user.vue`) with ShadCN table, checkbox, dialog, and button primitives.
@@ -21,5 +21,5 @@
   - [x] Migrate IAM import/export workflows to ShadCN components and new upload zone.
   - [x] Migrate Settings page to shared ShadCN components.
   - [x] Migrate Auth login page to shared ShadCN components.
-- [ ] Migrate feature-specific views to consume the new shared components, auditing for leftover Naive UI imports and styles.
-- [ ] Remove Naive UI dependencies and configuration, ensuring ESLint/Vitest/build succeed.
+- [x] Migrate feature-specific views to consume the new shared components, auditing for leftover Naive UI imports and styles. (`rg "<n-"` returns no matches.)
+- [x] Remove Naive UI dependencies and configuration, ensuring ESLint/Vitest/build succeed.

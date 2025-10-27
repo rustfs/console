@@ -7,26 +7,27 @@
     </page-header>
 
     <page-content class="flex flex-col gap-4">
-      <div
-        class="flex flex-col gap-4 rounded-lg border border-border/60 bg-background/80 p-4 shadow-sm md:flex-row md:items-center md:justify-between"
+      <AppCard
+        :padded="false"
+        :content-class="'flex flex-col gap-4 md:flex-row md:items-center md:justify-between'"
       >
         <div class="flex w-full max-w-sm items-center gap-2">
           <Icon name="ri:search-2-line" class="size-4 text-muted-foreground" />
-          <AppInput v-model="searchTerm" :placeholder="t('Search')" />
+          <Input v-model="searchTerm" :placeholder="t('Search')" />
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2">
-          <AppButton variant="secondary" @click="addForm">
+          <Button variant="secondary" @click="addForm">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Event Destination') }}</span>
-          </AppButton>
-          <AppButton variant="outline" @click="refresh">
+          </Button>
+          <Button variant="outline" @click="() => refresh()">
             <Icon name="ri:refresh-line" class="size-4" />
             <span>{{ t('Refresh') }}</span>
-          </AppButton>
+          </Button>
         </div>
-      </div>
+      </AppCard>
 
-      <AppCard padded class="border border-border/60">
+      <AppCard>
         <AppDataTable
           :table="table"
           :is-loading="pending"
@@ -36,15 +37,19 @@
       </AppCard>
     </page-content>
 
-    <events-target-new ref="newFormRef" @search="refresh" />
+    <events-target-new ref="newFormRef" @search="() => refresh()" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { AppButton, AppCard, AppInput, AppTag } from '@/components/app'
-import { AppDataTable, useDataTable } from '@/components/app/data-table'
+import { AppCard, AppTag } from '@/components/app'
+import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
+import { useDataTable } from '@/components/app/data-table'
 import { h, computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -93,7 +98,7 @@ const columns: ColumnDef<RowData>[] = [
     cell: ({ row }) =>
       h('div', { class: 'flex justify-center gap-2' }, [
         h(
-          AppButton,
+          Button,
           {
             variant: 'outline',
             size: 'sm',

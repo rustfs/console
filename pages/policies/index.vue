@@ -7,29 +7,28 @@
     </page-header>
 
     <page-content class="flex flex-col gap-4">
-      <div
-        class="flex flex-col gap-4 rounded-lg border border-border/60 bg-background/80 p-4 shadow-sm md:flex-row md:items-center md:justify-between"
+      <AppCard
+        :padded="false"
+        :content-class="'flex flex-col gap-4 md:flex-row md:items-center md:justify-between'"
       >
         <div class="flex w-full max-w-sm items-center gap-2">
           <Icon name="ri:search-2-line" class="size-4 text-muted-foreground" />
-          <AppInput v-model="searchTerm" :placeholder="t('Search')" />
+          <Input v-model="searchTerm" :placeholder="t('Search')" />
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2">
-          <AppButton variant="secondary" @click="handleNew">
+          <Button variant="secondary" @click="handleNew">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('New Policy') }}</span>
-          </AppButton>
+          </Button>
         </div>
-      </div>
-
-      <AppCard padded class="border border-border/60">
-        <AppDataTable
-          :table="table"
-          :is-loading="loading"
-          :empty-title="t('No Policies')"
-          :empty-description="t('Create a policy to manage access control templates.')"
-        />
       </AppCard>
+
+      <AppDataTable
+        :table="table"
+        :is-loading="loading"
+        :empty-title="t('No Policies')"
+        :empty-description="t('Create a policy to manage access control templates.')"
+      />
     </page-content>
 
     <policies-form-item v-model:show="showPolicyForm" :policy="current" @saved="fetchPolicies" />
@@ -37,10 +36,14 @@
 </template>
 
 <script lang="ts" setup>
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { AppButton, AppCard, AppInput } from '@/components/app'
-import { AppDataTable, useDataTable } from '@/components/app/data-table'
+import { AppCard } from '@/components/app'
+import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
+import { useDataTable } from '@/components/app/data-table'
 import { h, computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -87,7 +90,7 @@ const columns: ColumnDef<PolicyRow>[] = [
     cell: ({ row }) =>
       h('div', { class: 'flex justify-center gap-2' }, [
         h(
-          AppButton,
+          Button,
           {
             variant: 'outline',
             size: 'sm',
@@ -96,7 +99,7 @@ const columns: ColumnDef<PolicyRow>[] = [
           () => [h(Icon, { name: 'ri:edit-2-line', class: 'size-4' }), h('span', t('Edit'))]
         ),
         h(
-          AppButton,
+          Button,
           {
             variant: 'outline',
             size: 'sm',

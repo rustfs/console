@@ -2,12 +2,12 @@
   <AppCard padded class="space-y-4">
     <div v-if="!editStatus" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="w-full sm:max-w-xs">
-        <AppInput v-model="searchTerm" :placeholder="t('Search Group')" />
+        <Input v-model="searchTerm" :placeholder="t('Search Group')" />
       </div>
-      <AppButton variant="secondary" class="inline-flex items-center gap-2" @click="startEditing">
+      <Button variant="secondary" class="inline-flex items-center gap-2" @click="startEditing">
         <Icon class="size-4" name="ri:add-line" />
         {{ t('Edit Group') }}
-      </AppButton>
+      </Button>
     </div>
 
     <div v-else class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -56,12 +56,12 @@
         </div>
       </div>
       <div class="flex items-center gap-2 sm:self-start">
-        <AppButton variant="ghost" @click="cancelEditing">
+        <Button variant="ghost" @click="cancelEditing">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="secondary" :loading="submitting" @click="changeMembers">
+        </Button>
+        <Button variant="secondary" :loading="submitting" @click="changeMembers">
           {{ t('Submit') }}
-        </AppButton>
+        </Button>
       </div>
     </div>
 
@@ -88,8 +88,10 @@
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+
 import { Icon } from '#components'
-import { AppButton, AppCard, AppInput } from '@/components/app'
+import { AppCard } from '@/components/app'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'

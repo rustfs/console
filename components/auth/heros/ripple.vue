@@ -4,7 +4,7 @@
   >
     <div class="max-w-7xl flex flex-col z-10">
       <img src="~/assets/logo.svg" class="max-w-28" alt="" />
-      <div class="text-4xl my-6 font-semibold !text-primary px-0">
+      <div class="text-4xl my-6 font-semibold text-primary! px-0">
         <span :class="{ 'pr-1': locale !== 'zh' }">{{ t('Rust-based') }} </span>
         <FlipWords
           :words="[
@@ -15,7 +15,7 @@
             t('S3 Compatible'),
           ]"
           :duration="3000"
-          class="text-4xl font-semibold !text-primary px-0"
+          class="text-4xl font-semibold text-primary! px-0"
         />
         <div class="text-muted-foreground mt-2">
           {{ t('Reliable distributed file system') }}
@@ -31,8 +31,8 @@
     </a>
     <div class="h-full inset-0 absolute z-0">
       <Ripple
-        class="bg-white/5 -mb-[100vh] h-full w-full -mr-[50vw] [mask-image:linear-gradient(to_bottom,white,transparent)]"
-        circle-class="border-[hsl(var(--primary))] bg-[#0000]/25 dark:bg-[#fff]/25 rounded-full"
+        class="bg-white/5 -mb-[100vh] h-full w-full -mr-[50vw] mask-[linear-gradient(to_bottom,white,transparent)]"
+        circle-class="border-[hsl(var(--primary))] bg-[#0000]/25 dark:bg-white/25 rounded-full"
       />
     </div>
   </div>

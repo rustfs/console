@@ -4,12 +4,12 @@
       <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-2">
           <Label>{{ t('User Name') }}</Label>
-          <AppInput v-model="editForm.accessKey" autocomplete="off" />
+          <Input v-model="editForm.accessKey" autocomplete="off" />
           <p v-if="errors.accessKey" class="text-xs text-destructive">{{ errors.accessKey }}</p>
         </div>
         <div class="space-y-2">
           <Label>{{ t('Password') }}</Label>
-          <AppInput v-model="editForm.secretKey" type="password" autocomplete="off" />
+          <Input v-model="editForm.secretKey" type="password" autocomplete="off" />
           <p v-if="errors.secretKey" class="text-xs text-destructive">{{ errors.secretKey }}</p>
         </div>
       </div>
@@ -107,20 +107,22 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal">
+        <Button variant="outline" @click="closeModal">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="primary" :loading="submitting" @click="submitForm">
+        </Button>
+        <Button variant="default" :loading="submitting" @click="submitForm">
           {{ t('Submit') }}
-        </AppButton>
+        </Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
+import { Input } from '@/components/ui/input'
+
 import { Icon } from '#components'
-import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { AppCard, AppModal } from '@/components/app'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'

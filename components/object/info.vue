@@ -2,23 +2,23 @@
   <AppDrawer v-model="visible" :title="t('Object Details')" size="lg">
     <div class="space-y-4">
       <div class="flex flex-wrap items-center gap-2">
-        <AppButton variant="outline" size="sm" @click="download">
+        <Button variant="outline" size="sm" @click="download">
           <Icon name="ri:download-line" class="size-4" />
           {{ t('Download') }}
-        </AppButton>
-        <AppButton variant="outline" size="sm" @click="() => (showPreview = true)">
+        </Button>
+        <Button variant="outline" size="sm" @click="() => (showPreview = true)">
           <Icon name="ri:eye-line" class="size-4" />
           {{ t('Preview') }}
-        </AppButton>
-        <AppButton variant="outline" size="sm" @click="() => (showTagView = true)">
+        </Button>
+        <Button variant="outline" size="sm" @click="() => (showTagView = true)">
           <Icon name="ri:price-tag-3-line" class="size-4" />
           {{ t('Set Tags') }}
-        </AppButton>
-        <AppButton variant="outline" size="sm" @click="geVersions">
+        </Button>
+        <Button variant="outline" size="sm" @click="viewVersions">
           <Icon name="ri:file-list-2-line" class="size-4" />
           {{ t('Versions') }}
-        </AppButton>
-        <AppButton
+        </Button>
+        <Button
           v-if="lockStatus"
           variant="outline"
           size="sm"
@@ -26,7 +26,7 @@
         >
           <Icon name="ri:lock-line" class="size-4" />
           {{ t('Retention') }}
-        </AppButton>
+        </Button>
       </div>
 
       <AppCard :title="t('Info')" padded>
@@ -63,10 +63,10 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <AppInput v-model="signedUrl" id="signedUrl" :placeholder="t('Temporary URL')" />
-            <AppButton variant="outline" size="sm" :disabled="!object?.Key" @click="copyTemporaryUrl">
+            <Input v-model="signedUrl" :placeholder="t('Temporary URL')" readonly />
+            <Button variant="outline" size="sm" :disabled="!object?.Key" @click="copyTemporaryUrl">
               {{ t('Copy') }}
-            </AppButton>
+            </Button>
           </div>
         </div>
       </AppCard>
@@ -80,9 +80,9 @@
           </AppTag>
         </div>
         <form class="flex flex-wrap gap-3" @submit.prevent="submitTagForm">
-          <AppInput v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
-          <AppInput v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
-          <AppButton type="submit" variant="primary">{{ t('Add') }}</AppButton>
+          <Input v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
+          <Input v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
+          <Button type="submit" variant="default">{{ t('Add') }}</Button>
         </form>
       </AppCard>
     </AppModal>
@@ -102,12 +102,12 @@
           </div>
           <div class="flex flex-col gap-2">
             <Label>{{ t('Retention RetainUntilDate') }}</Label>
-            <AppInput v-model="retainUntilDate" type="datetime-local" />
+            <Input v-model="retainUntilDate" type="datetime-local" />
           </div>
           <div class="flex justify-end gap-2">
-            <AppButton variant="secondary" @click="resetRetention">{{ t('Reset') }}</AppButton>
-            <AppButton type="submit" variant="primary">{{ t('Confirm') }}</AppButton>
-            <AppButton variant="outline" @click="() => (showRetentionView = false)">{{ t('Cancel') }}</AppButton>
+            <Button variant="secondary" @click="resetRetention">{{ t('Reset') }}</Button>
+            <Button type="submit" variant="default">{{ t('Confirm') }}</Button>
+            <Button variant="outline" @click="() => (showRetentionView = false)">{{ t('Cancel') }}</Button>
           </div>
         </form>
       </AppCard>
@@ -118,17 +118,17 @@
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppCard, AppDrawer, AppInput, AppModal, AppRadioGroup, AppSwitch, AppTag } from '@/components/app'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppDrawer, AppModal, AppRadioGroup, AppSwitch, AppTag } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { useI18n } from 'vue-i18n'
-import { ref, computed } from 'vue'
-import ClipboardJS from 'clipboard'
+import { ref } from 'vue'
 import { joinRelativeURL } from 'ufo'
 
 const { t } = useI18n()
 const message = useMessage()
-const dialog = useDialog()
 
 const props = defineProps<{
   bucketName: string
@@ -140,7 +140,7 @@ const tags = ref<Array<{ Key: string; Value: string }>>([])
 const lockStatus = ref(false)
 const retention = ref('')
 const retainUntilDate = ref('')
-const retentionMode = ref('GOVERNANCE')
+const retentionMode = ref<'COMPLIANCE' | 'GOVERNANCE'>('GOVERNANCE')
 const signedUrl = ref('')
 const showTagView = ref(false)
 const showRetentionView = ref(false)
@@ -148,8 +148,15 @@ const showPreview = ref(false)
 
 const tagFormValue = ref({ Key: '', Value: '' })
 
-const { getObjectInfo, setLegalHold, putObjectTags, getObjectTags, getObjectRetention, putObjectRetention, geObjectVersions } =
-  useObject({ bucket: props.bucketName })
+const {
+  getObjectInfo,
+  setLegalHold,
+  putObjectTags,
+  getObjectTags,
+  getObjectRetention,
+  putObjectRetention,
+  getObjectVersions,
+} = useObject({ bucket: props.bucketName })
 
 const openDrawer = async (bucket: string, key: string) => {
   visible.value = true
@@ -168,7 +175,7 @@ const openDrawer = async (bucket: string, key: string) => {
 const fetchTags = async (key: string) => {
   try {
     const response = await getObjectTags(key)
-    tags.value = response.TagSet || []
+    tags.value = response
   } catch (error) {
     tags.value = []
   }
@@ -177,8 +184,9 @@ const fetchTags = async (key: string) => {
 const fetchRetention = async (key: string) => {
   try {
     const response = await getObjectRetention(key)
-    retention.value = response.Mode || ''
-    retainUntilDate.value = response.RetainUntilDate || ''
+    retention.value = response.Mode ?? ''
+    retainUntilDate.value = response.RetainUntilDate ?? ''
+    retentionMode.value = response.Mode === 'COMPLIANCE' ? 'COMPLIANCE' : 'GOVERNANCE'
   } catch (error) {
     retention.value = ''
     retainUntilDate.value = ''
@@ -219,7 +227,7 @@ const submitRetention = async () => {
   try {
     await putObjectRetention(object.value.Key, {
       Mode: retentionMode.value,
-      RetainUntilDate: retainUntilDate.value,
+      RetainUntilDate: retainUntilDate.value || undefined,
     })
     message.success(t('Update Success'))
     showRetentionView.value = false
@@ -232,7 +240,7 @@ const submitRetention = async () => {
 const resetRetention = async () => {
   if (!object.value) return
   try {
-    await putObjectRetention(object.value.Key, { Mode: 'GOVERNANCE', RetainUntilDate: '' })
+    await putObjectRetention(object.value.Key, { Mode: 'GOVERNANCE' })
     message.success(t('Update Success'))
     fetchRetention(object.value.Key)
   } catch (error: any) {
@@ -240,9 +248,9 @@ const resetRetention = async () => {
   }
 }
 
-const geVersions = async () => {
+const viewVersions = async () => {
   if (!object.value) return
-  await geObjectVersions(object.value.Key)
+  await getObjectVersions(object.value.Key)
 }
 
 const download = async () => {
@@ -251,13 +259,14 @@ const download = async () => {
   window.open(url, '_blank')
 }
 
-const copyTemporaryUrl = () => {
-  const clipboard = new ClipboardJS('#signedUrl', {
-    text: () => signedUrl.value,
-  })
-  clipboard.on('success', () => message.success(t('Copy Success')))
-  clipboard.on('error', () => message.error(t('Copy Failed')))
-  clipboard.destroy()
+const copyTemporaryUrl = async () => {
+  if (!signedUrl.value) return
+  try {
+    await navigator.clipboard.writeText(signedUrl.value)
+    message.success(t('Copy Success'))
+  } catch {
+    message.error(t('Copy Failed'))
+  }
 }
 
 defineExpose({

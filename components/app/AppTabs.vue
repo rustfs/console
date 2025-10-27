@@ -16,7 +16,7 @@ const props = defineProps<{
   class?: HTMLAttributes['class']
 }>()
 
-const value = defineModel<string>({ default: '' })
+const value = defineModel<string>()
 
 watch(
   () => props.tabs,

@@ -1,5 +1,5 @@
 <template>
-  <AppButton
+  <Button
     v-if="total > 0"
     variant="ghost"
     size="sm"
@@ -21,7 +21,7 @@
     <div v-else>
       {{ t('Task Completed', { completed: completed.length, failed: failed.length }) }}
     </div>
-  </AppButton>
+  </Button>
 
   <AppDrawer v-model="showDrawer" :title="t('Task Management')" size="lg">
     <div class="flex flex-col gap-4">
@@ -41,9 +41,9 @@
       <div v-if="total > 0" class="space-y-3">
         <div class="flex items-center justify-between text-sm text-muted-foreground">
           <div>{{ total - (pending.length + processing.length) }}/{{ total }}</div>
-          <AppButton variant="ghost" size="sm" class="h-auto px-2" @click="clearTasks">
+          <Button variant="ghost" size="sm" class="h-auto px-2" @click="clearTasks">
             {{ t('Clear Records') }}
-          </AppButton>
+          </Button>
         </div>
         <AppProgress :value="percentage" :processing="percentage < 100" :height="3" />
       </div>
@@ -76,7 +76,9 @@
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppDrawer, AppProgress, AppSpinner } from '@/components/app'
+import { Button } from '@/components/ui/button'
+
+import { AppDrawer, AppProgress, AppSpinner } from '@/components/app'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, ref, watch } from 'vue'

@@ -12,6 +12,7 @@ import {
   GetObjectLegalHoldCommand,
   PutObjectLegalHoldCommand,
   ListObjectVersionsCommand,
+  ObjectLockRetentionMode,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -107,26 +108,45 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     }
   }
 
-  async function getObjectTagging(key: string) {
+  async function getObjectInfo(key: string) {
+    const [meta, signedUrl] = await Promise.all([headObject(key), getSignedUrl(key)]);
+    return {
+      ...meta,
+      Key: key,
+      SignedUrl: signedUrl,
+    };
+  }
+
+  async function getObjectTags(key: string): Promise<Array<{ Key: string; Value: string }>> {
     const params = {
       Bucket: bucket,
       Key: key,
     };
 
-    return await $client.send(new GetObjectTaggingCommand(params));
+    const response = await $client.send(new GetObjectTaggingCommand(params));
+    return (response.TagSet ?? []).map(tag => ({
+      Key: tag.Key ?? '',
+      Value: tag.Value ?? '',
+    }));
   }
 
-  async function putObjectTagging(key: string, tagging: any) {
+  async function putObjectTags(key: string, tags: Array<{ Key: string; Value: string }>) {
+    const sanitizedTags = tags
+      .filter(tag => tag.Key && tag.Value)
+      .map(tag => ({ Key: tag.Key, Value: tag.Value }));
+
     const params = {
       Bucket: bucket,
       Key: key,
-      Tagging: tagging,
+      Tagging: {
+        TagSet: sanitizedTags,
+      },
     };
 
     return await $client.send(new PutObjectTaggingCommand(params));
   }
 
-  async function deleteObjectTagging(key: string) {
+  async function deleteObjectTags(key: string) {
     const params = {
       Bucket: bucket,
       Key: key,
@@ -143,23 +163,37 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
 
     try {
       const response = await $client.send(new GetObjectRetentionCommand(params));
-      if (!response || !response.Retention || Object.keys(response.Retention).length === 0) {
-        return { Retention: null };
+      const retention = response?.Retention;
+      if (!retention || Object.keys(retention).length === 0) {
+        return { Mode: '', RetainUntilDate: '' };
       }
-      return response;
+      return {
+        Mode: retention.Mode ?? '',
+        RetainUntilDate: retention.RetainUntilDate
+          ? new Date(retention.RetainUntilDate).toISOString()
+          : '',
+      };
     } catch (error: any) {
       if (error.message?.includes('Deserialization error')) {
-        return { Retention: null };
+        return { Mode: '', RetainUntilDate: '' };
       }
       throw error;
     }
   }
 
-  async function putObjectRetention(key: string, retention: any) {
+  async function putObjectRetention(
+    key: string,
+    retention: { Mode: 'GOVERNANCE' | 'COMPLIANCE'; RetainUntilDate?: string }
+  ) {
     const params = {
       Bucket: bucket,
       Key: key,
-      Retention: retention,
+      Retention: {
+        Mode: retention.Mode === 'COMPLIANCE' ? ObjectLockRetentionMode.COMPLIANCE : ObjectLockRetentionMode.GOVERNANCE,
+        ...(retention.RetainUntilDate
+          ? { RetainUntilDate: new Date(retention.RetainUntilDate) }
+          : {}),
+      },
     };
     return await $client.send(new PutObjectRetentionCommand(params));
   }
@@ -219,15 +253,18 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     putObject,
     deleteObject,
     getSignedUrl,
+    getObjectInfo,
     mapAllFiles,
     listObject,
-    getObjectTagging,
-    putObjectTagging,
-    deleteObjectTagging,
+    getObjectTags,
+    putObjectTags,
+    deleteObjectTags,
     getObjectRetention,
     putObjectRetention,
     getObjectLegalHold,
     putObjectLegalHold,
+    setLegalHold: (key: string, enabled: boolean) =>
+      putObjectLegalHold(key, { Status: enabled ? 'ON' : 'OFF' }),
     getObjectVersions,
     deleteAllVersions,
   };

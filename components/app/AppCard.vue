@@ -31,7 +31,7 @@ const props = withDefaults(
 </script>
 
 <template>
-  <Card :class="cn('border-border/60', props.class)">
+  <Card :class="props.class">
     <CardHeader v-if="title || $slots.header">
       <slot name="header">
         <CardTitle v-if="title">{{ title }}</CardTitle>

@@ -3,21 +3,24 @@
     <AppCard padded>
       <AppDataTable :table="table" :is-loading="loading" :empty-title="t('No Versions')" />
       <div class="mt-4 flex justify-end">
-        <AppButton variant="outline" @click="closeModal">{{ t('Close') }}</AppButton>
+        <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
       </div>
     </AppCard>
   </AppModal>
 </template>
 
 <script setup lang="tsx">
-import { AppButton, AppCard, AppDataTable, AppModal } from '@/components/app'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppModal } from '@/components/app'
+import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
 import { useDataTable } from '@/components/app/data-table'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import dayjs from 'dayjs'
-import { saveAs } from 'file-saver'
-import JSZip from 'jszip'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { ColumnDef } from '@tanstack/vue-table'
 
 const props = defineProps<{
   bucketName: string
@@ -33,6 +36,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const message = useMessage()
+const ActionButton = Button as unknown as any
 
 const visibleProxy = computed({
   get: () => props.visible,
@@ -44,16 +48,21 @@ const visibleProxy = computed({
 const versions = ref<any[]>([])
 const loading = ref(false)
 
-const columns = computed(() => [
+const objectApi = useObject({ bucket: props.bucketName })
+
+const columns = computed<ColumnDef<any, any>[]>(() => [
   {
+    id: 'versionId',
     header: () => t('VersionId'),
     cell: ({ row }: any) => shortVersionId(row.original.VersionId),
   },
   {
+    id: 'lastModified',
     header: () => t('LastModified'),
     cell: ({ row }: any) => (row.original.LastModified ? dayjs(row.original.LastModified).format('YYYY-MM-DD HH:mm:ss') : ''),
   },
   {
+    id: 'size',
     header: () => t('Size'),
     cell: ({ row }: any) => (typeof row.original.Size === 'number' ? formatBytes(row.original.Size) : ''),
   },
@@ -62,15 +71,15 @@ const columns = computed(() => [
     header: () => t('Action'),
     cell: ({ row }: any) => (
       <div class="flex gap-2">
-        <AppButton variant="outline" size="sm" onClick={() => previewVersion(row.original)}>
+        <ActionButton variant="outline" size="sm" onClick={() => previewVersion(row.original)}>
           {t('Preview')}
-        </AppButton>
-        <AppButton variant="outline" size="sm" onClick={() => downloadVersion(row.original)}>
+        </ActionButton>
+        <ActionButton variant="outline" size="sm" onClick={() => downloadVersion(row.original)}>
           {t('Download')}
-        </AppButton>
-        <AppButton variant="destructive" size="sm" onClick={() => deleteVersion(row.original)}>
+        </ActionButton>
+        <ActionButton variant="destructive" size="sm" onClick={() => deleteVersion(row.original)}>
           {t('Delete')}
-        </AppButton>
+        </ActionButton>
       </div>
     ),
   },
@@ -90,9 +99,8 @@ watch(
 
 const fetchVersions = async () => {
   loading.value = true
-  const { getObjectVersions } = useObject({ bucket: props.bucketName })
   try {
-    const response = await getObjectVersions(props.objectKey)
+    const response = await objectApi.getObjectVersions(props.objectKey)
     versions.value = response.Versions ?? []
   } catch (error) {
     message.error(t('Failed to fetch versions'))
@@ -124,9 +132,8 @@ const downloadVersion = async (row: any) => {
 }
 
 const deleteVersion = async (row: any) => {
-  const { deleteObject } = useObject({ bucket: props.bucketName })
   try {
-    await deleteObject(props.objectKey, row.VersionId)
+    await objectApi.deleteObject(props.objectKey, row.VersionId)
     message.success(t('Delete Success'))
     fetchVersions()
     emit('refresh-parent')

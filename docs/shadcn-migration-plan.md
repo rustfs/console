@@ -21,7 +21,7 @@ Each phase will be committed independently on `refactor/shadcn-vue` to keep roll
 | Navigation | `NMenu`, `NDropdown` | Build `AppSidebarMenu` using shadcn Sidebar primitives; for dropdowns use `components/ui/dropdown-menu`. |
 | Form shell | `NForm`, `NFormItem`, `NFormItemGi`, `NFormItemGridItem`, `NGrid`, `NGi` | Use `vee-validate` (already installed) with `components/ui/form`. Create wrappers (`app-form`, `app-form-field`, helpers) that match current inline/grid layout via Tailwind grid/flex utilities. |
 | Inputs | `NInput`, `NInputNumber`, `NSelect`, `NDatePicker`, `NCheckbox`, `NCheckboxGroup`, `NRadio`, `NRadioGroup`, `NSwitch`, `NDynamicInput`, `NUpload`, `NUploadDragger`, `NInputGroup`, `NInputGroupLabel`, `NP`, `NText` | Map to shadcn `Input`, `NumberField`, `Select`, `Calendar/Popover`, `Checkbox`, `RadioGroup`, `Switch`, `TagsInput`. Implement custom wrappers for dynamic list fields and upload (likely using existing uploader logic + `Dropzone`). Replace `NP/NText` with semantic HTML + `Typography` utilities. |
-| Buttons | `NButton`, `NButtonGroup` | Use shadcn `Button` and `ButtonGroup`. Define `AppButton` to centralise variants (primary/ghost, sizes). |
+| Buttons | `NButton`, `NButtonGroup` | Use shadcn `Button` / `ButtonGroup` directly; add Tailwind utilities or inline spinner when needed for loading states. |
 | Feedback | `NModal`, `NDrawer`, `NAlert`, `NTooltip`, `NEmpty`, `NProgress`, `NSpin`, `NStatistic`, `NBreadcrumb` | Use shadcn `Dialog`, `Drawer`, `Alert`, `Tooltip`, `Empty` block, `Progress`, `Spinner` etc. Create `app-stat`/`app-empty` wrappers where gaps exist. |
 | Data display | `NCard`, `NList`, `NThing`, `NBadge`, `NTag`, `NDescriptions`, `NDescriptionsItem`, `NCarousel`, `NCollapse`, `NCollapseItem` | Replace with shadcn `Card`, `Badge`, `Accordion`, `Tabs` etc. Implement `AppDescriptionList` (simple definition list) and `AppTag` (using `Badge` or `Chip`). Use `Carousel` block already present. |
 | Tables | `NDataTable`, `NVirtualList` | Implement `AppDataTable` powered by `@tanstack/vue-table` + `ScrollArea`. Support selection, inline actions, slot-based cell rendering. Provide compatible props for datasets currently using render functions. |
@@ -36,7 +36,7 @@ Each phase will be committed independently on `refactor/shadcn-vue` to keep roll
 
 - `components/app/AppUiProvider.vue` – wraps shadcn theme providers and exports composables for toasts/dialogs.
 - `components/app/AppSidebar.vue` + related items (menu, user dropdown host) following Sidebar07 markup.
-- `components/app/AppButton.vue`, `AppCard.vue`, `AppBadge.vue`, `AppTag.vue`.
+- `components/app/AppCard.vue`, `AppBadge.vue`, `AppTag.vue` (buttons now import `Button` directly).
 - `components/app/AppForm.vue`, `AppFormField.vue`, `AppFieldGrid.vue` for consistent form layout.
 - `components/app/AppDialog.vue`, `AppDrawer.vue`, `AppConfirmDialog.vue`.
 - `components/app/AppDataTable` module with column definitions, toolbar templates, and selection helpers.
@@ -56,20 +56,21 @@ After each page group migrates, commit & push to `refactor/shadcn-vue`.
 
 ## Cleanup Checklist
 
-- Remove `nuxtjs-naive-ui`, `naive-ui`, `auto-imports` config, and generated component declarations.
-- Drop obsolete CSS tied to Naive overrides once equivalents exist.
-- Update README to reflect the new UI stack.
-- Run lint/tests plus a targeted manual regression of menus, forms, uploads, and table interactions.
+- [x] Remove `nuxtjs-naive-ui`, `naive-ui`, `auto-imports` config, and generated component declarations.
+- [x] Drop obsolete CSS tied to Naive overrides once equivalents exist.
+- [x] Update README to reflect the new UI stack.
+- [x] Run lint/tests plus a targeted manual regression of menus, forms, uploads, and table interactions.
 
 ## Remaining TODO (2025-10-27)
 
 - [x] Object task management: `components/object/task-stats.vue`, `components/object/upload/task/item.vue`, `components/object/delete/task/item.vue`, and finish `components/object/upload/picker.vue`.
 - [x] Bucket dialogs: migrate `components/buckets/new-form.vue` and `components/buckets/info.vue`.
-- [ ] User management suite: group/user edit & policy components under `components/users/**` (forms, tables, modals).
-- [ ] Performance dashboard: refactor `pages/performance/index.vue` to shadcn primitives.
-- [ ] License center: migrate `pages/license/index.vue` & `pages/license/components/license-article.vue`.
-- [ ] SSE monitor & metrics: convert `pages/sse/index.vue`.
-- [ ] System configuration & tools: update `pages/config.vue` and `pages/kms-test.vue`.
-- [ ] Final pass: remove Naive UI resolver/module, scrub `<n-*>` usage (`rg "<n-"` should return nothing), and tidy shared components.
+- [x] User management suite: group/user edit & policy components under `components/users/**` (forms, tables, modals).
+- [x] Performance dashboard: refactor `pages/performance/index.vue` to shadcn primitives.
+- [x] License center: migrate `pages/license/index.vue` & `pages/license/components/license-article.vue`.
+- [x] SSE monitor & metrics: convert `pages/sse/index.vue`.
+- [x] System configuration tooling: update `pages/config.vue`.
+- [x] KMS test utilities: migrate `pages/kms-test.vue`.
+- [x] Final pass: remove Naive UI resolver/module, scrub `<n-*>` usage (`rg "<n-"` should return nothing), and tidy shared components.
 
 This plan will guide the subsequent implementation steps while keeping the migration reviewable.

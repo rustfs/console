@@ -115,7 +115,7 @@ class UploadTaskManager {
     if (taskIndex !== -1) {
       // 如果任务正在进行，先取消它
       const task = this.tasks[taskIndex];
-      if (task.status === 'uploading' && task.abortController) {
+      if (task?.status === 'uploading' && task.abortController) {
         task.abortController.abort();
       }
       this.tasks.splice(taskIndex, 1);

@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="TData">
+import { Button } from '@/components/ui/button'
+
 import type { Table } from '@tanstack/vue-table'
-import AppButton from '@/components/app/AppButton.vue'
 import AppSelect from '@/components/app/AppSelect.vue'
 import { cn } from '@/lib/utils'
 import { computed } from 'vue'
@@ -54,23 +55,23 @@ const handlePageSizeChange = (value: number | string | boolean | null) => {
         Page {{ pageCount === 0 ? 0 : currentPage }} of {{ pageCount }}
       </span>
       <div class="flex items-center gap-2">
-        <AppButton variant="outline" size="sm" :disabled="!canPrevious" @click="props.table.setPageIndex(0)">
+        <Button variant="outline" size="sm" :disabled="!canPrevious" @click="props.table.setPageIndex(0)">
           First
-        </AppButton>
-        <AppButton variant="outline" size="sm" :disabled="!canPrevious" @click="props.table.previousPage()">
+        </Button>
+        <Button variant="outline" size="sm" :disabled="!canPrevious" @click="props.table.previousPage()">
           Prev
-        </AppButton>
-        <AppButton variant="outline" size="sm" :disabled="!canNext" @click="props.table.nextPage()">
+        </Button>
+        <Button variant="outline" size="sm" :disabled="!canNext" @click="props.table.nextPage()">
           Next
-        </AppButton>
-        <AppButton
+        </Button>
+        <Button
           variant="outline"
           size="sm"
           :disabled="!canNext"
           @click="props.table.setPageIndex(Math.max(pageCount - 1, 0))"
         >
           Last
-        </AppButton>
+        </Button>
       </div>
     </div>
   </div>

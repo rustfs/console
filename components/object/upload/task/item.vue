@@ -3,27 +3,27 @@
     <div class="flex items-center justify-between gap-3">
       <div class="truncate text-sm font-medium text-foreground">{{ task.file.name }}</div>
       <div class="flex shrink-0 items-center gap-1.5">
-        <AppButton
+        <Button
           v-if="task.status === 'uploading'"
           variant="ghost"
-          size="xs"
+          size="sm"
           class="h-auto px-2 text-xs"
           @click="handlePauseTask"
         >
           {{ t('Pause') }}
-        </AppButton>
-        <AppButton
+        </Button>
+        <Button
           v-if="task.status === 'paused'"
           variant="ghost"
-          size="xs"
+          size="sm"
           class="h-auto px-2 text-xs"
           @click="handleResumeTask"
         >
           {{ t('Resume') }}
-        </AppButton>
-        <AppButton variant="ghost" size="xs" class="h-auto px-2 text-xs" @click="handleDeleteTask">
+        </Button>
+        <Button variant="ghost" size="sm" class="h-auto px-2 text-xs" @click="handleDeleteTask">
           {{ t('Delete Record') }}
-        </AppButton>
+        </Button>
       </div>
     </div>
     <AppProgress :value="task.progress" :processing="task.status === 'uploading'" :height="2" />
@@ -41,7 +41,9 @@
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppProgress } from '@/components/app'
+import { Button } from '@/components/ui/button'
+
+import { AppProgress } from '@/components/app'
 import type { UploadTask } from '~/lib/upload-task-manager'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 import { formatBytes } from '~/utils/functions'

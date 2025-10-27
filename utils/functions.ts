@@ -72,7 +72,12 @@ export function makeRandomString(length = 20): string {
   // 打乱数组
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+    const current = arr[i];
+    const swapWith = arr[j];
+    if (current !== undefined && swapWith !== undefined) {
+      arr[i] = swapWith;
+      arr[j] = current;
+    }
   }
 
   // 将数组转换回字符串

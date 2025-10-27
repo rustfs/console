@@ -8,26 +8,29 @@
     <AppCard padded class="space-y-4">
       <div class="grid gap-2">
         <Label>{{ t('Access Key') }}</Label>
-        <AppInput v-model="formModel.accessKey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
+        <Input v-model="formModel.accessKey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
       </div>
 
       <div class="grid gap-2">
         <Label>{{ t('Secret Key') }}</Label>
-        <AppInput v-model="formModel.secretKey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+        <Input v-model="formModel.secretKey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
       </div>
     </AppCard>
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal()">{{ t('Cancel') }}</AppButton>
-        <AppButton variant="primary" :loading="submitting" @click="submitForm">{{ t('Submit') }}</AppButton>
+        <Button variant="outline" @click="closeModal()">{{ t('Cancel') }}</Button>
+        <Button variant="default" :loading="submitting" @click="submitForm">{{ t('Submit') }}</Button>
       </div>
     </template>
   </AppModal>
 </template>
 
 <script setup lang="ts">
-import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
+import { AppCard, AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

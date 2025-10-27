@@ -87,17 +87,17 @@ const defaultGlobeConfig: GlobeConfig = {
   ...props.globeConfig,
 };
 
-const githubGlobeRef = ref<HTMLCanvasElement>();
-const globeData = ref<GlobeData[]>();
+const githubGlobeRef = ref<HTMLCanvasElement | null>(null);
+const globeData = ref<GlobeData[]>([]);
 
 let numberOfRings: number[] = [];
 
-let renderer: WebGLRenderer;
-let scene: Scene;
-let camera: PerspectiveCamera;
-let controls: OrbitControls;
+let renderer: WebGLRenderer | null = null;
+let scene: Scene | null = null;
+let camera: PerspectiveCamera | null = null;
+let controls: OrbitControls | null = null;
 
-let globe: ThreeGlobe;
+let globe: ThreeGlobe | null = null;
 
 onMounted(() => {
   setupScene();
@@ -110,12 +110,28 @@ onMounted(() => {
   window.addEventListener('resize', onWindowResize, false);
 
   watch(globeData, () => {
-    if (!globe || !globeData.value) return;
+    if (!globe || globeData.value.length === 0) return;
 
-    numberOfRings = genRandomNumbers(0, props.data.length, Math.floor((props.data.length * 4) / 5));
+    const arcLength = props.data?.length ?? 0;
+    if (arcLength === 0) return;
+
+    numberOfRings = genRandomNumbers(0, arcLength, Math.floor((arcLength * 4) / 5));
 
     globe.ringsData(globeData.value.filter((d, i) => numberOfRings.includes(i)));
   });
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', onWindowResize, false);
+  if (controls) {
+    controls.dispose();
+    controls = null;
+  }
+  renderer?.dispose();
+  renderer = null;
+  scene = null;
+  camera = null;
+  globe = null;
 });
 
 function setupScene() {
@@ -202,11 +218,13 @@ function initGlobe() {
   globeMaterial.emissiveIntensity = defaultGlobeConfig.emissiveIntensity || 0.1;
   globeMaterial.shininess = defaultGlobeConfig.shininess || 0.9;
 
-  scene.add(globe);
+  if (scene) {
+    scene.add(globe);
+  }
 }
 
 function onWindowResize() {
-  if (!githubGlobeRef.value) {
+  if (!githubGlobeRef.value || !renderer || !camera) {
     return;
   }
 
@@ -219,22 +237,31 @@ function onWindowResize() {
   renderer.setSize(width, height);
 }
 function startAnimation() {
-  if (!globe || !globeData.value!) return;
+  if (!globe) return;
+  const arcs = props.data ?? [];
+  const strokeValues = [0.32, 0.28, 0.3] as const;
+  const getStroke = () => {
+    if (!strokeValues.length) {
+      return 0.3;
+    }
+    const index = Math.floor(Math.random() * strokeValues.length);
+    return strokeValues[index] ?? strokeValues[0];
+  };
   globe
-    .arcsData(props.data)
+    .arcsData(arcs)
     .arcStartLat((d: any) => d.startLat * 1)
     .arcStartLng((d: any) => d.startLng * 1)
     .arcEndLat((d: any) => d.endLat * 1)
     .arcEndLng((d: any) => d.endLng * 1)
     .arcColor((e: any) => e.color)
     .arcAltitude((e: any) => e.arcAlt * 1)
-    .arcStroke((e: any) => [0.32, 0.28, 0.3][Math.round(Math.random() * 4)])
+    .arcStroke(() => getStroke())
     .arcDashLength(defaultGlobeConfig.arcLength!)
     .arcDashInitialGap((e: any) => e.order * 1)
     .arcDashGap(15)
     .arcDashAnimateTime(defaultGlobeConfig.arcTime!)
 
-    .pointsData(props.data)
+    .pointsData(arcs)
     .pointColor((e: any) => e.color)
     .pointsMerge(true)
     .pointAltitude(0.0)
@@ -244,10 +271,14 @@ function startAnimation() {
     .ringColor((e: any) => (t: any) => e.color(t))
     .ringMaxRadius(defaultGlobeConfig.maxRings!)
     .ringPropagationSpeed(3)
-    .ringRepeatPeriod((defaultGlobeConfig.arcTime! * defaultGlobeConfig.arcLength!) / defaultGlobeConfig.rings!);
+    .ringRepeatPeriod((defaultGlobeConfig.arcTime! * defaultGlobeConfig.arcLength!) / (defaultGlobeConfig.rings || 1));
 }
 
 function animate() {
+  if (!globe || !renderer || !scene || !camera) {
+    requestAnimationFrame(animate);
+    return;
+  }
   globe.rotation.y += 0.01; // Rotate globe
 
   renderer.render(scene, camera);
@@ -256,22 +287,26 @@ function animate() {
 }
 
 function buildData() {
-  const arcs = props.data;
-  let points = [];
+  const arcs = props.data ?? [];
+  const pointSize = props.globeConfig?.pointSize ?? defaultGlobeConfig.pointSize ?? 1;
+  const points: GlobeData[] = [];
+
   for (let i = 0; i < arcs.length; i++) {
     const arc = arcs[i];
-    const rgb = hexToRgb(arc.color) as { r: number; g: number; b: number };
-    points.push({
-      size: props.globeConfig.pointSize,
+    if (!arc) continue;
+    const rgb = hexToRgb(arc.color ?? '#ffffff');
+    const basePoint = {
+      size: pointSize,
       order: arc.order,
       color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
+    };
+    points.push({
+      ...basePoint,
       lat: arc.startLat,
       lng: arc.startLng,
     });
     points.push({
-      size: props.globeConfig.pointSize,
-      order: arc.order,
-      color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
+      ...basePoint,
       lat: arc.endLat,
       lng: arc.endLng,
     });
@@ -285,7 +320,7 @@ function buildData() {
   globeData.value = filteredPoints;
 }
 
-function hexToRgb(color: string) {
+function hexToRgb(color: string): { r: number; g: number; b: number } {
   let hex = color.replace(/^#/, '');
 
   // If the hex code is 3 characters, expand it to 6 characters

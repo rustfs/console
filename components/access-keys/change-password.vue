@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { AppButton, AppCard, AppInput, AppModal } from '@/components/app'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import Spinner from '@/components/ui/spinner/Spinner.vue'
+
+import { AppCard, AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -106,7 +110,7 @@ async function submitForm() {
     <AppCard padded class="space-y-4">
       <div class="grid gap-2">
         <Label for="password-current">{{ t('Current Password') }}</Label>
-        <AppInput
+        <Input
           id="password-current"
           v-model="formModel.current_secret_key"
           type="password"
@@ -119,7 +123,7 @@ async function submitForm() {
 
       <div class="grid gap-2">
         <Label for="password-new">{{ t('New Password') }}</Label>
-        <AppInput
+        <Input
           id="password-new"
           v-model="formModel.new_secret_key"
           type="password"
@@ -132,7 +136,7 @@ async function submitForm() {
 
       <div class="grid gap-2">
         <Label for="password-new-confirm">{{ t('Confirm New Password') }}</Label>
-        <AppInput
+        <Input
           id="password-new-confirm"
           v-model="formModel.re_new_secret_key"
           type="password"
@@ -147,12 +151,13 @@ async function submitForm() {
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" @click="closeModal()">
+        <Button variant="outline" @click="closeModal()">
           {{ t('Cancel') }}
-        </AppButton>
-        <AppButton variant="primary" :loading="submitting" @click="submitForm">
-          {{ t('Submit') }}
-        </AppButton>
+        </Button>
+        <Button variant="default" :disabled="submitting" @click="submitForm">
+          <Spinner v-if="submitting" class="size-4" />
+          <span>{{ t('Submit') }}</span>
+        </Button>
       </div>
     </template>
   </AppModal>

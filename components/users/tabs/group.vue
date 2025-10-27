@@ -36,7 +36,7 @@
             <Checkbox
               :checked="checkedKeys.includes(rowKey(row))"
               aria-label="Select group"
-              @update:checked="value => toggleRow(rowKey(row), value)"
+              @update:checked="(value: boolean) => toggleRow(rowKey(row), value)"
             />
           </TableCell>
           <TableCell class="font-medium">{{ row.name }}</TableCell>

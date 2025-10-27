@@ -1,5 +1,5 @@
 import { inject } from 'vue'
-import type { ExternalToast, ToastT } from 'vue-sonner'
+import type { ExternalToast } from 'vue-sonner'
 import { toast } from 'vue-sonner'
 
 export interface MessageOptions {
@@ -58,7 +58,7 @@ const show = (type: 'success' | 'error' | 'warning' | 'info', content: string, o
 export const createMessageApi = (): MessageApi => {
   const loading = (content: string, options?: MessageOptions): MessageHandle => {
     const mapped = mapOptions(options)
-    const id: ToastT = toast.loading(content, mapped)
+    const id = toast.loading(content, mapped)
 
     return {
       destroy: () => toast.dismiss(id),

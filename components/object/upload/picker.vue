@@ -21,18 +21,18 @@
           </p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
-          <AppButton variant="outline" size="sm" :disabled="isFolderLoading" @click="selectFile">
+          <Button variant="outline" size="sm" :disabled="isFolderLoading" @click="selectFile">
             <Icon name="ri:file-add-line" class="size-4" />
             {{ t('Select File') }}
-          </AppButton>
-          <AppButton variant="outline" size="sm" :disabled="isFolderLoading" @click="selectFolder">
+          </Button>
+          <Button variant="outline" size="sm" :disabled="isFolderLoading" @click="selectFolder">
             <Icon name="ri:folder-add-line" class="size-4" />
             {{ t('Select Folder') }}
-          </AppButton>
-          <AppButton variant="secondary" size="sm" @click="closeModal">
+          </Button>
+          <Button variant="secondary" size="sm" @click="closeModal">
             <Icon name="ri:close-line" class="size-4" />
             {{ t('Close') }}
-          </AppButton>
+          </Button>
         </div>
       </div>
 
@@ -51,7 +51,7 @@
         </AlertDescription>
       </Alert>
 
-      <AppCard padded class="space-y-4 border border-border/60">
+      <AppCard padded class="space-y-4 border">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="space-y-1 text-sm text-muted-foreground">
             <p v-if="totalFileCount > 0">
@@ -61,7 +61,7 @@
               {{ t('Memory Usage') }}: {{ getMemoryUsageLevel() }}
             </p>
           </div>
-          <AppButton
+          <Button
             variant="outline"
             size="sm"
             :disabled="!hasFiles || isFolderLoading || isAdding"
@@ -69,11 +69,11 @@
           >
             <Icon name="ri:delete-bin-line" class="size-4" />
             {{ t('Clear All') }}
-          </AppButton>
+          </Button>
         </div>
 
         <div
-          class="rounded-md border border-dashed border-border/60 transition"
+          class="rounded-md border border-dashed transition"
           :class="isDragOver ? 'border-primary bg-primary/5' : ''"
           @dragenter.prevent="handleDragEnter"
           @dragover.prevent="handleDragOver"
@@ -128,10 +128,10 @@
                     {{ formatBytes(item.size) }}
                   </td>
                   <td class="px-3 py-2 text-right">
-                    <AppButton variant="ghost" size="sm" class="h-auto px-2" @click="removeItem(index)">
+                    <Button variant="ghost" size="sm" class="h-auto px-2" @click="removeItem(index)">
                       <Icon name="ri:delete-bin-line" class="size-4" />
                       {{ t('Delete') }}
-                    </AppButton>
+                    </Button>
                   </td>
                 </tr>
               </tbody>
@@ -139,7 +139,7 @@
           </div>
         </div>
 
-        <div v-if="isFolderLoading" class="space-y-2 rounded-md border border-dashed border-border/60 p-3">
+        <div v-if="isFolderLoading" class="space-y-2 rounded-md border border-dashed p-3">
           <div class="flex items-center justify-between text-xs text-muted-foreground">
             <span>{{ t('Reading Folder Files') }}</span>
             <span>{{ folderLoadingProgress }}%</span>
@@ -147,7 +147,7 @@
           <AppProgress :value="folderLoadingProgress" :processing="true" />
         </div>
 
-        <div v-if="isAdding" class="space-y-2 rounded-md border border-dashed border-border/60 p-3">
+        <div v-if="isAdding" class="space-y-2 rounded-md border border-dashed p-3">
           <div class="flex items-center justify-between text-xs text-muted-foreground">
             <span>{{ t('Adding to Upload Queue') }}</span>
             <span>{{ addProgress }}%</span>
@@ -157,25 +157,27 @@
       </AppCard>
 
       <div class="flex justify-end gap-2">
-        <AppButton variant="outline" :disabled="!hasFiles || isAdding || isFolderLoading">
+        <Button variant="outline" :disabled="!hasFiles || isAdding || isFolderLoading">
           {{ t('Configure') }}
-        </AppButton>
-        <AppButton
-          variant="primary"
+        </Button>
+        <Button
+          variant="default"
           :disabled="!hasFiles || isAdding || isFolderLoading"
           :loading="isAdding"
           @click="handleUpload"
         >
           {{ t('Start Upload') }}
-        </AppButton>
+        </Button>
       </div>
     </div>
   </AppModal>
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
-import { AppButton, AppCard, AppModal, AppProgress } from '@/components/app'
+import { AppCard, AppModal, AppProgress } from '@/components/app'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

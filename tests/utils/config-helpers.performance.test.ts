@@ -94,7 +94,11 @@ describe('config-helpers Performance Tests', () => {
       const hosts = Array.from({ length: 100 }, (_, i) => `https://host${i}.example.com:${9000 + i}`);
 
       const { results, averageTime } = await runBatchTest(() => {
-        const host = hosts[Math.floor(Math.random() * hosts.length)];
+        const hostIndex = Math.floor(Math.random() * hosts.length);
+        const host = hosts[hostIndex];
+        if (!host) {
+          throw new Error('Host not found');
+        }
         return saveHostConfig(host);
       }, 100);
 
@@ -117,7 +121,11 @@ describe('config-helpers Performance Tests', () => {
       );
 
       const { results, averageTime } = await runBatchTest(() => {
-        const config = configs[Math.floor(Math.random() * configs.length)];
+        const configIndex = Math.floor(Math.random() * configs.length);
+        const config = configs[configIndex];
+        if (!config) {
+          throw new Error('Config not found');
+        }
         return validateConfig(config);
       }, 1000);
 

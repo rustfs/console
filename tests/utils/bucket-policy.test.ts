@@ -310,14 +310,19 @@ describe('createPrivatePolicy', () => {
     expect(statements).toHaveLength(2);
 
     // First statement: Allow owner all actions
-    expect(statements[0].Effect).toBe(PolicyEffect.Allow);
-    expect(statements[0].Principal.AWS).toEqual(['arn:aws:iam::*:root']);
-    expect(statements[0].Action).toEqual([PolicyAction.AllActions]);
+    const [allowStatement, denyStatement] = statements;
+    expect(allowStatement).toBeDefined();
+    expect(denyStatement).toBeDefined();
+    if (!allowStatement || !denyStatement) return;
+
+    expect(allowStatement.Effect).toBe(PolicyEffect.Allow);
+    expect(allowStatement.Principal.AWS).toEqual(['arn:aws:iam::*:root']);
+    expect(allowStatement.Action).toEqual([PolicyAction.AllActions]);
 
     // Second statement: Deny all others
-    expect(statements[1].Effect).toBe(PolicyEffect.Deny);
-    expect(statements[1].Principal.AWS).toEqual(['*']);
-    expect(statements[1].Action).toEqual([PolicyAction.AllActions]);
+    expect(denyStatement.Effect).toBe(PolicyEffect.Deny);
+    expect(denyStatement.Principal.AWS).toEqual(['*']);
+    expect(denyStatement.Action).toEqual([PolicyAction.AllActions]);
   });
 });
 
@@ -328,15 +333,20 @@ describe('createPublicPolicy', () => {
     expect(statements).toHaveLength(2);
 
     // First statement: Allow all read
-    expect(statements[0].Effect).toBe(PolicyEffect.Allow);
-    expect(statements[0].Principal.AWS).toEqual(['*']);
-    expect(statements[0].Action).toContain(PolicyAction.GetObject);
+    const [readStatement, ownerStatement] = statements;
+    expect(readStatement).toBeDefined();
+    expect(ownerStatement).toBeDefined();
+    if (!readStatement || !ownerStatement) return;
+
+    expect(readStatement.Effect).toBe(PolicyEffect.Allow);
+    expect(readStatement.Principal.AWS).toEqual(['*']);
+    expect(readStatement.Action).toContain(PolicyAction.GetObject);
 
     // Second statement: Allow owner write
-    expect(statements[1].Effect).toBe(PolicyEffect.Allow);
-    expect(statements[1].Principal.AWS).toEqual(['arn:aws:iam::*:root']);
-    expect(statements[1].Action).toContain(PolicyAction.PutObject);
-    expect(statements[1].Action).toContain(PolicyAction.DeleteObject);
+    expect(ownerStatement.Effect).toBe(PolicyEffect.Allow);
+    expect(ownerStatement.Principal.AWS).toEqual(['arn:aws:iam::*:root']);
+    expect(ownerStatement.Action).toContain(PolicyAction.PutObject);
+    expect(ownerStatement.Action).toContain(PolicyAction.DeleteObject);
   });
 });
 

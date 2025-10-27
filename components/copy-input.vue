@@ -1,8 +1,9 @@
 <script lang="ts" setup>
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+
 import { Icon } from '#components'
 import ClipboardJS from 'clipboard'
-import AppButton from '@/components/app/AppButton.vue'
-import AppInput from '@/components/app/AppInput.vue'
 import { useMessage } from '@/lib/ui/message'
 import { onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -52,21 +53,21 @@ onUnmounted(() => {
 
 <template>
   <div class="flex h-full items-center gap-2">
-    <AppInput
+    <Input
       v-model="model"
       :readonly="props.readonly"
       :id="props.id"
       class="flex-1"
     />
-    <AppButton
+    <Button
       v-if="!props.copyIcon"
       :id="`${props.id}-btn`"
       :data-clipboard-target="`#${props.id}`"
-      variant="primary"
+      variant="default"
     >
       {{ t('Copy') }}
-    </AppButton>
-    <AppButton
+    </Button>
+    <Button
       v-else
       :id="`${props.id}-btn-icon`"
       variant="ghost"
@@ -77,6 +78,6 @@ onUnmounted(() => {
     >
       <Icon :size="18" name="ri:file-copy-line" />
       <span class="sr-only">{{ t('Copy') }}</span>
-    </AppButton>
+    </Button>
   </div>
 </template>

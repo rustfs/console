@@ -24,7 +24,7 @@ Each phase will be committed independently on `refactor/shadcn-vue` to keep roll
 | Buttons | `NButton`, `NButtonGroup` | Use shadcn `Button` / `ButtonGroup` directly; add Tailwind utilities or inline spinner when needed for loading states. |
 | Feedback | `NModal`, `NDrawer`, `NAlert`, `NTooltip`, `NEmpty`, `NProgress`, `NSpin`, `NStatistic`, `NBreadcrumb` | Use shadcn `Dialog`, `Drawer`, `Alert`, `Tooltip`, `Empty` block, `Progress`, `Spinner` etc. Create `app-stat`/`app-empty` wrappers where gaps exist. |
 | Data display | `NCard`, `NList`, `NThing`, `NBadge`, `NTag`, `NDescriptions`, `NDescriptionsItem`, `NCarousel`, `NCollapse`, `NCollapseItem` | Replace with shadcn `Card`, `Badge`, `Accordion`, `Tabs` etc. Implement `AppDescriptionList` (simple definition list) and `AppTag` (using `Badge` or `Chip`). Use `Carousel` block already present. |
-| Tables | `NDataTable`, `NVirtualList` | Implement `AppDataTable` powered by `@tanstack/vue-table` + `ScrollArea`. Support selection, inline actions, slot-based cell rendering. Provide compatible props for datasets currently using render functions. |
+| Tables | `NDataTable`, `NVirtualList` | Implement `DataTable` powered by `@tanstack/vue-table` + `ScrollArea`. Support selection, inline actions, slot-based cell rendering. Provide compatible props for datasets currently using render functions. |
 | Misc | `NDrawerContent`, `NScrollbar`, `NPageHeader`, `NPopover`, `NPopconfirm` | Use `DrawerContent`, `ScrollArea`, `PageHeader` replaced by `div` + `Breadcrumb`, shadcn `Popover`, and build `AppConfirmDialog` on top of AlertDialog. |
 
 ### Additional Dependencies
@@ -36,17 +36,17 @@ Each phase will be committed independently on `refactor/shadcn-vue` to keep roll
 
 - `components/app/AppUiProvider.vue` – wraps shadcn theme providers and exports composables for toasts/dialogs.
 - `components/app/AppSidebar.vue` + related items (menu, user dropdown host) following Sidebar07 markup.
-- `components/app/AppCard.vue`, `AppBadge.vue`, `AppTag.vue` (buttons now import `Button` directly).
+- `components/app/AppCard.vue`, `AppTag.vue` (buttons now import `Button` directly).
 - `components/app/AppForm.vue`, `AppFormField.vue`, `AppFieldGrid.vue` for consistent form layout.
 - `components/app/AppDialog.vue`, `AppDrawer.vue`, `AppConfirmDialog.vue`.
-- `components/app/AppDataTable` module with column definitions, toolbar templates, and selection helpers.
+- `components/DataTable` module with column definitions, toolbar templates, and selection helpers.
 - `components/app/AppDescriptionList.vue`, `AppEmpty.vue`, `AppStatistic.vue`, `AppSpinner.vue`.
 
 These wrappers allow feature screens to migrate with minimal churn and keep visual consistency.
 
 ## Page Migration Order
 
-1. **Access Keys / Users / Policies** – heavy data table usage; verify AppDataTable handles selection and actions.
+1. **Access Keys / Users / Policies** – heavy data table usage; verify DataTable handles selection and actions.
 2. **Objects & Buckets** – exercise drawers/modals, dynamic input, and descriptions.
 3. **Lifecycle / Replication / Events** – validate complex forms, tabs, accordions.
 4. **Performance Dashboard** – ensure stats, badges, carousel translations remain coherent.

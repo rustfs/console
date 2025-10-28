@@ -1,48 +1,37 @@
 <template>
-  <div class="space-y-4">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Events') }}</h1>
       </template>
-    </page-header>
-
-    <page-content class="space-y-6">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div class="w-full max-w-sm space-y-2">
-          <Label for="bucket-select">{{ t('Bucket') }}</Label>
+      <template #actions>
+        <Label for="bucket-select">{{ t('Bucket') }}</Label>
+        <div class="max-w-xs flex-1">
           <Select id="bucket-select" v-model="bucketName" :disabled="!bucketList.length">
             <SelectTrigger>
               <SelectValue :placeholder="t('Please select bucket')" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="bucket in bucketList"
-                :key="bucket.value"
-                :value="bucket.value"
-              >
+              <SelectItem v-for="bucket in bucketList" :key="bucket.value" :value="bucket.value">
                 {{ bucket.label }}
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
+        <Button type="button" variant="secondary" @click="handleNew">
+          <Icon class="size-4" name="ri:add-line" />
+          <span>{{ t('Add Event Subscription') }}</span>
+        </Button>
+        <Button type="button" variant="secondary" @click="handleRefresh" :disabled="loading">
+          <Icon class="size-4" name="ri:refresh-line" />
+          <span>{{ t('Refresh') }}</span>
+        </Button>
+      </template>
+    </page-header>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <Button type="button" variant="secondary" @click="handleNew">
-            <Icon class="size-4" name="ri:add-line" />
-            <span>{{ t('Add Event Subscription') }}</span>
-          </Button>
-          <Button type="button" variant="secondary" @click="handleRefresh" :disabled="loading">
-            <Icon class="size-4" name="ri:refresh-line" />
-            <span>{{ t('Refresh') }}</span>
-          </Button>
-        </div>
-      </div>
-
+    <div class="space-y-6">
       <div class="relative">
-        <div
-          v-if="loading"
-          class="absolute inset-0 z-10 flex items-center justify-center rounded-lg border bg-background/70 backdrop-blur-sm"
-        >
+        <div v-if="loading" class="absolute inset-0 z-10 flex items-center justify-center rounded-lg border bg-background/70 backdrop-blur-sm">
           <Spinner class="size-6 text-muted-foreground" />
         </div>
 
@@ -70,11 +59,7 @@
                 </TableCell>
                 <TableCell>
                   <div class="flex flex-wrap gap-1">
-                    <Badge
-                      v-for="event in getDisplayEvents(row.events)"
-                      :key="event"
-                      variant="secondary"
-                    >
+                    <Badge v-for="event in getDisplayEvents(row.events)" :key="event" variant="secondary">
                       {{ event }}
                     </Badge>
                   </div>
@@ -83,13 +68,7 @@
                 <TableCell>{{ row.suffix || '-' }}</TableCell>
                 <TableCell>
                   <div class="flex justify-center">
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="secondary"
-                      class="gap-2"
-                      @click="event => handleRowDelete(row, event)"
-                    >
+                    <Button type="button" size="sm" variant="secondary" class="gap-2" @click="event => handleRowDelete(row, event)">
                       <Icon class="size-4" name="ri:delete-bin-7-line" />
                       {{ t('Delete') }}
                     </Button>
@@ -113,8 +92,8 @@
       </div>
 
       <events-new-form ref="newRef" :bucketName="bucketName" @success="refresh" />
-    </page-content>
-  </div>
+    </div>
+  </page>
 </template>
 
 <script setup lang="ts">

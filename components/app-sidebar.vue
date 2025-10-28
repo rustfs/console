@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { Icon } from '#components'
-import LanguageSwitcher from '@/components/language-switcher.vue'
-import ThemeSwitcher from '@/components/theme-switcher.vue'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -21,7 +19,6 @@ import {
   SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar'
-import UserDropdown from '@/components/user-dropdown.vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -95,7 +92,7 @@ const getLabel = (item: NavItem) => t(item.label)
     <SidebarContent>
       <ScrollArea class="flex-1 pr-1">
         <div class="flex flex-col gap-4">
-          <SidebarGroup v-for="(group, groupIndex) in navGroups" :key="groupIndex" class="gap-1">
+          <SidebarGroup v-for="(group, groupIndex) in navGroups" :key="groupIndex" class="gap-4">
             <SidebarGroupContent>
               <SidebarMenu>
                 <template v-for="item in group" :key="item.label">
@@ -154,13 +151,6 @@ const getLabel = (item: NavItem) => t(item.label)
     </SidebarContent>
 
     <SidebarFooter class="mt-auto flex flex-col gap-3 px-2 pb-2">
-      <div class="pt-3">
-        <div class="flex flex-col gap-2">
-          <LanguageSwitcher />
-          <ThemeSwitcher />
-        </div>
-      </div>
-      <UserDropdown :is-collapsed="isCollapsed" />
     </SidebarFooter>
 
     <SidebarRail />

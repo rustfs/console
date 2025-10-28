@@ -7,7 +7,7 @@
   >
     <div class="space-y-6">
       <div v-if="!formData.type" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <AppCard
+        <div
           v-for="option in typeOptions"
           :key="option.value"
           class="cursor-pointer border border-border/70 transition hover:border-primary"
@@ -20,20 +20,17 @@
               <p class="text-sm text-muted-foreground">{{ option.description }}</p>
             </div>
           </div>
-        </AppCard>
+        </div>
       </div>
 
       <div v-else class="space-y-4">
-        <AppCard
-          class="flex cursor-pointer items-center gap-3 border transition hover:border-primary"
-          @click="resetType"
-        >
+        <div class="flex cursor-pointer items-center gap-3 border transition hover:border-primary" @click="resetType">
           <img :src="iconUrl" class="h-10 w-10" alt="" />
           <div class="flex flex-col">
             <span class="text-sm text-muted-foreground">{{ t('Selected Type') }}</span>
             <span class="text-base font-semibold">{{ formData.type }}</span>
           </div>
-        </AppCard>
+        </div>
 
         <div class="grid gap-4">
           <div class="grid gap-2">
@@ -98,7 +95,7 @@ import { Button } from '@/components/ui/button'
 import { useI18n } from 'vue-i18n'
 import MqttIcon from '~/assets/svg/mqtt.svg'
 import WebhooksIcon from '~/assets/svg/webhooks.svg'
-import { AppCard, AppModal } from '@/components/app'
+import { AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref, watch } from 'vue'
 import { useEventTarget } from '#imports'

@@ -1,16 +1,10 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Event Destinations') }}</h1>
       </template>
-    </page-header>
-
-    <page-content class="flex flex-col gap-4">
-      <AppCard
-        :padded="false"
-        :content-class="'flex flex-col gap-4 md:flex-row md:items-center md:justify-between'"
-      >
+      <div class="flex flex-col gap-4 w-full md:flex-row md:items-center md:justify-between">
         <div class="flex w-full max-w-sm items-center gap-2">
           <Icon name="ri:search-2-line" class="size-4 text-muted-foreground" />
           <Input v-model="searchTerm" :placeholder="t('Search')" />
@@ -25,33 +19,26 @@
             <span>{{ t('Refresh') }}</span>
           </Button>
         </div>
-      </AppCard>
+      </div>
+    </page-header>
 
-      <AppCard>
-        <AppDataTable
-          :table="table"
-          :is-loading="pending"
-          :empty-title="t('No Destinations')"
-          :empty-description="t('Create an event destination to forward notifications.')"
-        />
-      </AppCard>
-    </page-content>
+    <DataTable :table="table" :is-loading="pending" :empty-title="t('No Destinations')" :empty-description="t('Create an event destination to forward notifications.')" />
 
     <events-target-new ref="newFormRef" @search="() => refresh()" />
-  </div>
+  </page>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
+import { AppTag } from '@/components/app'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { AppCard, AppTag } from '@/components/app'
-import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
-import { useDataTable } from '@/components/app/data-table'
-import { h, computed, ref, watch } from 'vue'
+import { h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDataTable } from '~/components/data-table'
+import DataTable from '~/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const message = useMessage()

@@ -1,33 +1,20 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Access Keys') }}</h1>
       </template>
-    </page-header>
-
-    <page-content class="flex flex-col gap-4">
-      <AppCard
-        :padded="false"
-        :content-class="'flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-4'"
-      >
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between w-full">
         <div class="flex w-full max-w-sm items-center gap-2">
           <Icon name="ri:search-line" class="size-4 text-muted-foreground" />
-          <Input
-            v-model="searchTerm"
-            :placeholder="t('Search Access Key')"
-          />
+          <Input v-model="searchTerm" :placeholder="t('Search Access Key')" />
         </div>
         <div class="flex flex-wrap items-center justify-end gap-2">
           <Button variant="outline" @click="changePasswordVisible = true">
             <Icon name="ri:key-2-line" class="size-4" />
             <span>{{ t('Change Password') }}</span>
           </Button>
-          <Button
-            variant="outline"
-            :disabled="!selectedKeys.length"
-            @click="deleteSelected"
-          >
+          <Button variant="outline" :disabled="!selectedKeys.length" @click="deleteSelected">
             <Icon name="ri:delete-bin-5-line" class="size-4" />
             <span>{{ t('Delete Selected') }}</span>
           </Button>
@@ -36,43 +23,37 @@
             <span>{{ t('Add Access Key') }}</span>
           </Button>
         </div>
-      </AppCard>
-
-      <div class="space-y-3">
-        <AppDataTable
-          :table="table"
-          :is-loading="loading"
-          :empty-title="t('No Access Keys')"
-          :empty-description="t('Create a new access key to get started.')"
-          class="overflow-hidden"
-          table-class="min-w-full"
-        />
-        <AppDataTablePagination :table="table" class="px-2 py-3" />
       </div>
-    </page-content>
+    </page-header>
+
+    <div class="space-y-3">
+      <DataTable :table="table" :is-loading="loading" :empty-title="t('No Access Keys')" :empty-description="t('Create a new access key to get started.')" class="overflow-hidden"
+        table-class="min-w-full" />
+      <DataTablePagination :table="table" class="px-2 py-3" />
+    </div>
 
     <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="refresh" @notice="noticeDialog" />
     <EditItem ref="editItemRef" @search="refresh" />
     <ChangePassword ref="changePasswordModalRef" v-model:visible="changePasswordVisible" />
     <users-user-notice ref="noticeRef" @search="refresh" />
-  </div>
+  </page>
 </template>
 
 <script lang="ts" setup>
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
+import { AppTag } from '@/components/app'
+import { Checkbox } from '@/components/ui/checkbox'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
-import { computed, h, onMounted, reactive, ref, watch } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AppTag } from '@/components/app'
-import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
-import AppDataTablePagination from '@/components/app/data-table/AppDataTablePagination.vue'
-import { useDataTable } from '@/components/app/data-table'
-import { Checkbox } from '@/components/ui/checkbox'
 import { ChangePassword, EditItem, NewItem } from '~/components/access-keys'
+import { useDataTable } from '~/components/data-table'
+import DataTablePagination from '@/components/data-table/data-table-pagination.vue'
+import DataTable from '@/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const dialog = useDialog()

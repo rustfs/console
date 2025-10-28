@@ -2,7 +2,7 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppCard, AppModal } from '@/components/app'
+import { AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -120,7 +120,7 @@ const submitForm = async () => {
     size="lg"
     :close-on-backdrop="false"
   >
-    <AppCard padded class="space-y-4">
+    <div class="space-y-4">
       <div class="grid gap-2">
         <Label for="policy-name">{{ t('Policy Name') }}</Label>
         <Input id="policy-name" v-model="form.name" autocomplete="off" />
@@ -134,7 +134,7 @@ const submitForm = async () => {
         </div>
         <p v-if="errors.content" class="text-sm text-destructive">{{ errors.content }}</p>
       </div>
-    </AppCard>
+    </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">

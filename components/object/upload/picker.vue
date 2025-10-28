@@ -51,7 +51,7 @@
         </AlertDescription>
       </Alert>
 
-      <AppCard padded class="space-y-4 border">
+      <div class="space-y-4 border">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="space-y-1 text-sm text-muted-foreground">
             <p v-if="totalFileCount > 0">
@@ -144,7 +144,7 @@
             <span>{{ t('Reading Folder Files') }}</span>
             <span>{{ folderLoadingProgress }}%</span>
           </div>
-          <AppProgress :value="folderLoadingProgress" :processing="true" />
+          <Progress :model-value="folderLoadingProgress" class="h-2" />
         </div>
 
         <div v-if="isAdding" class="space-y-2 rounded-md border border-dashed p-3">
@@ -152,9 +152,9 @@
             <span>{{ t('Adding to Upload Queue') }}</span>
             <span>{{ addProgress }}%</span>
           </div>
-          <AppProgress :value="addProgress" :processing="true" />
+          <Progress :model-value="addProgress" class="h-2" />
         </div>
-      </AppCard>
+      </div>
 
       <div class="flex justify-end gap-2">
         <Button variant="outline" :disabled="!hasFiles || isAdding || isFolderLoading">
@@ -177,7 +177,8 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppCard, AppModal, AppProgress } from '@/components/app'
+import { AppModal } from '@/components/app'
+import Progress from '@/components/ui/progress/Progress.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

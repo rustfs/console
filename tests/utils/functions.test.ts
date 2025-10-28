@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { formatBytes, getBytes, makeRandomString, niceBytes } from '../../utils/functions';
+import {
+  formatBytes,
+  getBytes,
+  makeRandomString,
+  niceBytes,
+  resolveRouteParam,
+  safeDecodeURIComponent,
+} from '../../utils/functions';
 
 describe('formatBytes', () => {
   it('should format bytes correctly', () => {
@@ -144,5 +151,40 @@ describe('makeRandomString', () => {
     for (const char of result) {
       expect(validChars).toContain(char);
     }
+  });
+});
+
+describe('safeDecodeURIComponent', () => {
+  it('should decode a valid encoded value', () => {
+    expect(safeDecodeURIComponent('folder%20name')).toBe('folder name');
+  });
+
+  it('should return the original value when decoding fails', () => {
+    expect(safeDecodeURIComponent('folder%test')).toBe('folder%test');
+  });
+
+  it('should handle empty-like values gracefully', () => {
+    expect(safeDecodeURIComponent('')).toBe('');
+    expect(safeDecodeURIComponent(undefined)).toBe('');
+    expect(safeDecodeURIComponent(null)).toBe('');
+  });
+});
+
+describe('resolveRouteParam', () => {
+  it('should decode a single string param', () => {
+    expect(resolveRouteParam('path%2Fto%2Ffile')).toBe('path/to/file');
+  });
+
+  it('should return raw string when decoding fails', () => {
+    expect(resolveRouteParam('folder%test')).toBe('folder%test');
+  });
+
+  it('should join array params and decode them', () => {
+    expect(resolveRouteParam(['nested', 'path%2Fvalue'])).toBe('nested/path/value');
+  });
+
+  it('should return empty string for undefined or null', () => {
+    expect(resolveRouteParam(undefined)).toBe('');
+    expect(resolveRouteParam(null)).toBe('');
   });
 });

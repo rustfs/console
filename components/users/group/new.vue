@@ -2,7 +2,7 @@
 import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import { AppCard, AppModal } from '@/components/app'
+import { AppModal } from '@/components/app'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
@@ -105,7 +105,7 @@ const submitForm = async () => {
 
 <template>
   <AppModal v-model="modalVisible" :title="t('Add group members')" size="lg" :close-on-backdrop="false">
-    <AppCard padded class="space-y-6">
+    <div class="space-y-6">
       <div class="space-y-2">
         <Label class="text-sm font-medium">{{ t('Name') }}</Label>
         <Input v-model="formModel.group" autocomplete="off" />
@@ -159,7 +159,7 @@ const submitForm = async () => {
           </Badge>
         </div>
       </div>
-    </AppCard>
+    </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">

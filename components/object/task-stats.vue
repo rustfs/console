@@ -45,7 +45,7 @@
             {{ t('Clear Records') }}
           </Button>
         </div>
-        <AppProgress :value="percentage" :processing="percentage < 100" :height="3" />
+        <Progress :model-value="percentage" class="h-[3px]" />
       </div>
 
       <Tabs v-model="tab" class="flex flex-col gap-4">
@@ -78,7 +78,8 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
-import { AppDrawer, AppProgress, AppSpinner } from '@/components/app'
+import { AppDrawer, AppSpinner } from '@/components/app'
+import Progress from '@/components/ui/progress/Progress.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, ref, watch } from 'vue'

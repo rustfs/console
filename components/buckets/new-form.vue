@@ -1,82 +1,57 @@
 <template>
   <AppModal v-model="modalVisible" :title="t('Create Bucket')" size="lg" :close-on-backdrop="false">
-    <AppCard padded class="space-y-6">
+    <div class="space-y-6">
       <div class="space-y-2">
         <Label for="bucket-name">{{ t('Please enter name') }}</Label>
-        <Input
-          id="bucket-name"
-          v-model="objectKey"
-          autocomplete="off"
-          :class="[
-            'w-full',
-            showNameError && 'border-destructive focus-visible:ring-destructive',
-          ]"
-        />
+        <Input id="bucket-name" v-model="objectKey" autocomplete="off" :class="[
+          'w-full',
+          showNameError && 'border-destructive focus-visible:ring-destructive',
+        ]" />
       </div>
 
       <div class="space-y-2">
-        <Label>{{ t('Version') }}</Label>
-        <div class="flex items-center justify-between rounded-md border p-3">
-          <AppSwitch v-model="version" />
+        <div class="flex items-center justify-between">
+          <Label>{{ t('Version') }}</Label>
+          <Switch v-model:checked="version" />
         </div>
       </div>
 
       <div class="space-y-2">
-        <Label>{{ t('Object Lock') }}</Label>
-        <div class="flex items-center justify-between rounded-md border p-3">
-          <AppSwitch v-model="objectLock" />
+        <div class="flex items-center justify-between">
+          <Label>{{ t('Object Lock') }}</Label>
+          <Switch v-model:checked="objectLock" />
         </div>
       </div>
 
       <div v-if="objectLock" class="space-y-4 rounded-lg border p-4">
         <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium text-foreground">{{ t('Retention') }}</p>
-          </div>
-          <AppSwitch v-model="retentionEnabled" />
+          <Label>{{ t('Retention') }}</Label>
+          <Switch v-model:checked="retentionEnabled" />
         </div>
 
         <div v-if="retentionEnabled" class="space-y-4">
           <div class="space-y-2">
             <Label>{{ t('Retention Mode') }}</Label>
-            <AppRadioGroup
-              v-model="retentionMode"
-              :options="retentionModeOptions"
-              class="grid gap-2 sm:grid-cols-2"
-              item-class="h-full"
-            />
+            <AppRadioGroup v-model="retentionMode" :options="retentionModeOptions" class="grid gap-2 sm:grid-cols-2" item-class="h-full" />
           </div>
 
           <div class="space-y-2">
             <Label>{{ t('Validity') }}</Label>
             <div class="flex flex-col gap-2 sm:flex-row">
-              <Input
-                v-model="retentionPeriod"
-                type="number"
-                class="sm:w-32"
-              />
-              <AppSelect
-                v-model="retentionUnit"
-                :options="retentionUnitOptions"
-                class="sm:w-32"
-              />
+              <Input v-model="retentionPeriod" type="number" class="sm:w-32" />
+              <AppSelect v-model="retentionUnit" :options="retentionUnitOptions" class="sm:w-32" />
             </div>
           </div>
         </div>
       </div>
-    </AppCard>
+    </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button variant="outline" @click="closeModal">
           {{ t('Cancel') }}
         </Button>
-        <Button
-          variant="default"
-          :loading="creating"
-          :disabled="isSubmitDisabled"
-          @click="handleCreateBucket"
-        >
+        <Button variant="default" :loading="creating" :disabled="isSubmitDisabled" @click="handleCreateBucket">
           {{ t('Create') }}
         </Button>
       </div>
@@ -85,11 +60,12 @@
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import { AppCard, AppModal, AppRadioGroup, AppSelect, AppSwitch } from '@/components/app'
+import { AppModal, AppRadioGroup, AppSelect } from '@/components/app'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 

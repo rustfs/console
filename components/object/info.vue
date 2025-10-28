@@ -18,12 +18,7 @@
           <Icon name="ri:file-list-2-line" class="size-4" />
           {{ t('Versions') }}
         </Button>
-        <Button
-          v-if="lockStatus"
-          variant="outline"
-          size="sm"
-          @click="() => (showRetentionView = true)"
-        >
+        <Button v-if="lockStatus" variant="outline" size="sm" @click="() => (showRetentionView = true)">
           <Icon name="ri:lock-line" class="size-4" />
           {{ t('Retention') }}
         </Button>
@@ -53,12 +48,12 @@
           </div>
           <div class="flex items-center justify-between">
             <span class="font-medium text-muted-foreground">{{ t('Legal Hold') }}</span>
-            <AppSwitch :checked="lockStatus" @update:checked="toggleLegalHold" />
+          <Switch :checked="lockStatus" @update:checked="toggleLegalHold" />
           </div>
           <div class="flex flex-col gap-2">
             <span class="font-medium text-muted-foreground">{{ t('Retention') + t('Policy') }}</span>
             <div class="flex flex-col gap-1">
-              <span>{{ retention}}</span>
+              <span>{{ retention }}</span>
               <span v-if="retainUntilDate" class="text-xs text-muted-foreground">{{ retainUntilDate }}</span>
             </div>
           </div>
@@ -73,32 +68,32 @@
     </div>
 
     <AppModal v-model="showTagView" :title="t('Set Tags')" size="lg">
-      <AppCard class="space-y-4">
+      <div class="space-y-4">
         <div class="flex flex-wrap gap-2">
           <AppTag v-for="tag in tags" :key="tag.Key" tone="info">
             {{ tag.Key }}: {{ tag.Value }}
           </AppTag>
         </div>
-        <form class="flex flex-wrap gap-3" @submit.prevent="submitTagForm">
-          <Input v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
-          <Input v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
+        <form class="space-y-4" @submit.prevent="submitTagForm">
+          <div class="flex items-center gap-2">
+            <Input v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
+            <span>=</span>
+            <Input v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
+          </div>
           <Button type="submit" variant="default">{{ t('Add') }}</Button>
         </form>
-      </AppCard>
+      </div>
     </AppModal>
 
     <AppModal v-model="showRetentionView" :title="t('Retention')" size="lg">
-      <AppCard class="space-y-4">
+      <div class="space-y-4">
         <form class="flex flex-col gap-3" @submit.prevent="submitRetention">
           <div class="flex flex-col gap-2">
             <Label>{{ t('Retention Mode') }}</Label>
-            <AppRadioGroup
-              v-model="retentionMode"
-              :options="[
-                { label: t('COMPLIANCE'), value: 'COMPLIANCE' },
-                { label: t('GOVERNANCE'), value: 'GOVERNANCE' },
-              ]"
-            />
+            <AppRadioGroup v-model="retentionMode" :options="[
+              { label: t('COMPLIANCE'), value: 'COMPLIANCE' },
+              { label: t('GOVERNANCE'), value: 'GOVERNANCE' },
+            ]" />
           </div>
           <div class="flex flex-col gap-2">
             <Label>{{ t('Retention RetainUntilDate') }}</Label>
@@ -110,7 +105,7 @@
             <Button variant="outline" @click="() => (showRetentionView = false)">{{ t('Cancel') }}</Button>
           </div>
         </form>
-      </AppCard>
+      </div>
     </AppModal>
 
     <object-preview-modal v-model:show="showPreview" :object="object" />
@@ -118,14 +113,15 @@
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import { AppCard, AppDrawer, AppModal, AppRadioGroup, AppSwitch, AppTag } from '@/components/app'
+import { AppCard, AppDrawer, AppModal, AppRadioGroup, AppTag } from '@/components/app'
+import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { useI18n } from 'vue-i18n'
-import { ref } from 'vue'
 import { joinRelativeURL } from 'ufo'
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 const message = useMessage()

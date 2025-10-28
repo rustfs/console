@@ -1,13 +1,10 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Tiers') }}</h1>
       </template>
-    </page-header>
-
-    <page-content class="flex flex-col gap-4">
-      <div class="flex flex-wrap items-center justify-end gap-2">
+      <div class="flex flex-wrap items-center justify-end gap-2 w-full">
         <Button variant="secondary" @click="openNewForm">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('Add Tier') }}</span>
@@ -17,23 +14,13 @@
           <span>{{ t('Refresh') }}</span>
         </Button>
       </div>
+    </page-header>
 
-      <AppDataTable
-        :table="table"
-        :is-loading="loading"
-        :empty-title="t('No Tiers')"
-        :empty-description="t('Add tiers to configure remote storage destinations.')"
-      />
+    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Tiers')" :empty-description="t('Add tiers to configure remote storage destinations.')" />
 
-      <tiers-new-form ref="newFormRef" @search="() => refresh()" />
-      <tiers-change-key
-        ref="changeKeyRef"
-        v-model:visible="changeKeyVisible"
-        v-model:name="selectedTier"
-        @search="() => refresh()"
-      />
-    </page-content>
-  </div>
+    <tiers-new-form ref="newFormRef" @search="() => refresh()" />
+    <tiers-change-key ref="changeKeyRef" v-model:visible="changeKeyVisible" v-model:name="selectedTier" @search="() => refresh()" />
+  </page>
 </template>
 
 <script setup lang="ts">
@@ -41,11 +28,10 @@ import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { AppCard, AppTag } from '@/components/app'
-import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
-import { useDataTable } from '@/components/app/data-table'
-import { computed, h, ref } from 'vue'
+import { h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDataTable } from '~/components/data-table'
+import DataTable from '~/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const message = useMessage()

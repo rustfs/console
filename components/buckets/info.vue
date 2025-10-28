@@ -65,17 +65,17 @@
             <p class="text-sm font-medium text-foreground">{{ t('Object Lock') }}</p>
             <AppSpinner v-if="objectLockLoading" size="sm" />
           </div>
-          <AppSwitch v-model="lockStatus" disabled />
+          <Switch v-model:checked="lockStatus" disabled />
         </div>
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <p class="text-sm font-medium text-foreground">{{ t('Version Control') }}</p>
             <AppSpinner v-if="statusLoading" size="sm" />
           </div>
-          <AppSwitch
-            :model-value="versioningStatus === 'Enabled'"
+          <Switch
+            :checked="versioningStatus === 'Enabled'"
             :disabled="lockStatus || statusLoading"
-            @update:model-value="value => handleVersionToggle(value)"
+            @update:checked="value => handleVersionToggle(value)"
           />
         </div>
       </AppCard>
@@ -239,7 +239,8 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppCard, AppDrawer, AppModal, AppRadioGroup, AppSelect, AppSwitch, AppSpinner } from '@/components/app'
+import { AppCard, AppDrawer, AppModal, AppRadioGroup, AppSelect, AppSpinner } from '@/components/app'
+import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Icon } from '#components'
 import { computed, ref, watch } from 'vue'

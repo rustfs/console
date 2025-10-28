@@ -64,7 +64,7 @@
     </AppCard>
 
     <AppModal v-model="showTagView" :title="t('Set Tags')" size="lg">
-      <AppCard class="space-y-4">
+      <div class="space-y-4">
         <div class="flex flex-wrap gap-2">
           <AppTag v-for="tag in tags" :key="tag.Key" tone="info">
             {{ tag.Key }}: {{ tag.Value }}
@@ -76,7 +76,7 @@
           <Button type="submit" variant="default">{{ t('Add') }}</Button>
           <Button variant="outline" @click="showTagView = false">{{ t('Cancel') }}</Button>
         </form>
-      </AppCard>
+      </div>
     </AppModal>
 
     <object-preview-modal :show="showPreview" :object="object" @update:show="showPreview = $event" />

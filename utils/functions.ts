@@ -85,3 +85,36 @@ export function makeRandomString(length = 20): string {
 
   return initstr.slice(0, length);
 }
+
+/**
+ * Safely decodes a URI component without throwing on invalid sequences.
+ * If decoding fails, the original value is returned unchanged.
+ */
+export function safeDecodeURIComponent(value?: string | null): string {
+  if (value === undefined || value === null || value === '') {
+    return value ?? '';
+  }
+
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * Normalizes a route parameter that may be encoded or provided as an array.
+ * Ensures we always return a usable string and avoid decode errors for malformed values.
+ */
+export function resolveRouteParam(param: string | string[] | null | undefined): string {
+  if (param === undefined || param === null) {
+    return '';
+  }
+
+  const raw = Array.isArray(param) ? param.join('/') : String(param);
+  if (!raw) {
+    return '';
+  }
+
+  return safeDecodeURIComponent(raw);
+}

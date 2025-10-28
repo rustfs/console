@@ -1,6 +1,6 @@
 <template>
   <AppModal v-model="visible" :title="t('Batch allocation policies')" size="xl" :close-on-backdrop="false">
-    <AppCard padded class="space-y-4">
+    <div class="space-y-4">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="w-full sm:max-w-xs">
           <Input v-model="searchTerm" :placeholder="t('Search Policy')" />
@@ -42,7 +42,7 @@
           </TableRow>
         </TableBody>
       </Table>
-    </AppCard>
+    </div>
   </AppModal>
 </template>
 
@@ -50,7 +50,7 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppCard, AppCheckbox, AppModal } from '@/components/app'
+import { AppCheckbox, AppModal } from '@/components/app'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

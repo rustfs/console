@@ -1,6 +1,6 @@
 <template>
   <AppModal v-model="visible" :title="t('Create User')" size="lg" :close-on-backdrop="false">
-    <AppCard padded class="space-y-6">
+    <div class="space-y-6">
       <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-2">
           <Label>{{ t('User Name') }}</Label>
@@ -103,7 +103,7 @@
           <Badge v-for="value in editForm.policies" :key="value" variant="secondary">{{ value }}</Badge>
         </div>
       </div>
-    </AppCard>
+    </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">
@@ -122,7 +122,7 @@
 import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import { AppCard, AppModal } from '@/components/app'
+import { AppModal } from '@/components/app'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'

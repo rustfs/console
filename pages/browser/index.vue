@@ -1,16 +1,13 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Buckets') }}</h1>
       </template>
-    </page-header>
-
-    <page-content class="flex flex-col gap-4 overflow-y-auto">
-      <AppCard :padded="false" :content-class="'flex flex-wrap items-center justify-between gap-3 p-4'">
-        <div class="flex w-full max-w-sm items-center gap-2">
-          <Icon name="ri:search-2-line" class="size-4 text-muted-foreground" />
-          <Input v-model="searchTerm" :placeholder="t('Search')" />
+      <template #actions>
+        <div class="flex max-w-sm items-center gap-2">
+          <Icon name="ri:search-2-line" class="size-4 text-muted-foreground -mr-8" />
+          <Input v-model="searchTerm" :placeholder="t('Search')" class="pl-8" />
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <Button variant="secondary" @click="formVisible = true">
@@ -22,29 +19,27 @@
             <span>{{ t('Refresh') }}</span>
           </Button>
         </div>
-      </AppCard>
+      </template>
+    </page-header>
 
-      <AppDataTable :table="table" :is-loading="pending" :empty-title="t('No Buckets')" :empty-description="t('Create a bucket to start storing objects.')" />
-    </page-content>
+    <DataTable :table="table" :is-loading="pending" :empty-title="t('No Buckets')" :empty-description="t('Create a bucket to start storing objects.')" />
+  </page>
 
-    <buckets-new-form :show="formVisible" @update:show="handleFormClosed" />
-    <buckets-info ref="infoRef" />
-  </div>
+  <buckets-new-form :show="formVisible" @update:show="handleFormClosed" />
+  <buckets-info ref="infoRef" />
 </template>
 
 <script lang="ts" setup>
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 import { Icon, NuxtLink } from '#components'
-import { AppCard } from '@/components/app'
-import { useDataTable } from '@/components/app/data-table'
-import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
 import { niceBytes } from '@/utils/functions'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDataTable } from '~/components/data-table'
+import DataTable from '~/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const message = useMessage()

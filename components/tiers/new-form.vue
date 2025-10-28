@@ -2,7 +2,7 @@
   <AppModal v-model="visible" :title="t('Add Tier')" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
       <div v-if="!formData.type" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <AppCard
+        <div
           v-for="item in typeOptions"
           :key="item.value"
           class="cursor-pointer border border-border/70 transition hover:border-primary"
@@ -15,11 +15,11 @@
               <p class="text-sm text-muted-foreground">{{ item.description }}</p>
             </div>
           </div>
-        </AppCard>
+        </div>
       </div>
 
       <div v-else class="space-y-5">
-        <AppCard class="cursor-pointer border transition hover:border-primary" @click="resetType">
+        <div class="cursor-pointer border transition hover:border-primary" @click="resetType">
           <div class="flex items-center gap-3">
             <img :src="iconUrl" class="h-10 w-10" alt="" />
             <div>
@@ -27,9 +27,9 @@
               <p class="text-base font-semibold">{{ formData.type }}</p>
             </div>
           </div>
-        </AppCard>
+        </div>
 
-        <AppCard padded class="space-y-4">
+        <div class="space-y-4">
           <div class="grid gap-2">
             <Label>{{ t('Name') }} (A-Z,0-9,_)</Label>
             <Input
@@ -75,7 +75,7 @@
             <Label>{{ t('Storage Class') }}</Label>
             <Input v-model="formData.storageclass" :placeholder="t('Please Enter storage class')" />
           </div>
-        </AppCard>
+        </div>
       </div>
     </div>
 
@@ -94,7 +94,7 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppCard, AppModal } from '@/components/app'
+import { AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

@@ -1,63 +1,43 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Bucket Replication') }}</h1>
       </template>
+      <div class="flex-1 flex flex-wrap items-center justify-end gap-2">
+        <Label class="text-sm font-medium text-muted-foreground">{{ t('Bucket') }}</Label>
+        <AppSelect v-model="bucketName" :options="bucketList" :placeholder="t('Please select bucket')" class="max-w-xs" />
+        <Button variant="secondary" @click="openForm">
+          <Icon name="ri:add-line" class="size-4" />
+          <span>{{ t('Add Replication Rule') }}</span>
+        </Button>
+        <Button variant="outline" @click="() => loadReplication()">
+          <Icon name="ri:refresh-line" class="size-4" />
+          <span>{{ t('Refresh') }}</span>
+        </Button>
+      </div>
     </page-header>
 
-    <page-content class="flex flex-col gap-4">
-      <AppCard
-        :padded="false"
-        :content-class="'flex flex-col gap-4 p-4 md:flex-row md:items-end md:justify-between'"
-      >
-        <div class="w-full max-w-sm">
-          <Label class="mb-2 block text-sm font-medium text-muted-foreground">{{ t('Bucket') }}</Label>
-          <AppSelect
-            v-model="bucketName"
-            :options="bucketList"
-            :placeholder="t('Please select bucket')"
-            class="w-full"
-          />
-        </div>
-        <div class="flex flex-wrap items-center justify-end gap-2">
-          <Button variant="secondary" @click="openForm">
-            <Icon name="ri:add-line" class="size-4" />
-            <span>{{ t('Add Replication Rule') }}</span>
-          </Button>
-          <Button variant="outline" @click="() => loadReplication()">
-            <Icon name="ri:refresh-line" class="size-4" />
-            <span>{{ t('Refresh') }}</span>
-          </Button>
-        </div>
-      </AppCard>
+    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Add replication rules to sync objects across buckets.')" />
 
-      <AppDataTable
-        :table="table"
-        :is-loading="loading"
-        :empty-title="t('No Data')"
-        :empty-description="t('Add replication rules to sync objects across buckets.')"
-      />
-
-      <replication-new-form ref="addFormRef" :bucketName="bucketName" @success="() => loadReplication()" />
-    </page-content>
-  </div>
+    <replication-new-form ref="addFormRef" :bucketName="bucketName" @success="() => loadReplication()" />
+  </page>
 </template>
 
 <script lang="ts" setup>
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import type { Bucket } from '@aws-sdk/client-s3'
-import type { ColumnDef } from '@tanstack/vue-table'
-import { AppCard, AppSelect, AppTag } from '@/components/app'
-import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
-import { useDataTable } from '@/components/app/data-table'
+import { AppSelect, AppTag } from '@/components/app'
 import type { SelectOption } from '@/components/app/AppSelect.vue'
 import { Label } from '@/components/ui/label'
+import { useBucket } from '@/composables/useBucket'
+import type { Bucket } from '@aws-sdk/client-s3'
+import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useBucket } from '@/composables/useBucket'
+import { useDataTable } from '~/components/data-table'
+import DataTable from '~/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const message = useMessage()

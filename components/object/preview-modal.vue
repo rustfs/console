@@ -1,13 +1,7 @@
 <template>
   <AppModal v-model="visibleProxy" :title="t('Preview')" size="xl" :close-on-backdrop="false">
     <div class="flex flex-col gap-4">
-      <div class="flex items-center justify-end gap-2">
-        <Button variant="outline" size="sm" @click="closeModal">
-          <Icon name="ri:close-line" class="size-4" />
-          {{ t('Close') }}
-        </Button>
-      </div>
-      <div class="min-h-[300px] rounded-md border p-4">
+      <div class="min-h-[300px] rounded-md border p-4 flex flex-col">
         <AppSpinner v-if="loading" class="mx-auto size-8" />
         <template v-else>
           <div v-if="isImage" class="flex justify-center">
@@ -23,7 +17,7 @@
             <source :src="previewUrl" :type="contentType" />
             {{ t('Your browser does not support the audio tag') }}
           </audio>
-          <div v-else class="flex h-full items-center justify-center text-sm text-muted-foreground">
+          <div v-else class="flex flex-1 justify-self-center items-center justify-center text-sm text-muted-foreground">
             {{ t('Cannot Preview', { contentType: contentType || 'unknown' }) }}
           </div>
         </template>
@@ -33,10 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
 
 import { AppModal, AppSpinner } from '@/components/app'
-import { Icon } from '#components'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 

@@ -6,7 +6,7 @@
     :close-on-backdrop="false"
   >
     <div class="space-y-6">
-      <AppCard padded class="space-y-4">
+      <div class="space-y-4">
         <div class="grid gap-3 md:grid-cols-2">
           <div class="grid gap-2">
             <Label>{{ t('Priority') }}</Label>
@@ -77,15 +77,15 @@
             </div>
           </div>
         </div>
-      </AppCard>
+      </div>
 
-      <AppCard padded class="space-y-4">
+      <div class="space-y-4">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium">{{ t('Use TLS') }}</p>
             <p class="text-xs text-muted-foreground">{{ t('Enable secure transport when connecting to endpoint.') }}</p>
           </div>
-          <AppSwitch v-model="formData.tls" />
+          <Switch v-model:checked="formData.tls" />
         </div>
 
         <div class="flex items-center justify-between">
@@ -93,7 +93,7 @@
             <p class="text-sm font-medium">{{ t('Replicate Existing Objects') }}</p>
             <p class="text-xs text-muted-foreground">{{ t('Include objects that already exist in the source bucket.') }}</p>
           </div>
-          <AppSwitch v-model="formData.existingObject" />
+          <Switch v-model:checked="formData.existingObject" />
         </div>
 
         <div class="flex items-center justify-between">
@@ -101,7 +101,7 @@
             <p class="text-sm font-medium">{{ t('Replicate Delete Markers') }}</p>
             <p class="text-xs text-muted-foreground">{{ t('Sync delete markers to destination bucket.') }}</p>
           </div>
-          <AppSwitch v-model="formData.expiredDeleteMark" />
+          <Switch v-model:checked="formData.expiredDeleteMark" />
         </div>
 
         <div class="space-y-3" v-if="formData.modeType === 'async'">
@@ -122,7 +122,7 @@
             </div>
           </div>
         </div>
-      </AppCard>
+      </div>
     </div>
 
     <template #footer>
@@ -139,8 +139,9 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppCard, AppModal, AppSelect, AppSwitch } from '@/components/app'
+import { AppModal, AppSelect } from '@/components/app'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getBytes } from '@/utils/functions'

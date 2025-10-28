@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <template v-if="!editStatus">
-      <AppCard padded class="space-y-4">
+      <div class="space-y-4">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="w-full sm:max-w-xs">
             <Input v-model="searchTerm" :placeholder="t('Search Account')" />
@@ -57,11 +57,11 @@
             </TableRow>
           </TableBody>
         </Table>
-      </AppCard>
+      </div>
     </template>
 
     <template v-else-if="editType === 'add'">
-      <AppCard padded class="space-y-4">
+      <div class="space-y-4">
         <div class="grid gap-4 md:grid-cols-2">
           <div class="space-y-2">
             <Label>{{ t('Access Key') }}</Label>
@@ -81,7 +81,7 @@
           </div>
           <div class="space-y-2 md:col-span-2">
             <Label>{{ t('Description') }}</Label>
-            <AppTextarea v-model="formModel.description" :rows="3" />
+          <Textarea v-model="formModel.description" :rows="3" />
           </div>
         </div>
 
@@ -93,7 +93,7 @@
                 {{ t('Automatically inherit the main account policy when enabled.') }}
               </p>
             </div>
-            <AppSwitch v-model="formModel.impliedPolicy" />
+            <Switch v-model:checked="formModel.impliedPolicy" />
           </div>
         </div>
 
@@ -106,7 +106,7 @@
           <Button variant="outline" @click="cancelAdd">{{ t('Cancel') }}</Button>
           <Button variant="default" :loading="submitting" @click="submitForm">{{ t('Submit') }}</Button>
         </div>
-      </AppCard>
+      </div>
     </template>
 
     <users-user-acedit
@@ -122,7 +122,9 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppCard, AppDateTimePicker, AppSwitch, AppTextarea } from '@/components/app'
+import { AppDateTimePicker } from '@/components/app'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import dayjs from 'dayjs'

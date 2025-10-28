@@ -1,172 +1,162 @@
 <template>
-  <page-header>
-    <template #title>
-      <h1 class="text-2xl font-bold">{{ t('Server Information') }}</h1>
-    </template>
-    <template #actions>
-      <Button variant="outline" @click="getPageData">
-        <Icon name="ri:refresh-line" class="mr-2 size-4" />
-        {{ t('Sync') }}
-      </Button>
-    </template>
-  </page-header>
+  <page>
+    <page-header>
+      <template #title>
+        <h1 class="text-2xl font-bold">{{ t('Server Information') }}</h1>
+      </template>
+      <template #actions>
+        <Button variant="outline" @click="getPageData">
+          <Icon name="ri:refresh-line" class="mr-2 size-4" />
+          {{ t('Sync') }}
+        </Button>
+      </template>
+    </page-header>
 
-  <page-content>
-    <div class="grid gap-4 lg:grid-cols-3">
-      <AppCard class="space-y-1">
-        <p class="text-sm text-muted-foreground">{{ t('Storage Space') }}</p>
-        <p class="text-2xl font-semibold">{{ systemInfo?.buckets?.count ?? 0 }}</p>
-      </AppCard>
-      <AppCard class="space-y-1">
-        <p class="text-sm text-muted-foreground">{{ t('Objects') }}</p>
-        <p class="text-2xl font-semibold">{{ systemInfo?.objects?.count ?? 0 }}</p>
-      </AppCard>
-      <AppCard class="space-y-3">
-        <p class="text-sm font-medium text-muted-foreground">{{ t('Usage Report') }}</p>
-        <div class="flex items-center justify-between gap-4">
-          <span class="text-3xl font-semibold">{{ niceBytes(datausageinfo.total_used_capacity) }}</span>
-          <div class="w-32 space-y-2">
-            <AppProgress :value="usedPercent" />
-            <p class="text-xs text-muted-foreground text-right">{{ usedPercent.toFixed(0) }}%</p>
-          </div>
+    <div>
+      <div class="grid gap-4 lg:grid-cols-3">
+        <div class="space-y-1">
+          <p class="text-sm text-muted-foreground">{{ t('Storage Space') }}</p>
+          <p class="text-2xl font-semibold">{{ systemInfo?.buckets?.count ?? 0 }}</p>
+        </div>
+        <div class="space-y-1">
+          <p class="text-sm text-muted-foreground">{{ t('Objects') }}</p>
+          <p class="text-2xl font-semibold">{{ systemInfo?.objects?.count ?? 0 }}</p>
         </div>
         <div class="space-y-3">
-          <div v-for="item in usageStats" :key="item.label" class="flex items-start gap-3 rounded-lg border p-3">
-            <Icon :name="item.icon" class="size-5 text-muted-foreground" />
-            <div class="flex-1">
-              <p class="text-sm font-medium text-foreground">{{ item.label }}</p>
-              <p class="text-xs text-muted-foreground">{{ item.value }}</p>
+          <p class="text-sm font-medium text-muted-foreground">{{ t('Usage Report') }}</p>
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-3xl font-semibold">{{ niceBytes(datausageinfo.total_used_capacity) }}</span>
+            <div class="w-32 space-y-2">
+              <Progress :model-value="usedPercent" class="h-2" />
+              <p class="text-xs text-muted-foreground text-right">{{ usedPercent.toFixed(0) }}%</p>
+            </div>
+          </div>
+          <div class="space-y-3">
+            <div v-for="item in usageStats" :key="item.label" class="flex items-start gap-3 rounded-lg border p-3">
+              <Icon :name="item.icon" class="size-5 text-muted-foreground" />
+              <div class="flex-1">
+                <p class="text-sm font-medium text-foreground">{{ item.label }}</p>
+                <p class="text-xs text-muted-foreground">{{ item.value }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 grid gap-4 lg:grid-cols-2">
+        <div class="space-y-4">
+          <p class="text-sm font-medium text-muted-foreground">{{ t('Servers') }}</p>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-lg border p-4">
+              <p class="text-sm text-muted-foreground">{{ t('Online') }}</p>
+              <p class="text-2xl font-semibold">{{ onlineServers }}</p>
+            </div>
+            <div class="rounded-lg border p-4">
+              <p class="text-sm text-muted-foreground">{{ t('Offline') }}</p>
+              <p class="text-2xl font-semibold">{{ offlineServers }}</p>
             </div>
           </div>
         </div>
-      </AppCard>
-    </div>
-
-    <div class="mt-6 grid gap-4 lg:grid-cols-2">
-      <AppCard class="space-y-4">
-        <p class="text-sm font-medium text-muted-foreground">{{ t('Servers') }}</p>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <div class="rounded-lg border p-4">
-            <p class="text-sm text-muted-foreground">{{ t('Online') }}</p>
-            <p class="text-2xl font-semibold">{{ onlineServers }}</p>
-          </div>
-          <div class="rounded-lg border p-4">
-            <p class="text-sm text-muted-foreground">{{ t('Offline') }}</p>
-            <p class="text-2xl font-semibold">{{ offlineServers }}</p>
-          </div>
-        </div>
-      </AppCard>
-      <AppCard class="space-y-4">
-        <p class="text-sm font-medium text-muted-foreground">{{ t('Disks') }}</p>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <div class="rounded-lg border p-4">
-            <p class="text-sm text-muted-foreground">{{ t('Online') }}</p>
-            <p class="text-2xl font-semibold">{{ systemInfo?.backend?.onlineDisks ?? 0 }}</p>
-          </div>
-          <div class="rounded-lg border p-4">
-            <p class="text-sm text-muted-foreground">{{ t('Offline') }}</p>
-            <p class="text-2xl font-semibold">{{ systemInfo?.backend?.offlineDisks ?? 0 }}</p>
-          </div>
-        </div>
-      </AppCard>
-    </div>
-
-    <div class="mt-6 grid gap-4 lg:grid-cols-3">
-      <div
-        v-for="item in backendInfo"
-        :key="item.title"
-        class="rounded-lg border p-4"
-      >
-        <div class="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-          <Icon :name="item.icon" class="size-5" />
-          <span>{{ item.title }}</span>
-        </div>
-        <p class="mt-3 text-xl font-semibold text-foreground">{{ item.value ?? '-' }}</p>
-      </div>
-    </div>
-
-    <AppCard class="mt-6 space-y-4">
-      <div class="flex items-center justify-between">
-        <p class="text-base font-semibold">
-          {{ t('Server List') }} ({{ serverInfo.count ?? 0 }})
-        </p>
-      </div>
-      <Accordion type="single" collapsible class="space-y-2">
-        <AccordionItem
-          v-for="(server, index) in systemInfo?.servers || []"
-          :key="server.endpoint"
-          :value="String(index)"
-        >
-          <AccordionTrigger>
-            <div class="flex flex-col gap-2 text-left sm:flex-row sm:items-center sm:gap-4">
-              <div class="flex items-center gap-2">
-                <span
-                  class="inline-flex h-2 w-2 rounded-full"
-                  :class="server.state === 'online' ? 'bg-emerald-500' : 'bg-rose-500'"
-                />
-                <span class="font-semibold">{{ server.endpoint }}</span>
-              </div>
-              <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                <span>
-                  {{ t('Disks') }}: {{ countOnlineDrives(server, 'ok') }} / {{ server.drives.length }}
-                </span>
-                <span>
-                  {{ t('Network') }}: {{ countOnlineNetworks(server, 'online') }} /
-                  {{ Object.keys(server.network).length }}
-                </span>
-                <span>
-                  {{ t('Uptime') }}: {{ dayjs().subtract(server.uptime, 'second').toNow() }}
-                </span>
-              </div>
+        <div class="space-y-4">
+          <p class="text-sm font-medium text-muted-foreground">{{ t('Disks') }}</p>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-lg border p-4">
+              <p class="text-sm text-muted-foreground">{{ t('Online') }}</p>
+              <p class="text-2xl font-semibold">{{ systemInfo?.backend?.onlineDisks ?? 0 }}</p>
             </div>
-          </AccordionTrigger>
-          <AccordionContent>
-            <p class="pb-2 text-xs text-muted-foreground">{{ t('Version') }}: {{ server.version }}</p>
-            <ScrollArea class="w-full">
-              <div class="flex gap-4 pb-2">
-                <div
-                  v-for="drive in server.drives"
-                  :key="drive.uuid"
-                  class="min-w-[260px] rounded-lg border p-4"
-                >
-                  <p class="text-sm font-medium text-muted-foreground">{{ drive.drive_path }}</p>
-                  <p class="mt-1 text-xs text-muted-foreground">
-                    {{ niceBytes(drive.usedspace) }} / {{ niceBytes(drive.totalspace) }}
-                  </p>
-                  <AppProgress :value="drive.totalspace ? (drive.usedspace / drive.totalspace) * 100 : 0" class="mt-3" />
-                  <div class="mt-3 text-xs text-muted-foreground">
-                    <p>
-                      {{ t('Used') }}: <span class="font-medium text-foreground">{{ niceBytes(drive.usedspace) }}</span>
-                    </p>
-                    <p>
-                      {{ t('Available') }}:
-                      <span class="font-medium text-foreground">{{ niceBytes(drive.availspace) }}</span>
-                    </p>
-                  </div>
+            <div class="rounded-lg border p-4">
+              <p class="text-sm text-muted-foreground">{{ t('Offline') }}</p>
+              <p class="text-2xl font-semibold">{{ systemInfo?.backend?.offlineDisks ?? 0 }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 grid gap-4 lg:grid-cols-3">
+        <div v-for="item in backendInfo" :key="item.title" class="rounded-lg border p-4">
+          <div class="flex items-center gap-3 text-sm font-medium text-muted-foreground">
+            <Icon :name="item.icon" class="size-5" />
+            <span>{{ item.title }}</span>
+          </div>
+          <p class="mt-3 text-xl font-semibold text-foreground">{{ item.value ?? '-' }}</p>
+        </div>
+      </div>
+
+      <div class="mt-6 space-y-4">
+        <div class="flex items-center justify-between">
+          <p class="text-base font-semibold">
+            {{ t('Server List') }} ({{ serverInfo.count ?? 0 }})
+          </p>
+        </div>
+        <Accordion type="single" collapsible class="space-y-2">
+          <AccordionItem v-for="(server, index) in systemInfo?.servers || []" :key="server.endpoint" :value="String(index)">
+            <AccordionTrigger>
+              <div class="flex flex-col gap-2 text-left sm:flex-row sm:items-center sm:gap-4">
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex h-2 w-2 rounded-full" :class="server.state === 'online' ? 'bg-emerald-500' : 'bg-rose-500'" />
+                  <span class="font-semibold">{{ server.endpoint }}</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <span>
+                    {{ t('Disks') }}: {{ countOnlineDrives(server, 'ok') }} / {{ server.drives.length }}
+                  </span>
+                  <span>
+                    {{ t('Network') }}: {{ countOnlineNetworks(server, 'online') }} /
+                    {{ Object.keys(server.network).length }}
+                  </span>
+                  <span>
+                    {{ t('Uptime') }}: {{ dayjs().subtract(server.uptime, 'second').toNow() }}
+                  </span>
                 </div>
               </div>
-            </ScrollArea>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </AppCard>
-  </page-content>
+            </AccordionTrigger>
+            <AccordionContent>
+              <p class="pb-2 text-xs text-muted-foreground">{{ t('Version') }}: {{ server.version }}</p>
+              <ScrollArea class="w-full">
+                <div class="flex gap-4 pb-2">
+                  <div v-for="drive in server.drives" :key="drive.uuid" class="min-w-[260px] rounded-lg border p-4">
+                    <p class="text-sm font-medium text-muted-foreground">{{ drive.drive_path }}</p>
+                    <p class="mt-1 text-xs text-muted-foreground">
+                      {{ niceBytes(drive.usedspace) }} / {{ niceBytes(drive.totalspace) }}
+                    </p>
+                    <Progress
+                      :model-value="drive.totalspace ? (drive.usedspace / drive.totalspace) * 100 : 0"
+                      class="mt-3 h-2"
+                    />
+                    <div class="mt-3 text-xs text-muted-foreground">
+                      <p>
+                        {{ t('Used') }}: <span class="font-medium text-foreground">{{ niceBytes(drive.usedspace) }}</span>
+                      </p>
+                      <p>
+                        {{ t('Available') }}:
+                        <span class="font-medium text-foreground">{{ niceBytes(drive.availspace) }}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </ScrollArea>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+    </div>
+  </page>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
-import dayjs from 'dayjs'
-import zhCn from 'dayjs/locale/zh-cn'
-import en from 'dayjs/locale/en'
-import relativeTime from 'dayjs/plugin/relativeTime'
 import { Icon } from '#components'
-import { AppCard, AppProgress } from '@/components/app'
+import Progress from '@/components/ui/progress/Progress.vue'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { niceBytes } from '@/utils/functions'
+import dayjs from 'dayjs'
+import en from 'dayjs/locale/en'
+import zhCn from 'dayjs/locale/zh-cn'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { niceBytes } from '@/utils/functions'
 
 const { t, locale } = useI18n()
 const systemApi = useSystem()
@@ -308,12 +298,4 @@ const getPageData = async () => {
 }
 
 getPageData()
-</script>
-
-<script lang="ts">
-export default {
-  components: {
-    AppCard,
-  },
-}
 </script>

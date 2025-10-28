@@ -1,16 +1,10 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('IAM Policies') }}</h1>
       </template>
-    </page-header>
-
-    <page-content class="flex flex-col gap-4">
-      <AppCard
-        :padded="false"
-        :content-class="'flex flex-col gap-4 md:flex-row md:items-center md:justify-between'"
-      >
+      <div class="flex flex-col gap-4 w-full md:flex-row md:items-center md:justify-between">
         <div class="flex w-full max-w-sm items-center gap-2">
           <Icon name="ri:search-2-line" class="size-4 text-muted-foreground" />
           <Input v-model="searchTerm" :placeholder="t('Search')" />
@@ -21,31 +15,25 @@
             <span>{{ t('New Policy') }}</span>
           </Button>
         </div>
-      </AppCard>
+      </div>
+    </page-header>
 
-      <AppDataTable
-        :table="table"
-        :is-loading="loading"
-        :empty-title="t('No Policies')"
-        :empty-description="t('Create a policy to manage access control templates.')"
-      />
-    </page-content>
+    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Policies')" :empty-description="t('Create a policy to manage access control templates.')" />
 
     <policies-form-item v-model:show="showPolicyForm" :policy="current" @saved="fetchPolicies" />
-  </div>
+  </page>
 </template>
 
 <script lang="ts" setup>
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { AppCard } from '@/components/app'
-import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
-import { useDataTable } from '@/components/app/data-table'
-import { h, computed, onMounted, ref, watch } from 'vue'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useDataTable } from '~/components/data-table'
+import DataTable from '~/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const { $api } = useNuxtApp()

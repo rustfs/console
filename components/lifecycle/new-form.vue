@@ -13,7 +13,7 @@
         </TabsList>
 
         <TabsContent value="expire" class="mt-0 space-y-6">
-          <AppCard padded class="space-y-4">
+          <div class="space-y-4">
             <div v-if="versioningStatus" class="grid gap-2">
               <Label>{{ t('Object Version') }}</Label>
               <AppSelect v-model="formData.versionType" :options="versionOptions" />
@@ -32,9 +32,9 @@
                 <span class="text-sm text-muted-foreground">{{ t('Days After') }}</span>
               </div>
             </div>
-          </AppCard>
+          </div>
 
-          <AppCard padded class="space-y-4">
+          <div class="space-y-4">
             <details>
               <summary class="cursor-pointer text-sm font-medium text-primary">{{ t('More Configurations') }}</summary>
               <div class="mt-4 space-y-4">
@@ -75,9 +75,9 @@
                 </div>
               </div>
             </details>
-          </AppCard>
+          </div>
 
-          <AppCard v-if="formData.versionType === 'current'" padded>
+          <div v-if="formData.versionType === 'current'">
             <details>
               <summary class="cursor-pointer text-sm font-medium text-primary">{{ t('Advanced Settings') }}</summary>
               <div class="mt-4 flex items-center justify-between">
@@ -87,14 +87,14 @@
                     {{ t('If no versions remain, delete references to this object') }}
                   </p>
                 </div>
-                <AppSwitch v-model="formData.expiredDeleteMark" />
+                <Switch v-model:checked="formData.expiredDeleteMark" />
               </div>
             </details>
-          </AppCard>
+          </div>
         </TabsContent>
 
         <TabsContent value="transition" class="mt-0 space-y-6">
-          <AppCard padded class="space-y-4">
+          <div class="space-y-4">
             <div v-if="versioningStatus" class="grid gap-2">
               <Label>{{ t('Object Version') }}</Label>
               <AppSelect v-model="formData.versionType" :options="versionOptions" />
@@ -122,9 +122,9 @@
                 :placeholder="t('Please select storage type')"
               />
             </div>
-          </AppCard>
+          </div>
 
-          <AppCard padded class="space-y-4">
+          <div class="space-y-4">
             <details>
               <summary class="cursor-pointer text-sm font-medium text-primary">{{ t('More Configurations') }}</summary>
               <div class="mt-4 space-y-4">
@@ -165,7 +165,7 @@
                 </div>
               </div>
             </details>
-          </AppCard>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
@@ -184,7 +184,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppCard, AppModal, AppSelect, AppSwitch } from '@/components/app'
+import { AppModal, AppSelect } from '@/components/app'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Label } from '@/components/ui/label'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
@@ -213,6 +214,10 @@ const versionOptions = computed(() => [
   { label: t('Non-current Version'), value: 'non-current' },
 ])
 
+const formState = reactive({
+  action: 'expire' as 'expire' | 'transition',
+})
+
 const formData = reactive({
   versionType: 'current',
   days: 1,
@@ -234,10 +239,6 @@ watch(
   },
   { immediate: true }
 )
-
-const formState = reactive({
-  action: 'expire' as 'expire' | 'transition',
-})
 
 const tiers = ref<Array<{ label: string; value: string }>>([])
 

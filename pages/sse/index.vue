@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Server-Side Encryption (SSE) Configuration') }}</h1>
@@ -11,15 +11,15 @@
       </template>
     </page-header>
 
-    <page-content>
+    <div>
       <!-- KMS 状态显示 -->
       <AppCard class="mb-6 space-y-4">
         <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div class="flex flex-col gap-2">
             <div class="flex flex-wrap items-center gap-3">
-              <AppBadge :variant="kmsStatusVariant" class="text-sm uppercase">
+              <Badge :variant="kmsStatusVariant" class="text-sm uppercase">
                 {{ getKmsStatusText() }}
-              </AppBadge>
+              </Badge>
               <span class="text-sm text-muted-foreground">{{ getKmsStatusDescription() }}</span>
               <span v-if="sseKmsForm.kms_backend" class="text-xs text-foreground/70">
                 {{ t('Backend') }}: {{ sseKmsForm.backend_type }}
@@ -27,53 +27,26 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              :loading="refreshingStatus"
-              @click="refreshStatus"
-            >
+            <Button size="sm" variant="outline" :loading="refreshingStatus" @click="refreshStatus">
               <Icon name="ri:refresh-line" class="mr-2 size-4" />
               {{ t('Refresh') }}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              :disabled="sseKmsForm.kms_status !== 'Running'"
-              :loading="clearingCache"
-              @click="clearKMSCache"
-            >
+            <Button size="sm" variant="outline" :disabled="sseKmsForm.kms_status !== 'Running'" :loading="clearingCache" @click="clearKMSCache">
               <Icon name="ri:delete-bin-line" class="mr-2 size-4" />
               {{ t('Clear Cache') }}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              :disabled="sseKmsForm.kms_status !== 'Running'"
-              @click="viewDetailedStatus"
-            >
+            <Button size="sm" variant="outline" :disabled="sseKmsForm.kms_status !== 'Running'" @click="viewDetailedStatus">
               <Icon name="ri:eye-line" class="mr-2 size-4" />
               {{ t('Details') }}
             </Button>
 
-            <Button
-              v-if="hasConfiguration && (sseKmsForm.kms_status === 'Configured' || isErrorStatus(sseKmsForm.kms_status))"
-              size="sm"
-              variant="default"
-              :loading="startingKMS"
-              @click="startKMSService"
-            >
+            <Button v-if="hasConfiguration && (sseKmsForm.kms_status === 'Configured' || isErrorStatus(sseKmsForm.kms_status))" size="sm" variant="default" :loading="startingKMS"
+              @click="startKMSService">
               <Icon name="ri:play-line" class="mr-2 size-4" />
               {{ t('Start KMS') }}
             </Button>
 
-            <Button
-              v-if="hasConfiguration && sseKmsForm.kms_status === 'Running'"
-              size="sm"
-              variant="outline"
-              :loading="stoppingKMS"
-              @click="stopKMSService"
-            >
+            <Button v-if="hasConfiguration && sseKmsForm.kms_status === 'Running'" size="sm" variant="outline" :loading="stoppingKMS" @click="stopKMSService">
               <Icon name="ri:stop-line" class="mr-2 size-4" />
               {{ t('Stop KMS') }}
             </Button>
@@ -82,13 +55,13 @@
       </AppCard>
 
       <!-- KMS 配置区域 -->
-      <AppCard :title="t('KMS Configuration')" class="mb-6" content-class="space-y-6">
+      <div class="mb-6 space-y-6">
+        <div class="space-y-2">
+          <h2 class="text-lg font-semibold">{{ t('KMS Configuration') }}</h2>
+        </div>
         <div v-if="!isEditing" class="space-y-4">
           <!-- 当前配置显示 -->
-          <div
-            v-if="sseKmsForm.backend_type"
-            class="rounded-lg border bg-muted/30 p-4 dark:bg-muted/10"
-          >
+          <div v-if="sseKmsForm.backend_type" class="rounded-lg border bg-muted/30 p-4 dark:bg-muted/10">
             <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div class="space-y-2">
                 <p class="text-sm font-semibold text-foreground">
@@ -150,10 +123,7 @@
           </div>
 
           <!-- 未配置状态 -->
-          <div
-            v-else
-            class="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-8 text-muted-foreground"
-          >
+          <div v-else class="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-8 text-muted-foreground">
             <Icon name="ri:key-2-line" class="mb-2 text-4xl" />
             <div class="text-sm">{{ t('No KMS configuration found') }}</div>
             <Button size="sm" variant="default" @click="startEditing">
@@ -173,33 +143,17 @@
 
           <div class="space-y-2">
             <Label for="kms-address">{{ t('Vault Server Address') }}</Label>
-            <Input
-              id="kms-address"
-              v-model="sseKmsForm.address"
-              :placeholder="t('e.g., https://vault.example.com:8200')"
-              autocomplete="off"
-            />
+            <Input id="kms-address" v-model="sseKmsForm.address" :placeholder="t('e.g., https://vault.example.com:8200')" autocomplete="off" />
           </div>
 
           <div class="space-y-3">
             <Label>{{ t('Authentication Method') }}</Label>
-            <AppRadioGroup
-              v-model="sseKmsForm.auth_type"
-              :options="authTypeOptions"
-              class="grid gap-3 md:grid-cols-2"
-              item-class="h-full"
-            />
+            <AppRadioGroup v-model="sseKmsForm.auth_type" :options="authTypeOptions" class="grid gap-3 md:grid-cols-2" item-class="h-full" />
           </div>
 
           <div v-if="sseKmsForm.auth_type === 'token'" class="space-y-2">
             <Label for="kms-token">{{ t('Vault Token') }}</Label>
-            <Input
-              id="kms-token"
-              v-model="sseKmsForm.vault_token"
-              type="password"
-              autocomplete="off"
-              :placeholder="t('Enter your Vault authentication token')"
-            />
+            <Input id="kms-token" v-model="sseKmsForm.vault_token" type="password" autocomplete="off" :placeholder="t('Enter your Vault authentication token')" />
             <p class="text-xs text-muted-foreground">
               {{ t('Required: Vault authentication token') }}
             </p>
@@ -208,25 +162,14 @@
           <div v-if="sseKmsForm.auth_type === 'approle'" class="grid gap-4 md:grid-cols-2">
             <div class="space-y-2">
               <Label for="kms-role-id">{{ t('Role ID') }}</Label>
-              <Input
-                id="kms-role-id"
-                v-model="sseKmsForm.vault_app_role_id"
-                :placeholder="t('Enter AppRole Role ID')"
-                autocomplete="off"
-              />
+              <Input id="kms-role-id" v-model="sseKmsForm.vault_app_role_id" :placeholder="t('Enter AppRole Role ID')" autocomplete="off" />
               <p class="text-xs text-muted-foreground">
                 {{ t('AppRole Role ID from Vault') }}
               </p>
             </div>
             <div class="space-y-2">
               <Label for="kms-secret-id">{{ t('Secret ID') }}</Label>
-              <Input
-                id="kms-secret-id"
-                v-model="sseKmsForm.vault_app_role_secret_id"
-                type="password"
-                autocomplete="off"
-                :placeholder="t('Enter AppRole Secret ID')"
-              />
+              <Input id="kms-secret-id" v-model="sseKmsForm.vault_app_role_secret_id" type="password" autocomplete="off" :placeholder="t('Enter AppRole Secret ID')" />
               <p class="text-xs text-muted-foreground">
                 {{ t('AppRole Secret ID from Vault') }}
               </p>
@@ -235,12 +178,7 @@
 
           <div class="space-y-2">
             <Label for="kms-mount-path">{{ t('Transit Mount Path') }}</Label>
-            <Input
-              id="kms-mount-path"
-              v-model="sseKmsForm.mount_path"
-              :placeholder="t('transit')"
-              autocomplete="off"
-            />
+            <Input id="kms-mount-path" v-model="sseKmsForm.mount_path" :placeholder="t('transit')" autocomplete="off" />
             <p class="text-xs text-muted-foreground">
               {{ t('Transit engine mount path, default: transit') }}
             </p>
@@ -248,12 +186,7 @@
 
           <div class="space-y-2">
             <Label for="kms-kv-mount">{{ t('KV Mount Path') }}</Label>
-            <Input
-              id="kms-kv-mount"
-              v-model="sseKmsForm.kv_mount"
-              :placeholder="t('secret')"
-              autocomplete="off"
-            />
+            <Input id="kms-kv-mount" v-model="sseKmsForm.kv_mount" :placeholder="t('secret')" autocomplete="off" />
             <p class="text-xs text-muted-foreground">
               {{ t('KV storage mount path, default: secret') }}
             </p>
@@ -261,12 +194,7 @@
 
           <div class="space-y-2">
             <Label for="kms-key-prefix">{{ t('Key Path Prefix') }}</Label>
-            <Input
-              id="kms-key-prefix"
-              v-model="sseKmsForm.key_path_prefix"
-              :placeholder="t('rustfs/kms/keys')"
-              autocomplete="off"
-            />
+            <Input id="kms-key-prefix" v-model="sseKmsForm.key_path_prefix" :placeholder="t('rustfs/kms/keys')" autocomplete="off" />
             <p class="text-xs text-muted-foreground">
               {{ t('Key storage path prefix in KV store') }}
             </p>
@@ -275,24 +203,14 @@
           <div class="grid gap-6 md:grid-cols-2">
             <div class="space-y-2">
               <Label for="kms-timeout">{{ t('Timeout (seconds)') }}</Label>
-              <Input
-                id="kms-timeout"
-                v-model="sseKmsForm.timeout_seconds"
-                type="number"
-                placeholder="30"
-              />
+              <Input id="kms-timeout" v-model="sseKmsForm.timeout_seconds" type="number" placeholder="30" />
               <p class="text-xs text-muted-foreground">
                 {{ t('Request timeout in seconds, default: 30') }}
               </p>
             </div>
             <div class="space-y-2">
               <Label for="kms-retry">{{ t('Retry Attempts') }}</Label>
-              <Input
-                id="kms-retry"
-                v-model="sseKmsForm.retry_attempts"
-                type="number"
-                placeholder="3"
-              />
+              <Input id="kms-retry" v-model="sseKmsForm.retry_attempts" type="number" placeholder="3" />
               <p class="text-xs text-muted-foreground">
                 {{ t('Number of retry attempts, default: 3') }}
               </p>
@@ -301,35 +219,25 @@
 
           <div class="space-y-2">
             <Label for="kms-default-key">{{ t('Default Key ID') }}</Label>
-            <Input
-              id="kms-default-key"
-              v-model="sseKmsForm.default_key_id"
-              :placeholder="t('rustfs-master')"
-              autocomplete="off"
-            />
+            <Input id="kms-default-key" v-model="sseKmsForm.default_key_id" :placeholder="t('rustfs-master')" autocomplete="off" />
             <p class="text-xs text-muted-foreground">
               {{ t('Default master key ID for SSE-KMS') }}
             </p>
           </div>
 
-          <div class="space-y-2">
-            <Label>{{ t('Enable Cache') }}</Label>
-            <div class="flex items-center justify-between rounded-md border p-3">
-              <AppSwitch v-model="sseKmsForm.enable_cache" />
+            <div class="space-y-2">
+              <Label>{{ t('Enable Cache') }}</Label>
+              <div class="flex items-center justify-between rounded-md border p-3">
+                <Switch v-model:checked="sseKmsForm.enable_cache" />
+              </div>
+              <p class="text-xs text-muted-foreground">
+                {{ t('Enable caching for better performance, default: true') }}
+              </p>
             </div>
-            <p class="text-xs text-muted-foreground">
-              {{ t('Enable caching for better performance, default: true') }}
-            </p>
-          </div>
 
           <div v-if="sseKmsForm.enable_cache" class="space-y-2">
             <Label for="kms-cache-ttl">{{ t('Cache TTL (seconds)') }}</Label>
-            <Input
-              id="kms-cache-ttl"
-              v-model="sseKmsForm.cache_ttl_seconds"
-              type="number"
-              placeholder="600"
-            />
+            <Input id="kms-cache-ttl" v-model="sseKmsForm.cache_ttl_seconds" type="number" placeholder="600" />
             <p class="text-xs text-muted-foreground">
               {{ t('Cache time-to-live in seconds, default: 600') }}
             </p>
@@ -344,7 +252,7 @@
             </Button>
           </div>
         </form>
-      </AppCard>
+      </div>
 
       <!-- KMS 密钥列表 -->
       <AppCard :title="t('KMS Keys Management')" class="mb-6" content-class="space-y-6">
@@ -391,22 +299,11 @@
                 </AppTag>
               </div>
               <div class="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  :loading="refreshingKeys"
-                  :disabled="sseKmsForm.kms_status !== 'Running'"
-                  @click="refreshKeyList"
-                >
+                <Button size="sm" variant="outline" :loading="refreshingKeys" :disabled="sseKmsForm.kms_status !== 'Running'" @click="refreshKeyList">
                   <Icon name="ri:refresh-line" class="size-4" />
                   {{ t('Refresh') }}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="default"
-                  :disabled="!canAddKeys"
-                  @click="showCreateKeyModal = true"
-                >
+                <Button size="sm" variant="default" :disabled="!canAddKeys" @click="showCreateKeyModal = true">
                   <Icon name="ri:add-line" class="size-4" />
                   {{ t('Create Master Key') }}
                 </Button>
@@ -414,19 +311,12 @@
             </div>
 
             <!-- 主密钥列表 -->
-            <div
-              v-if="
-                kmsKeys.filter(key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK').length > 0
-              "
-              class="space-y-3"
-            >
-              <div
-                v-for="key in kmsKeys.filter(
-                  key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK'
-                )"
-                :key="key.key_id"
-                class="border-l-4 border-purple-500 border rounded-lg p-4 bg-purple-50 dark:bg-purple-900/10"
-              >
+            <div v-if="
+              kmsKeys.filter(key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK').length > 0
+            " class="space-y-3">
+              <div v-for="key in kmsKeys.filter(
+                key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK'
+              )" :key="key.key_id" class="border-l-4 border-purple-500 border rounded-lg p-4 bg-purple-50 dark:bg-purple-900/10">
                 <div class="flex justify-between items-start">
                   <div class="flex-1">
                     <div class="flex items-center space-x-2 mb-2">
@@ -455,22 +345,11 @@
                     <Button size="sm" variant="outline" @click="showKeyDetails(key.key_id)">
                       {{ t('Details') }}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      :disabled="mapKeyState(key) === 'PendingDeletion'"
-                      @click="deleteKeyClick(key)"
-                    >
+                    <Button size="sm" variant="destructive" :disabled="mapKeyState(key) === 'PendingDeletion'" @click="deleteKeyClick(key)">
                       {{ mapKeyState(key) === 'PendingDeletion' ? t('Deleting...') : t('Delete') }}
                     </Button>
-                    <Button
-                      v-if="mapKeyState(key) === 'PendingDeletion'"
-                      size="sm"
-                      variant="destructive"
-                      class="bg-destructive/10 text-destructive hover:bg-destructive/20"
-                      :disabled="forceDeleting"
-                      @click="forceDeleteKeyClick(key)"
-                    >
+                    <Button v-if="mapKeyState(key) === 'PendingDeletion'" size="sm" variant="destructive" class="bg-destructive/10 text-destructive hover:bg-destructive/20"
+                      :disabled="forceDeleting" @click="forceDeleteKeyClick(key)">
                       {{ t('Force Delete') }}
                     </Button>
                   </div>
@@ -480,22 +359,17 @@
           </div>
 
           <!-- 数据密钥管理区域 -->
-          <div
-            v-if="kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length > 0"
-            class="space-y-4 mt-8"
-          >
+          <div v-if="kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length > 0" class="space-y-4 mt-8">
             <div class="flex items-center space-x-3">
               <div class="w-4 h-4 bg-green-500 rounded-full"></div>
               <h3 class="text-lg font-medium">{{ t('Data Keys (DEK)') }}</h3>
               <AppTag tone="success">
-                {{ kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length }}
+                {{kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length}}
               </AppTag>
             </div>
 
             <!-- 数据密钥说明 -->
-            <div
-              class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded p-3 text-sm"
-            >
+            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded p-3 text-sm">
               <p class="text-green-700 dark:text-green-300">
                 {{
                   t(
@@ -507,11 +381,8 @@
 
             <!-- 数据密钥列表 -->
             <div class="space-y-3">
-              <div
-                v-for="key in kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK')"
-                :key="key.key_id"
-                class="border-l-4 border-green-500 border rounded-lg p-4 bg-green-50 dark:bg-green-900/10"
-              >
+              <div v-for="key in kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK')" :key="key.key_id"
+                class="border-l-4 border-green-500 border rounded-lg p-4 bg-green-50 dark:bg-green-900/10">
                 <div class="flex justify-between items-start">
                   <div class="flex-1">
                     <div class="flex items-center space-x-2 mb-2">
@@ -552,11 +423,7 @@
             <Icon name="ri:key-2-line" class="text-4xl mx-auto mb-2" />
             <div>{{ t('No KMS keys found') }}</div>
             <div class="text-sm">{{ t('Create your first KMS key to get started') }}</div>
-            <Button
-              class="mt-2"
-              :disabled="!canAddKeys"
-              @click="showCreateKeyModal = true"
-            >
+            <Button class="mt-2" :disabled="!canAddKeys" @click="showCreateKeyModal = true">
               {{ t('Create First Key') }}
             </Button>
           </div>
@@ -579,39 +446,19 @@
           <!-- 搜索和排序 -->
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div class="relative flex-1">
-              <Icon
-                name="ri:search-line"
-                class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                v-model="bucketSearchQuery"
-                :placeholder="t('Search buckets...')"
-                class="pl-10"
-              />
-              <button
-                v-if="bucketSearchQuery"
-                type="button"
-                class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
-                @click="bucketSearchQuery = ''"
-              >
+              <Icon name="ri:search-line" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input v-model="bucketSearchQuery" :placeholder="t('Search buckets...')" class="pl-10" />
+              <button v-if="bucketSearchQuery" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
+                @click="bucketSearchQuery = ''">
                 <Icon name="ri:close-circle-line" class="size-4" />
               </button>
             </div>
-            <AppSelect
-              v-model="bucketSortBy"
-              :options="bucketSortOptions"
-              :placeholder="t('Sort by')"
-              class="w-full sm:w-40"
-            />
+            <AppSelect v-model="bucketSortBy" :options="bucketSortOptions" :placeholder="t('Sort by')" class="w-full sm:w-40" />
           </div>
 
           <!-- Bucket 列表 -->
           <div v-if="filteredBuckets.length > 0" class="space-y-3">
-            <div
-              v-for="bucket in filteredBuckets"
-              :key="bucket.name"
-              class="border rounded-lg p-4 hover:shadow-md transition-shadow"
-            >
+            <div v-for="bucket in filteredBuckets" :key="bucket.name" class="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <div class="flex justify-between items-center">
                 <div class="flex-1">
                   <div class="flex items-center space-x-3">
@@ -642,21 +489,12 @@
 
                   <!-- 操作按钮 -->
                   <div class="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      @click="configureBucketEncryption(bucket)"
-                    >
+                    <Button size="sm" variant="default" @click="configureBucketEncryption(bucket)">
                       <Icon name="ri:lock-line" class="size-4" />
                       {{ t('Configure') }}
                     </Button>
-                    <Button
-                      v-if="bucket.encryptionStatus === 'Enabled'"
-                      size="sm"
-                      variant="destructive"
-                      class="bg-destructive/10 text-destructive hover:bg-destructive/20"
-                      @click="removeBucketEncryption(bucket)"
-                    >
+                    <Button v-if="bucket.encryptionStatus === 'Enabled'" size="sm" variant="destructive" class="bg-destructive/10 text-destructive hover:bg-destructive/20"
+                      @click="removeBucketEncryption(bucket)">
                       <Icon name="ri:lock-unlock-line" class="size-4" />
                       {{ t('Remove') }}
                     </Button>
@@ -665,10 +503,7 @@
               </div>
 
               <!-- 加密详细信息 -->
-              <div
-                v-if="bucket.encryptionStatus === 'Enabled'"
-                class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded"
-              >
+              <div v-if="bucket.encryptionStatus === 'Enabled'" class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
                 <div class="text-sm">
                   <div>
                     <strong>{{ t('Algorithm') }}:</strong> {{ bucket.encryptionAlgorithm }}
@@ -689,10 +524,7 @@
           </div>
 
           <!-- 搜索无结果 -->
-          <div
-            v-else-if="!bucketListLoading && buckets.length > 0 && filteredBuckets.length === 0"
-            class="text-center py-8 text-gray-500"
-          >
+          <div v-else-if="!bucketListLoading && buckets.length > 0 && filteredBuckets.length === 0" class="text-center py-8 text-gray-500">
             <Icon name="ri:search-line" class="text-4xl mx-auto mb-2" />
             <div>{{ t('No buckets match your search') }}</div>
             <div class="text-sm">{{ t('Try adjusting your search terms') }}</div>
@@ -707,24 +539,14 @@
       </AppCard>
 
       <!-- 配置 Bucket 加密模态框 -->
-      <AppModal
-        v-model="showBucketEncryptModal"
-        :title="
-          selectedBucket
-            ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name })
-            : t('Configure Bucket Encryption')
-        "
-        size="lg"
-        :close-on-backdrop="false"
-      >
+      <AppModal v-model="showBucketEncryptModal" :title="selectedBucket
+        ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name })
+        : t('Configure Bucket Encryption')
+        " size="lg" :close-on-backdrop="false">
         <div class="space-y-4">
           <div class="space-y-2">
             <Label>{{ t('Encryption Type') }}</Label>
-            <AppSelect
-              v-model="bucketEncryptForm.encryptionType"
-              :options="bucketEncryptionOptions"
-              :placeholder="t('Select encryption type')"
-            />
+            <AppSelect v-model="bucketEncryptForm.encryptionType" :options="bucketEncryptionOptions" :placeholder="t('Select encryption type')" />
             <p class="text-xs text-muted-foreground">
               {{ t('Choose the encryption method for this bucket') }}
             </p>
@@ -732,12 +554,7 @@
 
           <div v-if="bucketEncryptForm.encryptionType === 'SSE-KMS'" class="space-y-2">
             <Label>{{ t('KMS Key') }}</Label>
-            <AppSelect
-              v-model="bucketEncryptForm.kmsKeyId"
-              :options="kmsKeyOptions"
-              :placeholder="t('Select KMS key')"
-              :disabled="kmsKeysLoading"
-            />
+            <AppSelect v-model="bucketEncryptForm.kmsKeyId" :options="kmsKeyOptions" :placeholder="t('Select KMS key')" :disabled="kmsKeysLoading" />
             <p class="text-xs text-muted-foreground">
               {{ t('Select the KMS key to use for encryption') }}
             </p>
@@ -760,12 +577,7 @@
       </AppModal>
 
       <!-- 移除加密确认模态框 -->
-      <AppModal
-        v-model="showRemoveEncryptModal"
-        :title="t('Confirm Remove Encryption')"
-        size="lg"
-        :close-on-backdrop="false"
-      >
+      <AppModal v-model="showRemoveEncryptModal" :title="t('Confirm Remove Encryption')" size="lg" :close-on-backdrop="false">
         <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
           <Icon name="ri:alert-line" class="text-4xl text-orange-500" />
           <div class="text-lg font-medium text-foreground">
@@ -791,12 +603,7 @@
       </AppModal>
 
       <!-- 创建/编辑密钥模态框 -->
-      <AppModal
-        v-model="showCreateKeyModal"
-        :title="t('Create New Key')"
-        size="lg"
-        :close-on-backdrop="false"
-      >
+      <AppModal v-model="showCreateKeyModal" :title="t('Create New Key')" size="lg" :close-on-backdrop="false">
         <div class="space-y-4">
           <div class="space-y-2">
             <Label>{{ t('Key Name') }}</Label>
@@ -808,11 +615,7 @@
 
           <div class="space-y-2">
             <Label>{{ t('Algorithm') }}</Label>
-            <AppSelect
-              v-model="keyForm.algorithm"
-              :options="algorithmOptions"
-              :placeholder="t('Select encryption algorithm')"
-            />
+            <AppSelect v-model="keyForm.algorithm" :options="algorithmOptions" :placeholder="t('Select encryption algorithm')" />
             <p class="text-xs text-muted-foreground">
               {{ t('Encryption algorithm for the key.') }}
             </p>
@@ -832,12 +635,7 @@
       </AppModal>
 
       <!-- 删除确认模态框 -->
-      <AppModal
-        v-model="showDeleteModal"
-        :title="t('Confirm Delete')"
-        size="lg"
-        :close-on-backdrop="false"
-      >
+      <AppModal v-model="showDeleteModal" :title="t('Confirm Delete')" size="lg" :close-on-backdrop="false">
         <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
           <Icon name="ri:alert-line" class="text-4xl text-red-500" />
           <div class="text-lg font-medium text-foreground">
@@ -862,12 +660,7 @@
       </AppModal>
 
       <!-- 强制删除确认模态框 -->
-      <AppModal
-        v-model="showForceDeleteModal"
-        :title="t('Confirm Force Delete')"
-        size="lg"
-        :close-on-backdrop="false"
-      >
+      <AppModal v-model="showForceDeleteModal" :title="t('Confirm Force Delete')" size="lg" :close-on-backdrop="false">
         <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
           <Icon name="ri:alert-line" class="text-4xl text-red-500" />
           <div class="text-lg font-medium text-foreground">
@@ -895,11 +688,7 @@
       </AppModal>
 
       <!-- 详细状态查看模态框 -->
-      <AppModal
-        v-model="showDetailedStatusModal"
-        :title="t('Detailed KMS Status')"
-        size="lg"
-      >
+      <AppModal v-model="showDetailedStatusModal" :title="t('Detailed KMS Status')" size="lg">
         <div v-if="detailedStatusData" class="space-y-6">
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1">
@@ -939,10 +728,10 @@
                   {{
                     detailedStatusData.cache_stats.hit_count && detailedStatusData.cache_stats.miss_count
                       ? (
-                          (detailedStatusData.cache_stats.hit_count /
-                            (detailedStatusData.cache_stats.hit_count + detailedStatusData.cache_stats.miss_count)) *
-                          100
-                        ).toFixed(1) + '%'
+                        (detailedStatusData.cache_stats.hit_count /
+                          (detailedStatusData.cache_stats.hit_count + detailedStatusData.cache_stats.miss_count)) *
+                        100
+                      ).toFixed(1) + '%'
                       : 'N/A'
                   }}
                 </p>
@@ -970,19 +759,21 @@
           </div>
         </template>
       </AppModal>
-    </page-content>
-  </div>
+    </div>
+  </page>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import { ref, reactive, computed, onMounted, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useMessage } from '@/composables/ui';
-import { AppBadge, AppCard, AppRadioGroup, AppSelect, AppSpinner, AppSwitch, AppTag } from '@/components/app'
-import { Label } from '@/components/ui/label';
+import { AppCard, AppRadioGroup, AppSelect, AppSpinner, AppTag } from '@/components/app'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
+import { useMessage } from '@/composables/ui'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 const {
   getKMSStatus,
   getConfiguration,
@@ -998,126 +789,126 @@ const {
   clearCache,
   getDetailedStatus,
   getKeyDetails,
-} = useSSE();
+} = useSSE()
 
-const { listBuckets, getBucketEncryption, putBucketEncryption, deleteBucketEncryption } = useBucket({});
+const { listBuckets, getBucketEncryption, putBucketEncryption, deleteBucketEncryption } = useBucket({})
 
-const { t } = useI18n();
-const message = useMessage();
+const { t } = useI18n()
+const message = useMessage()
 
 // 状态管理
-const isEditing = ref(false);
-const saving = ref(false);
-const testingConnection = ref(false);
-const refreshingStatus = ref(false);
-const clearingCache = ref(false);
-const showDetailedStatusModal = ref(false);
-const startingKMS = ref(false);
-const stoppingKMS = ref(false);
-const detailedStatusData = ref<any>(null);
+const isEditing = ref(false)
+const saving = ref(false)
+const testingConnection = ref(false)
+const refreshingStatus = ref(false)
+const clearingCache = ref(false)
+const showDetailedStatusModal = ref(false)
+const startingKMS = ref(false)
+const stoppingKMS = ref(false)
+const detailedStatusData = ref<any>(null)
 
 const kmsStatusVariant = computed(() => {
-  const type = getKmsStatusType();
+  const type = getKmsStatusType()
   switch (type) {
     case 'success':
-      return 'primary';
+      return 'default'
     case 'warning':
-      return 'outline';
+      return 'outline'
     case 'danger':
-      return 'danger';
+      return 'destructive'
     case 'info':
-      return 'secondary';
+      return 'secondary'
     default:
-      return 'secondary';
+      return 'secondary'
   }
-});
+})
 
 const kmsStatusTone = computed(() => {
-  const type = getKmsStatusType();
+  const type = getKmsStatusType()
   switch (type) {
     case 'success':
-      return 'success';
+      return 'success'
     case 'warning':
-      return 'warning';
+      return 'warning'
     case 'danger':
-      return 'danger';
+      return 'danger'
     case 'info':
-      return 'info';
+      return 'info'
     default:
-      return 'default';
+      return 'default'
   }
-});
+})
 
 // 密钥管理状态
-const showCreateKeyModal = ref(false);
-const showDeleteModal = ref(false);
-const showForceDeleteModal = ref(false);
-const savingKey = ref(false);
-const deletingKey = ref(false);
-const forceDeleting = ref(false);
-const refreshingKeys = ref(false);
-const keyToDelete = ref<any>(null);
-const keyToForceDelete = ref<any>(null);
+const showCreateKeyModal = ref(false)
+const showDeleteModal = ref(false)
+const showForceDeleteModal = ref(false)
+const savingKey = ref(false)
+const deletingKey = ref(false)
+const forceDeleting = ref(false)
+const refreshingKeys = ref(false)
+const keyToDelete = ref<any>(null)
+const keyToForceDelete = ref<any>(null)
 
 // 本地密钥名称映射存储
-const keyNameMapping = ref<Record<string, string>>({});
+const keyNameMapping = ref<Record<string, string>>({})
 
 // Bucket 加密管理状态
-const buckets = ref<any[]>([]);
-const bucketListLoading = ref(false);
-const bucketSearchQuery = ref('');
-const bucketSortBy = ref('name');
-const showBucketEncryptModal = ref(false);
-const showRemoveEncryptModal = ref(false);
-const savingBucketEncryption = ref(false);
-const removingBucketEncryption = ref(false);
-const selectedBucket = ref<any>(null);
-const kmsKeysLoading = ref(false);
+const buckets = ref<any[]>([])
+const bucketListLoading = ref(false)
+const bucketSearchQuery = ref('')
+const bucketSortBy = ref('name')
+const showBucketEncryptModal = ref(false)
+const showRemoveEncryptModal = ref(false)
+const savingBucketEncryption = ref(false)
+const removingBucketEncryption = ref(false)
+const selectedBucket = ref<any>(null)
+const kmsKeysLoading = ref(false)
 
 // 本地存储键名
-const KEY_NAME_MAPPING_STORAGE_KEY = 'kms_key_name_mapping';
+const KEY_NAME_MAPPING_STORAGE_KEY = 'kms_key_name_mapping'
 
 // 从本地存储加载密钥名称映射
 const loadKeyNameMapping = () => {
   try {
-    const stored = localStorage.getItem(KEY_NAME_MAPPING_STORAGE_KEY);
+    const stored = localStorage.getItem(KEY_NAME_MAPPING_STORAGE_KEY)
     if (stored) {
-      keyNameMapping.value = JSON.parse(stored);
+      keyNameMapping.value = JSON.parse(stored)
     }
   } catch (error) {
-    console.warn('Failed to load key name mapping from localStorage:', error);
-    keyNameMapping.value = {};
+    console.warn('Failed to load key name mapping from localStorage:', error)
+    keyNameMapping.value = {}
   }
-};
+}
 
 // 保存密钥名称映射到本地存储
 const saveKeyNameMapping = () => {
   try {
-    localStorage.setItem(KEY_NAME_MAPPING_STORAGE_KEY, JSON.stringify(keyNameMapping.value));
+    localStorage.setItem(KEY_NAME_MAPPING_STORAGE_KEY, JSON.stringify(keyNameMapping.value))
   } catch (error) {
-    console.warn('Failed to save key name mapping to localStorage:', error);
+    console.warn('Failed to save key name mapping to localStorage:', error)
   }
-};
+}
 
 // 设置密钥名称
 const setKeyName = (keyId: string, name: string) => {
-  keyNameMapping.value[keyId] = name;
-  saveKeyNameMapping();
-};
+  keyNameMapping.value[keyId] = name
+  saveKeyNameMapping()
+}
 
 // 删除密钥名称映射
 const removeKeyName = (keyId: string) => {
-  delete keyNameMapping.value[keyId];
-  saveKeyNameMapping();
-};
+  delete keyNameMapping.value[keyId]
+  saveKeyNameMapping()
+}
 
 // 定义KMS状态类型
-type KmsStatus = 'Running' | 'Configured' | 'NotConfigured' | string | { Error: string } | null;
+type KmsStatus = 'Running' | 'Configured' | 'NotConfigured' | string | { Error: string } | null
 
 // 类型守卫函数
 const isErrorStatus = (status: KmsStatus): status is { Error: string } => {
-  return typeof status === 'object' && status !== null && 'Error' in status;
-};
+  return typeof status === 'object' && status !== null && 'Error' in status
+}
 
 // SSE-KMS 表单数据
 const sseKmsForm = reactive({
@@ -1141,47 +932,47 @@ const sseKmsForm = reactive({
   file_permissions: undefined as number | undefined,
   kms_status: '' as KmsStatus, // KMS状态：Running, Stopped, NotConfigured, Error
   kms_backend: null as {
-    type?: string;
-    address?: string;
-    mount_path?: string;
-    kv_mount?: string;
-    key_path_prefix?: string;
+    type?: string
+    address?: string
+    mount_path?: string
+    kv_mount?: string
+    key_path_prefix?: string
     auth_method?: {
-      type?: string;
-      token?: string;
-      role_id?: string;
-      secret_id?: string;
-    };
+      type?: string
+      token?: string
+      role_id?: string
+      secret_id?: string
+    }
   } | null, // KMS后端信息
   kms_healthy: false, // KMS健康状态
-});
+})
 
 // KMS 密钥列表
-const kmsKeys = ref<any[]>([]);
+const kmsKeys = ref<any[]>([])
 
 // 密钥表单数据
 const keyForm = reactive({
   keyName: '',
   algorithm: 'AES-256',
-});
+})
 
 // Bucket 加密配置表单
 const bucketEncryptForm = reactive({
   encryptionType: '',
   kmsKeyId: '',
-});
+})
 
 // Bucket 排序选项
 const bucketSortOptions = computed(() => [
   { label: t('Name'), value: 'name' },
   { label: t('Creation Date'), value: 'creationDate' },
-]);
+])
 
 // Bucket 加密类型选项
 const bucketEncryptionOptions = computed(() => [
   { label: 'SSE-S3', value: 'SSE-S3' },
   { label: 'SSE-KMS', value: 'SSE-KMS' },
-]);
+])
 
 // 算法选项
 const algorithmOptions = [
@@ -1189,7 +980,7 @@ const algorithmOptions = [
   { label: 'AES-128', value: 'AES-128' },
   { label: 'RSA-2048', value: 'RSA-2048' },
   { label: 'RSA-4096', value: 'RSA-4096' },
-];
+]
 
 // 计算属性
 const hasConfiguration = computed(() => {
@@ -1202,8 +993,8 @@ const hasConfiguration = computed(() => {
     ((sseKmsForm.kms_status && sseKmsForm.kms_status !== 'NotConfigured') ||
       sseKmsForm.address ||
       sseKmsForm.default_key_id)
-  );
-});
+  )
+})
 
 const authTypeOptions = computed(() => [
   {
@@ -1216,44 +1007,44 @@ const authTypeOptions = computed(() => [
     value: 'approle',
     description: t('Use AppRole authentication'),
   },
-]);
+])
 
 // 计算属性：是否可以添加密钥
 const canAddKeys = computed(() => {
   // 只有在配置完成且状态为Running且健康时才允许添加密钥
-  return hasConfiguration.value && sseKmsForm.kms_status === 'Running' && sseKmsForm.kms_healthy;
-});
+  return hasConfiguration.value && sseKmsForm.kms_status === 'Running' && sseKmsForm.kms_healthy
+})
 
 // 计算属性：过滤和排序后的bucket列表
 const filteredBuckets = computed(() => {
-  let filtered = [...buckets.value];
+  let filtered = [...buckets.value]
 
   // 搜索过滤
   if (bucketSearchQuery.value) {
-    const query = bucketSearchQuery.value.toLowerCase();
-    filtered = filtered.filter(bucket => bucket.name.toLowerCase().includes(query));
+    const query = bucketSearchQuery.value.toLowerCase()
+    filtered = filtered.filter(bucket => bucket.name.toLowerCase().includes(query))
   }
 
   // 排序
   filtered.sort((a, b) => {
     if (bucketSortBy.value === 'name') {
-      return a.name.localeCompare(b.name);
+      return a.name.localeCompare(b.name)
     } else if (bucketSortBy.value === 'creationDate') {
-      return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime();
+      return new Date(b.creationDate).getTime() - new Date(a.creationDate).getTime()
     }
-    return 0;
-  });
+    return 0
+  })
 
-  return filtered;
-});
+  return filtered
+})
 
 // 计算属性：KMS密钥选项（用于bucket加密配置）
 const kmsKeyOptions = computed(() => {
   return getMasterKeys().map((key: any) => ({
     label: getKeyName(key),
     value: key.key_id,
-  }));
-});
+  }))
+})
 
 // 辅助函数：获取主密钥列表
 const getMasterKeys = () => {
@@ -1262,114 +1053,114 @@ const getMasterKeys = () => {
     // 1. 如果有key_type字段，则使用该字段
     // 2. 如果没有key_type字段，默认认为是主密钥
     // 3. 如果key_id以特定前缀开头，可能是数据密钥
-    return !key.key_type || key.key_type === 'master' || key.key_type === 'CMK';
-  });
-};
+    return !key.key_type || key.key_type === 'master' || key.key_type === 'CMK'
+  })
+}
 
 // 辅助函数：获取数据密钥列表
 const getDataKeys = () => {
   return kmsKeys.value.filter(key => {
-    return key.key_type === 'data' || key.key_type === 'DEK';
-  });
-};
+    return key.key_type === 'data' || key.key_type === 'DEK'
+  })
+}
 
 // 辅助函数：判断密钥类型
 const getKeyType = (key: any) => {
   if (key.key_type === 'data' || key.key_type === 'DEK') {
-    return 'data';
+    return 'data'
   }
-  return 'master';
-};
+  return 'master'
+}
 
 // 辅助函数：获取密钥名称
 const getKeyName = (key: any) => {
   // 优先从后端的 description 字段获取名称（持久化的）
   if (key.description) {
-    return key.description;
+    return key.description
   }
 
   // 然后从 metadata 或 tags 中获取名称
   // 优先使用 tags.name（新的标准格式），fallback 到 metadata.name（向后兼容）
-  const name = key.tags?.name || key.metadata?.name;
+  const name = key.tags?.name || key.metadata?.name
   if (name) {
-    return name;
+    return name
   }
 
   // 从本地存储的映射中获取名称（临时的，向后兼容）
-  const localName = keyNameMapping.value[key.key_id];
+  const localName = keyNameMapping.value[key.key_id]
   if (localName) {
-    return localName;
+    return localName
   }
 
   // 最后显示密钥ID的前8位
-  return key.key_id ? `Key-${key.key_id.substring(0, 8)}` : 'Unnamed Key';
-};
+  return key.key_id ? `Key-${key.key_id.substring(0, 8)}` : 'Unnamed Key'
+}
 
 // 辅助函数：获取密钥类型显示名称
 const getKeyTypeName = (key: any) => {
-  const type = getKeyType(key);
-  return type === 'data' ? t('Data Key (DEK)') : t('Master Key (CMK)');
-};
+  const type = getKeyType(key)
+  return type === 'data' ? t('Data Key (DEK)') : t('Master Key (CMK)')
+}
 
 // 辅助函数：获取密钥类型颜色
 const getKeyTypeColor = (key: any) => {
-  const type = getKeyType(key);
-  return type === 'data' ? 'green' : 'purple';
-};
+  const type = getKeyType(key)
+  return type === 'data' ? 'green' : 'purple'
+}
 
 // 方法
 const getKmsStatusType = () => {
-  if (!hasConfiguration.value) return 'default';
+  if (!hasConfiguration.value) return 'default'
 
   // 处理Error状态（可能是对象格式）
   if (isErrorStatus(sseKmsForm.kms_status)) {
-    return 'danger';
+    return 'danger'
   }
 
   // 根据KMS状态返回不同的标签类型
   switch (sseKmsForm.kms_status) {
     case 'Running':
-      return sseKmsForm.kms_healthy ? 'success' : 'warning';
+      return sseKmsForm.kms_healthy ? 'success' : 'warning'
     case 'Configured':
-      return 'info';
+      return 'info'
     case 'Stopped':
-      return 'warning';
+      return 'warning'
     case 'Error':
-      return 'danger';
+      return 'danger'
     case 'NotConfigured':
-      return 'default';
+      return 'default'
     default:
-      return 'default';
+      return 'default'
   }
-};
+}
 
 const getKmsStatusText = () => {
-  if (!hasConfiguration.value) return t('Not Configured');
+  if (!hasConfiguration.value) return t('Not Configured')
 
   // 根据KMS状态返回不同的状态文本
   // 注意：后端的Error状态是 Error(String) 格式，会被序列化为对象
   if (isErrorStatus(sseKmsForm.kms_status)) {
-    return t('Error');
+    return t('Error')
   }
 
   switch (sseKmsForm.kms_status) {
     case 'Running':
-      return sseKmsForm.kms_healthy ? t('Running') : t('Running (Unhealthy)');
+      return sseKmsForm.kms_healthy ? t('Running') : t('Running (Unhealthy)')
     case 'Configured':
-      return t('Configured');
+      return t('Configured')
     case 'NotConfigured':
-      return t('Not Configured');
+      return t('Not Configured')
     default:
-      return t('Unknown');
+      return t('Unknown')
   }
-};
+}
 
 const getKmsStatusDescription = () => {
-  if (!hasConfiguration.value) return t('KMS server is not configured');
+  if (!hasConfiguration.value) return t('KMS server is not configured')
 
   // 处理Error状态（可能是对象格式）
   if (isErrorStatus(sseKmsForm.kms_status)) {
-    return t('KMS server has errors') + ': ' + sseKmsForm.kms_status.Error;
+    return t('KMS server has errors') + ': ' + sseKmsForm.kms_status.Error
   }
 
   // 根据KMS状态返回不同的描述
@@ -1377,100 +1168,100 @@ const getKmsStatusDescription = () => {
     case 'Running':
       // 如果KMS运行但配置详情为空，说明是配置详情不可见的状态
       if (sseKmsForm.kms_healthy && (!sseKmsForm.address || sseKmsForm.address === 'configured-but-hidden')) {
-        return t('KMS server is running, configuration details are private');
+        return t('KMS server is running, configuration details are private')
       }
-      return sseKmsForm.kms_healthy ? t('KMS server is running and healthy') : t('KMS server is running but unhealthy');
+      return sseKmsForm.kms_healthy ? t('KMS server is running and healthy') : t('KMS server is running but unhealthy')
     case 'Configured':
-      return t('KMS server is configured but not running');
+      return t('KMS server is configured but not running')
     case 'NotConfigured':
-      return t('KMS server is not configured');
+      return t('KMS server is not configured')
     default:
-      return t('KMS server status unknown');
+      return t('KMS server status unknown')
   }
-};
+}
 
 // 将后端的 key_state 映射到前端期望的状态值
 const mapKeyState = (key: any) => {
   // 后端使用 key_state 字段，前端使用 status 字段
-  const keyState = key.key_state || key.status;
+  const keyState = key.key_state || key.status
 
   switch (keyState) {
     case 'Enabled':
-      return 'Active';
+      return 'Active'
     case 'Disabled':
-      return 'Disabled';
+      return 'Disabled'
     case 'PendingDeletion':
-      return 'PendingDeletion';
+      return 'PendingDeletion'
     case 'Unavailable':
-      return 'Inactive';
+      return 'Inactive'
     default:
-      return keyState;
+      return keyState
   }
-};
+}
 
 // 获取密钥状态标签类型
 const getKeyStatusType = (key: any) => {
-  const status = mapKeyState(key);
+  const status = mapKeyState(key)
   switch (status) {
     case 'Active':
-      return 'success';
+      return 'success'
     case 'Inactive':
-      return 'default';
+      return 'default'
     case 'PendingDeletion':
-      return 'warning';
+      return 'warning'
     case 'Disabled':
-      return 'default';
+      return 'default'
     default:
-      return 'default';
+      return 'default'
   }
-};
+}
 
 // 获取密钥状态显示文本
 const getKeyStatusText = (key: any) => {
-  const status = mapKeyState(key);
+  const status = mapKeyState(key)
   switch (status) {
     case 'Active':
-      return t('Active');
+      return t('Active')
     case 'Inactive':
-      return t('Inactive');
+      return t('Inactive')
     case 'PendingDeletion':
-      return t('Pending Deletion');
+      return t('Pending Deletion')
     case 'Disabled':
-      return t('Disabled');
+      return t('Disabled')
     default:
-      return status;
+      return status
   }
-};
+}
 
 const getKmsTypeName = (kmsType: string) => {
   const names: Record<string, string> = {
     vault: t('HashiCorp Vault Transit Engine'),
-  };
-  return names[kmsType] || kmsType;
-};
+  }
+  return names[kmsType] || kmsType
+}
 
 // 获取认证方式显示名称
 const getAuthMethodName = () => {
   // 从 KMS 后端信息中获取认证方式
   if (sseKmsForm.kms_backend && sseKmsForm.kms_backend.auth_method) {
     if (sseKmsForm.kms_backend.auth_method.type === 'token') {
-      return t('Token');
+      return t('Token')
     } else if (sseKmsForm.kms_backend.auth_method.type === 'approle') {
-      return t('AppRole');
+      return t('AppRole')
     }
   }
-  return t('Not configured');
-};
+  return t('Not configured')
+}
 
 const showKeyDetails = async (keyId: string) => {
   try {
-    const keyDetails = await getKeyDetails(keyId);
+    const keyDetails = await getKeyDetails(keyId)
     // 可以在这里显示密钥详情模态框，或者跳转到详情页面
-    message.info(`Key Details: ${JSON.stringify(keyDetails, null, 2)}`);
+    message.info(`Key Details: ${JSON.stringify(keyDetails, null, 2)}`)
   } catch (error) {
-    message.error(t('Failed to get key details'));
+    message.error(t('Failed to get key details'))
   }
-};
+}
 
 const formatDate = (date: Date) => {
   return new Intl.DateTimeFormat('en-US', {
@@ -1479,30 +1270,30 @@ const formatDate = (date: Date) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  }).format(date);
-};
+  }).format(date)
+}
 
 // KMS配置编辑方法
 const startEditing = () => {
   // 如果是首次编辑，默认选中Vault
   if (!sseKmsForm.backend_type) {
-    sseKmsForm.backend_type = 'vault';
+    sseKmsForm.backend_type = 'vault'
   }
-  isEditing.value = true;
-};
+  isEditing.value = true
+}
 
 const cancelEditing = () => {
-  isEditing.value = false;
+  isEditing.value = false
   // 重置表单到当前配置
-  loadKMSStatus();
-};
+  loadKMSStatus()
+}
 
 // 统一的KMS状态和配置获取方法
 const loadKMSStatus = async () => {
   try {
     // 先获取KMS服务状态
-    const statusResponse = await getKMSStatus();
-    console.log('KMS Status Response:', statusResponse); // 临时调试日志
+    const statusResponse = await getKMSStatus()
+    console.log('KMS Status Response:', statusResponse) // 临时调试日志
 
     // 检查服务状态
     if (!statusResponse || statusResponse.status === 'NotConfigured') {
@@ -1523,41 +1314,41 @@ const loadKMSStatus = async () => {
         kms_status: 'NotConfigured',
         kms_backend: null,
         kms_healthy: false,
-      });
-      isEditing.value = true;
-      message.info(t('KMS is not configured, please configure it first'));
-      return;
+      })
+      isEditing.value = true
+      message.info(t('KMS is not configured, please configure it first'))
+      return
     }
 
     // 如果服务已配置，更新状态信息
-    sseKmsForm.kms_status = statusResponse.status;
-    sseKmsForm.kms_healthy = statusResponse.healthy;
+    sseKmsForm.kms_status = statusResponse.status
+    sseKmsForm.kms_healthy = statusResponse.healthy
 
     // 如果服务状态不是运行中，显示相应信息但不获取配置
     if (statusResponse.status !== 'Running') {
       if (statusResponse.status === 'Stopped') {
-        message.warning(t('KMS service is stopped'));
+        message.warning(t('KMS service is stopped'))
       } else if (statusResponse.status === 'Error') {
-        message.error(t('KMS service has errors'));
+        message.error(t('KMS service has errors'))
       }
       // 仍然尝试获取配置以显示当前设置
     }
 
     // 直接从状态响应中获取配置信息
     if (statusResponse.config_summary) {
-      const configResponse = statusResponse.config_summary;
-      console.log('Config Summary from Status:', configResponse); // 临时调试日志
-      console.log('Config Summary Type:', typeof configResponse);
-      console.log('Config Summary Keys:', Object.keys(configResponse || {}));
+      const configResponse = statusResponse.config_summary
+      console.log('Config Summary from Status:', configResponse) // 临时调试日志
+      console.log('Config Summary Type:', typeof configResponse)
+      console.log('Config Summary Keys:', Object.keys(configResponse || {}))
       if (configResponse.backend_summary) {
-        console.log('Backend Summary:', configResponse.backend_summary);
-        console.log('Backend Summary Keys:', Object.keys(configResponse.backend_summary));
+        console.log('Backend Summary:', configResponse.backend_summary)
+        console.log('Backend Summary Keys:', Object.keys(configResponse.backend_summary))
         if (configResponse.backend_summary.backend_type === 'vault') {
-          console.log('Vault Config:', configResponse.backend_summary);
-          console.log('Vault Address:', configResponse.backend_summary.address);
+          console.log('Vault Config:', configResponse.backend_summary)
+          console.log('Vault Address:', configResponse.backend_summary.address)
         }
       } else {
-        console.log('No backend_summary found in config_summary');
+        console.log('No backend_summary found in config_summary')
       }
 
       Object.assign(sseKmsForm, {
@@ -1566,38 +1357,38 @@ const loadKMSStatus = async () => {
         enable_cache: configResponse.enable_cache !== undefined ? configResponse.enable_cache : true,
         timeout_seconds: configResponse.timeout_seconds || 30,
         retry_attempts: configResponse.retry_attempts || 3,
-      });
+      })
 
       // 处理缓存配置
       if (configResponse.cache_summary) {
-        sseKmsForm.cache_ttl_seconds = configResponse.cache_summary.ttl_seconds || 300;
+        sseKmsForm.cache_ttl_seconds = configResponse.cache_summary.ttl_seconds || 300
       }
 
       // 根据backend_summary提取后端特定配置
       if (configResponse.backend_summary) {
         if (configResponse.backend_summary.backend_type === 'vault') {
           // Vault后端配置
-          const vaultConfig = configResponse.backend_summary;
+          const vaultConfig = configResponse.backend_summary
           Object.assign(sseKmsForm, {
             address: vaultConfig.address || '',
             mount_path: vaultConfig.mount_path || 'transit',
             kv_mount: vaultConfig.kv_mount || 'secret',
             key_path_prefix: vaultConfig.key_path_prefix || 'rustfs/kms/keys',
-          });
+          })
 
           // 设置认证方式（基于auth_method_type推断）
-          sseKmsForm.auth_type = vaultConfig.auth_method_type === 'approle' ? 'approle' : 'token';
-          sseKmsForm.vault_token = '***'; // 显示掩码表示已配置
-          sseKmsForm.vault_app_role_id = '';
-          sseKmsForm.vault_app_role_secret_id = '';
+          sseKmsForm.auth_type = vaultConfig.auth_method_type === 'approle' ? 'approle' : 'token'
+          sseKmsForm.vault_token = '***' // 显示掩码表示已配置
+          sseKmsForm.vault_app_role_id = ''
+          sseKmsForm.vault_app_role_secret_id = ''
         } else if (configResponse.backend_summary.backend_type === 'local') {
           // Local后端配置
-          const localConfig = configResponse.backend_summary;
+          const localConfig = configResponse.backend_summary
           Object.assign(sseKmsForm, {
             key_directory: localConfig.key_dir || '',
             has_master_key: localConfig.has_master_key || false,
             file_permissions: localConfig.file_permissions,
-          });
+          })
         }
       }
 
@@ -1611,15 +1402,15 @@ const loadKMSStatus = async () => {
         auth_method: {
           type: 'token', // 默认假设是token认证
         },
-      };
+      }
 
-      message.success(t('Configuration loaded successfully'));
+      message.success(t('Configuration loaded successfully'))
     } else {
       // 如果没有配置信息，但状态服务正常，说明KMS已配置但详情不可见
-      console.log('No config_summary in status response, KMS may be configured but details are private');
-      sseKmsForm.backend_type = statusResponse.backend_type?.toLowerCase() || 'vault';
-      sseKmsForm.default_key_id = 'configured-but-hidden'; // 设置一个标识表示已配置
-      sseKmsForm.address = 'configured-but-hidden';
+      console.log('No config_summary in status response, KMS may be configured but details are private')
+      sseKmsForm.backend_type = statusResponse.backend_type?.toLowerCase() || 'vault'
+      sseKmsForm.default_key_id = 'configured-but-hidden' // 设置一个标识表示已配置
+      sseKmsForm.address = 'configured-but-hidden'
 
       // 构建最小的后端信息用于显示
       sseKmsForm.kms_backend = {
@@ -1631,10 +1422,10 @@ const loadKMSStatus = async () => {
         auth_method: {
           type: 'configured-but-hidden',
         },
-      };
+      }
     }
   } catch (error) {
-    console.error('Failed to load KMS status:', error);
+    console.error('Failed to load KMS status:', error)
 
     // 检查是否是服务未初始化的错误
     if (error instanceof Error && error.message && error.message.includes('KMS service not initialized')) {
@@ -1655,91 +1446,91 @@ const loadKMSStatus = async () => {
         kms_status: 'NotConfigured',
         kms_backend: null,
         kms_healthy: false,
-      });
-      isEditing.value = true;
-      message.info(t('KMS service not initialized, please configure it first'));
+      })
+      isEditing.value = true
+      message.info(t('KMS service not initialized, please configure it first'))
     } else {
       // 其他错误，进入编辑模式
-      isEditing.value = true;
-      message.error(t('Failed to load KMS status'));
+      isEditing.value = true
+      message.error(t('Failed to load KMS status'))
     }
   }
-};
+}
 
 // 加载密钥列表
 const loadKeyList = async () => {
   try {
-    const response = await getKeyList();
-    console.log('Key List Response:', response); // 调试日志
-    console.log('Key List Response Type:', typeof response);
-    console.log('Key List Response Keys:', Object.keys(response || {}));
+    const response = await getKeyList()
+    console.log('Key List Response:', response) // 调试日志
+    console.log('Key List Response Type:', typeof response)
+    console.log('Key List Response Keys:', Object.keys(response || {}))
 
     // 适配新的API响应格式
     if (response && response.success !== false) {
-      kmsKeys.value = response.keys || [];
-      console.log('Loaded keys:', kmsKeys.value.length);
+      kmsKeys.value = response.keys || []
+      console.log('Loaded keys:', kmsKeys.value.length)
     } else {
-      console.log('Key list failed:', response);
-      message.warning(response?.message || t('Failed to load key list'));
-      kmsKeys.value = [];
+      console.log('Key list failed:', response)
+      message.warning(response?.message || t('Failed to load key list'))
+      kmsKeys.value = []
     }
   } catch (error) {
-    console.error('Failed to load key list:', error);
+    console.error('Failed to load key list:', error)
     console.error('Error details:', {
       message: (error as any)?.message,
       status: (error as any)?.status,
       response: (error as any)?.response,
-    });
-    message.error(t('Failed to load key list'));
-    kmsKeys.value = [];
+    })
+    message.error(t('Failed to load key list'))
+    kmsKeys.value = []
   }
-};
+}
 
 // 刷新密钥列表
 const refreshKeyList = async () => {
   try {
-    refreshingKeys.value = true;
-    await loadKeyList();
-    message.success(t('Key list refreshed'));
+    refreshingKeys.value = true
+    await loadKeyList()
+    message.success(t('Key list refreshed'))
   } catch (error) {
-    console.error('Failed to refresh key list:', error);
-    message.error(t('Failed to refresh key list'));
+    console.error('Failed to refresh key list:', error)
+    message.error(t('Failed to refresh key list'))
   } finally {
-    refreshingKeys.value = false;
+    refreshingKeys.value = false
   }
-};
+}
 
 // 设置为本地开发
 const setLocalDevelopment = async () => {
   try {
     await configureKMS({
       kms_type: 'local',
-    });
+    })
 
-    message.success(t('Local development mode set successfully'));
+    message.success(t('Local development mode set successfully'))
 
     // 重新加载配置状态
-    await loadKMSStatus();
+    await loadKMSStatus()
   } catch (error) {
-    message.error(t('Failed to set local development mode'));
+    message.error(t('Failed to set local development mode'))
   }
-};
+}
 // setLocalDevelopment();
 
 const validateSseKmsForm = () => {
   if (!sseKmsForm.address || !String(sseKmsForm.address).trim()) {
-    message.error(t('Please enter Vault server address'));
-    return false;
+    message.error(t('Please enter Vault server address'))
+    return false
   }
 
   if (!sseKmsForm.default_key_id || !String(sseKmsForm.default_key_id).trim()) {
-    message.error(t('Please enter default key ID'));
-    return false;
+    message.error(t('Please enter default key ID'))
+    return false
   }
 
   if (sseKmsForm.auth_type === 'token' && (!sseKmsForm.vault_token || !String(sseKmsForm.vault_token).trim())) {
-    message.error(t('Please enter Vault token'));
-    return false;
+    message.error(t('Please enter Vault token'))
+    return false
   }
 
   if (
@@ -1749,47 +1540,47 @@ const validateSseKmsForm = () => {
       !sseKmsForm.vault_app_role_secret_id ||
       !String(sseKmsForm.vault_app_role_secret_id).trim())
   ) {
-    message.error(t('Please enter both Role ID and Secret ID'));
-    return false;
+    message.error(t('Please enter both Role ID and Secret ID'))
+    return false
   }
 
-  return true;
-};
+  return true
+}
 
 const validateKeyForm = () => {
   if (!keyForm.keyName || !keyForm.keyName.toString().trim()) {
-    message.error(t('Please enter key name'));
-    return false;
+    message.error(t('Please enter key name'))
+    return false
   }
-  return true;
-};
+  return true
+}
 
 const validateBucketEncryptForm = () => {
   if (!bucketEncryptForm.encryptionType) {
-    message.error(t('Please select encryption type'));
-    return false;
+    message.error(t('Please select encryption type'))
+    return false
   }
 
   if (bucketEncryptForm.encryptionType === 'SSE-KMS' && !bucketEncryptForm.kmsKeyId) {
-    message.error(t('Please select a KMS key for SSE-KMS encryption'));
-    return false;
+    message.error(t('Please select a KMS key for SSE-KMS encryption'))
+    return false
   }
 
   if (!selectedBucket.value) {
-    message.error(t('No bucket selected'));
-    return false;
+    message.error(t('No bucket selected'))
+    return false
   }
 
-  return true;
-};
+  return true
+}
 
 const saveConfiguration = async () => {
   if (!validateSseKmsForm()) {
-    return;
+    return
   }
 
   try {
-    saving.value = true;
+    saving.value = true
 
     // 调用API保存KMS配置 - 适配新的平铺参数格式
     const configData: any = {
@@ -1803,7 +1594,7 @@ const saveConfiguration = async () => {
       default_key_id: sseKmsForm.default_key_id || null,
       enable_cache: sseKmsForm.enable_cache,
       cache_ttl_seconds: sseKmsForm.cache_ttl_seconds || 600,
-    };
+    }
 
     // 根据选择的认证方式添加相应的字段
     if (sseKmsForm.auth_type === 'token') {
@@ -1811,13 +1602,13 @@ const saveConfiguration = async () => {
         // Token 认证方式
         configData.auth_method = {
           token: sseKmsForm.vault_token,
-        };
+        }
       } else if (sseKmsForm.vault_token === '***') {
         // 如果显示的是掩码，说明已经有配置，不需要重新设置认证信息
-        delete configData.auth_method;
+        delete configData.auth_method
       } else {
-        message.error(t('Please enter Vault token'));
-        return;
+        message.error(t('Please enter Vault token'))
+        return
       }
     } else if (sseKmsForm.auth_type === 'approle') {
       if (
@@ -1830,85 +1621,85 @@ const saveConfiguration = async () => {
         configData.auth_method = {
           role_id: sseKmsForm.vault_app_role_id,
           secret_id: sseKmsForm.vault_app_role_secret_id,
-        };
+        }
       } else if (sseKmsForm.vault_app_role_id === '***' || sseKmsForm.vault_app_role_secret_id === '***') {
         // 如果显示的是掩码，说明已经有配置，不需要重新设置认证信息
-        delete configData.auth_method;
+        delete configData.auth_method
       } else {
-        message.error(t('Please enter both Role ID and Secret ID'));
-        return;
+        message.error(t('Please enter both Role ID and Secret ID'))
+        return
       }
     } else {
-      message.error(t('Please select authentication method'));
-      return;
+      message.error(t('Please select authentication method'))
+      return
     }
 
-    const response = await configureKMS(configData);
+    const response = await configureKMS(configData)
 
     // 处理配置响应，更新KMS状态
     if (response && response.status) {
-      sseKmsForm.kms_status = response.status;
+      sseKmsForm.kms_status = response.status
       // 如果配置成功，假设服务健康
       if (response.success !== false) {
-        sseKmsForm.kms_healthy = true;
+        sseKmsForm.kms_healthy = true
       }
     }
 
     // 更新显示的配置信息（保留用户刚刚输入的值）
     // 这样用户可以看到他们刚刚保存的配置
     if (configData.address) {
-      sseKmsForm.address = configData.address;
+      sseKmsForm.address = configData.address
     }
 
-    message.success(t('Configuration saved successfully'));
-    isEditing.value = false;
-    loadKMSStatus();
+    message.success(t('Configuration saved successfully'))
+    isEditing.value = false
+    loadKMSStatus()
   } catch (error) {
-    console.error('KMS Configuration save error:', error);
-    let errorMessage = t('Failed to save configuration');
+    console.error('KMS Configuration save error:', error)
+    let errorMessage = t('Failed to save configuration')
 
     if (error && typeof error === 'object' && 'message' in error) {
-      errorMessage += `: ${error.message}`;
+      errorMessage += `: ${error.message}`
     } else if (error && typeof error === 'object' && 'response' in error) {
-      const response = error.response as any;
+      const response = error.response as any
       if (response?.data?.message) {
-        errorMessage += `: ${response.data.message}`;
+        errorMessage += `: ${response.data.message}`
       } else if (response?.statusText) {
-        errorMessage += `: ${response.statusText}`;
+        errorMessage += `: ${response.statusText}`
       }
     } else if (typeof error === 'string') {
-      errorMessage += `: ${error}`;
+      errorMessage += `: ${error}`
     }
 
-    message.error(errorMessage);
+    message.error(errorMessage)
   } finally {
-    saving.value = false;
+    saving.value = false
   }
-};
+}
 
 const deleteKeyClick = (key: any) => {
   // 如果密钥已经在删除中，显示提示
   if (mapKeyState(key) === 'PendingDeletion') {
-    message.info(t('Key is already pending deletion'));
-    return;
+    message.info(t('Key is already pending deletion'))
+    return
   }
 
-  keyToDelete.value = key;
-  showDeleteModal.value = true;
-};
+  keyToDelete.value = key
+  showDeleteModal.value = true
+}
 
 const forceDeleteKeyClick = (key: any) => {
-  keyToForceDelete.value = key;
-  showForceDeleteModal.value = true;
-};
+  keyToForceDelete.value = key
+  showForceDeleteModal.value = true
+}
 
 const saveKey = async () => {
   if (!validateKeyForm()) {
-    return;
+    return
   }
 
   try {
-    savingKey.value = true;
+    savingKey.value = true
 
     // 调用API创建密钥 - 适配新的参数格式
     const createKeyData = {
@@ -1920,113 +1711,113 @@ const saveKey = async () => {
         created_by: 'console',
         created_at: new Date().toISOString(),
       },
-    };
+    }
 
-    console.log('Creating key with data:', createKeyData);
-    const response = await createKey(createKeyData);
-    console.log('Create key response:', response);
+    console.log('Creating key with data:', createKeyData)
+    const response = await createKey(createKeyData)
+    console.log('Create key response:', response)
 
     // 密钥名称已通过 description 字段保存到后端，无需额外处理
 
-    message.success(t('Key created successfully'));
-    showCreateKeyModal.value = false;
+    message.success(t('Key created successfully'))
+    showCreateKeyModal.value = false
 
     // 重置表单
     Object.assign(keyForm, {
       keyName: '',
       algorithm: 'AES-256',
-    });
+    })
 
     // 重新加载密钥列表
-    await loadKeyList();
+    await loadKeyList()
   } catch (error) {
-    message.error(t('Failed to save key'));
+    message.error(t('Failed to save key'))
   } finally {
-    savingKey.value = false;
+    savingKey.value = false
   }
-};
+}
 
 const confirmDeleteKey = async () => {
   try {
-    deletingKey.value = true;
+    deletingKey.value = true
 
     // 调用API删除密钥 - 适配新的参数格式
-    await deleteKey(keyToDelete.value.key_id);
+    await deleteKey(keyToDelete.value.key_id)
 
     // 密钥删除后，名称信息也随之从后端删除
 
-    message.success(t('Key deleted successfully'));
+    message.success(t('Key deleted successfully'))
 
-    showDeleteModal.value = false;
-    keyToDelete.value = null;
+    showDeleteModal.value = false
+    keyToDelete.value = null
 
     // 重新加载密钥列表
-    await loadKeyList();
+    await loadKeyList()
   } catch (error) {
-    message.error(t('Failed to delete key'));
+    message.error(t('Failed to delete key'))
   } finally {
-    deletingKey.value = false;
+    deletingKey.value = false
   }
-};
+}
 
 const confirmForceDeleteKey = async () => {
   try {
-    forceDeleting.value = true;
+    forceDeleting.value = true
 
     // 调用强制删除API
-    await forceDeleteKey(keyToForceDelete.value.key_id);
+    await forceDeleteKey(keyToForceDelete.value.key_id)
 
-    message.success(t('Key force deleted successfully'));
-    showForceDeleteModal.value = false;
-    keyToForceDelete.value = null;
+    message.success(t('Key force deleted successfully'))
+    showForceDeleteModal.value = false
+    keyToForceDelete.value = null
 
     // 重新加载密钥列表
-    await loadKeyList();
+    await loadKeyList()
   } catch (error) {
-    message.error(t('Failed to force delete key'));
+    message.error(t('Failed to force delete key'))
   } finally {
-    forceDeleting.value = false;
+    forceDeleting.value = false
   }
-};
+}
 
 // 新增功能方法
 const refreshStatus = async () => {
   try {
-    refreshingStatus.value = true;
-    await loadKMSStatus();
-    message.success(t('Status refreshed successfully'));
+    refreshingStatus.value = true
+    await loadKMSStatus()
+    message.success(t('Status refreshed successfully'))
   } catch (error) {
-    message.error(t('Failed to refresh status'));
+    message.error(t('Failed to refresh status'))
   } finally {
-    refreshingStatus.value = false;
+    refreshingStatus.value = false
   }
-};
+}
 
 const clearKMSCache = async () => {
   try {
-    clearingCache.value = true;
-    const result = await clearCache();
+    clearingCache.value = true
+    const result = await clearCache()
     if (result.status === 'success') {
-      message.success(t('Cache cleared successfully'));
+      message.success(t('Cache cleared successfully'))
     } else {
-      message.warning(result.message || t('Cache clear completed with warnings'));
+      message.warning(result.message || t('Cache clear completed with warnings'))
     }
   } catch (error) {
-    message.error(t('Failed to clear cache'));
+    message.error(t('Failed to clear cache'))
   } finally {
-    clearingCache.value = false;
+    clearingCache.value = false
   }
-};
+}
 
 const viewDetailedStatus = async () => {
   try {
-    const detailedStatus = await getDetailedStatus();
-    detailedStatusData.value = detailedStatus;
-    showDetailedStatusModal.value = true;
+    const detailedStatus = await getDetailedStatus()
+    detailedStatusData.value = detailedStatus
+    showDetailedStatusModal.value = true
   } catch (error) {
-    message.error(t('Failed to get detailed status'));
+    message.error(t('Failed to get detailed status'))
   }
-};
+}
 
 // 监听 KMS 类型变化，重置 vault 字段为默认值
 watch(
@@ -2034,56 +1825,56 @@ watch(
   newValue => {
     if (newValue === 'vault') {
       // 切换到 vault 类型时，重置 vault 字段为默认值
-      sseKmsForm.mount_path = 'transit';
-      sseKmsForm.timeout_seconds = 30;
+      sseKmsForm.mount_path = 'transit'
+      sseKmsForm.timeout_seconds = 30
     }
   }
-);
+)
 
 // 启动KMS服务
 const startKMSService = async () => {
   try {
-    startingKMS.value = true;
-    const response = await startKMS();
+    startingKMS.value = true
+    const response = await startKMS()
 
     if (response && response.success) {
-      message.success(t('KMS service started successfully'));
-      sseKmsForm.kms_status = response.status;
-      await loadKMSStatus();
+      message.success(t('KMS service started successfully'))
+      sseKmsForm.kms_status = response.status
+      await loadKMSStatus()
 
       // 刷新密钥列表
-      await loadKeyList();
+      await loadKeyList()
     } else {
-      message.error(t('Failed to start KMS service') + ': ' + (response?.message || 'Unknown error'));
+      message.error(t('Failed to start KMS service') + ': ' + (response?.message || 'Unknown error'))
     }
   } catch (error) {
-    console.error('Failed to start KMS service:', error);
-    message.error(t('Failed to start KMS service'));
+    console.error('Failed to start KMS service:', error)
+    message.error(t('Failed to start KMS service'))
   } finally {
-    startingKMS.value = false;
+    startingKMS.value = false
   }
-};
+}
 
 // 停止KMS服务
 const stopKMSService = async () => {
   try {
-    stoppingKMS.value = true;
-    const response = await stopKMS();
+    stoppingKMS.value = true
+    const response = await stopKMS()
 
     if (response && response.success) {
-      message.success(t('KMS service stopped successfully'));
-      sseKmsForm.kms_status = response.status;
-      await loadKMSStatus();
+      message.success(t('KMS service stopped successfully'))
+      sseKmsForm.kms_status = response.status
+      await loadKMSStatus()
     } else {
-      message.error(t('Failed to stop KMS service') + ': ' + (response?.message || 'Unknown error'));
+      message.error(t('Failed to stop KMS service') + ': ' + (response?.message || 'Unknown error'))
     }
   } catch (error) {
-    console.error('Failed to stop KMS service:', error);
-    message.error(t('Failed to stop KMS service'));
+    console.error('Failed to stop KMS service:', error)
+    message.error(t('Failed to stop KMS service'))
   } finally {
-    stoppingKMS.value = false;
+    stoppingKMS.value = false
   }
-};
+}
 
 // =========================
 // Bucket 加密管理相关方法
@@ -2091,35 +1882,35 @@ const stopKMSService = async () => {
 
 // 加载bucket列表
 const loadBucketList = async () => {
-  bucketListLoading.value = true;
+  bucketListLoading.value = true
   try {
-    const response = await listBuckets();
+    const response = await listBuckets()
     if (response && response.Buckets) {
       // 并行获取每个bucket的加密配置
       const bucketList = await Promise.all(
         response.Buckets.map(async (bucket: any) => {
           try {
-            const encryptionConfig = await getBucketEncryption(bucket.Name);
+            const encryptionConfig = await getBucketEncryption(bucket.Name)
 
-            let encryptionStatus = 'Disabled';
-            let encryptionType = '';
-            let encryptionAlgorithm = '';
-            let kmsKeyId = '';
+            let encryptionStatus = 'Disabled'
+            let encryptionType = ''
+            let encryptionAlgorithm = ''
+            let kmsKeyId = ''
 
-            const rules = encryptionConfig?.ServerSideEncryptionConfiguration?.Rules ?? [];
-            const rule = rules[0];
+            const rules = encryptionConfig?.ServerSideEncryptionConfiguration?.Rules ?? []
+            const rule = rules[0]
 
             if (rule?.ApplyServerSideEncryptionByDefault) {
-              encryptionStatus = 'Enabled';
-              const algorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm;
+              encryptionStatus = 'Enabled'
+              const algorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm
 
               if (algorithm === 'aws:kms') {
-                encryptionType = 'SSE-KMS';
-                encryptionAlgorithm = 'AES-256 (KMS)';
-                kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID || '';
+                encryptionType = 'SSE-KMS'
+                encryptionAlgorithm = 'AES-256 (KMS)'
+                kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID || ''
               } else if (algorithm === 'AES256') {
-                encryptionType = 'SSE-S3';
-                encryptionAlgorithm = 'AES-256 (S3)';
+                encryptionType = 'SSE-S3'
+                encryptionAlgorithm = 'AES-256 (S3)'
               }
             }
 
@@ -2130,7 +1921,7 @@ const loadBucketList = async () => {
               encryptionType,
               encryptionAlgorithm,
               kmsKeyId,
-            };
+            }
           } catch (error) {
             // 如果获取加密配置失败（如404），则认为未配置加密
             return {
@@ -2140,57 +1931,57 @@ const loadBucketList = async () => {
               encryptionType: '',
               encryptionAlgorithm: '',
               kmsKeyId: '',
-            };
+            }
           }
         })
-      );
+      )
 
-      buckets.value = bucketList;
+      buckets.value = bucketList
     }
   } catch (error) {
-    console.error('Failed to load bucket list:', error);
-    message.error(t('Failed to load bucket list'));
+    console.error('Failed to load bucket list:', error)
+    message.error(t('Failed to load bucket list'))
   } finally {
-    bucketListLoading.value = false;
+    bucketListLoading.value = false
   }
-};
+}
 
 // 刷新bucket列表
 const refreshBucketList = async () => {
-  await loadBucketList();
-  message.success(t('Bucket list refreshed'));
-};
+  await loadBucketList()
+  message.success(t('Bucket list refreshed'))
+}
 
 // 配置bucket加密
 const configureBucketEncryption = (bucket: any) => {
-  selectedBucket.value = bucket;
+  selectedBucket.value = bucket
 
   // 初始化表单数据
   if (bucket.encryptionStatus === 'Enabled') {
-    bucketEncryptForm.encryptionType = bucket.encryptionType;
-    bucketEncryptForm.kmsKeyId = bucket.kmsKeyId || '';
+    bucketEncryptForm.encryptionType = bucket.encryptionType
+    bucketEncryptForm.kmsKeyId = bucket.kmsKeyId || ''
   } else {
-    bucketEncryptForm.encryptionType = '';
-    bucketEncryptForm.kmsKeyId = '';
+    bucketEncryptForm.encryptionType = ''
+    bucketEncryptForm.kmsKeyId = ''
   }
 
-  showBucketEncryptModal.value = true;
-};
+  showBucketEncryptModal.value = true
+}
 
 // 移除bucket加密
 const removeBucketEncryption = (bucket: any) => {
-  selectedBucket.value = bucket;
-  showRemoveEncryptModal.value = true;
-};
+  selectedBucket.value = bucket
+  showRemoveEncryptModal.value = true
+}
 
 // 保存bucket加密配置
 const saveBucketEncryption = async () => {
   if (!validateBucketEncryptForm()) {
-    return;
+    return
   }
 
   try {
-    savingBucketEncryption.value = true;
+    savingBucketEncryption.value = true
 
     const encryptionConfig: any = {
       Rules: [
@@ -2198,74 +1989,74 @@ const saveBucketEncryption = async () => {
           ApplyServerSideEncryptionByDefault: {},
         },
       ],
-    };
-
-    if (bucketEncryptForm.encryptionType === 'SSE-KMS') {
-      encryptionConfig.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm = 'aws:kms';
-      encryptionConfig.Rules[0].ApplyServerSideEncryptionByDefault.KMSMasterKeyID = bucketEncryptForm.kmsKeyId;
-    } else if (bucketEncryptForm.encryptionType === 'SSE-S3') {
-      encryptionConfig.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm = 'AES256';
     }
 
-    await putBucketEncryption(selectedBucket.value.name, encryptionConfig);
+    if (bucketEncryptForm.encryptionType === 'SSE-KMS') {
+      encryptionConfig.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm = 'aws:kms'
+      encryptionConfig.Rules[0].ApplyServerSideEncryptionByDefault.KMSMasterKeyID = bucketEncryptForm.kmsKeyId
+    } else if (bucketEncryptForm.encryptionType === 'SSE-S3') {
+      encryptionConfig.Rules[0].ApplyServerSideEncryptionByDefault.SSEAlgorithm = 'AES256'
+    }
 
-    message.success(t('Bucket encryption configured successfully'));
-    showBucketEncryptModal.value = false;
+    await putBucketEncryption(selectedBucket.value.name, encryptionConfig)
+
+    message.success(t('Bucket encryption configured successfully'))
+    showBucketEncryptModal.value = false
 
     // 刷新bucket列表
-    await loadBucketList();
+    await loadBucketList()
   } catch (error: any) {
-    console.error('Failed to configure bucket encryption:', error);
-    message.error(t('Failed to configure bucket encryption') + ': ' + error.message);
+    console.error('Failed to configure bucket encryption:', error)
+    message.error(t('Failed to configure bucket encryption') + ': ' + error.message)
   } finally {
-    savingBucketEncryption.value = false;
+    savingBucketEncryption.value = false
   }
-};
+}
 
 // 确认移除bucket加密
 const confirmRemoveBucketEncryption = async () => {
   if (!selectedBucket.value) {
-    message.error(t('No bucket selected'));
-    return;
+    message.error(t('No bucket selected'))
+    return
   }
 
-  removingBucketEncryption.value = true;
+  removingBucketEncryption.value = true
   try {
-    await deleteBucketEncryption(selectedBucket.value.name);
-    message.success(t('Bucket encryption removed successfully'));
-    showRemoveEncryptModal.value = false;
+    await deleteBucketEncryption(selectedBucket.value.name)
+    message.success(t('Bucket encryption removed successfully'))
+    showRemoveEncryptModal.value = false
 
     // 刷新bucket列表
-    await loadBucketList();
+    await loadBucketList()
   } catch (error: any) {
-    console.error('Failed to remove bucket encryption:', error);
-    message.error(t('Failed to remove bucket encryption') + ': ' + error.message);
+    console.error('Failed to remove bucket encryption:', error)
+    message.error(t('Failed to remove bucket encryption') + ': ' + error.message)
   } finally {
-    removingBucketEncryption.value = false;
+    removingBucketEncryption.value = false
   }
-};
+}
 
 // 格式化日期时间
 const formatDateTime = (dateString: string) => {
   try {
-    return new Date(dateString).toLocaleString();
+    return new Date(dateString).toLocaleString()
   } catch (error) {
-    return dateString;
+    return dateString
   }
-};
+}
 
 // 页面加载时获取当前配置和密钥列表
 onMounted(async () => {
-  await loadKMSStatus();
+  await loadKMSStatus()
 
   // 只有在KMS配置正确且状态为Running时才加载密钥列表
   if (sseKmsForm.kms_status === 'Running' && sseKmsForm.kms_healthy) {
-    await loadKeyList();
+    await loadKeyList()
   }
 
   // 加载bucket列表
-  await loadBucketList();
-});
+  await loadBucketList()
+})
 </script>
 
 <style scoped>

@@ -6,7 +6,7 @@
         {{ t('Delete Record') }}
       </Button>
     </div>
-    <AppProgress :value="task.progress" :processing="task.status === 'deleting'" :height="2" />
+    <Progress :model-value="task.progress" class="h-[2px]" />
     <div class="flex items-center justify-between text-muted-foreground">
       <div></div>
       <div class="text-muted-foreground">
@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
-import { AppProgress } from '@/components/app'
+import Progress from '@/components/ui/progress/Progress.vue'
 import type { DeleteTask } from '~/lib/delete-task-manager'
 import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
 

@@ -1,12 +1,11 @@
 <script lang="ts" setup>
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { configManager } from '~/utils/config'
-import { AppCard } from '@/components/app'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -92,40 +91,32 @@ const currentItems = computed(() => [
 </script>
 
 <template>
-  <div class="flex flex-col gap-6">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Settings') }}</h1>
       </template>
     </page-header>
 
-    <page-content class="flex flex-col gap-6">
-      <AppCard padded class="space-y-4">
+    <div class="flex flex-col gap-6">
+      <div class="space-y-4">
         <h2 class="text-lg font-semibold">{{ t('Current Configuration') }}</h2>
         <dl class="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div
-            v-for="item in currentItems"
-            :key="item.label"
-            class="rounded-md border p-3"
-          >
+          <div v-for="item in currentItems" :key="item.label" class="rounded-md border p-3">
             <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
               {{ item.label }}
             </dt>
             <dd class="mt-1 text-sm">{{ item.value }}</dd>
           </div>
         </dl>
-      </AppCard>
+      </div>
 
-      <AppCard padded class="space-y-4">
+      <div class="space-y-4">
         <h2 class="text-lg font-semibold">{{ t('Server Configuration') }}</h2>
         <form class="space-y-4" @submit.prevent="saveConfig">
           <div class="space-y-2">
             <Label class="text-sm font-medium">{{ t('Server Address') }}</Label>
-            <Input
-              v-model="formData.serverHost"
-              :placeholder="t('Please enter server address (e.g., http://localhost:9000)')"
-              autocomplete="off"
-            />
+            <Input v-model="formData.serverHost" :placeholder="t('Please enter server address (e.g., http://localhost:9000)')" autocomplete="off" />
             <p class="text-xs text-muted-foreground">
               {{ t('Example: http://localhost:9000 or https://your-domain.com') }}
             </p>
@@ -151,7 +142,7 @@ const currentItems = computed(() => [
             </ul>
           </AlertDescription>
         </Alert>
-      </AppCard>
-    </page-content>
-  </div>
+      </div>
+    </div>
+  </page>
 </template>

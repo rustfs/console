@@ -1,5 +1,5 @@
 <template>
-  <AppCard padded class="space-y-4">
+  <div class="space-y-4">
     <div class="grid gap-4 md:grid-cols-2">
       <div class="space-y-2">
         <Label>{{ t('Access Key') }}</Label>
@@ -35,7 +35,7 @@
               {{ t('Automatically inherit the main account policy when enabled.') }}
             </p>
           </div>
-          <AppSwitch v-model="formModel.impliedPolicy" />
+          <Switch v-model:checked="formModel.impliedPolicy" />
         </div>
         <div class="flex items-center justify-between">
           <div>
@@ -44,7 +44,7 @@
               {{ formModel.accountStatus === 'on' ? t('Available') : t('Disabled') }}
             </p>
           </div>
-          <AppSwitch v-model="statusBoolean" />
+          <Switch v-model:checked="statusBoolean" />
         </div>
       </div>
     </div>
@@ -62,14 +62,15 @@
         {{ t('Submit') }}
       </Button>
     </div>
-  </AppCard>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppCard, AppDateTimePicker, AppSwitch } from '@/components/app'
+import { AppDateTimePicker } from '@/components/app'
+import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import dayjs from 'dayjs'
 import { computed, reactive, ref, watch } from 'vue'

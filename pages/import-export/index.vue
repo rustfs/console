@@ -1,16 +1,27 @@
 <template>
-  <div class="flex flex-col gap-6">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Import/Export') }}</h1>
       </template>
     </page-header>
 
-    <page-content class="flex flex-col gap-6">
-      <AppTabs :tabs="tabs" v-model="activeTab">
-        <template #iam>
+    <div class="flex flex-col gap-6">
+      <Tabs v-model="activeTab" class="flex flex-col gap-6">
+        <TabsList class="w-full justify-start overflow-x-auto">
+          <TabsTrigger
+            v-for="tab in tabs"
+            :key="tab.key"
+            :value="tab.key"
+            class="capitalize"
+          >
+            {{ tab.label }}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="iam" class="mt-0">
           <div class="space-y-6">
-            <AppCard padded class="space-y-6">
+            <div class="space-y-6">
               <div class="space-y-2">
                 <h2 class="text-lg font-semibold">{{ t('IAM Configuration Export') }}</h2>
                 <p class="text-sm text-muted-foreground">
@@ -61,9 +72,9 @@
                   <span>{{ isLoading ? t('Exporting...') : t('Export Now') }}</span>
                 </Button>
               </div>
-            </AppCard>
+            </div>
 
-            <AppCard padded class="space-y-6">
+            <div class="space-y-6">
               <div class="space-y-2">
                 <h2 class="text-lg font-semibold">{{ t('IAM Configuration Import') }}</h2>
                 <p class="text-sm text-muted-foreground">
@@ -74,11 +85,7 @@
               <div class="space-y-4">
                 <div class="space-y-3">
                   <h3 class="text-sm font-medium">{{ t('Select ZIP File') }}</h3>
-                  <AppUploadZone
-                    :accept="'.zip'"
-                    :disabled="isLoading"
-                    @change="handleFileSelect"
-                  >
+                  <AppUploadZone :accept="'.zip'" :disabled="isLoading" @change="handleFileSelect">
                     <p class="text-base font-medium">{{ t('Click or drag ZIP file to this area to upload') }}</p>
                     <p class="text-sm text-muted-foreground">
                       {{ t('Only ZIP files are supported, and file size should not exceed 10MB') }}
@@ -109,33 +116,28 @@
                       }}
                     </p>
                   </div>
-                  <Button
-                    variant="default"
-                    size="lg"
-                    :loading="isLoading"
-                    :disabled="isLoading || !selectedFile"
-                    @click="handleImportIam"
-                  >
+                  <Button variant="default" size="lg" :loading="isLoading" :disabled="isLoading || !selectedFile" @click="handleImportIam">
                     <Icon name="ri:upload-2-line" class="size-4" />
                     <span>{{ isLoading ? t('Importing...') : t('Import Now') }}</span>
                   </Button>
                 </div>
               </div>
-            </AppCard>
+            </div>
           </div>
-        </template>
-      </AppTabs>
-    </page-content>
-  </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  </page>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppCard, AppTabs, AppUploadZone } from '@/components/app'
+import { AppUploadZone } from '@/components/app'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { ref, computed } from 'vue'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()

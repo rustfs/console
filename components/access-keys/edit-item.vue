@@ -3,9 +3,11 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import Spinner from '@/components/ui/spinner/Spinner.vue'
 
-import { AppCard, AppModal, AppSwitch, AppTextarea } from '@/components/app'
+import { AppModal } from '@/components/app'
 import AppDateTimePicker from '@/components/app/AppDateTimePicker.vue'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import dayjs from 'dayjs'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -97,7 +99,7 @@ async function submitForm() {
     size="lg"
     :close-on-backdrop="false"
   >
-    <AppCard padded class="space-y-4">
+    <div class="space-y-4">
       <div class="grid gap-2">
         <Label>{{ t('Access Key') }}</Label>
         <Input v-model="formModel.accesskey" disabled />
@@ -120,14 +122,14 @@ async function submitForm() {
 
       <div class="grid gap-2">
         <Label>{{ t('Description') }}</Label>
-        <AppTextarea v-model="formModel.description" :rows="3" />
+        <Textarea v-model="formModel.description" :rows="3" />
       </div>
 
       <div class="flex items-center justify-between rounded-md border p-3">
         <span class="text-sm font-medium">{{ t('Status') }}</span>
-        <AppSwitch v-model="statusBoolean" />
+        <Switch v-model:checked="statusBoolean" />
       </div>
-    </AppCard>
+    </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">

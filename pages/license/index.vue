@@ -6,14 +6,14 @@
       </template>
     </page-header>
 
-    <page-content class="space-y-6">
+    <div class="space-y-6">
       <AppCard class="space-y-4">
         <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div class="flex flex-col gap-2">
             <div class="flex items-center gap-3">
-              <AppBadge :variant="hasValidLicense ? 'primary' : 'danger'">
+              <Badge :variant="hasValidLicense ? 'default' : 'destructive'">
                 {{ t('Enterprise License') }}
-              </AppBadge>
+              </Badge>
               <span :class="['text-sm font-medium', hasValidLicense ? 'text-emerald-600' : 'text-rose-500']">
                 {{ t('Status') }}：{{ hasValidLicense ? t('Normal') : t('Expired') }}
               </span>
@@ -74,7 +74,7 @@
                 <td class="px-4 py-3 font-medium">{{ item.name }}</td>
                 <td class="px-4 py-3 text-muted-foreground">{{ item.description }}</td>
                 <td class="px-4 py-3">
-                  <AppBadge variant="primary">{{ item.status }}</AppBadge>
+                  <Badge variant="default">{{ item.status }}</Badge>
                 </td>
               </tr>
             </tbody>
@@ -91,7 +91,7 @@
           </div>
         </dl>
       </AppCard>
-    </page-content>
+    </div>
   </div>
 
   <LicenseArticle v-else />
@@ -101,8 +101,9 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
+import { AppCard } from '@/components/app'
+import { Badge } from '@/components/ui/badge'
 import dayjs from 'dayjs'
-import { AppBadge, AppCard } from '@/components/app'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SiteConfig } from '~/types/config'

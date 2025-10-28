@@ -1,9 +1,9 @@
 <template>
   <AppModal v-model="visible" :title="group.name || t('Members')" size="lg" :close-on-backdrop="false">
-    <AppCard padded class="space-y-4">
+    <div class="space-y-4">
       <div class="flex items-center justify-between rounded-md border px-3 py-2">
         <span class="text-sm text-muted-foreground">{{ t('Status') }}</span>
-        <AppSwitch v-model="statusBoolean" />
+        <Switch v-model:checked="statusBoolean" />
       </div>
 
       <Tabs v-model="activeTab" class="flex flex-col gap-4">
@@ -19,12 +19,13 @@
           <users-group-policies :group="group" @search="getGroupData(group.name)" />
         </TabsContent>
       </Tabs>
-    </AppCard>
+    </div>
   </AppModal>
 </template>
 
 <script setup lang="ts">
-import { AppCard, AppModal, AppSwitch } from '@/components/app'
+import { AppModal } from '@/components/app'
+import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

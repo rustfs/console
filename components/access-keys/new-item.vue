@@ -5,7 +5,7 @@
     size="lg"
     :close-on-backdrop="false"
   >
-    <AppCard padded class="space-y-4">
+    <div class="space-y-4">
       <div class="grid gap-2">
         <Label for="create-access-key">{{ t('Access Key') }}</Label>
         <Input id="create-access-key" v-model="formModel.accessKey" autocomplete="off" />
@@ -37,7 +37,7 @@
 
       <div class="grid gap-2">
         <Label for="create-description">{{ t('Description') }}</Label>
-        <AppTextarea id="create-description" v-model="formModel.description" :rows="3" />
+        <Textarea id="create-description" v-model="formModel.description" :rows="3" />
       </div>
 
       <div class="flex items-start justify-between gap-3 rounded-md border p-3">
@@ -47,14 +47,14 @@
             {{ t('Automatically inherit the main account policy when enabled.') }}
           </p>
         </div>
-        <AppSwitch v-model="formModel.impliedPolicy" />
+        <Switch v-model:checked="formModel.impliedPolicy" />
       </div>
 
       <div v-if="!formModel.impliedPolicy" class="grid gap-2">
         <Label>{{ t('Current user policy') }}</Label>
         <json-editor v-model="formModel.policy" />
       </div>
-    </AppCard>
+    </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">
@@ -75,9 +75,11 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import Spinner from '@/components/ui/spinner/Spinner.vue'
 
-import { AppCard, AppModal, AppSwitch, AppTextarea } from '@/components/app'
+import { AppModal } from '@/components/app'
 import AppDateTimePicker from '@/components/app/AppDateTimePicker.vue'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { makeRandomString } from '~/utils/functions'

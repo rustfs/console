@@ -1,12 +1,12 @@
 <template>
-  <div class="space-y-6">
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('License') }}</h1>
       </template>
     </page-header>
 
-    <page-content>
+    <div>
       <AppCard class="space-y-4">
         <div class="text-center">
           <h2 class="text-2xl font-bold">{{ t('Apache License') }}</h2>
@@ -16,12 +16,12 @@
         </div>
         <ScrollArea class="h-[70vh] rounded-lg border">
           <pre class="whitespace-pre-wrap p-6 text-sm leading-6 text-muted-foreground">
-{{ licenseContent }}
-          </pre>
+        {{ licenseContent }}
+      </pre>
         </ScrollArea>
       </AppCard>
-    </page-content>
-  </div>
+    </div>
+  </page>
 </template>
 
 <script setup lang="ts">

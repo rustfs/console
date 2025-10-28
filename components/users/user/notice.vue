@@ -1,6 +1,6 @@
 <template>
   <AppModal v-model="visible" :title="t('New user has been created')" size="md" :close-on-backdrop="false">
-    <AppCard padded class="space-y-4">
+    <div class="space-y-4">
       <div class="space-y-2">
         <Label>{{ t('Access Key') }}</Label>
         <copy-input v-model="accessKey" class="w-full" :readonly="true" :copy-icon="true" />
@@ -9,7 +9,7 @@
         <Label>{{ t('Secret Key') }}</Label>
         <copy-input v-model="secretkey" class="w-full" :readonly="true" :copy-icon="true" />
       </div>
-    </AppCard>
+    </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">
@@ -23,7 +23,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
-import { AppCard, AppModal } from '@/components/app'
+import { AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { download } from '@/utils/export-file'
 import { ref } from 'vue'

@@ -1,11 +1,11 @@
 <template>
-  <div>
+  <page>
     <page-header>
       <template #title>
         <h1 class="text-2xl font-bold">{{ t('Site Replication') }}</h1>
       </template>
     </page-header>
-    <page-content class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4">
       <div class="flex justify-end">
         <Button type="button" variant="secondary" class="inline-flex items-center gap-2" @click="openForm">
           <Icon name="ri:add-line" class="size-4" />
@@ -20,8 +20,8 @@
       </Card>
 
       <site-replication-new-form ref="addFormRef"></site-replication-new-form>
-    </page-content>
-  </div>
+    </div>
+  </page>
 </template>
 
 <script lang="ts" setup>

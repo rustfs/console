@@ -26,7 +26,7 @@
         </Button>
       </div>
     </div>
-    <AppProgress :value="task.progress" :processing="task.status === 'uploading'" :height="2" />
+    <Progress :model-value="task.progress" class="h-[2px]" />
     <div class="flex items-center justify-between text-muted-foreground">
       <div>{{ formatBytes(task.file.size) }}</div>
       <div class="text-muted-foreground">
@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
-import { AppProgress } from '@/components/app'
+import Progress from '@/components/ui/progress/Progress.vue'
 import type { UploadTask } from '~/lib/upload-task-manager'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 import { formatBytes } from '~/utils/functions'

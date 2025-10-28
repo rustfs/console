@@ -5,7 +5,7 @@
     size="md"
     :close-on-backdrop="false"
   >
-    <AppCard padded class="space-y-4">
+    <div class="space-y-4">
       <div class="grid gap-2">
         <Label>{{ t('Access Key') }}</Label>
         <Input v-model="formModel.accessKey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
@@ -15,7 +15,7 @@
         <Label>{{ t('Secret Key') }}</Label>
         <Input v-model="formModel.secretKey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
       </div>
-    </AppCard>
+    </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">
@@ -30,7 +30,7 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppCard, AppModal } from '@/components/app'
+import { AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

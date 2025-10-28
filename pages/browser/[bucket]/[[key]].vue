@@ -1,21 +1,18 @@
 <template>
-  <div>
-    <div>
-      <page-header>
-        <template #title>
-          <div class="flex items-center gap-4">
-            <h1 @click="$router.push(bucketPath())" class="cursor-pointer">{{ bucketName }}</h1>
-            <object-path-links :object-key="key" @click="path => $router.push(bucketPath(path))" />
-          </div>
-        </template>
-      </page-header>
-      <page-content class="flex flex-col gap-4">
-        <object-list v-if="isObjectList" :bucket="bucketName" :path="key" />
-        <object-view v-else :bucket-name="bucketName" :object-key="key" />
-      </page-content>
+  <page>
+    <page-header>
+      <template #title>
+        <div class="flex items-center gap-4">
+          <h1 @click="$router.push(bucketPath())" class="cursor-pointer">{{ bucketName }}</h1>
+          <object-path-links :object-key="key" @click="path => $router.push(bucketPath(path))" />
+        </div>
+      </template>
+    </page-header>
+    <div class="flex flex-col gap-4">
+      <object-list v-if="isObjectList" :bucket="bucketName" :path="key" />
+      <object-view v-else :bucket-name="bucketName" :object-key="key" />
     </div>
-    <footer />
-  </div>
+  </page>
 </template>
 
 <script lang="ts" setup>
@@ -23,6 +20,7 @@ import { useRoute } from '#app'
 import { endsWith } from 'lodash'
 import { joinRelativeURL } from 'ufo'
 import { computed } from 'vue'
+import { resolveRouteParam } from '~/utils/functions'
 
 // 从路由参数中获取 bucketName, pageSize, continuationToken
 const route = useRoute()
@@ -31,7 +29,7 @@ const message = useMessage()
 const router = useRouter()
 
 // bucketName 和 pageSize 来自路由
-const bucketName = computed(() => route.params.bucket as string)
+const bucketName = computed(() => resolveRouteParam(route.params.bucket))
 // 检测bucketName是否存在，使用 head bucket 接口,如果不存在跳转到/browser
 const isBucketExist = () => {
   return useBucket({ region: route.params.region as string })
@@ -48,10 +46,7 @@ const isBucketExist = () => {
 isBucketExist()
 
 // 当前路径的前缀, example: 'folder1/folder2/'
-const key = computed(() => {
-  const rawKey = route.params.key
-  return rawKey ? decodeURIComponent(String(rawKey)) : ''
-})
+const key = computed(() => resolveRouteParam(route.params.key))
 
 const bucketPath = (path: string | Array<string> = '') => {
   if (Array.isArray(path)) {
@@ -65,5 +60,5 @@ const bucketPath = (path: string | Array<string> = '') => {
   return joinRelativeURL('/browser', encodeURIComponent(bucketName.value), encodeURIComponent(path))
 }
 
-const isObjectList = key.value.endsWith('/') || key.value === ''
+const isObjectList = computed(() => key.value === '' || key.value.endsWith('/'))
 </script>

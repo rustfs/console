@@ -1,5 +1,5 @@
 <template>
-  <AppCard padded class="space-y-4">
+  <div class="space-y-4">
     <div v-if="!editStatus" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="w-full sm:max-w-xs">
         <Input v-model="searchTerm" :placeholder="t('Search Policy')" />
@@ -84,14 +84,13 @@
         </TableRow>
       </TableBody>
     </Table>
-  </AppCard>
+  </div>
 </template>
 
 <script setup lang="ts">
 import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import { AppCard } from '@/components/app'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'

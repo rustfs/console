@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import AppBadge from './AppBadge.vue'
 import { cn } from '@/lib/utils'
 import type { HTMLAttributes } from 'vue'
 
@@ -26,7 +25,7 @@ const props = withDefaults(
 </script>
 
 <template>
-  <AppBadge variant="outline" :class="cn('capitalize', toneClass[tone], props.class)">
+  <Badge variant="outline" :class="cn('lowercase border-none', toneClass[tone], props.class)">
     <slot />
-  </AppBadge>
+  </Badge>
 </template>

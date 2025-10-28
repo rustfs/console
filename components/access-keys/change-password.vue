@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import Spinner from '@/components/ui/spinner/Spinner.vue'
 
-import { AppCard, AppModal } from '@/components/app'
+import { AppModal } from '@/components/app'
 import { Label } from '@/components/ui/label'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -107,7 +107,7 @@ async function submitForm() {
     size="md"
     :close-on-backdrop="false"
   >
-    <AppCard padded class="space-y-4">
+    <div class="space-y-4">
       <div class="grid gap-2">
         <Label for="password-current">{{ t('Current Password') }}</Label>
         <Input
@@ -147,7 +147,7 @@ async function submitForm() {
           {{ errors.re_new_secret_key }}
         </p>
       </div>
-    </AppCard>
+    </div>
 
     <template #footer>
       <div class="flex justify-end gap-2">

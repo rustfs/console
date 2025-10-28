@@ -1,13 +1,8 @@
 <template>
   <div class="space-y-4">
-    <PageHeader class="sticky top-0 z-10 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <div class="sticky top-0 z-10 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <Input
-          v-model="searchTerm"
-          :placeholder="t('Search')"
-          class="max-w-md"
-          @input="handleSearch"
-        />
+        <Input v-model="searchTerm" :placeholder="t('Search')" class="max-w-md" @input="handleSearch" />
         <div class="flex flex-wrap items-center gap-2">
           <object-upload-stats />
           <object-delete-stats />
@@ -19,21 +14,11 @@
             <Icon name="ri:file-add-line" class="size-4" />
             <span>{{ t('Upload File') }}/{{ t('Folder') }}</span>
           </Button>
-          <Button
-            variant="destructive"
-            :disabled="!checkedKeys.length"
-            v-show="checkedKeys.length"
-            @click="handleBatchDelete"
-          >
+          <Button variant="destructive" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="handleBatchDelete">
             <Icon name="ri:delete-bin-5-line" class="size-4" />
             <span>{{ t('Delete Selected') }}</span>
           </Button>
-          <Button
-            variant="outline"
-            :disabled="!checkedKeys.length"
-            v-show="checkedKeys.length"
-            @click="downloadMultiple"
-          >
+          <Button variant="outline" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="downloadMultiple">
             <Icon name="ri:download-cloud-2-line" class="size-4" />
             <span>{{ t('Download') }}</span>
           </Button>
@@ -43,16 +28,9 @@
           </Button>
         </div>
       </div>
-    </PageHeader>
+    </div>
 
-    <AppCard padded class="border">
-      <AppDataTable
-        :table="table"
-        :is-loading="loading"
-        :empty-title="t('No Objects')"
-        :empty-description="t('Upload files or create folders to populate this bucket.')"
-      />
-    </AppCard>
+    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Objects')" :empty-description="t('Upload files or create folders to populate this bucket.')" />
 
     <div class="flex justify-end gap-2">
       <Button variant="outline" :disabled="!continuationToken" @click="goToPreviousPage">
@@ -65,51 +43,35 @@
       </Button>
     </div>
 
-    <object-upload-picker
-      :show="uploadPickerVisible"
-      :bucketName="bucketName"
-      :prefix="prefix"
-      @update:show="val => {
-        uploadPickerVisible = val
-        refresh()
-      }"
-    />
-    <object-new-form
-      :show="newObjectFormVisible"
-      :bucketName="bucketName"
-      :prefix="prefix"
-      :asPrefix="newObjectAsPrefix"
-      @update:show="val => {
-        newObjectFormVisible = val
-        refresh()
-      }"
-    />
-    <object-info
-      ref="infoRef"
-      :bucket-name="bucketName"
-      @refresh-parent="handleObjectDeleted"
-    />
+    <object-upload-picker :show="uploadPickerVisible" :bucketName="bucketName" :prefix="prefix" @update:show="val => {
+      uploadPickerVisible = val
+      refresh()
+    }" />
+    <object-new-form :show="newObjectFormVisible" :bucketName="bucketName" :prefix="prefix" :asPrefix="newObjectAsPrefix" @update:show="val => {
+      newObjectFormVisible = val
+      refresh()
+    }" />
+    <object-info ref="infoRef" :bucket-name="bucketName" @refresh-parent="handleObjectDeleted" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import { AppCard } from '@/components/app'
-import AppDataTable from '@/components/app/data-table/AppDataTable.vue'
-import { useDataTable } from '@/components/app/data-table'
-import PageHeader from '@/components/page/header.vue'
+import { Icon, NuxtLink } from '#components'
 import { ListObjectsV2Command } from '@aws-sdk/client-s3'
+import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import { joinRelativeURL } from 'ufo'
 import { computed, h, ref, watch } from 'vue'
-import type { ColumnDef } from '@tanstack/vue-table'
-import { useUploadTaskManagerStore } from '~/store/upload-tasks'
+import { useDataTable } from '~/components/data-table'
+import DataTable from '~/components/data-table/data-table.vue'
 import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
-import { Icon, NuxtLink } from '#components'
+import { useUploadTaskManagerStore } from '~/store/upload-tasks'
+import { resolveRouteParam, safeDecodeURIComponent } from '~/utils/functions'
 
 const { $s3Client } = useNuxtApp()
 const { t } = useI18n()
@@ -151,7 +113,7 @@ type ObjectRow = {
 }
 
 const bucketName = computed(() => props.bucket)
-const prefix = computed(() => decodeURIComponent(props.path))
+const prefix = computed(() => resolveRouteParam(props.path))
 
 const bucketPath = (path?: string | string[]) => {
   const value = Array.isArray(path) ? path.join('/') : path
@@ -245,8 +207,30 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
       id: 'object',
       header: () => t('Object'),
       cell: ({ row }: any) => {
-        const displayKey = prefix.value ? row.original.Key.substring(prefix.value.length) : row.original.Key
-        const label = displayKey || '/'
+        const key = row.original.Key ?? ''
+        const prefixValue = prefix.value || ''
+        const isPrefixed = Boolean(prefixValue) && key.startsWith(prefixValue)
+        const relativeKey = isPrefixed ? key.slice(prefixValue.length) : key
+
+        const trimTrailingSlash = (value: string) => (value.endsWith('/') ? value.slice(0, -1) : value)
+        const normalize = (value: string) => {
+          const trimmed = trimTrailingSlash(value)
+          if (!trimmed) return ''
+          const decoded = safeDecodeURIComponent(trimmed)
+          if (!decoded) return ''
+          const segments = decoded.split('/').filter(Boolean)
+          return segments.length ? segments[segments.length - 1] : decoded
+        }
+
+        let label = normalize(relativeKey)
+        if (!label) {
+          label = normalize(key)
+        }
+        if (!label) {
+          const fallback = safeDecodeURIComponent(trimTrailingSlash(key))
+          label = fallback || key || '/'
+        }
+
         if (row.original.type === 'prefix') {
           return h(
             NuxtLink,
@@ -254,7 +238,9 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
               href: bucketPath(row.original.Key),
               class: 'flex items-center gap-2 text-primary hover:underline',
             },
-            () => [h(Icon, { name: 'ri:folder-line', class: 'size-4' }), label]
+            {
+              default: () => [h(Icon, { name: 'ri:folder-line', class: 'size-4' }), h('span', label)],
+            }
           )
         }
         return h(
@@ -263,7 +249,7 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
             class: 'flex items-center gap-2 text-primary hover:underline',
             onClick: () => infoRef.value?.openDrawer(bucketName.value, row.original.Key),
           },
-          () => [h(Icon, { name: 'ri:file-line', class: 'size-4' }), label]
+          [h(Icon, { name: 'ri:file-line', class: 'size-4' }), h('span', label)]
         )
       },
     },
@@ -285,14 +271,14 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
         h('div', { class: 'flex justify-center gap-2' }, [
           row.original.type === 'object'
             ? h(
-                Button,
-                {
-                  variant: 'outline',
-                  size: 'sm',
-                  onClick: () => downloadFile(row.original.Key),
-                },
-                () => [h(Icon, { name: 'ri:download-cloud-2-line', class: 'size-4' }), h('span', t('Download'))]
-              )
+              Button,
+              {
+                variant: 'outline',
+                size: 'sm',
+                onClick: () => downloadFile(row.original.Key),
+              },
+              () => [h(Icon, { name: 'ri:download-cloud-2-line', class: 'size-4' }), h('span', t('Download'))]
+            )
             : null,
           h(
             Button,

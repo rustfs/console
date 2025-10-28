@@ -1,144 +1,247 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Server Information') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Server Information') }}</h1>
       <template #actions>
-        <Button variant="outline" @click="getPageData">
-          <Icon name="ri:refresh-line" class="mr-2 size-4" />
-          {{ t('Sync') }}
-        </Button>
+        <ActionBar>
+          <Button variant="outline" @click="getPageData">
+            <Icon name="ri:refresh-line" class="mr-2 size-4" />
+            {{ t('Sync') }}
+          </Button>
+        </ActionBar>
       </template>
     </page-header>
 
-    <div>
-      <div class="grid gap-4 lg:grid-cols-3">
-        <div class="space-y-1">
-          <p class="text-sm text-muted-foreground">{{ t('Storage Space') }}</p>
-          <p class="text-2xl font-semibold">{{ systemInfo?.buckets?.count ?? 0 }}</p>
-        </div>
-        <div class="space-y-1">
-          <p class="text-sm text-muted-foreground">{{ t('Objects') }}</p>
-          <p class="text-2xl font-semibold">{{ systemInfo?.objects?.count ?? 0 }}</p>
-        </div>
-        <div class="space-y-3">
-          <p class="text-sm font-medium text-muted-foreground">{{ t('Usage Report') }}</p>
-          <div class="flex items-center justify-between gap-4">
-            <span class="text-3xl font-semibold">{{ niceBytes(datausageinfo.total_used_capacity) }}</span>
-            <div class="w-32 space-y-2">
+    <div class="space-y-8">
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <Card v-for="metric in summaryMetrics" :key="metric.label" class="shadow-none">
+          <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle class="text-sm font-medium text-muted-foreground">
+              {{ metric.label }}
+            </CardTitle>
+            <Icon :name="metric.icon" class="size-5 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <p class="text-2xl font-semibold text-foreground">
+              {{ metric.display }}
+            </p>
+            <p v-if="metric.caption" class="text-xs text-muted-foreground mt-1">
+              {{ metric.caption }}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card class="shadow-none">
+        <CardHeader class="pb-3">
+          <div class="flex items-center justify-between">
+            <CardTitle>{{ t('Usage Report') }}</CardTitle>
+            <span class="text-sm text-muted-foreground">
+              {{ t('Last Scan Activity') }}: {{ lastUpdatedLabel }}
+            </span>
+          </div>
+          <CardDescription>
+            {{ t('Monitor overall storage usage and recent scanner activity at a glance.') }}
+          </CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-6">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex items-center gap-4">
+              <Icon name="ri:database-2-line" class="size-6 text-primary" />
+              <div>
+                <p class="text-sm text-muted-foreground">{{ t('Used Capacity') }}</p>
+                <p class="text-2xl font-semibold text-foreground">
+                  {{ niceBytes(datausageinfo.total_used_capacity) }}
+                </p>
+              </div>
+            </div>
+            <div class="w-full max-w-xs space-y-2">
               <Progress :model-value="usedPercent" class="h-2" />
-              <p class="text-xs text-muted-foreground text-right">{{ usedPercent.toFixed(0) }}%</p>
+              <p class="text-xs text-muted-foreground text-right">
+                {{ usedPercent.toFixed(0) }}%
+              </p>
             </div>
           </div>
-          <div class="space-y-3">
-            <div v-for="item in usageStats" :key="item.label" class="flex items-start gap-3 rounded-lg border p-3">
-              <Icon :name="item.icon" class="size-5 text-muted-foreground" />
-              <div class="flex-1">
-                <p class="text-sm font-medium text-foreground">{{ item.label }}</p>
-                <p class="text-xs text-muted-foreground">{{ item.value }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <div class="mt-6 grid gap-4 lg:grid-cols-2">
-        <div class="space-y-4">
-          <p class="text-sm font-medium text-muted-foreground">{{ t('Servers') }}</p>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <div class="rounded-lg border p-4">
-              <p class="text-sm text-muted-foreground">{{ t('Online') }}</p>
-              <p class="text-2xl font-semibold">{{ onlineServers }}</p>
-            </div>
-            <div class="rounded-lg border p-4">
-              <p class="text-sm text-muted-foreground">{{ t('Offline') }}</p>
-              <p class="text-2xl font-semibold">{{ offlineServers }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="space-y-4">
-          <p class="text-sm font-medium text-muted-foreground">{{ t('Disks') }}</p>
-          <div class="grid gap-3 sm:grid-cols-2">
-            <div class="rounded-lg border p-4">
-              <p class="text-sm text-muted-foreground">{{ t('Online') }}</p>
-              <p class="text-2xl font-semibold">{{ systemInfo?.backend?.onlineDisks ?? 0 }}</p>
-            </div>
-            <div class="rounded-lg border p-4">
-              <p class="text-sm text-muted-foreground">{{ t('Offline') }}</p>
-              <p class="text-2xl font-semibold">{{ systemInfo?.backend?.offlineDisks ?? 0 }}</p>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div
+              v-for="item in usageStats"
+              :key="item.label"
+              class="rounded-lg border bg-muted/40 p-4"
+            >
+              <p class="text-xs text-muted-foreground uppercase">
+                {{ item.label }}
+              </p>
+              <p class="mt-2 text-sm font-medium text-foreground">
+                {{ item.value }}
+              </p>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div class="mt-6 grid gap-4 lg:grid-cols-3">
-        <div v-for="item in backendInfo" :key="item.title" class="rounded-lg border p-4">
-          <div class="flex items-center gap-3 text-sm font-medium text-muted-foreground">
-            <Icon :name="item.icon" class="size-5" />
-            <span>{{ item.title }}</span>
-          </div>
-          <p class="mt-3 text-xl font-semibold text-foreground">{{ item.value ?? '-' }}</p>
-        </div>
-      </div>
-
-      <div class="mt-6 space-y-4">
-        <div class="flex items-center justify-between">
-          <p class="text-base font-semibold">
-            {{ t('Server List') }} ({{ serverInfo.count ?? 0 }})
-          </p>
-        </div>
-        <Accordion type="single" collapsible class="space-y-2">
-          <AccordionItem v-for="(server, index) in systemInfo?.servers || []" :key="server.endpoint" :value="String(index)">
-            <AccordionTrigger>
-              <div class="flex flex-col gap-2 text-left sm:flex-row sm:items-center sm:gap-4">
-                <div class="flex items-center gap-2">
-                  <span class="inline-flex h-2 w-2 rounded-full" :class="server.state === 'online' ? 'bg-emerald-500' : 'bg-rose-500'" />
-                  <span class="font-semibold">{{ server.endpoint }}</span>
+      <Card class="shadow-none">
+        <CardHeader class="pb-3">
+          <CardTitle>{{ t('Infrastructure Health') }}</CardTitle>
+          <CardDescription>
+            {{ t('Real-time status of cluster servers and backend storage devices.') }}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="grid gap-4 lg:grid-cols-2">
+            <div class="rounded-lg border bg-muted/40 p-4">
+              <p class="text-sm font-medium text-muted-foreground">{{ t('Servers') }}</p>
+              <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <div class="rounded-md border bg-background p-3">
+                  <p class="text-xs text-muted-foreground">{{ t('Online') }}</p>
+                  <p class="mt-1 text-xl font-semibold text-foreground">{{ onlineServers }}</p>
                 </div>
-                <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <span>
-                    {{ t('Disks') }}: {{ countOnlineDrives(server, 'ok') }} / {{ server.drives.length }}
-                  </span>
-                  <span>
-                    {{ t('Network') }}: {{ countOnlineNetworks(server, 'online') }} /
-                    {{ Object.keys(server.network).length }}
-                  </span>
-                  <span>
-                    {{ t('Uptime') }}: {{ dayjs().subtract(server.uptime, 'second').toNow() }}
-                  </span>
+                <div class="rounded-md border bg-background p-3">
+                  <p class="text-xs text-muted-foreground">{{ t('Offline') }}</p>
+                  <p class="mt-1 text-xl font-semibold text-foreground">{{ offlineServers }}</p>
                 </div>
               </div>
-            </AccordionTrigger>
-            <AccordionContent>
-              <p class="pb-2 text-xs text-muted-foreground">{{ t('Version') }}: {{ server.version }}</p>
-              <ScrollArea class="w-full">
-                <div class="flex gap-4 pb-2">
-                  <div v-for="drive in server.drives" :key="drive.uuid" class="min-w-[260px] rounded-lg border p-4">
-                    <p class="text-sm font-medium text-muted-foreground">{{ drive.drive_path }}</p>
-                    <p class="mt-1 text-xs text-muted-foreground">
-                      {{ niceBytes(drive.usedspace) }} / {{ niceBytes(drive.totalspace) }}
-                    </p>
-                    <Progress
-                      :model-value="drive.totalspace ? (drive.usedspace / drive.totalspace) * 100 : 0"
-                      class="mt-3 h-2"
+            </div>
+            <div class="rounded-lg border bg-muted/40 p-4">
+              <p class="text-sm font-medium text-muted-foreground">{{ t('Disks') }}</p>
+              <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <div class="rounded-md border bg-background p-3">
+                  <p class="text-xs text-muted-foreground">{{ t('Online') }}</p>
+                  <p class="mt-1 text-xl font-semibold text-foreground">
+                    {{ systemInfo?.backend?.onlineDisks ?? 0 }}
+                  </p>
+                </div>
+                <div class="rounded-md border bg-background p-3">
+                  <p class="text-xs text-muted-foreground">{{ t('Offline') }}</p>
+                  <p class="mt-1 text-xl font-semibold text-foreground">
+                    {{ systemInfo?.backend?.offlineDisks ?? 0 }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card class="shadow-none">
+        <CardHeader>
+          <CardTitle>{{ t('Backend Services') }}</CardTitle>
+          <CardDescription>
+            {{ t('Key services and configuration values reported by the cluster.') }}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <Card
+              v-for="item in backendInfo"
+              :key="item.title"
+              class="border bg-muted/40 shadow-none"
+            >
+              <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle class="text-sm font-medium text-muted-foreground">
+                  {{ item.title }}
+                </CardTitle>
+                <Icon :name="item.icon" class="size-5 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p class="text-xl font-semibold text-foreground">
+                  {{ item.value ?? '-' }}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card class="shadow-none">
+        <CardHeader class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <CardTitle>{{ t('Server List') }}</CardTitle>
+            <CardDescription>
+              {{ t('Inspect individual server health, disk utilization, and network status.') }}
+            </CardDescription>
+          </div>
+          <span class="text-sm text-muted-foreground">
+            {{ t('Total') }}: {{ serverInfo.count ?? 0 }}
+          </span>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible class="space-y-2">
+            <AccordionItem
+              v-for="(server, index) in systemInfo?.servers || []"
+              :key="server.endpoint"
+              :value="String(index)"
+            >
+              <AccordionTrigger>
+                <div class="flex flex-col gap-2 text-left sm:flex-row sm:items-center sm:gap-4">
+                  <div class="flex items-center gap-2">
+                    <span
+                      class="inline-flex h-2 w-2 rounded-full"
+                      :class="server.state === 'online' ? 'bg-emerald-500' : 'bg-rose-500'"
                     />
-                    <div class="mt-3 text-xs text-muted-foreground">
-                      <p>
-                        {{ t('Used') }}: <span class="font-medium text-foreground">{{ niceBytes(drive.usedspace) }}</span>
-                      </p>
-                      <p>
-                        {{ t('Available') }}:
-                        <span class="font-medium text-foreground">{{ niceBytes(drive.availspace) }}</span>
-                      </p>
-                    </div>
+                    <span class="font-semibold">{{ server.endpoint }}</span>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    <span>
+                      {{ t('Disks') }}: {{ countOnlineDrives(server, 'ok') }} / {{ server.drives.length }}
+                    </span>
+                    <span>
+                      {{ t('Network') }}: {{ countOnlineNetworks(server, 'online') }} /
+                      {{ Object.keys(server.network).length }}
+                    </span>
+                    <span>
+                      {{ t('Uptime') }}: {{ dayjs().subtract(server.uptime, 'second').toNow() }}
+                    </span>
                   </div>
                 </div>
-              </ScrollArea>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
+              </AccordionTrigger>
+              <AccordionContent>
+                <p class="pb-2 text-xs text-muted-foreground">
+                  {{ t('Version') }}: {{ server.version }}
+                </p>
+                <ScrollArea class="w-full">
+                  <div class="flex gap-4 pb-2">
+                    <Card
+                      v-for="drive in server.drives"
+                      :key="drive.uuid"
+                      class="min-w-[260px] shadow-none"
+                    >
+                      <CardHeader class="pb-2">
+                        <CardTitle class="text-sm font-medium text-muted-foreground">
+                          {{ drive.drive_path }}
+                        </CardTitle>
+                        <CardDescription class="text-xs">
+                          {{ niceBytes(drive.usedspace) }} / {{ niceBytes(drive.totalspace) }}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Progress
+                          :model-value="drive.totalspace ? (drive.usedspace / drive.totalspace) * 100 : 0"
+                          class="mb-3 h-2"
+                        />
+                        <div class="space-y-1 text-xs text-muted-foreground">
+                          <p>
+                            {{ t('Used') }}:
+                            <span class="font-medium text-foreground">
+                              {{ niceBytes(drive.usedspace) }}
+                            </span>
+                          </p>
+                          <p>
+                            {{ t('Available') }}:
+                            <span class="font-medium text-foreground">
+                              {{ niceBytes(drive.availspace) }}
+                            </span>
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </ScrollArea>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
     </div>
   </page>
 </template>
@@ -147,6 +250,7 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Progress from '@/components/ui/progress/Progress.vue'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -180,11 +284,47 @@ const datausageinfo = ref<any>({})
 const storageinfo = ref<any>({})
 const serverInfo = ref<any>({})
 
+const numberFormatter = new Intl.NumberFormat()
+
 const usedPercent = computed(() => {
   const total = Number(datausageinfo.value.total_capacity || 0)
   if (!total) return 0
   const used = Number(datausageinfo.value.total_used_capacity || 0)
   return Math.min(100, Math.max(0, (used / total) * 100))
+})
+
+const lastUpdatedLabel = computed(() => {
+  const last = metricsInfo.value?.aggregated?.scanner?.current_started
+  const time = dayjs(last)
+  return time.isValid() ? time.fromNow() : '--'
+})
+
+const summaryMetrics = computed(() => {
+  const bucketCount = systemInfo.value?.buckets?.count ?? 0
+  const objectCount = systemInfo.value?.objects?.count ?? 0
+  const totalCapacity = datausageinfo.value?.total_capacity
+  const usedCapacity = datausageinfo.value?.total_used_capacity
+
+  return [
+    {
+      label: t('Storage Space'),
+      display: numberFormatter.format(bucketCount),
+      icon: 'ri:archive-line',
+      caption: null,
+    },
+    {
+      label: t('Objects'),
+      display: numberFormatter.format(objectCount),
+      icon: 'ri:stack-line',
+      caption: null,
+    },
+    {
+      label: t('Total Capacity'),
+      display: totalCapacity ? niceBytes(String(totalCapacity)) : '--',
+      icon: 'ri:hard-drive-2-line',
+      caption: usedCapacity ? `${t('Used')}: ${niceBytes(String(usedCapacity))}` : null,
+    },
+  ]
 })
 
 const fromLsatStartTime = computed(() => {

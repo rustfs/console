@@ -1,7 +1,7 @@
 <script setup lang="ts" generic="TData">
-import AppEmpty from '@/components/app/AppEmpty.vue'
+import EmptyState from '@/components/empty-state.vue'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import Spinner from '@/components/ui/spinner/Spinner.vue'
+import { Spinner } from '@/components/ui/spinner'
 import {
   TableBody,
   TableCell,
@@ -76,9 +76,9 @@ const hasRows = computed(() => props.table.getRowModel().rows.length > 0)
           <template v-else>
             <TableRow>
               <TableCell :colspan="visibleColumnCount" class="h-48">
-                <AppEmpty :title="emptyTitle" :description="emptyDescription">
+                <EmptyState :title="emptyTitle" :description="emptyDescription">
                   <slot name="empty" />
-                </AppEmpty>
+                </EmptyState>
               </TableCell>
             </TableRow>
           </template>
@@ -118,9 +118,9 @@ const hasRows = computed(() => props.table.getRowModel().rows.length > 0)
           <template v-else>
             <TableRow>
               <TableCell :colspan="visibleColumnCount" class="h-48">
-                <AppEmpty :title="emptyTitle" :description="emptyDescription">
+                <EmptyState :title="emptyTitle" :description="emptyDescription">
                   <slot name="empty" />
-                </AppEmpty>
+                </EmptyState>
               </TableCell>
             </TableRow>
           </template>

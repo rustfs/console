@@ -1,9 +1,9 @@
 <template>
-  <AppModal v-model="visible" :title="t('Batch allocation policies')" size="xl" :close-on-backdrop="false">
+  <Modal v-model="visible" :title="t('Batch allocation policies')" size="xl" :close-on-backdrop="false">
     <div class="space-y-4">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div class="w-full sm:max-w-xs">
-          <Input v-model="searchTerm" :placeholder="t('Search Policy')" />
+          <SearchInput v-model="searchTerm" :placeholder="t('Search Policy')" clearable class="w-full" />
         </div>
         <Button variant="secondary" :disabled="!checkedKeys.length || submitting" @click="changePolicies">
           {{ t('Submit') }}
@@ -14,10 +14,10 @@
         <TableHeader>
           <TableRow>
             <TableHead class="w-12">
-              <AppCheckbox
+              <Checkbox
                 :checked="allVisibleSelected"
                 :indeterminate="checkedKeys.length > 0 && !allVisibleSelected"
-                @update:checked="toggleSelectAll"
+                @update:checked="(value: boolean | 'indeterminate') => toggleSelectAll(value === true)"
               />
             </TableHead>
             <TableHead>{{ t('Name') }}</TableHead>
@@ -26,9 +26,9 @@
         <TableBody v-if="filteredPolicies.length">
           <TableRow v-for="policy in filteredPolicies" :key="policy.name">
             <TableCell>
-              <AppCheckbox
+              <Checkbox
                 :checked="isSelected(policy.name)"
-                @update:checked="(value: boolean) => toggleSelection(policy.name, value)"
+                @update:checked="(value: boolean | 'indeterminate') => toggleSelection(policy.name, value === true)"
               />
             </TableCell>
             <TableCell class="font-medium">{{ policy.name }}</TableCell>
@@ -43,14 +43,14 @@
         </TableBody>
       </Table>
     </div>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppCheckbox, AppModal } from '@/components/app'
+import Modal from '@/components/modal.vue'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

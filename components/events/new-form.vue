@@ -16,52 +16,58 @@
       </DialogHeader>
 
       <div class="space-y-6">
-        <div class="grid gap-4 sm:grid-cols-[160px_1fr] sm:items-center">
-          <Label for="event-resource-name">{{ t('Amazon Resource Name') }}</Label>
-          <Select
-            id="event-resource-name"
-            v-model="formData.resourceName"
-            :disabled="!arnList.length"
-          >
-            <SelectTrigger>
-              <SelectValue :placeholder="t('Please select resource name')" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="item in arnList"
-                :key="item.value"
-                :value="item.value"
-              >
-                {{ item.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-          <p v-if="errors.resourceName" class="sm:col-start-2 text-sm text-destructive">
+        <Field orientation="responsive" class="sm:items-center">
+          <FieldLabel for="event-resource-name">{{ t('Amazon Resource Name') }}</FieldLabel>
+          <FieldContent>
+            <Select
+              id="event-resource-name"
+              v-model="formData.resourceName"
+              :disabled="!arnList.length"
+            >
+              <SelectTrigger>
+                <SelectValue :placeholder="t('Please select resource name')" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="item in arnList"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </FieldContent>
+          <FieldDescription v-if="errors.resourceName" class="text-destructive">
             {{ errors.resourceName }}
-          </p>
-        </div>
+          </FieldDescription>
+        </Field>
 
-        <div class="grid gap-4 sm:grid-cols-[160px_1fr] sm:items-center">
-          <Label for="event-prefix">{{ t('Prefix') }}</Label>
-          <Input
-            id="event-prefix"
-            v-model="formData.prefix"
-            :placeholder="t('Please enter prefix')"
-          />
-        </div>
+        <Field orientation="responsive" class="sm:items-center">
+          <FieldLabel for="event-prefix">{{ t('Prefix') }}</FieldLabel>
+          <FieldContent>
+            <Input
+              id="event-prefix"
+              v-model="formData.prefix"
+              :placeholder="t('Please enter prefix')"
+            />
+          </FieldContent>
+        </Field>
 
-        <div class="grid gap-4 sm:grid-cols-[160px_1fr] sm:items-center">
-          <Label for="event-suffix">{{ t('Suffix') }}</Label>
-          <Input
-            id="event-suffix"
-            v-model="formData.suffix"
-            :placeholder="t('Please enter suffix')"
-          />
-        </div>
+        <Field orientation="responsive" class="sm:items-center">
+          <FieldLabel for="event-suffix">{{ t('Suffix') }}</FieldLabel>
+          <FieldContent>
+            <Input
+              id="event-suffix"
+              v-model="formData.suffix"
+              :placeholder="t('Please enter suffix')"
+            />
+          </FieldContent>
+        </Field>
 
-        <div class="grid gap-4 sm:grid-cols-[160px_1fr]">
-          <Label>{{ t('Select events') }}</Label>
-          <div class="space-y-2">
+        <Field orientation="responsive">
+          <FieldLabel>{{ t('Select events') }}</FieldLabel>
+          <FieldContent>
             <ScrollArea class="max-h-64 rounded-md border">
               <div class="flex flex-col gap-2 p-4">
                 <label
@@ -78,11 +84,11 @@
                 </label>
               </div>
             </ScrollArea>
-            <p v-if="errors.events" class="text-sm text-destructive">
-              {{ errors.events }}
-            </p>
-          </div>
-        </div>
+          </FieldContent>
+          <FieldDescription v-if="errors.events" class="text-destructive">
+            {{ errors.events }}
+          </FieldDescription>
+        </Field>
       </div>
 
       <div class="flex flex-col gap-2 pt-6 sm:flex-row sm:justify-center">
@@ -107,7 +113,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import {
   Select,
   SelectContent,

@@ -4,7 +4,7 @@
       <div class="space-y-4">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="w-full sm:max-w-xs">
-            <Input v-model="searchTerm" :placeholder="t('Search Account')" />
+            <SearchInput v-model="searchTerm" :placeholder="t('Search Account')" clearable class="w-full" />
           </div>
           <Button variant="secondary" class="inline-flex items-center gap-2" @click="addItem">
             <Icon class="size-4" name="ri:add-line" />
@@ -73,7 +73,7 @@
           </div>
           <div class="space-y-2">
             <Label>{{ t('Expiration') }}</Label>
-            <AppDateTimePicker v-model="formModel.expiry" :min="minExpiry" :placeholder="t('Please select expiration date')" />
+            <DateTimePicker v-model="formModel.expiry" :min="minExpiry" :placeholder="t('Please select expiration date')" />
           </div>
           <div class="space-y-2">
             <Label>{{ t('Name') }}</Label>
@@ -122,7 +122,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppDateTimePicker } from '@/components/app'
+import DateTimePicker from '@/components/datetime-picker.vue'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'

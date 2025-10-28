@@ -84,7 +84,7 @@ const getLabel = (item: NavItem) => t(item.label)
           <span>{{ brandInitial }}</span>
         </div>
         <div v-if="!isCollapsed" class="flex min-w-0 flex-col px-3 py-4">
-          <img src="~/assets/logo.svg" alt="RustFS" class="h-6" />
+          <img src="~/assets/logo.svg" alt="RustFS" class="h-4" />
         </div>
       </NuxtLink>
     </SidebarHeader>
@@ -92,7 +92,7 @@ const getLabel = (item: NavItem) => t(item.label)
     <SidebarContent>
       <ScrollArea class="flex-1 pr-1">
         <div class="flex flex-col gap-4">
-          <SidebarGroup v-for="(group, groupIndex) in navGroups" :key="groupIndex" class="gap-4">
+          <SidebarGroup v-for="(group, groupIndex) in navGroups" :key="groupIndex" class="gap-4 py-0">
             <SidebarGroupContent>
               <SidebarMenu>
                 <template v-for="item in group" :key="item.label">

@@ -1,9 +1,7 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Site Replication') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Site Replication') }}</h1>
     </page-header>
     <div class="flex flex-col gap-4">
       <div class="flex justify-end">
@@ -13,7 +11,7 @@
         </Button>
       </div>
 
-      <Card class="min-h-[400px]">
+      <Card class="min-h-[400px] shadow-none">
         <CardContent class="flex h-full items-center justify-center">
           <p class="text-sm text-muted-foreground">{{ t('No Data') }}</p>
         </CardContent>

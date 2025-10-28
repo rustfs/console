@@ -1,31 +1,31 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Events') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Events') }}</h1>
       <template #actions>
-        <Label for="bucket-select">{{ t('Bucket') }}</Label>
-        <div class="max-w-xs flex-1">
-          <Select id="bucket-select" v-model="bucketName" :disabled="!bucketList.length">
-            <SelectTrigger>
-              <SelectValue :placeholder="t('Please select bucket')" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="bucket in bucketList" :key="bucket.value" :value="bucket.value">
-                {{ bucket.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <Button type="button" variant="secondary" @click="handleNew">
-          <Icon class="size-4" name="ri:add-line" />
-          <span>{{ t('Add Event Subscription') }}</span>
-        </Button>
-        <Button type="button" variant="secondary" @click="handleRefresh" :disabled="loading">
-          <Icon class="size-4" name="ri:refresh-line" />
-          <span>{{ t('Refresh') }}</span>
-        </Button>
+        <ActionBar class="w-full justify-end gap-2">
+          <Label for="bucket-select">{{ t('Bucket') }}</Label>
+          <div class="max-w-xs flex-1">
+            <Select id="bucket-select" v-model="bucketName" :disabled="!bucketList.length">
+              <SelectTrigger>
+                <SelectValue :placeholder="t('Please select bucket')" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="bucket in bucketList" :key="bucket.value" :value="bucket.value">
+                  {{ bucket.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button type="button" variant="secondary" @click="handleNew">
+            <Icon class="size-4" name="ri:add-line" />
+            <span>{{ t('Add Event Subscription') }}</span>
+          </Button>
+          <Button type="button" variant="secondary" @click="handleRefresh" :disabled="loading">
+            <Icon class="size-4" name="ri:refresh-line" />
+            <span>{{ t('Refresh') }}</span>
+          </Button>
+        </ActionBar>
       </template>
     </page-header>
 
@@ -79,7 +79,7 @@
           </Table>
         </div>
 
-        <Card v-else class="relative">
+        <Card v-else class="relative shadow-none">
           <CardContent class="py-16">
             <Empty class="mx-auto max-w-sm text-center">
               <EmptyHeader>

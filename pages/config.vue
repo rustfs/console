@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 
 await setPageLayout('plain')
 
@@ -114,16 +115,18 @@ onMounted(() => {
             <!-- Form -->
             <form @submit.prevent="validateAndSave" autocomplete="off">
               <div class="grid gap-y-6">
-                <div>
-                  <label for="serverHost" class="block text-sm mb-2 dark:text-white">{{ t('Server Address') }}</label>
-                  <div class="text-xs text-gray-500 mb-2">
+                <Field>
+                  <FieldLabel for="serverHost">{{ t('Server Address') }}</FieldLabel>
+                  <FieldDescription>
                     {{ t('Leave empty to use current host as default') }}
-                  </div>
-                  <Input v-model="serverHost" type="text" :placeholder="t('Please enter server address (e.g., http://localhost:9000)')" />
-                  <div class="text-xs text-gray-500 mt-1">
+                  </FieldDescription>
+                  <FieldContent>
+                    <Input id="serverHost" v-model="serverHost" type="text" :placeholder="t('Please enter server address (e.g., http://localhost:9000)')" />
+                  </FieldContent>
+                  <FieldDescription>
                     {{ t('Example: http://localhost:9000 or https://your-domain.com') }}
-                  </div>
-                </div>
+                  </FieldDescription>
+                </Field>
 
                 <div class="flex gap-3">
                   <Button type="submit" class="flex-1">

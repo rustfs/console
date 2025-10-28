@@ -1,47 +1,73 @@
 <template>
-  <AppModal v-model="modalVisible" :title="t('Create Bucket')" size="lg" :close-on-backdrop="false">
+  <Modal v-model="modalVisible" :title="t('Create Bucket')" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
-      <div class="space-y-2">
-        <Label for="bucket-name">{{ t('Please enter name') }}</Label>
-        <Input id="bucket-name" v-model="objectKey" autocomplete="off" :class="[
-          'w-full',
-          showNameError && 'border-destructive focus-visible:ring-destructive',
-        ]" />
-      </div>
+      <Field>
+        <FieldLabel for="bucket-name">{{ t('Please enter name') }}</FieldLabel>
+        <FieldContent>
+          <Input id="bucket-name" v-model="objectKey" autocomplete="off" :class="[
+            'w-full',
+            showNameError && 'border-destructive focus-visible:ring-destructive',
+          ]" />
+        </FieldContent>
+      </Field>
 
-      <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <Label>{{ t('Version') }}</Label>
+      <Field orientation="responsive" class="items-center">
+        <FieldLabel>{{ t('Version') }}</FieldLabel>
+        <FieldContent class="flex justify-end">
           <Switch v-model:checked="version" />
-        </div>
-      </div>
+        </FieldContent>
+      </Field>
 
-      <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <Label>{{ t('Object Lock') }}</Label>
+      <Field orientation="responsive" class="items-center">
+        <FieldLabel>{{ t('Object Lock') }}</FieldLabel>
+        <FieldContent class="flex justify-end">
           <Switch v-model:checked="objectLock" />
-        </div>
-      </div>
+        </FieldContent>
+      </Field>
 
       <div v-if="objectLock" class="space-y-4 rounded-lg border p-4">
-        <div class="flex items-center justify-between">
-          <Label>{{ t('Retention') }}</Label>
-          <Switch v-model:checked="retentionEnabled" />
-        </div>
+        <Field orientation="responsive" class="items-center">
+          <FieldLabel>{{ t('Retention') }}</FieldLabel>
+          <FieldContent class="flex justify-end">
+            <Switch v-model:checked="retentionEnabled" />
+          </FieldContent>
+        </Field>
 
         <div v-if="retentionEnabled" class="space-y-4">
-          <div class="space-y-2">
-            <Label>{{ t('Retention Mode') }}</Label>
-            <AppRadioGroup v-model="retentionMode" :options="retentionModeOptions" class="grid gap-2 sm:grid-cols-2" item-class="h-full" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Retention Mode') }}</FieldLabel>
+            <FieldContent>
+              <RadioGroup v-model="retentionMode" class="grid gap-2 sm:grid-cols-2">
+                <label
+                  v-for="option in retentionModeOptions"
+                  :key="option.value"
+                  class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                >
+                  <RadioGroupItem :value="option.value" class="mt-0.5" />
+                  <span class="text-sm font-medium">{{ option.label }}</span>
+                </label>
+              </RadioGroup>
+            </FieldContent>
+          </Field>
 
-          <div class="space-y-2">
-            <Label>{{ t('Validity') }}</Label>
-            <div class="flex flex-col gap-2 sm:flex-row">
-              <Input v-model="retentionPeriod" type="number" class="sm:w-32" />
-              <AppSelect v-model="retentionUnit" :options="retentionUnitOptions" class="sm:w-32" />
-            </div>
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Validity') }}</FieldLabel>
+            <FieldContent>
+              <div class="flex flex-col gap-2 sm:flex-row">
+                <Input v-model="retentionPeriod" type="number" class="sm:w-32" />
+                <RadioGroup v-model="retentionUnit" class="grid gap-2 sm:grid-cols-2">
+                  <label
+                    v-for="option in retentionUnitOptions"
+                    :key="option.value"
+                    class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                  >
+                    <RadioGroupItem :value="option.value" class="mt-0.5" />
+                    <span class="text-sm font-medium">{{ option.label }}</span>
+                  </label>
+                </RadioGroup>
+              </div>
+            </FieldContent>
+          </Field>
         </div>
       </div>
     </div>
@@ -56,15 +82,15 @@
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-import { AppModal, AppRadioGroup, AppSelect } from '@/components/app'
-import { Label } from '@/components/ui/label'
+import Modal from '@/components/modal.vue'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -95,7 +121,7 @@ const retentionPeriod = ref('180')
 const retentionUnit = ref<'day' | 'year'>('day')
 const creating = ref(false)
 
-watch(objectLock, value => {
+watch(objectLock, (value: boolean) => {
   if (value) {
     version.value = true
   } else {
@@ -103,7 +129,7 @@ watch(objectLock, value => {
   }
 })
 
-watch(version, value => {
+watch(version, (value: boolean) => {
   if (!value && objectLock.value) {
     objectLock.value = false
   }

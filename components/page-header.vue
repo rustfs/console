@@ -1,8 +1,11 @@
 <template>
-  <div class="sticky top-0 z-10 flex flex-col md:flex-row justify-between gap-2">
-    <slot name="title"></slot>
-    <div class="flex-1 flex flex-wrap items-center justify-end gap-2">
-      <slot name="actions"></slot>
+  <div class="sticky top-0 z-10 flex flex-col justify-between gap-2 md:flex-row">
+    <div class="space-y-2">
+      <slot />
+      <slot name="description"></slot>
+    </div>
+    <div class="flex flex-1 flex-wrap items-center justify-end gap-2">
+      <slot name="actions" />
     </div>
   </div>
 </template>

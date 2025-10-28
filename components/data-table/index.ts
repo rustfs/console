@@ -1,1 +1,0 @@
-export { useDataTable } from './useDataTable'

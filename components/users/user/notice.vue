@@ -1,5 +1,5 @@
 <template>
-  <AppModal v-model="visible" :title="t('New user has been created')" size="md" :close-on-backdrop="false">
+  <Modal v-model="visible" :title="t('New user has been created')" size="md" :close-on-backdrop="false">
     <div class="space-y-4">
       <div class="space-y-2">
         <Label>{{ t('Access Key') }}</Label>
@@ -17,13 +17,13 @@
         <Button variant="default" @click="exportFile">{{ t('Export') }}</Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
-import { AppModal } from '@/components/app'
+import Modal from '@/components/modal.vue'
 import { Label } from '@/components/ui/label'
 import { download } from '@/utils/export-file'
 import { ref } from 'vue'

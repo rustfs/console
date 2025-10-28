@@ -15,11 +15,18 @@
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel v-if="dialog.negativeText" @click.prevent="() => handleNegative(dialog)">
-              {{ dialog.negativeText }}
+            <AlertDialogCancel v-if="dialog.negativeText" as-child @click.prevent="() => handleNegative(dialog)">
+              <Button
+                :variant="negativeButtonVariant(dialog)"
+                class="w-full sm:w-auto text-foreground"
+              >
+                {{ dialog.negativeText }}
+              </Button>
             </AlertDialogCancel>
-            <AlertDialogAction :class="positiveButtonClass(dialog)" @click.prevent="() => handlePositive(dialog)">
-              {{ dialog.positiveText || 'Confirm' }}
+            <AlertDialogAction as-child @click.prevent="() => handlePositive(dialog)">
+              <Button :class="positiveButtonClass(dialog)">
+                {{ dialog.positiveText || 'Confirm' }}
+              </Button>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -40,6 +47,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
+import type { ButtonVariants } from '@/components/ui/button'
 import type { DialogInstance } from '@/lib/ui/dialog'
 import { useDialogController } from '@/lib/ui/dialog'
 import { cn } from '@/lib/utils'
@@ -48,10 +57,22 @@ import { computed } from 'vue'
 const controller = useDialogController()
 const dialogs = computed(() => controller.dialogs.value)
 
+const negativeButtonVariant = (dialog: DialogInstance): ButtonVariants['variant'] => {
+  return 'outline'
+}
+
 const positiveButtonClass = (dialog: DialogInstance) => {
+  const variant =
+    dialog.tone === 'destructive'
+      ? 'destructive'
+      : dialog.tone === 'warning'
+        ? 'secondary'
+        : 'default'
+
   return cn(
-    buttonVariants({ variant: dialog.tone === 'destructive' || dialog.tone === 'warning' ? 'destructive' : 'default' }),
-    'w-full sm:w-auto'
+    buttonVariants({ variant }),
+    'w-full sm:w-auto',
+    variant === 'destructive' && 'text-white'
   )
 }
 

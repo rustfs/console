@@ -1,5 +1,5 @@
 <template>
-  <AppModal v-model="visible" :title="t('Create User')" size="lg" :close-on-backdrop="false">
+  <Modal v-model="visible" :title="t('Create User')" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
       <div class="grid gap-4 md:grid-cols-2">
         <div class="space-y-2">
@@ -115,14 +115,14 @@
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
 import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import { AppModal } from '@/components/app'
+import Modal from '@/components/modal.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'

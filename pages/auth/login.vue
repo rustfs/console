@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 await setPageLayout('plain')
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -75,35 +76,43 @@ const handleLogin = async () => {
             <form @submit.prevent="handleLogin" autocomplete="off">
               <div class="grid gap-y-6">
                 <template v-if="method == 'accessKeyAndSecretKey'">
-                  <div>
-                    <label for="accessKey" class="block text-sm mb-2 dark:text-white">{{ t('Account') }}</label>
-                    <Input v-model="accessKeyAndSecretKey.accessKeyId" autocomplete="new-password" type="text" :placeholder="t('Please enter account')" />
-                  </div>
-                  <div>
-                    <div class="flex justify-between items-center">
-                      <label for="secretKey" class="block text-sm mb-2 dark:text-white">{{ t('Key') }}</label>
-                    </div>
-                    <Input v-model="accessKeyAndSecretKey.secretAccessKey" autocomplete="new-password" type="password" :placeholder="t('Please enter key')" />
-                  </div>
+                  <Field>
+                    <FieldLabel for="accessKey">{{ t('Account') }}</FieldLabel>
+                    <FieldContent>
+                      <Input id="accessKey" v-model="accessKeyAndSecretKey.accessKeyId" autocomplete="new-password" type="text" :placeholder="t('Please enter account')" />
+                    </FieldContent>
+                  </Field>
+                  <Field>
+                    <FieldLabel for="secretKey">{{ t('Key') }}</FieldLabel>
+                    <FieldContent>
+                      <Input id="secretKey" v-model="accessKeyAndSecretKey.secretAccessKey" autocomplete="new-password" type="password" :placeholder="t('Please enter key')" />
+                    </FieldContent>
+                  </Field>
                 </template>
 
                 <template v-else>
-                  <div>
-                    <label for="accessKey" class="block text-sm mb-2 dark:text-white">{{ t('STS Username') }}</label>
-                    <Input v-model="sts.accessKeyId" autocomplete="new-password" type="text" :placeholder="t('Please enter STS username')" />
-                  </div>
-                  <div>
-                    <label for="sts.secretAccessKey" class="block text-sm mb-2 dark:text-white">
+                  <Field>
+                    <FieldLabel for="stsAccessKey">{{ t('STS Username') }}</FieldLabel>
+                    <FieldContent>
+                      <Input id="stsAccessKey" v-model="sts.accessKeyId" autocomplete="new-password" type="text" :placeholder="t('Please enter STS username')" />
+                    </FieldContent>
+                  </Field>
+                  <Field>
+                    <FieldLabel for="stsSecretKey">
                       {{ t('STS Key') }}
-                    </label>
-                    <Input v-model="sts.secretAccessKey" autocomplete="new-password" type="password" :placeholder="t('Please enter STS key')" />
-                  </div>
-                  <div>
-                    <label for="sessionToken" class="block text-sm mb-2 dark:text-white">
+                    </FieldLabel>
+                    <FieldContent>
+                      <Input id="stsSecretKey" v-model="sts.secretAccessKey" autocomplete="new-password" type="password" :placeholder="t('Please enter STS key')" />
+                    </FieldContent>
+                  </Field>
+                  <Field>
+                    <FieldLabel for="sessionToken">
                       {{ t('STS Session Token') }}
-                    </label>
-                    <Input v-model="sts.sessionToken" autocomplete="new-password" type="text" :placeholder="t('Please enter STS session token')" />
-                  </div>
+                    </FieldLabel>
+                    <FieldContent>
+                      <Input id="sessionToken" v-model="sts.sessionToken" autocomplete="new-password" type="text" :placeholder="t('Please enter STS session token')" />
+                    </FieldContent>
+                  </Field>
                 </template>
 
                 <Button type="submit" variant="default" class="w-full justify-center">

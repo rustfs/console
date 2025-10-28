@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <div v-if="!editStatus" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div class="w-full sm:max-w-xs">
-        <Input v-model="searchTerm" :placeholder="t('Search Group')" />
+        <SearchInput v-model="searchTerm" :placeholder="t('Search Group')" clearable class="w-full" />
       </div>
       <Button variant="secondary" class="inline-flex items-center gap-2" @click="startEditing">
         <Icon class="size-4" name="ri:add-line" />
@@ -88,8 +88,6 @@
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
-
 import { Icon } from '#components'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

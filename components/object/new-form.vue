@@ -1,5 +1,5 @@
 <template>
-  <AppModal v-model="modalVisible" :title="t('New Form', { type: displayType })" size="md" :close-on-backdrop="false">
+  <Modal v-model="modalVisible" :title="t('New Form', { type: displayType })" size="md" :close-on-backdrop="false">
     <div class="space-y-4">
       <Alert>
         <AlertDescription>{{ t('Overwrite Warning') }}</AlertDescription>
@@ -18,7 +18,7 @@
         </Button>
       </div>
     </div>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
@@ -28,7 +28,7 @@ import { Button } from '@/components/ui/button'
 import { joinRelativeURL } from 'ufo'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AppModal } from '@/components/app'
+import Modal from '@/components/modal.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 const { t } = useI18n()

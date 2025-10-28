@@ -1,9 +1,7 @@
 <template>
   <div>
     <div class="mb-4 mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div class="flex w-full max-w-md items-center gap-2">
-        <Input v-model="searchTerm" :placeholder="t('Search Access User')" />
-      </div>
+      <SearchInput v-model="searchTerm" :placeholder="t('Search Access User')" clearable class="w-full max-w-md" />
       <div class="flex flex-wrap items-center gap-2">
         <Button
           type="button"
@@ -110,7 +108,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

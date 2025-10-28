@@ -2,8 +2,8 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppModal } from '@/components/app'
-import { Label } from '@/components/ui/label'
+import Modal from '@/components/modal.vue'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -114,26 +114,34 @@ const submitForm = async () => {
 </script>
 
 <template>
-  <AppModal
+  <Modal
     v-model="modalVisible"
     :title="t('Policy Original')"
     size="lg"
     :close-on-backdrop="false"
   >
     <div class="space-y-4">
-      <div class="grid gap-2">
-        <Label for="policy-name">{{ t('Policy Name') }}</Label>
-        <Input id="policy-name" v-model="form.name" autocomplete="off" />
-        <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
-      </div>
+      <Field>
+        <FieldLabel for="policy-name">{{ t('Policy Name') }}</FieldLabel>
+        <FieldContent>
+          <Input id="policy-name" v-model="form.name" autocomplete="off" />
+        </FieldContent>
+        <FieldDescription v-if="errors.name" class="text-destructive">
+          {{ errors.name }}
+        </FieldDescription>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label for="policy-content">{{ t('Policy Original') }}</Label>
-        <div class="max-h-[60vh] overflow-auto rounded-md border">
-          <json-editor id="policy-content" v-model="form.content" />
-        </div>
-        <p v-if="errors.content" class="text-sm text-destructive">{{ errors.content }}</p>
-      </div>
+      <Field>
+        <FieldLabel for="policy-content">{{ t('Policy Original') }}</FieldLabel>
+        <FieldContent>
+          <div class="max-h-[60vh] overflow-auto rounded-md border">
+            <json-editor id="policy-content" v-model="form.content" />
+          </div>
+        </FieldContent>
+        <FieldDescription v-if="errors.content" class="text-destructive">
+          {{ errors.content }}
+        </FieldDescription>
+      </Field>
     </div>
 
     <template #footer>
@@ -142,5 +150,5 @@ const submitForm = async () => {
         <Button variant="default" :loading="submitting" @click="submitForm">{{ t('Submit') }}</Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>

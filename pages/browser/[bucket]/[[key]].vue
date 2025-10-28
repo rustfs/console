@@ -1,12 +1,10 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <div class="flex items-center gap-4">
-          <h1 @click="$router.push(bucketPath())" class="cursor-pointer">{{ bucketName }}</h1>
-          <object-path-links :object-key="key" @click="path => $router.push(bucketPath(path))" />
-        </div>
-      </template>
+      <div class="flex items-center gap-4">
+        <h1 @click="$router.push(bucketPath())" class="cursor-pointer">{{ bucketName }}</h1>
+        <object-path-links :object-key="key" @click="path => $router.push(bucketPath(path))" />
+      </div>
     </page-header>
     <div class="flex flex-col gap-4">
       <object-list v-if="isObjectList" :bucket="bucketName" :path="key" />

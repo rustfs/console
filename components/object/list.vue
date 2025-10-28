@@ -1,34 +1,32 @@
 <template>
-  <div class="space-y-4">
-    <div class="sticky top-0 z-10 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div class="flex flex-wrap items-center justify-between gap-3">
-        <Input v-model="searchTerm" :placeholder="t('Search')" class="max-w-md" @input="handleSearch" />
-        <div class="flex flex-wrap items-center gap-2">
-          <object-upload-stats />
-          <object-delete-stats />
-          <Button variant="secondary" @click="() => handleNewObject(true)">
-            <Icon name="ri:add-line" class="size-4" />
-            <span>{{ t('New Folder') }}</span>
-          </Button>
-          <Button variant="secondary" @click="() => (uploadPickerVisible = true)">
-            <Icon name="ri:file-add-line" class="size-4" />
-            <span>{{ t('Upload File') }}/{{ t('Folder') }}</span>
-          </Button>
-          <Button variant="destructive" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="handleBatchDelete">
-            <Icon name="ri:delete-bin-5-line" class="size-4" />
-            <span>{{ t('Delete Selected') }}</span>
-          </Button>
-          <Button variant="outline" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="downloadMultiple">
-            <Icon name="ri:download-cloud-2-line" class="size-4" />
-            <span>{{ t('Download') }}</span>
-          </Button>
-          <Button variant="outline" @click="handleRefresh">
-            <Icon name="ri:refresh-line" class="size-4" />
-            <span>{{ t('Refresh') }}</span>
-          </Button>
-        </div>
-      </div>
-    </div>
+  <div class="space-y-6">
+    <page-header>
+      <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable />
+      <template #actions>
+        <object-upload-stats />
+        <object-delete-stats />
+        <Button variant="secondary" @click="() => handleNewObject(true)">
+          <Icon name="ri:add-line" class="size-4" />
+          <span>{{ t('New Folder') }}</span>
+        </Button>
+        <Button variant="secondary" @click="() => (uploadPickerVisible = true)">
+          <Icon name="ri:file-add-line" class="size-4" />
+          <span>{{ t('Upload File') }}/{{ t('Folder') }}</span>
+        </Button>
+        <Button variant="destructive" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="handleBatchDelete">
+          <Icon name="ri:delete-bin-5-line" class="size-4" />
+          <span>{{ t('Delete Selected') }}</span>
+        </Button>
+        <Button variant="outline" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="downloadMultiple">
+          <Icon name="ri:download-cloud-2-line" class="size-4" />
+          <span>{{ t('Download') }}</span>
+        </Button>
+        <Button variant="outline" @click="handleRefresh">
+          <Icon name="ri:refresh-line" class="size-4" />
+          <span>{{ t('Refresh') }}</span>
+        </Button>
+      </template>
+    </page-header>
 
     <DataTable :table="table" :is-loading="loading" :empty-title="t('No Objects')" :empty-description="t('Upload files or create folders to populate this bucket.')" />
 
@@ -42,24 +40,25 @@
         <Icon name="ri:arrow-right-s-line" class="ml-2" />
       </Button>
     </div>
-
-    <object-upload-picker :show="uploadPickerVisible" :bucketName="bucketName" :prefix="prefix" @update:show="val => {
-      uploadPickerVisible = val
-      refresh()
-    }" />
-    <object-new-form :show="newObjectFormVisible" :bucketName="bucketName" :prefix="prefix" :asPrefix="newObjectAsPrefix" @update:show="val => {
-      newObjectFormVisible = val
-      refresh()
-    }" />
-    <object-info ref="infoRef" :bucket-name="bucketName" @refresh-parent="handleObjectDeleted" />
   </div>
+
+  <object-upload-picker :show="uploadPickerVisible" :bucketName="bucketName" :prefix="prefix" @update:show="val => {
+    uploadPickerVisible = val
+    refresh()
+  }" />
+  <object-new-form :show="newObjectFormVisible" :bucketName="bucketName" :prefix="prefix" :asPrefix="newObjectAsPrefix" @update:show="val => {
+    newObjectFormVisible = val
+    refresh()
+  }" />
+  <object-info ref="infoRef" :bucket-name="bucketName" @refresh-parent="handleObjectDeleted" />
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 import { Icon, NuxtLink } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import { ListObjectsV2Command } from '@aws-sdk/client-s3'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
@@ -67,8 +66,6 @@ import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import { joinRelativeURL } from 'ufo'
 import { computed, h, ref, watch } from 'vue'
-import { useDataTable } from '~/components/data-table'
-import DataTable from '~/components/data-table/data-table.vue'
 import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 import { resolveRouteParam, safeDecodeURIComponent } from '~/utils/functions'
@@ -101,6 +98,10 @@ const handleSearch = debounce(() => {
   tokenHistory.value = []
   refresh()
 }, 300)
+
+watch(searchTerm, () => {
+  handleSearch()
+})
 
 const uploadTaskStore = useUploadTaskManagerStore()
 const deleteTaskStore = useDeleteTaskManagerStore()
@@ -192,6 +193,7 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
       header: ({ table }: any) =>
         h('input', {
           type: 'checkbox',
+          class: 'w-8',
           checked: table.getIsAllPageRowsSelected(),
           indeterminate: table.getIsSomePageRowsSelected(),
           onChange: (event: Event) => table.toggleAllPageRowsSelected((event.target as HTMLInputElement).checked),
@@ -199,6 +201,7 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
       cell: ({ row }: any) =>
         h('input', {
           type: 'checkbox',
+          class: 'w-8',
           checked: row.getIsSelected(),
           onChange: (event: Event) => row.toggleSelected((event.target as HTMLInputElement).checked),
         }),
@@ -268,7 +271,7 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
       header: () => t('Actions'),
       enableSorting: false,
       cell: ({ row }: any) =>
-        h('div', { class: 'flex justify-center gap-2' }, [
+        h('div', { class: 'flex items-center gap-2' }, [
           row.original.type === 'object'
             ? h(
               Button,

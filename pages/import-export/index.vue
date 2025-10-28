@@ -1,9 +1,7 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Import/Export') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Import/Export') }}</h1>
     </page-header>
 
     <div class="flex flex-col gap-6">
@@ -19,36 +17,23 @@
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="iam" class="mt-0">
-          <div class="space-y-6">
-            <div class="space-y-6">
-              <div class="space-y-2">
-                <h2 class="text-lg font-semibold">{{ t('IAM Configuration Export') }}</h2>
-                <p class="text-sm text-muted-foreground">
-                  {{
-                    t(
-                      'Export all IAM configurations including users, groups, policies, and access keys in a ZIP file.'
-                    )
-                  }}
-                </p>
-              </div>
-
-              <div class="grid gap-3 md:grid-cols-2">
-                <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Icon name="ri:user-line" class="text-blue-500" />
-                  <span>{{ t('Users') }}</span>
-                </div>
-                <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Icon name="ri:group-line" class="text-green-500" />
-                  <span>{{ t('User Groups') }}</span>
-                </div>
-                <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Icon name="ri:shield-line" class="text-purple-500" />
-                  <span>{{ t('IAM Policies') }}</span>
-                </div>
-                <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Icon name="ri:key-line" class="text-orange-500" />
-                  <span>{{ t('AK/SK') }}</span>
+        <TabsContent value="export" class="mt-0">
+          <Card class="shadow-none">
+            <CardHeader class="space-y-1">
+              <CardTitle>{{ t('IAM Configuration Export') }}</CardTitle>
+              <CardDescription>
+                {{
+                  t(
+                    'Export all IAM configurations including users, groups, policies, and access keys in a ZIP file.'
+                  )
+                }}
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-6">
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div v-for="item in exportHighlights" :key="item.label" class="flex items-center gap-3 rounded-md border bg-muted/40 p-3">
+                  <Icon :name="item.icon" :class="item.iconClass" class="size-5" />
+                  <span class="text-sm font-medium text-foreground">{{ t(item.label) }}</span>
                 </div>
               </div>
 
@@ -59,71 +44,66 @@
                   {{ t('The exported file contains sensitive information. Please keep it secure.') }}
                 </AlertDescription>
               </Alert>
+            </CardContent>
+            <CardFooter class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div class="text-sm text-muted-foreground">
+                {{ t('Download complete IAM configuration as ZIP file') }}
+              </div>
+              <Button variant="default" size="lg" :loading="isLoading" :disabled="isLoading" @click="handleExportIam">
+                <Icon name="ri:download-2-line" class="size-4" />
+                <span>{{ isLoading ? t('Exporting...') : t('Export Now') }}</span>
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
 
-              <div class="flex flex-col gap-2 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h3 class="text-sm font-semibold">{{ t('Export IAM Configuration') }}</h3>
-                  <p class="text-xs text-muted-foreground">
-                    {{ t('Download complete IAM configuration as ZIP file') }}
+        <TabsContent value="import" class="mt-0">
+          <Card class="shadow-none">
+            <CardHeader class="space-y-1">
+              <CardTitle>{{ t('IAM Configuration Import') }}</CardTitle>
+              <CardDescription>
+                {{ t('Import IAM configurations from a previously exported ZIP file.') }}
+              </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-4">
+              <div class="space-y-3">
+                <UploadZone :accept="'.zip'" :disabled="isLoading" class="border-dashed" @change="handleFileSelect">
+                  <p class="text-base font-medium">{{ t('Click or drag ZIP file to this area to upload') }}</p>
+                  <p class="text-sm text-muted-foreground">
+                    {{ t('Only ZIP files are supported, and file size should not exceed 10MB') }}
                   </p>
-                </div>
-                <Button variant="default" size="lg" :loading="isLoading" :disabled="isLoading" @click="handleExportIam">
-                  <Icon name="ri:download-2-line" class="size-4" />
-                  <span>{{ isLoading ? t('Exporting...') : t('Export Now') }}</span>
-                </Button>
-              </div>
-            </div>
+                </UploadZone>
+                <p v-if="uploadError" class="text-sm text-destructive">{{ uploadError }}</p>
 
-            <div class="space-y-6">
-              <div class="space-y-2">
-                <h2 class="text-lg font-semibold">{{ t('IAM Configuration Import') }}</h2>
-                <p class="text-sm text-muted-foreground">
-                  {{ t('Import IAM configurations from a previously exported ZIP file.') }}
-                </p>
-              </div>
-
-              <div class="space-y-4">
-                <div class="space-y-3">
-                  <h3 class="text-sm font-medium">{{ t('Select ZIP File') }}</h3>
-                  <AppUploadZone :accept="'.zip'" :disabled="isLoading" @change="handleFileSelect">
-                    <p class="text-base font-medium">{{ t('Click or drag ZIP file to this area to upload') }}</p>
-                    <p class="text-sm text-muted-foreground">
-                      {{ t('Only ZIP files are supported, and file size should not exceed 10MB') }}
-                    </p>
-                  </AppUploadZone>
-                  <p v-if="uploadError" class="text-sm text-destructive">{{ uploadError }}</p>
-                  <div v-if="selectedFile" class="flex items-center justify-between rounded-md border p-3">
+                <Card v-if="selectedFile" class="border-dashed bg-muted/30 shadow-none">
+                  <CardContent class="flex items-start justify-between gap-3 py-4">
                     <div>
-                      <p class="text-sm font-medium">{{ selectedFile.name }}</p>
+                      <p class="text-sm font-medium text-foreground">{{ selectedFile.name }}</p>
                       <p class="text-xs text-muted-foreground">
                         {{ formatSize(selectedFile.size) }}
                       </p>
                     </div>
-                    <Button variant="ghost" size="sm" class="text-destructive" @click="clearSelectedFile">
+                    <Button variant="ghost" size="icon-sm" class="text-destructive" @click="clearSelectedFile">
                       <Icon name="ri:close-line" class="size-4" />
                     </Button>
-                  </div>
-                </div>
-
-                <div class="flex flex-col gap-2 rounded-lg border p-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h3 class="text-sm font-semibold">{{ t('Import IAM Configuration') }}</h3>
-                    <p class="text-xs text-muted-foreground">
-                      {{
-                        selectedFile
-                          ? t('Ready to import: {filename}', { filename: selectedFile.name })
-                          : t('Please select a ZIP file to import')
-                      }}
-                    </p>
-                  </div>
-                  <Button variant="default" size="lg" :loading="isLoading" :disabled="isLoading || !selectedFile" @click="handleImportIam">
-                    <Icon name="ri:upload-2-line" class="size-4" />
-                    <span>{{ isLoading ? t('Importing...') : t('Import Now') }}</span>
-                  </Button>
-                </div>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-          </div>
+            </CardContent>
+            <CardFooter class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div class="text-sm text-muted-foreground">
+                {{
+                  selectedFile
+                    ? t('Ready to import: {filename}', { filename: selectedFile.name })
+                    : t('Please select a ZIP file to import')
+                }}
+              </div>
+              <Button variant="default" size="lg" :loading="isLoading" :disabled="isLoading || !selectedFile" @click="handleImportIam">
+                <Icon name="ri:upload-2-line" class="size-4" />
+                <span>{{ isLoading ? t('Importing...') : t('Import Now') }}</span>
+              </Button>
+            </CardFooter>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
@@ -134,8 +114,9 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppUploadZone } from '@/components/app'
+import UploadZone from '@/components/upload-zone.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -149,8 +130,17 @@ definePageMeta({
 
 const { isLoading, exportIamConfig, importIamConfig } = useImportExport()
 
-const activeTab = ref('iam')
-const tabs = computed(() => [{ key: 'iam', label: t('IAM') }])
+const activeTab = ref<'export' | 'import'>('export')
+const tabs = computed(() => [
+  { key: 'export', label: t('Export') },
+  { key: 'import', label: t('Import') },
+])
+const exportHighlights = computed(() => [
+  { label: 'Users', icon: 'ri:user-line', iconClass: 'text-blue-500' },
+  { label: 'User Groups', icon: 'ri:group-line', iconClass: 'text-green-500' },
+  { label: 'IAM Policies', icon: 'ri:shield-line', iconClass: 'text-purple-500' },
+  { label: 'AK/SK', icon: 'ri:key-line', iconClass: 'text-orange-500' },
+])
 
 const selectedFile = ref<File | null>(null)
 const uploadError = ref('')

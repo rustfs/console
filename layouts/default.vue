@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import AppSidebar from '@/components/app-sidebar.vue'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import AppSidebar from '~/components/app-sidebar.vue'
 
 const route = useRoute()
 const showSidebar = computed(() => !route.path.startsWith('/auth'))

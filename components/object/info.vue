@@ -1,5 +1,5 @@
 <template>
-  <AppDrawer v-model="visible" :title="t('Object Details')" size="lg">
+  <Drawer v-model="visible" :title="t('Object Details')" size="lg">
     <div class="space-y-4">
       <div class="flex flex-wrap items-center gap-2">
         <Button variant="outline" size="sm" @click="download">
@@ -24,8 +24,11 @@
         </Button>
       </div>
 
-      <AppCard :title="t('Info')" padded>
-        <div class="space-y-3 text-sm">
+      <Item variant="outline" class="flex-col items-stretch gap-4">
+        <ItemHeader class="items-center">
+          <ItemTitle>{{ t('Info') }}</ItemTitle>
+        </ItemHeader>
+        <ItemContent class="space-y-3 text-sm">
           <div class="flex items-center justify-between">
             <span class="font-medium text-muted-foreground">{{ t('Object Name') }}</span>
             <span>{{ object?.Key }}</span>
@@ -48,7 +51,7 @@
           </div>
           <div class="flex items-center justify-between">
             <span class="font-medium text-muted-foreground">{{ t('Legal Hold') }}</span>
-          <Switch :checked="lockStatus" @update:checked="toggleLegalHold" />
+            <Switch :checked="lockStatus" @update:checked="toggleLegalHold" />
           </div>
           <div class="flex flex-col gap-2">
             <span class="font-medium text-muted-foreground">{{ t('Retention') + t('Policy') }}</span>
@@ -63,42 +66,57 @@
               {{ t('Copy') }}
             </Button>
           </div>
-        </div>
-      </AppCard>
+        </ItemContent>
+      </Item>
     </div>
 
-    <AppModal v-model="showTagView" :title="t('Set Tags')" size="lg">
+    <Modal v-model="showTagView" :title="t('Set Tags')" size="lg">
       <div class="space-y-4">
         <div class="flex flex-wrap gap-2">
-          <AppTag v-for="tag in tags" :key="tag.Key" tone="info">
+          <Badge v-for="tag in tags" :key="tag.Key" variant="secondary">
             {{ tag.Key }}: {{ tag.Value }}
-          </AppTag>
+          </Badge>
         </div>
         <form class="space-y-4" @submit.prevent="submitTagForm">
-          <div class="flex items-center gap-2">
-            <Input v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
-            <span>=</span>
-            <Input v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
+          <div class="grid gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel>{{ t('Tag Key') }}</FieldLabel>
+              <FieldContent>
+                <Input v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel>{{ t('Tag Value') }}</FieldLabel>
+              <FieldContent>
+                <Input v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
+              </FieldContent>
+            </Field>
           </div>
-          <Button type="submit" variant="default">{{ t('Add') }}</Button>
+          <div class="flex justify-end">
+            <Button type="submit" variant="default">{{ t('Add') }}</Button>
+          </div>
         </form>
       </div>
-    </AppModal>
+    </Modal>
 
-    <AppModal v-model="showRetentionView" :title="t('Retention')" size="lg">
+    <Modal v-model="showRetentionView" :title="t('Retention')" size="lg">
       <div class="space-y-4">
         <form class="flex flex-col gap-3" @submit.prevent="submitRetention">
-          <div class="flex flex-col gap-2">
-            <Label>{{ t('Retention Mode') }}</Label>
-            <AppRadioGroup v-model="retentionMode" :options="[
-              { label: t('COMPLIANCE'), value: 'COMPLIANCE' },
-              { label: t('GOVERNANCE'), value: 'GOVERNANCE' },
-            ]" />
-          </div>
-          <div class="flex flex-col gap-2">
-            <Label>{{ t('Retention RetainUntilDate') }}</Label>
-            <Input v-model="retainUntilDate" type="datetime-local" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Retention Mode') }}</FieldLabel>
+            <FieldContent>
+              <v-radio-group v-model="retentionMode" :options="[
+                { label: t('COMPLIANCE'), value: 'COMPLIANCE' },
+                { label: t('GOVERNANCE'), value: 'GOVERNANCE' },
+              ]" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Retention RetainUntilDate') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="retainUntilDate" type="datetime-local" />
+            </FieldContent>
+          </Field>
           <div class="flex justify-end gap-2">
             <Button variant="secondary" @click="resetRetention">{{ t('Reset') }}</Button>
             <Button type="submit" variant="default">{{ t('Confirm') }}</Button>
@@ -106,19 +124,22 @@
           </div>
         </form>
       </div>
-    </AppModal>
+    </Modal>
 
     <object-preview-modal v-model:show="showPreview" :object="object" />
-  </AppDrawer>
+  </Drawer>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-import { AppCard, AppDrawer, AppModal, AppRadioGroup, AppTag } from '@/components/app'
+import Drawer from '@/components/drawer.vue'
+import Modal from '@/components/modal.vue'
+import { Item, ItemContent, ItemHeader, ItemTitle } from '@/components/ui/item'
+import { Badge } from '@/components/ui/badge'
 import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { joinRelativeURL } from 'ufo'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'

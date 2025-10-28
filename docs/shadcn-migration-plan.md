@@ -23,7 +23,7 @@ Each phase will be committed independently on `refactor/shadcn-vue` to keep roll
 | Inputs | `NInput`, `NInputNumber`, `NSelect`, `NDatePicker`, `NCheckbox`, `NCheckboxGroup`, `NRadio`, `NRadioGroup`, `NSwitch`, `NDynamicInput`, `NUpload`, `NUploadDragger`, `NInputGroup`, `NInputGroupLabel`, `NP`, `NText` | Map to shadcn `Input`, `NumberField`, `Select`, `Calendar/Popover`, `Checkbox`, `RadioGroup`, `Switch`, `TagsInput`. Implement custom wrappers for dynamic list fields and upload (likely using existing uploader logic + `Dropzone`). Replace `NP/NText` with semantic HTML + `Typography` utilities. |
 | Buttons | `NButton`, `NButtonGroup` | Use shadcn `Button` / `ButtonGroup` directly; add Tailwind utilities or inline spinner when needed for loading states. |
 | Feedback | `NModal`, `NDrawer`, `NAlert`, `NTooltip`, `NEmpty`, `NProgress`, `NSpin`, `NStatistic`, `NBreadcrumb` | Use shadcn `Dialog`, `Drawer`, `Alert`, `Tooltip`, `Empty` block, `Progress`, `Spinner` etc. Create `app-stat`/`app-empty` wrappers where gaps exist. |
-| Data display | `NCard`, `NList`, `NThing`, `NBadge`, `NTag`, `NDescriptions`, `NDescriptionsItem`, `NCarousel`, `NCollapse`, `NCollapseItem` | Replace with shadcn `Card`, `Badge`, `Accordion`, `Tabs` etc. Implement `AppDescriptionList` (simple definition list) and `AppTag` (using `Badge` or `Chip`). Use `Carousel` block already present. |
+| Data display | `NCard`, `NList`, `NThing`, `NBadge`, `NTag`, `NDescriptions`, `NDescriptionsItem`, `NCarousel`, `NCollapse`, `NCollapseItem` | Replace with shadcn `Card`, `Badge`, `Accordion`, `Tabs` etc. Implement `AppDescriptionList` (simple definition list). Use `Carousel` block already present. |
 | Tables | `NDataTable`, `NVirtualList` | Implement `DataTable` powered by `@tanstack/vue-table` + `ScrollArea`. Support selection, inline actions, slot-based cell rendering. Provide compatible props for datasets currently using render functions. |
 | Misc | `NDrawerContent`, `NScrollbar`, `NPageHeader`, `NPopover`, `NPopconfirm` | Use `DrawerContent`, `ScrollArea`, `PageHeader` replaced by `div` + `Breadcrumb`, shadcn `Popover`, and build `AppConfirmDialog` on top of AlertDialog. |
 
@@ -34,13 +34,12 @@ Each phase will be committed independently on `refactor/shadcn-vue` to keep roll
 
 ## Shared Components To Introduce
 
-- `components/app/AppUiProvider.vue` – wraps shadcn theme providers and exports composables for toasts/dialogs.
-- `components/app/AppSidebar.vue` + related items (menu, user dropdown host) following Sidebar07 markup.
-- `components/app/AppCard.vue`, `AppTag.vue` (buttons now import `Button` directly).
-- `components/app/AppForm.vue`, `AppFormField.vue`, `AppFieldGrid.vue` for consistent form layout.
-- `components/app/AppDialog.vue`, `AppDrawer.vue`, `AppConfirmDialog.vue`.
+- `components/providers/AppUiProvider.vue` – wraps shadcn theme providers and exports composables for toasts/dialogs.
+- `components/app-sidebar.vue` + related items (menu, user dropdown host) following Sidebar07 markup.
+- Form/layout helpers in `components/app-*.vue` (card, form, field grid) for consistent structure.
+- Shared overlays like `components/modal.vue`, `drawer.vue`, and confirmation dialogs.
 - `components/DataTable` module with column definitions, toolbar templates, and selection helpers.
-- `components/app/AppDescriptionList.vue`, `AppEmpty.vue`, `AppStatistic.vue`, `AppSpinner.vue`.
+- Presentation helpers such as `components/app-description-list.vue`, `empty-state.vue`, `spinner.vue`, and related statistic cards.
 
 These wrappers allow feature screens to migrate with minimal churn and keep visual consistency.
 

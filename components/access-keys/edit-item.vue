@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import Spinner from '@/components/ui/spinner/Spinner.vue'
+import { Spinner } from '@/components/ui/spinner'
 
-import { AppModal } from '@/components/app'
-import AppDateTimePicker from '@/components/app/AppDateTimePicker.vue'
-import { Label } from '@/components/ui/label'
+import DateTimePicker from '@/components/datetime-picker.vue'
+import Modal from '@/components/modal.vue'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import dayjs from 'dayjs'
@@ -93,42 +93,54 @@ async function submitForm() {
 </script>
 
 <template>
-  <AppModal
+  <Modal
     v-model="visible"
     :title="t('Edit Key')"
     size="lg"
     :close-on-backdrop="false"
   >
     <div class="space-y-4">
-      <div class="grid gap-2">
-        <Label>{{ t('Access Key') }}</Label>
-        <Input v-model="formModel.accesskey" disabled />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.accesskey" disabled />
+        </FieldContent>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label>{{ t('Policy') }}</Label>
-        <json-editor v-model="formModel.policy" />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Policy') }}</FieldLabel>
+        <FieldContent>
+          <json-editor v-model="formModel.policy" />
+        </FieldContent>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label>{{ t('Expiry') }}</Label>
-        <AppDateTimePicker v-model="formModel.expiry" :min="minExpiry" />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Expiry') }}</FieldLabel>
+        <FieldContent>
+          <DateTimePicker v-model="formModel.expiry" :min="minExpiry" />
+        </FieldContent>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label>{{ t('Name') }}</Label>
-        <Input v-model="formModel.name" />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Name') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.name" />
+        </FieldContent>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label>{{ t('Description') }}</Label>
-        <Textarea v-model="formModel.description" :rows="3" />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Description') }}</FieldLabel>
+        <FieldContent>
+          <Textarea v-model="formModel.description" :rows="3" />
+        </FieldContent>
+      </Field>
 
-      <div class="flex items-center justify-between rounded-md border p-3">
-        <span class="text-sm font-medium">{{ t('Status') }}</span>
-        <Switch v-model:checked="statusBoolean" />
-      </div>
+      <Field orientation="responsive" class="items-center rounded-md border p-3">
+        <FieldLabel class="text-sm font-medium">{{ t('Status') }}</FieldLabel>
+        <FieldContent class="flex justify-end">
+          <Switch v-model:checked="statusBoolean" />
+        </FieldContent>
+      </Field>
     </div>
 
     <template #footer>
@@ -142,5 +154,5 @@ async function submitForm() {
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>

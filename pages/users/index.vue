@@ -1,9 +1,7 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Users') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Users') }}</h1>
     </page-header>
     <div>
       <Tabs v-model="activeTab" class="flex flex-col gap-4">

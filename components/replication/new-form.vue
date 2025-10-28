@@ -1,5 +1,5 @@
 <template>
-  <AppModal
+  <Modal
     v-model="visible"
     :title="t('Add Replication Rule') + ` (${t('Bucket')}: ${bucketName})`"
     size="xl"
@@ -8,48 +8,66 @@
     <div class="space-y-6">
       <div class="space-y-4">
         <div class="grid gap-3 md:grid-cols-2">
-          <div class="grid gap-2">
-            <Label>{{ t('Priority') }}</Label>
-            <Input v-model="formData.level" type="number" min="1" />
-          </div>
-          <div class="grid gap-2">
-            <Label>{{ t('Mode') }}</Label>
-            <AppSelect v-model="formData.modeType" :options="modeOptions" />
-          </div>
-          <div class="grid gap-2">
-            <Label>{{ t('Endpoint') }}</Label>
-            <Input v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
-          </div>
-          <div class="grid gap-2">
-            <Label>{{ t('Bucket') }}</Label>
-            <Input v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
-          </div>
-          <div class="grid gap-2">
-            <Label>{{ t('Access Key') }}</Label>
-            <Input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
-          </div>
-          <div class="grid gap-2">
-            <Label>{{ t('Secret Key') }}</Label>
-            <Input v-model="formData.secrretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
-          </div>
-          <div class="grid gap-2">
-            <Label>{{ t('Region') }}</Label>
-            <Input v-model="formData.region" :placeholder="t('Please enter region')" />
-          </div>
-          <div class="grid gap-2">
-            <Label>{{ t('Storage Class') }}</Label>
-            <Input v-model="formData.storageType" :placeholder="t('Please enter storage class')" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Priority') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.level" type="number" min="1" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Mode') }}</FieldLabel>
+            <FieldContent>
+              <Selector v-model="formData.modeType" :options="modeOptions" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Endpoint') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Bucket') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.secrretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Region') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.region" :placeholder="t('Please enter region')" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Storage Class') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.storageType" :placeholder="t('Please enter storage class')" />
+            </FieldContent>
+          </Field>
         </div>
 
-        <div class="grid gap-2">
-          <Label>{{ t('Prefix') }}</Label>
-          <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
-        </div>
+        <Field>
+          <FieldLabel>{{ t('Prefix') }}</FieldLabel>
+          <FieldContent>
+            <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+          </FieldContent>
+        </Field>
 
         <div class="space-y-3">
           <div class="flex items-center justify-between">
-            <Label class="text-sm font-medium">{{ t('Tags') }}</Label>
+            <FieldLabel class="text-sm font-medium">{{ t('Tags') }}</FieldLabel>
             <Button variant="outline" size="sm" @click="addTag">
               <Icon name="ri:add-line" class="size-4" />
               {{ t('Add Tag') }}
@@ -105,22 +123,26 @@
         </div>
 
         <div class="space-y-3" v-if="formData.modeType === 'async'">
-          <div class="grid gap-2">
-            <Label>{{ t('Health Check Interval (seconds)') }}</Label>
-            <Input
-              v-model="formData.timecheck"
-              type="number"
-              min="1"
-              class="w-32"
-            />
-          </div>
-          <div class="grid gap-2">
-            <Label>{{ t('Bandwidth Limit') }}</Label>
-            <div class="flex items-center gap-2">
-              <Input v-model="formData.bandwidth" type="number" min="0" class="w-32" />
-              <AppSelect v-model="formData.unit" :options="unitOptions" class="w-28" />
-            </div>
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Health Check Interval (seconds)') }}</FieldLabel>
+            <FieldContent>
+              <Input
+                v-model="formData.timecheck"
+                type="number"
+                min="1"
+                class="w-32"
+              />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Bandwidth Limit') }}</FieldLabel>
+            <FieldContent>
+              <div class="flex items-center gap-2">
+                <Input v-model="formData.bandwidth" type="number" min="0" class="w-32" />
+                <Selector v-model="formData.unit" :options="unitOptions" class="w-28" />
+              </div>
+            </FieldContent>
+          </Field>
         </div>
       </div>
     </div>
@@ -131,7 +153,7 @@
         <Button variant="default" :loading="submitting" @click="handleSave">{{ t('Save') }}</Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
@@ -139,8 +161,9 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppModal, AppSelect } from '@/components/app'
-import { Label } from '@/components/ui/label'
+import Modal from '@/components/modal.vue'
+import Selector from '@/components/selector.vue'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

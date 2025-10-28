@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { configManager } from '~/utils/config'
@@ -93,9 +94,7 @@ const currentItems = computed(() => [
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Settings') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Settings') }}</h1>
     </page-header>
 
     <div class="flex flex-col gap-6">
@@ -114,13 +113,15 @@ const currentItems = computed(() => [
       <div class="space-y-4">
         <h2 class="text-lg font-semibold">{{ t('Server Configuration') }}</h2>
         <form class="space-y-4" @submit.prevent="saveConfig">
-          <div class="space-y-2">
-            <Label class="text-sm font-medium">{{ t('Server Address') }}</Label>
-            <Input v-model="formData.serverHost" :placeholder="t('Please enter server address (e.g., http://localhost:9000)')" autocomplete="off" />
-            <p class="text-xs text-muted-foreground">
+          <Field>
+            <FieldLabel>{{ t('Server Address') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.serverHost" :placeholder="t('Please enter server address (e.g., http://localhost:9000)')" autocomplete="off" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('Example: http://localhost:9000 or https://your-domain.com') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
 
           <div class="flex flex-wrap items-center gap-2">
             <Button type="submit" variant="default" :loading="loading">

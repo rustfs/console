@@ -158,6 +158,8 @@ npm run preview
 
 ### Code Quality
 
+- Component files use **kebab-case** (e.g., `search-input.vue`, `action-bar.vue`).
+
 We maintain high code quality standards with:
 
 - **TypeScript**: Full type safety and better developer experience
@@ -204,7 +206,7 @@ Add new languages by:
 
 ### Component Library
 
-Built on shadcn-vue primitives with custom wrappers in `components/ui/` and `components/app`. Extend the design system by:
+Built on shadcn-vue primitives with custom wrappers in `components/ui/` and the root `components/` directory (e.g. `modal.vue`, `drawer.vue`, `selector.vue`). Extend the design system by:
 
 - Adding new components to `components/ui/`
 - Following established naming conventions

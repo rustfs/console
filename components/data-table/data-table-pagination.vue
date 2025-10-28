@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button'
 
 import type { Table } from '@tanstack/vue-table'
-import AppSelect from '@/components/app/AppSelect.vue'
+import Selector from '@/components/selector.vue'
 import { cn } from '@/lib/utils'
 import { computed } from 'vue'
 
@@ -42,7 +42,7 @@ const handlePageSizeChange = (value: number | string | boolean | null) => {
       <span class="text-sm text-muted-foreground">
         Rows per page
       </span>
-      <AppSelect
+      <Selector
         :options="pageSizeOptions.map(option => ({ label: String(option), value: option }))"
         :model-value="pagination.pageSize"
         class="w-24"

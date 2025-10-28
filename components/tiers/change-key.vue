@@ -1,20 +1,24 @@
 <template>
-  <AppModal
+  <Modal
     v-model="visibleProxy"
     :title="t('Update Key') + '：' + nameProxy"
     size="md"
     :close-on-backdrop="false"
   >
     <div class="space-y-4">
-      <div class="grid gap-2">
-        <Label>{{ t('Access Key') }}</Label>
-        <Input v-model="formModel.accessKey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.accessKey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
+        </FieldContent>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label>{{ t('Secret Key') }}</Label>
-        <Input v-model="formModel.secretKey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.secretKey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+        </FieldContent>
+      </Field>
     </div>
 
     <template #footer>
@@ -23,15 +27,15 @@
         <Button variant="default" :loading="submitting" @click="submitForm">{{ t('Submit') }}</Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppModal } from '@/components/app'
-import { Label } from '@/components/ui/label'
+import Modal from '@/components/modal.vue'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 

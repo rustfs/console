@@ -2,7 +2,7 @@
 import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import { AppModal } from '@/components/app'
+import Modal from '@/components/modal.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
@@ -104,7 +104,7 @@ const submitForm = async () => {
 </script>
 
 <template>
-  <AppModal v-model="modalVisible" :title="t('Add group members')" size="lg" :close-on-backdrop="false">
+  <Modal v-model="modalVisible" :title="t('Add group members')" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
       <div class="space-y-2">
         <Label class="text-sm font-medium">{{ t('Name') }}</Label>
@@ -171,5 +171,5 @@ const submitForm = async () => {
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>

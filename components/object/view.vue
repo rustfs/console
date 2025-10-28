@@ -1,83 +1,97 @@
 <template>
   <div class="space-y-4">
-    <AppCard padded class="space-y-4">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="flex flex-col">
-          <div class="flex items-center gap-2">
-            <Button variant="ghost" size="sm" @click="router.back">
-              <Icon name="ri:arrow-left-line" class="size-4" />
-            </Button>
-            <h2 class="text-lg font-semibold">{{ object?.Key }}</h2>
+    <Item variant="outline" class="flex-col items-stretch gap-4">
+      <ItemContent class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-col">
+            <div class="flex items-center gap-2">
+              <Button variant="ghost" size="sm" @click="router.back">
+                <Icon name="ri:arrow-left-line" class="size-4" />
+              </Button>
+              <h2 class="text-lg font-semibold">{{ object?.Key }}</h2>
+            </div>
+            <p class="text-sm text-muted-foreground">{{ t('Object Detail Description', { bucket: bucketName }) }}</p>
           </div>
-          <p class="text-sm text-muted-foreground">{{ t('Object Detail Description', { bucket: bucketName }) }}</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" @click="download">
+              <Icon name="ri:download-line" class="size-4" />
+              {{ t('Download') }}
+            </Button>
+            <Button variant="outline" size="sm" @click="copySignedUrl">
+              <Icon name="ri:file-copy-line" class="size-4" />
+              {{ t('Copy Temporary URL') }}
+            </Button>
+            <Button variant="outline" size="sm" @click="() => (showPreview = true)">
+              <Icon name="ri:eye-line" class="size-4" />
+              {{ t('Preview') }}
+            </Button>
+            <Button variant="outline" size="sm" @click="() => (showTagView = true)">
+              <Icon name="ri:price-tag-3-line" class="size-4" />
+              {{ t('Set Tags') }}
+            </Button>
+            <Button variant="destructive" size="sm" @click="confirmDelete">
+              <Icon name="ri:delete-bin-5-line" class="size-4" />
+              {{ t('Delete') }}
+            </Button>
+            <Button variant="outline" size="sm" @click="refresh">
+              <Icon name="ri:refresh-line" class="size-4" />
+              {{ t('Refresh') }}
+            </Button>
+          </div>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" @click="download">
-            <Icon name="ri:download-line" class="size-4" />
-            {{ t('Download') }}
-          </Button>
-          <Button variant="outline" size="sm" @click="copySignedUrl">
-            <Icon name="ri:file-copy-line" class="size-4" />
-            {{ t('Copy Temporary URL') }}
-          </Button>
-          <Button variant="outline" size="sm" @click="() => (showPreview = true)">
-            <Icon name="ri:eye-line" class="size-4" />
-            {{ t('Preview') }}
-          </Button>
-          <Button variant="outline" size="sm" @click="() => (showTagView = true)">
-            <Icon name="ri:price-tag-3-line" class="size-4" />
-            {{ t('Set Tags') }}
-          </Button>
-          <Button variant="destructive" size="sm" @click="confirmDelete">
-            <Icon name="ri:delete-bin-5-line" class="size-4" />
-            {{ t('Delete') }}
-          </Button>
-          <Button variant="outline" size="sm" @click="refresh">
-            <Icon name="ri:refresh-line" class="size-4" />
-            {{ t('Refresh') }}
-          </Button>
+      </ItemContent>
+    </Item>
+
+    <Item variant="outline" class="flex-col items-stretch gap-4">
+      <ItemContent class="space-y-3 text-sm">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-muted-foreground">{{ t('Object Name') }}</span>
+          <span>{{ object?.Key }}</span>
         </div>
-      </div>
-    </AppCard>
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-muted-foreground">{{ t('Object Size') }}</span>
+          <span>{{ object?.ContentLength }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-muted-foreground">{{ t('Object Type') }}</span>
+          <span>{{ object?.ContentType }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-muted-foreground">ETag</span>
+          <span>{{ object?.ETag }}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-muted-foreground">{{ t('Last Modified Time') }}</span>
+          <span>{{ object?.LastModified }}</span>
+        </div>
+      </ItemContent>
+    </Item>
 
-    <AppCard padded class="space-y-3 text-sm">
-      <div class="flex items-center justify-between">
-        <span class="font-medium text-muted-foreground">{{ t('Object Name') }}</span>
-        <span>{{ object?.Key }}</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="font-medium text-muted-foreground">{{ t('Object Size') }}</span>
-        <span>{{ object?.ContentLength }}</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="font-medium text-muted-foreground">{{ t('Object Type') }}</span>
-        <span>{{ object?.ContentType }}</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="font-medium text-muted-foreground">ETag</span>
-        <span>{{ object?.ETag }}</span>
-      </div>
-      <div class="flex items-center justify-between">
-        <span class="font-medium text-muted-foreground">{{ t('Last Modified Time') }}</span>
-        <span>{{ object?.LastModified }}</span>
-      </div>
-    </AppCard>
-
-    <AppModal v-model="showTagView" :title="t('Set Tags')" size="lg">
+    <Modal v-model="showTagView" :title="t('Set Tags')" size="lg">
       <div class="space-y-4">
         <div class="flex flex-wrap gap-2">
-          <AppTag v-for="tag in tags" :key="tag.Key" tone="info">
+          <Badge v-for="tag in tags" :key="tag.Key" variant="secondary">
             {{ tag.Key }}: {{ tag.Value }}
-          </AppTag>
+          </Badge>
         </div>
         <form class="flex flex-wrap gap-3" @submit.prevent="submitTagForm">
-          <Input v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
-          <Input v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
-          <Button type="submit" variant="default">{{ t('Add') }}</Button>
-          <Button variant="outline" @click="showTagView = false">{{ t('Cancel') }}</Button>
+          <Field class="min-w-[200px] flex-1">
+            <FieldLabel>{{ t('Tag Key') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="tagFormValue.Key" :placeholder="t('Tag Key Placeholder')" />
+            </FieldContent>
+          </Field>
+          <Field class="min-w-[200px] flex-1">
+            <FieldLabel>{{ t('Tag Value') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="tagFormValue.Value" :placeholder="t('Tag Value Placeholder')" />
+            </FieldContent>
+          </Field>
+          <Button type="submit" variant="default" class="self-end">{{ t('Add') }}</Button>
+          <Button type="button" variant="outline" class="self-end" @click="showTagView = false">{{ t('Cancel') }}</Button>
         </form>
       </div>
-    </AppModal>
+    </Modal>
 
     <object-preview-modal :show="showPreview" :object="object" @update:show="showPreview = $event" />
   </div>
@@ -88,7 +102,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppCard, AppModal, AppTag } from '@/components/app'
+import Modal from '@/components/modal.vue'
+import { Item, ItemContent } from '@/components/ui/item'
+import { Badge } from '@/components/ui/badge'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'

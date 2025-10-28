@@ -1,14 +1,9 @@
 <template>
-  <AppModal v-model="visible" :title="t('Add Tier')" size="lg" :close-on-backdrop="false">
+  <Modal v-model="visible" :title="t('Add Tier')" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
       <div v-if="!formData.type" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div
-          v-for="item in typeOptions"
-          :key="item.value"
-          class="cursor-pointer border border-border/70 transition hover:border-primary"
-          @click="chooseType(item.value)"
-        >
-          <div class="flex items-center gap-3">
+        <div v-for="item in typeOptions" :key="item.value" class="cursor-pointer border border-border/70 transition hover:border-primary" @click="chooseType(item.value)">
+          <div class="flex items-center gap-3 p-4">
             <img :src="item.iconUrl" class="h-10 w-10" alt="" />
             <div>
               <p class="text-base font-semibold">{{ item.label }}</p>
@@ -20,7 +15,7 @@
 
       <div v-else class="space-y-5">
         <div class="cursor-pointer border transition hover:border-primary" @click="resetType">
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 p-4">
             <img :src="iconUrl" class="h-10 w-10" alt="" />
             <div>
               <p class="text-sm text-muted-foreground">{{ t('Selected Type') }}</p>
@@ -30,51 +25,64 @@
         </div>
 
         <div class="space-y-4">
-          <div class="grid gap-2">
-            <Label>{{ t('Name') }} (A-Z,0-9,_)</Label>
-            <Input
-              v-model="formData.name"
-              :placeholder="t('Please enter name')"
-              autocomplete="off"
-              @input="filterName"
-            />
-            <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Name') }} (A-Z,0-9,_)</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.name" :placeholder="t('Please enter name')" autocomplete="off" @input="filterName" />
+            </FieldContent>
+            <FieldDescription v-if="errors.name" class="text-destructive">
+              {{ errors.name }}
+            </FieldDescription>
+          </Field>
 
-          <div class="grid gap-2">
-            <Label>{{ t('Endpoint') }}</Label>
-            <Input v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Endpoint') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
+            </FieldContent>
+          </Field>
 
-          <div class="grid gap-2">
-            <Label>{{ t('Access Key') }}</Label>
-            <Input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
+            </FieldContent>
+          </Field>
 
-          <div class="grid gap-2">
-            <Label>{{ t('Secret Key') }}</Label>
-            <Input v-model="formData.secretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.secretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+            </FieldContent>
+          </Field>
 
-          <div class="grid gap-2">
-            <Label>{{ t('Bucket') }}</Label>
-            <Input v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Bucket') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
+            </FieldContent>
+          </Field>
 
-          <div class="grid gap-2">
-            <Label>{{ t('Prefix') }}</Label>
-            <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Prefix') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+            </FieldContent>
+          </Field>
 
-          <div class="grid gap-2">
-            <Label>{{ t('Region') }}</Label>
-            <Input v-model="formData.region" :placeholder="t('Please enter region')" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Region') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.region" :placeholder="t('Please enter region')" />
+            </FieldContent>
+          </Field>
 
-          <div class="grid gap-2">
-            <Label>{{ t('Storage Class') }}</Label>
-            <Input v-model="formData.storageclass" :placeholder="t('Please Enter storage class')" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Storage Class') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.storageclass" :placeholder="t('Please Enter storage class')" />
+            </FieldContent>
+          </Field>
         </div>
       </div>
     </div>
@@ -87,20 +95,20 @@
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import { AppModal } from '@/components/app'
-import { Label } from '@/components/ui/label'
-import { computed, reactive, ref } from 'vue'
+import Modal from '@/components/modal.vue'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import MinioIcon from '~/assets/svg/minio.svg'
-import AWSIcon from '~/assets/svg/aws.svg'
 import RustfsIcon from '~/assets/logo.svg'
+import AWSIcon from '~/assets/svg/aws.svg'
+import MinioIcon from '~/assets/svg/minio.svg'
 
 const { t } = useI18n()
 const usetier = useTiers()

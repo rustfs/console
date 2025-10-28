@@ -1,10 +1,8 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Tiers') }}</h1>
-      </template>
-      <div class="flex flex-wrap items-center justify-end gap-2 w-full">
+      <h1 class="text-2xl font-bold">{{ t('Tiers') }}</h1>
+      <template #actions>
         <Button variant="secondary" @click="openNewForm">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('Add Tier') }}</span>
@@ -13,7 +11,7 @@
           <Icon name="ri:refresh-line" class="size-4" />
           <span>{{ t('Refresh') }}</span>
         </Button>
-      </div>
+      </template>
     </page-header>
 
     <DataTable :table="table" :is-loading="loading" :empty-title="t('No Tiers')" :empty-description="t('Add tiers to configure remote storage destinations.')" />
@@ -27,11 +25,11 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDataTable } from '~/components/data-table'
-import DataTable from '~/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const message = useMessage()

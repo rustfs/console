@@ -1,9 +1,7 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Server-Side Encryption (SSE) Configuration') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Server-Side Encryption (SSE) Configuration') }}</h1>
       <template #description>
         <p class="text-gray-600 dark:text-gray-400">
           {{ t('Configure server-side encryption for your objects using external key management services.') }}
@@ -11,22 +9,45 @@
       </template>
     </page-header>
 
-    <div>
-      <!-- KMS 状态显示 -->
-      <AppCard class="mb-6 space-y-4">
-        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div class="flex flex-col gap-2">
-            <div class="flex flex-wrap items-center gap-3">
-              <Badge :variant="kmsStatusVariant" class="text-sm uppercase">
-                {{ getKmsStatusText() }}
-              </Badge>
-              <span class="text-sm text-muted-foreground">{{ getKmsStatusDescription() }}</span>
-              <span v-if="sseKmsForm.kms_backend" class="text-xs text-foreground/70">
-                {{ t('Backend') }}: {{ sseKmsForm.backend_type }}
-              </span>
+    <div class="space-y-8">
+      <!-- KMS 总览 -->
+      <Card class="shadow-none">
+        <CardHeader class="space-y-2">
+          <div class="flex flex-wrap items-center gap-3">
+            <CardTitle class="text-base sm:text-lg">{{ t('KMS Status Overview') }}</CardTitle>
+            <Badge :variant="kmsStatusVariant" class="text-sm uppercase">
+              {{ getKmsStatusText() }}
+            </Badge>
+          </div>
+          <CardDescription>
+            {{ getKmsStatusDescription() }}
+          </CardDescription>
+          <CardDescription v-if="sseKmsForm.kms_backend">
+            {{ t('Backend') }}: {{ sseKmsForm.backend_type }}
+          </CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="rounded-md border bg-muted/40 p-3">
+              <p class="text-xs text-muted-foreground">{{ t('Backend Type') }}</p>
+              <p class="text-sm font-medium text-foreground">
+                {{ sseKmsForm.backend_type ? getKmsTypeName(sseKmsForm.backend_type) : t('Not configured') }}
+              </p>
+            </div>
+            <div class="rounded-md border bg-muted/40 p-3">
+              <p class="text-xs text-muted-foreground">{{ t('Cache Status') }}</p>
+              <p class="text-sm font-medium text-foreground">
+                {{ sseKmsForm.enable_cache ? t('Enabled') : t('Disabled') }}
+              </p>
+            </div>
+            <div class="rounded-md border bg-muted/40 p-3">
+              <p class="text-xs text-muted-foreground">{{ t('Default Key ID') }}</p>
+              <p class="text-sm font-medium text-foreground">
+                {{ sseKmsForm.default_key_id || t('Not configured') }}
+              </p>
             </div>
           </div>
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="flex flex-wrap items-center justify-end gap-2">
             <Button size="sm" variant="outline" :loading="refreshingStatus" @click="refreshStatus">
               <Icon name="ri:refresh-line" class="mr-2 size-4" />
               {{ t('Refresh') }}
@@ -39,101 +60,117 @@
               <Icon name="ri:eye-line" class="mr-2 size-4" />
               {{ t('Details') }}
             </Button>
-
-            <Button v-if="hasConfiguration && (sseKmsForm.kms_status === 'Configured' || isErrorStatus(sseKmsForm.kms_status))" size="sm" variant="default" :loading="startingKMS"
-              @click="startKMSService">
+            <Button
+              v-if="hasConfiguration && (sseKmsForm.kms_status === 'Configured' || isErrorStatus(sseKmsForm.kms_status))"
+              size="sm"
+              variant="default"
+              :loading="startingKMS"
+              @click="startKMSService"
+            >
               <Icon name="ri:play-line" class="mr-2 size-4" />
               {{ t('Start KMS') }}
             </Button>
-
-            <Button v-if="hasConfiguration && sseKmsForm.kms_status === 'Running'" size="sm" variant="outline" :loading="stoppingKMS" @click="stopKMSService">
+            <Button
+              v-if="hasConfiguration && sseKmsForm.kms_status === 'Running'"
+              size="sm"
+              variant="outline"
+              :loading="stoppingKMS"
+              @click="stopKMSService"
+            >
               <Icon name="ri:stop-line" class="mr-2 size-4" />
               {{ t('Stop KMS') }}
             </Button>
           </div>
-        </div>
-      </AppCard>
+        </CardContent>
+      </Card>
 
       <!-- KMS 配置区域 -->
-      <div class="mb-6 space-y-6">
-        <div class="space-y-2">
-          <h2 class="text-lg font-semibold">{{ t('KMS Configuration') }}</h2>
-        </div>
-        <div v-if="!isEditing" class="space-y-4">
-          <!-- 当前配置显示 -->
-          <div v-if="sseKmsForm.backend_type" class="rounded-lg border bg-muted/30 p-4 dark:bg-muted/10">
-            <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div class="space-y-2">
-                <p class="text-sm font-semibold text-foreground">
-                  {{ t('Current KMS Type') }}: {{ getKmsTypeName(sseKmsForm.backend_type) }}
-                </p>
-                <div class="space-y-2 text-sm text-muted-foreground">
-                  <!-- Vault backend specific fields -->
-                  <template v-if="sseKmsForm.backend_type === 'vault'">
-                    <div>
-                      {{ t('Vault Server') }}:
-                      <span v-if="sseKmsForm.address === 'configured-but-hidden'" class="italic">
-                        {{ t('(Configuration details are private)') }}
-                      </span>
-                      <span v-else>{{ sseKmsForm.address || t('Not specified') }}</span>
-                    </div>
-                    <div v-if="sseKmsForm.mount_path">{{ t('Transit Mount') }}: {{ sseKmsForm.mount_path }}</div>
-                    <div v-if="sseKmsForm.kv_mount">{{ t('KV Mount') }}: {{ sseKmsForm.kv_mount }}</div>
-                    <div v-if="sseKmsForm.key_path_prefix">
-                      {{ t('Key Path Prefix') }}: {{ sseKmsForm.key_path_prefix }}
-                    </div>
-                    <div v-if="sseKmsForm.auth_type">
-                      {{ t('Auth Method') }}: {{ sseKmsForm.auth_type === 'approle' ? 'AppRole' : 'Token' }}
-                    </div>
-                  </template>
+      <Card class="shadow-none">
+        <CardHeader class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div class="space-y-1">
+            <CardTitle>{{ t('KMS Configuration') }}</CardTitle>
+            <CardDescription>
+              {{ t('Manage how RustFS connects to your external key management service.') }}
+            </CardDescription>
+          </div>
+          <div v-if="!isEditing" class="flex gap-2">
+            <Button size="sm" variant="default" @click="startEditing">
+              {{ hasConfiguration ? t('Edit Configuration') : t('Configure KMS') }}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent class="space-y-6">
+          <div v-if="!isEditing" class="space-y-4">
+            <div v-if="sseKmsForm.backend_type" class="rounded-lg border bg-muted/30 p-4 dark:bg-muted/10">
+              <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div class="space-y-2">
+                  <p class="text-sm font-semibold text-foreground">
+                    {{ t('Current KMS Type') }}: {{ getKmsTypeName(sseKmsForm.backend_type) }}
+                  </p>
+                  <div class="space-y-2 text-sm text-muted-foreground">
+                    <!-- Vault backend specific fields -->
+                    <template v-if="sseKmsForm.backend_type === 'vault'">
+                      <div>
+                        {{ t('Vault Server') }}:
+                        <span v-if="sseKmsForm.address === 'configured-but-hidden'" class="italic">
+                          {{ t('(Configuration details are private)') }}
+                        </span>
+                        <span v-else>{{ sseKmsForm.address || t('Not specified') }}</span>
+                      </div>
+                      <div v-if="sseKmsForm.mount_path">{{ t('Transit Mount') }}: {{ sseKmsForm.mount_path }}</div>
+                      <div v-if="sseKmsForm.kv_mount">{{ t('KV Mount') }}: {{ sseKmsForm.kv_mount }}</div>
+                      <div v-if="sseKmsForm.key_path_prefix">
+                        {{ t('Key Path Prefix') }}: {{ sseKmsForm.key_path_prefix }}
+                      </div>
+                      <div v-if="sseKmsForm.auth_type">
+                        {{ t('Auth Method') }}: {{ sseKmsForm.auth_type === 'approle' ? 'AppRole' : 'Token' }}
+                      </div>
+                    </template>
 
-                  <!-- Local backend specific fields -->
-                  <template v-if="sseKmsForm.backend_type === 'local'">
-                    <div v-if="sseKmsForm.key_directory">{{ t('Key Directory') }}: {{ sseKmsForm.key_directory }}</div>
-                    <div v-if="sseKmsForm.has_master_key !== undefined">
-                      {{ t('Master Key') }}: {{ sseKmsForm.has_master_key ? t('Configured') : t('Not configured') }}
+                    <!-- Local backend specific fields -->
+                    <template v-if="sseKmsForm.backend_type === 'local'">
+                      <div v-if="sseKmsForm.key_directory">{{ t('Key Directory') }}: {{ sseKmsForm.key_directory }}</div>
+                      <div v-if="sseKmsForm.has_master_key !== undefined">
+                        {{ t('Master Key') }}: {{ sseKmsForm.has_master_key ? t('Configured') : t('Not configured') }}
+                      </div>
+                    </template>
+                    <div v-if="sseKmsForm.timeout_seconds">{{ t('Timeout') }}: {{ sseKmsForm.timeout_seconds }}s</div>
+                    <div v-if="sseKmsForm.retry_attempts">{{ t('Retry Attempts') }}: {{ sseKmsForm.retry_attempts }}</div>
+                    <div v-if="sseKmsForm.enable_cache !== undefined">
+                      {{ t('Cache Enabled') }}: {{ sseKmsForm.enable_cache ? t('Yes') : t('No') }}
                     </div>
-                  </template>
-                  <div v-if="sseKmsForm.timeout_seconds">{{ t('Timeout') }}: {{ sseKmsForm.timeout_seconds }}s</div>
-                  <div v-if="sseKmsForm.retry_attempts">{{ t('Retry Attempts') }}: {{ sseKmsForm.retry_attempts }}</div>
-                  <div v-if="sseKmsForm.enable_cache !== undefined">
-                    {{ t('Cache Enabled') }}: {{ sseKmsForm.enable_cache ? t('Yes') : t('No') }}
-                  </div>
-                  <div v-if="sseKmsForm.cache_ttl_seconds">
-                    {{ t('Cache TTL') }}: {{ sseKmsForm.cache_ttl_seconds }}s
-                  </div>
-                  <div v-if="sseKmsForm.default_key_id && sseKmsForm.default_key_id !== 'configured-but-hidden'">
-                    {{ t('Default Key ID') }}: {{ sseKmsForm.default_key_id }}
-                  </div>
-                  <div v-else-if="sseKmsForm.default_key_id === 'configured-but-hidden'">
-                    {{ t('Default Key ID') }}: <span class="italic">{{ t('(Configured)') }}</span>
-                  </div>
-                  <div v-if="sseKmsForm.kms_status">
-                    {{ t('Status') }}:
-                    <AppTag :tone="kmsStatusTone" class="text-xs uppercase">
-                      {{ getKmsStatusText() }}
-                    </AppTag>
+                    <div v-if="sseKmsForm.cache_ttl_seconds">
+                      {{ t('Cache TTL') }}: {{ sseKmsForm.cache_ttl_seconds }}s
+                    </div>
+                    <div v-if="sseKmsForm.default_key_id && sseKmsForm.default_key_id !== 'configured-but-hidden'">
+                      {{ t('Default Key ID') }}: {{ sseKmsForm.default_key_id }}
+                    </div>
+                    <div v-else-if="sseKmsForm.default_key_id === 'configured-but-hidden'">
+                      {{ t('Default Key ID') }}: <span class="italic">{{ t('(Configured)') }}</span>
+                    </div>
+                    <div v-if="sseKmsForm.kms_status">
+                      {{ t('Status') }}:
+                      <Badge :variant="kmsStatusVariant" class="text-xs uppercase">
+                        {{ getKmsStatusText() }}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </div>
-              <Button size="sm" variant="outline" @click="startEditing">
-                {{ t('Edit Configuration') }}
+            </div>
+
+            <!-- 未配置状态 -->
+            <div v-else class="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-8 text-muted-foreground">
+              <Icon name="ri:key-2-line" class="mb-2 text-4xl" />
+              <div class="text-sm">{{ t('No KMS configuration found') }}</div>
+              <Button size="sm" variant="default" @click="startEditing">
+                {{ t('Configure KMS') }}
               </Button>
             </div>
           </div>
 
-          <!-- 未配置状态 -->
-          <div v-else class="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-8 text-muted-foreground">
-            <Icon name="ri:key-2-line" class="mb-2 text-4xl" />
-            <div class="text-sm">{{ t('No KMS configuration found') }}</div>
-            <Button size="sm" variant="default" @click="startEditing">
-              {{ t('Configure KMS') }}
-            </Button>
-          </div>
-        </div>
-
-        <!-- 编辑模式表单 -->
-        <form v-else class="space-y-6" @submit.prevent="saveConfiguration">
+          <!-- 编辑模式表单 -->
+          <form v-else class="space-y-6" @submit.prevent="saveConfiguration">
           <div>
             <p class="text-sm font-medium text-foreground">{{ t('KMS Type') }}</p>
             <p class="text-xs text-muted-foreground">
@@ -141,107 +178,147 @@
             </p>
           </div>
 
-          <div class="space-y-2">
-            <Label for="kms-address">{{ t('Vault Server Address') }}</Label>
-            <Input id="kms-address" v-model="sseKmsForm.address" :placeholder="t('e.g., https://vault.example.com:8200')" autocomplete="off" />
-          </div>
+          <Field>
+            <FieldLabel for="kms-address">{{ t('Vault Server Address') }}</FieldLabel>
+            <FieldContent>
+              <Input id="kms-address" v-model="sseKmsForm.address" :placeholder="t('e.g., https://vault.example.com:8200')" autocomplete="off" />
+            </FieldContent>
+          </Field>
 
-          <div class="space-y-3">
-            <Label>{{ t('Authentication Method') }}</Label>
-            <AppRadioGroup v-model="sseKmsForm.auth_type" :options="authTypeOptions" class="grid gap-3 md:grid-cols-2" item-class="h-full" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Authentication Method') }}</FieldLabel>
+            <FieldContent>
+              <RadioGroup v-model="sseKmsForm.auth_type" class="grid gap-3 md:grid-cols-2">
+                <label
+                  v-for="option in authTypeOptions"
+                  :key="option.value"
+                  class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                >
+                  <RadioGroupItem :value="option.value" class="mt-0.5" />
+                  <span class="flex flex-col gap-1">
+                    <span class="text-sm font-medium">{{ option.label }}</span>
+                    <span v-if="option.description" class="text-xs text-muted-foreground">
+                      {{ option.description }}
+                    </span>
+                  </span>
+                </label>
+              </RadioGroup>
+            </FieldContent>
+          </Field>
 
-          <div v-if="sseKmsForm.auth_type === 'token'" class="space-y-2">
-            <Label for="kms-token">{{ t('Vault Token') }}</Label>
-            <Input id="kms-token" v-model="sseKmsForm.vault_token" type="password" autocomplete="off" :placeholder="t('Enter your Vault authentication token')" />
-            <p class="text-xs text-muted-foreground">
+          <Field v-if="sseKmsForm.auth_type === 'token'">
+            <FieldLabel for="kms-token">{{ t('Vault Token') }}</FieldLabel>
+            <FieldContent>
+              <Input id="kms-token" v-model="sseKmsForm.vault_token" type="password" autocomplete="off" :placeholder="t('Enter your Vault authentication token')" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('Required: Vault authentication token') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
 
           <div v-if="sseKmsForm.auth_type === 'approle'" class="grid gap-4 md:grid-cols-2">
-            <div class="space-y-2">
-              <Label for="kms-role-id">{{ t('Role ID') }}</Label>
-              <Input id="kms-role-id" v-model="sseKmsForm.vault_app_role_id" :placeholder="t('Enter AppRole Role ID')" autocomplete="off" />
-              <p class="text-xs text-muted-foreground">
+            <Field>
+              <FieldLabel for="kms-role-id">{{ t('Role ID') }}</FieldLabel>
+              <FieldContent>
+                <Input id="kms-role-id" v-model="sseKmsForm.vault_app_role_id" :placeholder="t('Enter AppRole Role ID')" autocomplete="off" />
+              </FieldContent>
+              <FieldDescription>
                 {{ t('AppRole Role ID from Vault') }}
-              </p>
-            </div>
-            <div class="space-y-2">
-              <Label for="kms-secret-id">{{ t('Secret ID') }}</Label>
-              <Input id="kms-secret-id" v-model="sseKmsForm.vault_app_role_secret_id" type="password" autocomplete="off" :placeholder="t('Enter AppRole Secret ID')" />
-              <p class="text-xs text-muted-foreground">
+              </FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel for="kms-secret-id">{{ t('Secret ID') }}</FieldLabel>
+              <FieldContent>
+                <Input id="kms-secret-id" v-model="sseKmsForm.vault_app_role_secret_id" type="password" autocomplete="off" :placeholder="t('Enter AppRole Secret ID')" />
+              </FieldContent>
+              <FieldDescription>
                 {{ t('AppRole Secret ID from Vault') }}
-              </p>
-            </div>
+              </FieldDescription>
+            </Field>
           </div>
 
-          <div class="space-y-2">
-            <Label for="kms-mount-path">{{ t('Transit Mount Path') }}</Label>
-            <Input id="kms-mount-path" v-model="sseKmsForm.mount_path" :placeholder="t('transit')" autocomplete="off" />
-            <p class="text-xs text-muted-foreground">
+          <Field>
+            <FieldLabel for="kms-mount-path">{{ t('Transit Mount Path') }}</FieldLabel>
+            <FieldContent>
+              <Input id="kms-mount-path" v-model="sseKmsForm.mount_path" :placeholder="t('transit')" autocomplete="off" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('Transit engine mount path, default: transit') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
 
-          <div class="space-y-2">
-            <Label for="kms-kv-mount">{{ t('KV Mount Path') }}</Label>
-            <Input id="kms-kv-mount" v-model="sseKmsForm.kv_mount" :placeholder="t('secret')" autocomplete="off" />
-            <p class="text-xs text-muted-foreground">
+          <Field>
+            <FieldLabel for="kms-kv-mount">{{ t('KV Mount Path') }}</FieldLabel>
+            <FieldContent>
+              <Input id="kms-kv-mount" v-model="sseKmsForm.kv_mount" :placeholder="t('secret')" autocomplete="off" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('KV storage mount path, default: secret') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
 
-          <div class="space-y-2">
-            <Label for="kms-key-prefix">{{ t('Key Path Prefix') }}</Label>
-            <Input id="kms-key-prefix" v-model="sseKmsForm.key_path_prefix" :placeholder="t('rustfs/kms/keys')" autocomplete="off" />
-            <p class="text-xs text-muted-foreground">
+          <Field>
+            <FieldLabel for="kms-key-prefix">{{ t('Key Path Prefix') }}</FieldLabel>
+            <FieldContent>
+              <Input id="kms-key-prefix" v-model="sseKmsForm.key_path_prefix" :placeholder="t('rustfs/kms/keys')" autocomplete="off" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('Key storage path prefix in KV store') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
 
           <div class="grid gap-6 md:grid-cols-2">
-            <div class="space-y-2">
-              <Label for="kms-timeout">{{ t('Timeout (seconds)') }}</Label>
-              <Input id="kms-timeout" v-model="sseKmsForm.timeout_seconds" type="number" placeholder="30" />
-              <p class="text-xs text-muted-foreground">
+            <Field>
+              <FieldLabel for="kms-timeout">{{ t('Timeout (seconds)') }}</FieldLabel>
+              <FieldContent>
+                <Input id="kms-timeout" v-model="sseKmsForm.timeout_seconds" type="number" placeholder="30" />
+              </FieldContent>
+              <FieldDescription>
                 {{ t('Request timeout in seconds, default: 30') }}
-              </p>
-            </div>
-            <div class="space-y-2">
-              <Label for="kms-retry">{{ t('Retry Attempts') }}</Label>
-              <Input id="kms-retry" v-model="sseKmsForm.retry_attempts" type="number" placeholder="3" />
-              <p class="text-xs text-muted-foreground">
+              </FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel for="kms-retry">{{ t('Retry Attempts') }}</FieldLabel>
+              <FieldContent>
+                <Input id="kms-retry" v-model="sseKmsForm.retry_attempts" type="number" placeholder="3" />
+              </FieldContent>
+              <FieldDescription>
                 {{ t('Number of retry attempts, default: 3') }}
-              </p>
-            </div>
+              </FieldDescription>
+            </Field>
           </div>
 
-          <div class="space-y-2">
-            <Label for="kms-default-key">{{ t('Default Key ID') }}</Label>
-            <Input id="kms-default-key" v-model="sseKmsForm.default_key_id" :placeholder="t('rustfs-master')" autocomplete="off" />
-            <p class="text-xs text-muted-foreground">
+          <Field>
+            <FieldLabel for="kms-default-key">{{ t('Default Key ID') }}</FieldLabel>
+            <FieldContent>
+              <Input id="kms-default-key" v-model="sseKmsForm.default_key_id" :placeholder="t('rustfs-master')" autocomplete="off" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('Default master key ID for SSE-KMS') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
 
-            <div class="space-y-2">
-              <Label>{{ t('Enable Cache') }}</Label>
+          <Field orientation="responsive">
+            <FieldLabel>{{ t('Enable Cache') }}</FieldLabel>
+            <FieldContent>
               <div class="flex items-center justify-between rounded-md border p-3">
                 <Switch v-model:checked="sseKmsForm.enable_cache" />
               </div>
-              <p class="text-xs text-muted-foreground">
-                {{ t('Enable caching for better performance, default: true') }}
-              </p>
-            </div>
+            </FieldContent>
+            <FieldDescription>
+              {{ t('Enable caching for better performance, default: true') }}
+            </FieldDescription>
+          </Field>
 
-          <div v-if="sseKmsForm.enable_cache" class="space-y-2">
-            <Label for="kms-cache-ttl">{{ t('Cache TTL (seconds)') }}</Label>
-            <Input id="kms-cache-ttl" v-model="sseKmsForm.cache_ttl_seconds" type="number" placeholder="600" />
-            <p class="text-xs text-muted-foreground">
+          <Field v-if="sseKmsForm.enable_cache">
+            <FieldLabel for="kms-cache-ttl">{{ t('Cache TTL (seconds)') }}</FieldLabel>
+            <FieldContent>
+              <Input id="kms-cache-ttl" v-model="sseKmsForm.cache_ttl_seconds" type="number" placeholder="600" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('Cache time-to-live in seconds, default: 600') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
 
           <div class="flex justify-end gap-2">
             <Button type="button" variant="outline" @click="cancelEditing">
@@ -252,11 +329,30 @@
             </Button>
           </div>
         </form>
-      </div>
+      </CardContent>
+      </Card>
 
       <!-- KMS 密钥列表 -->
-      <AppCard :title="t('KMS Keys Management')" class="mb-6" content-class="space-y-6">
-        <div class="space-y-6">
+      <Card class="shadow-none">
+        <CardHeader class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div class="space-y-1">
+            <CardTitle>{{ t('KMS Keys Management') }}</CardTitle>
+            <CardDescription>
+              {{ t('Create, rotate, and inspect the keys managed by your KMS backend.') }}
+            </CardDescription>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" :loading="refreshingKeys" :disabled="sseKmsForm.kms_status !== 'Running'" @click="refreshKeyList">
+              <Icon name="ri:refresh-line" class="size-4" />
+              <span>{{ t('Refresh') }}</span>
+            </Button>
+            <Button size="sm" variant="default" :disabled="!canAddKeys" @click="showCreateKeyModal = true">
+              <Icon name="ri:add-line" class="size-4" />
+              <span>{{ t('Create Key') }}</span>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent class="space-y-6">
           <!-- 密钥类型说明 -->
           <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <h4 class="font-medium text-blue-900 dark:text-blue-100 mb-3">{{ t('Understanding Key Types') }}</h4>
@@ -288,26 +384,14 @@
 
           <!-- 主密钥管理区域 -->
           <div class="space-y-4">
-            <div class="flex justify-between items-center">
-              <div class="flex items-center space-x-3">
-                <div class="w-4 h-4 bg-purple-500 rounded-full"></div>
-                <h3 class="text-lg font-medium">{{ t('Master Keys (CMK)') }}</h3>
-                <AppTag tone="info">
-                  {{
-                    kmsKeys.filter(key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK').length
-                  }}
-                </AppTag>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" :loading="refreshingKeys" :disabled="sseKmsForm.kms_status !== 'Running'" @click="refreshKeyList">
-                  <Icon name="ri:refresh-line" class="size-4" />
-                  {{ t('Refresh') }}
-                </Button>
-                <Button size="sm" variant="default" :disabled="!canAddKeys" @click="showCreateKeyModal = true">
-                  <Icon name="ri:add-line" class="size-4" />
-                  {{ t('Create Master Key') }}
-                </Button>
-              </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="w-4 h-4 rounded-full bg-purple-500"></div>
+              <h3 class="text-lg font-medium">{{ t('Master Keys (CMK)') }}</h3>
+              <Badge variant="secondary">
+                {{
+                  kmsKeys.filter(key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK').length
+                }}
+              </Badge>
             </div>
 
             <!-- 主密钥列表 -->
@@ -331,9 +415,9 @@
                       <div v-if="key.algorithm">{{ t('Algorithm') }}: {{ key.algorithm }}</div>
                       <div>
                         {{ t('Status') }}:
-                        <AppTag :tone="getKeyStatusType(key)">
+                        <Badge :variant="getKeyStatusVariant(key)">
                           {{ getKeyStatusText(key) }}
-                        </AppTag>
+                        </Badge>
                       </div>
                       <div v-if="key.createdAt">{{ t('Created') }}: {{ formatDate(new Date(key.createdAt)) }}</div>
                       <div v-else-if="key.creation_date">
@@ -363,9 +447,9 @@
             <div class="flex items-center space-x-3">
               <div class="w-4 h-4 bg-green-500 rounded-full"></div>
               <h3 class="text-lg font-medium">{{ t('Data Keys (DEK)') }}</h3>
-              <AppTag tone="success">
+              <Badge variant="secondary">
                 {{kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length}}
-              </AppTag>
+              </Badge>
             </div>
 
             <!-- 数据密钥说明 -->
@@ -398,9 +482,9 @@
                       <div v-if="key.algorithm">{{ t('Algorithm') }}: {{ key.algorithm }}</div>
                       <div>
                         {{ t('Status') }}:
-                        <AppTag :tone="getKeyStatusType(key)">
+                        <Badge :variant="getKeyStatusVariant(key)">
                           {{ getKeyStatusText(key) }}
-                        </AppTag>
+                        </Badge>
                       </div>
                       <div v-if="key.createdAt">{{ t('Created') }}: {{ formatDate(new Date(key.createdAt)) }}</div>
                       <div v-else-if="key.creation_date">
@@ -419,20 +503,23 @@
           </div>
 
           <!-- 空状态 -->
-          <div v-if="kmsKeys.length === 0" class="text-center py-8 text-gray-500">
-            <Icon name="ri:key-2-line" class="text-4xl mx-auto mb-2" />
-            <div>{{ t('No KMS keys found') }}</div>
-            <div class="text-sm">{{ t('Create your first KMS key to get started') }}</div>
-            <Button class="mt-2" :disabled="!canAddKeys" @click="showCreateKeyModal = true">
+          <EmptyState
+            v-if="kmsKeys.length === 0"
+            :title="t('No KMS keys found')"
+            :description="t('Create your first KMS key to get started')"
+            icon="ri:key-2-line"
+            class="py-12"
+          >
+            <Button class="mt-4" :disabled="!canAddKeys" @click="showCreateKeyModal = true">
               {{ t('Create First Key') }}
             </Button>
-          </div>
-        </div>
-      </AppCard>
+          </EmptyState>
+        </CardContent>
+      </Card>
 
       <!-- Bucket 加密配置管理 -->
-      <AppCard class="mt-6" content-class="space-y-4">
-        <template #header>
+      <Card class="mt-6 shadow-none">
+        <CardHeader>
           <div class="flex items-center justify-between gap-3">
             <h3 class="text-lg font-semibold">{{ t('Bucket Encryption Management') }}</h3>
             <Button size="sm" :loading="bucketListLoading" @click="refreshBucketList">
@@ -440,31 +527,37 @@
               {{ t('Refresh') }}
             </Button>
           </div>
-        </template>
-
-        <div class="space-y-4">
+        </CardHeader>
+        <CardContent class="space-y-4">
           <!-- 搜索和排序 -->
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div class="relative flex-1">
-              <Icon name="ri:search-line" class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input v-model="bucketSearchQuery" :placeholder="t('Search buckets...')" class="pl-10" />
-              <button v-if="bucketSearchQuery" type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground transition hover:text-foreground"
-                @click="bucketSearchQuery = ''">
-                <Icon name="ri:close-circle-line" class="size-4" />
-              </button>
-            </div>
-            <AppSelect v-model="bucketSortBy" :options="bucketSortOptions" :placeholder="t('Sort by')" class="w-full sm:w-40" />
+            <SearchInput
+              v-model="bucketSearchQuery"
+              :placeholder="t('Search buckets...')"
+              clearable
+              class="flex-1"
+            />
+            <Selector
+              v-model="bucketSortBy"
+              :options="bucketSortOptions"
+              :placeholder="t('Sort by')"
+              class="w-full sm:w-40"
+            />
           </div>
 
           <!-- Bucket 列表 -->
           <div v-if="filteredBuckets.length > 0" class="space-y-3">
-            <div v-for="bucket in filteredBuckets" :key="bucket.name" class="border rounded-lg p-4 hover:shadow-md transition-shadow">
-              <div class="flex justify-between items-center">
+            <div
+              v-for="bucket in filteredBuckets"
+              :key="bucket.name"
+              class="rounded-lg border p-4"
+            >
+              <div class="flex items-center justify-between">
                 <div class="flex-1">
                   <div class="flex items-center space-x-3">
                     <Icon name="ri:folder-3-line" class="text-lg text-blue-500" />
                     <div>
-                      <h4 class="font-medium text-lg">{{ bucket.name }}</h4>
+                      <h4 class="text-lg font-medium">{{ bucket.name }}</h4>
                       <div class="text-sm text-gray-500">
                         {{ t('Created') }}: {{ formatDateTime(bucket.creationDate) }}
                       </div>
@@ -475,8 +568,8 @@
                 <div class="flex items-center space-x-4">
                   <!-- 加密状态显示 -->
                   <div class="text-center">
-                    <div class="text-sm text-gray-500 mb-1">{{ t('Encryption Status') }}</div>
-                    <AppTag :tone="bucket.encryptionStatus === 'Enabled' ? 'success' : 'default'">
+                    <div class="mb-1 text-sm text-gray-500">{{ t('Encryption Status') }}</div>
+                    <Badge :variant="bucket.encryptionStatus === 'Enabled' ? 'secondary' : 'outline'">
                       {{
                         bucket.encryptionStatus === 'Enabled'
                           ? bucket.encryptionType === 'SSE-KMS'
@@ -484,7 +577,7 @@
                             : 'SSE-S3'
                           : t('Not configured')
                       }}
-                    </AppTag>
+                    </Badge>
                   </div>
 
                   <!-- 操作按钮 -->
@@ -493,8 +586,13 @@
                       <Icon name="ri:lock-line" class="size-4" />
                       {{ t('Configure') }}
                     </Button>
-                    <Button v-if="bucket.encryptionStatus === 'Enabled'" size="sm" variant="destructive" class="bg-destructive/10 text-destructive hover:bg-destructive/20"
-                      @click="removeBucketEncryption(bucket)">
+                    <Button
+                      v-if="bucket.encryptionStatus === 'Enabled'"
+                      size="sm"
+                      variant="destructive"
+                      class="bg-destructive/10 text-destructive hover:bg-destructive/20"
+                      @click="removeBucketEncryption(bucket)"
+                    >
                       <Icon name="ri:lock-unlock-line" class="size-4" />
                       {{ t('Remove') }}
                     </Button>
@@ -503,7 +601,10 @@
               </div>
 
               <!-- 加密详细信息 -->
-              <div v-if="bucket.encryptionStatus === 'Enabled'" class="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded">
+              <div
+                v-if="bucket.encryptionStatus === 'Enabled'"
+                class="mt-3 rounded border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20"
+              >
                 <div class="text-sm">
                   <div>
                     <strong>{{ t('Algorithm') }}:</strong> {{ bucket.encryptionAlgorithm }}
@@ -515,53 +616,59 @@
               </div>
             </div>
           </div>
-
-          <!-- 空状态 -->
-          <div v-else-if="!bucketListLoading && buckets.length === 0" class="text-center py-8 text-gray-500">
-            <Icon name="ri:folder-2-line" class="text-4xl mx-auto mb-2" />
+          <div
+            v-else-if="!bucketListLoading && buckets.length === 0"
+            class="py-8 text-center text-gray-500"
+          >
+            <Icon name="ri:folder-2-line" class="mb-2 mx-auto text-4xl" />
             <div>{{ t('No buckets found') }}</div>
             <div class="text-sm">{{ t('Create your first bucket to configure encryption') }}</div>
           </div>
-
-          <!-- 搜索无结果 -->
-          <div v-else-if="!bucketListLoading && buckets.length > 0 && filteredBuckets.length === 0" class="text-center py-8 text-gray-500">
-            <Icon name="ri:search-line" class="text-4xl mx-auto mb-2" />
+          <div
+            v-else-if="!bucketListLoading && buckets.length > 0 && filteredBuckets.length === 0"
+            class="py-8 text-center text-gray-500"
+          >
+            <Icon name="ri:search-line" class="mb-2 mx-auto text-4xl" />
             <div>{{ t('No buckets match your search') }}</div>
             <div class="text-sm">{{ t('Try adjusting your search terms') }}</div>
           </div>
 
           <!-- 加载状态 -->
-          <div v-if="bucketListLoading" class="text-center py-8">
-            <AppSpinner size="lg" class="mx-auto" />
-            <div class="text-gray-500 mt-2">{{ t('Loading buckets...') }}</div>
+          <div v-if="bucketListLoading" class="py-8 text-center">
+            <Spinner class="mx-auto size-6 text-muted-foreground" />
+            <div class="mt-2 text-gray-500">{{ t('Loading buckets...') }}</div>
           </div>
-        </div>
-      </AppCard>
+        </CardContent>
+      </Card>
 
       <!-- 配置 Bucket 加密模态框 -->
-      <AppModal v-model="showBucketEncryptModal" :title="selectedBucket
+      <Modal v-model="showBucketEncryptModal" :title="selectedBucket
         ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name })
         : t('Configure Bucket Encryption')
         " size="lg" :close-on-backdrop="false">
         <div class="space-y-4">
-          <div class="space-y-2">
-            <Label>{{ t('Encryption Type') }}</Label>
-            <AppSelect v-model="bucketEncryptForm.encryptionType" :options="bucketEncryptionOptions" :placeholder="t('Select encryption type')" />
-            <p class="text-xs text-muted-foreground">
+          <Field>
+            <FieldLabel>{{ t('Encryption Type') }}</FieldLabel>
+            <FieldContent>
+              <Selector v-model="bucketEncryptForm.encryptionType" :options="bucketEncryptionOptions" :placeholder="t('Select encryption type')" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('Choose the encryption method for this bucket') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
 
-          <div v-if="bucketEncryptForm.encryptionType === 'SSE-KMS'" class="space-y-2">
-            <Label>{{ t('KMS Key') }}</Label>
-            <AppSelect v-model="bucketEncryptForm.kmsKeyId" :options="kmsKeyOptions" :placeholder="t('Select KMS key')" :disabled="kmsKeysLoading" />
-            <p class="text-xs text-muted-foreground">
+          <Field v-if="bucketEncryptForm.encryptionType === 'SSE-KMS'">
+            <FieldLabel>{{ t('KMS Key') }}</FieldLabel>
+            <FieldContent class="space-y-1.5">
+              <Selector v-model="bucketEncryptForm.kmsKeyId" :options="kmsKeyOptions" :placeholder="t('Select KMS key')" :disabled="kmsKeysLoading" />
+              <span v-if="kmsKeysLoading" class="text-xs text-muted-foreground">
+                {{ t('Loading keys...') }}
+              </span>
+            </FieldContent>
+            <FieldDescription>
               {{ t('Select the KMS key to use for encryption') }}
-            </p>
-            <div v-if="kmsKeysLoading" class="text-xs text-muted-foreground">
-              {{ t('Loading keys...') }}
-            </div>
-          </div>
+            </FieldDescription>
+          </Field>
         </div>
 
         <template #footer>
@@ -574,10 +681,10 @@
             </Button>
           </div>
         </template>
-      </AppModal>
+      </Modal>
 
       <!-- 移除加密确认模态框 -->
-      <AppModal v-model="showRemoveEncryptModal" :title="t('Confirm Remove Encryption')" size="lg" :close-on-backdrop="false">
+      <Modal v-model="showRemoveEncryptModal" :title="t('Confirm Remove Encryption')" size="lg" :close-on-backdrop="false">
         <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
           <Icon name="ri:alert-line" class="text-4xl text-orange-500" />
           <div class="text-lg font-medium text-foreground">
@@ -600,26 +707,30 @@
             </Button>
           </div>
         </template>
-      </AppModal>
+      </Modal>
 
       <!-- 创建/编辑密钥模态框 -->
-      <AppModal v-model="showCreateKeyModal" :title="t('Create New Key')" size="lg" :close-on-backdrop="false">
+      <Modal v-model="showCreateKeyModal" :title="t('Create New Key')" size="lg" :close-on-backdrop="false">
         <div class="space-y-4">
-          <div class="space-y-2">
-            <Label>{{ t('Key Name') }}</Label>
-            <Input v-model="keyForm.keyName" :placeholder="t('e.g., app-default')" autocomplete="off" />
-            <p class="text-xs text-muted-foreground">
+          <Field>
+            <FieldLabel>{{ t('Key Name') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="keyForm.keyName" :placeholder="t('e.g., app-default')" autocomplete="off" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('Main key ID (Transit key name). Use business-related readable ID.') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
 
-          <div class="space-y-2">
-            <Label>{{ t('Algorithm') }}</Label>
-            <AppSelect v-model="keyForm.algorithm" :options="algorithmOptions" :placeholder="t('Select encryption algorithm')" />
-            <p class="text-xs text-muted-foreground">
+          <Field>
+            <FieldLabel>{{ t('Algorithm') }}</FieldLabel>
+            <FieldContent>
+              <Selector v-model="keyForm.algorithm" :options="algorithmOptions" :placeholder="t('Select encryption algorithm')" />
+            </FieldContent>
+            <FieldDescription>
               {{ t('Encryption algorithm for the key.') }}
-            </p>
-          </div>
+            </FieldDescription>
+          </Field>
         </div>
 
         <template #footer>
@@ -632,10 +743,10 @@
             </Button>
           </div>
         </template>
-      </AppModal>
+      </Modal>
 
       <!-- 删除确认模态框 -->
-      <AppModal v-model="showDeleteModal" :title="t('Confirm Delete')" size="lg" :close-on-backdrop="false">
+      <Modal v-model="showDeleteModal" :title="t('Confirm Delete')" size="lg" :close-on-backdrop="false">
         <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
           <Icon name="ri:alert-line" class="text-4xl text-red-500" />
           <div class="text-lg font-medium text-foreground">
@@ -657,10 +768,10 @@
             </Button>
           </div>
         </template>
-      </AppModal>
+      </Modal>
 
       <!-- 强制删除确认模态框 -->
-      <AppModal v-model="showForceDeleteModal" :title="t('Confirm Force Delete')" size="lg" :close-on-backdrop="false">
+      <Modal v-model="showForceDeleteModal" :title="t('Confirm Force Delete')" size="lg" :close-on-backdrop="false">
         <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
           <Icon name="ri:alert-line" class="text-4xl text-red-500" />
           <div class="text-lg font-medium text-foreground">
@@ -685,10 +796,10 @@
             </Button>
           </div>
         </template>
-      </AppModal>
+      </Modal>
 
       <!-- 详细状态查看模态框 -->
-      <AppModal v-model="showDetailedStatusModal" :title="t('Detailed KMS Status')" size="lg">
+      <Modal v-model="showDetailedStatusModal" :title="t('Detailed KMS Status')" size="lg">
         <div v-if="detailedStatusData" class="space-y-6">
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-1">
@@ -701,9 +812,9 @@
             </div>
             <div class="space-y-1">
               <p class="text-xs font-semibold uppercase text-muted-foreground">{{ t('Cache Enabled') }}</p>
-              <AppTag :tone="detailedStatusData.cache_enabled ? 'success' : 'default'">
+              <Badge :variant="detailedStatusData.cache_enabled ? 'secondary' : 'outline'">
                 {{ detailedStatusData.cache_enabled ? t('Enabled') : t('Disabled') }}
-              </AppTag>
+              </Badge>
             </div>
             <div class="space-y-1">
               <p class="text-xs font-semibold uppercase text-muted-foreground">{{ t('Default Key ID') }}</p>
@@ -758,7 +869,7 @@
             </Button>
           </div>
         </template>
-      </AppModal>
+      </Modal>
     </div>
   </page>
 </template>
@@ -767,10 +878,13 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-import { AppCard, AppRadioGroup, AppSelect, AppSpinner, AppTag } from '@/components/app'
+import EmptyState from '@/components/empty-state.vue'
+import Selector from '@/components/selector.vue'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { useMessage } from '@/composables/ui'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -807,37 +921,22 @@ const startingKMS = ref(false)
 const stoppingKMS = ref(false)
 const detailedStatusData = ref<any>(null)
 
-const kmsStatusVariant = computed(() => {
-  const type = getKmsStatusType()
-  switch (type) {
+const toneToBadgeVariant = (tone: 'success' | 'warning' | 'danger' | 'info' | 'default') => {
+  switch (tone) {
     case 'success':
-      return 'default'
-    case 'warning':
-      return 'outline'
+      return 'secondary'
     case 'danger':
       return 'destructive'
-    case 'info':
-      return 'secondary'
-    default:
-      return 'secondary'
-  }
-})
-
-const kmsStatusTone = computed(() => {
-  const type = getKmsStatusType()
-  switch (type) {
-    case 'success':
-      return 'success'
     case 'warning':
-      return 'warning'
-    case 'danger':
-      return 'danger'
+      return 'outline'
     case 'info':
-      return 'info'
+      return 'secondary'
     default:
-      return 'default'
+      return 'outline'
   }
-})
+}
+
+const kmsStatusVariant = computed(() => toneToBadgeVariant(getKmsStatusType()))
 
 // 密钥管理状态
 const showCreateKeyModal = ref(false)
@@ -1200,7 +1299,7 @@ const mapKeyState = (key: any) => {
 }
 
 // 获取密钥状态标签类型
-const getKeyStatusType = (key: any) => {
+const getKeyStatusTone = (key: any) => {
   const status = mapKeyState(key)
   switch (status) {
     case 'Active':
@@ -1215,6 +1314,8 @@ const getKeyStatusType = (key: any) => {
       return 'default'
   }
 }
+
+const getKeyStatusVariant = (key: any) => toneToBadgeVariant(getKeyStatusTone(key))
 
 // 获取密钥状态显示文本
 const getKeyStatusText = (key: any) => {

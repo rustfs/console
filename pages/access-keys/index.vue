@@ -1,29 +1,22 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Access Keys') }}</h1>
+      <h1 class="text-2xl font-bold">{{ t('Access Keys') }}</h1>
+      <template #actions>
+        <SearchInput v-model="searchTerm" :placeholder="t('Search Access Key')" clearable class="max-w-sm" />
+        <Button variant="outline" @click="changePasswordVisible = true">
+          <Icon name="ri:key-2-line" class="size-4" />
+          <span>{{ t('Change Password') }}</span>
+        </Button>
+        <Button variant="outline" v-show="selectedKeys.length" :disabled="!selectedKeys.length" @click="deleteSelected">
+          <Icon name="ri:delete-bin-5-line" class="size-4" />
+          <span>{{ t('Delete Selected') }}</span>
+        </Button>
+        <Button variant="secondary" @click="addItem">
+          <Icon name="ri:add-line" class="size-4" />
+          <span>{{ t('Add Access Key') }}</span>
+        </Button>
       </template>
-      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between w-full">
-        <div class="flex w-full max-w-sm items-center gap-2">
-          <Icon name="ri:search-line" class="size-4 text-muted-foreground" />
-          <Input v-model="searchTerm" :placeholder="t('Search Access Key')" />
-        </div>
-        <div class="flex flex-wrap items-center justify-end gap-2">
-          <Button variant="outline" @click="changePasswordVisible = true">
-            <Icon name="ri:key-2-line" class="size-4" />
-            <span>{{ t('Change Password') }}</span>
-          </Button>
-          <Button variant="outline" :disabled="!selectedKeys.length" @click="deleteSelected">
-            <Icon name="ri:delete-bin-5-line" class="size-4" />
-            <span>{{ t('Delete Selected') }}</span>
-          </Button>
-          <Button variant="secondary" @click="addItem">
-            <Icon name="ri:add-line" class="size-4" />
-            <span>{{ t('Add Access Key') }}</span>
-          </Button>
-        </div>
-      </div>
     </page-header>
 
     <div class="space-y-3">
@@ -41,19 +34,18 @@
 
 <script lang="ts" setup>
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import { AppTag } from '@/components/app'
+import { ChangePassword, EditItem, NewItem } from '@/components/access-keys'
+import DataTablePagination from '@/components/data-table/data-table-pagination.vue'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
+import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChangePassword, EditItem, NewItem } from '~/components/access-keys'
-import { useDataTable } from '~/components/data-table'
-import DataTablePagination from '@/components/data-table/data-table-pagination.vue'
-import DataTable from '@/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const dialog = useDialog()
@@ -124,8 +116,11 @@ const columns: ColumnDef<RowData>[] = [
     accessorKey: 'accountStatus',
     header: () => t('Status'),
     cell: ({ row }) =>
-      h(AppTag, { tone: row.original.accountStatus === 'on' ? 'success' : 'danger' }, () =>
-        row.original.accountStatus === 'on' ? t('Available') : t('Disabled')),
+      h(
+        Badge,
+        { variant: row.original.accountStatus === 'on' ? 'secondary' : 'destructive' },
+        () => (row.original.accountStatus === 'on' ? t('Available') : t('Disabled'))
+      ),
   },
   {
     accessorKey: 'name',

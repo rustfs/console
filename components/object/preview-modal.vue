@@ -1,8 +1,8 @@
 <template>
-  <AppModal v-model="visibleProxy" :title="t('Preview')" size="xl" :close-on-backdrop="false">
+  <Modal v-model="visibleProxy" :title="t('Preview')" size="xl" :close-on-backdrop="false">
     <div class="flex flex-col gap-4">
       <div class="min-h-[300px] rounded-md border p-4 flex flex-col">
-        <AppSpinner v-if="loading" class="mx-auto size-8" />
+        <Spinner v-if="loading" class="mx-auto size-8 text-muted-foreground" />
         <template v-else>
           <div v-if="isImage" class="flex justify-center">
             <img :src="previewUrl" alt="preview" class="max-h-[60vh]" />
@@ -23,12 +23,12 @@
         </template>
       </div>
     </div>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-
-import { AppModal, AppSpinner } from '@/components/app'
+import Modal from '@/components/modal.vue'
+import { Spinner } from '@/components/ui/spinner'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 

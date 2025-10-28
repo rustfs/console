@@ -1,138 +1,146 @@
 <template>
-  <AppDrawer v-model="visible" :title="drawerTitle" size="xl">
+  <Drawer v-model="visible" :title="drawerTitle" size="xl">
     <div class="space-y-6">
-      <AppCard padded class="space-y-3">
-        <div class="flex items-start justify-between gap-3">
-          <div class="space-y-1">
-            <p class="text-sm font-medium text-foreground">{{ t('Access Policy') }}</p>
-          </div>
-          <Button variant="outline" size="sm" class="shrink-0" @click="editPolicy">
-            <Icon name="ri:edit-2-line" class="mr-2 size-4" />
-            <span>{{ t('Edit') }}</span>
-          </Button>
-        </div>
-        <p class="text-sm text-muted-foreground">{{ currentPolicyLabel }}</p>
-      </AppCard>
+      <ItemGroup class="space-y-4">
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader>
+            <ItemTitle>{{ t('Access Policy') }}</ItemTitle>
+            <ItemActions>
+              <Button variant="outline" size="sm" class="shrink-0" @click="editPolicy">
+                <Icon name="ri:edit-2-line" class="mr-2 size-4" />
+                <span>{{ t('Edit') }}</span>
+              </Button>
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent>
+            <ItemDescription class="text-sm">{{ currentPolicyLabel }}</ItemDescription>
+          </ItemContent>
+        </Item>
 
-      <AppCard padded class="space-y-3">
-        <div class="flex items-start justify-between gap-3">
-          <div class="space-y-1">
-            <p class="text-sm font-medium text-foreground">{{ t('Encryption') }}</p>
-            <p class="text-xs text-muted-foreground">{{ encryptionLabel }}</p>
-          </div>
-          <Button variant="outline" size="sm" class="shrink-0" @click="editEncrypt">
-            <Icon name="ri:edit-2-line" class="mr-2 size-4" />
-            <span>{{ t('Edit') }}</span>
-          </Button>
-        </div>
-      </AppCard>
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader class="items-start">
+            <div class="flex flex-col gap-1">
+              <ItemTitle>{{ t('Encryption') }}</ItemTitle>
+              <ItemDescription class="text-xs text-muted-foreground">
+                {{ encryptionLabel }}
+              </ItemDescription>
+            </div>
+            <ItemActions>
+              <Button variant="outline" size="sm" class="shrink-0" @click="editEncrypt">
+                <Icon name="ri:edit-2-line" class="mr-2 size-4" />
+                <span>{{ t('Edit') }}</span>
+              </Button>
+            </ItemActions>
+          </ItemHeader>
+        </Item>
 
-      <AppCard padded class="space-y-3">
-        <div class="flex items-start justify-between gap-3">
-          <p class="text-sm font-medium text-foreground">{{ t('Tag') }}</p>
-          <Button variant="outline" size="sm" class="shrink-0" @click="addTag">
-            <Icon name="ri:add-line" class="mr-2 size-4" />
-            <span>{{ t('Add') }}</span>
-          </Button>
-        </div>
-        <div v-if="tags.length" class="flex flex-wrap gap-2">
-          <div
-            v-for="(tag, index) in tags"
-            :key="`${tag.Key}-${index}`"
-            class="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs"
-          >
-            <button type="button" class="text-left" @click="editTag(index)">
-              {{ tag.Key }}:{{ tag.Value }}
-            </button>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="h-6 w-6 p-0"
-              @click.stop="handleDeleteTag(index)"
-            >
-              <Icon name="ri:close-line" class="size-3.5" />
-            </Button>
-          </div>
-        </div>
-        <p v-else class="text-sm text-muted-foreground">
-          {{ t('No Data') }}
-        </p>
-      </AppCard>
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader>
+            <ItemTitle>{{ t('Tag') }}</ItemTitle>
+            <ItemActions>
+              <Button variant="outline" size="sm" class="shrink-0" @click="addTag">
+                <Icon name="ri:add-line" class="mr-2 size-4" />
+                <span>{{ t('Add') }}</span>
+              </Button>
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent>
+            <div v-if="tags.length" class="flex flex-wrap gap-2">
+              <div v-for="(tag, index) in tags" :key="`${tag.Key}-${index}`" class="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs">
+                <button type="button" class="text-left" @click="editTag(index)">
+                  {{ tag.Key }}:{{ tag.Value }}
+                </button>
+                <Button variant="ghost" size="sm" class="h-6 w-6 p-0" @click.stop="handleDeleteTag(index)">
+                  <Icon name="ri:close-line" class="size-3.5" />
+                </Button>
+              </div>
+            </div>
+            <ItemDescription v-else class="text-sm">
+              {{ t('No Data') }}
+            </ItemDescription>
+          </ItemContent>
+        </Item>
 
-      <AppCard padded class="space-y-4">
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <p class="text-sm font-medium text-foreground">{{ t('Object Lock') }}</p>
-            <AppSpinner v-if="objectLockLoading" size="sm" />
-          </div>
-          <Switch v-model:checked="lockStatus" disabled />
-        </div>
-        <div class="flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <p class="text-sm font-medium text-foreground">{{ t('Version Control') }}</p>
-            <AppSpinner v-if="statusLoading" size="sm" />
-          </div>
-          <Switch
-            :checked="versioningStatus === 'Enabled'"
-            :disabled="lockStatus || statusLoading"
-            @update:checked="value => handleVersionToggle(value)"
-          />
-        </div>
-      </AppCard>
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader>
+            <ItemTitle>{{ t('Object Lock') }}</ItemTitle>
+            <ItemActions>
+              <Spinner v-if="objectLockLoading" class="size-3 text-muted-foreground" />
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent class="flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm font-medium text-foreground">{{ t('Object Lock') }}</p>
+              <Switch v-model:checked="lockStatus" disabled />
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <p class="text-sm font-medium text-foreground">{{ t('Version Control') }}</p>
+                <Spinner v-if="statusLoading" class="size-3 text-muted-foreground" />
+              </div>
+              <Switch :checked="versioningStatus === 'Enabled'" :disabled="lockStatus || statusLoading" @update:checked="handleVersionToggle" />
+            </div>
+          </ItemContent>
+        </Item>
 
-      <AppCard padded class="space-y-4">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <p class="text-sm font-medium text-foreground">{{ t('Retention') }}</p>
-            <p class="text-xs text-muted-foreground">
-              {{ retentionEnabled ? t('Enabled') : t('Disabled') }}
-            </p>
-          </div>
-          <Button variant="outline" size="sm" class="shrink-0" @click="editRetention">
-            <span>{{ t('Edit') }}</span>
-          </Button>
-        </div>
-        <div class="grid gap-3 sm:grid-cols-2">
-          <div>
-            <p class="text-xs text-muted-foreground">{{ t('Retention Mode') }}</p>
-            <p class="text-sm text-foreground">
-              {{ retentionFormValue.retentionMode ? t(retentionFormValue.retentionMode) : '-' }}
-            </p>
-          </div>
-          <div>
-            <p class="text-xs text-muted-foreground">{{ t('Retention Unit') }}</p>
-            <p class="text-sm text-foreground">
-              {{ retentionFormValue.retentionUnit ? t(retentionFormValue.retentionUnit) : '-' }}
-            </p>
-          </div>
-          <div>
-            <p class="text-xs text-muted-foreground">{{ t('Retention Period') }}</p>
-            <p class="text-sm text-foreground">
-              {{ retentionFormValue.retentionPeriod ?? '-' }}
-            </p>
-          </div>
-        </div>
-      </AppCard>
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader class="items-start">
+            <div>
+              <ItemTitle>{{ t('Retention') }}</ItemTitle>
+              <ItemDescription class="text-xs text-muted-foreground">
+                {{ retentionEnabled ? t('Enabled') : t('Disabled') }}
+              </ItemDescription>
+            </div>
+            <ItemActions>
+              <Button variant="outline" size="sm" class="shrink-0" @click="editRetention">
+                <span>{{ t('Edit') }}</span>
+              </Button>
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <p class="text-xs text-muted-foreground">{{ t('Retention Mode') }}</p>
+                <p class="text-sm text-foreground">
+                  {{ retentionFormValue.retentionMode ? t(retentionFormValue.retentionMode) : '-' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-muted-foreground">{{ t('Retention Unit') }}</p>
+                <p class="text-sm text-foreground">
+                  {{ retentionFormValue.retentionUnit ? t(retentionFormValue.retentionUnit) : '-' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-muted-foreground">{{ t('Retention Period') }}</p>
+                <p class="text-sm text-foreground">
+                  {{ retentionFormValue.retentionPeriod ?? '-' }}
+                </p>
+              </div>
+            </div>
+          </ItemContent>
+        </Item>
+      </ItemGroup>
     </div>
-  </AppDrawer>
+  </Drawer>
 
-  <AppModal v-model="showPolicyModal" :title="t('Set Policy')" size="xl">
-    <AppCard padded class="space-y-4">
-      <div class="space-y-2">
-        <Label>{{ t('Policy') }}</Label>
-        <AppSelect
-          v-model="policyFormValue.policy"
-          :options="policyOptions"
-          :placeholder="t('Please select policy')"
-        />
-      </div>
-      <div v-if="policyFormValue.policy === 'custom'" class="space-y-2">
-        <Label>{{ t('Policy Content') }}</Label>
-        <div class="max-h-[60vh] overflow-y-auto rounded-md border p-2">
-          <json-editor v-model="policyFormValue.content" />
-        </div>
-      </div>
-    </AppCard>
+  <Modal v-model="showPolicyModal" :title="t('Set Policy')" size="xl">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel>{{ t('Policy') }}</FieldLabel>
+        <FieldContent>
+          <Selector v-model="policyFormValue.policy" :options="policyOptions" :placeholder="t('Please select policy')" />
+        </FieldContent>
+      </Field>
+      <Field v-if="policyFormValue.policy === 'custom'">
+        <FieldLabel>{{ t('Policy Content') }}</FieldLabel>
+        <FieldContent>
+          <div class="max-h-[60vh] overflow-y-auto rounded-md border p-2">
+            <json-editor v-model="policyFormValue.content" />
+          </div>
+        </FieldContent>
+      </Field>
+    </div>
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button variant="outline" @click="showPolicyModal = false">
@@ -143,19 +151,23 @@
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 
-  <AppModal v-model="showTagModal" :title="t('Set Tag')" size="md">
-    <AppCard padded class="space-y-4">
-      <div class="space-y-2">
-        <Label>{{ t('Tag Key') }}</Label>
-        <Input v-model="tagFormValue.name" :placeholder="t('Tag Key Placeholder')" />
-      </div>
-      <div class="space-y-2">
-        <Label>{{ t('Tag Value') }}</Label>
-        <Input v-model="tagFormValue.value" :placeholder="t('Please enter tag value')" />
-      </div>
-    </AppCard>
+  <Modal v-model="showTagModal" :title="t('Set Tag')" size="md">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel>{{ t('Tag Key') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="tagFormValue.name" :placeholder="t('Tag Key Placeholder')" />
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>{{ t('Tag Value') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="tagFormValue.value" :placeholder="t('Please enter tag value')" />
+        </FieldContent>
+      </Field>
+    </div>
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button variant="outline" @click="showTagModal = false">
@@ -166,27 +178,23 @@
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 
-  <AppModal v-model="showEncryptModal" :title="t('Enable Storage Encryption')" size="md">
-    <AppCard padded class="space-y-4">
-      <div class="space-y-2">
-        <Label>{{ t('Encryption Type') }}</Label>
-        <AppSelect
-          v-model="encryptFormValue.encrypt"
-          :options="encryptionOptions"
-          :placeholder="t('Please select encryption type')"
-        />
-      </div>
-      <div v-if="encryptFormValue.encrypt === 'SSE-KMS'" class="space-y-2">
-        <Label>KMS Key ID</Label>
-        <AppSelect
-          v-model="encryptFormValue.kmsKeyId"
-          :options="kmsKeyOptions"
-          :placeholder="t('Please select KMS key')"
-        />
-      </div>
-    </AppCard>
+  <Modal v-model="showEncryptModal" :title="t('Enable Storage Encryption')" size="md">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel>{{ t('Encryption Type') }}</FieldLabel>
+        <FieldContent>
+          <Selector v-model="encryptFormValue.encrypt" :options="encryptionOptions" :placeholder="t('Please select encryption type')" />
+        </FieldContent>
+      </Field>
+      <Field v-if="encryptFormValue.encrypt === 'SSE-KMS'">
+        <FieldLabel>KMS Key ID</FieldLabel>
+        <FieldContent>
+          <Selector v-model="encryptFormValue.kmsKeyId" :options="kmsKeyOptions" :placeholder="t('Please select KMS key')" />
+        </FieldContent>
+      </Field>
+    </div>
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button variant="outline" @click="showEncryptModal = false">
@@ -197,31 +205,39 @@
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 
-  <AppModal v-model="showRetentionModal" :title="t('Set Retention')" size="md">
-    <AppCard padded class="space-y-4">
-      <div class="space-y-2">
-        <Label>{{ t('Retention Mode') }}</Label>
-        <AppRadioGroup
-          v-model="retentionFormValue.retentionMode"
-          :options="retentionModeOptions"
-          class="grid gap-2 sm:grid-cols-2"
-        />
-      </div>
-      <div class="space-y-2">
-        <Label>{{ t('Retention Unit') }}</Label>
-        <AppRadioGroup
-          v-model="retentionFormValue.retentionUnit"
-          :options="retentionUnitOptions"
-          class="grid gap-2 sm:grid-cols-2"
-        />
-      </div>
-      <div class="space-y-2">
-        <Label>{{ t('Retention Period') }}</Label>
-        <Input v-model="retentionPeriodInput" type="number" />
-      </div>
-    </AppCard>
+  <Modal v-model="showRetentionModal" :title="t('Set Retention')" size="md">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel>{{ t('Retention Mode') }}</FieldLabel>
+        <FieldContent>
+          <RadioGroup v-model="retentionFormValue.retentionMode" class="grid gap-2 sm:grid-cols-2">
+            <label v-for="option in retentionModeOptions" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
+              <RadioGroupItem :value="option.value" class="mt-0.5" />
+              <span class="text-sm font-medium">{{ option.label }}</span>
+            </label>
+          </RadioGroup>
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>{{ t('Retention Unit') }}</FieldLabel>
+        <FieldContent>
+          <RadioGroup v-model="retentionFormValue.retentionUnit" class="grid gap-2 sm:grid-cols-2">
+            <label v-for="option in retentionUnitOptions" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
+              <RadioGroupItem :value="option.value" class="mt-0.5" />
+              <span class="text-sm font-medium">{{ option.label }}</span>
+            </label>
+          </RadioGroup>
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>{{ t('Retention Period') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="retentionPeriodInput" type="number" />
+        </FieldContent>
+      </Field>
+    </div>
     <template #footer>
       <div class="flex justify-end gap-2">
         <Button variant="outline" @click="showRetentionModal = false">
@@ -232,17 +248,22 @@
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import { AppCard, AppDrawer, AppModal, AppRadioGroup, AppSelect, AppSpinner } from '@/components/app'
-import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
 import { Icon } from '#components'
+import Drawer from '@/components/drawer.vue'
+import Modal from '@/components/modal.vue'
+import Selector from '@/components/selector.vue'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemHeader, ItemTitle } from '@/components/ui/item'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Spinner } from '@/components/ui/spinner'
+import { Switch } from '@/components/ui/switch'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { BucketPolicyType } from '~/utils/bucket-policy'

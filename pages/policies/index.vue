@@ -1,21 +1,14 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('IAM Policies') }}</h1>
+      <h1 class="text-2xl font-bold">{{ t('IAM Policies') }}</h1>
+      <template #actions>
+        <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable class="max-w-sm" />
+        <Button variant="secondary" @click="handleNew">
+          <Icon name="ri:add-line" class="size-4" />
+          <span>{{ t('New Policy') }}</span>
+        </Button>
       </template>
-      <div class="flex flex-col gap-4 w-full md:flex-row md:items-center md:justify-between">
-        <div class="flex w-full max-w-sm items-center gap-2">
-          <Icon name="ri:search-2-line" class="size-4 text-muted-foreground" />
-          <Input v-model="searchTerm" :placeholder="t('Search')" />
-        </div>
-        <div class="flex flex-wrap items-center justify-end gap-2">
-          <Button variant="secondary" @click="handleNew">
-            <Icon name="ri:add-line" class="size-4" />
-            <span>{{ t('New Policy') }}</span>
-          </Button>
-        </div>
-      </div>
     </page-header>
 
     <DataTable :table="table" :is-loading="loading" :empty-title="t('No Policies')" :empty-description="t('Create a policy to manage access control templates.')" />
@@ -26,14 +19,13 @@
 
 <script lang="ts" setup>
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDataTable } from '~/components/data-table'
-import DataTable from '~/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const { $api } = useNuxtApp()

@@ -1,24 +1,17 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Buckets') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Buckets') }}</h1>
       <template #actions>
-        <div class="flex max-w-sm items-center gap-2">
-          <Icon name="ri:search-2-line" class="size-4 text-muted-foreground -mr-8" />
-          <Input v-model="searchTerm" :placeholder="t('Search')" class="pl-8" />
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" @click="formVisible = true">
-            <Icon name="ri:add-line" class="size-4" />
-            <span>{{ t('Create Bucket') }}</span>
-          </Button>
-          <Button variant="outline" @click="() => refresh()">
-            <Icon name="ri:refresh-line" class="size-4" />
-            <span>{{ t('Refresh') }}</span>
-          </Button>
-        </div>
+        <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable class="max-w-sm" />
+        <Button variant="secondary" @click="formVisible = true">
+          <Icon name="ri:add-line" class="size-4" />
+          <span>{{ t('Create Bucket') }}</span>
+        </Button>
+        <Button variant="outline" @click="() => refresh()">
+          <Icon name="ri:refresh-line" class="size-4" />
+          <span>{{ t('Refresh') }}</span>
+        </Button>
       </template>
     </page-header>
 
@@ -33,13 +26,13 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon, NuxtLink } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import { niceBytes } from '@/utils/functions'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDataTable } from '~/components/data-table'
-import DataTable from '~/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -133,7 +126,7 @@ const columns: ColumnDef<BucketRow>[] = [
     header: () => t('Actions'),
     enableSorting: false,
     cell: ({ row }) =>
-      h('div', { class: 'flex justify-center gap-2' }, [
+      h('div', { class: 'flex items-center gap-2' }, [
         h(
           Button,
           {

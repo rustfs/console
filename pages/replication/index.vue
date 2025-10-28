@@ -1,21 +1,26 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Bucket Replication') }}</h1>
+      <h1 class="text-2xl font-bold">{{ t('Bucket Replication') }}</h1>
+      <template #actions>
+        <ActionBar class="w-full justify-end gap-3 sm:w-auto">
+          <BucketSelector
+            v-model="bucketName"
+            :options="bucketList"
+            :placeholder="t('Please select bucket')"
+            class="w-full sm:w-auto"
+            selector-class="sm:w-56"
+          />
+          <Button variant="secondary" @click="openForm">
+            <Icon name="ri:add-line" class="size-4" />
+            <span>{{ t('Add Replication Rule') }}</span>
+          </Button>
+          <Button variant="outline" @click="() => loadReplication()">
+            <Icon name="ri:refresh-line" class="size-4" />
+            <span>{{ t('Refresh') }}</span>
+          </Button>
+        </ActionBar>
       </template>
-      <div class="flex-1 flex flex-wrap items-center justify-end gap-2">
-        <Label class="text-sm font-medium text-muted-foreground">{{ t('Bucket') }}</Label>
-        <AppSelect v-model="bucketName" :options="bucketList" :placeholder="t('Please select bucket')" class="max-w-xs" />
-        <Button variant="secondary" @click="openForm">
-          <Icon name="ri:add-line" class="size-4" />
-          <span>{{ t('Add Replication Rule') }}</span>
-        </Button>
-        <Button variant="outline" @click="() => loadReplication()">
-          <Icon name="ri:refresh-line" class="size-4" />
-          <span>{{ t('Refresh') }}</span>
-        </Button>
-      </div>
     </page-header>
 
     <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Add replication rules to sync objects across buckets.')" />
@@ -28,16 +33,15 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppSelect, AppTag } from '@/components/app'
-import type { SelectOption } from '@/components/app/AppSelect.vue'
-import { Label } from '@/components/ui/label'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
+import type { SelectOption } from '@/components/selector.vue'
+import { Badge } from '@/components/ui/badge'
 import { useBucket } from '@/composables/useBucket'
 import type { Bucket } from '@aws-sdk/client-s3'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDataTable } from '~/components/data-table'
-import DataTable from '~/components/data-table/data-table.vue'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -103,8 +107,8 @@ const columns: ColumnDef<ReplicationRule>[] = [
     header: () => t('Status'),
     cell: ({ row }) =>
       h(
-        AppTag,
-        { tone: row.original.Status === 'Enabled' ? 'success' : 'warning' },
+        Badge,
+        { variant: row.original.Status === 'Enabled' ? 'secondary' : 'outline' },
         () => (row.original.Status === 'Enabled' ? t('Enabled') : t('Disabled'))
       ),
   },

@@ -1,59 +1,79 @@
 <template>
-  <AppModal
+  <Modal
     v-model="modalVisible"
     :title="t('Create Key')"
     size="lg"
     :close-on-backdrop="false"
   >
     <div class="space-y-4">
-      <div class="grid gap-2">
-        <Label for="create-access-key">{{ t('Access Key') }}</Label>
-        <Input id="create-access-key" v-model="formModel.accessKey" autocomplete="off" />
-        <p v-if="errors.accessKey" class="text-sm text-destructive">{{ errors.accessKey }}</p>
-      </div>
+      <Field>
+        <FieldLabel for="create-access-key">{{ t('Access Key') }}</FieldLabel>
+        <FieldContent>
+          <Input id="create-access-key" v-model="formModel.accessKey" autocomplete="off" />
+        </FieldContent>
+        <FieldDescription v-if="errors.accessKey" class="text-destructive">
+          {{ errors.accessKey }}
+        </FieldDescription>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label for="create-secret-key">{{ t('Secret Key') }}</Label>
-        <Input id="create-secret-key" v-model="formModel.secretKey" type="password" autocomplete="off" />
-        <p v-if="errors.secretKey" class="text-sm text-destructive">{{ errors.secretKey }}</p>
-      </div>
+      <Field>
+        <FieldLabel for="create-secret-key">{{ t('Secret Key') }}</FieldLabel>
+        <FieldContent>
+          <Input id="create-secret-key" v-model="formModel.secretKey" type="password" autocomplete="off" />
+        </FieldContent>
+        <FieldDescription v-if="errors.secretKey" class="text-destructive">
+          {{ errors.secretKey }}
+        </FieldDescription>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label for="create-expiry">{{ t('Expiry') }}</Label>
-        <AppDateTimePicker
-          id="create-expiry"
-          v-model="formModel.expiry"
-          :min="minExpiry"
-          :placeholder="t('Please select expiry date')"
-        />
-        <p v-if="errors.expiry" class="text-sm text-destructive">{{ errors.expiry }}</p>
-      </div>
+      <Field>
+        <FieldLabel for="create-expiry">{{ t('Expiry') }}</FieldLabel>
+        <FieldContent>
+          <DateTimePicker
+            id="create-expiry"
+            v-model="formModel.expiry"
+            :min="minExpiry"
+            :placeholder="t('Please select expiry date')"
+          />
+        </FieldContent>
+        <FieldDescription v-if="errors.expiry" class="text-destructive">
+          {{ errors.expiry }}
+        </FieldDescription>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label for="create-name">{{ t('Name') }}</Label>
-        <Input id="create-name" v-model="formModel.name" autocomplete="off" />
-        <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
-      </div>
+      <Field>
+        <FieldLabel for="create-name">{{ t('Name') }}</FieldLabel>
+        <FieldContent>
+          <Input id="create-name" v-model="formModel.name" autocomplete="off" />
+        </FieldContent>
+        <FieldDescription v-if="errors.name" class="text-destructive">
+          {{ errors.name }}
+        </FieldDescription>
+      </Field>
 
-      <div class="grid gap-2">
-        <Label for="create-description">{{ t('Description') }}</Label>
-        <Textarea id="create-description" v-model="formModel.description" :rows="3" />
-      </div>
+      <Field>
+        <FieldLabel for="create-description">{{ t('Description') }}</FieldLabel>
+        <FieldContent>
+          <Textarea id="create-description" v-model="formModel.description" :rows="3" />
+        </FieldContent>
+      </Field>
 
-      <div class="flex items-start justify-between gap-3 rounded-md border p-3">
-        <div>
-          <p class="text-sm font-medium">{{ t('Use main account policy') }}</p>
+      <Field orientation="responsive" class="items-start gap-3 rounded-md border p-3">
+        <FieldLabel class="text-sm font-medium">{{ t('Use main account policy') }}</FieldLabel>
+        <FieldContent class="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
           <p class="text-xs text-muted-foreground">
             {{ t('Automatically inherit the main account policy when enabled.') }}
           </p>
-        </div>
-        <Switch v-model:checked="formModel.impliedPolicy" />
-      </div>
+          <Switch v-model:checked="formModel.impliedPolicy" />
+        </FieldContent>
+      </Field>
 
-      <div v-if="!formModel.impliedPolicy" class="grid gap-2">
-        <Label>{{ t('Current user policy') }}</Label>
-        <json-editor v-model="formModel.policy" />
-      </div>
+      <Field v-if="!formModel.impliedPolicy">
+        <FieldLabel>{{ t('Current user policy') }}</FieldLabel>
+        <FieldContent>
+          <json-editor v-model="formModel.policy" />
+        </FieldContent>
+      </Field>
     </div>
 
     <template #footer>
@@ -67,17 +87,17 @@
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import Spinner from '@/components/ui/spinner/Spinner.vue'
+import { Spinner } from '@/components/ui/spinner'
 
-import { AppModal } from '@/components/app'
-import AppDateTimePicker from '@/components/app/AppDateTimePicker.vue'
-import { Label } from '@/components/ui/label'
+import DateTimePicker from '@/components/datetime-picker.vue'
+import Modal from '@/components/modal.vue'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { computed, reactive, ref } from 'vue'

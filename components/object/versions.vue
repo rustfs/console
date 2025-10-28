@@ -1,26 +1,29 @@
 <template>
-  <AppModal v-model="visibleProxy" :title="t('Object Versions')" size="lg" :close-on-backdrop="false">
-    <AppCard padded>
-      <DataTable :table="table" :is-loading="loading" :empty-title="t('No Versions')" />
-      <div class="mt-4 flex justify-end">
-        <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
-      </div>
-    </AppCard>
-  </AppModal>
+  <Modal v-model="visibleProxy" :title="t('Object Versions')" size="lg" :close-on-backdrop="false">
+  <Card class="shadow-none">
+      <CardContent class="space-y-4 p-6">
+        <DataTable :table="table" :is-loading="loading" :empty-title="t('No Versions')" />
+        <div class="flex justify-end">
+          <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
+        </div>
+      </CardContent>
+    </Card>
+  </Modal>
 </template>
 
 <script setup lang="tsx">
 import { Button } from '@/components/ui/button'
 
-import { AppCard, AppModal } from '@/components/app'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
+import Modal from '@/components/modal.vue'
+import { Card, CardContent } from '@/components/ui/card'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useDataTable } from '~/components/data-table'
-import DataTable from '~/components/data-table/data-table.vue'
 
 const props = defineProps<{
   bucketName: string

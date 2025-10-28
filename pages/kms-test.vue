@@ -1,59 +1,84 @@
 <template>
   <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">KMS API Test Page</h1>
-      </template>
+      <h1 class="text-2xl font-bold">KMS API Test Page</h1>
       <template #description>
         <p class="text-gray-600 dark:text-gray-400">Test page for KMS functionality after API updates</p>
       </template>
     </page-header>
 
     <div>
-      <AppCard title="KMS API Test Suite" class="mb-6" content-class="space-y-4">
-        <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <Button @click="testServiceStatus" :loading="testing.status">Test Service Status</Button>
-          <Button @click="testConfiguration" :loading="testing.config">Test Configuration</Button>
-          <Button @click="testKeyList" :loading="testing.keys">Test Key List</Button>
-          <Button @click="testClearCache" :loading="testing.cache">Test Clear Cache</Button>
-        </div>
+      <Card class="mb-6 shadow-none">
+        <CardHeader>
+          <CardTitle>KMS API Test Suite</CardTitle>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <Button @click="testServiceStatus" :loading="testing.status">Test Service Status</Button>
+            <Button @click="testConfiguration" :loading="testing.config">Test Configuration</Button>
+            <Button @click="testKeyList" :loading="testing.keys">Test Key List</Button>
+            <Button @click="testClearCache" :loading="testing.cache">Test Clear Cache</Button>
+          </div>
 
-        <AppCard v-if="testResults.length > 0" title="Test Results" content-class="space-y-2">
-          <div v-for="(result, index) in testResults" :key="index" class="rounded border-l-4 p-3"
-            :class="result.success ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/10' : 'border-rose-500 bg-rose-50 dark:bg-rose-900/10'">
-            <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-              <div>
-                <h4 class="font-medium">{{ result.test }}</h4>
-                <p class="text-sm text-muted-foreground">{{ result.message }}</p>
-                <div v-if="result.data" class="mt-2 text-sm text-muted-foreground">
-                  <details>
-                    <summary class="cursor-pointer text-sm text-primary">View Response Data</summary>
-                    <pre class="mt-2 max-h-64 overflow-auto rounded bg-muted p-2 text-xs">{{ JSON.stringify(result.data, null, 2) }}</pre>
-                  </details>
+          <Card v-if="testResults.length > 0" class="shadow-none">
+            <CardHeader>
+              <CardTitle>Test Results</CardTitle>
+            </CardHeader>
+            <CardContent class="space-y-2">
+              <div
+                v-for="(result, index) in testResults"
+                :key="index"
+                class="rounded border-l-4 p-3"
+                :class="result.success ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/10' : 'border-rose-500 bg-rose-50 dark:bg-rose-900/10'"
+              >
+                <div class="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <h4 class="font-medium">{{ result.test }}</h4>
+                    <p class="text-sm text-muted-foreground">{{ result.message }}</p>
+                    <div v-if="result.data" class="mt-2 text-sm text-muted-foreground">
+                      <details>
+                        <summary class="cursor-pointer text-sm text-primary">View Response Data</summary>
+                        <pre class="mt-2 max-h-64 overflow-auto rounded bg-muted p-2 text-xs">{{ JSON.stringify(result.data, null, 2) }}</pre>
+                      </details>
+                    </div>
+                  </div>
+                  <Badge :variant="result.success ? 'secondary' : 'destructive'" class="self-start">
+                    {{ result.success ? 'PASS' : 'FAIL' }}
+                  </Badge>
                 </div>
               </div>
-              <AppTag :tone="result.success ? 'success' : 'danger'" class="self-start">
-                {{ result.success ? 'PASS' : 'FAIL' }}
-              </AppTag>
-            </div>
-          </div>
-        </AppCard>
+            </CardContent>
+          </Card>
 
-        <AppCard title="API Documentation">
-          <p class="text-sm text-muted-foreground">
-            Updated KMS API documentation is available in the project's docs folder.
-          </p>
-          <Button as="a" href="/docs/kms/frontend-api-guide-zh.md" target="_blank" rel="noopener noreferrer" variant="outline" class="mt-2 w-fit">
-            View API Documentation
-          </Button>
-        </AppCard>
-      </AppCard>
+          <Card class="shadow-none">
+            <CardHeader>
+              <CardTitle>API Documentation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p class="text-sm text-muted-foreground">
+                Updated KMS API documentation is available in the project's docs folder.
+              </p>
+              <Button
+                as="a"
+                href="/docs/kms/frontend-api-guide-zh.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="outline"
+                class="mt-2 w-fit"
+              >
+                View API Documentation
+              </Button>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
     </div>
   </page>
 </template>
 
 <script setup lang="ts">
-import { AppCard, AppTag } from '@/components/app'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useMessage } from '@/composables/ui'
 import { reactive, ref } from 'vue'
@@ -61,7 +86,6 @@ import { reactive, ref } from 'vue'
 const { getKMSStatus, getConfiguration, getKeyList, clearCache } = useSSE()
 const message = useMessage()
 
-// Test states
 const testing = reactive({
   status: false,
   config: false,
@@ -69,26 +93,10 @@ const testing = reactive({
   cache: false,
 })
 
-const testResults = ref<
-  Array<{
-    test: string
-    success: boolean
-    message: string
-    data?: any
-    timestamp: Date
-  }>
->([])
+const testResults = ref<Array<{ test: string; success: boolean; message: string; data?: any; timestamp: Date }>>([])
 
 const addTestResult = (test: string, success: boolean, message: string, data?: any) => {
-  testResults.value.unshift({
-    test,
-    success,
-    message,
-    data,
-    timestamp: new Date(),
-  })
-
-  // Keep only last 10 results
+  testResults.value.unshift({ test, success, message, data, timestamp: new Date() })
   if (testResults.value.length > 10) {
     testResults.value = testResults.value.slice(0, 10)
   }
@@ -145,7 +153,7 @@ const testClearCache = async () => {
       'Clear Cache',
       result.status === 'success',
       `Cache clear result: ${result.status} - ${result.message}`,
-      result
+      result,
     )
     message.success('Clear cache test completed')
   } catch (error) {

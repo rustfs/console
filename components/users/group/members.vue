@@ -1,10 +1,10 @@
 <template>
   <div class="space-y-4">
-    <Card>
+  <Card class="shadow-none">
       <CardContent class="space-y-4 pt-6">
         <div v-if="!editStatus" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="w-full sm:max-w-xs">
-            <Input v-model="searchTerm" :placeholder="t('Search User')" />
+            <SearchInput v-model="searchTerm" :placeholder="t('Search User')" clearable class="w-full" />
           </div>
           <Button type="button" variant="secondary" class="inline-flex items-center gap-2" @click="startEditing">
             <Icon class="size-4" name="ri:add-line" />
@@ -95,7 +95,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'

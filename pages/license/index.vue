@@ -1,96 +1,104 @@
 <template>
   <div v-if="hasLicense">
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Enterprise License') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Enterprise License') }}</h1>
     </page-header>
 
     <div class="space-y-6">
-      <AppCard class="space-y-4">
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-3">
-              <Badge :variant="hasValidLicense ? 'default' : 'destructive'">
-                {{ t('Enterprise License') }}
-              </Badge>
-              <span :class="['text-sm font-medium', hasValidLicense ? 'text-emerald-600' : 'text-rose-500']">
-                {{ t('Status') }}：{{ hasValidLicense ? t('Normal') : t('Expired') }}
-              </span>
+      <Card class="shadow-none">
+        <CardContent class="space-y-4">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center gap-3">
+                <Badge :variant="hasValidLicense ? 'default' : 'destructive'">
+                  {{ t('Enterprise License') }}
+                </Badge>
+                <span :class="['text-sm font-medium', hasValidLicense ? 'text-emerald-600' : 'text-rose-500']">
+                  {{ t('Status') }}：{{ hasValidLicense ? t('Normal') : t('Expired') }}
+                </span>
+              </div>
+              <p class="text-sm text-muted-foreground">
+                {{ t('License Valid Until') }}：{{ endDate }}
+              </p>
             </div>
-            <p class="text-sm text-muted-foreground">
-              {{ t('License Valid Until') }}：{{ endDate }}
-            </p>
-          </div>
 
-          <div class="flex flex-wrap items-center gap-3">
-            <Button variant="default" @click="updateLicense">
-              <Icon name="ri:upload-fill" class="mr-2 size-4" />
-              {{ t('Update License') }}
-            </Button>
-            <Button variant="outline" @click="contactSupport">
-              <Icon name="ri:customer-service-2-line" class="mr-2 size-4" />
-              {{ t('Contact Support') }}
-            </Button>
+            <div class="flex flex-wrap items-center gap-3">
+              <Button variant="default" @click="updateLicense">
+                <Icon name="ri:upload-fill" class="mr-2 size-4" />
+                {{ t('Update License') }}
+              </Button>
+              <Button variant="outline" @click="contactSupport">
+                <Icon name="ri:customer-service-2-line" class="mr-2 size-4" />
+                {{ t('Contact Support') }}
+              </Button>
+            </div>
           </div>
-        </div>
-      </AppCard>
+        </CardContent>
+      </Card>
 
       <div class="grid gap-6 lg:grid-cols-2">
-        <AppCard class="space-y-4">
-          <p class="text-base font-semibold">{{ t('License Details') }}</p>
-          <dl class="grid gap-4 sm:grid-cols-2">
-            <div v-for="item in licenseDetails" :key="item.label" class="space-y-1">
-              <dt class="text-xs font-medium uppercase text-muted-foreground">{{ item.label }}</dt>
-              <dd class="text-sm text-foreground">{{ item.value }}</dd>
-            </div>
-          </dl>
-        </AppCard>
+        <Card class="shadow-none">
+          <CardContent class="space-y-4">
+            <p class="text-base font-semibold">{{ t('License Details') }}</p>
+            <dl class="grid gap-4 sm:grid-cols-2">
+              <div v-for="item in licenseDetails" :key="item.label" class="space-y-1">
+                <dt class="text-xs font-medium uppercase text-muted-foreground">{{ item.label }}</dt>
+                <dd class="text-sm text-foreground">{{ item.value }}</dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
 
-        <AppCard class="space-y-4">
-          <p class="text-base font-semibold">{{ t('Customer Service') }}</p>
-          <dl class="grid gap-4 sm:grid-cols-2">
-            <div v-for="item in serviceInfo" :key="item.label" class="space-y-1">
-              <dt class="text-xs font-medium uppercase text-muted-foreground">{{ item.label }}</dt>
-              <dd class="text-sm text-foreground">{{ item.value }}</dd>
-            </div>
-          </dl>
-        </AppCard>
+        <Card class="shadow-none">
+          <CardContent class="space-y-4">
+            <p class="text-base font-semibold">{{ t('Customer Service') }}</p>
+            <dl class="grid gap-4 sm:grid-cols-2">
+              <div v-for="item in serviceInfo" :key="item.label" class="space-y-1">
+                <dt class="text-xs font-medium uppercase text-muted-foreground">{{ item.label }}</dt>
+                <dd class="text-sm text-foreground">{{ item.value }}</dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
       </div>
 
-      <AppCard class="space-y-4">
-        <p class="text-base font-semibold">{{ t('Feature Permissions') }}</p>
-        <div class="overflow-hidden rounded-lg border">
-          <table class="w-full text-sm">
-            <thead class="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-              <tr>
-                <th class="px-4 py-2">{{ t('Name') }}</th>
-                <th class="px-4 py-2">{{ t('Description') }}</th>
-                <th class="px-4 py-2">{{ t('Status') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in permissions" :key="item.name" class="border-t">
-                <td class="px-4 py-3 font-medium">{{ item.name }}</td>
-                <td class="px-4 py-3 text-muted-foreground">{{ item.description }}</td>
-                <td class="px-4 py-3">
-                  <Badge variant="default">{{ item.status }}</Badge>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </AppCard>
-
-      <AppCard class="space-y-4">
-        <p class="text-base font-semibold">{{ t('Technical Parameters') }}</p>
-        <dl class="grid gap-4 sm:grid-cols-2">
-          <div v-for="item in technicalParameters" :key="item.label" class="space-y-1">
-            <dt class="text-xs font-medium uppercase text-muted-foreground">{{ item.label }}</dt>
-            <dd class="text-sm text-foreground">{{ item.value }}</dd>
+      <Card class="shadow-none">
+        <CardContent class="space-y-4">
+          <p class="text-base font-semibold">{{ t('Feature Permissions') }}</p>
+          <div class="overflow-hidden rounded-lg border">
+            <table class="w-full text-sm">
+              <thead class="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th class="px-4 py-2">{{ t('Name') }}</th>
+                  <th class="px-4 py-2">{{ t('Description') }}</th>
+                  <th class="px-4 py-2">{{ t('Status') }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in permissions" :key="item.name" class="border-t">
+                  <td class="px-4 py-3 font-medium">{{ item.name }}</td>
+                  <td class="px-4 py-3 text-muted-foreground">{{ item.description }}</td>
+                  <td class="px-4 py-3">
+                    <Badge variant="default">{{ item.status }}</Badge>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        </dl>
-      </AppCard>
+        </CardContent>
+      </Card>
+
+      <Card class="shadow-none">
+        <CardContent class="space-y-4">
+          <p class="text-base font-semibold">{{ t('Technical Parameters') }}</p>
+          <dl class="grid gap-4 sm:grid-cols-2">
+            <div v-for="item in technicalParameters" :key="item.label" class="space-y-1">
+              <dt class="text-xs font-medium uppercase text-muted-foreground">{{ item.label }}</dt>
+              <dd class="text-sm text-foreground">{{ item.value }}</dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
     </div>
   </div>
 
@@ -101,8 +109,8 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppCard } from '@/components/app'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import dayjs from 'dayjs'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

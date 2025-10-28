@@ -1,15 +1,8 @@
 <template>
-  <AppModal v-model="visible" :title="t('Upload File')" size="xl" :close-on-backdrop="false">
+  <Modal v-model="visible" :title="t('Upload File')" size="xl" :close-on-backdrop="false">
     <div class="space-y-5">
       <input ref="fileInput" type="file" multiple class="hidden" @change="handleFileSelect" />
-      <input
-        ref="folderInput"
-        type="file"
-        webkitdirectory
-        directory
-        class="hidden"
-        @change="handleFolderSelect"
-      />
+      <input ref="folderInput" type="file" webkitdirectory directory class="hidden" @change="handleFolderSelect" />
 
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="space-y-1">
@@ -20,7 +13,8 @@
             {{ t('Current Prefix') }}: {{ prefix || '/' }}
           </p>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
+
+        <ActionBar>
           <Button variant="outline" size="sm" :disabled="isFolderLoading" @click="selectFile">
             <Icon name="ri:file-add-line" class="size-4" />
             {{ t('Select File') }}
@@ -29,11 +23,7 @@
             <Icon name="ri:folder-add-line" class="size-4" />
             {{ t('Select Folder') }}
           </Button>
-          <Button variant="secondary" size="sm" @click="closeModal">
-            <Icon name="ri:close-line" class="size-4" />
-            {{ t('Close') }}
-          </Button>
-        </div>
+        </ActionBar>
       </div>
 
       <Alert class="border-sky-200 bg-sky-50 text-sky-900 dark:border-sky-500/30 dark:bg-sky-500/10 dark:text-sky-100">
@@ -42,18 +32,16 @@
         </AlertDescription>
       </Alert>
 
-      <Alert
-        v-if="isMemoryWarning"
-        class="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
-      >
+      <Alert v-if="isMemoryWarning" class="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
         <AlertDescription>
           {{ t('Large File Count Warning', { count: totalFileCount.toLocaleString(), max: MAX_FILES_LIMIT }) }}
         </AlertDescription>
       </Alert>
 
-      <div class="space-y-4 border">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="space-y-1 text-sm text-muted-foreground">
+      <div class="border">
+        <!-- objects info -->
+        <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-2">
+          <div class="flex items-center gap-2 text-sm text-muted-foreground">
             <p v-if="totalFileCount > 0">
               {{ t('Total Files') }}: {{ totalFileCount.toLocaleString() }}
             </p>
@@ -61,29 +49,16 @@
               {{ t('Memory Usage') }}: {{ getMemoryUsageLevel() }}
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="!hasFiles || isFolderLoading || isAdding"
-            @click="clearAllFiles"
-          >
+          <Button variant="outline" size="sm" :disabled="!hasFiles || isFolderLoading || isAdding" @click="clearAllFiles">
             <Icon name="ri:delete-bin-line" class="size-4" />
             {{ t('Clear All') }}
           </Button>
         </div>
 
-        <div
-          class="rounded-md border border-dashed transition"
-          :class="isDragOver ? 'border-primary bg-primary/5' : ''"
-          @dragenter.prevent="handleDragEnter"
-          @dragover.prevent="handleDragOver"
-          @dragleave.prevent="handleDragLeave"
-          @drop.prevent="handleDrop"
-        >
-          <div
-            v-if="!selectedItems.length"
-            class="flex h-[42vh] flex-col items-center justify-center gap-4 p-6 text-center"
-          >
+        <!-- objects list / drag area -->
+        <div class="rounded-md border-t transition" :class="isDragOver ? 'border-primary bg-primary/5' : ''" @dragenter.prevent="handleDragEnter" @dragover.prevent="handleDragOver"
+          @dragleave.prevent="handleDragLeave" @drop.prevent="handleDrop">
+          <div v-if="!selectedItems.length" class="flex h-[42vh] flex-col items-center justify-center gap-4 p-6 text-center">
             <Icon name="ri:cloud-upload-line" class="size-10 text-muted-foreground" />
             <p class="text-base font-medium text-muted-foreground">{{ t('No Selection') }}</p>
             <p class="max-w-[320px] text-sm text-muted-foreground">
@@ -93,7 +68,7 @@
           </div>
           <div v-else class="max-h-[42vh] overflow-auto">
             <table class="w-full text-sm">
-              <thead class="sticky top-0 bg-muted/60 text-xs uppercase text-muted-foreground">
+              <thead class="sticky top-0 bg-muted text-xs uppercase text-muted-foreground">
                 <tr>
                   <th class="px-3 py-2 text-left font-medium">
                     {{ t('Name') }}
@@ -110,12 +85,9 @@
                 <tr v-for="(item, index) in selectedItems" :key="item.uid" class="border-b last:border-b-0">
                   <td class="px-3 py-2">
                     <div class="flex items-start gap-2">
-                      <Icon
-                        :name="item.type === 'folder' ? 'ri:folder-3-line' : 'ri:file-line'"
-                        class="mt-0.5 size-4 text-muted-foreground"
-                      />
+                      <Icon :name="item.type === 'folder' ? 'ri:folder-3-line' : 'ri:file-line'" class="mt-0.5 size-4 text-muted-foreground" />
                       <div>
-                        <div class="font-medium text-foreground">
+                        <div class="font-medium text-foreground truncate max-w-md">
                           {{ item.name }}<span v-if="item.type === 'folder'">/</span>
                         </div>
                         <div v-if="item.type === 'folder' && item.fileCount" class="text-xs text-muted-foreground">
@@ -160,26 +132,21 @@
         <Button variant="outline" :disabled="!hasFiles || isAdding || isFolderLoading">
           {{ t('Configure') }}
         </Button>
-        <Button
-          variant="default"
-          :disabled="!hasFiles || isAdding || isFolderLoading"
-          :loading="isAdding"
-          @click="handleUpload"
-        >
+        <Button variant="default" :disabled="!hasFiles || isAdding || isFolderLoading" :loading="isAdding" @click="handleUpload">
           {{ t('Start Upload') }}
         </Button>
       </div>
     </div>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { AppModal } from '@/components/app'
-import Progress from '@/components/ui/progress/Progress.vue'
+import Modal from '@/components/modal.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import Progress from '@/components/ui/progress/Progress.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
@@ -254,7 +221,7 @@ const clearAllFiles = () => {
 
   if (typeof window !== 'undefined' && 'gc' in window && typeof (window as any).gc === 'function') {
     try {
-      ;(window as any).gc()
+      ; (window as any).gc()
     } catch {
       // ignore
     }

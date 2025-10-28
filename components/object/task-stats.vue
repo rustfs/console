@@ -1,13 +1,7 @@
 <template>
-  <Button
-    v-if="total > 0"
-    variant="ghost"
-    size="sm"
-    class="h-auto px-0 text-sm font-medium text-primary hover:text-primary"
-    @click="toggleDrawer"
-  >
+  <Button v-if="total > 0" variant="outline" @click="toggleDrawer">
     <div v-if="pending.length" class="flex items-center gap-2">
-      <AppSpinner size="sm" />
+      <Spinner class="size-3 text-muted-foreground" />
       <span>
         {{
           t('In Progress', {
@@ -23,11 +17,9 @@
     </div>
   </Button>
 
-  <AppDrawer v-model="showDrawer" :title="t('Task Management')" size="lg">
+  <Drawer v-model="showDrawer" :title="t('Task Management')" size="lg">
     <div class="flex flex-col gap-4">
-      <Alert
-        class="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
-      >
+      <Alert class="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
         <AlertDescription class="space-y-2 text-sm leading-relaxed">
           <p>
             <span class="font-medium text-amber-600 dark:text-amber-300">{{ t('Browser Warning') }}</span>
@@ -72,15 +64,16 @@
         </TabsContent>
       </Tabs>
     </div>
-  </AppDrawer>
+  </Drawer>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
-import { AppDrawer, AppSpinner } from '@/components/app'
-import Progress from '@/components/ui/progress/Progress.vue'
+import Drawer from '@/components/drawer.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import Progress from '@/components/ui/progress/Progress.vue'
+import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

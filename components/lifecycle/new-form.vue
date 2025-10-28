@@ -1,10 +1,5 @@
 <template>
-  <AppModal
-    v-model="visible"
-    :title="`${t('Add Lifecycle Rule')} (${t('Bucket')}: ${bucketName})`"
-    size="lg"
-    :close-on-backdrop="false"
-  >
+  <Modal v-model="visible" :title="`${t('Add Lifecycle Rule')} (${t('Bucket')}: ${bucketName})`" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
       <Tabs v-model="activeTab" class="flex flex-col gap-4">
         <TabsList class="w-full justify-start overflow-x-auto">
@@ -14,59 +9,55 @@
 
         <TabsContent value="expire" class="mt-0 space-y-6">
           <div class="space-y-4">
-            <div v-if="versioningStatus" class="grid gap-2">
-              <Label>{{ t('Object Version') }}</Label>
-              <AppSelect v-model="formData.versionType" :options="versionOptions" />
-            </div>
+            <Field v-if="versioningStatus">
+              <FieldLabel>{{ t('Object Version') }}</FieldLabel>
+              <FieldContent>
+                <Selector v-model="formData.versionType" :options="versionOptions" />
+              </FieldContent>
+            </Field>
 
-            <div class="grid gap-2">
-              <Label>{{ t('Time Cycle') }}</Label>
-              <div class="flex items-center gap-3">
-                <Input
-                  v-model="formData.days"
-                  type="number"
-                  min="1"
-                  class="w-32"
-                  :placeholder="t('Days')"
-                />
-                <span class="text-sm text-muted-foreground">{{ t('Days After') }}</span>
-              </div>
-            </div>
+            <Field orientation="horizontal">
+              <FieldContent>
+                <FieldLabel>{{ t('Time Cycle') }}</FieldLabel>
+                <FieldDescription>{{ t('Set the time cycle for the rule') }}</FieldDescription>
+              </FieldContent>
+              <FieldContent>
+                <div class="flex items-center justify-end gap-3">
+                  <Input v-model="formData.days" type="number" min="1" class="w-32" :placeholder="t('Days')" />
+                  <span class="text-sm text-muted-foreground">{{ t('Days After') }}</span>
+                </div>
+              </FieldContent>
+            </Field>
           </div>
 
           <div class="space-y-4">
             <details>
               <summary class="cursor-pointer text-sm font-medium text-primary">{{ t('More Configurations') }}</summary>
               <div class="mt-4 space-y-4">
-                <div class="grid gap-2">
-                  <Label>{{ t('Prefix') }}</Label>
-                  <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
-                </div>
+                <Field orientation="horizontal">
+                  <FieldContent>
+                    <FieldLabel>{{ t('Prefix') }}</FieldLabel>
+                    <FieldDescription>{{ t('Set the prefix for the rule') }}</FieldDescription>
+                  </FieldContent>
+                  <FieldContent>
+                    <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+                  </FieldContent>
+                </Field>
 
                 <div class="space-y-3">
                   <div class="flex items-center justify-between">
-                    <Label class="text-sm font-medium">{{ t('Tags') }}</Label>
+                    <FieldLabel class="text-sm font-medium">{{ t('Tags') }}</FieldLabel>
                     <Button variant="outline" size="sm" @click="addTag">
                       <Icon name="ri:add-line" class="size-4" />
                       {{ t('Add Tag') }}
                     </Button>
                   </div>
                   <div v-if="formData.tags.length" class="space-y-3">
-                    <div
-                      v-for="(tag, index) in formData.tags"
-                      :key="index"
-                      class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
-                    >
+                    <div v-for="(tag, index) in formData.tags" :key="index" class="grid gap-2 md:grid-cols-2 md:items-center md:gap-4">
                       <Input v-model="tag.key" :placeholder="t('Tag Name')" />
                       <div class="flex items-center gap-2">
                         <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          class="text-destructive"
-                          :disabled="formData.tags.length === 1"
-                          @click="removeTag(index)"
-                        >
+                        <Button variant="ghost" size="sm" class="text-destructive" :disabled="formData.tags.length === 1" @click="removeTag(index)">
                           <Icon name="ri:delete-bin-line" class="size-4" />
                         </Button>
                       </div>
@@ -80,83 +71,71 @@
           <div v-if="formData.versionType === 'current'">
             <details>
               <summary class="cursor-pointer text-sm font-medium text-primary">{{ t('Advanced Settings') }}</summary>
-              <div class="mt-4 flex items-center justify-between">
-                <div>
-                  <p class="text-sm font-medium">{{ t('Delete Marker Handling') }}</p>
-                  <p class="text-xs text-muted-foreground">
-                    {{ t('If no versions remain, delete references to this object') }}
-                  </p>
-                </div>
-                <Switch v-model:checked="formData.expiredDeleteMark" />
-              </div>
+              <Field orientation="horizontal" class="mt-4">
+                <FieldContent>
+                  <FieldLabel class="text-sm font-medium">{{ t('Delete Marker Handling') }}</FieldLabel>
+                  <FieldDescription>{{ t('If no versions remain, delete references to this object') }}</FieldDescription>
+                </FieldContent>
+                <FieldContent>
+                  <Switch v-model="formData.expiredDeleteMark" class="ml-auto" />
+                </FieldContent>
+              </Field>
             </details>
           </div>
         </TabsContent>
 
         <TabsContent value="transition" class="mt-0 space-y-6">
           <div class="space-y-4">
-            <div v-if="versioningStatus" class="grid gap-2">
-              <Label>{{ t('Object Version') }}</Label>
-              <AppSelect v-model="formData.versionType" :options="versionOptions" />
-            </div>
+            <Field v-if="versioningStatus">
+              <FieldLabel>{{ t('Object Version') }}</FieldLabel>
+              <FieldContent>
+                <Selector v-model="formData.versionType" :options="versionOptions" />
+              </FieldContent>
+            </Field>
 
-            <div class="grid gap-2">
-              <Label>{{ t('Time Cycle') }}</Label>
-              <div class="flex items-center gap-3">
-                <Input
-                  v-model="formData.days"
-                  type="number"
-                  min="1"
-                  class="w-32"
-                  :placeholder="t('Days')"
-                />
-                <span class="text-sm text-muted-foreground">{{ t('Days After') }}</span>
-              </div>
-            </div>
+            <Field>
+              <FieldLabel>{{ t('Time Cycle') }}</FieldLabel>
+              <FieldContent>
+                <div class="flex items-center gap-3">
+                  <Input v-model="formData.days" type="number" min="1" class="w-32" :placeholder="t('Days')" />
+                  <span class="text-sm text-muted-foreground">{{ t('Days After') }}</span>
+                </div>
+              </FieldContent>
+            </Field>
 
-            <div class="grid gap-2">
-              <Label>{{ t('Storage Type') }}</Label>
-              <AppSelect
-                v-model="formData.storageType"
-                :options="tiers"
-                :placeholder="t('Please select storage type')"
-              />
-            </div>
+            <Field>
+              <FieldLabel>{{ t('Storage Type') }}</FieldLabel>
+              <FieldContent>
+                <Selector v-model="formData.storageType" :options="tiers" :placeholder="t('Please select storage type')" />
+              </FieldContent>
+            </Field>
           </div>
 
           <div class="space-y-4">
             <details>
               <summary class="cursor-pointer text-sm font-medium text-primary">{{ t('More Configurations') }}</summary>
               <div class="mt-4 space-y-4">
-                <div class="grid gap-2">
-                  <Label>{{ t('Prefix') }}</Label>
-                  <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
-                </div>
+                <Field>
+                  <FieldLabel>{{ t('Prefix') }}</FieldLabel>
+                  <FieldContent>
+                    <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+                  </FieldContent>
+                </Field>
 
                 <div class="space-y-3">
                   <div class="flex items-center justify-between">
-                    <Label class="text-sm font-medium">{{ t('Tags') }}</Label>
+                    <FieldLabel class="text-sm font-medium">{{ t('Tags') }}</FieldLabel>
                     <Button variant="outline" size="sm" @click="addTag">
                       <Icon name="ri:add-line" class="size-4" />
                       {{ t('Add Tag') }}
                     </Button>
                   </div>
                   <div v-if="formData.tags.length" class="space-y-3">
-                    <div
-                      v-for="(tag, index) in formData.tags"
-                      :key="index"
-                      class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
-                    >
+                    <div v-for="(tag, index) in formData.tags" :key="index" class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4">
                       <Input v-model="tag.key" :placeholder="t('Tag Name')" />
                       <div class="flex items-center gap-2">
                         <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          class="text-destructive"
-                          :disabled="formData.tags.length === 1"
-                          @click="removeTag(index)"
-                        >
+                        <Button variant="ghost" size="sm" class="text-destructive" :disabled="formData.tags.length === 1" @click="removeTag(index)">
                           <Icon name="ri:delete-bin-line" class="size-4" />
                         </Button>
                       </div>
@@ -176,18 +155,19 @@
         <Button variant="default" :loading="submitting" @click="handleSave">{{ t('Save') }}</Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import { AppModal, AppSelect } from '@/components/app'
+import Modal from '@/components/modal.vue'
+import Selector from '@/components/selector.vue'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Label } from '@/components/ui/label'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 

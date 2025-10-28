@@ -2,7 +2,7 @@
   <slot />
   <AppDialogHost />
   <ClientOnly>
-    <Toaster position="top-right" :rich-colors="true" :close-button="true" />
+    <Toaster position="top-center" :rich-colors="true" :close-button="true" />
   </ClientOnly>
 </template>
 

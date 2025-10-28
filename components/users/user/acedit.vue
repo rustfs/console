@@ -8,7 +8,7 @@
 
       <div class="space-y-2">
         <Label>{{ t('Expiration') }}</Label>
-        <AppDateTimePicker
+        <DateTimePicker
           v-model="formModel.expiry"
           :min="minExpiry"
           :placeholder="t('Please select expiration date')"
@@ -69,7 +69,7 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 
-import { AppDateTimePicker } from '@/components/app'
+import DateTimePicker from '@/components/datetime-picker.vue'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import dayjs from 'dayjs'

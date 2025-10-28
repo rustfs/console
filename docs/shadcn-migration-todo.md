@@ -1,10 +1,10 @@
 # ShadCN Vue Migration Todo
 
-- [x] Replace global layout shell (`layouts/default.vue`) to use `components/app/AppSidebar` built with ShadCN Sidebar primitives and update the layout structure similar to Sidebar07.
-- [x] Build `components/app/AppSidebar.vue` and supporting subcomponents to render navigation, language/theme controls, and user menu with ShadCN UI widgets.
+- [x] Replace global layout shell (`layouts/default.vue`) to use `components/app-sidebar.vue` built with ShadCN Sidebar primitives and update the layout structure similar to Sidebar07.
+- [x] Build `components/app-sidebar.vue` and supporting subcomponents to render navigation, language/theme controls, and user menu with ShadCN UI widgets.
 - [x] Replace Naive UI providers in `app.vue` with ShadCN-friendly structure, wiring toast/dialog replacements and preserving color mode handling.
-- [x] Convert shared form components and high-use Naive UI elements (buttons, inputs, tables, etc.) to their ShadCN equivalents, introducing reusable wrappers under `components/app-` when helpful.
-  - [x] Establish shared wrappers (`AppCard`, `AppSelect`, etc.) under `components/app`; buttons/inputs now import shadcn primitives directly.
+- [x] Convert shared form components and high-use Naive UI elements (buttons, inputs, tables, etc.) to their ShadCN equivalents, introducing reusable wrappers under `components/` when helpful.
+  - [x] Establish shared wrappers (`modal.vue`, `selector.vue`, etc.) directly under `components/`; buttons/inputs now import shadcn primitives directly.
   - [x] Build reusable data table primitives (`DataTable`, pagination, `useDataTable`) powered by TanStack.
   - [x] Convert `components/copy-input.vue` to the new wrappers and toast API.
   - [x] Rebuild the users list tab (`components/users/tabs/user.vue`) with ShadCN table, checkbox, dialog, and button primitives.

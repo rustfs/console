@@ -1,19 +1,9 @@
 <template>
-  <AppModal
-    v-model="visible"
-    :title="formData.type ? t('Add {type} Destination', { type: formData.type }) : t('Add Event Destination')"
-    size="lg"
-    :close-on-backdrop="false"
-  >
+  <Modal v-model="visible" :title="formData.type ? t('Add {type} Destination', { type: formData.type }) : t('Add Event Destination')" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
       <div v-if="!formData.type" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div
-          v-for="option in typeOptions"
-          :key="option.value"
-          class="cursor-pointer border border-border/70 transition hover:border-primary"
-          @click="chooseType(option.value)"
-        >
-          <div class="flex items-center gap-3">
+        <div v-for="option in typeOptions" :key="option.value" class="cursor-pointer border border-border/70 transition hover:border-primary" @click="chooseType(option.value)">
+          <div class="flex items-center gap-3 p-4">
             <img :src="option.iconUrl" class="h-10 w-10" alt="" />
             <div>
               <p class="text-base font-semibold">{{ option.label }}</p>
@@ -24,7 +14,7 @@
       </div>
 
       <div v-else class="space-y-4">
-        <div class="flex cursor-pointer items-center gap-3 border transition hover:border-primary" @click="resetType">
+        <div class="flex cursor-pointer items-center gap-3 p-4 border transition hover:border-primary" @click="resetType">
           <img :src="iconUrl" class="h-10 w-10" alt="" />
           <div class="flex flex-col">
             <span class="text-sm text-muted-foreground">{{ t('Selected Type') }}</span>
@@ -33,46 +23,27 @@
         </div>
 
         <div class="grid gap-4">
-          <div class="grid gap-2">
-            <Label for="target-name">{{ t('Name') }} (A-Z,0-9,_)</Label>
-            <Input
-              id="target-name"
-              v-model="formData.name"
-              :placeholder="t('Please enter name')"
-              autocomplete="off"
-              @input="validateNameFormat"
-            />
-            <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
-          </div>
+          <Field>
+            <FieldLabel for="target-name">{{ t('Name') }} (A-Z,0-9,_)</FieldLabel>
+            <FieldContent>
+              <Input id="target-name" v-model="formData.name" :placeholder="t('Please enter name')" autocomplete="off" @input="validateNameFormat" />
+            </FieldContent>
+            <FieldDescription v-if="errors.name" class="text-destructive">
+              {{ errors.name }}
+            </FieldDescription>
+          </Field>
 
-          <div
-            v-for="config in currentConfigOptions"
-            :key="config.name"
-            class="grid gap-2"
-          >
-            <Label :for="`config-${config.name}`">{{ config.label }}</Label>
-            <Input
-              v-if="config.type === 'text'"
-              :id="`config-${config.name}`"
-              v-model="formData.config[config.name]"
-              :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
-            />
-            <Input
-              v-else-if="config.type === 'password'"
-              :id="`config-${config.name}`"
-              v-model="formData.config[config.name]"
-              type="password"
-              autocomplete="off"
-              :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
-            />
-            <Input
-              v-else-if="config.type === 'number'"
-              :id="`config-${config.name}`"
-              v-model="formData.config[config.name]"
-              type="number"
-              :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
-            />
-          </div>
+          <Field v-for="config in currentConfigOptions" :key="config.name">
+            <FieldLabel :for="`config-${config.name}`">{{ config.label }}</FieldLabel>
+            <FieldContent>
+              <Input v-if="config.type === 'text'" :id="`config-${config.name}`" v-model="formData.config[config.name]"
+                :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`" />
+              <Input v-else-if="config.type === 'password'" :id="`config-${config.name}`" v-model="formData.config[config.name]" type="password" autocomplete="off"
+                :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`" />
+              <Input v-else-if="config.type === 'number'" :id="`config-${config.name}`" v-model="formData.config[config.name]" type="number"
+                :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`" />
+            </FieldContent>
+          </Field>
         </div>
       </div>
     </div>
@@ -85,20 +56,20 @@
         </Button>
       </div>
     </template>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
+import { useEventTarget } from '#imports'
+import Modal from '@/components/modal.vue'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MqttIcon from '~/assets/svg/mqtt.svg'
 import WebhooksIcon from '~/assets/svg/webhooks.svg'
-import { AppModal } from '@/components/app'
-import { Label } from '@/components/ui/label'
-import { computed, reactive, ref, watch } from 'vue'
-import { useEventTarget } from '#imports'
 
 const { t } = useI18n()
 const { updateEventTarget } = useEventTarget()

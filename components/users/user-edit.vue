@@ -1,5 +1,5 @@
 <template>
-  <AppModal v-model="visible" :title="user.accessKey || t('Account')" size="lg" :close-on-backdrop="false">
+  <Modal v-model="visible" :title="user.accessKey || t('Account')" size="lg" :close-on-backdrop="false">
     <div class="space-y-4">
       <div class="flex items-center justify-between rounded-md border px-3 py-2">
         <span class="text-sm text-muted-foreground">{{ t('Status') }}</span>
@@ -26,11 +26,11 @@
 
       <users-user-notice ref="noticeRef" @search="refreshUser" />
     </div>
-  </AppModal>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-import { AppModal } from '@/components/app'
+import Modal from '@/components/modal.vue'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, ref } from 'vue'

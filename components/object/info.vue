@@ -6,7 +6,7 @@
           <Icon name="ri:download-line" class="size-4" />
           {{ t('Download') }}
         </Button>
-        <Button variant="outline" size="sm" @click="() => (showPreview = true)">
+        <Button variant="outline" size="sm" @click="openPreview">
           <Icon name="ri:eye-line" class="size-4" />
           {{ t('Preview') }}
         </Button>
@@ -126,26 +126,39 @@
       </div>
     </Modal>
 
-    <object-preview-modal v-model:show="showPreview" :object="object" />
+    <object-preview-modal v-model:show="showPreview" :object="previewObject ?? object" />
+    <ObjectVersions
+      :bucket-name="bucketName"
+      :object-key="object?.Key || ''"
+      :visible="showVersions"
+      @close="handleVersionsClose"
+      @preview="handlePreviewVersion"
+      @refresh-parent="handleVersionsRefresh"
+    />
   </Drawer>
 </template>
 
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useNuxtApp } from '#app'
+import { GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl as presignGetObject } from '@aws-sdk/s3-request-presigner'
+import { joinRelativeURL } from 'ufo'
+import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 import Drawer from '@/components/drawer.vue'
+import ObjectVersions from '@/components/object/versions.vue'
 import Modal from '@/components/modal.vue'
-import { Item, ItemContent, ItemHeader, ItemTitle } from '@/components/ui/item'
 import { Badge } from '@/components/ui/badge'
-import { Switch } from '@/components/ui/switch'
+import { Button } from '@/components/ui/button'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
-import { joinRelativeURL } from 'ufo'
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { Input } from '@/components/ui/input'
+import { Item, ItemContent, ItemHeader, ItemTitle } from '@/components/ui/item'
+import { Switch } from '@/components/ui/switch'
 
 const { t } = useI18n()
 const message = useMessage()
+const { $s3Client } = useNuxtApp()
 
 const props = defineProps<{
   bucketName: string
@@ -162,31 +175,31 @@ const signedUrl = ref('')
 const showTagView = ref(false)
 const showRetentionView = ref(false)
 const showPreview = ref(false)
+const showVersions = ref(false)
+const previewObject = ref<any | null>(null)
 
 const tagFormValue = ref({ Key: '', Value: '' })
 
-const {
-  getObjectInfo,
-  setLegalHold,
-  putObjectTags,
-  getObjectTags,
-  getObjectRetention,
-  putObjectRetention,
-  getObjectVersions,
-} = useObject({ bucket: props.bucketName })
+const { getObjectInfo, setLegalHold, putObjectTags, getObjectTags, getObjectRetention, putObjectRetention } = useObject({
+  bucket: props.bucketName,
+})
 
-const openDrawer = async (bucket: string, key: string) => {
+const openDrawer = async (_bucket: string, key: string) => {
   visible.value = true
   try {
-    const info = await getObjectInfo(key)
-    object.value = info
-    lockStatus.value = info?.ObjectLockLegalHoldStatus === 'ON'
-    signedUrl.value = info?.SignedUrl || ''
+    await loadObjectInfo(key)
     await fetchTags(key)
     await fetchRetention(key)
   } catch (error) {
     message.error(t('Failed to fetch object info'))
   }
+}
+
+const loadObjectInfo = async (key: string) => {
+  const info = await getObjectInfo(key)
+  object.value = info
+  lockStatus.value = info?.ObjectLockLegalHoldStatus === 'ON'
+  signedUrl.value = info?.SignedUrl || ''
 }
 
 const fetchTags = async (key: string) => {
@@ -265,10 +278,70 @@ const resetRetention = async () => {
   }
 }
 
-const viewVersions = async () => {
+const viewVersions = () => {
   if (!object.value) return
-  await getObjectVersions(object.value.Key)
+  showVersions.value = true
 }
+
+const openPreview = (target?: any) => {
+  const source = target ?? object.value
+  if (!source) return
+  previewObject.value = source
+  showPreview.value = true
+}
+
+const handlePreviewVersion = async (versionId: string) => {
+  if (!object.value?.Key) return
+  try {
+    const [head, signed] = await Promise.all([
+      $s3Client.send(
+        new HeadObjectCommand({
+          Bucket: props.bucketName,
+          Key: object.value.Key,
+          VersionId: versionId,
+        })
+      ),
+      presignGetObject(
+        $s3Client,
+        new GetObjectCommand({
+          Bucket: props.bucketName,
+          Key: object.value.Key,
+          VersionId: versionId,
+        }),
+        { expiresIn: 3600 }
+      ),
+    ])
+    previewObject.value = {
+      ...head,
+      Key: object.value.Key,
+      SignedUrl: signed,
+      VersionId: versionId,
+    }
+    showPreview.value = true
+  } catch (error: any) {
+    message.error(error?.message || t('Failed to fetch versions'))
+  }
+}
+
+const handleVersionsClose = () => {
+  showVersions.value = false
+}
+
+const handleVersionsRefresh = async () => {
+  if (!object.value?.Key) return
+  try {
+    await loadObjectInfo(object.value.Key)
+  } catch (error: any) {
+    message.error(error?.message || t('Failed to fetch object info'))
+  }
+}
+
+watch(
+  () => showPreview.value,
+  value => {
+    if (!value) previewObject.value = null
+  }
+)
 
 const download = async () => {
   if (!object.value) return

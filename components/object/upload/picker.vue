@@ -58,7 +58,7 @@
         <!-- objects list / drag area -->
         <div class="rounded-md border-t transition" :class="isDragOver ? 'border-primary bg-primary/5' : ''" @dragenter.prevent="handleDragEnter" @dragover.prevent="handleDragOver"
           @dragleave.prevent="handleDragLeave" @drop.prevent="handleDrop">
-          <div v-if="!selectedItems.length" class="flex h-[42vh] flex-col items-center justify-center gap-4 p-6 text-center">
+          <div v-if="!selectedItems.length" class="flex h-[40vh] flex-col items-center justify-center gap-4 p-6 text-center">
             <Icon name="ri:cloud-upload-line" class="size-10 text-muted-foreground" />
             <p class="text-base font-medium text-muted-foreground">{{ t('No Selection') }}</p>
             <p class="max-w-[320px] text-sm text-muted-foreground">
@@ -68,7 +68,7 @@
           </div>
           <div v-else class="max-h-[42vh] overflow-auto">
             <table class="w-full text-sm">
-              <thead class="sticky top-0 bg-muted text-xs uppercase text-muted-foreground">
+              <thead class="sticky top-0 z-10 bg-muted text-xs uppercase text-muted-foreground">
                 <tr>
                   <th class="px-3 py-2 text-left font-medium">
                     {{ t('Name') }}

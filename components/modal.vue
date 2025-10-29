@@ -70,7 +70,7 @@ const handleEscape = (event: Event) => {
         </slot>
       </DialogHeader>
 
-      <div class="max-h-[75vh]">
+      <div class="max-h-[80vh]">
         <slot />
       </div>
 

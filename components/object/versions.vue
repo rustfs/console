@@ -1,28 +1,25 @@
 <template>
   <Modal v-model="visibleProxy" :title="t('Object Versions')" size="lg" :close-on-backdrop="false">
-  <Card class="shadow-none">
-      <CardContent class="space-y-4 p-6">
-        <DataTable :table="table" :is-loading="loading" :empty-title="t('No Versions')" />
-        <div class="flex justify-end">
-          <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
-        </div>
-      </CardContent>
-    </Card>
+    <div class="space-y-4">
+      <DataTable :table="table" :is-loading="loading" :empty-title="t('No Versions')" />
+      <div class="flex justify-end">
+        <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
+      </div>
+    </div>
   </Modal>
 </template>
 
-<script setup lang="tsx">
+<script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
 import DataTable from '@/components/data-table/data-table.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
 import Modal from '@/components/modal.vue'
-import { Card, CardContent } from '@/components/ui/card'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
-import { computed, ref, watch } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const props = defineProps<{
@@ -72,19 +69,36 @@ const columns = computed<ColumnDef<any, any>[]>(() => [
   {
     id: 'actions',
     header: () => t('Action'),
-    cell: ({ row }: any) => (
-      <div class="flex gap-2">
-        <ActionButton variant="outline" size="sm" onClick={() => previewVersion(row.original)}>
-          {t('Preview')}
-        </ActionButton>
-        <ActionButton variant="outline" size="sm" onClick={() => downloadVersion(row.original)}>
-          {t('Download')}
-        </ActionButton>
-        <ActionButton variant="destructive" size="sm" onClick={() => deleteVersion(row.original)}>
-          {t('Delete')}
-        </ActionButton>
-      </div>
-    ),
+    cell: ({ row }: any) =>
+      h('div', { class: 'flex gap-2' }, [
+        h(
+          ActionButton,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => previewVersion(row.original),
+          },
+          () => t('Preview')
+        ),
+        h(
+          ActionButton,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => downloadVersion(row.original),
+          },
+          () => t('Download')
+        ),
+        h(
+          ActionButton,
+          {
+            variant: 'destructive',
+            size: 'sm',
+            onClick: () => deleteVersion(row.original),
+          },
+          () => t('Delete')
+        ),
+      ]),
   },
 ])
 

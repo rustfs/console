@@ -12,8 +12,8 @@ const showSidebar = computed(() => !route.path.startsWith('/auth'))
   <SidebarProvider v-if="showSidebar">
     <AppSidebar />
     <SidebarInset>
-      <AppTopNav />
-      <div class="flex flex-1 flex-col gap-4 pt-0">
+      <div class="flex flex-1 flex-col gap-4 pt-0 p-6">
+        <AppTopNav />
         <slot />
       </div>
     </SidebarInset>

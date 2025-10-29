@@ -12,8 +12,9 @@
         }}
       </span>
     </div>
-    <div v-else>
-      {{ t('Task Completed', { completed: completed.length, failed: failed.length }) }}
+    <div v-else class="flex items-center gap-2">
+      <Icon name="ri:check-line" class="size-4 text-emerald-600" />
+      <span>{{ t('Task Completed', { completed: completed.length, failed: failed.length }) }}</span>
     </div>
   </Button>
 

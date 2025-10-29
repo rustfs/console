@@ -18,7 +18,6 @@ import { useRoute } from '#app'
 import { endsWith } from 'lodash'
 import { joinRelativeURL } from 'ufo'
 import { computed } from 'vue'
-import { resolveRouteParam } from '~/utils/functions'
 
 // 从路由参数中获取 bucketName, pageSize, continuationToken
 const route = useRoute()
@@ -27,8 +26,8 @@ const message = useMessage()
 const router = useRouter()
 
 // bucketName 和 pageSize 来自路由
-const bucketName = computed(() => resolveRouteParam(route.params.bucket))
-// 检测bucketName是否存在，使用 head bucket 接口,如果不存在跳转到/browser
+const bucketName = computed(() => route.params.bucket as string)
+
 const isBucketExist = () => {
   return useBucket({ region: route.params.region as string })
     .headBucket(bucketName.value)
@@ -44,7 +43,7 @@ const isBucketExist = () => {
 isBucketExist()
 
 // 当前路径的前缀, example: 'folder1/folder2/'
-const key = computed(() => resolveRouteParam(route.params.key))
+const key = computed(() => decodeURIComponent(route.params.key as string))
 
 const bucketPath = (path: string | Array<string> = '') => {
   if (Array.isArray(path)) {
@@ -58,5 +57,5 @@ const bucketPath = (path: string | Array<string> = '') => {
   return joinRelativeURL('/browser', encodeURIComponent(bucketName.value), encodeURIComponent(path))
 }
 
-const isObjectList = computed(() => key.value === '' || key.value.endsWith('/'))
+const isObjectList = key.value.endsWith('/') || key.value === ''
 </script>

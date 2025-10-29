@@ -65,16 +65,15 @@ import dayjs from 'dayjs'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import { joinRelativeURL } from 'ufo'
+import type { VNode } from 'vue'
 import { computed, h, ref, watch } from 'vue'
 import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
-import { resolveRouteParam, safeDecodeURIComponent } from '~/utils/functions'
 
 const { $s3Client } = useNuxtApp()
 const { t } = useI18n()
 const route = useRoute()
 const dialog = useDialog()
-const message = useMessage()
 const props = defineProps<{ bucket: string; path: string }>()
 
 const uploadPickerVisible = ref(false)
@@ -114,7 +113,13 @@ type ObjectRow = {
 }
 
 const bucketName = computed(() => props.bucket)
-const prefix = computed(() => resolveRouteParam(props.path))
+const prefix = computed(() => decodeURIComponent(props.path))
+const pageSize = computed(() => {
+  const q = route.query.pageSize
+  const s = Array.isArray(q) ? q[0] : q
+  const size = Number.parseInt(s ?? '', 10)
+  return Number.isFinite(size) && size > 0 ? size : 25
+})
 
 const bucketPath = (path?: string | string[]) => {
   const value = Array.isArray(path) ? path.join('/') : path
@@ -126,6 +131,8 @@ const tokenHistory = ref<string[]>([])
 const nextToken = ref<string | undefined>(undefined)
 
 const infoRef = ref<{ openDrawer: (bucket: string, key: string) => void }>()
+const message = useMessage()
+const objectApi = useObject({ bucket: bucketName.value })
 
 const handleNewObject = (asPrefix: boolean) => {
   newObjectAsPrefix.value = asPrefix
@@ -139,43 +146,58 @@ const handleObjectDeleted = () => {
 const fetchObjects = async (): Promise<ObjectRow[]> => {
   loading.value = true
   try {
-    const params: any = {
+    const response = await $s3Client.send(new ListObjectsV2Command({
       Bucket: bucketName.value,
       Prefix: prefix.value,
+      Delimiter: '/',
       ContinuationToken: continuationToken.value,
-      MaxKeys: Number.parseInt((route.query.pageSize as string) ?? '100', 10),
-    }
+      MaxKeys: pageSize.value,
+    }))
 
-    const response = await $s3Client.send(new ListObjectsV2Command(params))
     nextToken.value = response.NextContinuationToken
 
-    const prefixData: ObjectRow[] = (response.CommonPrefixes ?? []).map(item => ({
+    const prefixItems: ObjectRow[] = (response.CommonPrefixes ?? []).map(item => ({
       Key: item.Prefix ?? '',
       type: 'prefix' as const,
       Size: 0,
       LastModified: '',
     }))
 
-    const objectData: ObjectRow[] = (response.Contents ?? []).map(item => ({
+    const objectItems: ObjectRow[] = (response.Contents ?? []).map(item => ({
       Key: item.Key ?? '',
       type: 'object' as const,
       Size: item.Size ?? 0,
       LastModified: item.LastModified ? item.LastModified.toISOString() : '',
     }))
 
-    return [...prefixData, ...objectData]
+    return [...prefixItems, ...objectItems]
   } finally {
     loading.value = false
   }
 }
 
+const asyncDataCacheKey = computed(() => {
+  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${searchTerm.value || 'all'}`
+})
+
+const displayKey = (key: string) => {
+  if (!prefix.value) return key
+  return key.startsWith(prefix.value) ? key.slice(prefix.value.length) : key
+}
+
 const { data, refresh } = await useAsyncData<ObjectRow[]>(
-  'objects',
+  asyncDataCacheKey,
   async () => {
     const objects = await fetchObjects()
-    if (!searchTerm.value) return objects
     const term = searchTerm.value.toLowerCase()
-    return objects.filter(item => item.Key.toLowerCase().includes(term))
+
+    return objects.filter(item => {
+      if (term) {
+        const key = displayKey(item.Key).toLowerCase()
+        return key.includes(term)
+      }
+      return item.Key !== prefix.value
+    })
   },
   {
     default: () => [],
@@ -205,41 +227,25 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
           checked: row.getIsSelected(),
           onChange: (event: Event) => row.toggleSelected((event.target as HTMLInputElement).checked),
         }),
+      meta: {
+        maxWidth: 24,
+      },
     },
     {
       id: 'object',
       header: () => t('Object'),
       cell: ({ row }: any) => {
         const key = row.original.Key ?? ''
-        const prefixValue = prefix.value || ''
-        const isPrefixed = Boolean(prefixValue) && key.startsWith(prefixValue)
-        const relativeKey = isPrefixed ? key.slice(prefixValue.length) : key
+        const displayKey = prefix.value ? key.substring(prefix.value.length) : key
 
-        const trimTrailingSlash = (value: string) => (value.endsWith('/') ? value.slice(0, -1) : value)
-        const normalize = (value: string) => {
-          const trimmed = trimTrailingSlash(value)
-          if (!trimmed) return ''
-          const decoded = safeDecodeURIComponent(trimmed)
-          if (!decoded) return ''
-          const segments = decoded.split('/').filter(Boolean)
-          return segments.length ? segments[segments.length - 1] : decoded
-        }
-
-        let label = normalize(relativeKey)
-        if (!label) {
-          label = normalize(key)
-        }
-        if (!label) {
-          const fallback = safeDecodeURIComponent(trimTrailingSlash(key))
-          label = fallback || key || '/'
-        }
+        let label: string | VNode = displayKey || '/'
 
         if (row.original.type === 'prefix') {
           return h(
             NuxtLink,
             {
               href: bucketPath(row.original.Key),
-              class: 'flex items-center gap-2 text-primary hover:underline',
+              class: 'flex items-center gap-2 text-blue-500 hover:underline',
             },
             {
               default: () => [h(Icon, { name: 'ri:folder-line', class: 'size-4' }), h('span', label)],
@@ -259,12 +265,12 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
     {
       id: 'size',
       header: () => t('Size'),
-      cell: ({ row }: any) => (row.original.type === 'object' ? formatBytes(row.original.Size) : ''),
+      cell: ({ row }: any) => (row.original.type === 'object' ? formatBytes(row.original.Size) : '-'),
     },
     {
       id: 'lastModified',
       header: () => t('Last Modified'),
-      cell: ({ row }: any) => (row.original.LastModified ? dayjs(row.original.LastModified).format('YYYY-MM-DD HH:mm:ss') : ''),
+      cell: ({ row }: any) => (row.original.LastModified ? dayjs(row.original.LastModified).format('YYYY-MM-DD HH:mm:ss') : '-'),
     },
     {
       id: 'actions',
@@ -342,34 +348,123 @@ const handleRefresh = () => {
   refresh()
 }
 
+const computeRelativeKey = (key: string) => {
+  if (!key) return ''
+  const base = prefix.value || ''
+  return base && key.startsWith(base) ? key.slice(base.length) : key
+}
+
+const collectKeysForDeletion = async (keys: string[]) => {
+  const rows = data.value ?? []
+  const rowMap = new Map(rows.map(item => [item.Key, item]))
+  const collected: string[] = []
+
+  for (const key of keys) {
+    if (!key) continue
+    const row = rowMap.get(key)
+    if (row?.type === 'prefix') {
+      await objectApi.mapAllFiles(bucketName.value, row.Key, fileKey => {
+        if (fileKey) {
+          collected.push(fileKey)
+        }
+      })
+    } else {
+      collected.push(key)
+    }
+  }
+
+  return Array.from(new Set(collected))
+}
+
 const downloadFile = async (key: string) => {
-  const url = bucketPath(['download', key])
-  window.open(url, '_blank')
+  if (!key) return
+  const loadingMsg = message.loading(t('Getting URL'), { duration: 0 })
+  try {
+    const url = await objectApi.getSignedUrl(key)
+    window.open(url, '_blank')
+  } catch (error: any) {
+    message.error(error?.message || t('Download Failed'))
+  } finally {
+    loadingMsg.destroy()
+  }
 }
 
 const downloadMultiple = async () => {
-  if (!checkedKeys.value.length) return
-
-  const zip = new JSZip()
-  const folderMap: Record<string, JSZip> = {}
-
-  for (const key of checkedKeys.value) {
-    const response = await fetch(bucketPath(['download', key]))
-    const blob = await response.blob()
-    const relativeKey = prefix.value ? key.replace(prefix.value, '') : key
-    const parts = relativeKey.split('/').filter(Boolean)
-    const fileName = parts.pop() ?? key
-    const folderPath = parts.join('/')
-
-    const folder = folderPath
-      ? folderMap[folderPath] || (folderMap[folderPath] = zip.folder(folderPath)!)
-      : zip
-
-    folder.file(fileName, blob)
+  if (!checkedKeys.value.length) {
+    message.warning(t('Please select at least one item'))
+    return
   }
 
+  const selectedRows = (data.value ?? []).filter(item => checkedKeys.value.includes(item.Key))
+  if (!selectedRows.length) {
+    message.warning(t('No files to download'))
+    return
+  }
+
+  const collecting = message.loading(t('Collecting files'), { duration: 0 })
+  const allFiles: { key: string; relative: string }[] = []
+
+  try {
+    for (const item of selectedRows) {
+      if (item.type === 'object') {
+        const relative = computeRelativeKey(item.Key)
+        allFiles.push({ key: item.Key, relative })
+      } else if (item.type === 'prefix') {
+        await objectApi.mapAllFiles(bucketName.value, item.Key, fileKey => {
+          const relative = computeRelativeKey(fileKey)
+          allFiles.push({ key: fileKey, relative })
+        })
+      }
+    }
+  } catch (error: any) {
+    collecting.destroy()
+    message.error(error?.message || t('Download Failed'))
+    return
+  }
+
+  collecting.destroy()
+
+  if (!allFiles.length) {
+    message.warning(t('No files to download'))
+    return
+  }
+
+  const zip = new JSZip()
+  let finished = 0
+  let destroyProgress: (() => void) | null | undefined
+
+  const updateProgress = () => {
+    if (destroyProgress) destroyProgress()
+    const handle = message.loading(`${t('Downloading files')} ${Math.round((finished / allFiles.length) * 100)}%`, {
+      duration: 0,
+    })
+    destroyProgress = handle.destroy
+  }
+
+  updateProgress()
+
+  try {
+    await Promise.all(
+      allFiles.map(async ({ key, relative }) => {
+        const url = await objectApi.getSignedUrl(key)
+        const response = await fetch(url)
+        const blob = await response.blob()
+        zip.file(relative || key, blob)
+        finished++
+        updateProgress()
+      })
+    )
+  } catch (error: any) {
+    if (destroyProgress) destroyProgress()
+    message.error(error?.message || t('Download Failed'))
+    return
+  }
+
+  if (destroyProgress) destroyProgress()
+
   const content = await zip.generateAsync({ type: 'blob' })
-  saveAs(content, `${bucketName.value}-${Date.now()}.zip`)
+  saveAs(content, `${bucketName.value || 'download'}.zip`)
+  message.success(t('Download ready'))
 }
 
 const confirmDelete = (keys: string[]) => {
@@ -383,14 +478,27 @@ const confirmDelete = (keys: string[]) => {
 }
 
 const handleDelete = async (keys: string[]) => {
-  deleteTaskStore.addKeys(keys, bucketName.value, prefix.value)
-  checkedKeys.value = []
-  table.resetRowSelection()
-  refresh()
+  try {
+    const targets = await collectKeysForDeletion(keys)
+    if (!targets.length) {
+      message.success(t('Delete Success'))
+    } else {
+      deleteTaskStore.addKeys(targets, bucketName.value)
+      message.success(t('Delete task created'))
+    }
+    checkedKeys.value = []
+    table.resetRowSelection()
+    refresh()
+  } catch (error: any) {
+    message.error(error?.message || t('Delete Failed'))
+  }
 }
 
 const handleBatchDelete = () => {
-  if (!checkedKeys.value.length) return
+  if (!checkedKeys.value.length) {
+    message.warning(t('Please select at least one item'))
+    return
+  }
   confirmDelete([...checkedKeys.value])
 }
 

@@ -5,7 +5,7 @@
         <Field>
           <FieldLabel>{{ t('User Name') }}</FieldLabel>
           <FieldContent>
-            <Input v-model="editForm.accessKey" default-value="" name="new-user-access-key" spellcheck="false" autocomplete="new-user-access-key" />
+            <Input v-model="editForm.accessKey" default-value="" minlength="4" name="new-user-access-key" spellcheck="false" autocomplete="new-user-access-key" />
           </FieldContent>
           <FieldDescription v-if="errors.accessKey" class="text-destructive">
             {{ errors.accessKey }}
@@ -15,8 +15,8 @@
         <Field>
           <FieldLabel>{{ t('Password') }}</FieldLabel>
           <FieldContent>
-            <Input v-model="editForm.secretKey" default-value="" id="new-user-password" spellcheck="false" type="password" name="new-user-password" autocomplete="new-user-password"
-              aria-autocomplete="none" />
+            <Input v-model="editForm.secretKey" default-value="" minlength="8" id="new-user-password" spellcheck="false" type="password" name="new-user-password"
+              autocomplete="new-user-password" aria-autocomplete="none" />
           </FieldContent>
           <FieldDescription v-if="errors.secretKey" class="text-destructive">
             {{ errors.secretKey }}
@@ -192,14 +192,14 @@ const validate = () => {
 
   if (!editForm.accessKey.trim()) {
     errors.accessKey = t('Please enter username')
-  } else if (!/^.{6,16}$/.test(editForm.accessKey)) {
-    errors.accessKey = t('username length cannot be less than 8 characters and greater than 16 characters')
+  } else if (!/^.{4,16}$/.test(editForm.accessKey)) {
+    errors.accessKey = t('username length cannot be less than 4 characters and greater than 16 characters')
   }
 
   if (!editForm.secretKey.trim()) {
     errors.secretKey = t('Please enter password')
-  } else if (!/^.{6,16}$/.test(editForm.secretKey)) {
-    errors.secretKey = t('password length cannot be less than 8 characters and greater than 16 characters')
+  } else if (!/^.{8,40}$/.test(editForm.secretKey)) {
+    errors.secretKey = t('password length cannot be less than 8 characters and greater than 40 characters')
   }
 
   return !errors.accessKey && !errors.secretKey

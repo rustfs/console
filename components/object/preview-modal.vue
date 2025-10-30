@@ -1,5 +1,5 @@
 <template>
-  <Modal v-model="visibleProxy" :title="t('Preview')" size="xl" :close-on-backdrop="false">
+  <Modal v-model="visibleProxy" :title="t('Preview')" size="xl" :close-on-backdrop="false" class="z-1000">
     <div class="flex flex-col gap-4">
       <div class="min-h-[300px] rounded-md border p-4 flex flex-col">
         <Spinner v-if="loading" class="mx-auto size-8 text-muted-foreground" />
@@ -27,10 +27,10 @@
 </template>
 
 <script setup lang="ts">
-import Modal from '@/components/modal.vue'
 import { Spinner } from '@/components/ui/spinner'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 

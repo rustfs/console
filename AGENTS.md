@@ -19,6 +19,7 @@
 - Vue files use `<script setup>` with TypeScript; prefer composables for shared logic.
 - Components use StudlyCase filenames (e.g. `BucketSelector.vue`) but reference via kebab-case in templates.
 - Override shadcn primitives **outside** `components/ui/`; never edit files in that directory directly.
+- Render tabular data with the shared `DataTable` + `useDataTable` utilities unless a specific requirement makes them unsuitable.
 
 ## Testing Guidelines
 - Vitest is the primary framework; add new suites under `tests/`.

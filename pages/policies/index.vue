@@ -4,7 +4,7 @@
       <h1 class="text-2xl font-bold">{{ t('IAM Policies') }}</h1>
       <template #actions>
         <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable class="max-w-sm" />
-        <Button variant="secondary" @click="handleNew">
+        <Button variant="outline" @click="handleNew">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('New Policy') }}</span>
         </Button>

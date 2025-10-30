@@ -6,14 +6,16 @@
           <div class="w-full sm:max-w-xs">
             <SearchInput v-model="searchTerm" :placeholder="t('Search User')" clearable class="w-full" />
           </div>
-          <Button type="button" variant="secondary" class="inline-flex items-center gap-2" @click="startEditing">
+          <Button type="button" variant="outline" class="inline-flex items-center gap-2" @click="startEditing">
             <Icon class="size-4" name="ri:add-line" />
             {{ t('Edit User') }}
           </Button>
         </div>
         <div v-else class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div class="flex w-full flex-col gap-2">
-            <Label class="text-sm font-medium">{{ t('Select user group members') }}</Label>
+        <Field>
+          <FieldLabel class="text-sm font-medium">{{ t('Select user group members') }}</FieldLabel>
+          <FieldContent class="space-y-2">
             <Popover v-model:open="memberSelectorOpen">
               <PopoverTrigger as-child>
                 <Button
@@ -59,9 +61,11 @@
             <div v-if="members.length" class="flex flex-wrap gap-2">
               <Badge v-for="value in members" :key="value" variant="secondary">{{ value }}</Badge>
             </div>
+          </FieldContent>
+        </Field>
           </div>
           <div class="flex items-center gap-2 sm:self-start">
-            <Button type="button" variant="secondary" @click="changeMembers">{{ t('Submit') }}</Button>
+            <Button type="button" variant="outline" @click="changeMembers">{{ t('Submit') }}</Button>
           </div>
         </div>
       </CardContent>
@@ -95,7 +99,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { Label } from '@/components/ui/label'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { computed, onMounted, ref, watch } from 'vue'

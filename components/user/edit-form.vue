@@ -14,27 +14,27 @@
         </TabsList>
 
         <TabsContent value="groups" class="mt-0">
-          <users-user-groups :user="user" @search="refreshUser" />
+          <user-groups :user="user" @search="refreshUser" />
         </TabsContent>
         <TabsContent value="policy" class="mt-0">
-          <users-user-policies :user="user" @search="refreshUser" />
+          <user-policies :user="user" @search="refreshUser" />
         </TabsContent>
         <TabsContent value="account" class="mt-0">
-          <users-user-account :user="user" @search="refreshUser" @notice="noticeDialog" />
+          <user-account :user="user" @search="refreshUser" @notice="noticeDialog" />
         </TabsContent>
       </Tabs>
 
-      <users-user-notice ref="noticeRef" @search="refreshUser" />
+      <user-notice ref="noticeRef" @search="refreshUser" />
     </div>
   </Modal>
 </template>
 
 <script setup lang="ts">
-import Modal from '@/components/modal.vue'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const visible = ref(false)

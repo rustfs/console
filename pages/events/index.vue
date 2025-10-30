@@ -3,29 +3,27 @@
     <page-header>
       <h1 class="text-2xl font-bold">{{ t('Events') }}</h1>
       <template #actions>
-        <ActionBar class="w-full justify-end gap-2">
-          <Label for="bucket-select">{{ t('Bucket') }}</Label>
-          <div class="max-w-xs flex-1">
-            <Select id="bucket-select" v-model="bucketName" :disabled="!bucketList.length">
-              <SelectTrigger>
-                <SelectValue :placeholder="t('Please select bucket')" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="bucket in bucketList" :key="bucket.value" :value="bucket.value">
-                  {{ bucket.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="button" variant="secondary" @click="handleNew">
-            <Icon class="size-4" name="ri:add-line" />
-            <span>{{ t('Add Event Subscription') }}</span>
-          </Button>
-          <Button type="button" variant="secondary" @click="handleRefresh" :disabled="loading">
-            <Icon class="size-4" name="ri:refresh-line" />
-            <span>{{ t('Refresh') }}</span>
-          </Button>
-        </ActionBar>
+        <Label for="bucket-select">{{ t('Bucket') }}</Label>
+        <div class="max-w-xs flex-1">
+          <Select id="bucket-select" v-model="bucketName" :disabled="!bucketList.length">
+            <SelectTrigger>
+              <SelectValue :placeholder="t('Please select bucket')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="bucket in bucketList" :key="bucket.value" :value="bucket.value">
+                {{ bucket.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <Button type="button" variant="outline" @click="handleNew">
+          <Icon class="size-4" name="ri:add-line" />
+          <span>{{ t('Add Event Subscription') }}</span>
+        </Button>
+        <Button type="button" variant="outline" @click="handleRefresh" :disabled="loading">
+          <Icon class="size-4" name="ri:refresh-line" />
+          <span>{{ t('Refresh') }}</span>
+        </Button>
       </template>
     </page-header>
 
@@ -68,7 +66,7 @@
                 <TableCell>{{ row.suffix || '-' }}</TableCell>
                 <TableCell>
                   <div class="flex justify-center">
-                    <Button type="button" size="sm" variant="secondary" class="gap-2" @click="event => handleRowDelete(row, event)">
+                    <Button type="button" size="sm" variant="outline" class="gap-2" @click="event => handleRowDelete(row, event)">
                       <Icon class="size-4" name="ri:delete-bin-7-line" />
                       {{ t('Delete') }}
                     </Button>

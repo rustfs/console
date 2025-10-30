@@ -4,62 +4,64 @@
       <div class="w-full sm:max-w-xs">
         <SearchInput v-model="searchTerm" :placeholder="t('Search Policy')" clearable class="w-full" />
       </div>
-      <Button variant="secondary" class="inline-flex items-center gap-2" @click="startEditing">
+      <Button variant="outline" class="inline-flex items-center gap-2" @click="startEditing">
         <Icon class="size-4" name="ri:add-line" />
         {{ t('Edit Policy') }}
       </Button>
     </div>
 
     <div v-else class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-      <div class="flex w-full flex-col gap-2">
-        <Label class="text-sm font-medium">{{ t('Select user group policies') }}</Label>
-        <Popover v-model:open="policySelectorOpen">
-          <PopoverTrigger as-child>
-            <Button
-              type="button"
-              variant="outline"
-              class="min-h-10 justify-between gap-2"
-              :aria-label="t('Select user group policies')"
-            >
-              <span class="truncate">
-                {{ selectedPolicyLabels.length ? selectedPolicyLabels.join(', ') : t('Select user group policies') }}
-              </span>
-              <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent class="w-72 p-0" align="start">
-            <Command>
-              <CommandInput :placeholder="t('Search Policy')" />
-              <CommandList>
-                <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
-                <CommandGroup>
-                  <CommandItem
-                    v-for="option in policies"
-                    :key="option.value"
-                    :value="option.label"
-                    @select="() => togglePolicy(option.value)"
-                  >
-                    <Icon
-                      name="ri:check-line"
-                      class="mr-2 size-4"
-                      :class="selectedPolicies.includes(option.value) ? 'opacity-100' : 'opacity-0'"
-                    />
-                    <span>{{ option.label }}</span>
-                  </CommandItem>
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        <div v-if="selectedPolicies.length" class="flex flex-wrap gap-2">
-          <Badge v-for="value in selectedPolicies" :key="value" variant="secondary">{{ value }}</Badge>
-        </div>
-      </div>
+      <Field class="flex w-full flex-col gap-2">
+        <FieldLabel class="text-sm font-medium">{{ t('Select user group policies') }}</FieldLabel>
+        <FieldContent class="space-y-2">
+          <Popover v-model:open="policySelectorOpen">
+            <PopoverTrigger as-child>
+              <Button
+                type="button"
+                variant="outline"
+                class="min-h-10 justify-between gap-2"
+                :aria-label="t('Select user group policies')"
+              >
+                <span class="truncate">
+                  {{ selectedPolicyLabels.length ? selectedPolicyLabels.join(', ') : t('Select user group policies') }}
+                </span>
+                <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-72 p-0" align="start">
+              <Command>
+                <CommandInput :placeholder="t('Search Policy')" />
+                <CommandList>
+                  <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem
+                      v-for="option in policies"
+                      :key="option.value"
+                      :value="option.label"
+                      @select="() => togglePolicy(option.value)"
+                    >
+                      <Icon
+                        name="ri:check-line"
+                        class="mr-2 size-4"
+                        :class="selectedPolicies.includes(option.value) ? 'opacity-100' : 'opacity-0'"
+                      />
+                      <span>{{ option.label }}</span>
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <div v-if="selectedPolicies.length" class="flex flex-wrap gap-2">
+            <Badge v-for="value in selectedPolicies" :key="value" variant="secondary">{{ value }}</Badge>
+          </div>
+        </FieldContent>
+      </Field>
       <div class="flex items-center gap-2 sm:self-start">
         <Button variant="ghost" @click="cancelEditing">
           {{ t('Cancel') }}
         </Button>
-        <Button variant="secondary" @click="changePolicies">
+        <Button variant="outline" @click="changePolicies">
           {{ t('Submit') }}
         </Button>
       </div>
@@ -92,7 +94,7 @@ import { Icon } from '#components'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { Label } from '@/components/ui/label'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { computed, onMounted, ref, watch } from 'vue'

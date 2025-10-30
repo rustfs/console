@@ -1,14 +1,18 @@
 <template>
   <Modal v-model="visible" :title="t('New user has been created')" size="md" :close-on-backdrop="false">
     <div class="space-y-4">
-      <div class="space-y-2">
-        <Label>{{ t('Access Key') }}</Label>
-        <copy-input v-model="accessKey" class="w-full" :readonly="true" :copy-icon="true" />
-      </div>
-      <div class="space-y-2">
-        <Label>{{ t('Secret Key') }}</Label>
-        <copy-input v-model="secretkey" class="w-full" :readonly="true" :copy-icon="true" />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+        <FieldContent>
+          <copy-input v-model="accessKey" class="w-full" :readonly="true" :copy-icon="true" />
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
+        <FieldContent>
+          <copy-input v-model="secretkey" class="w-full" :readonly="true" :copy-icon="true" />
+        </FieldContent>
+      </Field>
     </div>
 
     <template #footer>
@@ -22,12 +26,11 @@
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
-
-import Modal from '@/components/modal.vue'
-import { Label } from '@/components/ui/label'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { download } from '@/utils/export-file'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const visible = ref(false)

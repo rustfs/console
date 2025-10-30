@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
-
 import { Icon } from '#components'
-import Modal from '@/components/modal.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { Label } from '@/components/ui/label'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 interface Props {
   visible: boolean
@@ -106,59 +105,49 @@ const submitForm = async () => {
 <template>
   <Modal v-model="modalVisible" :title="t('Add group members')" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
-      <div class="space-y-2">
-        <Label class="text-sm font-medium">{{ t('Name') }}</Label>
-        <Input v-model="formModel.group" autocomplete="off" />
-      </div>
+      <Field>
+        <FieldLabel class="text-sm font-medium">{{ t('Name') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.group" autocomplete="off" />
+        </FieldContent>
+      </Field>
 
-      <div class="space-y-2">
-        <Label class="text-sm font-medium">{{ t('Users') }}</Label>
-        <Popover v-model:open="memberSelectorOpen">
-          <PopoverTrigger as-child>
-            <Button
-              type="button"
-              variant="outline"
-              class="min-h-10 w-full justify-between gap-2"
-              :aria-label="t('Users')"
-            >
-              <span class="truncate">
-                {{
-                  selectedMemberLabels.length ? selectedMemberLabels.join(', ') : t('Select user group members')
-                }}
-              </span>
-              <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent class="w-72 p-0" align="start">
-            <Command>
-              <CommandInput :placeholder="t('Search User')" />
-              <CommandList>
-                <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
-                <CommandGroup>
-                  <CommandItem
-                    v-for="option in users"
-                    :key="option.value"
-                    :value="option.label"
-                    @select="() => toggleMember(option.value)"
-                  >
-                    <Icon
-                      name="ri:check-line"
-                      class="mr-2 size-4"
-                      :class="formModel.members.includes(option.value) ? 'opacity-100' : 'opacity-0'"
-                    />
-                    <span>{{ option.label }}</span>
-                  </CommandItem>
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        <div v-if="formModel.members.length" class="flex flex-wrap gap-2">
-          <Badge v-for="value in formModel.members" :key="value" variant="secondary">
-            {{ value }}
-          </Badge>
-        </div>
-      </div>
+      <Field>
+        <FieldLabel class="text-sm font-medium">{{ t('Users') }}</FieldLabel>
+        <FieldContent class="space-y-2">
+          <Popover v-model:open="memberSelectorOpen">
+            <PopoverTrigger as-child>
+              <Button type="button" variant="outline" class="min-h-10 w-full justify-between gap-2" :aria-label="t('Users')">
+                <span class="truncate">
+                  {{
+                    selectedMemberLabels.length ? selectedMemberLabels.join(', ') : t('Select user group members')
+                  }}
+                </span>
+                <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-72 p-0" align="start">
+              <Command>
+                <CommandInput :placeholder="t('Search User')" />
+                <CommandList>
+                  <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem v-for="option in users" :key="option.value" :value="option.label" @select="() => toggleMember(option.value)">
+                      <Icon name="ri:check-line" class="mr-2 size-4" :class="formModel.members.includes(option.value) ? 'opacity-100' : 'opacity-0'" />
+                      <span>{{ option.label }}</span>
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <div v-if="formModel.members.length" class="flex flex-wrap gap-2">
+            <Badge v-for="value in formModel.members" :key="value" variant="secondary">
+              {{ value }}
+            </Badge>
+          </div>
+        </FieldContent>
+      </Field>
     </div>
 
     <template #footer>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import Selector, { type SelectOption } from '@/components/selector.vue'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
 import { cn } from '@/lib/utils'
-import { computed, useAttrs } from 'vue'
 import type { HTMLAttributes } from 'vue'
+import { computed, useAttrs } from 'vue'
+import Selector, { type SelectOption } from '~/components/selector.vue'
 
 defineOptions({ inheritAttrs: false })
 
@@ -57,14 +57,8 @@ const controlWrapperClasses = computed(() =>
       {{ props.label }}
     </Label>
     <div :class="controlWrapperClasses">
-      <Selector
-        v-model="modelValue"
-        :options="props.options"
-        :placeholder="props.placeholder"
-        :disabled="props.disabled || props.loading"
-        :empty-message="props.emptyMessage"
-        :class="cn('min-w-[200px]', props.selectorClass)"
-      />
+      <Selector v-model="modelValue" :options="props.options" :placeholder="props.placeholder" :disabled="props.disabled || props.loading" :empty-message="props.emptyMessage"
+        :class="cn('min-w-[200px]', props.selectorClass)" />
       <p v-if="props.description" class="text-xs text-muted-foreground">
         {{ props.description }}
       </p>

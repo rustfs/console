@@ -2,107 +2,92 @@
   <Modal v-model="visible" :title="t('Create User')" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
       <div class="grid gap-4 md:grid-cols-2">
-        <div class="space-y-2">
-          <Label>{{ t('User Name') }}</Label>
-          <Input v-model="editForm.accessKey" autocomplete="off" />
-          <p v-if="errors.accessKey" class="text-xs text-destructive">{{ errors.accessKey }}</p>
-        </div>
-        <div class="space-y-2">
-          <Label>{{ t('Password') }}</Label>
-          <Input v-model="editForm.secretKey" type="password" autocomplete="off" />
-          <p v-if="errors.secretKey" class="text-xs text-destructive">{{ errors.secretKey }}</p>
-        </div>
+        <Field>
+          <FieldLabel>{{ t('User Name') }}</FieldLabel>
+          <FieldContent>
+            <Input v-model="editForm.accessKey" autocomplete="off" />
+          </FieldContent>
+          <FieldDescription v-if="errors.accessKey" class="text-destructive">
+            {{ errors.accessKey }}
+          </FieldDescription>
+        </Field>
+
+        <Field>
+          <FieldLabel>{{ t('Password') }}</FieldLabel>
+          <FieldContent>
+            <Input v-model="editForm.secretKey" type="password" autocomplete="off" />
+          </FieldContent>
+          <FieldDescription v-if="errors.secretKey" class="text-destructive">
+            {{ errors.secretKey }}
+          </FieldDescription>
+        </Field>
       </div>
 
-      <div class="space-y-2">
-        <Label>{{ t('Groups') }}</Label>
-        <Popover v-model:open="groupSelectorOpen">
-          <PopoverTrigger as-child>
-            <Button
-              type="button"
-              variant="outline"
-              class="min-h-10 justify-between gap-2"
-              :aria-label="t('Groups')"
-            >
-              <span class="truncate">
-                {{ selectedGroupLabels.length ? selectedGroupLabels.join(', ') : t('Select Group') }}
-              </span>
-              <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent class="w-72 p-0" align="start">
-            <Command>
-              <CommandInput :placeholder="t('Search Group')" />
-              <CommandList>
-                <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
-                <CommandGroup>
-                  <CommandItem
-                    v-for="option in groupsList"
-                    :key="option.value"
-                    :value="option.label"
-                    @select="() => toggleGroup(option.value)"
-                  >
-                    <Icon
-                      name="ri:check-line"
-                      class="mr-2 size-4"
-                      :class="editForm.groups.includes(option.value) ? 'opacity-100' : 'opacity-0'"
-                    />
-                    <span>{{ option.label }}</span>
-                  </CommandItem>
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        <div v-if="editForm.groups.length" class="flex flex-wrap gap-2">
-          <Badge v-for="value in editForm.groups" :key="value" variant="secondary">{{ value }}</Badge>
-        </div>
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Groups') }}</FieldLabel>
+        <FieldContent>
+          <Popover v-model:open="groupSelectorOpen">
+            <PopoverTrigger as-child>
+              <Button type="button" variant="outline" class="min-h-10 justify-between gap-2" :aria-label="t('Groups')">
+                <span class="truncate">
+                  {{ selectedGroupLabels.length ? selectedGroupLabels.join(', ') : t('Select Group') }}
+                </span>
+                <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-72 p-0" align="start">
+              <Command>
+                <CommandInput :placeholder="t('Search Group')" />
+                <CommandList>
+                  <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem v-for="option in groupsList" :key="option.value" :value="option.label" @select="() => toggleGroup(option.value)">
+                      <Icon name="ri:check-line" class="mr-2 size-4" :class="editForm.groups.includes(option.value) ? 'opacity-100' : 'opacity-0'" />
+                      <span>{{ option.label }}</span>
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <div v-if="editForm.groups.length" class="flex flex-wrap gap-2">
+            <Badge v-for="value in editForm.groups" :key="value" variant="secondary">{{ value }}</Badge>
+          </div>
+        </FieldContent>
+      </Field>
 
-      <div class="space-y-2">
-        <Label>{{ t('Policy') }}</Label>
-        <Popover v-model:open="policySelectorOpen">
-          <PopoverTrigger as-child>
-            <Button
-              type="button"
-              variant="outline"
-              class="min-h-10 justify-between gap-2"
-              :aria-label="t('Policy')"
-            >
-              <span class="truncate">
-                {{ selectedPolicyLabels.length ? selectedPolicyLabels.join(', ') : t('Select user group policies') }}
-              </span>
-              <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent class="w-72 p-0" align="start">
-            <Command>
-              <CommandInput :placeholder="t('Search Policy')" />
-              <CommandList>
-                <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
-                <CommandGroup>
-                  <CommandItem
-                    v-for="option in policiesList"
-                    :key="option.value"
-                    :value="option.label"
-                    @select="() => togglePolicy(option.value)"
-                  >
-                    <Icon
-                      name="ri:check-line"
-                      class="mr-2 size-4"
-                      :class="editForm.policies.includes(option.value) ? 'opacity-100' : 'opacity-0'"
-                    />
-                    <span>{{ option.label }}</span>
-                  </CommandItem>
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        <div v-if="editForm.policies.length" class="flex flex-wrap gap-2">
-          <Badge v-for="value in editForm.policies" :key="value" variant="secondary">{{ value }}</Badge>
-        </div>
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Policy') }}</FieldLabel>
+        <FieldContent>
+          <Popover v-model:open="policySelectorOpen">
+            <PopoverTrigger as-child>
+              <Button type="button" variant="outline" class="min-h-10 justify-between gap-2" :aria-label="t('Policy')">
+                <span class="truncate">
+                  {{ selectedPolicyLabels.length ? selectedPolicyLabels.join(', ') : t('Select user group policies') }}
+                </span>
+                <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent class="w-72 p-0" align="start">
+              <Command>
+                <CommandInput :placeholder="t('Search Policy')" />
+                <CommandList>
+                  <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
+                  <CommandGroup>
+                    <CommandItem v-for="option in policiesList" :key="option.value" :value="option.label" @select="() => togglePolicy(option.value)">
+                      <Icon name="ri:check-line" class="mr-2 size-4" :class="editForm.policies.includes(option.value) ? 'opacity-100' : 'opacity-0'" />
+                      <span>{{ option.label }}</span>
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <div v-if="editForm.policies.length" class="flex flex-wrap gap-2">
+            <Badge v-for="value in editForm.policies" :key="value" variant="secondary">{{ value }}</Badge>
+          </div>
+        </FieldContent>
+      </Field>
     </div>
 
     <template #footer>
@@ -119,16 +104,15 @@
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
-
 import { Icon } from '#components'
-import Modal from '@/components/modal.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
-import { Label } from '@/components/ui/label'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const message = useMessage()

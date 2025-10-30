@@ -64,12 +64,12 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 import { useEventTarget } from '#imports'
-import Modal from '@/components/modal.vue'
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import MqttIcon from '~/assets/svg/mqtt.svg'
 import WebhooksIcon from '~/assets/svg/webhooks.svg'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const { updateEventTarget } = useEventTarget()

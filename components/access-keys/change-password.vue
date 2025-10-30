@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 
-import Modal from '@/components/modal.vue'
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 
@@ -101,22 +101,12 @@ async function submitForm() {
 </script>
 
 <template>
-  <Modal
-    v-model="modalVisible"
-    :title="t('Change current account password')"
-    size="md"
-    :close-on-backdrop="false"
-  >
+  <Modal v-model="modalVisible" :title="t('Change current account password')" size="md" :close-on-backdrop="false">
     <div class="space-y-4">
       <Field>
         <FieldLabel for="password-current">{{ t('Current Password') }}</FieldLabel>
         <FieldContent>
-          <Input
-            id="password-current"
-            v-model="formModel.current_secret_key"
-            type="password"
-            autocomplete="off"
-          />
+          <Input id="password-current" v-model="formModel.current_secret_key" type="password" autocomplete="off" />
         </FieldContent>
         <FieldDescription v-if="errors.current_secret_key" class="text-destructive">
           {{ errors.current_secret_key }}
@@ -126,12 +116,7 @@ async function submitForm() {
       <Field>
         <FieldLabel for="password-new">{{ t('New Password') }}</FieldLabel>
         <FieldContent>
-          <Input
-            id="password-new"
-            v-model="formModel.new_secret_key"
-            type="password"
-            autocomplete="off"
-          />
+          <Input id="password-new" v-model="formModel.new_secret_key" type="password" autocomplete="off" />
         </FieldContent>
         <FieldDescription v-if="errors.new_secret_key" class="text-destructive">
           {{ errors.new_secret_key }}
@@ -141,13 +126,7 @@ async function submitForm() {
       <Field>
         <FieldLabel for="password-new-confirm">{{ t('Confirm New Password') }}</FieldLabel>
         <FieldContent>
-          <Input
-            id="password-new-confirm"
-            v-model="formModel.re_new_secret_key"
-            type="password"
-            autocomplete="off"
-            :disabled="!formModel.new_secret_key"
-          />
+          <Input id="password-new-confirm" v-model="formModel.re_new_secret_key" type="password" autocomplete="off" :disabled="!formModel.new_secret_key" />
         </FieldContent>
         <FieldDescription v-if="errors.re_new_secret_key" class="text-destructive">
           {{ errors.re_new_secret_key }}

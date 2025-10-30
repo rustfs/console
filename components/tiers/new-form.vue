@@ -102,13 +102,13 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-import Modal from '@/components/modal.vue'
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import RustfsIcon from '~/assets/logo.svg'
 import AWSIcon from '~/assets/svg/aws.svg'
 import MinioIcon from '~/assets/svg/minio.svg'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const usetier = useTiers()

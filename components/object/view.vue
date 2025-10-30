@@ -67,6 +67,8 @@
       </ItemContent>
     </Item>
 
+    <object-preview-modal :show="showPreview" :object="object" @update:show="showPreview = $event" />
+
     <Modal v-model="showTagView" :title="t('Set Tags')" size="lg">
       <div class="space-y-4">
         <div class="flex flex-wrap gap-2">
@@ -92,23 +94,21 @@
         </form>
       </div>
     </Modal>
-
-    <object-preview-modal :show="showPreview" :object="object" @update:show="showPreview = $event" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import Modal from '@/components/modal.vue'
-import { Item, ItemContent } from '@/components/ui/item'
 import { Badge } from '@/components/ui/badge'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
+import { Item, ItemContent } from '@/components/ui/item'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+import Modal from '~/components/modal.vue'
 
 const props = defineProps<{
   bucketName: string

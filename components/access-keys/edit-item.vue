@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 
 import DateTimePicker from '@/components/datetime-picker.vue'
-import Modal from '@/components/modal.vue'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import dayjs from 'dayjs'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -93,12 +93,7 @@ async function submitForm() {
 </script>
 
 <template>
-  <Modal
-    v-model="visible"
-    :title="t('Edit Key')"
-    size="lg"
-    :close-on-backdrop="false"
-  >
+  <Modal v-model="visible" :title="t('Edit Key')" size="lg" :close-on-backdrop="false">
     <div class="space-y-4">
       <Field>
         <FieldLabel>{{ t('Access Key') }}</FieldLabel>
@@ -131,11 +126,11 @@ async function submitForm() {
       <Field>
         <FieldLabel>{{ t('Description') }}</FieldLabel>
         <FieldContent>
-          <Textarea v-model="formModel.description" :rows="3" />
+          <Textarea v-model="formModel.description" :rows="2" />
         </FieldContent>
       </Field>
 
-      <Field orientation="responsive" class="items-center rounded-md border p-3">
+      <Field orientation="responsive">
         <FieldLabel class="text-sm font-medium">{{ t('Status') }}</FieldLabel>
         <FieldContent class="flex justify-end">
           <Switch v-model:checked="statusBoolean" />

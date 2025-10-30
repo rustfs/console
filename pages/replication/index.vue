@@ -4,14 +4,8 @@
       <h1 class="text-2xl font-bold">{{ t('Bucket Replication') }}</h1>
       <template #actions>
         <ActionBar class="w-full justify-end gap-3 sm:w-auto">
-          <BucketSelector
-            v-model="bucketName"
-            :options="bucketList"
-            :placeholder="t('Please select bucket')"
-            class="w-full sm:w-auto"
-            selector-class="sm:w-56"
-          />
-          <Button variant="secondary" @click="openForm">
+          <BucketSelector v-model="bucketName" :options="bucketList" :placeholder="t('Please select bucket')" class="w-full sm:w-auto" selector-class="sm:w-56" />
+          <Button variant="outline" @click="openForm">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Replication Rule') }}</span>
           </Button>
@@ -35,13 +29,13 @@ import { Button } from '@/components/ui/button'
 import { Icon } from '#components'
 import DataTable from '@/components/data-table/data-table.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
-import type { SelectOption } from '@/components/selector.vue'
 import { Badge } from '@/components/ui/badge'
 import { useBucket } from '@/composables/useBucket'
 import type { Bucket } from '@aws-sdk/client-s3'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import type { SelectOption } from '~/components/selector.vue'
 
 const { t } = useI18n()
 const message = useMessage()

@@ -6,7 +6,7 @@
           <div class="w-full sm:max-w-xs">
             <SearchInput v-model="searchTerm" :placeholder="t('Search Account')" clearable class="w-full" />
           </div>
-          <Button variant="secondary" class="inline-flex items-center gap-2" @click="addItem">
+          <Button variant="outline" class="inline-flex items-center gap-2" @click="addItem">
             <Icon class="size-4" name="ri:add-line" />
             {{ t('Add Account') }}
           </Button>
@@ -34,15 +34,10 @@
               <TableCell class="text-center">{{ account.name || '-' }}</TableCell>
               <TableCell>
                 <div class="flex justify-center gap-2">
-                  <Button variant="ghost" size="sm" class="h-8 w-8 p-0" @click="openEditItem(account)">
+                  <Button variant="outline" size="sm" class="h-8 w-8 p-0" @click="openEditItem(account)">
                     <Icon class="size-4" name="ri:edit-2-line" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    class="h-8 w-8 p-0 text-destructive"
-                    @click="confirmDelete(account)"
-                  >
+                  <Button variant="outline" size="sm" class="h-8 w-8 p-0 text-destructive border-destructive" @click="confirmDelete(account)">
                     <Icon class="size-4" name="ri:delete-bin-5-line" />
                   </Button>
                 </div>
@@ -63,44 +58,56 @@
     <template v-else-if="editType === 'add'">
       <div class="space-y-4">
         <div class="grid gap-4 md:grid-cols-2">
-          <div class="space-y-2">
-            <Label>{{ t('Access Key') }}</Label>
-            <Input v-model="formModel.accessKey" autocomplete="off" />
-          </div>
-          <div class="space-y-2">
-            <Label>{{ t('Secret Key') }}</Label>
-            <Input v-model="formModel.secretKey" type="password" autocomplete="off" />
-          </div>
-          <div class="space-y-2">
-            <Label>{{ t('Expiration') }}</Label>
-            <DateTimePicker v-model="formModel.expiry" :min="minExpiry" :placeholder="t('Please select expiration date')" />
-          </div>
-          <div class="space-y-2">
-            <Label>{{ t('Name') }}</Label>
-            <Input v-model="formModel.name" autocomplete="off" />
-          </div>
-          <div class="space-y-2 md:col-span-2">
-            <Label>{{ t('Description') }}</Label>
-          <Textarea v-model="formModel.description" :rows="3" />
-          </div>
+          <Field>
+            <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formModel.accessKey" autocomplete="off" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formModel.secretKey" type="password" autocomplete="off" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Expiration') }}</FieldLabel>
+            <FieldContent>
+              <DateTimePicker v-model="formModel.expiry" :min="minExpiry" :placeholder="t('Please select expiration date')" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Name') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formModel.name" autocomplete="off" />
+            </FieldContent>
+          </Field>
+          <Field class="md:col-span-2">
+            <FieldLabel>{{ t('Description') }}</FieldLabel>
+            <FieldContent>
+              <Textarea v-model="formModel.description" :rows="3" />
+            </FieldContent>
+          </Field>
         </div>
 
-        <div class="space-y-2">
-          <div class="flex items-center justify-between rounded-md border px-3 py-2">
-            <div>
-              <p class="text-sm font-medium">{{ t('Use main account policy') }}</p>
-              <p class="text-xs text-muted-foreground">
-                {{ t('Automatically inherit the main account policy when enabled.') }}
-              </p>
-            </div>
+        <Field orientation="responsive" class="items-start rounded-md border px-3 py-2">
+          <FieldLabel class="space-y-1">
+            <p class="text-sm font-medium">{{ t('Use main account policy') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('Automatically inherit the main account policy when enabled.') }}
+            </p>
+          </FieldLabel>
+          <FieldContent class="flex justify-end">
             <Switch v-model:checked="formModel.impliedPolicy" />
-          </div>
-        </div>
+          </FieldContent>
+        </Field>
 
-        <div v-if="!formModel.impliedPolicy" class="space-y-2">
-          <Label>{{ t('Current User Policy') }}</Label>
-          <json-editor v-model="formModel.policy" />
-        </div>
+        <Field v-if="!formModel.impliedPolicy">
+          <FieldLabel>{{ t('Current User Policy') }}</FieldLabel>
+          <FieldContent>
+            <json-editor v-model="formModel.policy" />
+          </FieldContent>
+        </Field>
 
         <div class="flex justify-end gap-2">
           <Button variant="outline" @click="cancelAdd">{{ t('Cancel') }}</Button>
@@ -109,29 +116,25 @@
       </div>
     </template>
 
-    <users-user-acedit
-      v-if="editStatus && editType === 'edit'"
-      :user="editData"
-      @search="handleEditFinished"
-    />
+    <user-access-key-edit-form v-if="editStatus && editType === 'edit'" :user="editData" @search="handleEditFinished" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
 import DateTimePicker from '@/components/datetime-picker.vue'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
-import { Label } from '@/components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Textarea } from '@/components/ui/textarea'
 import dayjs from 'dayjs'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { makeRandomString } from '~/utils/functions'
 import { useDialog, useMessage } from '~/composables/ui'
+import { makeRandomString } from '~/utils/functions'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -288,7 +291,7 @@ const validateForm = () => {
 
 const submitForm = async () => {
   if (editType.value === 'edit') {
-    // 交由 users-user-acedit 处理
+    // 交由 user-acedit 处理
     return
   }
 
@@ -306,10 +309,10 @@ const submitForm = async () => {
     }
     const res = await createServiceAccount(payload)
     message.success(t('Add Success'))
-  cancelAdd()
-  emit('search')
-  emit('notice', res)
-  loadAccounts()
+    cancelAdd()
+    emit('search')
+    emit('notice', res)
+    loadAccounts()
   } catch (error) {
     console.error(error)
     message.error(t('Add Failed'))

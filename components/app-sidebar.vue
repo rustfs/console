@@ -99,7 +99,7 @@ const getLabel = (item: NavItem) => t(item.label)
                   <Collapsible v-if="hasChildren(item)" as-child :default-open="isRouteActive(item)" class="group/collapsible">
                     <SidebarMenuItem>
                       <CollapsibleTrigger as-child>
-                        <SidebarMenuButton :is-active="isRouteActive(item)" :tooltip="getLabel(item)">
+                        <SidebarMenuButton :is-active="isRouteActive(item)" :tooltip="getLabel(item)" class="gap-3">
                           <Icon v-if="item.icon" :name="item.icon" class="size-4 shrink-0" />
                           <span class="flex-1 truncate">{{ getLabel(item) }}</span>
                           <Icon name="ri:arrow-right-s-line" class="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />

@@ -1,10 +1,5 @@
 <template>
-  <Modal
-    v-model="visible"
-    :title="t('Add Replication Rule') + ` (${t('Bucket')}: ${bucketName})`"
-    size="xl"
-    :close-on-backdrop="false"
-  >
+  <Modal v-model="visible" :title="t('Add Replication Rule') + ` (${t('Bucket')}: ${bucketName})`" size="xl" :close-on-backdrop="false">
     <div class="space-y-6">
       <div class="space-y-4">
         <div class="grid gap-3 md:grid-cols-2">
@@ -74,21 +69,11 @@
             </Button>
           </div>
           <div v-if="formData.tags.length" class="space-y-3">
-            <div
-              v-for="(tag, index) in formData.tags"
-              :key="index"
-              class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
-            >
+            <div v-for="(tag, index) in formData.tags" :key="index" class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4">
               <Input v-model="tag.key" :placeholder="t('Tag Name')" />
               <div class="flex items-center gap-2">
                 <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  class="text-destructive"
-                  :disabled="formData.tags.length === 1"
-                  @click="removeTag(index)"
-                >
+                <Button variant="ghost" size="sm" class="text-destructive" :disabled="formData.tags.length === 1" @click="removeTag(index)">
                   <Icon name="ri:delete-bin-line" class="size-4" />
                 </Button>
               </div>
@@ -126,12 +111,7 @@
           <Field>
             <FieldLabel>{{ t('Health Check Interval (seconds)') }}</FieldLabel>
             <FieldContent>
-              <Input
-                v-model="formData.timecheck"
-                type="number"
-                min="1"
-                class="w-32"
-              />
+              <Input v-model="formData.timecheck" type="number" min="1" class="w-32" />
             </FieldContent>
           </Field>
           <Field>
@@ -157,17 +137,17 @@
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import Modal from '@/components/modal.vue'
-import Selector from '@/components/selector.vue'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
+import { getBytes } from '@/utils/functions'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { getBytes } from '@/utils/functions'
+import Modal from '~/components/modal.vue'
+import Selector from '~/components/selector.vue'
 
 const { t } = useI18n()
 const message = useMessage()

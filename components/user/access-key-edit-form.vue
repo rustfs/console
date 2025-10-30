@@ -1,58 +1,70 @@
 <template>
   <div class="space-y-4">
     <div class="grid gap-4 md:grid-cols-2">
-      <div class="space-y-2">
-        <Label>{{ t('Access Key') }}</Label>
-        <Input v-model="formModel.accessKey" disabled />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.accessKey" disabled />
+        </FieldContent>
+      </Field>
 
-      <div class="space-y-2">
-        <Label>{{ t('Expiration') }}</Label>
-        <DateTimePicker
-          v-model="formModel.expiry"
-          :min="minExpiry"
-          :placeholder="t('Please select expiration date')"
-        />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Expiration') }}</FieldLabel>
+        <FieldContent>
+          <DateTimePicker
+            v-model="formModel.expiry"
+            :min="minExpiry"
+            :placeholder="t('Please select expiration date')"
+          />
+        </FieldContent>
+      </Field>
 
-      <div class="space-y-2">
-        <Label>{{ t('Name') }}</Label>
-        <Input v-model="formModel.name" autocomplete="off" />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Name') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.name" autocomplete="off" />
+        </FieldContent>
+      </Field>
 
-      <div class="space-y-2">
-        <Label>{{ t('Description') }}</Label>
-        <Input v-model="formModel.description" autocomplete="off" />
-      </div>
+      <Field>
+        <FieldLabel>{{ t('Description') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.description" autocomplete="off" />
+        </FieldContent>
+      </Field>
     </div>
 
     <div class="space-y-4">
-      <div class="flex flex-col gap-3 rounded-md border p-3">
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium">{{ t('Use Main Account Policy') }}</p>
-            <p class="text-xs text-muted-foreground">
-              {{ t('Automatically inherit the main account policy when enabled.') }}
-            </p>
-          </div>
+      <Field orientation="responsive" class="items-start gap-3 rounded-md border p-3">
+        <FieldLabel class="space-y-1">
+          <p class="text-sm font-medium">{{ t('Use Main Account Policy') }}</p>
+          <p class="text-xs text-muted-foreground">
+            {{ t('Automatically inherit the main account policy when enabled.') }}
+          </p>
+        </FieldLabel>
+        <FieldContent class="flex justify-end">
           <Switch v-model:checked="formModel.impliedPolicy" />
-        </div>
-        <div class="flex items-center justify-between">
-          <div>
-            <p class="text-sm font-medium">{{ t('Status') }}</p>
-            <p class="text-xs text-muted-foreground">
-              {{ formModel.accountStatus === 'on' ? t('Available') : t('Disabled') }}
-            </p>
-          </div>
+        </FieldContent>
+      </Field>
+      <Field orientation="responsive" class="items-start gap-3 rounded-md border p-3">
+        <FieldLabel class="space-y-1">
+          <p class="text-sm font-medium">{{ t('Status') }}</p>
+          <p class="text-xs text-muted-foreground">
+            {{ formModel.accountStatus === 'on' ? t('Available') : t('Disabled') }}
+          </p>
+        </FieldLabel>
+        <FieldContent class="flex justify-end">
           <Switch v-model:checked="statusBoolean" />
-        </div>
-      </div>
+        </FieldContent>
+      </Field>
     </div>
 
-    <div v-if="!formModel.impliedPolicy" class="space-y-2">
-      <Label>{{ t('Current User Policy') }}</Label>
-      <json-editor v-model="formModel.policy" />
-    </div>
+    <Field v-if="!formModel.impliedPolicy">
+      <FieldLabel>{{ t('Current User Policy') }}</FieldLabel>
+      <FieldContent>
+        <json-editor v-model="formModel.policy" />
+      </FieldContent>
+    </Field>
 
     <div class="flex justify-end gap-2">
       <Button variant="outline" @click="cancelEdit">
@@ -71,7 +83,7 @@ import { Button } from '@/components/ui/button'
 
 import DateTimePicker from '@/components/datetime-picker.vue'
 import { Switch } from '@/components/ui/switch'
-import { Label } from '@/components/ui/label'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import dayjs from 'dayjs'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'

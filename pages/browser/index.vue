@@ -4,7 +4,7 @@
       <h1 class="text-2xl font-bold">{{ t('Buckets') }}</h1>
       <template #actions>
         <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable class="max-w-sm" />
-        <Button variant="secondary" @click="formVisible = true">
+        <Button variant="outline" @click="formVisible = true">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('Create Bucket') }}</span>
         </Button>

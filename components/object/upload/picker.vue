@@ -144,11 +144,11 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import Modal from '@/components/modal.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Progress from '@/components/ui/progress/Progress.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
 const props = defineProps<{

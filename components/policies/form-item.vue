@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-import Modal from '@/components/modal.vue'
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const { $api } = useNuxtApp()
@@ -114,12 +114,7 @@ const submitForm = async () => {
 </script>
 
 <template>
-  <Modal
-    v-model="modalVisible"
-    :title="t('Policy Original')"
-    size="lg"
-    :close-on-backdrop="false"
-  >
+  <Modal v-model="modalVisible" :title="t('Policy Original')" size="lg" :close-on-backdrop="false">
     <div class="space-y-4">
       <Field>
         <FieldLabel for="policy-name">{{ t('Policy Name') }}</FieldLabel>

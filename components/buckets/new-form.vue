@@ -38,11 +38,7 @@
             <FieldLabel>{{ t('Retention Mode') }}</FieldLabel>
             <FieldContent>
               <RadioGroup v-model="retentionMode" class="grid gap-2 sm:grid-cols-2">
-                <label
-                  v-for="option in retentionModeOptions"
-                  :key="option.value"
-                  class="flex items-start gap-3 rounded-md border border-border/50 p-3"
-                >
+                <label v-for="option in retentionModeOptions" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
                   <RadioGroupItem :value="option.value" class="mt-0.5" />
                   <span class="text-sm font-medium">{{ option.label }}</span>
                 </label>
@@ -56,11 +52,7 @@
               <div class="flex flex-col gap-2 sm:flex-row">
                 <Input v-model="retentionPeriod" type="number" class="sm:w-32" />
                 <RadioGroup v-model="retentionUnit" class="grid gap-2 sm:grid-cols-2">
-                  <label
-                    v-for="option in retentionUnitOptions"
-                    :key="option.value"
-                    class="flex items-start gap-3 rounded-md border border-border/50 p-3"
-                  >
+                  <label v-for="option in retentionUnitOptions" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
                     <RadioGroupItem :value="option.value" class="mt-0.5" />
                     <span class="text-sm font-medium">{{ option.label }}</span>
                   </label>
@@ -89,11 +81,11 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
-import Modal from '@/components/modal.vue'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const props = defineProps<{
   show: boolean

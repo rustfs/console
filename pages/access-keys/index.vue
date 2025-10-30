@@ -3,16 +3,16 @@
     <page-header>
       <h1 class="text-2xl font-bold">{{ t('Access Keys') }}</h1>
       <template #actions>
-        <SearchInput v-model="searchTerm" :placeholder="t('Search Access Key')" clearable class="max-w-sm" />
+        <SearchInput v-model="searchTerm" :placeholder="t('Search Access Key')" clearable class="max-w-xs" />
         <Button variant="outline" @click="changePasswordVisible = true">
           <Icon name="ri:key-2-line" class="size-4" />
           <span>{{ t('Change Password') }}</span>
         </Button>
-        <Button variant="outline" v-show="selectedKeys.length" :disabled="!selectedKeys.length" @click="deleteSelected">
+        <Button variant="outline" v-if="selectedKeys.length" :disabled="!selectedKeys.length" @click="deleteSelected">
           <Icon name="ri:delete-bin-5-line" class="size-4" />
           <span>{{ t('Delete Selected') }}</span>
         </Button>
-        <Button variant="secondary" @click="addItem">
+        <Button variant="outline" @click="addItem">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('Add Access Key') }}</span>
         </Button>
@@ -25,10 +25,10 @@
       <DataTablePagination :table="table" class="px-2 py-3" />
     </div>
 
-    <NewItem ref="newItemRef" v-model:visible="newItemVisible" @search="refresh" @notice="noticeDialog" />
-    <EditItem ref="editItemRef" @search="refresh" />
-    <ChangePassword ref="changePasswordModalRef" v-model:visible="changePasswordVisible" />
-    <users-user-notice ref="noticeRef" @search="refresh" />
+    <access-keys-new-item ref="newItemRef" v-model:visible="newItemVisible" @search="refresh" @notice="noticeDialog" />
+    <access-keys-edit-item ref="editItemRef" @search="refresh" />
+    <access-keys-change-password ref="changePasswordModalRef" v-model:visible="changePasswordVisible" />
+    <user-notice ref="noticeRef" @search="refresh" />
   </page>
 </template>
 
@@ -36,7 +36,6 @@
 import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
-import { ChangePassword, EditItem, NewItem } from '@/components/access-keys'
 import DataTablePagination from '@/components/data-table/data-table-pagination.vue'
 import DataTable from '@/components/data-table/data-table.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
@@ -64,8 +63,6 @@ const data = ref<RowData[]>([])
 const loading = ref(false)
 const searchTerm = ref('')
 
-const TableButton = Button as unknown as any
-
 const openEditItem = (row: RowData) => {
   editItemRef.value?.openDialog(row)
 }
@@ -90,13 +87,13 @@ const columns: ColumnDef<RowData>[] = [
         checked: table.getIsAllPageRowsSelected(),
         indeterminate: table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected(),
         'onUpdate:checked': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
-        class: 'translate-y-[2px]'
+        class: 'translate-y-0.5'
       }),
     cell: ({ row }) =>
       h(Checkbox, {
         checked: row.getIsSelected(),
         'onUpdate:checked': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        class: 'translate-y-[2px]'
+        class: 'translate-y-0.5'
       }),
     size: 48,
   },
@@ -139,12 +136,12 @@ const columns: ColumnDef<RowData>[] = [
     enableHiding: false,
     cell: ({ row }) =>
       h('div', { class: 'flex justify-center gap-2' }, [
-        h(TableButton, {
+        h(Button, {
           variant: 'outline',
           size: 'sm',
           onClick: () => openEditItem(row.original),
         }, () => [h(Icon, { name: 'ri:edit-2-line', class: 'size-4' }), h('span', t('Edit'))]),
-        h(TableButton, {
+        h(Button, {
           variant: 'outline',
           size: 'sm',
           onClick: () => confirmDeleteSingle(row.original),

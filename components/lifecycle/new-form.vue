@@ -163,13 +163,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
-import Modal from '@/components/modal.vue'
-import Selector from '@/components/selector.vue'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
+import Selector from '~/components/selector.vue'
 
 const { t } = useI18n()
 const message = useMessage()

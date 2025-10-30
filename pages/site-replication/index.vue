@@ -5,7 +5,7 @@
     </page-header>
     <div class="flex flex-col gap-4">
       <div class="flex justify-end">
-        <Button type="button" variant="secondary" class="inline-flex items-center gap-2" @click="openForm">
+        <Button type="button" variant="outline" class="inline-flex items-center gap-2" @click="openForm">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('Add Site') }}</span>
         </Button>

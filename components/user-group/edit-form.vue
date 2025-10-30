@@ -24,11 +24,11 @@
 </template>
 
 <script setup lang="ts">
-import Modal from '@/components/modal.vue'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const visible = ref(false)

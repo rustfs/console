@@ -1,39 +1,41 @@
 <template>
   <page>
     <page-header>
-      <h1 class="text-2xl font-bold">{{ t('Users') }}</h1>
+      <h1 class="text-2xl font-bold">{{ t('User Groups') }}</h1>
       <template #actions>
-        <SearchInput v-model="searchTerm" :placeholder="t('Search Access User')" clearable class="max-w-xs" />
-        <Button type="button" variant="outline" :disabled="!selectedKeys.length" @click="deleteByList">
-          <Icon class="size-4" name="ri:delete-bin-5-line" />
-          {{ t('Delete Selected') }}
-        </Button>
-        <Button type="button" variant="outline" :disabled="!selectedKeys.length" @click="addToGroup">
+        <SearchInput v-model="searchTerm" :placeholder="t('Search User Group')" clearable class="w-full max-w-md" />
+        <Button type="button" variant="outline" :disabled="!selectedKeys.length" @click="allocationPolicy">
           <Icon class="size-4" name="ri:group-2-fill" />
-          {{ t('Add to Group') }}
+          {{ t('Assign Policy') }}
         </Button>
-        <Button type="button" variant="outline" @click="addUserItem">
+        <Button type="button" variant="outline" @click="addUserGroup">
           <Icon class="size-4" name="ri:add-line" />
-          {{ t('Add User') }}
+          {{ t('Add User Group') }}
         </Button>
       </template>
     </page-header>
 
-    <div class="space-y-4">
-      <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Create a user to get started.')" table-class="min-w-full" />
-      <DataTablePagination :table="table" />
+    <DataTable
+      :table="table"
+      :is-loading="loading"
+      :empty-title="t('No Data')"
+      :empty-description="t('Create user groups to organize permissions.')"
+      table-class="min-w-full"
+    />
+    <DataTablePagination :table="table" class="px-2 py-3" />
 
-      <user-new-form ref="newItemRef" @search="getDataList" />
-      <user-edit-form ref="editItemRef" @search="getDataList" />
-    </div>
+    <user-group-edit-form ref="editItemRef" />
+    <user-group-new-form ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" />
+    <user-group-set-policies-mutiple
+      ref="policiesRef"
+      :checkedKeys="selectedKeys"
+      @changePoliciesSuccess="changePoliciesSuccess"
+    />
   </page>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '#components'
-import DataTablePagination from '@/components/data-table/data-table-pagination.vue'
-import DataTable from '@/components/data-table/data-table.vue'
-import { useDataTable } from '@/components/data-table/useDataTable'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,6 +47,9 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import DataTablePagination from '@/components/data-table/data-table-pagination.vue'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, onMounted, ref, watch } from 'vue'
@@ -52,60 +57,19 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
-const { listUsers, deleteUser } = useUsers()
 const dialog = useDialog()
 const message = useMessage()
+const group = useGroups()
 
-interface UserRow {
-  accessKey: string
-  [key: string]: unknown
+interface GroupRow {
+  name: string
 }
 
 const searchTerm = ref('')
+const listData = ref<GroupRow[]>([])
 const loading = ref(false)
-const listData = ref<UserRow[]>([])
 
-const newItemRef = ref()
-const editItemRef = ref()
-
-async function deleteItem(row: UserRow) {
-  try {
-    await deleteUser(row.accessKey)
-    message.success(t('Delete Success'))
-    table.resetRowSelection()
-    await getDataList()
-  } catch (error) {
-    message.error(t('Delete Failed'))
-  }
-}
-
-function openEditItem(row: UserRow) {
-  editItemRef.value?.openDialog(row)
-}
-
-function addUserItem() {
-  newItemRef.value?.openDialog()
-}
-
-const addToGroup = () => { }
-
-async function getDataList() {
-  loading.value = true
-  try {
-    const res = await listUsers()
-    listData.value = Object.entries(res).map(([username, info]) => ({
-      accessKey: username,
-      ...(typeof info === 'object' ? info : {}),
-    }))
-  } catch (error) {
-    message.error(t('Failed to get data'))
-  } finally {
-    loading.value = false
-  }
-  table.resetRowSelection()
-}
-
-const columns: ColumnDef<UserRow>[] = [
+const columns: ColumnDef<GroupRow>[] = [
   {
     id: 'select',
     enableSorting: false,
@@ -126,9 +90,9 @@ const columns: ColumnDef<UserRow>[] = [
     size: 48,
   },
   {
-    accessorKey: 'accessKey',
+    accessorKey: 'name',
     header: () => t('Name'),
-    cell: ({ row }) => h('span', { class: 'font-medium' }, row.original.accessKey),
+    cell: ({ row }) => h('span', { class: 'font-medium' }, row.original.name),
     filterFn: 'includesString',
   },
   {
@@ -197,26 +161,90 @@ const columns: ColumnDef<UserRow>[] = [
   },
 ]
 
-const { table } = useDataTable<UserRow>({
+const { table } = useDataTable<GroupRow>({
   data: listData,
   columns,
-  getRowId: row => row.accessKey,
+  getRowId: row => row.name,
 })
 
-const selectedKeys = computed(() => table.getSelectedRowModel().rows.map(row => row.original.accessKey))
+const selectedKeys = computed(() => table.getSelectedRowModel().rows.map(row => row.original.name))
+
+onMounted(() => {
+  getDataList()
+})
+
+const getDataList = async () => {
+  loading.value = true
+  try {
+    const res = await group.listGroup()
+    listData.value =
+      res?.map((item: string) => ({
+        name: item,
+      })) || []
+  } catch (error) {
+    message.error(t('Failed to get data'))
+  } finally {
+    loading.value = false
+  }
+  table.resetRowSelection()
+}
+
+const newItemRef = ref()
+const newItemVisible = ref(false)
+
+function addUserGroup() {
+  newItemVisible.value = true
+}
+
+const policiesRef = ref()
+const allocationPolicy = () => {
+  policiesRef.value.openDialog()
+}
+
+const changePoliciesSuccess = () => {
+  table.resetRowSelection()
+}
+
+const editItemRef = ref()
+function openEditItem(row: GroupRow) {
+  editItemRef.value.openDialog(row)
+}
+
+async function deleteItem(row: GroupRow) {
+  try {
+    const info = await group.getGroup(row.name)
+    if (info.members.length) {
+      message.error(t('Please remove members first'))
+      return
+    }
+    await group.updateGroupMembers({
+      group: row.name,
+      members: info.members,
+      isRemove: true,
+      groupStatus: 'enabled',
+    })
+    message.success(t('Delete Success'))
+    await getDataList()
+  } catch (error) {
+    message.error(t('Delete Failed'))
+  }
+}
 
 function deleteByList() {
-  if (!selectedKeys.value.length) return
   dialog.error({
     title: t('Warning'),
-    content: t('Are you sure you want to delete all selected users?'),
+    content: t('Are you sure you want to delete all selected user groups?'),
     positiveText: t('Confirm'),
     negativeText: t('Cancel'),
     onPositiveClick: async () => {
+      if (!selectedKeys.value.length) {
+        message.error(t('Please select at least one item'))
+        return
+      }
       try {
-        await Promise.all(selectedKeys.value.map(item => deleteUser(item)))
-        message.success(t('Delete Success'))
+        await Promise.all(selectedKeys.value.map(item => group.removeGroup(item)))
         table.resetRowSelection()
+        message.success(t('Delete Success'))
         await getDataList()
       } catch (error) {
         message.error(t('Delete Failed'))
@@ -226,10 +254,6 @@ function deleteByList() {
 }
 
 watch(searchTerm, value => {
-  table.getColumn('accessKey')?.setFilterValue(value || undefined)
-})
-
-onMounted(() => {
-  getDataList()
+  table.getColumn('name')?.setFilterValue(value || undefined)
 })
 </script>

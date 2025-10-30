@@ -6,7 +6,7 @@
         <div class="w-full sm:max-w-xs">
           <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable class="w-full" />
         </div>
-        <Button variant="secondary" @click="addForm">
+        <Button variant="outline" @click="addForm">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('Add Event Destination') }}</span>
         </Button>
@@ -19,7 +19,7 @@
 
     <DataTable :table="table" :is-loading="pending" :empty-title="t('No Destinations')" :empty-description="t('Create an event destination to forward notifications.')" />
 
-    <events-target-new ref="newFormRef" @search="() => refresh()" />
+    <events-target-new-form ref="newFormRef" @search="() => refresh()" />
   </page>
 </template>
 

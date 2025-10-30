@@ -71,13 +71,13 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
-import Drawer from '@/components/drawer.vue'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Progress from '@/components/ui/progress/Progress.vue'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Drawer from '~/components/drawer.vue'
 
 const props = defineProps<{
   tasks: any[]

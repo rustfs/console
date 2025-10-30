@@ -1,10 +1,10 @@
 <script setup lang="ts" generic="TData">
 import { Button } from '@/components/ui/button'
 
-import type { Table } from '@tanstack/vue-table'
-import Selector from '@/components/selector.vue'
 import { cn } from '@/lib/utils'
+import type { Table } from '@tanstack/vue-table'
 import { computed } from 'vue'
+import Selector from '~/components/selector.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -42,12 +42,8 @@ const handlePageSizeChange = (value: number | string | boolean | null) => {
       <span class="text-sm text-muted-foreground">
         Rows per page
       </span>
-      <Selector
-        :options="pageSizeOptions.map(option => ({ label: String(option), value: option }))"
-        :model-value="pagination.pageSize"
-        class="w-24"
-        @update:model-value="handlePageSizeChange"
-      />
+      <Selector :options="pageSizeOptions.map(option => ({ label: String(option), value: option }))" :model-value="pagination.pageSize" class="w-24"
+        @update:model-value="handlePageSizeChange" />
     </div>
 
     <div class="flex items-center gap-2">
@@ -64,12 +60,7 @@ const handlePageSizeChange = (value: number | string | boolean | null) => {
         <Button variant="outline" size="sm" :disabled="!canNext" @click="props.table.nextPage()">
           Next
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="!canNext"
-          @click="props.table.setPageIndex(Math.max(pageCount - 1, 0))"
-        >
+        <Button variant="outline" size="sm" :disabled="!canNext" @click="props.table.setPageIndex(Math.max(pageCount - 1, 0))">
           Last
         </Button>
       </div>

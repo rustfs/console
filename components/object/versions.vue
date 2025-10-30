@@ -1,6 +1,6 @@
 <template>
   <Modal v-model="visibleProxy" :title="t('Object Versions')" size="lg" :close-on-backdrop="false">
-    <div class="space-y-4">
+    <div class="space-y-4 z-20">
       <DataTable :table="table" :is-loading="loading" :empty-title="t('No Versions')" />
       <div class="flex justify-end">
         <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
@@ -14,13 +14,13 @@ import { Button } from '@/components/ui/button'
 
 import DataTable from '@/components/data-table/data-table.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
-import Modal from '@/components/modal.vue'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const props = defineProps<{
   bucketName: string

@@ -5,11 +5,7 @@
         <AlertDescription>{{ t('Overwrite Warning') }}</AlertDescription>
       </Alert>
 
-      <Input
-        v-model="objectKey"
-        :placeholder="t('Name Placeholder', { type: displayType })"
-        autocomplete="off"
-      />
+      <Input v-model="objectKey" :placeholder="t('Name Placeholder', { type: displayType })" autocomplete="off" />
 
       <div class="flex justify-end gap-2">
         <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
@@ -22,14 +18,14 @@
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import { joinRelativeURL } from 'ufo'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Modal from '@/components/modal.vue'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const emit = defineEmits<{

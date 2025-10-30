@@ -5,15 +5,15 @@
       <template #actions>
         <object-upload-stats />
         <object-delete-stats />
-        <Button variant="secondary" @click="() => handleNewObject(true)">
+        <Button variant="outline" @click="() => handleNewObject(true)">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('New Folder') }}</span>
         </Button>
-        <Button variant="secondary" @click="() => (uploadPickerVisible = true)">
+        <Button variant="outline" @click="() => (uploadPickerVisible = true)">
           <Icon name="ri:file-add-line" class="size-4" />
           <span>{{ t('Upload File') }}/{{ t('Folder') }}</span>
         </Button>
-        <Button variant="destructive" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="handleBatchDelete">
+        <Button variant="outline" class="text-destructive border-destructive" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="handleBatchDelete">
           <Icon name="ri:delete-bin-5-line" class="size-4" />
           <span>{{ t('Delete Selected') }}</span>
         </Button>

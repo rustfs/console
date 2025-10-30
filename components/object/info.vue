@@ -127,14 +127,8 @@
     </Modal>
 
     <object-preview-modal v-model:show="showPreview" :object="previewObject ?? object" />
-    <ObjectVersions
-      :bucket-name="bucketName"
-      :object-key="object?.Key || ''"
-      :visible="showVersions"
-      @close="handleVersionsClose"
-      @preview="handlePreviewVersion"
-      @refresh-parent="handleVersionsRefresh"
-    />
+    <ObjectVersions :bucket-name="bucketName" :object-key="object?.Key || ''" :visible="showVersions" @close="handleVersionsClose" @preview="handlePreviewVersion"
+      @refresh-parent="handleVersionsRefresh" />
   </Drawer>
 </template>
 
@@ -146,15 +140,15 @@ import { joinRelativeURL } from 'ufo'
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import Drawer from '@/components/drawer.vue'
 import ObjectVersions from '@/components/object/versions.vue'
-import Modal from '@/components/modal.vue'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Item, ItemContent, ItemHeader, ItemTitle } from '@/components/ui/item'
 import { Switch } from '@/components/ui/switch'
+import Drawer from '~/components/drawer.vue'
+import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const message = useMessage()

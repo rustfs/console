@@ -5,7 +5,7 @@
         <div class="w-full sm:max-w-xs">
           <SearchInput v-model="searchTerm" :placeholder="t('Search Policy')" clearable class="w-full" />
         </div>
-        <Button variant="secondary" :disabled="!checkedKeys.length || submitting" @click="changePolicies">
+        <Button variant="outline" :disabled="!checkedKeys.length || submitting" @click="changePolicies">
           {{ t('Submit') }}
         </Button>
       </div>
@@ -14,11 +14,8 @@
         <TableHeader>
           <TableRow>
             <TableHead class="w-12">
-              <Checkbox
-                :checked="allVisibleSelected"
-                :indeterminate="checkedKeys.length > 0 && !allVisibleSelected"
-                @update:checked="(value: boolean | 'indeterminate') => toggleSelectAll(value === true)"
-              />
+              <Checkbox :checked="allVisibleSelected" :indeterminate="checkedKeys.length > 0 && !allVisibleSelected"
+                @update:checked="(value: boolean | 'indeterminate') => toggleSelectAll(value === true)" />
             </TableHead>
             <TableHead>{{ t('Name') }}</TableHead>
           </TableRow>
@@ -26,10 +23,7 @@
         <TableBody v-if="filteredPolicies.length">
           <TableRow v-for="policy in filteredPolicies" :key="policy.name">
             <TableCell>
-              <Checkbox
-                :checked="isSelected(policy.name)"
-                @update:checked="(value: boolean | 'indeterminate') => toggleSelection(policy.name, value === true)"
-              />
+              <Checkbox :checked="isSelected(policy.name)" @update:checked="(value: boolean | 'indeterminate') => toggleSelection(policy.name, value === true)" />
             </TableCell>
             <TableCell class="font-medium">{{ policy.name }}</TableCell>
           </TableRow>
@@ -49,11 +43,11 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 
-import Modal from '@/components/modal.vue'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
 const { listPolicies, setUserOrGroupPolicy } = usePolicies()
 const { t } = useI18n()

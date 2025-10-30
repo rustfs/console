@@ -1,10 +1,5 @@
 <template>
-  <Modal
-    v-model="modalVisible"
-    :title="t('Create Key')"
-    size="lg"
-    :close-on-backdrop="false"
-  >
+  <Modal v-model="modalVisible" :title="t('Create Key')" size="lg" :close-on-backdrop="false">
     <div class="space-y-4">
       <Field>
         <FieldLabel for="create-access-key">{{ t('Access Key') }}</FieldLabel>
@@ -29,12 +24,7 @@
       <Field>
         <FieldLabel for="create-expiry">{{ t('Expiry') }}</FieldLabel>
         <FieldContent>
-          <DateTimePicker
-            id="create-expiry"
-            v-model="formModel.expiry"
-            :min="minExpiry"
-            :placeholder="t('Please select expiry date')"
-          />
+          <DateTimePicker id="create-expiry" v-model="formModel.expiry" :min="minExpiry" :placeholder="t('Please select expiry date')" />
         </FieldContent>
         <FieldDescription v-if="errors.expiry" class="text-destructive">
           {{ errors.expiry }}
@@ -91,17 +81,17 @@
 </template>
 
 <script setup lang="ts">
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 
 import DateTimePicker from '@/components/datetime-picker.vue'
-import Modal from '@/components/modal.vue'
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 import { makeRandomString } from '~/utils/functions'
 
 const { t } = useI18n()

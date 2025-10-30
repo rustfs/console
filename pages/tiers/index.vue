@@ -3,7 +3,7 @@
     <page-header>
       <h1 class="text-2xl font-bold">{{ t('Tiers') }}</h1>
       <template #actions>
-        <Button variant="secondary" @click="openNewForm">
+        <Button variant="outline" @click="openNewForm">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('Add Tier') }}</span>
         </Button>

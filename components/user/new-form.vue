@@ -192,8 +192,8 @@ const validate = () => {
 
   if (!editForm.accessKey.trim()) {
     errors.accessKey = t('Please enter username')
-  } else if (!/^.{4,16}$/.test(editForm.accessKey)) {
-    errors.accessKey = t('username length cannot be less than 4 characters and greater than 16 characters')
+  } else if (!/^.{3,20}$/.test(editForm.accessKey)) {
+    errors.accessKey = t('username length cannot be less than 3 characters and greater than 20 characters')
   }
 
   if (!editForm.secretKey.trim()) {

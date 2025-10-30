@@ -5,7 +5,7 @@
         <Field>
           <FieldLabel>{{ t('User Name') }}</FieldLabel>
           <FieldContent>
-            <Input v-model="editForm.accessKey" autocomplete="off" />
+            <Input v-model="editForm.accessKey" default-value="" name="new-user-access-key" spellcheck="false" autocomplete="new-user-access-key" />
           </FieldContent>
           <FieldDescription v-if="errors.accessKey" class="text-destructive">
             {{ errors.accessKey }}
@@ -15,7 +15,8 @@
         <Field>
           <FieldLabel>{{ t('Password') }}</FieldLabel>
           <FieldContent>
-            <Input v-model="editForm.secretKey" type="password" autocomplete="off" />
+            <Input v-model="editForm.secretKey" default-value="" id="new-user-password" spellcheck="false" type="password" name="new-user-password" autocomplete="new-user-password"
+              aria-autocomplete="none" />
           </FieldContent>
           <FieldDescription v-if="errors.secretKey" class="text-destructive">
             {{ errors.secretKey }}

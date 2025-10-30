@@ -68,7 +68,7 @@ const columns: ColumnDef<PolicyRow>[] = [
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) =>
-      h('div', { class: 'flex justify-center gap-2' }, [
+      h('div', { class: 'flex items-center gap-2' }, [
         h(
           Button,
           {

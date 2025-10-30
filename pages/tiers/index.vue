@@ -93,7 +93,7 @@ const columns: ColumnDef<TierRow>[] = [
     header: () => t('Actions'),
     enableSorting: false,
     cell: ({ row }) =>
-      h('div', { class: 'flex justify-center gap-2' }, [
+      h('div', { class: 'flex items-centergap-2' }, [
         h(
           Button,
           {

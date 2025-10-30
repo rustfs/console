@@ -134,7 +134,7 @@ const columns: ColumnDef<ReplicationRule>[] = [
     header: () => t('Actions'),
     enableSorting: false,
     cell: ({ row }) =>
-      h('div', { class: 'flex justify-center gap-2' }, [
+      h('div', { class: 'flex items-center gap-2' }, [
         h(
           Button,
           {

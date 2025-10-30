@@ -137,7 +137,7 @@ const columns: ColumnDef<UserRow>[] = [
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) =>
-      h('div', { class: 'flex items-center justify-center gap-2' }, [
+      h('div', { class: 'flex items-center gap-2' }, [
         h(
           Button,
           {

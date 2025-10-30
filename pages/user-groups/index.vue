@@ -15,27 +15,20 @@
       </template>
     </page-header>
 
-    <DataTable
-      :table="table"
-      :is-loading="loading"
-      :empty-title="t('No Data')"
-      :empty-description="t('Create user groups to organize permissions.')"
-      table-class="min-w-full"
-    />
+    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Create user groups to organize permissions.')" table-class="min-w-full" />
     <DataTablePagination :table="table" class="px-2 py-3" />
 
     <user-group-edit-form ref="editItemRef" />
     <user-group-new-form ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" />
-    <user-group-set-policies-mutiple
-      ref="policiesRef"
-      :checkedKeys="selectedKeys"
-      @changePoliciesSuccess="changePoliciesSuccess"
-    />
+    <user-group-set-policies-mutiple ref="policiesRef" :checkedKeys="selectedKeys" @changePoliciesSuccess="changePoliciesSuccess" />
   </page>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '#components'
+import DataTablePagination from '@/components/data-table/data-table-pagination.vue'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,9 +40,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import DataTablePagination from '@/components/data-table/data-table-pagination.vue'
-import DataTable from '@/components/data-table/data-table.vue'
-import { useDataTable } from '@/components/data-table/useDataTable'
 import { Checkbox } from '@/components/ui/checkbox'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, onMounted, ref, watch } from 'vue'
@@ -101,7 +91,7 @@ const columns: ColumnDef<GroupRow>[] = [
     enableSorting: false,
     enableHiding: false,
     cell: ({ row }) =>
-      h('div', { class: 'flex items-center justify-center gap-2' }, [
+      h('div', { class: 'flex items-center gap-2' }, [
         h(
           Button,
           {

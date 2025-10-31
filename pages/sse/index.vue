@@ -52,20 +52,44 @@
               <Icon name="ri:refresh-line" class="mr-2 size-4" />
               {{ t('Refresh') }}
             </Button>
-            <Button size="sm" variant="outline" :disabled="sseKmsForm.kms_status !== 'Running'" :loading="clearingCache" @click="clearKMSCache">
+            <Button
+              size="sm"
+              variant="outline"
+              :disabled="sseKmsForm.kms_status !== 'Running'"
+              :loading="clearingCache"
+              @click="clearKMSCache"
+            >
               <Icon name="ri:delete-bin-line" class="mr-2 size-4" />
               {{ t('Clear Cache') }}
             </Button>
-            <Button size="sm" variant="outline" :disabled="sseKmsForm.kms_status !== 'Running'" @click="viewDetailedStatus">
+            <Button
+              size="sm"
+              variant="outline"
+              :disabled="sseKmsForm.kms_status !== 'Running'"
+              @click="viewDetailedStatus"
+            >
               <Icon name="ri:eye-line" class="mr-2 size-4" />
               {{ t('Details') }}
             </Button>
-            <Button v-if="hasConfiguration && (sseKmsForm.kms_status === 'Configured' || isErrorStatus(sseKmsForm.kms_status))" size="sm" variant="default" :loading="startingKMS"
-              @click="startKMSService">
+            <Button
+              v-if="
+                hasConfiguration && (sseKmsForm.kms_status === 'Configured' || isErrorStatus(sseKmsForm.kms_status))
+              "
+              size="sm"
+              variant="default"
+              :loading="startingKMS"
+              @click="startKMSService"
+            >
               <Icon name="ri:play-line" class="mr-2 size-4" />
               {{ t('Start KMS') }}
             </Button>
-            <Button v-if="hasConfiguration && sseKmsForm.kms_status === 'Running'" size="sm" variant="outline" :loading="stoppingKMS" @click="stopKMSService">
+            <Button
+              v-if="hasConfiguration && sseKmsForm.kms_status === 'Running'"
+              size="sm"
+              variant="outline"
+              :loading="stoppingKMS"
+              @click="stopKMSService"
+            >
               <Icon name="ri:stop-line" class="mr-2 size-4" />
               {{ t('Stop KMS') }}
             </Button>
@@ -118,13 +142,17 @@
 
                     <!-- Local backend specific fields -->
                     <template v-if="sseKmsForm.backend_type === 'local'">
-                      <div v-if="sseKmsForm.key_directory">{{ t('Key Directory') }}: {{ sseKmsForm.key_directory }}</div>
+                      <div v-if="sseKmsForm.key_directory">
+                        {{ t('Key Directory') }}: {{ sseKmsForm.key_directory }}
+                      </div>
                       <div v-if="sseKmsForm.has_master_key !== undefined">
                         {{ t('Master Key') }}: {{ sseKmsForm.has_master_key ? t('Configured') : t('Not configured') }}
                       </div>
                     </template>
                     <div v-if="sseKmsForm.timeout_seconds">{{ t('Timeout') }}: {{ sseKmsForm.timeout_seconds }}s</div>
-                    <div v-if="sseKmsForm.retry_attempts">{{ t('Retry Attempts') }}: {{ sseKmsForm.retry_attempts }}</div>
+                    <div v-if="sseKmsForm.retry_attempts">
+                      {{ t('Retry Attempts') }}: {{ sseKmsForm.retry_attempts }}
+                    </div>
                     <div v-if="sseKmsForm.enable_cache !== undefined">
                       {{ t('Cache Enabled') }}: {{ sseKmsForm.enable_cache ? t('Yes') : t('No') }}
                     </div>
@@ -149,7 +177,10 @@
             </div>
 
             <!-- 未配置状态 -->
-            <div v-else class="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-8 text-muted-foreground">
+            <div
+              v-else
+              class="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed py-8 text-muted-foreground"
+            >
               <Icon name="ri:key-2-line" class="mb-2 text-4xl" />
               <div class="text-sm">{{ t('No KMS configuration found') }}</div>
               <Button size="sm" variant="default" @click="startEditing">
@@ -170,7 +201,12 @@
             <Field>
               <FieldLabel for="kms-address">{{ t('Vault Server Address') }}</FieldLabel>
               <FieldContent>
-                <Input id="kms-address" v-model="sseKmsForm.address" :placeholder="t('e.g., https://vault.example.com:8200')" autocomplete="off" />
+                <Input
+                  id="kms-address"
+                  v-model="sseKmsForm.address"
+                  :placeholder="t('e.g., https://vault.example.com:8200')"
+                  autocomplete="off"
+                />
               </FieldContent>
             </Field>
 
@@ -178,7 +214,11 @@
               <FieldLabel>{{ t('Authentication Method') }}</FieldLabel>
               <FieldContent>
                 <RadioGroup v-model="sseKmsForm.auth_type" class="grid gap-3 md:grid-cols-2">
-                  <label v-for="option in authTypeOptions" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
+                  <label
+                    v-for="option in authTypeOptions"
+                    :key="option.value"
+                    class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                  >
                     <RadioGroupItem :value="option.value" class="mt-0.5" />
                     <span class="flex flex-col gap-1">
                       <span class="text-sm font-medium">{{ option.label }}</span>
@@ -194,7 +234,13 @@
             <Field v-if="sseKmsForm.auth_type === 'token'">
               <FieldLabel for="kms-token">{{ t('Vault Token') }}</FieldLabel>
               <FieldContent>
-                <Input id="kms-token" v-model="sseKmsForm.vault_token" type="password" autocomplete="off" :placeholder="t('Enter your Vault authentication token')" />
+                <Input
+                  id="kms-token"
+                  v-model="sseKmsForm.vault_token"
+                  type="password"
+                  autocomplete="off"
+                  :placeholder="t('Enter your Vault authentication token')"
+                />
               </FieldContent>
               <FieldDescription>
                 {{ t('Required: Vault authentication token') }}
@@ -205,7 +251,12 @@
               <Field>
                 <FieldLabel for="kms-role-id">{{ t('Role ID') }}</FieldLabel>
                 <FieldContent>
-                  <Input id="kms-role-id" v-model="sseKmsForm.vault_app_role_id" :placeholder="t('Enter AppRole Role ID')" autocomplete="off" />
+                  <Input
+                    id="kms-role-id"
+                    v-model="sseKmsForm.vault_app_role_id"
+                    :placeholder="t('Enter AppRole Role ID')"
+                    autocomplete="off"
+                  />
                 </FieldContent>
                 <FieldDescription>
                   {{ t('AppRole Role ID from Vault') }}
@@ -214,7 +265,13 @@
               <Field>
                 <FieldLabel for="kms-secret-id">{{ t('Secret ID') }}</FieldLabel>
                 <FieldContent>
-                  <Input id="kms-secret-id" v-model="sseKmsForm.vault_app_role_secret_id" type="password" autocomplete="off" :placeholder="t('Enter AppRole Secret ID')" />
+                  <Input
+                    id="kms-secret-id"
+                    v-model="sseKmsForm.vault_app_role_secret_id"
+                    type="password"
+                    autocomplete="off"
+                    :placeholder="t('Enter AppRole Secret ID')"
+                  />
                 </FieldContent>
                 <FieldDescription>
                   {{ t('AppRole Secret ID from Vault') }}
@@ -225,7 +282,12 @@
             <Field>
               <FieldLabel for="kms-mount-path">{{ t('Transit Mount Path') }}</FieldLabel>
               <FieldContent>
-                <Input id="kms-mount-path" v-model="sseKmsForm.mount_path" :placeholder="t('transit')" autocomplete="off" />
+                <Input
+                  id="kms-mount-path"
+                  v-model="sseKmsForm.mount_path"
+                  :placeholder="t('transit')"
+                  autocomplete="off"
+                />
               </FieldContent>
               <FieldDescription>
                 {{ t('Transit engine mount path, default: transit') }}
@@ -245,7 +307,12 @@
             <Field>
               <FieldLabel for="kms-key-prefix">{{ t('Key Path Prefix') }}</FieldLabel>
               <FieldContent>
-                <Input id="kms-key-prefix" v-model="sseKmsForm.key_path_prefix" :placeholder="t('rustfs/kms/keys')" autocomplete="off" />
+                <Input
+                  id="kms-key-prefix"
+                  v-model="sseKmsForm.key_path_prefix"
+                  :placeholder="t('rustfs/kms/keys')"
+                  autocomplete="off"
+                />
               </FieldContent>
               <FieldDescription>
                 {{ t('Key storage path prefix in KV store') }}
@@ -276,7 +343,12 @@
             <Field>
               <FieldLabel for="kms-default-key">{{ t('Default Key ID') }}</FieldLabel>
               <FieldContent>
-                <Input id="kms-default-key" v-model="sseKmsForm.default_key_id" :placeholder="t('rustfs-master')" autocomplete="off" />
+                <Input
+                  id="kms-default-key"
+                  v-model="sseKmsForm.default_key_id"
+                  :placeholder="t('rustfs-master')"
+                  autocomplete="off"
+                />
               </FieldContent>
               <FieldDescription>
                 {{ t('Default master key ID for SSE-KMS') }}
@@ -287,7 +359,7 @@
               <FieldLabel>{{ t('Enable Cache') }}</FieldLabel>
               <FieldContent>
                 <div class="flex items-center justify-between rounded-md border p-3">
-                  <Switch v-model:checked="sseKmsForm.enable_cache" />
+                  <Switch v-model="sseKmsForm.enable_cache" />
                 </div>
               </FieldContent>
               <FieldDescription>
@@ -327,7 +399,13 @@
             </CardDescription>
           </div>
           <div class="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" :loading="refreshingKeys" :disabled="sseKmsForm.kms_status !== 'Running'" @click="refreshKeyList">
+            <Button
+              size="sm"
+              variant="outline"
+              :loading="refreshingKeys"
+              :disabled="sseKmsForm.kms_status !== 'Running'"
+              @click="refreshKeyList"
+            >
               <Icon name="ri:refresh-line" class="size-4" />
               <span>{{ t('Refresh') }}</span>
             </Button>
@@ -373,26 +451,31 @@
               <div class="w-4 h-4 rounded-full bg-purple-500"></div>
               <h3 class="text-lg font-medium">{{ t('Master Keys (CMK)') }}</h3>
               <Badge variant="secondary">
-                {{
-                  kmsKeys.filter(key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK').length
-                }}
+                {{ kmsKeys.filter(key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK').length }}
               </Badge>
             </div>
 
             <!-- 主密钥列表 -->
-            <div v-if="
-              kmsKeys.filter(key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK').length > 0
-            " class="space-y-3">
-              <div v-for="key in kmsKeys.filter(
-                key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK'
-              )" :key="key.key_id" class="border-l-4 border-purple-500 border rounded-lg p-4 bg-purple-50 dark:bg-purple-900/10">
+            <div
+              v-if="
+                kmsKeys.filter(key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK').length > 0
+              "
+              class="space-y-3"
+            >
+              <div
+                v-for="key in kmsKeys.filter(
+                  key => !key.key_type || key.key_type === 'master' || key.key_type === 'CMK'
+                )"
+                :key="key.key_id"
+                class="border-l-4 border-purple-500 border rounded-lg p-4 bg-purple-50 dark:bg-purple-900/10"
+              >
                 <div class="flex justify-between items-start">
                   <div class="flex-1">
                     <div class="flex items-center space-x-2 mb-2">
                       <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
                       <span class="text-sm font-medium text-purple-700 dark:text-purple-300">{{
                         t('Master Key (CMK)')
-                        }}</span>
+                      }}</span>
                     </div>
                     <div class="font-medium">{{ getKeyName(key) }}</div>
                     <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
@@ -414,11 +497,22 @@
                     <Button size="sm" variant="outline" @click="showKeyDetails(key.key_id)">
                       {{ t('Details') }}
                     </Button>
-                    <Button size="sm" variant="destructive" :disabled="mapKeyState(key) === 'PendingDeletion'" @click="deleteKeyClick(key)">
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      :disabled="mapKeyState(key) === 'PendingDeletion'"
+                      @click="deleteKeyClick(key)"
+                    >
                       {{ mapKeyState(key) === 'PendingDeletion' ? t('Deleting...') : t('Delete') }}
                     </Button>
-                    <Button v-if="mapKeyState(key) === 'PendingDeletion'" size="sm" variant="destructive" class="bg-destructive/10 text-destructive hover:bg-destructive/20"
-                      :disabled="forceDeleting" @click="forceDeleteKeyClick(key)">
+                    <Button
+                      v-if="mapKeyState(key) === 'PendingDeletion'"
+                      size="sm"
+                      variant="destructive"
+                      class="bg-destructive/10 text-destructive hover:bg-destructive/20"
+                      :disabled="forceDeleting"
+                      @click="forceDeleteKeyClick(key)"
+                    >
                       {{ t('Force Delete') }}
                     </Button>
                   </div>
@@ -428,17 +522,22 @@
           </div>
 
           <!-- 数据密钥管理区域 -->
-          <div v-if="kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length > 0" class="space-y-4 mt-8">
+          <div
+            v-if="kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length > 0"
+            class="space-y-4 mt-8"
+          >
             <div class="flex items-center space-x-3">
               <div class="w-4 h-4 bg-green-500 rounded-full"></div>
               <h3 class="text-lg font-medium">{{ t('Data Keys (DEK)') }}</h3>
               <Badge variant="secondary">
-                {{kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length}}
+                {{ kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK').length }}
               </Badge>
             </div>
 
             <!-- 数据密钥说明 -->
-            <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded p-3 text-sm">
+            <div
+              class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded p-3 text-sm"
+            >
               <p class="text-green-700 dark:text-green-300">
                 {{
                   t(
@@ -450,15 +549,18 @@
 
             <!-- 数据密钥列表 -->
             <div class="space-y-3">
-              <div v-for="key in kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK')" :key="key.key_id"
-                class="border-l-4 border-green-500 border rounded-lg p-4 bg-green-50 dark:bg-green-900/10">
+              <div
+                v-for="key in kmsKeys.filter(key => key.key_type === 'data' || key.key_type === 'DEK')"
+                :key="key.key_id"
+                class="border-l-4 border-green-500 border rounded-lg p-4 bg-green-50 dark:bg-green-900/10"
+              >
                 <div class="flex justify-between items-start">
                   <div class="flex-1">
                     <div class="flex items-center space-x-2 mb-2">
                       <div class="w-3 h-3 bg-green-500 rounded-full"></div>
                       <span class="text-sm font-medium text-green-700 dark:text-green-300">{{
                         t('Data Key (DEK)')
-                        }}</span>
+                      }}</span>
                     </div>
                     <div class="font-medium">{{ getKeyName(key) }}</div>
                     <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
@@ -488,7 +590,13 @@
           </div>
 
           <!-- 空状态 -->
-          <EmptyState v-if="kmsKeys.length === 0" :title="t('No KMS keys found')" :description="t('Create your first KMS key to get started')" icon="ri:key-2-line" class="py-12">
+          <EmptyState
+            v-if="kmsKeys.length === 0"
+            :title="t('No KMS keys found')"
+            :description="t('Create your first KMS key to get started')"
+            icon="ri:key-2-line"
+            class="py-12"
+          >
             <Button class="mt-4" :disabled="!canAddKeys" @click="showCreateKeyModal = true">
               {{ t('Create First Key') }}
             </Button>
@@ -511,7 +619,12 @@
           <!-- 搜索和排序 -->
           <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <SearchInput v-model="bucketSearchQuery" :placeholder="t('Search buckets...')" clearable class="flex-1" />
-            <Selector v-model="bucketSortBy" :options="bucketSortOptions" :placeholder="t('Sort by')" class="w-full sm:w-40" />
+            <Selector
+              v-model="bucketSortBy"
+              :options="bucketSortOptions"
+              :placeholder="t('Sort by')"
+              class="w-full sm:w-40"
+            />
           </div>
 
           <!-- Bucket 列表 -->
@@ -551,8 +664,13 @@
                       <Icon name="ri:lock-line" class="size-4" />
                       {{ t('Configure') }}
                     </Button>
-                    <Button v-if="bucket.encryptionStatus === 'Enabled'" size="sm" variant="destructive" class="bg-destructive/10 text-destructive hover:bg-destructive/20"
-                      @click="removeBucketEncryption(bucket)">
+                    <Button
+                      v-if="bucket.encryptionStatus === 'Enabled'"
+                      size="sm"
+                      variant="destructive"
+                      class="bg-destructive/10 text-destructive hover:bg-destructive/20"
+                      @click="removeBucketEncryption(bucket)"
+                    >
                       <Icon name="ri:lock-unlock-line" class="size-4" />
                       {{ t('Remove') }}
                     </Button>
@@ -561,7 +679,10 @@
               </div>
 
               <!-- 加密详细信息 -->
-              <div v-if="bucket.encryptionStatus === 'Enabled'" class="mt-3 rounded border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20">
+              <div
+                v-if="bucket.encryptionStatus === 'Enabled'"
+                class="mt-3 rounded border border-green-200 bg-green-50 p-3 dark:border-green-800 dark:bg-green-900/20"
+              >
                 <div class="text-sm">
                   <div>
                     <strong>{{ t('Algorithm') }}:</strong> {{ bucket.encryptionAlgorithm }}
@@ -578,7 +699,10 @@
             <div>{{ t('No buckets found') }}</div>
             <div class="text-sm">{{ t('Create your first bucket to configure encryption') }}</div>
           </div>
-          <div v-else-if="!bucketListLoading && buckets.length > 0 && filteredBuckets.length === 0" class="py-8 text-center text-gray-500">
+          <div
+            v-else-if="!bucketListLoading && buckets.length > 0 && filteredBuckets.length === 0"
+            class="py-8 text-center text-gray-500"
+          >
             <Icon name="ri:search-line" class="mb-2 mx-auto text-4xl" />
             <div>{{ t('No buckets match your search') }}</div>
             <div class="text-sm">{{ t('Try adjusting your search terms') }}</div>
@@ -593,15 +717,25 @@
       </Card>
 
       <!-- 配置 Bucket 加密模态框 -->
-      <Modal v-model="showBucketEncryptModal" :title="selectedBucket
-        ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name })
-        : t('Configure Bucket Encryption')
-        " size="lg" :close-on-backdrop="false">
+      <Modal
+        v-model="showBucketEncryptModal"
+        :title="
+          selectedBucket
+            ? t('Configure Encryption for {bucket}', { bucket: selectedBucket.name })
+            : t('Configure Bucket Encryption')
+        "
+        size="lg"
+        :close-on-backdrop="false"
+      >
         <div class="space-y-4">
           <Field>
             <FieldLabel>{{ t('Encryption Type') }}</FieldLabel>
             <FieldContent>
-              <Selector v-model="bucketEncryptForm.encryptionType" :options="bucketEncryptionOptions" :placeholder="t('Select encryption type')" />
+              <Selector
+                v-model="bucketEncryptForm.encryptionType"
+                :options="bucketEncryptionOptions"
+                :placeholder="t('Select encryption type')"
+              />
             </FieldContent>
             <FieldDescription>
               {{ t('Choose the encryption method for this bucket') }}
@@ -611,7 +745,12 @@
           <Field v-if="bucketEncryptForm.encryptionType === 'SSE-KMS'">
             <FieldLabel>{{ t('KMS Key') }}</FieldLabel>
             <FieldContent class="space-y-1.5">
-              <Selector v-model="bucketEncryptForm.kmsKeyId" :options="kmsKeyOptions" :placeholder="t('Select KMS key')" :disabled="kmsKeysLoading" />
+              <Selector
+                v-model="bucketEncryptForm.kmsKeyId"
+                :options="kmsKeyOptions"
+                :placeholder="t('Select KMS key')"
+                :disabled="kmsKeysLoading"
+              />
               <span v-if="kmsKeysLoading" class="text-xs text-muted-foreground">
                 {{ t('Loading keys...') }}
               </span>
@@ -635,7 +774,12 @@
       </Modal>
 
       <!-- 移除加密确认模态框 -->
-      <Modal v-model="showRemoveEncryptModal" :title="t('Confirm Remove Encryption')" size="lg" :close-on-backdrop="false">
+      <Modal
+        v-model="showRemoveEncryptModal"
+        :title="t('Confirm Remove Encryption')"
+        size="lg"
+        :close-on-backdrop="false"
+      >
         <div class="flex flex-col items-center gap-2 py-4 text-center text-muted-foreground">
           <Icon name="ri:alert-line" class="text-4xl text-orange-500" />
           <div class="text-lg font-medium text-foreground">
@@ -676,7 +820,11 @@
           <Field>
             <FieldLabel>{{ t('Algorithm') }}</FieldLabel>
             <FieldContent>
-              <Selector v-model="keyForm.algorithm" :options="algorithmOptions" :placeholder="t('Select encryption algorithm')" />
+              <Selector
+                v-model="keyForm.algorithm"
+                :options="algorithmOptions"
+                :placeholder="t('Select encryption algorithm')"
+              />
             </FieldContent>
             <FieldDescription>
               {{ t('Encryption algorithm for the key.') }}
@@ -782,7 +930,9 @@
               </div>
               <div class="rounded-lg border p-3">
                 <p class="text-xs uppercase text-muted-foreground">{{ t('Cache Misses') }}</p>
-                <p class="text-lg font-semibold text-foreground">{{ detailedStatusData.cache_stats.miss_count || 0 }}</p>
+                <p class="text-lg font-semibold text-foreground">
+                  {{ detailedStatusData.cache_stats.miss_count || 0 }}
+                </p>
               </div>
               <div class="rounded-lg border p-3">
                 <p class="text-xs uppercase text-muted-foreground">{{ t('Hit Rate') }}</p>
@@ -790,10 +940,10 @@
                   {{
                     detailedStatusData.cache_stats.hit_count && detailedStatusData.cache_stats.miss_count
                       ? (
-                        (detailedStatusData.cache_stats.hit_count /
-                          (detailedStatusData.cache_stats.hit_count + detailedStatusData.cache_stats.miss_count)) *
-                        100
-                      ).toFixed(1) + '%'
+                          (detailedStatusData.cache_stats.hit_count /
+                            (detailedStatusData.cache_stats.hit_count + detailedStatusData.cache_stats.miss_count)) *
+                          100
+                        ).toFixed(1) + '%'
                       : 'N/A'
                   }}
                 </p>

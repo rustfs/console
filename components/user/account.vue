@@ -37,7 +37,12 @@
                   <Button variant="outline" size="sm" class="h-8 w-8 p-0" @click="openEditItem(account)">
                     <Icon class="size-4" name="ri:edit-2-line" />
                   </Button>
-                  <Button variant="outline" size="sm" class="h-8 w-8 p-0 text-destructive border-destructive" @click="confirmDelete(account)">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    class="h-8 w-8 p-0 text-destructive border-destructive"
+                    @click="confirmDelete(account)"
+                  >
                     <Icon class="size-4" name="ri:delete-bin-5-line" />
                   </Button>
                 </div>
@@ -73,7 +78,11 @@
           <Field>
             <FieldLabel>{{ t('Expiration') }}</FieldLabel>
             <FieldContent>
-              <DateTimePicker v-model="formModel.expiry" :min="minExpiry" :placeholder="t('Please select expiration date')" />
+              <DateTimePicker
+                v-model="formModel.expiry"
+                :min="minExpiry"
+                :placeholder="t('Please select expiration date')"
+              />
             </FieldContent>
           </Field>
           <Field>
@@ -98,7 +107,7 @@
             </p>
           </FieldLabel>
           <FieldContent class="flex justify-end">
-            <Switch v-model:checked="formModel.impliedPolicy" />
+            <Switch v-model="formModel.impliedPolicy" />
           </FieldContent>
         </Field>
 

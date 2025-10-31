@@ -43,7 +43,7 @@
           </p>
         </FieldLabel>
         <FieldContent class="flex justify-end">
-          <Switch v-model:checked="formModel.impliedPolicy" />
+          <Switch v-model="formModel.impliedPolicy" />
         </FieldContent>
       </Field>
       <Field orientation="responsive" class="items-start gap-3 rounded-md border p-3">
@@ -54,7 +54,7 @@
           </p>
         </FieldLabel>
         <FieldContent class="flex justify-end">
-          <Switch v-model:checked="statusBoolean" />
+          <Switch v-model="statusBoolean" />
         </FieldContent>
       </Field>
     </div>

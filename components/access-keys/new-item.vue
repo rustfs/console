@@ -24,7 +24,12 @@
       <Field>
         <FieldLabel for="create-expiry">{{ t('Expiry') }}</FieldLabel>
         <FieldContent>
-          <DateTimePicker id="create-expiry" v-model="formModel.expiry" :min="minExpiry" :placeholder="t('Please select expiry date')" />
+          <DateTimePicker
+            id="create-expiry"
+            v-model="formModel.expiry"
+            :min="minExpiry"
+            :placeholder="t('Please select expiry date')"
+          />
         </FieldContent>
         <FieldDescription v-if="errors.expiry" class="text-destructive">
           {{ errors.expiry }}
@@ -54,7 +59,7 @@
           <p class="text-xs text-muted-foreground">
             {{ t('Automatically inherit the main account policy when enabled.') }}
           </p>
-          <Switch v-model:checked="formModel.impliedPolicy" />
+          <Switch v-model="formModel.impliedPolicy" />
         </FieldContent>
       </Field>
 

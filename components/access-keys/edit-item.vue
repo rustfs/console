@@ -133,7 +133,7 @@ async function submitForm() {
       <Field orientation="responsive">
         <FieldLabel class="text-sm font-medium">{{ t('Status') }}</FieldLabel>
         <FieldContent class="flex justify-end">
-          <Switch v-model:checked="statusBoolean" />
+          <Switch v-model="statusBoolean" />
         </FieldContent>
       </Field>
     </div>

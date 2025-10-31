@@ -1,5 +1,10 @@
 <template>
-  <Modal v-model="visible" :title="t('Add Replication Rule') + ` (${t('Bucket')}: ${bucketName})`" size="xl" :close-on-backdrop="false">
+  <Modal
+    v-model="visible"
+    :title="t('Add Replication Rule') + ` (${t('Bucket')}: ${bucketName})`"
+    size="xl"
+    :close-on-backdrop="false"
+  >
     <div class="space-y-6">
       <div class="space-y-4">
         <div class="grid gap-3 md:grid-cols-2">
@@ -36,7 +41,12 @@
           <Field>
             <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
             <FieldContent>
-              <Input v-model="formData.secrretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+              <Input
+                v-model="formData.secrretkey"
+                type="password"
+                autocomplete="off"
+                :placeholder="t('Please enter Secret Key')"
+              />
             </FieldContent>
           </Field>
           <Field>
@@ -69,11 +79,21 @@
             </Button>
           </div>
           <div v-if="formData.tags.length" class="space-y-3">
-            <div v-for="(tag, index) in formData.tags" :key="index" class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4">
+            <div
+              v-for="(tag, index) in formData.tags"
+              :key="index"
+              class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
+            >
               <Input v-model="tag.key" :placeholder="t('Tag Name')" />
               <div class="flex items-center gap-2">
                 <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
-                <Button variant="ghost" size="sm" class="text-destructive" :disabled="formData.tags.length === 1" @click="removeTag(index)">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  class="text-destructive"
+                  :disabled="formData.tags.length === 1"
+                  @click="removeTag(index)"
+                >
                   <Icon name="ri:delete-bin-line" class="size-4" />
                 </Button>
               </div>
@@ -88,15 +108,17 @@
             <p class="text-sm font-medium">{{ t('Use TLS') }}</p>
             <p class="text-xs text-muted-foreground">{{ t('Enable secure transport when connecting to endpoint.') }}</p>
           </div>
-          <Switch v-model:checked="formData.tls" />
+          <Switch v-model="formData.tls" />
         </div>
 
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm font-medium">{{ t('Replicate Existing Objects') }}</p>
-            <p class="text-xs text-muted-foreground">{{ t('Include objects that already exist in the source bucket.') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('Include objects that already exist in the source bucket.') }}
+            </p>
           </div>
-          <Switch v-model:checked="formData.existingObject" />
+          <Switch v-model="formData.existingObject" />
         </div>
 
         <div class="flex items-center justify-between">
@@ -104,7 +126,7 @@
             <p class="text-sm font-medium">{{ t('Replicate Delete Markers') }}</p>
             <p class="text-xs text-muted-foreground">{{ t('Sync delete markers to destination bucket.') }}</p>
           </div>
-          <Switch v-model:checked="formData.expiredDeleteMark" />
+          <Switch v-model="formData.expiredDeleteMark" />
         </div>
 
         <div class="space-y-3" v-if="formData.modeType === 'async'">

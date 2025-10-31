@@ -31,7 +31,7 @@
         <Field orientation="responsive" class="items-center">
           <FieldLabel>{{ t('Retention') }}</FieldLabel>
           <FieldContent class="flex justify-end">
-            <Switch v-model:checked="retentionEnabled" />
+            <Switch v-model="retentionEnabled" />
           </FieldContent>
         </Field>
 

@@ -3,7 +3,7 @@
     <div class="space-y-4">
       <div class="flex items-center justify-between rounded-md border px-3 py-2">
         <span class="text-sm text-muted-foreground">{{ t('Status') }}</span>
-        <Switch v-model:checked="statusBoolean" />
+        <Switch v-model="statusBoolean" />
       </div>
 
       <Tabs v-model="activeTab" class="flex flex-col gap-4">

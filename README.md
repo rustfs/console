@@ -358,6 +358,10 @@ pnpm lint
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
+**Important**: All commit messages must be written in English.
+
+**Commit Types**:
+
 - `feat`: New features
 - `fix`: Bug fixes
 - `docs`: Documentation changes
@@ -366,6 +370,15 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `test`: Test additions/modifications
 - `chore`: Build process or auxiliary tool changes
 - `perf`: Performance improvements
+
+**Examples**:
+
+```bash
+git commit -m "feat: add user authentication"
+git commit -m "fix: resolve bucket creation issue"
+git commit -m "docs: update API documentation"
+git commit -m "chore: update dependencies"
+```
 
 ### Pull Request Guidelines
 

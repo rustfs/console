@@ -74,6 +74,7 @@ npm run test
 - [ ] Code is properly commented
 - [ ] No console.log or debug statements left
 - [ ] TypeScript types are properly defined
+- [ ] All commit messages are in English (following Conventional Commits)
 
 ### Testing
 

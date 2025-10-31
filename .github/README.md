@@ -165,11 +165,20 @@ main:
 
 1. **创建功能分支**: `git checkout -b feature/new-feature`
 2. **开发和测试**: 本地开发并运行测试
-3. **提交代码**: 遵循 Conventional Commits 规范
+3. **提交代码**: 遵循 Conventional Commits 规范，**提交信息必须使用英文**
 4. **创建 PR**: 使用 PR 模板填写详细信息
 5. **自动检查**: CI/CD 自动运行所有检查
 6. **代码审查**: 团队成员审查代码
 7. **合并代码**: 所有检查通过后合并
+
+**提交规范**:
+
+- ✅ 正确: `git commit -m "feat: add user authentication"`
+- ❌ 错误: `git commit -m "功能: 添加用户认证"`
+- ✅ 正确: `git commit -m "fix: resolve bucket creation issue"`
+- ❌ 错误: `git commit -m "修复: 解决存储桶创建问题"`
+
+所有提交信息（commit message）必须使用英文，包括标题和描述。
 
 ### 发布流程
 

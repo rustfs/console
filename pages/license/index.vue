@@ -65,26 +65,7 @@
       <Card class="shadow-none">
         <CardContent class="space-y-4">
           <p class="text-base font-semibold">{{ t('Feature Permissions') }}</p>
-          <div class="overflow-hidden rounded-lg border">
-            <table class="w-full text-sm">
-              <thead class="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
-                <tr>
-                  <th class="px-4 py-2">{{ t('Name') }}</th>
-                  <th class="px-4 py-2">{{ t('Description') }}</th>
-                  <th class="px-4 py-2">{{ t('Status') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="item in permissions" :key="item.name" class="border-t">
-                  <td class="px-4 py-3 font-medium">{{ item.name }}</td>
-                  <td class="px-4 py-3 text-muted-foreground">{{ item.description }}</td>
-                  <td class="px-4 py-3">
-                    <Badge variant="default">{{ item.status }}</Badge>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <DataTable :table="permissionsTable" />
         </CardContent>
       </Card>
 
@@ -106,13 +87,15 @@
 </template>
 
 <script setup lang="ts">
-import { Button } from '@/components/ui/button'
-
 import { Icon } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
-import { computed, ref } from 'vue'
+import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { SiteConfig } from '~/types/config'
 import LicenseArticle from './components/license-article.vue'
@@ -145,7 +128,13 @@ const serviceInfo = computed(() => [
   { label: t('Response Level'), value: t('One-hour Response') },
 ])
 
-const permissions = computed(() => [
+interface PermissionItem {
+  name: string
+  description: string
+  status: string
+}
+
+const permissions = computed<PermissionItem[]>(() => [
   {
     name: t('Single Machine Multiple Disks'),
     description: t(
@@ -168,6 +157,30 @@ const permissions = computed(() => [
     status: t('Enabled'),
   },
 ])
+
+const permissionsColumns: ColumnDef<PermissionItem>[] = [
+  {
+    id: 'name',
+    header: () => t('Name'),
+    cell: ({ row }) => h('span', { class: 'font-medium' }, row.original.name),
+  },
+  {
+    id: 'description',
+    header: () => t('Description'),
+    cell: ({ row }) => h('span', { class: 'text-muted-foreground' }, row.original.description),
+  },
+  {
+    id: 'status',
+    header: () => t('Status'),
+    cell: ({ row }) => h(Badge, { variant: 'default' }, () => row.original.status),
+  },
+]
+
+const { table: permissionsTable } = useDataTable<PermissionItem>({
+  data: permissions,
+  columns: permissionsColumns,
+  getRowId: row => row.name,
+})
 
 const technicalParameters = computed(() => [
   { label: t('Service Hotline'), value: '400-033-5363' },

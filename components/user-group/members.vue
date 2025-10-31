@@ -71,38 +71,22 @@
       </CardContent>
     </Card>
 
-    <Table class="overflow-hidden rounded-lg border">
-      <TableHeader>
-        <TableRow>
-          <TableHead>{{ t('Name') }}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody v-if="filteredMembers.length">
-        <TableRow v-for="member in filteredMembers" :key="member">
-          <TableCell class="font-medium">{{ member }}</TableCell>
-        </TableRow>
-      </TableBody>
-      <TableBody v-else>
-        <TableRow>
-          <TableCell class="text-center" colspan="1">
-            <p class="py-6 text-sm text-muted-foreground">{{ t('No Data') }}</p>
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+    <DataTable :table="table" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { computed, onMounted, ref, watch } from 'vue'
+import type { ColumnDef } from '@tanstack/vue-table'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 interface UserOption {
@@ -141,11 +125,28 @@ const userLabelMap = computed(() => {
 
 const selectedUserLabels = computed(() => members.value.map(value => userLabelMap.value[value] ?? value))
 
-const filteredMembers = computed(() => {
-  const keyword = searchTerm.value.trim().toLowerCase()
-  const source = props.group?.members ?? []
-  if (!keyword) return source
-  return source.filter(item => item.toLowerCase().includes(keyword))
+interface MemberItem {
+  name: string
+}
+
+const membersData = computed<MemberItem[]>(() => (props.group?.members ?? []).map(name => ({ name })))
+
+const columns: ColumnDef<MemberItem>[] = [
+  {
+    id: 'name',
+    header: () => t('Name'),
+    cell: ({ row }) => h('span', { class: 'font-medium' }, row.original.name),
+  },
+]
+
+const { table } = useDataTable<MemberItem>({
+  data: membersData,
+  columns,
+  getRowId: row => row.name,
+})
+
+watch(searchTerm, value => {
+  table.getColumn('name')?.setFilterValue(value || undefined)
 })
 
 watch(

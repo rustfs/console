@@ -10,42 +10,18 @@
         </Button>
       </div>
 
-      <Table class="overflow-hidden rounded-lg border">
-        <TableHeader>
-          <TableRow>
-            <TableHead class="w-12">
-              <Checkbox :checked="allVisibleSelected" :indeterminate="checkedKeys.length > 0 && !allVisibleSelected"
-                @update:checked="(value: boolean | 'indeterminate') => toggleSelectAll(value === true)" />
-            </TableHead>
-            <TableHead>{{ t('Name') }}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody v-if="filteredPolicies.length">
-          <TableRow v-for="policy in filteredPolicies" :key="policy.name">
-            <TableCell>
-              <Checkbox :checked="isSelected(policy.name)" @update:checked="(value: boolean | 'indeterminate') => toggleSelection(policy.name, value === true)" />
-            </TableCell>
-            <TableCell class="font-medium">{{ policy.name }}</TableCell>
-          </TableRow>
-        </TableBody>
-        <TableBody v-else>
-          <TableRow>
-            <TableCell class="text-center" colspan="2">
-              <p class="py-6 text-sm text-muted-foreground">{{ t('No Data') }}</p>
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
+      <DataTable :table="table" />
     </div>
   </Modal>
 </template>
 
 <script setup lang="ts">
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import { Button } from '@/components/ui/button'
-
 import { Checkbox } from '@/components/ui/checkbox'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { computed, ref } from 'vue'
+import type { ColumnDef } from '@tanstack/vue-table'
+import { computed, h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Modal from '~/components/modal.vue'
 
@@ -101,6 +77,44 @@ const toggleSelectAll = (checked: boolean) => {
     checkedKeys.value = checkedKeys.value.filter(name => !visibleNames.includes(name))
   }
 }
+
+const columns: ColumnDef<{ name: string; content: unknown }>[] = [
+  {
+    id: 'select',
+    header: () =>
+      h(Checkbox, {
+        checked: allVisibleSelected.value,
+        indeterminate: checkedKeys.value.length > 0 && !allVisibleSelected.value,
+        onUpdateChecked: (value: boolean | 'indeterminate') => toggleSelectAll(value === true),
+      }),
+    enableSorting: false,
+    cell: ({ row }) =>
+      h(Checkbox, {
+        checked: isSelected(row.original.name),
+        onUpdateChecked: (value: boolean | 'indeterminate') => toggleSelection(row.original.name, value === true),
+      }),
+    meta: { maxWidth: '3rem' },
+  },
+  {
+    id: 'name',
+    header: () => t('Name'),
+    cell: ({ row }) => h('span', { class: 'font-medium' }, row.original.name),
+    filterFn: (row, _columnId, filterValue) => {
+      if (!filterValue) return true
+      return row.original.name.toLowerCase().includes(String(filterValue).toLowerCase())
+    },
+  },
+]
+
+const { table } = useDataTable<{ name: string; content: unknown }>({
+  data: filteredPolicies,
+  columns,
+  getRowId: row => row.name,
+})
+
+watch(searchTerm, value => {
+  table.getColumn('name')?.setFilterValue(value || undefined)
+})
 
 const loadPolicies = async () => {
   try {

@@ -3,12 +3,7 @@
     <page-header>
       <h1 class="text-2xl font-bold">{{ t('Events') }}</h1>
       <template #actions>
-        <BucketSelector
-          v-model="bucketName"
-          :placeholder="t('Please select bucket')"
-          selector-class="w-full"
-          cache-key="events-buckets"
-        />
+        <BucketSelector v-model="bucketName" :placeholder="t('Please select bucket')" selector-class="w-full" cache-key="events-buckets" />
         <Button type="button" variant="outline" @click="handleNew">
           <Icon class="size-4" name="ri:add-line" />
           <span>{{ t('Add Event Subscription') }}</span>
@@ -20,82 +15,20 @@
       </template>
     </page-header>
 
-    <div class="space-y-6">
-      <div class="relative">
-        <div v-if="loading" class="absolute inset-0 z-10 flex items-center justify-center rounded-lg border bg-background/70 backdrop-blur-sm">
-          <Spinner class="size-6 text-muted-foreground" />
-        </div>
+    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Add Event Subscription to get started')" />
 
-        <div v-if="pageData.length" class="overflow-hidden rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead class="w-28">{{ t('Type') }}</TableHead>
-                <TableHead class="min-w-[180px]">{{ t('ARN') }}</TableHead>
-                <TableHead class="w-52">{{ t('Events') }}</TableHead>
-                <TableHead class="w-36">{{ t('Prefix') }}</TableHead>
-                <TableHead class="w-36">{{ t('Suffix') }}</TableHead>
-                <TableHead class="w-24 text-center">{{ t('Actions') }}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="row in pageData" :key="row.id">
-                <TableCell>
-                  <Badge :class="typeBadgeClasses[row.type]">
-                    {{ row.type }}
-                  </Badge>
-                </TableCell>
-                <TableCell class="font-medium">
-                  <span class="line-clamp-2 break-all">{{ row.arn }}</span>
-                </TableCell>
-                <TableCell>
-                  <div class="flex flex-wrap gap-1">
-                    <Badge v-for="event in getDisplayEvents(row.events)" :key="event" variant="secondary">
-                      {{ event }}
-                    </Badge>
-                  </div>
-                </TableCell>
-                <TableCell>{{ row.prefix || '-' }}</TableCell>
-                <TableCell>{{ row.suffix || '-' }}</TableCell>
-                <TableCell>
-                  <div class="flex justify-center">
-                    <Button type="button" size="sm" variant="outline" class="gap-2" @click="event => handleRowDelete(row, event)">
-                      <Icon class="size-4" name="ri:delete-bin-7-line" />
-                      {{ t('Delete') }}
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-
-        <Card v-else class="relative shadow-none">
-          <CardContent class="py-16">
-            <Empty class="mx-auto max-w-sm text-center">
-              <EmptyHeader>
-                <EmptyTitle>{{ t('No Data') }}</EmptyTitle>
-                <EmptyDescription>{{ t('Add Event Subscription to get started') }}</EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </CardContent>
-        </Card>
-      </div>
-
-      <events-new-form ref="newRef" :bucketName="bucketName" @success="refresh" />
-    </div>
+    <events-new-form v-if="bucketName" ref="newRef" :bucketName="bucketName" @success="refresh" />
   </page>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { Spinner } from '@/components/ui/spinner'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ref, watch } from 'vue'
+import type { ColumnDef } from '@tanstack/vue-table'
+import { h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -139,6 +72,77 @@ const bucketName = ref<string | null>(null)
 const loading = ref(false)
 const pageData = ref<NotificationItem[]>([])
 
+const columns: ColumnDef<NotificationItem>[] = [
+  {
+    id: 'type',
+    header: () => t('Type'),
+    cell: ({ row }) =>
+      h(Badge, { class: typeBadgeClasses[row.original.type] }, () => row.original.type),
+    meta: { maxWidth: '7rem' },
+  },
+  {
+    id: 'arn',
+    header: () => t('ARN'),
+    cell: ({ row }) =>
+      h('span', { class: 'line-clamp-2 break-all font-medium' }, row.original.arn),
+    meta: { maxWidth: '180px' },
+  },
+  {
+    id: 'events',
+    header: () => t('Events'),
+    cell: ({ row }) =>
+      h(
+        'div',
+        { class: 'flex flex-wrap gap-1' },
+        getDisplayEvents(row.original.events).map(event =>
+          h(Badge, { variant: 'secondary', key: event }, () => event)
+        )
+      ),
+    meta: { maxWidth: '13rem' },
+  },
+  {
+    id: 'prefix',
+    header: () => t('Prefix'),
+    cell: ({ row }) => h('span', row.original.prefix || '-'),
+    meta: { maxWidth: '9rem' },
+  },
+  {
+    id: 'suffix',
+    header: () => t('Suffix'),
+    cell: ({ row }) => h('span', row.original.suffix || '-'),
+    meta: { maxWidth: '9rem' },
+  },
+  {
+    id: 'actions',
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: ({ row }) =>
+      h('div', { class: 'flex justify-center' }, [
+        h(
+          Button,
+          {
+            type: 'button',
+            size: 'sm',
+            variant: 'outline',
+            class: 'gap-2',
+            onClick: (event: Event) => handleRowDelete(row.original, event),
+          },
+          () => [
+            h(Icon, { class: 'size-4', name: 'ri:delete-bin-7-line' }),
+            h('span', t('Delete')),
+          ]
+        ),
+      ]),
+    meta: { maxWidth: '6rem' },
+  },
+]
+
+const { table } = useDataTable<NotificationItem>({
+  data: pageData,
+  columns,
+  getRowId: row => row.id,
+})
+
 watch(
   () => bucketName.value,
   async newVal => {
@@ -152,8 +156,8 @@ watch(
   { immediate: true },
 )
 
-const handleRowDelete = async (row: NotificationItem, event: Event) => {
-  event.stopPropagation()
+const handleRowDelete = async (row: NotificationItem, event?: Event) => {
+  event?.stopPropagation()
 
   const confirmed = await new Promise<boolean>(resolve => {
     dialog.warning({
@@ -170,6 +174,8 @@ const handleRowDelete = async (row: NotificationItem, event: Event) => {
 
   try {
     loading.value = true
+
+    if (!bucketName.value) return
 
     const currentResponse = await listBucketNotifications(bucketName.value)
     const currentNotifications = currentResponse || {}

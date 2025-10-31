@@ -67,37 +67,21 @@
       </div>
     </div>
 
-    <Table class="overflow-hidden rounded-lg border">
-      <TableHeader>
-        <TableRow>
-          <TableHead>{{ t('Name') }}</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody v-if="filteredPolicies.length">
-        <TableRow v-for="policy in filteredPolicies" :key="policy">
-          <TableCell class="font-medium">{{ policy }}</TableCell>
-        </TableRow>
-      </TableBody>
-      <TableBody v-else>
-        <TableRow>
-          <TableCell class="text-center" colspan="1">
-            <p class="py-6 text-sm text-muted-foreground">{{ t('No Data') }}</p>
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+    <DataTable :table="table" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { Icon } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { computed, onMounted, ref, watch } from 'vue'
+import type { ColumnDef } from '@tanstack/vue-table'
+import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { listPolicies, setUserOrGroupPolicy } = usePolicies()
@@ -124,11 +108,28 @@ const currentPolicies = computed(() => {
   return props.group.policy.split(',').map(item => item.trim()).filter(Boolean)
 })
 
-const filteredPolicies = computed(() => {
-  const keyword = searchTerm.value.trim().toLowerCase()
-  const source = currentPolicies.value
-  if (!keyword) return source
-  return source.filter(policy => policy.toLowerCase().includes(keyword))
+interface PolicyItem {
+  name: string
+}
+
+const policiesData = computed<PolicyItem[]>(() => currentPolicies.value.map(name => ({ name })))
+
+const columns: ColumnDef<PolicyItem>[] = [
+  {
+    id: 'name',
+    header: () => t('Name'),
+    cell: ({ row }) => h('span', { class: 'font-medium' }, row.original.name),
+  },
+]
+
+const { table } = useDataTable<PolicyItem>({
+  data: policiesData,
+  columns,
+  getRowId: row => row.name,
+})
+
+watch(searchTerm, value => {
+  table.getColumn('name')?.setFilterValue(value || undefined)
 })
 
 const policyLabelMap = computed(() => {

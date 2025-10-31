@@ -12,51 +12,7 @@
           </Button>
         </div>
 
-        <Table class="overflow-hidden rounded-lg border">
-          <TableHeader>
-            <TableRow>
-              <TableHead class="text-center">{{ t('Access Key') }}</TableHead>
-              <TableHead class="text-center">{{ t('Expiration') }}</TableHead>
-              <TableHead class="text-center">{{ t('Status') }}</TableHead>
-              <TableHead class="text-center">{{ t('Name') }}</TableHead>
-              <TableHead class="w-32 text-center">{{ t('Actions') }}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody v-if="filteredAccounts.length">
-            <TableRow v-for="account in filteredAccounts" :key="account.accessKey">
-              <TableCell class="text-center font-medium">{{ account.accessKey }}</TableCell>
-              <TableCell class="text-center">{{ formatExpiration(account.expiration) }}</TableCell>
-              <TableCell class="text-center">
-                <span class="text-sm">
-                  {{ account.accountStatus === 'on' ? t('Available') : t('Disabled') }}
-                </span>
-              </TableCell>
-              <TableCell class="text-center">{{ account.name || '-' }}</TableCell>
-              <TableCell>
-                <div class="flex justify-center gap-2">
-                  <Button variant="outline" size="sm" class="h-8 w-8 p-0" @click="openEditItem(account)">
-                    <Icon class="size-4" name="ri:edit-2-line" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    class="h-8 w-8 p-0 text-destructive border-destructive"
-                    @click="confirmDelete(account)"
-                  >
-                    <Icon class="size-4" name="ri:delete-bin-5-line" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-          <TableBody v-else>
-            <TableRow>
-              <TableCell class="text-center" colspan="5">
-                <p class="py-6 text-sm text-muted-foreground">{{ t('No Data') }}</p>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
+        <DataTable :table="table" />
       </div>
     </template>
 
@@ -134,13 +90,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
 import DateTimePicker from '@/components/datetime-picker.vue'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Textarea } from '@/components/ui/textarea'
+import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, h, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useDialog, useMessage } from '~/composables/ui'
 import { makeRandomString } from '~/utils/functions'
@@ -183,10 +141,78 @@ const parentPolicy = ref('')
 
 const minExpiry = computed(() => new Date().toISOString())
 
-const filteredAccounts = computed(() => {
-  const keyword = searchTerm.value.trim().toLowerCase()
-  if (!keyword) return listData.value
-  return listData.value.filter((item: any) => item.accessKey.toLowerCase().includes(keyword))
+interface AccountItem {
+  accessKey: string
+  expiration?: string
+  accountStatus?: string
+  name?: string
+  [key: string]: unknown
+}
+
+const columns: ColumnDef<AccountItem>[] = [
+  {
+    id: 'accessKey',
+    header: () => t('Access Key'),
+    cell: ({ row }) => h('span', { class: 'text-center font-medium' }, row.original.accessKey),
+  },
+  {
+    id: 'expiration',
+    header: () => t('Expiration'),
+    cell: ({ row }) => h('span', { class: 'text-center' }, formatExpiration(row.original.expiration)),
+  },
+  {
+    id: 'status',
+    header: () => t('Status'),
+    cell: ({ row }) =>
+      h(
+        'span',
+        { class: 'text-sm text-center' },
+        row.original.accountStatus === 'on' ? t('Available') : t('Disabled')
+      ),
+  },
+  {
+    id: 'name',
+    header: () => t('Name'),
+    cell: ({ row }) => h('span', { class: 'text-center' }, row.original.name || '-'),
+  },
+  {
+    id: 'actions',
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: ({ row }) =>
+      h('div', { class: 'flex justify-center gap-2' }, [
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            class: 'h-8 w-8 p-0',
+            onClick: () => openEditItem(row.original),
+          },
+          () => h(Icon, { class: 'size-4', name: 'ri:edit-2-line' })
+        ),
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            class: 'h-8 w-8 p-0 text-destructive border-destructive',
+            onClick: () => confirmDelete(row.original),
+          },
+          () => h(Icon, { class: 'size-4', name: 'ri:delete-bin-5-line' })
+        ),
+      ]),
+  },
+]
+
+const { table } = useDataTable<AccountItem>({
+  data: listData as any,
+  columns,
+  getRowId: row => row.accessKey,
+})
+
+watch(searchTerm, value => {
+  table.getColumn('accessKey')?.setFilterValue(value || undefined)
 })
 
 const formatExpiration = (value?: string) => {

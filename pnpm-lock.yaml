@@ -165,6 +165,12 @@ importers:
       '@inspira-ui/plugins':
         specifier: ^0.0.1
         version: 0.0.1
+      '@oxc-minify/binding-darwin-arm64':
+        specifier: ^0.95.0
+        version: 0.95.0
+      '@oxc-transform/binding-darwin-arm64':
+        specifier: ^0.95.0
+        version: 0.95.0
       '@tailwindcss/vite':
         specifier: ^4.1.16
         version: 4.1.16(vite@7.1.12(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.44.0)(yaml@2.8.1))
@@ -8350,8 +8356,7 @@ snapshots:
   '@oxc-minify/binding-android-arm64@0.95.0':
     optional: true
 
-  '@oxc-minify/binding-darwin-arm64@0.95.0':
-    optional: true
+  '@oxc-minify/binding-darwin-arm64@0.95.0': {}
 
   '@oxc-minify/binding-darwin-x64@0.95.0':
     optional: true
@@ -8547,8 +8552,7 @@ snapshots:
   '@oxc-transform/binding-android-arm64@0.95.0':
     optional: true
 
-  '@oxc-transform/binding-darwin-arm64@0.95.0':
-    optional: true
+  '@oxc-transform/binding-darwin-arm64@0.95.0': {}
 
   '@oxc-transform/binding-darwin-x64@0.95.0':
     optional: true

@@ -4,7 +4,7 @@
       <h1 class="text-2xl font-bold">{{ t('Lifecycle') }}</h1>
       <template #actions>
         <ActionBar class="w-full justify-end gap-3 sm:w-auto">
-          <BucketSelector v-model="bucketName" :options="bucketList" :placeholder="t('Please select bucket')" class="w-full sm:w-auto" selector-class="sm:w-56" />
+          <BucketSelector v-model="bucketName" :placeholder="t('Please select bucket')" cache-key="lifecycle-buckets" />
           <Button variant="outline" @click="handleNew">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Lifecycle Rule') }}</span>
@@ -30,17 +30,14 @@ import { Icon } from '#components'
 import DataTable from '@/components/data-table/data-table.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
 import { Badge } from '@/components/ui/badge'
-import type { Bucket } from '@aws-sdk/client-s3'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { computed, h, ref, watch } from 'vue'
+import { h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { SelectOption } from '~/components/selector.vue'
 
 const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
-const { listBuckets, getBucketLifecycleConfiguration, deleteBucketLifecycle, putBucketLifecycleConfiguration } =
-  useBucket({})
+const { getBucketLifecycleConfiguration, deleteBucketLifecycle, putBucketLifecycleConfiguration } = useBucket({})
 
 interface LifecycleRule {
   ID?: string
@@ -135,31 +132,7 @@ const columns: ColumnDef<LifecycleRule>[] = [
   },
 ]
 
-const bucketOptions = await useAsyncData<Bucket[]>(
-  'lifecycle-buckets',
-  async () => {
-    const response = await listBuckets()
-    const buckets = (response.Buckets ?? []).filter((bucket): bucket is Bucket => Boolean(bucket?.Name))
-    return buckets.sort((a, b) => (a.Name ?? '').localeCompare(b.Name ?? ''))
-  },
-  { default: () => [] as Bucket[] },
-)
-
-const bucketList = computed<SelectOption[]>(() => {
-  const buckets = bucketOptions.data.value ?? []
-  return buckets.reduce<SelectOption[]>((acc, bucket) => {
-    const name = bucket.Name ?? ''
-    if (!name) {
-      return acc
-    }
-    acc.push({ label: name, value: name })
-    return acc
-  }, [])
-})
-
-const initialBucketOption = bucketList.value[0]?.value
-const initialBucket = typeof initialBucketOption === 'string' ? initialBucketOption : ''
-const bucketName = ref<string>(initialBucket)
+const bucketName = ref<string | null>(null)
 const pageData = ref<LifecycleRule[]>([])
 const loading = ref(false)
 
@@ -177,7 +150,7 @@ const fetchLifecycle = async () => {
 
   loading.value = true
   try {
-    const response = await getBucketLifecycleConfiguration(bucketName.value)
+    const response = await getBucketLifecycleConfiguration(bucketName.value as string)
     const sortedRules: LifecycleRule[] = [...(response.Rules ?? [])]
       .map(rule => rule as LifecycleRule)
       .sort((a, b) => (a.ID ?? '').localeCompare(b.ID ?? ''))
@@ -214,11 +187,15 @@ const confirmDelete = (row: LifecycleRule) => {
 const handleRowDelete = async (row: LifecycleRule) => {
   const remaining = pageData.value.filter(item => item.ID !== row.ID)
 
+  if (!bucketName.value) {
+    return
+  }
+
   try {
     if (remaining.length === 0) {
-      await deleteBucketLifecycle(bucketName.value)
+      await deleteBucketLifecycle(bucketName.value as string)
     } else {
-      await putBucketLifecycleConfiguration(bucketName.value, { Rules: remaining })
+      await putBucketLifecycleConfiguration(bucketName.value as string, { Rules: remaining })
     }
     message.success(t('Delete Success'))
     await refresh()

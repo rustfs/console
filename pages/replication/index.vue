@@ -4,7 +4,13 @@
       <h1 class="text-2xl font-bold">{{ t('Bucket Replication') }}</h1>
       <template #actions>
         <ActionBar class="w-full justify-end gap-3 sm:w-auto">
-          <BucketSelector v-model="bucketName" :options="bucketList" :placeholder="t('Please select bucket')" class="w-full sm:w-auto" selector-class="sm:w-56" />
+          <BucketSelector
+            v-model="bucketName"
+            :placeholder="t('Please select bucket')"
+
+            selector-class="sm:w-56"
+            cache-key="replication-buckets"
+          />
           <Button variant="outline" @click="openForm">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Replication Rule') }}</span>
@@ -31,18 +37,15 @@ import DataTable from '@/components/data-table/data-table.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
 import { Badge } from '@/components/ui/badge'
 import { useBucket } from '@/composables/useBucket'
-import type { Bucket } from '@aws-sdk/client-s3'
 import type { ColumnDef } from '@tanstack/vue-table'
-import { computed, h, ref, watch } from 'vue'
+import { h, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { SelectOption } from '~/components/selector.vue'
 
 const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
 
 const {
-  listBuckets,
   getBucketReplication,
   putBucketReplication,
   deleteBucketReplication,
@@ -62,31 +65,7 @@ interface ReplicationRule {
   }
 }
 
-const { data: bucketData } = await useAsyncData<Bucket[]>(
-  'replication-buckets',
-  async () => {
-    const response = await listBuckets()
-    const buckets = (response.Buckets ?? []).filter((bucket): bucket is Bucket => Boolean(bucket?.Name))
-    return buckets.sort((a, b) => (a.Name ?? '').localeCompare(b.Name ?? ''))
-  },
-  { default: () => [] as Bucket[] }
-)
-
-const bucketList = computed<SelectOption[]>(() => {
-  const buckets = bucketData.value ?? []
-  return buckets.reduce<SelectOption[]>((acc, bucket) => {
-    const name = bucket.Name ?? ''
-    if (!name) {
-      return acc
-    }
-    acc.push({ label: name, value: name })
-    return acc
-  }, [])
-})
-
-const initialBucketOption = bucketList.value[0]?.value
-const initialBucket = typeof initialBucketOption === 'string' ? initialBucketOption : ''
-const bucketName = ref<string>(initialBucket)
+const bucketName = ref<string | null>(null)
 const rules = ref<ReplicationRule[]>([])
 const loading = ref(false)
 
@@ -161,7 +140,7 @@ const loadReplication = async () => {
   }
   loading.value = true
   try {
-    const res = await getBucketReplication(bucketName.value)
+    const res = await getBucketReplication(bucketName.value as string)
     rules.value = res?.ReplicationConfiguration?.Rules ?? []
   } catch (error) {
     rules.value = []
@@ -191,12 +170,16 @@ const confirmDelete = (rule: ReplicationRule) => {
 const handleRowDelete = async (rule: ReplicationRule) => {
   const remaining = rules.value.filter(item => item !== rule)
 
+  if (!bucketName.value) {
+    return
+  }
+
   try {
     if (remaining.length === 0) {
-      await deleteBucketReplication(bucketName.value)
-      await deleteRemoteReplicationTarget(bucketName.value, rule.Destination?.Bucket ?? '')
+      await deleteBucketReplication(bucketName.value as string)
+      await deleteRemoteReplicationTarget(bucketName.value as string, rule.Destination?.Bucket ?? '')
     } else {
-      await putBucketReplication(bucketName.value, {
+      await putBucketReplication(bucketName.value as string, {
         Rules: remaining,
       })
     }

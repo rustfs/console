@@ -3,19 +3,12 @@
     <page-header>
       <h1 class="text-2xl font-bold">{{ t('Events') }}</h1>
       <template #actions>
-        <Label for="bucket-select">{{ t('Bucket') }}</Label>
-        <div class="max-w-xs flex-1">
-          <Select id="bucket-select" v-model="bucketName" :disabled="!bucketList.length">
-            <SelectTrigger>
-              <SelectValue :placeholder="t('Please select bucket')" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="bucket in bucketList" :key="bucket.value" :value="bucket.value">
-                {{ bucket.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <BucketSelector
+          v-model="bucketName"
+          :placeholder="t('Please select bucket')"
+          selector-class="w-full"
+          cache-key="events-buckets"
+        />
         <Button type="button" variant="outline" @click="handleNew">
           <Icon class="size-4" name="ri:add-line" />
           <span>{{ t('Add Event Subscription') }}</span>
@@ -100,15 +93,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-const { listBuckets, listBucketNotifications, putBucketNotifications } = useBucket({})
+const { listBucketNotifications, putBucketNotifications } = useBucket({})
 const dialog = useDialog()
 const message = useMessage()
 
@@ -144,27 +135,7 @@ const typeBadgeClasses: Record<NotificationItem['type'], string> = {
   Topic: 'bg-indigo-100 text-indigo-900 dark:bg-indigo-900/40 dark:text-indigo-100',
 }
 
-const { data } = await useAsyncData(
-  'buckets',
-  async () => {
-    const response = await listBuckets()
-    return (
-      response.Buckets?.sort((a: any, b: any) => {
-        return a.Name.localeCompare(b.Name)
-      }) || []
-    )
-  },
-  { default: () => [] },
-)
-
-const bucketList = computed(() => {
-  return data.value.map((bucket: any) => ({
-    label: bucket.Name,
-    value: bucket.Name,
-  }))
-})
-
-const bucketName = ref<string>(bucketList.value.length > 0 ? bucketList.value[0]?.value ?? '' : '')
+const bucketName = ref<string | null>(null)
 const loading = ref(false)
 const pageData = ref<NotificationItem[]>([])
 
@@ -179,18 +150,6 @@ watch(
     await refresh()
   },
   { immediate: true },
-)
-
-watch(
-  () => bucketList.value,
-  newBuckets => {
-    if (!bucketName.value && newBuckets.length) {
-      const firstBucket = newBuckets[0]
-      if (firstBucket?.value) {
-        bucketName.value = firstBucket.value
-      }
-    }
-  },
 )
 
 const handleRowDelete = async (row: NotificationItem, event: Event) => {
@@ -243,7 +202,7 @@ const handleRowDelete = async (row: NotificationItem, event: Event) => {
       newNotificationConfig.TopicConfigurations = updatedConfigurations
     }
 
-    await putBucketNotifications(bucketName.value, newNotificationConfig)
+    await putBucketNotifications(bucketName.value as string, newNotificationConfig)
 
     message.success(t('Delete Success'))
     await refresh()
@@ -274,7 +233,7 @@ const refresh = async () => {
   }
 
   try {
-    const response = await listBucketNotifications(bucketName.value)
+    const response = await listBucketNotifications(bucketName.value as string)
     const notifications: NotificationItem[] = []
 
     if (response.LambdaFunctionConfigurations) {

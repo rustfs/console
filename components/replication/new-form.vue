@@ -1,7 +1,7 @@
 <template>
   <Modal
     v-model="visible"
-    :title="t('Add Replication Rule') + ` (${t('Bucket')}: ${bucketName})`"
+    :title="t('Add Replication Rule') + ` (${t('Bucket')}: ${bucketName || ''})`"
     size="xl"
     :close-on-backdrop="false"
   >
@@ -176,7 +176,7 @@ const message = useMessage()
 const { setRemoteReplicationTarget, putBucketReplication, getBucketReplication } = useBucket({})
 
 const props = defineProps<{
-  bucketName: string
+  bucketName: string | null
 }>()
 
 const emit = defineEmits<{

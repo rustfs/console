@@ -1,5 +1,5 @@
 <template>
-  <Modal v-model="visible" :title="`${t('Add Lifecycle Rule')} (${t('Bucket')}: ${bucketName})`" size="lg" :close-on-backdrop="false">
+  <Modal v-model="visible" :title="`${t('Add Lifecycle Rule')} (${t('Bucket')}: ${bucketName || ''})`" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
       <Tabs v-model="activeTab" class="flex flex-col gap-4">
         <TabsList class="w-full justify-start overflow-x-auto">
@@ -177,7 +177,7 @@ const { putBucketLifecycleConfiguration, getBucketVersioning, getBucketLifecycle
 const { listTiers } = useTiers()
 
 const props = defineProps<{
-  bucketName: string
+  bucketName: string | null
 }>()
 
 const emit = defineEmits<{

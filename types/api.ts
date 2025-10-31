@@ -1,57 +1,57 @@
 /**
- * API 相关类型定义
+ * API related type definitions
  */
 
 /**
- * API 错误处理器回调函数类型
+ * API error handler callback function type
  */
-export type ApiErrorHandlerCallback = () => void | Promise<void>;
+export type ApiErrorHandlerCallback = () => void | Promise<void>
 
 /**
- * API 客户端错误处理器接口
+ * API client error handler interface
  */
 export interface IApiErrorHandler {
-  handle401(): Promise<void>;
-  handle403(): Promise<void>;
-  handleServerError(): Promise<void>;
-  handleByStatus(status: number): Promise<void>;
+  handle401(): Promise<void>
+  handle403(): Promise<void>
+  handleServerError(): Promise<void>
+  handleByStatus(status: number): Promise<void>
 }
 
 /**
- * API 请求基础配置
+ * API request base configuration
  */
 export interface ApiRequestConfig {
-  baseURL?: string;
-  headers?: Record<string, string>;
-  timeout?: number;
+  baseURL?: string
+  headers?: Record<string, string>
+  timeout?: number
 }
 
 /**
- * API 响应基础结构
+ * API response base structure
  */
 export interface ApiResponse<T = any> {
-  data?: T;
-  message?: string;
-  code?: number;
+  data?: T
+  message?: string
+  code?: number
 }
 
 /**
- * 分页请求参数
+ * Pagination request parameters
  */
 export interface PaginationParams {
-  page?: number;
-  pageSize?: number;
-  offset?: number;
-  limit?: number;
+  page?: number
+  pageSize?: number
+  offset?: number
+  limit?: number
 }
 
 /**
- * 分页响应数据
+ * Paginated response data
  */
 export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page?: number;
-  pageSize?: number;
+  items: T[]
+  total: number
+  page?: number
+  pageSize?: number
 }
 

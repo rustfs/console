@@ -29,7 +29,7 @@ class ApiClient {
   }
 
   /**
-   * 设置错误处理器
+   * Set error handler
    */
   setErrorHandler(handler: IApiErrorHandler): void {
     this.errorHandler = handler
@@ -38,7 +38,7 @@ class ApiClient {
   async request(url: string, options: RequestOptions = {}, parseJson: boolean = true) {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url
     options.headers = { ...this.config?.headers, ...options.headers }
-    // 处理body的数据格式，只对普通对象序列化
+    // Handle body data format, only serialize plain objects
     if (options.body &&
       !(options.body instanceof FormData) &&
       !(options.body instanceof Blob) &&
@@ -50,8 +50,8 @@ class ApiClient {
 
     if (options.params) {
       const queryString = new URLSearchParams(options.params).toString()
-      url += `?${queryString}` // 拼接查询字符串到URL
-      delete options.params // 删除params，以免影响fetch的options
+      url += `?${queryString}` // Append query string to URL
+      delete options.params // Remove params to avoid affecting fetch options
     }
 
     logger.log('[request] url:', url)
@@ -66,7 +66,7 @@ class ApiClient {
       throw new Error(errorMsg)
     }
 
-    // 处理401未授权错误
+    // Handle 401 Unauthorized error
     if (response.status === 401) {
       if (this.errorHandler) {
         await this.errorHandler.handle401()
@@ -102,7 +102,7 @@ class ApiClient {
       const chunk = decoder.decode(value, { stream: true })
       try {
         const data = JSON.parse(chunk)
-        yield data // 使用 yield 返回数据
+        yield data // Use yield to return data
       } catch (error) {
         logger.error('Failed to parse chunk:', error)
       }

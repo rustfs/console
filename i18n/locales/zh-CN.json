@@ -845,5 +845,8 @@
   "update:name": "update:name",
   "update:show": "update:show",
   "update:visible": "update:visible",
-  "username length cannot be less than 8 characters and greater than 16 characters": "用户名长度不能少于8个字符且不能大于16个字符"
+  "username length cannot be less than 8 characters and greater than 16 characters": "用户名长度不能少于8个字符且不能大于16个字符",
+  "Validation failed": "验证失败",
+  "API request failed": "API 请求失败",
+  "Operation failed": "操作失败"
 }

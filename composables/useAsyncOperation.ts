@@ -1,56 +1,56 @@
 /**
- * 统一的异步操作管理 Composable
- * 提供加载状态、错误处理和重试机制
+ * Unified async operation management Composable
+ * Provides loading state, error handling, and retry mechanism
  */
-import { ref, readonly, type Ref } from 'vue';
-import { useErrorHandler } from './useErrorHandler';
+import { ref, readonly, type Ref } from 'vue'
+import { useErrorHandler } from './useErrorHandler'
 
 export interface AsyncOperationOptions {
   /**
-   * 是否自动处理错误
+   * Whether to automatically handle errors
    * @default true
    */
-  autoHandleError?: boolean;
+  autoHandleError?: boolean
   /**
-   * 默认错误消息
+   * Default error message
    */
-  defaultErrorMessage?: string;
+  defaultErrorMessage?: string
   /**
-   * 重试次数
+   * Number of retries
    * @default 0
    */
-  retries?: number;
+  retries?: number
   /**
-   * 重试延迟（毫秒）
+   * Retry delay in milliseconds
    * @default 1000
    */
-  retryDelay?: number;
+  retryDelay?: number
 }
 
 export interface UseAsyncOperationReturn<T extends (...args: any[]) => Promise<any>> {
   /**
-   * 加载状态（只读）
+   * Loading state (readonly)
    */
-  loading: Readonly<Ref<boolean>>;
+  loading: Readonly<Ref<boolean>>
   /**
-   * 错误信息（只读）
+   * Error information (readonly)
    */
-  error: Readonly<Ref<Error | null>>;
+  error: Readonly<Ref<Error | null>>
   /**
-   * 执行异步操作
+   * Execute async operation
    */
-  execute: (...args: Parameters<T>) => Promise<ReturnType<T> | null>;
+  execute: (...args: Parameters<T>) => Promise<ReturnType<T> | null>
   /**
-   * 重置错误状态
+   * Reset error state
    */
-  resetError: () => void;
+  resetError: () => void
 }
 
 /**
- * 包装异步操作，提供加载状态和错误处理
- * @param operation 异步操作函数
- * @param options 配置选项
- * @returns 包含加载状态和执行函数的对象
+ * Wrap async operation with loading state and error handling
+ * @param operation Async operation function
+ * @param options Configuration options
+ * @returns Object containing loading state and execute function
  */
 export function useAsyncOperation<T extends (...args: any[]) => Promise<any>>(
   operation: T,
@@ -61,76 +61,76 @@ export function useAsyncOperation<T extends (...args: any[]) => Promise<any>>(
     defaultErrorMessage,
     retries = 0,
     retryDelay = 1000,
-  } = options;
+  } = options
 
-  const loading = ref(false);
-  const error = ref<Error | null>(null);
-  const { handleError } = useErrorHandler();
+  const loading = ref(false)
+  const error = ref<Error | null>(null)
+  const { handleError } = useErrorHandler()
 
   /**
-   * 执行重试逻辑
+   * Execute retry logic
    */
   const executeWithRetry = async (
     ...args: Parameters<T>
   ): Promise<ReturnType<T>> => {
-    let lastError: Error | null = null;
+    let lastError: Error | null = null
 
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        return await operation(...args);
+        return await operation(...args)
       } catch (err) {
-        lastError = err instanceof Error ? err : new Error(String(err));
+        lastError = err instanceof Error ? err : new Error(String(err))
 
-        // 如果不是最后一次尝试，等待后重试
+        // If not the last attempt, wait and retry
         if (attempt < retries) {
-          await new Promise((resolve) => setTimeout(resolve, retryDelay));
-          continue;
+          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          continue
         }
       }
     }
 
-    throw lastError || new Error('Operation failed');
-  };
+    throw lastError || new Error('Operation failed')
+  }
 
   /**
-   * 执行异步操作
+   * Execute async operation
    */
   const execute = async (
     ...args: Parameters<T>
   ): Promise<ReturnType<T> | null> => {
-    loading.value = true;
-    error.value = null;
+    loading.value = true
+    error.value = null
 
     try {
-      const result = await executeWithRetry(...args);
-      return result;
+      const result = await executeWithRetry(...args)
+      return result
     } catch (err) {
       const errorInstance =
-        err instanceof Error ? err : new Error(String(err));
-      error.value = errorInstance;
+        err instanceof Error ? err : new Error(String(err))
+      error.value = errorInstance
 
       if (autoHandleError) {
-        handleError(errorInstance, defaultErrorMessage);
+        handleError(errorInstance, defaultErrorMessage)
       }
 
-      return null;
+      return null
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  };
+  }
 
   /**
-   * 重置错误状态
+   * Reset error state
    */
   const resetError = () => {
-    error.value = null;
-  };
+    error.value = null
+  }
 
   return {
     loading: readonly(loading),
     error: readonly(error),
     execute,
     resetError,
-  };
+  }
 }
 

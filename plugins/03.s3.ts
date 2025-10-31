@@ -32,25 +32,25 @@ export default defineNuxtPlugin({
       },
     })
 
-    // 添加中间件处理XML响应和401错误
+    // Add middleware to handle XML responses and 401 errors
     client.middlewareStack.add(
       (next: DeserializeHandler<any, any>) =>
         async (args: DeserializeHandlerArguments<any>): Promise<DeserializeHandlerOutput<any>> => {
           try {
             const response = (await next(args)) as S3Response
 
-            // 检查响应是否为XML格式
+            // Check if response is XML format
             if (response.response?.body && typeof response.response.body === 'string') {
               const body = response.response.body.trim()
 
-              // 检查是否是空的XML响应
+              // Check if it's an empty XML response
               if (body.match(/^<\?xml[^>]*\?><[^>]*><\/[^>]*>$/)) {
-                // 从XML标签名提取属性名
+                // Extract property name from XML tag name
                 const tagName = body.match(/<([^>]*)><\/\1>/)?.[1]
                 if (tagName) {
-                  // 将XML标签名转换为驼峰命名
+                  // Convert XML tag name to camelCase
                   const propertyName = tagName.replace(/(?:^|_)([a-z])/g, (_, letter) => letter.toUpperCase())
-                  // 返回null，保持response结构
+                  // Return null, maintain response structure
                   return {
                     response: response.response,
                     [propertyName]: null,
@@ -61,13 +61,13 @@ export default defineNuxtPlugin({
 
             return response as DeserializeHandlerOutput<any>
           } catch (error: any) {
-            // 处理401未授权错误
+            // Handle 401 Unauthorized error
             if (error?.$metadata?.httpStatusCode === 401) {
               const { logout } = useAuth()
               logout()
-              // 使用 navigateTo 而不是直接操作 window.location
+              // Use navigateTo instead of directly manipulating window.location
               await navigateTo('/auth/login')
-              // 返回一个空响应以符合类型要求
+              // Return an empty response to meet type requirements
               return {
                 response: {
                   statusCode: 401,
@@ -76,7 +76,7 @@ export default defineNuxtPlugin({
               } as DeserializeHandlerOutput<any>
             }
 
-            // 处理 S3 客户端错误，优先抛出 error.message 作为新的 Error
+            // Handle S3 client errors, prioritize throwing error.message as new Error
             if (error?.Code) {
               throw new Error(error.Code)
             }

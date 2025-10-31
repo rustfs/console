@@ -845,5 +845,8 @@
   "update:name": "update:name",
   "update:show": "update:show",
   "update:visible": "update:visible",
-  "username length cannot be less than 8 characters and greater than 16 characters": "username length cannot be less than 8 characters and greater than 16 characters"
+  "username length cannot be less than 8 characters and greater than 16 characters": "username length cannot be less than 8 characters and greater than 16 characters",
+  "Validation failed": "Validation failed",
+  "API request failed": "API request failed",
+  "Operation failed": "Operation failed"
 }

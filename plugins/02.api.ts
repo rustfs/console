@@ -28,7 +28,7 @@ export default defineNuxtPlugin({
       service,
     })
 
-    // 创建错误处理器
+    // Create error handler
     const errorHandler = new ApiErrorHandler({
       onUnauthorized: async () => {
         const { logout } = useAuth()

@@ -1,106 +1,106 @@
 /**
- * 统一的错误处理 Composable
- * 提供一致的错误处理和消息显示
+ * Unified error handling Composable
+ * Provides consistent error handling and message display
  */
-import { useMessage } from '~/lib/ui/message';
-import { useI18n } from 'vue-i18n';
+import { useMessage } from '~/lib/ui/message'
+import { useI18n } from 'vue-i18n'
 
 export interface ErrorHandlerOptions {
   /**
-   * 是否记录错误到控制台
+   * Whether to log errors to console
    * @default true
    */
-  logError?: boolean;
+  logError?: boolean
   /**
-   * 默认错误消息的翻译键
+   * Default error message translation key
    * @default 'Operation failed'
    */
-  defaultMessageKey?: string;
+  defaultMessageKey?: string
 }
 
 /**
- * 错误处理工具
- * @param options 配置选项
- * @returns 错误处理函数
+ * Error handling utility
+ * @param options Configuration options
+ * @returns Error handling functions
  */
 export function useErrorHandler(options: ErrorHandlerOptions = {}) {
-  const { logError = true, defaultMessageKey = 'Operation failed' } = options;
-  const message = useMessage();
-  const { t } = useI18n();
+  const { logError = true, defaultMessageKey = 'Operation failed' } = options
+  const message = useMessage()
+  const { t } = useI18n()
 
   /**
-   * 处理错误
-   * @param error 错误对象
-   * @param defaultMessage 默认错误消息（可选）
+   * Handle error
+   * @param error Error object
+   * @param defaultMessage Default error message (optional)
    */
   const handleError = (error: unknown, defaultMessage?: string): void => {
-    let errorMessage = defaultMessage || t(defaultMessageKey);
+    let errorMessage = defaultMessage || t(defaultMessageKey)
 
-    // 提取错误消息
+    // Extract error message
     if (error instanceof Error) {
-      errorMessage = error.message || errorMessage;
+      errorMessage = error.message || errorMessage
     } else if (typeof error === 'string') {
-      errorMessage = error;
+      errorMessage = error
     } else if (error && typeof error === 'object' && 'message' in error) {
-      errorMessage = String(error.message);
+      errorMessage = String(error.message)
     }
 
-    // 记录错误
+    // Log error
     if (logError) {
-      console.error('[ErrorHandler]', error);
+      console.error('[ErrorHandler]', error)
     }
 
-    // 显示错误消息
-    message.error(errorMessage);
-  };
+    // Show error message
+    message.error(errorMessage)
+  }
 
   /**
-   * 处理 API 错误
-   * @param error 错误对象
-   * @param defaultMessage 默认错误消息
+   * Handle API error
+   * @param error Error object
+   * @param defaultMessage Default error message
    */
   const handleApiError = (
     error: unknown,
     defaultMessage?: string
   ): void => {
-    // API 错误可能有特定的格式
+    // API errors may have specific format
     if (
       error &&
       typeof error === 'object' &&
       'response' in error &&
       'data' in error
     ) {
-      const apiError = error as { response?: { data?: { message?: string } } };
+      const apiError = error as { response?: { data?: { message?: string } } }
       const apiMessage =
         apiError.response?.data?.message ||
         defaultMessage ||
-        t('API request failed');
-      handleError(apiMessage);
-      return;
+        t('API request failed')
+      handleError(apiMessage)
+      return
     }
 
-    handleError(error, defaultMessage);
-  };
+    handleError(error, defaultMessage)
+  }
 
   /**
-   * 静默处理错误（不显示消息）
-   * @param error 错误对象
-   * @returns 错误消息
+   * Handle error silently (without showing message)
+   * @param error Error object
+   * @returns Error message
    */
   const handleErrorSilently = (error: unknown): string => {
     if (error instanceof Error) {
-      return error.message;
+      return error.message
     }
     if (typeof error === 'string') {
-      return error;
+      return error
     }
-    return t(defaultMessageKey);
-  };
+    return t(defaultMessageKey)
+  }
 
   return {
     handleError,
     handleApiError,
     handleErrorSilently,
-  };
+  }
 }
 

@@ -46,10 +46,12 @@
           </ItemHeader>
           <ItemContent>
             <div v-if="tags.length" class="flex flex-wrap gap-2">
-              <div v-for="(tag, index) in tags" :key="`${tag.Key}-${index}`" class="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs">
-                <button type="button" class="text-left" @click="editTag(index)">
-                  {{ tag.Key }}:{{ tag.Value }}
-                </button>
+              <div
+                v-for="(tag, index) in tags"
+                :key="`${tag.Key}-${index}`"
+                class="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs"
+              >
+                <button type="button" class="text-left" @click="editTag(index)">{{ tag.Key }}:{{ tag.Value }}</button>
                 <Button variant="ghost" size="sm" class="h-6 w-6 p-0" @click.stop="handleDeleteTag(index)">
                   <Icon name="ri:close-line" class="size-3.5" />
                 </Button>
@@ -71,14 +73,18 @@
           <ItemContent class="flex flex-col gap-3">
             <div class="flex items-center justify-between gap-3">
               <p class="text-sm font-medium text-foreground">{{ t('Object Lock') }}</p>
-              <Switch v-model:checked="lockStatus" disabled />
+              <Switch v-model="lockStatus" disabled />
             </div>
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-2">
                 <p class="text-sm font-medium text-foreground">{{ t('Version Control') }}</p>
                 <Spinner v-if="statusLoading" class="size-3 text-muted-foreground" />
               </div>
-              <Switch :checked="versioningStatus === 'Enabled'" :disabled="lockStatus || statusLoading" @update:checked="handleVersionToggle" />
+              <Switch
+                :modelValue="versioningStatus === 'Enabled'"
+                :disabled="lockStatus || statusLoading"
+                @update:modelValue="handleVersionToggle"
+              />
             </div>
           </ItemContent>
         </Item>
@@ -129,7 +135,11 @@
       <Field>
         <FieldLabel>{{ t('Policy') }}</FieldLabel>
         <FieldContent>
-          <Selector v-model="policyFormValue.policy" :options="policyOptions" :placeholder="t('Please select policy')" />
+          <Selector
+            v-model="policyFormValue.policy"
+            :options="policyOptions"
+            :placeholder="t('Please select policy')"
+          />
         </FieldContent>
       </Field>
       <Field v-if="policyFormValue.policy === 'custom'">
@@ -185,13 +195,21 @@
       <Field>
         <FieldLabel>{{ t('Encryption Type') }}</FieldLabel>
         <FieldContent>
-          <Selector v-model="encryptFormValue.encrypt" :options="encryptionOptions" :placeholder="t('Please select encryption type')" />
+          <Selector
+            v-model="encryptFormValue.encrypt"
+            :options="encryptionOptions"
+            :placeholder="t('Please select encryption type')"
+          />
         </FieldContent>
       </Field>
       <Field v-if="encryptFormValue.encrypt === 'SSE-KMS'">
         <FieldLabel>KMS Key ID</FieldLabel>
         <FieldContent>
-          <Selector v-model="encryptFormValue.kmsKeyId" :options="kmsKeyOptions" :placeholder="t('Please select KMS key')" />
+          <Selector
+            v-model="encryptFormValue.kmsKeyId"
+            :options="kmsKeyOptions"
+            :placeholder="t('Please select KMS key')"
+          />
         </FieldContent>
       </Field>
     </div>
@@ -213,7 +231,11 @@
         <FieldLabel>{{ t('Retention Mode') }}</FieldLabel>
         <FieldContent>
           <RadioGroup v-model="retentionFormValue.retentionMode" class="grid gap-2 sm:grid-cols-2">
-            <label v-for="option in retentionModeOptions" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
+            <label
+              v-for="option in retentionModeOptions"
+              :key="option.value"
+              class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+            >
               <RadioGroupItem :value="option.value" class="mt-0.5" />
               <span class="text-sm font-medium">{{ option.label }}</span>
             </label>
@@ -224,7 +246,11 @@
         <FieldLabel>{{ t('Retention Unit') }}</FieldLabel>
         <FieldContent>
           <RadioGroup v-model="retentionFormValue.retentionUnit" class="grid gap-2 sm:grid-cols-2">
-            <label v-for="option in retentionUnitOptions" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
+            <label
+              v-for="option in retentionUnitOptions"
+              :key="option.value"
+              class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+            >
               <RadioGroupItem :value="option.value" class="mt-0.5" />
               <span class="text-sm font-medium">{{ option.label }}</span>
             </label>

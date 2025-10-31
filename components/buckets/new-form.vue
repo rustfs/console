@@ -4,24 +4,26 @@
       <Field>
         <FieldLabel for="bucket-name">{{ t('Please enter name') }}</FieldLabel>
         <FieldContent>
-          <Input id="bucket-name" v-model="objectKey" autocomplete="off" :class="[
-            'w-full',
-            showNameError && 'border-destructive focus-visible:ring-destructive',
-          ]" />
+          <Input
+            id="bucket-name"
+            v-model="objectKey"
+            autocomplete="off"
+            :class="['w-full', showNameError && 'border-destructive focus-visible:ring-destructive']"
+          />
         </FieldContent>
       </Field>
 
       <Field orientation="responsive" class="items-center">
         <FieldLabel>{{ t('Version') }}</FieldLabel>
         <FieldContent class="flex justify-end">
-          <Switch v-model:checked="version" />
+          <Switch v-model="version" />
         </FieldContent>
       </Field>
 
       <Field orientation="responsive" class="items-center">
         <FieldLabel>{{ t('Object Lock') }}</FieldLabel>
         <FieldContent class="flex justify-end">
-          <Switch v-model:checked="objectLock" />
+          <Switch v-model="objectLock" />
         </FieldContent>
       </Field>
 
@@ -38,7 +40,11 @@
             <FieldLabel>{{ t('Retention Mode') }}</FieldLabel>
             <FieldContent>
               <RadioGroup v-model="retentionMode" class="grid gap-2 sm:grid-cols-2">
-                <label v-for="option in retentionModeOptions" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
+                <label
+                  v-for="option in retentionModeOptions"
+                  :key="option.value"
+                  class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                >
                   <RadioGroupItem :value="option.value" class="mt-0.5" />
                   <span class="text-sm font-medium">{{ option.label }}</span>
                 </label>
@@ -52,7 +58,11 @@
               <div class="flex flex-col gap-2 sm:flex-row">
                 <Input v-model="retentionPeriod" type="number" class="sm:w-32" />
                 <RadioGroup v-model="retentionUnit" class="grid gap-2 sm:grid-cols-2">
-                  <label v-for="option in retentionUnitOptions" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
+                  <label
+                    v-for="option in retentionUnitOptions"
+                    :key="option.value"
+                    class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                  >
                     <RadioGroupItem :value="option.value" class="mt-0.5" />
                     <span class="text-sm font-medium">{{ option.label }}</span>
                   </label>

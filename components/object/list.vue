@@ -205,32 +205,8 @@ const { data, refresh } = await useAsyncData<ObjectRow[]>(
   }
 )
 
-const checkedKeys = ref<string[]>([])
-
 const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
   return [
-    {
-      id: 'select',
-      enableSorting: false,
-      header: ({ table }: any) =>
-        h('input', {
-          type: 'checkbox',
-          class: 'w-8',
-          checked: table.getIsAllPageRowsSelected(),
-          indeterminate: table.getIsSomePageRowsSelected(),
-          onChange: (event: Event) => table.toggleAllPageRowsSelected((event.target as HTMLInputElement).checked),
-        }),
-      cell: ({ row }: any) =>
-        h('input', {
-          type: 'checkbox',
-          class: 'w-8',
-          checked: row.getIsSelected(),
-          onChange: (event: Event) => row.toggleSelected((event.target as HTMLInputElement).checked),
-        }),
-      meta: {
-        maxWidth: 24,
-      },
-    },
     {
       id: 'object',
       header: () => t('Object'),
@@ -303,19 +279,15 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
   ]
 })
 
-const { table } = useDataTable<ObjectRow>({
+const { table, selectedRowIds } = useDataTable<ObjectRow>({
   data,
   columns,
   getRowId: (row: any) => row.Key,
+  enableRowSelection: true,
 })
 
-watch(
-  () => table.getState().rowSelection,
-  selection => {
-    checkedKeys.value = Object.keys(selection).filter(key => selection[key])
-  },
-  { deep: true }
-)
+// 使用 data-table 提供的 selectedRowIds 替代手动维护的 checkedKeys
+const checkedKeys = computed(() => selectedRowIds.value)
 
 watch(
   () => uploadTaskStore.tasks,
@@ -486,7 +458,6 @@ const handleDelete = async (keys: string[]) => {
       deleteTaskStore.addKeys(targets, bucketName.value)
       message.success(t('Delete task created'))
     }
-    checkedKeys.value = []
     table.resetRowSelection()
     refresh()
   } catch (error: any) {

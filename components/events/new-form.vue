@@ -142,12 +142,9 @@ interface ArnOption {
   value: string
 }
 
-const props = defineProps({
-  bucketName: {
-    type: String,
-    required: true,
-  },
-})
+const props = defineProps<{
+  bucketName: string
+}>()
 
 const emit = defineEmits<{
   success: []

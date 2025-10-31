@@ -45,7 +45,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -106,25 +105,6 @@ async function getDataList() {
 }
 
 const columns: ColumnDef<UserRow>[] = [
-  {
-    id: 'select',
-    enableSorting: false,
-    enableHiding: false,
-    header: ({ table }) =>
-      h(Checkbox, {
-        checked: table.getIsAllPageRowsSelected(),
-        indeterminate: table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected(),
-        'onUpdate:checked': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
-        class: 'translate-y-0.5',
-      }),
-    cell: ({ row }) =>
-      h(Checkbox, {
-        checked: row.getIsSelected(),
-        'onUpdate:checked': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        class: 'translate-y-0.5',
-      }),
-    size: 48,
-  },
   {
     accessorKey: 'accessKey',
     header: () => t('Name'),
@@ -197,13 +177,14 @@ const columns: ColumnDef<UserRow>[] = [
   },
 ]
 
-const { table } = useDataTable<UserRow>({
+const { table, selectedRows, selectedRowIds } = useDataTable<UserRow>({
   data: listData,
   columns,
   getRowId: row => row.accessKey,
+  enableRowSelection: true,
 })
 
-const selectedKeys = computed(() => table.getSelectedRowModel().rows.map(row => row.original.accessKey))
+const selectedKeys = computed(() => selectedRowIds.value)
 
 function deleteByList() {
   if (!selectedKeys.value.length) return

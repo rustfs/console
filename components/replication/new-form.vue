@@ -266,6 +266,10 @@ const validate = () => {
 
 const handleSave = async () => {
   if (!validate()) return
+  if (!props.bucketName) {
+    message.error(t('Bucket name is required'))
+    return
+  }
   submitting.value = true
   try {
     const config: any = {

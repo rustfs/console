@@ -40,7 +40,6 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -60,25 +59,6 @@ const listData = ref<GroupRow[]>([])
 const loading = ref(false)
 
 const columns: ColumnDef<GroupRow>[] = [
-  {
-    id: 'select',
-    enableSorting: false,
-    enableHiding: false,
-    header: ({ table }) =>
-      h(Checkbox, {
-        checked: table.getIsAllPageRowsSelected(),
-        indeterminate: table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected(),
-        'onUpdate:checked': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
-        class: 'translate-y-0.5',
-      }),
-    cell: ({ row }) =>
-      h(Checkbox, {
-        checked: row.getIsSelected(),
-        'onUpdate:checked': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        class: 'translate-y-0.5',
-      }),
-    size: 48,
-  },
   {
     accessorKey: 'name',
     header: () => t('Name'),
@@ -151,13 +131,16 @@ const columns: ColumnDef<GroupRow>[] = [
   },
 ]
 
-const { table } = useDataTable<GroupRow>({
+const { table, selectedRows, selectedRowIds } = useDataTable<GroupRow>({
   data: listData,
   columns,
   getRowId: row => row.name,
+  enableRowSelection: true,
 })
 
-const selectedKeys = computed(() => table.getSelectedRowModel().rows.map(row => row.original.name))
+// 选中的行数据可以直接使用 selectedRows
+// 如果需要 ID 数组，可以使用 selectedRowIds，或者手动提取
+const selectedKeys = computed(() => selectedRows.value.map(row => row.name))
 
 onMounted(() => {
   getDataList()

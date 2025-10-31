@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { Icon } from '#components'
-import { Badge } from '@/components/ui/badge'
+import UserSelector from '@/components/user-selector.vue'
 import { Button } from '@/components/ui/button'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Modal from '~/components/modal.vue'
@@ -23,7 +20,6 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const message = useMessage()
 const { updateGroupMembers } = useGroups()
-const { listUsers } = useUsers()
 
 const defaultFormModel = () => ({
   group: '',
@@ -32,48 +28,14 @@ const defaultFormModel = () => ({
 
 const formModel = reactive(defaultFormModel())
 const submitting = ref(false)
-const memberSelectorOpen = ref(false)
-const users = ref<{ label: string; value: string }[]>([])
 
 const modalVisible = computed({
   get: () => props.visible,
   set: value => closeModal(value),
 })
 
-const selectedMemberLabels = computed(() => {
-  const map = users.value.reduce<Record<string, string>>((acc, option) => {
-    acc[option.value] = option.label
-    return acc
-  }, {})
-
-  return formModel.members.map(value => map[value] ?? value)
-})
-
-const loadUsers = async () => {
-  try {
-    const res = await listUsers()
-    users.value = Object.entries(res ?? {}).map(([username]) => ({
-      label: username,
-      value: username,
-    }))
-  } catch (error) {
-    message.error(t('Failed to get data'))
-  }
-}
-
-loadUsers()
-
-const toggleMember = (value: string) => {
-  if (formModel.members.includes(value)) {
-    formModel.members = formModel.members.filter(item => item !== value)
-  } else {
-    formModel.members = [...formModel.members, value]
-  }
-}
-
 const closeModal = (visible = false) => {
   Object.assign(formModel, defaultFormModel())
-  memberSelectorOpen.value = false
   emit('update:visible', visible)
 }
 
@@ -112,42 +74,11 @@ const submitForm = async () => {
         </FieldContent>
       </Field>
 
-      <Field>
-        <FieldLabel class="text-sm font-medium">{{ t('Users') }}</FieldLabel>
-        <FieldContent class="space-y-2">
-          <Popover v-model:open="memberSelectorOpen">
-            <PopoverTrigger as-child>
-              <Button type="button" variant="outline" class="min-h-10 w-full justify-between gap-2" :aria-label="t('Users')">
-                <span class="truncate">
-                  {{
-                    selectedMemberLabels.length ? selectedMemberLabels.join(', ') : t('Select user group members')
-                  }}
-                </span>
-                <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent class="w-72 p-0" align="start">
-              <Command>
-                <CommandInput :placeholder="t('Search User')" />
-                <CommandList>
-                  <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
-                  <CommandGroup>
-                    <CommandItem v-for="option in users" :key="option.value" :value="option.label" @select="() => toggleMember(option.value)">
-                      <Icon name="ri:check-line" class="mr-2 size-4" :class="formModel.members.includes(option.value) ? 'opacity-100' : 'opacity-0'" />
-                      <span>{{ option.label }}</span>
-                    </CommandItem>
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          <div v-if="formModel.members.length" class="flex flex-wrap gap-2">
-            <Badge v-for="value in formModel.members" :key="value" variant="secondary">
-              {{ value }}
-            </Badge>
-          </div>
-        </FieldContent>
-      </Field>
+      <UserSelector
+        v-model="formModel.members"
+        :label="t('Users')"
+        :placeholder="t('Select user group members')"
+      />
     </div>
 
     <template #footer>

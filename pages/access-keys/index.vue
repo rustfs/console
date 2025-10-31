@@ -40,7 +40,6 @@ import DataTablePagination from '@/components/data-table/data-table-pagination.v
 import DataTable from '@/components/data-table/data-table.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
 import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { computed, h, onMounted, ref, watch } from 'vue'
@@ -78,25 +77,6 @@ const confirmDeleteSingle = (row: RowData) => {
 }
 
 const columns: ColumnDef<RowData>[] = [
-  {
-    id: 'select',
-    enableSorting: false,
-    enableHiding: false,
-    header: ({ table }) =>
-      h(Checkbox, {
-        checked: table.getIsAllPageRowsSelected(),
-        indeterminate: table.getIsSomePageRowsSelected() && !table.getIsAllPageRowsSelected(),
-        'onUpdate:checked': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
-        class: 'translate-y-0.5'
-      }),
-    cell: ({ row }) =>
-      h(Checkbox, {
-        checked: row.getIsSelected(),
-        'onUpdate:checked': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        class: 'translate-y-0.5'
-      }),
-    size: 48,
-  },
   {
     accessorKey: 'accessKey',
     header: () => t('Access Key'),
@@ -150,17 +130,18 @@ const columns: ColumnDef<RowData>[] = [
   },
 ]
 
-const { table } = useDataTable<RowData>({
+const { table, selectedRows, selectedRowIds } = useDataTable<RowData>({
   data,
   columns,
   getRowId: row => row.accessKey,
+  enableRowSelection: true,
 })
 
 watch(searchTerm, value => {
   table.getColumn('accessKey')?.setFilterValue(value || undefined)
 })
 
-const selectedKeys = computed(() => table.getSelectedRowModel().rows.map(row => row.original.accessKey))
+const selectedKeys = computed(() => selectedRowIds.value)
 
 const listUserAccounts = async () => {
   loading.value = true

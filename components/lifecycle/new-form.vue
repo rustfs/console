@@ -236,7 +236,10 @@ const loadTiers = async () => {
 }
 
 const loadVersioningStatus = async () => {
-  if (!props.bucketName) return
+  if (!props.bucketName) {
+    versioningStatus.value = false
+    return
+  }
   try {
     const resp = await getBucketVersioning(props.bucketName)
     versioningStatus.value = resp.Status === 'Enabled'
@@ -347,6 +350,10 @@ const buildFilter = () => {
 
 const handleSave = async () => {
   if (!validate()) return
+  if (!props.bucketName) {
+    message.error(t('Bucket name is required'))
+    return
+  }
   submitting.value = true
   try {
     const currentConfig = await getBucketLifecycleConfiguration(props.bucketName)

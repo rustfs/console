@@ -38,104 +38,81 @@ const props = withDefaults(
 )
 
 const visibleColumnCount = computed(() => props.table.getVisibleLeafColumns().length)
-
 const hasRows = computed(() => props.table.getRowModel().rows.length > 0)
 
-const resolveMaxWidth = (value?: string | number) => {
-  if (value == null) return undefined
-  return typeof value === 'number' ? `${value}px` : value
-}
-
 const getColumnStyles = (column: Column<TData, unknown>) => {
-  const maxWidth = resolveMaxWidth(column.columnDef.meta?.maxWidth)
-  return maxWidth ? { maxWidth } : undefined
+  const maxWidth = column.columnDef.meta?.maxWidth
+  if (maxWidth == null) return undefined
+  return { maxWidth: typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth }
 }
 </script>
 
 <template>
   <div :class="cn('flex flex-col gap-4', props.class)">
-    <ScrollArea v-if="bodyHeight" :class="cn('rounded-md border', bodyHeight)">
-      <UiTable :class="tableClass">
+    <component :is="bodyHeight ? ScrollArea : 'div'" :class="bodyHeight ? cn('rounded-md border', bodyHeight) : undefined">
+      <UiTable :class="bodyHeight ? tableClass : cn('border rounded-md', tableClass)">
+        <!-- 表头 -->
         <TableHeader :class="stickyHeader ? 'sticky top-0 z-10 bg-muted/40 backdrop-blur' : ''">
-          <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id" :class="stickyHeader ? 'bg-muted/40 backdrop-blur' : undefined">
-            <TableHead v-for="header in headerGroup.headers" :key="header.id" :style="getColumnStyles(header.column)">
-              <template v-if="!header.isPlaceholder">
-                <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
-              </template>
+          <TableRow 
+            v-for="headerGroup in table.getHeaderGroups()" 
+            :key="headerGroup.id" 
+            :class="stickyHeader ? 'bg-muted/40 backdrop-blur' : undefined"
+          >
+            <TableHead 
+              v-for="header in headerGroup.headers" 
+              :key="header.id" 
+              :class="bodyHeight ? undefined : 'py-2'"
+              :style="getColumnStyles(header.column)"
+            >
+              <FlexRender 
+                v-if="!header.isPlaceholder"
+                :render="header.column.columnDef.header" 
+                :props="header.getContext()" 
+              />
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
-          <template v-if="isLoading">
-            <TableRow>
-              <TableCell :colspan="visibleColumnCount" class="h-48 text-center align-middle">
-                <div class="flex flex-col items-center gap-2">
-                  <Spinner class="size-6" />
-                  <span class="text-sm text-muted-foreground">Loading...</span>
-                </div>
-              </TableCell>
-            </TableRow>
-          </template>
-          <template v-else-if="hasRows">
-            <TableRow v-for="row in table.getRowModel().rows" :key="row.id" :data-state="row.getIsSelected() ? 'selected' : undefined" class="transition-colors hover:bg-muted/40">
-              <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id" :style="getColumnStyles(cell.column)">
-                <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-              </TableCell>
-            </TableRow>
-          </template>
-          <template v-else>
-            <TableRow>
-              <TableCell :colspan="visibleColumnCount" class="h-48">
-                <EmptyState :title="emptyTitle" :description="emptyDescription">
-                  <slot name="empty" />
-                </EmptyState>
-              </TableCell>
-            </TableRow>
-          </template>
-        </TableBody>
-      </UiTable>
-    </ScrollArea>
 
-    <template v-else>
-      <UiTable :class="cn('border rounded-md', tableClass)">
-        <TableHeader>
-          <TableRow v-for="headerGroup in table.getHeaderGroups()" :key="headerGroup.id">
-            <TableHead v-for="header in headerGroup.headers" :key="header.id" class="py-2" :style="getColumnStyles(header.column)">
-              <template v-if="!header.isPlaceholder">
-                <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
-              </template>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
+        <!-- 表体 -->
         <TableBody>
-          <template v-if="isLoading">
-            <TableRow>
-              <TableCell :colspan="visibleColumnCount" class="h-48 text-center align-middle">
-                <div class="flex flex-col items-center gap-2">
-                  <Spinner class="size-6" />
-                  <span class="text-sm text-muted-foreground">Loading...</span>
-                </div>
-              </TableCell>
-            </TableRow>
-          </template>
-          <template v-else-if="hasRows">
-            <TableRow v-for="row in table.getRowModel().rows" :key="row.id" :data-state="row.getIsSelected() ? 'selected' : undefined" class="transition-colors hover:bg-muted/40">
-              <TableCell v-for="cell in row.getVisibleCells()" :key="cell.id" class="py-2" :style="getColumnStyles(cell.column)">
-                <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
-              </TableCell>
-            </TableRow>
-          </template>
-          <template v-else>
-            <TableRow>
-              <TableCell :colspan="visibleColumnCount" class="h-48">
-                <EmptyState :title="emptyTitle" :description="emptyDescription">
-                  <slot name="empty" />
-                </EmptyState>
-              </TableCell>
-            </TableRow>
-          </template>
+          <!-- 加载中 -->
+          <TableRow v-if="isLoading">
+            <TableCell :colspan="visibleColumnCount" class="h-48 text-center align-middle">
+              <div class="flex flex-col items-center gap-2">
+                <Spinner class="size-6" />
+                <span class="text-sm text-muted-foreground">Loading...</span>
+              </div>
+            </TableCell>
+          </TableRow>
+
+          <!-- 有数据 -->
+          <TableRow
+            v-else-if="hasRows"
+            v-for="row in table.getRowModel().rows" 
+            :key="row.id" 
+            :data-state="row.getIsSelected() ? 'selected' : undefined" 
+            class="transition-colors hover:bg-muted/40"
+          >
+            <TableCell 
+              v-for="cell in row.getVisibleCells()" 
+              :key="cell.id" 
+              :class="bodyHeight ? undefined : 'py-2'"
+              :style="getColumnStyles(cell.column)"
+            >
+              <FlexRender :render="cell.column.columnDef.cell" :props="cell.getContext()" />
+            </TableCell>
+          </TableRow>
+
+          <!-- 空状态 -->
+          <TableRow v-else>
+            <TableCell :colspan="visibleColumnCount" class="h-48">
+              <EmptyState :title="emptyTitle" :description="emptyDescription">
+                <slot name="empty" />
+              </EmptyState>
+            </TableCell>
+          </TableRow>
         </TableBody>
       </UiTable>
-    </template>
+    </component>
   </div>
 </template>

@@ -1,222 +1,83 @@
-# 🚀 GitHub Actions CI/CD Pipelines
+# GitHub Actions CI/CD
 
-This project is configured with comprehensive CI/CD pipelines for automated testing, code quality checks, security scanning, and deployment.
+CI/CD pipelines for automated testing, code quality checks, security scanning, and deployment.
 
-## 📋 Workflow Overview
+## Workflows
 
-### 🧪 Test Pipeline (`test.yml`)
+### Test Pipeline (`test.yml`)
 
-**Triggers**: Push to main/develop branches, PRs to main/develop branches
+Runs on push/PR to main/develop branches.
 
-**Included Jobs**:
+- Linting and TypeScript type checking
+- Unit tests (Node.js 20, 22)
+- Integration tests
+- Code coverage (>95% statements, >90% branches, 100% functions)
+- Security audit (dependency scan + CodeQL)
+- Build verification
 
-- 🔍 **Code Quality Checks**: Linting, TypeScript type checking
-- 🧪 **Unit Tests**: Multi Node.js version testing (20, 22)
-- 🔗 **Integration Tests**: Complete functional integration tests
-- 📊 **Code Coverage**: Generate coverage reports and upload to Codecov
-- 🔒 **Security Scanning**: Dependency security audit and CodeQL analysis
-- 🏗️ **Build Test**: Verify the project can build successfully
-- 📋 **Test Summary**: Aggregate all test results
+### Code Quality Pipeline (`quality.yml`)
 
-**Coverage Requirements**:
+Runs on push/PR + daily scheduled checks.
 
-- Statement Coverage: > 95%
-- Branch Coverage: > 90%
-- Function Coverage: 100%
-- Line Coverage: > 95%
+- Prettier formatting check
+- TypeScript type safety
+- Dependency security check
+- Code complexity analysis
+- JSDoc coverage
 
-### 🔍 Code Quality Pipeline (`quality.yml`)
+### Release Pipeline (`release.yml`)
 
-**Triggers**: Push/PR + Daily scheduled checks
+Triggers: tag push, release publication, manual trigger.
 
-**Included Jobs**:
+- Pre-release validation (full test suite)
+- Production build
+- Deploy to staging/production
+- Auto-generate GitHub Release notes
 
-- 💅 **Code Formatting Check**: Prettier formatting validation
-- 📘 **TypeScript Check**: Type safety verification
-- 📦 **Dependency Check**: Outdated packages and security vulnerability checks
-- 🧮 **Code Complexity Analysis**: Code quality metrics
-- 📚 **Documentation Check**: JSDoc coverage check
-- 📋 **Quality Summary**: Comprehensive quality score
+### Dependency Management (`dependencies.yml`)
 
-**Quality Score Standards**:
+Weekly Monday checks + manual trigger.
 
-- 🎉 **Excellent** (90%+): Outstanding code quality
-- 👍 **Good** (75%+): Stable code quality
-- ⚠️ **Fair** (60%+): Needs improvement
-- ❌ **Needs Improvement** (<60%): Multiple issues need to be addressed
+- Security audit
+- Outdated package detection
+- Auto-update dependencies (patch/minor/major/all)
 
-### 🚀 Release Pipeline (`release.yml`)
+## Configuration
 
-**Triggers**: Tag push, Release publication, Manual trigger
-
-**Included Jobs**:
-
-- 🔍 **Pre-Release Validation**: Full test suite verification
-- 🏗️ **Build Release Package**: Production build
-- 🚀 **Deploy to Staging**: Pre-release environment deployment
-- 🌟 **Deploy to Production**: Production environment deployment
-- 📝 **Create GitHub Release**: Auto-generate Release notes
-- 📢 **Post-Release Notification**: Deployment status notification
-
-**Deployment Environments**:
-
-- **Staging**: <https://staging.example.com>
-- **Production**: <https://console.example.com>
-
-### 📦 Dependency Management Pipeline (`dependencies.yml`)
-
-**Triggers**: Weekly Monday scheduled check, Manual trigger
-
-**Included Jobs**:
-
-- 🔒 **Security Audit**: Dependency security vulnerability scanning
-- 📋 **Update Check**: Check for outdated dependency packages
-- 🔄 **Auto Update**: Automatically update dependencies and test
-- 📊 **Dependency Analysis**: Generate dependency analysis report
-
-**Update Strategies**:
-
-- **patch**: Only update patch versions (default)
-- **minor**: Update minor versions
-- **major**: Update major versions
-- **all**: Update all versions
-
-## 🔧 Configuration Requirements
-
-### Environment Variables
-
-Configure the following Secrets in GitHub repository settings:
+### Required Secrets
 
 ```bash
-# Codecov integration (optional)
-CODECOV_TOKEN=your_codecov_token
-
-# Deployment related (configure as needed)
-DEPLOY_SSH_KEY=your_ssh_private_key
+CODECOV_TOKEN=your_codecov_token          # Optional
+DEPLOY_SSH_KEY=your_ssh_private_key       # If deploying
 STAGING_HOST=staging.example.com
 PRODUCTION_HOST=console.example.com
 ```
 
-### Branch Protection Rules
+## Development Workflow
 
-It is recommended to set protection rules for `main` and `develop` branches:
+1. Create feature branch: `git checkout -b feature/new-feature`
+2. Develop and test locally
+3. Commit using Conventional Commits (English only)
+4. Create PR
+5. CI/CD runs automatically
+6. Code review
+7. Merge after all checks pass
 
-```yaml
-# .github/branch-protection.yml
-main:
-  required_status_checks:
-    - "🔍 Code Quality"
-    - "🧪 Unit Tests"
-    - "🔗 Integration Tests"
-    - "📊 Code Coverage"
-  enforce_admins: true
-  required_pull_request_reviews:
-    required_approving_review_count: 1
-    dismiss_stale_reviews: true
-  restrictions: null
-```
+**Commit messages must be in English:**
 
-## 📊 Monitoring and Reporting
+- ✅ `git commit -m "feat: add user authentication"`
+- ❌ `git commit -m "功能: 添加用户认证"`
 
-### Test Reports
+## Troubleshooting
 
-The following reports are generated after each run:
+**Test failures**: Check Actions logs, reproduce locally, fix and push.
 
-- 📊 **Coverage Report**: `coverage/` directory
-- 🧪 **Test Results**: JUnit XML format
-- 🔒 **Security Report**: Security audit results
-- 📋 **Quality Metrics**: Code quality analysis
+**Deployment failures**: Check deployment logs, verify environment, rollback if needed.
 
-### Quality Metrics
+**Dependency issues**: Auto-created Issues for security vulnerabilities, manually resolve compatibility issues.
 
-- **Code Coverage**: Display coverage changes in PRs
-- **Dependency Security**: Number and severity of security vulnerabilities
-- **Code Complexity**: File size and function complexity
-- **Test Results**: Test execution status and duration
+## Links
 
-## 🚨 Troubleshooting
-
-### Test Failures
-
-1. **View Failed Tests**: Check detailed logs in the Actions page
-2. **Reproduce Locally**: Run tests locally using the same Node.js version
-3. **Fix Issues**: Fix code or update tests
-4. **Resubmit**: Push the fixed code
-
-### Deployment Failures
-
-1. **Check Deployment Logs**: Review detailed output of deployment steps
-2. **Verify Environment**: Confirm target environment availability
-3. **Rollback**: If needed, manually rollback to the previous version
-4. **Fix and Retry**: Fix issues and trigger deployment again
-
-### Dependency Issues
-
-1. **Security Vulnerabilities**: Automatically create Issues, prioritize fixing high-severity vulnerabilities
-2. **Update Failures**: Check test failure reasons, manually resolve compatibility issues
-3. **License Issues**: Check license compatibility of new dependencies
-
-## 🔄 Workflow
-
-### Development Workflow
-
-1. **Create Feature Branch**: `git checkout -b feature/new-feature`
-2. **Develop and Test**: Develop locally and run tests
-3. **Commit Code**: Follow Conventional Commits specification, **commit messages must be in English**
-4. **Create PR**: Fill in detailed information using PR template
-5. **Automatic Checks**: CI/CD automatically runs all checks
-6. **Code Review**: Team members review code
-7. **Merge Code**: Merge after all checks pass
-
-**Commit Convention**:
-
-- ✅ Correct: `git commit -m "feat: add user authentication"`
-- ❌ Wrong: `git commit -m "功能: 添加用户认证"`
-- ✅ Correct: `git commit -m "fix: resolve bucket creation issue"`
-- ❌ Wrong: `git commit -m "修复: 解决存储桶创建问题"`
-
-All commit messages must be in English, including titles and descriptions.
-
-### Release Workflow
-
-1. **Prepare Release**: Ensure all features are completed and tested
-2. **Create Tag**: `git tag v1.0.0 && git push origin v1.0.0`
-3. **Automatic Deployment**: CI/CD automatically executes release process
-4. **Verify Deployment**: Check Staging environment
-5. **Production Deployment**: Manually approve production environment deployment
-6. **Monitor**: Monitor production environment health
-
-## 📈 Performance Optimization
-
-### Pipeline Optimization
-
-- **Parallel Execution**: Run independent jobs in parallel whenever possible
-- **Cache Strategy**: Use pnpm cache to speed up dependency installation
-- **Conditional Execution**: Conditionally run jobs based on changed content
-- **Resource Limits**: Set reasonable timeout durations
-
-### Test Optimization
-
-- **Test Layering**: Unit tests > Integration tests > E2E tests
-- **Concurrent Testing**: Utilize Vitest's concurrency capabilities
-- **Selective Testing**: Only test code related to changes
-- **Mock Strategy**: Reasonably use Mocks to reduce external dependencies
-
-## 🔗 Related Links
-
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
-- [Vitest Documentation](https://vitest.dev/)
-- [Codecov Documentation](https://docs.codecov.com/)
-- [Project Test Documentation](../tests/README.md)
-
-## 📞 Support
-
-If you encounter issues while using CI/CD pipelines:
-
-1. Check [GitHub Issues](../../issues) for known issues
-2. Create a new [Bug Report](../../issues/new?template=bug_report.md)
-3. Contact project maintainers
-
----
-
-🤖 **Automation makes development more efficient!** This CI/CD pipeline ensures code quality, improves development efficiency, and allows the team to focus on feature development rather than repetitive manual tasks.
+- [GitHub Actions Docs](https://docs.github.com/en/actions)
+- [Vitest Docs](https://vitest.dev/)
+- [Project Tests](../tests/README.md)

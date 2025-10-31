@@ -110,6 +110,18 @@ See [tests/README.md](tests/README.md) for details.
 
 ### Pre-Commit Checklist
 
+**Before committing, run all checks:**
+
+```bash
+# Quick check (lint, type-check, tests, build)
+pnpm run check
+
+# Full check (includes security audit)
+pnpm run pre-commit
+```
+
+Or manually:
+
 - ✅ `pnpm lint` passes
 - ✅ `pnpm type-check` passes
 - ✅ `pnpm test:run` passes
@@ -118,6 +130,8 @@ See [tests/README.md](tests/README.md) for details.
 - ✅ No debug code (`console.log`)
 - ✅ Self-reviewed
 - ✅ Commit messages in English
+
+**Tip**: Run `pnpm run check` before every commit to catch issues early.
 
 ### Commit Convention
 

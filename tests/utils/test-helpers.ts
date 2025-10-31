@@ -2,8 +2,8 @@
  * @fileoverview 测试辅助工具和 Mock 函数
  */
 
-import { expect, vi } from 'vitest';
-import type { SiteConfig } from '~/types/config';
+import { expect, vi } from 'vitest'
+import type { SiteConfig } from '~/types/config'
 
 // ============================================================================
 // Mock 数据生成器
@@ -24,7 +24,7 @@ export const createTestConfig = (overrides: Partial<SiteConfig> = {}): SiteConfi
     secretAccessKey: 'test-secret',
   },
   ...overrides,
-});
+})
 
 /**
  * 创建测试用的服务器配置响应
@@ -43,7 +43,7 @@ export const createTestServerResponse = (overrides: any = {}) => ({
     durationSeconds: 3600,
   },
   ...overrides,
-});
+})
 
 // ============================================================================
 // 环境 Mock 工具
@@ -53,12 +53,12 @@ export const createTestServerResponse = (overrides: any = {}) => ({
  * Mock 浏览器环境
  */
 export class BrowserMock {
-  private originalWindow: any;
-  private originalLocation: any;
+  private originalWindow: any
+  private originalLocation: any
 
   constructor() {
-    this.originalWindow = global.window;
-    this.originalLocation = global.window?.location;
+    this.originalWindow = global.window
+    this.originalLocation = global.window?.location
   }
 
   /**
@@ -73,12 +73,12 @@ export class BrowserMock {
       pathname: '/',
       search: '',
       hash: '',
-    };
+    }
 
     Object.defineProperty(global.window, 'location', {
       value: { ...defaultLocation, ...location },
       writable: true,
-    });
+    })
   }
 
   /**
@@ -86,19 +86,19 @@ export class BrowserMock {
    */
   mockNonBrowser() {
     // @ts-ignore
-    delete global.window;
+    delete global.window
   }
 
   /**
    * 恢复原始环境
    */
   restore() {
-    global.window = this.originalWindow;
+    global.window = this.originalWindow
     if (this.originalLocation) {
       Object.defineProperty(global.window, 'location', {
         value: this.originalLocation,
         writable: true,
-      });
+      })
     }
   }
 }
@@ -107,18 +107,18 @@ export class BrowserMock {
  * Mock localStorage
  */
 export class LocalStorageMock {
-  private store: Record<string, string> = {};
-  private originalLocalStorage: any;
+  private store: Record<string, string> = {}
+  private originalLocalStorage: any
 
   constructor() {
-    this.originalLocalStorage = global.localStorage;
+    this.originalLocalStorage = global.localStorage
   }
 
   /**
    * 设置初始数据
    */
   setData(data: Record<string, string>) {
-    this.store = { ...data };
+    this.store = { ...data }
   }
 
   /**
@@ -128,13 +128,13 @@ export class LocalStorageMock {
     const mockStorage = {
       ...this.createMockStorage(),
       [method]: vi.fn(() => {
-        throw new Error(`localStorage ${method} error`);
+        throw new Error(`localStorage ${method} error`)
       }),
-    };
+    }
 
     Object.defineProperty(global.window, 'localStorage', {
       value: mockStorage,
-    });
+    })
   }
 
   /**
@@ -143,27 +143,27 @@ export class LocalStorageMock {
   restore() {
     Object.defineProperty(global.window, 'localStorage', {
       value: this.createMockStorage(),
-    });
+    })
   }
 
   private createMockStorage() {
-    const self = this;
+    const self = this
     return {
       getItem: (key: string) => self.store[key] || null,
       setItem: (key: string, value: string) => {
-        self.store[key] = value;
+        self.store[key] = value
       },
       removeItem: (key: string) => {
-        delete self.store[key];
+        delete self.store[key]
       },
       clear: () => {
-        self.store = {};
+        self.store = {}
       },
       get length() {
-        return Object.keys(self.store).length;
+        return Object.keys(self.store).length
       },
       key: (index: number) => Object.keys(self.store)[index] || null,
-    };
+    }
   }
 }
 
@@ -180,7 +180,7 @@ export class FetchMock {
       status: options.status ?? 200,
       statusText: 'OK',
       json: () => Promise.resolve(data),
-    } as Response);
+    } as Response)
   }
 
   /**
@@ -192,14 +192,14 @@ export class FetchMock {
       status,
       statusText,
       json: () => Promise.reject(new Error('Response not ok')),
-    } as Response);
+    } as Response)
   }
 
   /**
    * Mock 网络错误
    */
   static mockNetworkError(message: string = 'Network error') {
-    return vi.mocked(fetch).mockRejectedValueOnce(new Error(message));
+    return vi.mocked(fetch).mockRejectedValueOnce(new Error(message))
   }
 
   /**
@@ -208,7 +208,7 @@ export class FetchMock {
   static mockTimeout(delay: number = 100) {
     return vi
       .mocked(fetch)
-      .mockImplementationOnce(() => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), delay)));
+      .mockImplementationOnce(() => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), delay)))
   }
 
   /**
@@ -220,7 +220,7 @@ export class FetchMock {
       status: 200,
       statusText: 'OK',
       json: () => Promise.reject(new Error('Invalid JSON')),
-    } as Response);
+    } as Response)
   }
 }
 
@@ -249,7 +249,7 @@ export const generateUrlTestCases = () => ({
     'javascript:alert(1)',
     'data:text/html,<script>alert(1)</script>',
   ],
-});
+})
 
 /**
  * 生成各种配置测试用例
@@ -273,7 +273,7 @@ export const generateConfigTestCases = () => ({
       s3: {},
     } as SiteConfig, // 部分字段为空
   ],
-});
+})
 
 // ============================================================================
 // 断言辅助函数
@@ -283,40 +283,40 @@ export const generateConfigTestCases = () => ({
  * 验证配置对象的结构
  */
 export const expectValidConfig = (config: SiteConfig | null) => {
-  expect(config).toBeTruthy();
-  expect(config?.serverHost).toBeTruthy();
-  expect(config?.api?.baseURL).toBeTruthy();
-  expect(config?.s3?.endpoint).toBeTruthy();
-  expect(config?.s3?.region).toBeTruthy();
-};
+  expect(config).toBeTruthy()
+  expect(config?.serverHost).toBeTruthy()
+  expect(config?.api?.baseURL).toBeTruthy()
+  expect(config?.s3?.endpoint).toBeTruthy()
+  expect(config?.s3?.region).toBeTruthy()
+}
 
 /**
  * 验证 ConfigResult 的结构
  */
 export const expectValidConfigResult = (result: any, expectedSource?: string) => {
-  expect(result).toHaveProperty('config');
-  expect(result).toHaveProperty('source');
+  expect(result).toHaveProperty('config')
+  expect(result).toHaveProperty('source')
 
   if (expectedSource) {
-    expect(result.source).toBe(expectedSource);
+    expect(result.source).toBe(expectedSource)
   }
 
   if (result.config) {
-    expectValidConfig(result.config);
+    expectValidConfig(result.config)
   }
-};
+}
 
 /**
  * 验证错误结果
  */
 export const expectErrorResult = (result: any, expectedSource?: string) => {
-  expect(result.config).toBeNull();
-  expect(result.error).toBeTruthy();
+  expect(result.config).toBeNull()
+  expect(result.error).toBeTruthy()
 
   if (expectedSource) {
-    expect(result.source).toBe(expectedSource);
+    expect(result.source).toBe(expectedSource)
   }
-};
+}
 
 // ============================================================================
 // 性能测试工具
@@ -326,12 +326,12 @@ export const expectErrorResult = (result: any, expectedSource?: string) => {
  * 测量函数执行时间
  */
 export const measureExecutionTime = async <T>(fn: () => Promise<T> | T): Promise<{ result: T; time: number }> => {
-  const start = performance.now();
-  const result = await fn();
-  const time = performance.now() - start;
+  const start = performance.now()
+  const result = await fn()
+  const time = performance.now() - start
 
-  return { result, time };
-};
+  return { result, time }
+}
 
 /**
  * 批量执行测试
@@ -340,18 +340,18 @@ export const runBatchTest = async <T>(
   fn: () => Promise<T> | T,
   count: number = 100
 ): Promise<{ results: T[]; averageTime: number; totalTime: number }> => {
-  const start = performance.now();
-  const results: T[] = [];
+  const start = performance.now()
+  const results: T[] = []
 
   for (let i = 0; i < count; i++) {
-    results.push(await fn());
+    results.push(await fn())
   }
 
-  const totalTime = performance.now() - start;
-  const averageTime = totalTime / count;
+  const totalTime = performance.now() - start
+  const averageTime = totalTime / count
 
-  return { results, averageTime, totalTime };
-};
+  return { results, averageTime, totalTime }
+}
 
 // ============================================================================
 // 清理工具
@@ -361,13 +361,13 @@ export const runBatchTest = async <T>(
  * 测试环境清理器
  */
 export class TestCleaner {
-  private cleanupFunctions: (() => void)[] = [];
+  private cleanupFunctions: (() => void)[] = []
 
   /**
    * 添加清理函数
    */
   addCleanup(fn: () => void) {
-    this.cleanupFunctions.push(fn);
+    this.cleanupFunctions.push(fn)
   }
 
   /**
@@ -376,11 +376,11 @@ export class TestCleaner {
   cleanup() {
     this.cleanupFunctions.forEach(fn => {
       try {
-        fn();
+        fn()
       } catch (error) {
-        console.warn('Cleanup function failed:', error);
+        console.warn('Cleanup function failed:', error)
       }
-    });
-    this.cleanupFunctions = [];
+    })
+    this.cleanupFunctions = []
   }
 }

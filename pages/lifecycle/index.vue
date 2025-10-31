@@ -17,7 +17,12 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Create lifecycle rules to automate object transitions and expiration.')" />
+    <DataTable
+      :table="table"
+      :is-loading="loading"
+      :empty-title="t('No Data')"
+      :empty-description="t('Create lifecycle rules to automate object transitions and expiration.')"
+    />
 
     <lifecycle-new-form ref="newRef" :bucketName="bucketName" @search="() => refresh()" />
   </page>
@@ -73,7 +78,9 @@ const columns: ColumnDef<LifecycleRule>[] = [
     id: 'version',
     header: () => t('Version'),
     accessorFn: row =>
-      row.NoncurrentVersionExpiration || row.NoncurrentVersionTransitions ? t('Non-current Version') : t('Current Version'),
+      row.NoncurrentVersionExpiration || row.NoncurrentVersionTransitions
+        ? t('Non-current Version')
+        : t('Current Version'),
   },
   {
     id: 'deleteMarker',
@@ -83,7 +90,8 @@ const columns: ColumnDef<LifecycleRule>[] = [
   {
     id: 'tier',
     header: () => t('Tier'),
-    accessorFn: row => row.Transitions?.[0]?.StorageClass || row.NoncurrentVersionTransitions?.[0]?.StorageClass || '--',
+    accessorFn: row =>
+      row.Transitions?.[0]?.StorageClass || row.NoncurrentVersionTransitions?.[0]?.StorageClass || '--',
   },
   {
     id: 'prefix',
@@ -110,7 +118,7 @@ const columns: ColumnDef<LifecycleRule>[] = [
         {
           variant: row.original.Status === 'Enabled' ? 'secondary' : 'destructive',
         },
-        () => row.original.Status || '-',
+        () => row.original.Status || '-'
       ),
   },
   {
@@ -126,7 +134,7 @@ const columns: ColumnDef<LifecycleRule>[] = [
             size: 'sm',
             onClick: () => confirmDelete(row.original),
           },
-          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))],
+          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
         ),
       ]),
   },

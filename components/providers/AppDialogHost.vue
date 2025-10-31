@@ -16,10 +16,7 @@
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel v-if="dialog.negativeText" as-child @click.prevent="() => handleNegative(dialog)">
-              <Button
-                :variant="negativeButtonVariant(dialog)"
-                class="w-full sm:w-auto text-foreground"
-              >
+              <Button :variant="negativeButtonVariant(dialog)" class="w-full sm:w-auto text-foreground">
                 {{ dialog.negativeText }}
               </Button>
             </AlertDialogCancel>
@@ -62,18 +59,9 @@ const negativeButtonVariant = (dialog: DialogInstance): ButtonVariants['variant'
 }
 
 const positiveButtonClass = (dialog: DialogInstance) => {
-  const variant =
-    dialog.tone === 'destructive'
-      ? 'destructive'
-      : dialog.tone === 'warning'
-        ? 'secondary'
-        : 'default'
+  const variant = dialog.tone === 'destructive' ? 'destructive' : dialog.tone === 'warning' ? 'secondary' : 'default'
 
-  return cn(
-    buttonVariants({ variant }),
-    'w-full sm:w-auto',
-    variant === 'destructive' && 'text-white'
-  )
+  return cn(buttonVariants({ variant }), 'w-full sm:w-auto', variant === 'destructive' && 'text-white')
 }
 
 const handleAction = async (

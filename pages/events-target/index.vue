@@ -17,7 +17,12 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="pending" :empty-title="t('No Destinations')" :empty-description="t('Create an event destination to forward notifications.')" />
+    <DataTable
+      :table="table"
+      :is-loading="pending"
+      :empty-title="t('No Destinations')"
+      :empty-description="t('Create an event destination to forward notifications.')"
+    />
 
     <events-target-new-form ref="newFormRef" @search="() => refresh()" />
   </page>

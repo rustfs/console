@@ -1,5 +1,5 @@
 export const useGroups = () => {
-  const { $api } = useNuxtApp();
+  const { $api } = useNuxtApp()
 
   /**
    * Get all groups
@@ -7,8 +7,8 @@ export const useGroups = () => {
    * @returns
    */
   const listGroup = async () => {
-    return await $api.get('/groups');
-  };
+    return await $api.get('/groups')
+  }
 
   /**
    * get group info
@@ -16,8 +16,8 @@ export const useGroups = () => {
    * @returns
    */
   const getGroup = async (name: string) => {
-    return await $api.get(`/group?group=${encodeURIComponent(name)}`);
-  };
+    return await $api.get(`/group?group=${encodeURIComponent(name)}`)
+  }
 
   /**
    * add group
@@ -25,8 +25,8 @@ export const useGroups = () => {
    * @returns
    */
   const createGroup = async (data: any) => {
-    return await $api.post('/groups', data);
-  };
+    return await $api.post('/groups', data)
+  }
 
   /**
    * delete group
@@ -34,8 +34,8 @@ export const useGroups = () => {
    * @returns
    */
   const removeGroup = async (name: string) => {
-    return await $api.delete(`/group/${encodeURIComponent(name)}`, {});
-  };
+    return await $api.delete(`/group/${encodeURIComponent(name)}`, {})
+  }
 
   /**
    * update group
@@ -44,8 +44,8 @@ export const useGroups = () => {
    * @returns
    */
   const updateGroup = async (name: string, data: any) => {
-    return await $api.put(`/group/${encodeURIComponent(name)}`, data);
-  };
+    return await $api.put(`/group/${encodeURIComponent(name)}`, data)
+  }
 
   /**
    * @desc 修改用户组的状态
@@ -54,8 +54,8 @@ export const useGroups = () => {
    * @returns
    */
   const updateGroupStatus = async (name: string, data: any) => {
-    return await $api.put(`/set-group-status?group=${encodeURIComponent(name)}&status=${data.status}`, data);
-  };
+    return await $api.put(`/set-group-status?group=${encodeURIComponent(name)}&status=${data.status}`, data)
+  }
 
   /**
    * #desc 修改用户组的成员
@@ -64,8 +64,8 @@ export const useGroups = () => {
    * @returns
    */
   const updateGroupMembers = async (data: any) => {
-    return await $api.put(`/update-group-members`, data);
-  };
+    return await $api.put(`/update-group-members`, data)
+  }
 
   return {
     listGroup,
@@ -75,5 +75,5 @@ export const useGroups = () => {
     updateGroup,
     updateGroupStatus,
     updateGroupMembers,
-  };
-};
+  }
+}

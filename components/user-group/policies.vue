@@ -105,7 +105,10 @@ const selectedPolicies = ref<string[]>([])
 
 const currentPolicies = computed(() => {
   if (!props.group?.policy) return []
-  return props.group.policy.split(',').map(item => item.trim()).filter(Boolean)
+  return props.group.policy
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean)
 })
 
 interface PolicyItem {

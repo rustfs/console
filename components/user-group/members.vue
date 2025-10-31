@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-4">
-  <Card class="shadow-none">
+    <Card class="shadow-none">
       <CardContent class="space-y-4 pt-6">
         <div v-if="!editStatus" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div class="w-full sm:max-w-xs">
@@ -127,8 +127,7 @@ const changeMembers = async () => {
     message.success('修改成功')
     editStatus.value = false
     emit('search')
-  }
-  catch (error) {
+  } catch (error) {
     message.error('修改失败')
   }
 }

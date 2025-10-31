@@ -1,1 +1,1 @@
-export { default as RadiantText } from './RadiantText.vue';
+export { default as RadiantText } from './RadiantText.vue'

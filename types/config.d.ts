@@ -1,21 +1,21 @@
 export type S3Config = {
-  region: string;
-  endpoint: string;
-  accessKeyId: string;
-  secretAccessKey: string;
-};
+  region: string
+  endpoint: string
+  accessKeyId: string
+  secretAccessKey: string
+}
 
 export type ApiConfig = {
-  baseURL: string;
-};
+  baseURL: string
+}
 
 export type SessionConfig = {
-  durationSeconds: number;
-};
+  durationSeconds: number
+}
 
 export interface SiteConfig {
-  serverHost: string;
-  api: ApiConfig;
-  s3: S3Config;
-  session?: SessionConfig;
+  serverHost: string
+  api: ApiConfig
+  s3: S3Config
+  session?: SessionConfig
 }

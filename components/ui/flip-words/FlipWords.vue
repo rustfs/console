@@ -33,65 +33,65 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 interface Props {
-  words: string[];
-  duration?: number;
-  class?: string;
+  words: string[]
+  duration?: number
+  class?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   duration: 3000,
   class: '',
-});
+})
 
-defineEmits(['animationStart', 'animationComplete']);
+defineEmits(['animationStart', 'animationComplete'])
 
-const currentWord = ref<string>(props.words[0] ?? "");
-const isVisible = ref(true);
-const timeoutId = ref<number | null>(null);
+const currentWord = ref<string>(props.words[0] ?? '')
+const isVisible = ref(true)
+const timeoutId = ref<number | null>(null)
 
 function startAnimation() {
-  isVisible.value = false;
+  isVisible.value = false
 
   setTimeout(() => {
-    const words = props.words ?? [];
-    const currentIndex = words.indexOf(currentWord.value);
-    const nextWord = words[currentIndex + 1] ?? words[0] ?? "";
-    currentWord.value = nextWord;
-    isVisible.value = true;
-  }, 600);
+    const words = props.words ?? []
+    const currentIndex = words.indexOf(currentWord.value)
+    const nextWord = words[currentIndex + 1] ?? words[0] ?? ''
+    currentWord.value = nextWord
+    isVisible.value = true
+  }, 600)
 }
 
 const splitWords = computed(() => {
   return currentWord.value.split(' ').map(word => ({
     word,
     letters: word.split(''),
-  }));
-});
+  }))
+})
 
 function startTimeout() {
   timeoutId.value = window.setTimeout(() => {
-    startAnimation();
-  }, props.duration);
+    startAnimation()
+  }, props.duration)
 }
 
 onMounted(() => {
-  startTimeout();
-});
+  startTimeout()
+})
 
 onBeforeUnmount(() => {
   if (timeoutId.value) {
-    clearTimeout(timeoutId.value);
+    clearTimeout(timeoutId.value)
   }
-});
+})
 
 watch(isVisible, newValue => {
   if (newValue) {
-    startTimeout();
+    startTimeout()
   }
-});
+})
 </script>
 
 <style>

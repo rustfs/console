@@ -5,7 +5,14 @@
         <Field>
           <FieldLabel>{{ t('User Name') }}</FieldLabel>
           <FieldContent>
-            <Input v-model="editForm.accessKey" default-value="" minlength="4" name="new-user-access-key" spellcheck="false" autocomplete="new-user-access-key" />
+            <Input
+              v-model="editForm.accessKey"
+              default-value=""
+              minlength="4"
+              name="new-user-access-key"
+              spellcheck="false"
+              autocomplete="new-user-access-key"
+            />
           </FieldContent>
           <FieldDescription v-if="errors.accessKey" class="text-destructive">
             {{ errors.accessKey }}
@@ -15,8 +22,17 @@
         <Field>
           <FieldLabel>{{ t('Password') }}</FieldLabel>
           <FieldContent>
-            <Input v-model="editForm.secretKey" default-value="" minlength="8" id="new-user-password" spellcheck="false" type="password" name="new-user-password"
-              autocomplete="new-user-password" aria-autocomplete="none" />
+            <Input
+              v-model="editForm.secretKey"
+              default-value=""
+              minlength="8"
+              id="new-user-password"
+              spellcheck="false"
+              type="password"
+              name="new-user-password"
+              autocomplete="new-user-password"
+              aria-autocomplete="none"
+            />
           </FieldContent>
           <FieldDescription v-if="errors.secretKey" class="text-destructive">
             {{ errors.secretKey }}
@@ -42,8 +58,17 @@
                 <CommandList>
                   <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
                   <CommandGroup>
-                    <CommandItem v-for="option in groupsList" :key="option.value" :value="option.label" @select="() => toggleGroup(option.value)">
-                      <Icon name="ri:check-line" class="mr-2 size-4" :class="editForm.groups.includes(option.value) ? 'opacity-100' : 'opacity-0'" />
+                    <CommandItem
+                      v-for="option in groupsList"
+                      :key="option.value"
+                      :value="option.label"
+                      @select="() => toggleGroup(option.value)"
+                    >
+                      <Icon
+                        name="ri:check-line"
+                        class="mr-2 size-4"
+                        :class="editForm.groups.includes(option.value) ? 'opacity-100' : 'opacity-0'"
+                      />
                       <span>{{ option.label }}</span>
                     </CommandItem>
                   </CommandGroup>
@@ -75,8 +100,17 @@
                 <CommandList>
                   <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
                   <CommandGroup>
-                    <CommandItem v-for="option in policiesList" :key="option.value" :value="option.label" @select="() => togglePolicy(option.value)">
-                      <Icon name="ri:check-line" class="mr-2 size-4" :class="editForm.policies.includes(option.value) ? 'opacity-100' : 'opacity-0'" />
+                    <CommandItem
+                      v-for="option in policiesList"
+                      :key="option.value"
+                      :value="option.label"
+                      @select="() => togglePolicy(option.value)"
+                    >
+                      <Icon
+                        name="ri:check-line"
+                        class="mr-2 size-4"
+                        :class="editForm.policies.includes(option.value) ? 'opacity-100' : 'opacity-0'"
+                      />
                       <span>{{ option.label }}</span>
                     </CommandItem>
                   </CommandGroup>

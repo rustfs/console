@@ -20,8 +20,14 @@
     </page-header>
 
     <div class="space-y-3">
-      <DataTable :table="table" :is-loading="loading" :empty-title="t('No Access Keys')" :empty-description="t('Create a new access key to get started.')" class="overflow-hidden"
-        table-class="min-w-full" />
+      <DataTable
+        :table="table"
+        :is-loading="loading"
+        :empty-title="t('No Access Keys')"
+        :empty-description="t('Create a new access key to get started.')"
+        class="overflow-hidden"
+        table-class="min-w-full"
+      />
       <DataTablePagination :table="table" class="px-2 py-3" />
     </div>
 
@@ -93,10 +99,8 @@ const columns: ColumnDef<RowData>[] = [
     accessorKey: 'accountStatus',
     header: () => t('Status'),
     cell: ({ row }) =>
-      h(
-        Badge,
-        { variant: row.original.accountStatus === 'on' ? 'secondary' : 'destructive' },
-        () => (row.original.accountStatus === 'on' ? t('Available') : t('Disabled'))
+      h(Badge, { variant: row.original.accountStatus === 'on' ? 'secondary' : 'destructive' }, () =>
+        row.original.accountStatus === 'on' ? t('Available') : t('Disabled')
       ),
   },
   {
@@ -116,16 +120,24 @@ const columns: ColumnDef<RowData>[] = [
     enableHiding: false,
     cell: ({ row }) =>
       h('div', { class: 'flex justify-center gap-2' }, [
-        h(Button, {
-          variant: 'outline',
-          size: 'sm',
-          onClick: () => openEditItem(row.original),
-        }, () => [h(Icon, { name: 'ri:edit-2-line', class: 'size-4' }), h('span', t('Edit'))]),
-        h(Button, {
-          variant: 'outline',
-          size: 'sm',
-          onClick: () => confirmDeleteSingle(row.original),
-        }, () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))])
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => openEditItem(row.original),
+          },
+          () => [h(Icon, { name: 'ri:edit-2-line', class: 'size-4' }), h('span', t('Edit'))]
+        ),
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => confirmDeleteSingle(row.original),
+          },
+          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
+        ),
       ]),
   },
 ]

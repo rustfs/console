@@ -73,9 +73,7 @@
     <Modal v-model="showTagView" :title="t('Set Tags')" size="lg">
       <div class="space-y-4">
         <div class="flex flex-wrap gap-2">
-          <Badge v-for="tag in tags" :key="tag.Key" variant="secondary">
-            {{ tag.Key }}: {{ tag.Value }}
-          </Badge>
+          <Badge v-for="tag in tags" :key="tag.Key" variant="secondary"> {{ tag.Key }}: {{ tag.Value }} </Badge>
         </div>
         <form class="space-y-4" @submit.prevent="submitTagForm">
           <div class="grid gap-4 sm:grid-cols-2">
@@ -105,10 +103,13 @@
           <Field>
             <FieldLabel>{{ t('Retention Mode') }}</FieldLabel>
             <FieldContent>
-              <v-radio-group v-model="retentionMode" :options="[
-                { label: t('COMPLIANCE'), value: 'COMPLIANCE' },
-                { label: t('GOVERNANCE'), value: 'GOVERNANCE' },
-              ]" />
+              <v-radio-group
+                v-model="retentionMode"
+                :options="[
+                  { label: t('COMPLIANCE'), value: 'COMPLIANCE' },
+                  { label: t('GOVERNANCE'), value: 'GOVERNANCE' },
+                ]"
+              />
             </FieldContent>
           </Field>
           <Field>
@@ -127,8 +128,14 @@
     </Modal>
 
     <object-preview-modal v-model:show="showPreview" :object="previewObject ?? object" />
-    <ObjectVersions :bucket-name="bucketName" :object-key="object?.Key || ''" :visible="showVersions" @close="handleVersionsClose" @preview="handlePreviewVersion"
-      @refresh-parent="handleVersionsRefresh" />
+    <ObjectVersions
+      :bucket-name="bucketName"
+      :object-key="object?.Key || ''"
+      :visible="showVersions"
+      @close="handleVersionsClose"
+      @preview="handlePreviewVersion"
+      @refresh-parent="handleVersionsRefresh"
+    />
   </Drawer>
 </template>
 
@@ -174,9 +181,11 @@ const previewObject = ref<any | null>(null)
 
 const tagFormValue = ref({ Key: '', Value: '' })
 
-const { getObjectInfo, setLegalHold, putObjectTags, getObjectTags, getObjectRetention, putObjectRetention } = useObject({
-  bucket: props.bucketName,
-})
+const { getObjectInfo, setLegalHold, putObjectTags, getObjectTags, getObjectRetention, putObjectRetention } = useObject(
+  {
+    bucket: props.bucketName,
+  }
+)
 
 const openDrawer = async (_bucket: string, key: string) => {
   visible.value = true
@@ -339,7 +348,12 @@ watch(
 
 const download = async () => {
   if (!object.value) return
-  const url = joinRelativeURL('/browser', encodeURIComponent(props.bucketName), 'download', encodeURIComponent(object.value.Key))
+  const url = joinRelativeURL(
+    '/browser',
+    encodeURIComponent(props.bucketName),
+    'download',
+    encodeURIComponent(object.value.Key)
+  )
   window.open(url, '_blank')
 }
 

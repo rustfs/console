@@ -80,7 +80,10 @@ const getLabel = (item: NavItem) => t(item.label)
   <Sidebar collapsible="icon">
     <SidebarHeader>
       <NuxtLink to="/" class="flex items-center gap-3">
-        <div v-if="isCollapsed" class="flex size-8 items-center justify-center rounded-lg bg-primary text-md font-semibold text-primary-foreground">
+        <div
+          v-if="isCollapsed"
+          class="flex size-8 items-center justify-center rounded-lg bg-primary text-md font-semibold text-primary-foreground"
+        >
           <span>{{ brandInitial }}</span>
         </div>
         <div v-if="!isCollapsed" class="flex min-w-0 flex-col px-3 py-4">
@@ -96,20 +99,33 @@ const getLabel = (item: NavItem) => t(item.label)
             <SidebarGroupContent>
               <SidebarMenu>
                 <template v-for="item in group" :key="item.label">
-                  <Collapsible v-if="hasChildren(item)" as-child :default-open="isRouteActive(item)" class="group/collapsible">
+                  <Collapsible
+                    v-if="hasChildren(item)"
+                    as-child
+                    :default-open="isRouteActive(item)"
+                    class="group/collapsible"
+                  >
                     <SidebarMenuItem>
                       <CollapsibleTrigger as-child>
                         <SidebarMenuButton :is-active="isRouteActive(item)" :tooltip="getLabel(item)" class="gap-3">
                           <Icon v-if="item.icon" :name="item.icon" class="size-4 shrink-0" />
                           <span class="flex-1 truncate">{{ getLabel(item) }}</span>
-                          <Icon name="ri:arrow-right-s-line" class="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                          <Icon
+                            name="ri:arrow-right-s-line"
+                            class="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                          />
                         </SidebarMenuButton>
                       </CollapsibleTrigger>
                       <CollapsibleContent>
                         <SidebarMenuSub>
                           <SidebarMenuSubItem v-for="child in item.children" :key="child.label">
                             <SidebarMenuSubButton v-if="isExternal(child)" as-child size="sm">
-                              <a :href="normalizedTo(child)" target="_blank" rel="noopener noreferrer" class="flex w-full items-center gap-2">
+                              <a
+                                :href="normalizedTo(child)"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="flex w-full items-center gap-2"
+                              >
                                 <Icon v-if="child.icon" :name="child.icon" class="size-3.5 shrink-0" />
                                 <span class="truncate">{{ getLabel(child) }}</span>
                                 <Icon name="ri:external-link-line" class="ml-auto size-3 text-muted-foreground" />
@@ -128,7 +144,12 @@ const getLabel = (item: NavItem) => t(item.label)
                   </Collapsible>
                   <SidebarMenuItem v-else>
                     <SidebarMenuButton v-if="isExternal(item)" as-child :tooltip="getLabel(item)">
-                      <a :href="normalizedTo(item)" target="_blank" rel="noopener noreferrer" class="flex w-full items-center gap-3">
+                      <a
+                        :href="normalizedTo(item)"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex w-full items-center gap-3"
+                      >
                         <Icon v-if="item.icon" :name="item.icon" class="size-4 shrink-0" />
                         <span class="flex-1 truncate">{{ getLabel(item) }}</span>
                         <Icon name="ri:external-link-line" class="size-3.5 text-muted-foreground" />
@@ -150,8 +171,7 @@ const getLabel = (item: NavItem) => t(item.label)
       </ScrollArea>
     </SidebarContent>
 
-    <SidebarFooter class="mt-auto flex flex-col gap-3 px-2 pb-2">
-    </SidebarFooter>
+    <SidebarFooter class="mt-auto flex flex-col gap-3 px-2 pb-2"> </SidebarFooter>
 
     <SidebarRail />
   </Sidebar>

@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia';
-import DeleteTaskManager from '~/lib/delete-task-manager';
+import { defineStore } from 'pinia'
+import DeleteTaskManager from '~/lib/delete-task-manager'
 
 export const useDeleteTaskManagerStore = defineStore('DeleteTaskManager', {
   state: () => ({
@@ -19,44 +19,44 @@ export const useDeleteTaskManagerStore = defineStore('DeleteTaskManager', {
   },
   actions: {
     addKeys(keys: string[], bucketName: string, prefix?: string) {
-      console.log('addKeys', keys.length, 'keys to bucket', bucketName, 'prefix:', prefix);
+      console.log('addKeys', keys.length, 'keys to bucket', bucketName, 'prefix:', prefix)
 
       // Process large batches of keys in chunks
-      const batchSize = 50;
+      const batchSize = 50
       if (keys.length > batchSize) {
-        console.log(`Processing ${keys.length} keys in batches of ${batchSize}`);
+        console.log(`Processing ${keys.length} keys in batches of ${batchSize}`)
         for (let i = 0; i < keys.length; i += batchSize) {
-          const batch = keys.slice(i, i + batchSize);
-          this.taskManager.addKeys(batch, bucketName, prefix);
+          const batch = keys.slice(i, i + batchSize)
+          this.taskManager.addKeys(batch, bucketName, prefix)
         }
       } else {
-        this.taskManager.addKeys(keys, bucketName, prefix);
+        this.taskManager.addKeys(keys, bucketName, prefix)
       }
     },
 
     getTasks() {
-      return this.taskManager.getTasks();
+      return this.taskManager.getTasks()
     },
 
     cancelTask(taskId: string) {
-      this.taskManager.cancelTask(taskId);
+      this.taskManager.cancelTask(taskId)
     },
 
     cancelAllTasks() {
-      this.taskManager.cancel();
+      this.taskManager.cancel()
     },
 
     removeTask(taskId: string) {
-      this.taskManager.removeTask(taskId);
+      this.taskManager.removeTask(taskId)
     },
 
     clearTasks() {
-      this.taskManager.clearTasks();
+      this.taskManager.clearTasks()
     },
 
     // Get statistics
     getStats() {
-      const tasks = this.tasks;
+      const tasks = this.tasks
       return {
         total: tasks.length,
         pending: tasks.filter(task => task.status === 'pending').length,
@@ -64,7 +64,7 @@ export const useDeleteTaskManagerStore = defineStore('DeleteTaskManager', {
         completed: tasks.filter(task => task.status === 'completed').length,
         failed: tasks.filter(task => task.status === 'failed').length,
         canceled: tasks.filter(task => task.status === 'canceled').length,
-      };
+      }
     },
   },
-});
+})

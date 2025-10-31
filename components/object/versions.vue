@@ -59,7 +59,8 @@ const columns = computed<ColumnDef<any, any>[]>(() => [
   {
     id: 'lastModified',
     header: () => t('LastModified'),
-    cell: ({ row }: any) => (row.original.LastModified ? dayjs(row.original.LastModified).format('YYYY-MM-DD HH:mm:ss') : ''),
+    cell: ({ row }: any) =>
+      row.original.LastModified ? dayjs(row.original.LastModified).format('YYYY-MM-DD HH:mm:ss') : '',
   },
   {
     id: 'size',

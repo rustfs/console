@@ -1,13 +1,13 @@
-import { Icon } from '#components';
+import { Icon } from '#components'
 
 export function icon(name: string) {
   if (!name.includes(':')) {
-    name = 'ri:' + name;
+    name = 'ri:' + name
   }
 
-  return h(Icon, { name });
+  return h(Icon, { name })
 }
 
 export function iconRender(name: string) {
-  return () => icon(name);
+  return () => icon(name)
 }

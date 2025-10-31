@@ -1,11 +1,6 @@
 <template>
   <Dialog :open="visible" @update:open="handleOpenChange">
-    <DialogContent
-      class="max-w-2xl"
-      @pointerDownOutside.prevent
-      @interactOutside.prevent
-      @escapeKeyDown.prevent
-    >
+    <DialogContent class="max-w-2xl" @pointerDownOutside.prevent @interactOutside.prevent @escapeKeyDown.prevent>
       <DialogHeader class="text-left">
         <DialogTitle>
           {{ t('Subscribe to event notification') }}
@@ -19,20 +14,12 @@
         <Field orientation="responsive" class="sm:items-center">
           <FieldLabel for="event-resource-name">{{ t('Amazon Resource Name') }}</FieldLabel>
           <FieldContent>
-            <Select
-              id="event-resource-name"
-              v-model="formData.resourceName"
-              :disabled="!arnList.length"
-            >
+            <Select id="event-resource-name" v-model="formData.resourceName" :disabled="!arnList.length">
               <SelectTrigger>
                 <SelectValue :placeholder="t('Please select resource name')" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="item in arnList"
-                  :key="item.value"
-                  :value="item.value"
-                >
+                <SelectItem v-for="item in arnList" :key="item.value" :value="item.value">
                   {{ item.label }}
                 </SelectItem>
               </SelectContent>
@@ -46,22 +33,14 @@
         <Field orientation="responsive" class="sm:items-center">
           <FieldLabel for="event-prefix">{{ t('Prefix') }}</FieldLabel>
           <FieldContent>
-            <Input
-              id="event-prefix"
-              v-model="formData.prefix"
-              :placeholder="t('Please enter prefix')"
-            />
+            <Input id="event-prefix" v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
           </FieldContent>
         </Field>
 
         <Field orientation="responsive" class="sm:items-center">
           <FieldLabel for="event-suffix">{{ t('Suffix') }}</FieldLabel>
           <FieldContent>
-            <Input
-              id="event-suffix"
-              v-model="formData.suffix"
-              :placeholder="t('Please enter suffix')"
-            />
+            <Input id="event-suffix" v-model="formData.suffix" :placeholder="t('Please enter suffix')" />
           </FieldContent>
         </Field>
 
@@ -70,11 +49,7 @@
           <FieldContent>
             <ScrollArea class="max-h-64 rounded-md border">
               <div class="flex flex-col gap-2 p-4">
-                <label
-                  v-for="event in eventOptions"
-                  :key="event.value"
-                  class="flex items-start gap-3"
-                >
+                <label v-for="event in eventOptions" :key="event.value" class="flex items-start gap-3">
                   <Checkbox
                     :checked="formData.events.includes(event.value)"
                     class="mt-1"
@@ -104,23 +79,12 @@
 </template>
 
 <script setup lang="ts">
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'

@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import type { HTMLAttributes } from 'vue'
 import { computed } from 'vue'
@@ -93,10 +87,7 @@ const internalValue = computed<string | undefined>({
           {{ option.label }}
         </SelectItem>
       </template>
-      <div
-        v-else
-        class="px-2 py-3 text-sm text-muted-foreground"
-      >
+      <div v-else class="px-2 py-3 text-sm text-muted-foreground">
         {{ emptyMessage || 'No options available' }}
       </div>
     </SelectContent>

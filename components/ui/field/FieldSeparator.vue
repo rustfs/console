@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue"
-import { cn } from "@/lib/utils"
+import type { HTMLAttributes } from 'vue'
+import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 
 const props = defineProps<{
-  class?: HTMLAttributes["class"]
+  class?: HTMLAttributes['class']
 }>()
 </script>
 
@@ -12,10 +12,7 @@ const props = defineProps<{
   <div
     data-slot="field-separator"
     :data-content="!!$slots.default"
-    :class="cn(
-      'relative -my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2',
-      props.class,
-    )"
+    :class="cn('relative -my-2 h-5 text-sm group-data-[variant=outline]/field-group:-mb-2', props.class)"
   >
     <Separator class="absolute inset-0 top-1/2" />
     <span

@@ -58,4 +58,3 @@ export async function navigateToRoute(
 export function getLoginRoute(): string {
   return buildRoute('/auth/login')
 }
-

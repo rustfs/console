@@ -36,9 +36,7 @@
         <CardHeader class="pb-3">
           <div class="flex items-center justify-between">
             <CardTitle>{{ t('Usage Report') }}</CardTitle>
-            <span class="text-sm text-muted-foreground">
-              {{ t('Last Scan Activity') }}: {{ lastUpdatedLabel }}
-            </span>
+            <span class="text-sm text-muted-foreground"> {{ t('Last Scan Activity') }}: {{ lastUpdatedLabel }} </span>
           </div>
           <CardDescription>
             {{ t('Monitor overall storage usage and recent scanner activity at a glance.') }}
@@ -57,18 +55,12 @@
             </div>
             <div class="w-full max-w-xs space-y-2">
               <Progress :model-value="usedPercent" class="h-2" />
-              <p class="text-xs text-muted-foreground text-right">
-                {{ usedPercent.toFixed(0) }}%
-              </p>
+              <p class="text-xs text-muted-foreground text-right">{{ usedPercent.toFixed(0) }}%</p>
             </div>
           </div>
 
           <div class="grid gap-3 sm:grid-cols-3">
-            <div
-              v-for="item in usageStats"
-              :key="item.label"
-              class="rounded-lg border bg-muted/40 p-4"
-            >
+            <div v-for="item in usageStats" :key="item.label" class="rounded-lg border bg-muted/40 p-4">
               <p class="text-xs text-muted-foreground uppercase">
                 {{ item.label }}
               </p>
@@ -132,11 +124,7 @@
         </CardHeader>
         <CardContent>
           <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <Card
-              v-for="item in backendInfo"
-              :key="item.title"
-              class="border bg-muted/40 shadow-none"
-            >
+            <Card v-for="item in backendInfo" :key="item.title" class="border bg-muted/40 shadow-none">
               <CardHeader class="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle class="text-sm font-medium text-muted-foreground">
                   {{ item.title }}
@@ -161,9 +149,7 @@
               {{ t('Inspect individual server health, disk utilization, and network status.') }}
             </CardDescription>
           </div>
-          <span class="text-sm text-muted-foreground">
-            {{ t('Total') }}: {{ serverInfo.count ?? 0 }}
-          </span>
+          <span class="text-sm text-muted-foreground"> {{ t('Total') }}: {{ serverInfo.count ?? 0 }} </span>
         </CardHeader>
         <CardContent>
           <Accordion type="single" collapsible class="space-y-2">
@@ -182,30 +168,20 @@
                     <span class="font-semibold">{{ server.endpoint }}</span>
                   </div>
                   <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                    <span>
-                      {{ t('Disks') }}: {{ countOnlineDrives(server, 'ok') }} / {{ server.drives.length }}
-                    </span>
+                    <span> {{ t('Disks') }}: {{ countOnlineDrives(server, 'ok') }} / {{ server.drives.length }} </span>
                     <span>
                       {{ t('Network') }}: {{ countOnlineNetworks(server, 'online') }} /
                       {{ Object.keys(server.network).length }}
                     </span>
-                    <span>
-                      {{ t('Uptime') }}: {{ dayjs().subtract(server.uptime, 'second').toNow() }}
-                    </span>
+                    <span> {{ t('Uptime') }}: {{ dayjs().subtract(server.uptime, 'second').toNow() }} </span>
                   </div>
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <p class="pb-2 text-xs text-muted-foreground">
-                  {{ t('Version') }}: {{ server.version }}
-                </p>
+                <p class="pb-2 text-xs text-muted-foreground">{{ t('Version') }}: {{ server.version }}</p>
                 <ScrollArea class="w-full">
                   <div class="flex gap-4 pb-2">
-                    <Card
-                      v-for="drive in server.drives"
-                      :key="drive.uuid"
-                      class="min-w-[260px] shadow-none"
-                    >
+                    <Card v-for="drive in server.drives" :key="drive.uuid" class="min-w-[260px] shadow-none">
                       <CardHeader class="pb-2">
                         <CardTitle class="text-sm font-medium text-muted-foreground">
                           {{ drive.drive_path }}
@@ -368,12 +344,12 @@ const usageStats = computed(() => [
   },
 ])
 
-const onlineServers = computed(() =>
-  (systemInfo.value?.servers || []).filter((server: any) => server.state === 'online').length
+const onlineServers = computed(
+  () => (systemInfo.value?.servers || []).filter((server: any) => server.state === 'online').length
 )
 
-const offlineServers = computed(() =>
-  (systemInfo.value?.servers || []).filter((server: any) => server.state === 'offline').length
+const offlineServers = computed(
+  () => (systemInfo.value?.servers || []).filter((server: any) => server.state === 'offline').length
 )
 
 const countOnlineNetworks = (info: any, type: string) =>

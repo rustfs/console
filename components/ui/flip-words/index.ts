@@ -1,1 +1,1 @@
-export { default as FlipWords } from './FlipWords.vue';
+export { default as FlipWords } from './FlipWords.vue'

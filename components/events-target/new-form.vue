@@ -1,8 +1,18 @@
 <template>
-  <Modal v-model="visible" :title="formData.type ? t('Add {type} Destination', { type: formData.type }) : t('Add Event Destination')" size="lg" :close-on-backdrop="false">
+  <Modal
+    v-model="visible"
+    :title="formData.type ? t('Add {type} Destination', { type: formData.type }) : t('Add Event Destination')"
+    size="lg"
+    :close-on-backdrop="false"
+  >
     <div class="space-y-6">
       <div v-if="!formData.type" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div v-for="option in typeOptions" :key="option.value" class="cursor-pointer border border-border/70 transition hover:border-primary" @click="chooseType(option.value)">
+        <div
+          v-for="option in typeOptions"
+          :key="option.value"
+          class="cursor-pointer border border-border/70 transition hover:border-primary"
+          @click="chooseType(option.value)"
+        >
           <div class="flex items-center gap-3 p-4">
             <img :src="option.iconUrl" class="h-10 w-10" alt="" />
             <div>
@@ -14,7 +24,10 @@
       </div>
 
       <div v-else class="space-y-4">
-        <div class="flex cursor-pointer items-center gap-3 p-4 border transition hover:border-primary" @click="resetType">
+        <div
+          class="flex cursor-pointer items-center gap-3 p-4 border transition hover:border-primary"
+          @click="resetType"
+        >
           <img :src="iconUrl" class="h-10 w-10" alt="" />
           <div class="flex flex-col">
             <span class="text-sm text-muted-foreground">{{ t('Selected Type') }}</span>
@@ -26,7 +39,13 @@
           <Field>
             <FieldLabel for="target-name">{{ t('Name') }} (A-Z,0-9,_)</FieldLabel>
             <FieldContent>
-              <Input id="target-name" v-model="formData.name" :placeholder="t('Please enter name')" autocomplete="off" @input="validateNameFormat" />
+              <Input
+                id="target-name"
+                v-model="formData.name"
+                :placeholder="t('Please enter name')"
+                autocomplete="off"
+                @input="validateNameFormat"
+              />
             </FieldContent>
             <FieldDescription v-if="errors.name" class="text-destructive">
               {{ errors.name }}
@@ -36,12 +55,27 @@
           <Field v-for="config in currentConfigOptions" :key="config.name">
             <FieldLabel :for="`config-${config.name}`">{{ config.label }}</FieldLabel>
             <FieldContent>
-              <Input v-if="config.type === 'text'" :id="`config-${config.name}`" v-model="formData.config[config.name]"
-                :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`" />
-              <Input v-else-if="config.type === 'password'" :id="`config-${config.name}`" v-model="formData.config[config.name]" type="password" autocomplete="off"
-                :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`" />
-              <Input v-else-if="config.type === 'number'" :id="`config-${config.name}`" v-model="formData.config[config.name]" type="number"
-                :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`" />
+              <Input
+                v-if="config.type === 'text'"
+                :id="`config-${config.name}`"
+                v-model="formData.config[config.name]"
+                :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
+              />
+              <Input
+                v-else-if="config.type === 'password'"
+                :id="`config-${config.name}`"
+                v-model="formData.config[config.name]"
+                type="password"
+                autocomplete="off"
+                :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
+              />
+              <Input
+                v-else-if="config.type === 'number'"
+                :id="`config-${config.name}`"
+                v-model="formData.config[config.name]"
+                type="number"
+                :placeholder="`${t('Please enter')} ${config.label.toLowerCase()}`"
+              />
             </FieldContent>
           </Field>
         </div>
@@ -115,7 +149,7 @@ const errors = reactive({
   name: '',
 })
 
-const currentConfigOptions = computed(() => (formData.type ? configOptions[formData.type] ?? [] : []))
+const currentConfigOptions = computed(() => (formData.type ? (configOptions[formData.type] ?? []) : []))
 
 watch(
   () => formData.type,

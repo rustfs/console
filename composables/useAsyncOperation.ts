@@ -56,12 +56,7 @@ export function useAsyncOperation<T extends (...args: any[]) => Promise<any>>(
   operation: T,
   options: AsyncOperationOptions = {}
 ): UseAsyncOperationReturn<T> {
-  const {
-    autoHandleError = true,
-    defaultErrorMessage,
-    retries = 0,
-    retryDelay = 1000,
-  } = options
+  const { autoHandleError = true, defaultErrorMessage, retries = 0, retryDelay = 1000 } = options
 
   const loading = ref(false)
   const error = ref<Error | null>(null)
@@ -70,9 +65,7 @@ export function useAsyncOperation<T extends (...args: any[]) => Promise<any>>(
   /**
    * Execute retry logic
    */
-  const executeWithRetry = async (
-    ...args: Parameters<T>
-  ): Promise<ReturnType<T>> => {
+  const executeWithRetry = async (...args: Parameters<T>): Promise<ReturnType<T>> => {
     let lastError: Error | null = null
 
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -83,7 +76,7 @@ export function useAsyncOperation<T extends (...args: any[]) => Promise<any>>(
 
         // If not the last attempt, wait and retry
         if (attempt < retries) {
-          await new Promise((resolve) => setTimeout(resolve, retryDelay))
+          await new Promise(resolve => setTimeout(resolve, retryDelay))
           continue
         }
       }
@@ -95,9 +88,7 @@ export function useAsyncOperation<T extends (...args: any[]) => Promise<any>>(
   /**
    * Execute async operation
    */
-  const execute = async (
-    ...args: Parameters<T>
-  ): Promise<ReturnType<T> | null> => {
+  const execute = async (...args: Parameters<T>): Promise<ReturnType<T> | null> => {
     loading.value = true
     error.value = null
 
@@ -105,8 +96,7 @@ export function useAsyncOperation<T extends (...args: any[]) => Promise<any>>(
       const result = await executeWithRetry(...args)
       return result
     } catch (err) {
-      const errorInstance =
-        err instanceof Error ? err : new Error(String(err))
+      const errorInstance = err instanceof Error ? err : new Error(String(err))
       error.value = errorInstance
 
       if (autoHandleError) {
@@ -133,4 +123,3 @@ export function useAsyncOperation<T extends (...args: any[]) => Promise<any>>(
     resetError,
   }
 }
-

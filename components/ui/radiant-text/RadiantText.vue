@@ -17,8 +17,8 @@
 </template>
 
 <script lang="ts" setup>
-import { cn } from '@/lib/utils';
-import { computed } from 'vue';
+import { cn } from '@/lib/utils'
+import { computed } from 'vue'
 
 const props = defineProps({
   duration: {
@@ -30,14 +30,14 @@ const props = defineProps({
     default: 100,
   },
   class: String,
-});
+})
 
 const styleVar = computed(() => {
   return {
     '--radiant-anim-duration': `${props.duration}s`,
     '--radiant-width': `${props.radiantWidth}px`,
-  };
-});
+  }
+})
 </script>
 
 <style scoped>

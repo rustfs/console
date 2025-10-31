@@ -31,7 +31,15 @@ watch(
 <template>
   <!-- :validator="validator" 验证器 -->
   <div class="w-full">
-    <JsonEditorVue v-bind="attrs" mode="text" v-model="model" :mainMenuBar="false" selection="TextSelection" class="editor w-full jse-theme-dark" :title="t('JSON Editor')" />
+    <JsonEditorVue
+      v-bind="attrs"
+      mode="text"
+      v-model="model"
+      :mainMenuBar="false"
+      selection="TextSelection"
+      class="editor w-full jse-theme-dark"
+      :title="t('JSON Editor')"
+    />
   </div>
 </template>
 <style scoped>

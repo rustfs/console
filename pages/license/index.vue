@@ -17,9 +17,7 @@
                   {{ t('Status') }}：{{ hasValidLicense ? t('Normal') : t('Expired') }}
                 </span>
               </div>
-              <p class="text-sm text-muted-foreground">
-                {{ t('License Valid Until') }}：{{ endDate }}
-              </p>
+              <p class="text-sm text-muted-foreground">{{ t('License Valid Until') }}：{{ endDate }}</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-3">

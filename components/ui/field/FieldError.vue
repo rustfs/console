@@ -1,24 +1,21 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue"
-import { computed } from "vue"
-import { cn } from "@/lib/utils"
+import type { HTMLAttributes } from 'vue'
+import { computed } from 'vue'
+import { cn } from '@/lib/utils'
 
 const props = defineProps<{
-  class?: HTMLAttributes["class"]
+  class?: HTMLAttributes['class']
   errors?: Array<{ message?: string } | undefined>
 }>()
 
 const content = computed(() => {
-  if (!props.errors || props.errors.length === 0)
-    return null
+  if (!props.errors || props.errors.length === 0) return null
 
   if (props.errors.length === 1 && props.errors[0]?.message) {
     return props.errors[0].message
   }
 
-  return props.errors.some(e => e?.message)
-    ? props.errors
-    : null
+  return props.errors.some(e => e?.message) ? props.errors : null
 })
 </script>
 

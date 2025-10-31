@@ -15,7 +15,12 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="pending" :empty-title="t('No Buckets')" :empty-description="t('Create a bucket to start storing objects.')" />
+    <DataTable
+      :table="table"
+      :is-loading="pending"
+      :empty-title="t('No Buckets')"
+      :empty-description="t('Create a bucket to start storing objects.')"
+    />
   </page>
 
   <buckets-new-form :show="formVisible" @update:show="handleFormClosed" />
@@ -180,8 +185,8 @@ const deleteItem = async (row: BucketRow) => {
   const objectApi = useObject({ bucket: row.Name })
 
   const files = await objectApi.listObject(row.Name, undefined, 1)
-  const hasObjects = Boolean(files?.Contents?.some(item => Boolean(item?.Key)))
-    || Boolean(files?.CommonPrefixes?.length)
+  const hasObjects =
+    Boolean(files?.Contents?.some(item => Boolean(item?.Key))) || Boolean(files?.CommonPrefixes?.length)
 
   if (hasObjects) {
     message.error(t('Bucket is not empty'))

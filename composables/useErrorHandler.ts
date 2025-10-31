@@ -59,22 +59,11 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
    * @param error Error object
    * @param defaultMessage Default error message
    */
-  const handleApiError = (
-    error: unknown,
-    defaultMessage?: string
-  ): void => {
+  const handleApiError = (error: unknown, defaultMessage?: string): void => {
     // API errors may have specific format
-    if (
-      error &&
-      typeof error === 'object' &&
-      'response' in error &&
-      'data' in error
-    ) {
+    if (error && typeof error === 'object' && 'response' in error && 'data' in error) {
       const apiError = error as { response?: { data?: { message?: string } } }
-      const apiMessage =
-        apiError.response?.data?.message ||
-        defaultMessage ||
-        t('API request failed')
+      const apiMessage = apiError.response?.data?.message || defaultMessage || t('API request failed')
       handleError(apiMessage)
       return
     }
@@ -103,4 +92,3 @@ export function useErrorHandler(options: ErrorHandlerOptions = {}) {
     handleErrorSilently,
   }
 }
-

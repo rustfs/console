@@ -74,11 +74,7 @@ const submitForm = async () => {
         </FieldContent>
       </Field>
 
-      <UserSelector
-        v-model="formModel.members"
-        :label="t('Users')"
-        :placeholder="t('Select user group members')"
-      />
+      <UserSelector v-model="formModel.members" :label="t('Users')" :placeholder="t('Select user group members')" />
     </div>
 
     <template #footer>

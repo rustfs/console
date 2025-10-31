@@ -44,8 +44,12 @@ const handlePageSizeChange = (value: number | string | boolean | null) => {
       <span class="text-sm text-muted-foreground">
         {{ t('Rows per page') }}
       </span>
-      <Selector :options="pageSizeOptions.map(option => ({ label: String(option), value: option }))" :model-value="pagination.pageSize" class="w-24"
-        @update:model-value="handlePageSizeChange" />
+      <Selector
+        :options="pageSizeOptions.map(option => ({ label: String(option), value: option }))"
+        :model-value="pagination.pageSize"
+        class="w-24"
+        @update:model-value="handlePageSizeChange"
+      />
     </div>
 
     <div class="flex items-center gap-2">
@@ -62,7 +66,12 @@ const handlePageSizeChange = (value: number | string | boolean | null) => {
         <Button variant="outline" size="sm" :disabled="!canNext" @click="props.table.nextPage()">
           {{ t('Next') }}
         </Button>
-        <Button variant="outline" size="sm" :disabled="!canNext" @click="props.table.setPageIndex(Math.max(pageCount - 1, 0))">
+        <Button
+          variant="outline"
+          size="sm"
+          :disabled="!canNext"
+          @click="props.table.setPageIndex(Math.max(pageCount - 1, 0))"
+        >
           {{ t('Last') }}
         </Button>
       </div>

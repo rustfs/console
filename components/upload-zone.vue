@@ -59,23 +59,19 @@ const onDragLeave = () => {
 
 <template>
   <label
-    :class="cn(
-      'flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/70 px-6 py-10 text-center transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-      hovering && !disabled && 'border-primary bg-primary/5',
-      disabled && 'pointer-events-none opacity-60',
-      props.class,
-    )"
+    :class="
+      cn(
+        'flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/70 px-6 py-10 text-center transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        hovering && !disabled && 'border-primary bg-primary/5',
+        disabled && 'pointer-events-none opacity-60',
+        props.class
+      )
+    "
     @drop="onDrop"
     @dragover="onDragOver"
     @dragleave="onDragLeave"
   >
-    <input
-      type="file"
-      :accept="accept"
-      class="hidden"
-      :disabled="disabled"
-      @change="onInputChange"
-    />
+    <input type="file" :accept="accept" class="hidden" :disabled="disabled" @change="onInputChange" />
     <Icon :name="icon" class="h-12 w-12 text-muted-foreground" />
     <slot />
   </label>

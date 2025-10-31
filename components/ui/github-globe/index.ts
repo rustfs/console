@@ -1,1 +1,1 @@
-export { default as GithubGlobe } from './GithubGlobe.vue';
+export { default as GithubGlobe } from './GithubGlobe.vue'

@@ -15,12 +15,22 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Create user groups to organize permissions.')" table-class="min-w-full" />
+    <DataTable
+      :table="table"
+      :is-loading="loading"
+      :empty-title="t('No Data')"
+      :empty-description="t('Create user groups to organize permissions.')"
+      table-class="min-w-full"
+    />
     <DataTablePagination :table="table" class="px-2 py-3" />
 
     <user-group-edit-form ref="editItemRef" />
     <user-group-new-form ref="newItemRef" v-model:visible="newItemVisible" @search="getDataList" />
-    <user-group-set-policies-mutiple ref="policiesRef" :checkedKeys="selectedKeys" @changePoliciesSuccess="changePoliciesSuccess" />
+    <user-group-set-policies-mutiple
+      ref="policiesRef"
+      :checkedKeys="selectedKeys"
+      @changePoliciesSuccess="changePoliciesSuccess"
+    />
   </page>
 </template>
 
@@ -109,18 +119,22 @@ const columns: ColumnDef<GroupRow>[] = [
                 {
                   default: () => [
                     h(AlertDialogHeader, {}, { default: () => h(AlertDialogTitle, {}, () => t('Confirm Delete')) }),
-                    h(AlertDialogFooter, {}, {
-                      default: () => [
-                        h(AlertDialogCancel, {}, () => t('Cancel')),
-                        h(
-                          AlertDialogAction,
-                          {
-                            onClick: () => deleteItem(row.original),
-                          },
-                          () => t('Delete')
-                        ),
-                      ],
-                    }),
+                    h(
+                      AlertDialogFooter,
+                      {},
+                      {
+                        default: () => [
+                          h(AlertDialogCancel, {}, () => t('Cancel')),
+                          h(
+                            AlertDialogAction,
+                            {
+                              onClick: () => deleteItem(row.original),
+                            },
+                            () => t('Delete')
+                          ),
+                        ],
+                      }
+                    ),
                   ],
                 }
               ),

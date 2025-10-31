@@ -47,9 +47,7 @@ const saveConfig = async () => {
     }
 
     const url = new URL(urlToValidate)
-    const urlToSave = /^https?:\/\//.test(formData.value.serverHost)
-      ? formData.value.serverHost
-      : urlToValidate
+    const urlToSave = /^https?:\/\//.test(formData.value.serverHost) ? formData.value.serverHost : urlToValidate
 
     localStorage.setItem('rustfs-server-host', urlToSave)
 
@@ -116,7 +114,11 @@ const currentItems = computed(() => [
           <Field>
             <FieldLabel>{{ t('Server Address') }}</FieldLabel>
             <FieldContent>
-              <Input v-model="formData.serverHost" :placeholder="t('Please enter server address (e.g., http://localhost:9000)')" autocomplete="off" />
+              <Input
+                v-model="formData.serverHost"
+                :placeholder="t('Please enter server address (e.g., http://localhost:9000)')"
+                autocomplete="off"
+              />
             </FieldContent>
             <FieldDescription>
               {{ t('Example: http://localhost:9000 or https://your-domain.com') }}

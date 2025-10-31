@@ -8,7 +8,9 @@
             <img :src="previewUrl" alt="preview" class="max-h-[60vh]" />
           </div>
           <iframe v-else-if="isPdf" :src="previewUrl" class="h-[70vh] w-full" frameborder="0" />
-          <pre v-else-if="isText" class="max-h-[70vh] overflow-auto whitespace-pre-wrap wrap-break-word">{{ textContent }}</pre>
+          <pre v-else-if="isText" class="max-h-[70vh] overflow-auto whitespace-pre-wrap wrap-break-word">{{
+            textContent
+          }}</pre>
           <video v-else-if="isVideo" controls class="w-full">
             <source :src="previewUrl" :type="contentType" />
             {{ t('Your browser does not support the video tag') }}

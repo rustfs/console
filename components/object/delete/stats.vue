@@ -7,13 +7,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useDeleteTaskManagerStore } from '~/store/delete-tasks';
+import { computed } from 'vue'
+import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
 
-const store = useDeleteTaskManagerStore();
-const tasks = computed(() => store.tasks);
+const store = useDeleteTaskManagerStore()
+const tasks = computed(() => store.tasks)
 
 const clearTasks = () => {
-  store.clearTasks();
-};
+  store.clearTasks()
+}
 </script>

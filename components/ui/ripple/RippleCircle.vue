@@ -3,20 +3,20 @@
 </template>
 
 <script setup lang="ts">
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
 interface Props {
-  size?: number;
-  class?: string;
-  opacity?: number;
-  animationDelay?: number;
-  borderStyle?: string;
+  size?: number
+  class?: string
+  opacity?: number
+  animationDelay?: number
+  borderStyle?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   size: 210,
   opacity: 0.24,
-});
+})
 </script>
 
 <style scoped>

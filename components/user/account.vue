@@ -164,11 +164,7 @@ const columns: ColumnDef<AccountItem>[] = [
     id: 'status',
     header: () => t('Status'),
     cell: ({ row }) =>
-      h(
-        'span',
-        { class: 'text-sm text-center' },
-        row.original.accountStatus === 'on' ? t('Available') : t('Disabled')
-      ),
+      h('span', { class: 'text-sm text-center' }, row.original.accountStatus === 'on' ? t('Available') : t('Disabled')),
   },
   {
     id: 'name',

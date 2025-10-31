@@ -1,5 +1,10 @@
 <template>
-  <Modal v-model="visible" :title="`${t('Add Lifecycle Rule')} (${t('Bucket')}: ${bucketName || ''})`" size="lg" :close-on-backdrop="false">
+  <Modal
+    v-model="visible"
+    :title="`${t('Add Lifecycle Rule')} (${t('Bucket')}: ${bucketName || ''})`"
+    size="lg"
+    :close-on-backdrop="false"
+  >
     <div class="space-y-6">
       <Tabs v-model="activeTab" class="flex flex-col gap-4">
         <TabsList class="w-full justify-start overflow-x-auto">
@@ -53,11 +58,21 @@
                     </Button>
                   </div>
                   <div v-if="formData.tags.length" class="space-y-3">
-                    <div v-for="(tag, index) in formData.tags" :key="index" class="grid gap-2 md:grid-cols-2 md:items-center md:gap-4">
+                    <div
+                      v-for="(tag, index) in formData.tags"
+                      :key="index"
+                      class="grid gap-2 md:grid-cols-2 md:items-center md:gap-4"
+                    >
                       <Input v-model="tag.key" :placeholder="t('Tag Name')" />
                       <div class="flex items-center gap-2">
                         <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
-                        <Button variant="ghost" size="sm" class="text-destructive" :disabled="formData.tags.length === 1" @click="removeTag(index)">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          class="text-destructive"
+                          :disabled="formData.tags.length === 1"
+                          @click="removeTag(index)"
+                        >
                           <Icon name="ri:delete-bin-line" class="size-4" />
                         </Button>
                       </div>
@@ -74,7 +89,9 @@
               <Field orientation="horizontal" class="mt-4">
                 <FieldContent>
                   <FieldLabel class="text-sm font-medium">{{ t('Delete Marker Handling') }}</FieldLabel>
-                  <FieldDescription>{{ t('If no versions remain, delete references to this object') }}</FieldDescription>
+                  <FieldDescription>{{
+                    t('If no versions remain, delete references to this object')
+                  }}</FieldDescription>
                 </FieldContent>
                 <FieldContent>
                   <Switch v-model="formData.expiredDeleteMark" class="ml-auto" />
@@ -106,7 +123,11 @@
             <Field>
               <FieldLabel>{{ t('Storage Type') }}</FieldLabel>
               <FieldContent>
-                <Selector v-model="formData.storageType" :options="tiers" :placeholder="t('Please select storage type')" />
+                <Selector
+                  v-model="formData.storageType"
+                  :options="tiers"
+                  :placeholder="t('Please select storage type')"
+                />
               </FieldContent>
             </Field>
           </div>
@@ -131,11 +152,21 @@
                     </Button>
                   </div>
                   <div v-if="formData.tags.length" class="space-y-3">
-                    <div v-for="(tag, index) in formData.tags" :key="index" class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4">
+                    <div
+                      v-for="(tag, index) in formData.tags"
+                      :key="index"
+                      class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
+                    >
                       <Input v-model="tag.key" :placeholder="t('Tag Name')" />
                       <div class="flex items-center gap-2">
                         <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
-                        <Button variant="ghost" size="sm" class="text-destructive" :disabled="formData.tags.length === 1" @click="removeTag(index)">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          class="text-destructive"
+                          :disabled="formData.tags.length === 1"
+                          @click="removeTag(index)"
+                        >
                           <Icon name="ri:delete-bin-line" class="size-4" />
                         </Button>
                       </div>
@@ -281,10 +312,7 @@ const validate = () => {
     return false
   }
 
-  if (
-    formState.action === 'transition' &&
-    (!formData.storageType || formData.storageType === '')
-  ) {
+  if (formState.action === 'transition' && (!formData.storageType || formData.storageType === '')) {
     message.error(t('Please select storage type'))
     return false
   }

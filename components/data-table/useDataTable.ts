@@ -55,27 +55,25 @@ function createSelectColumn<TData extends RowData>(): ColumnDef<TData> {
     enableHiding: false,
     header: ({ table }) => {
       return h(Checkbox, {
-        'modelValue': table.getIsAllPageRowsSelected(),
+        modelValue: table.getIsAllPageRowsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => table.toggleAllPageRowsSelected(!!value),
-        'ariaLabel': 'Select all',
-        'class': 'translate-y-0.5',
+        ariaLabel: 'Select all',
+        class: 'translate-y-0.5',
       })
     },
     cell: ({ row }) => {
       return h(Checkbox, {
-        'modelValue': row.getIsSelected(),
+        modelValue: row.getIsSelected(),
         'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        'ariaLabel': 'Select row',
-        'class': 'translate-y-0.5',
+        ariaLabel: 'Select row',
+        class: 'translate-y-0.5',
       })
     },
     size: 48,
   }
 }
 
-export function useDataTable<TData extends RowData>(
-  options: UseDataTableOptions<TData>
-): UseDataTableReturn<TData> {
+export function useDataTable<TData extends RowData>(options: UseDataTableOptions<TData>): UseDataTableReturn<TData> {
   const sorting = ref<SortingState>([])
   const columnFilters = ref<ColumnFiltersState>([])
   const rowSelection = ref<RowSelectionState>({})

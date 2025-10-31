@@ -1,1 +1,1 @@
-export { default as WorldMap } from './WorldMap.vue';
+export { default as WorldMap } from './WorldMap.vue'

@@ -39,12 +39,14 @@ class ApiClient {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url
     options.headers = { ...this.config?.headers, ...options.headers }
     // Handle body data format, only serialize plain objects
-    if (options.body &&
+    if (
+      options.body &&
       !(options.body instanceof FormData) &&
       !(options.body instanceof Blob) &&
       !(options.body instanceof ArrayBuffer) &&
       !(options.body instanceof Uint8Array) &&
-      !(options.body instanceof File)) {
+      !(options.body instanceof File)
+    ) {
       options.body = JSON.stringify(options.body)
     }
 

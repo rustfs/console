@@ -4,7 +4,12 @@
       <h1 class="text-2xl font-bold">{{ t('Bucket Replication') }}</h1>
       <template #actions>
         <ActionBar class="w-full justify-end gap-3 sm:w-auto">
-          <BucketSelector v-model="bucketName" :placeholder="t('Please select bucket')" selector-class="sm:w-56" cache-key="replication-buckets" />
+          <BucketSelector
+            v-model="bucketName"
+            :placeholder="t('Please select bucket')"
+            selector-class="sm:w-56"
+            cache-key="replication-buckets"
+          />
           <Button variant="outline" @click="openForm">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Replication Rule') }}</span>
@@ -17,7 +22,12 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Add replication rules to sync objects across buckets.')" />
+    <DataTable
+      :table="table"
+      :is-loading="loading"
+      :empty-title="t('No Data')"
+      :empty-description="t('Add replication rules to sync objects across buckets.')"
+    />
 
     <replication-new-form ref="addFormRef" :bucketName="bucketName" @success="() => loadReplication()" />
   </page>
@@ -39,12 +49,8 @@ const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
 
-const {
-  getBucketReplication,
-  putBucketReplication,
-  deleteBucketReplication,
-  deleteRemoteReplicationTarget,
-} = useBucket({})
+const { getBucketReplication, putBucketReplication, deleteBucketReplication, deleteRemoteReplicationTarget } =
+  useBucket({})
 
 interface ReplicationRule {
   ID?: string
@@ -73,10 +79,8 @@ const columns: ColumnDef<ReplicationRule>[] = [
     accessorKey: 'Status',
     header: () => t('Status'),
     cell: ({ row }) =>
-      h(
-        Badge,
-        { variant: row.original.Status === 'Enabled' ? 'secondary' : 'outline' },
-        () => (row.original.Status === 'Enabled' ? t('Enabled') : t('Disabled'))
+      h(Badge, { variant: row.original.Status === 'Enabled' ? 'secondary' : 'outline' }, () =>
+        row.original.Status === 'Enabled' ? t('Enabled') : t('Disabled')
       ),
   },
   {

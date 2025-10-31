@@ -7,12 +7,7 @@
     <div class="flex flex-col gap-6">
       <Tabs v-model="activeTab" class="flex flex-col gap-6">
         <TabsList class="w-full justify-start overflow-x-auto">
-          <TabsTrigger
-            v-for="tab in tabs"
-            :key="tab.key"
-            :value="tab.key"
-            class="capitalize"
-          >
+          <TabsTrigger v-for="tab in tabs" :key="tab.key" :value="tab.key" class="capitalize">
             {{ tab.label }}
           </TabsTrigger>
         </TabsList>
@@ -23,15 +18,17 @@
               <CardTitle>{{ t('IAM Configuration Export') }}</CardTitle>
               <CardDescription>
                 {{
-                  t(
-                    'Export all IAM configurations including users, groups, policies, and access keys in a ZIP file.'
-                  )
+                  t('Export all IAM configurations including users, groups, policies, and access keys in a ZIP file.')
                 }}
               </CardDescription>
             </CardHeader>
             <CardContent class="space-y-6">
               <div class="grid gap-4 sm:grid-cols-2">
-                <div v-for="item in exportHighlights" :key="item.label" class="flex items-center gap-3 rounded-md border bg-muted/40 p-3">
+                <div
+                  v-for="item in exportHighlights"
+                  :key="item.label"
+                  class="flex items-center gap-3 rounded-md border bg-muted/40 p-3"
+                >
                   <Icon :name="item.icon" :class="item.iconClass" class="size-5" />
                   <span class="text-sm font-medium text-foreground">{{ t(item.label) }}</span>
                 </div>
@@ -98,7 +95,13 @@
                     : t('Please select a ZIP file to import')
                 }}
               </div>
-              <Button variant="default" size="lg" :loading="isLoading" :disabled="isLoading || !selectedFile" @click="handleImportIam">
+              <Button
+                variant="default"
+                size="lg"
+                :loading="isLoading"
+                :disabled="isLoading || !selectedFile"
+                @click="handleImportIam"
+              >
                 <Icon name="ri:upload-2-line" class="size-4" />
                 <span>{{ isLoading ? t('Importing...') : t('Import Now') }}</span>
               </Button>

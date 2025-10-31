@@ -17,12 +17,7 @@
 <script setup lang="ts">
 import { Icon } from '#components'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { useColorMode } from '@vueuse/core'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'

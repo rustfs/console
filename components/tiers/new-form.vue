@@ -2,7 +2,12 @@
   <Modal v-model="visible" :title="t('Add Tier')" size="lg" :close-on-backdrop="false">
     <div class="space-y-6">
       <div v-if="!formData.type" class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div v-for="item in typeOptions" :key="item.value" class="cursor-pointer border border-border/70 transition hover:border-primary" @click="chooseType(item.value)">
+        <div
+          v-for="item in typeOptions"
+          :key="item.value"
+          class="cursor-pointer border border-border/70 transition hover:border-primary"
+          @click="chooseType(item.value)"
+        >
           <div class="flex items-center gap-3 p-4">
             <img :src="item.iconUrl" class="h-10 w-10" alt="" />
             <div>
@@ -28,7 +33,12 @@
           <Field>
             <FieldLabel>{{ t('Name') }} (A-Z,0-9,_)</FieldLabel>
             <FieldContent>
-              <Input v-model="formData.name" :placeholder="t('Please enter name')" autocomplete="off" @input="filterName" />
+              <Input
+                v-model="formData.name"
+                :placeholder="t('Please enter name')"
+                autocomplete="off"
+                @input="filterName"
+              />
             </FieldContent>
             <FieldDescription v-if="errors.name" class="text-destructive">
               {{ errors.name }}
@@ -52,7 +62,12 @@
           <Field>
             <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
             <FieldContent>
-              <Input v-model="formData.secretkey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+              <Input
+                v-model="formData.secretkey"
+                type="password"
+                autocomplete="off"
+                :placeholder="t('Please enter Secret Key')"
+              />
             </FieldContent>
           </Field>
 

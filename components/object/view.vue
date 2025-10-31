@@ -72,9 +72,7 @@
     <Modal v-model="showTagView" :title="t('Set Tags')" size="lg">
       <div class="space-y-4">
         <div class="flex flex-wrap gap-2">
-          <Badge v-for="tag in tags" :key="tag.Key" variant="secondary">
-            {{ tag.Key }}: {{ tag.Value }}
-          </Badge>
+          <Badge v-for="tag in tags" :key="tag.Key" variant="secondary"> {{ tag.Key }}: {{ tag.Value }} </Badge>
         </div>
         <form class="flex flex-wrap gap-3" @submit.prevent="submitTagForm">
           <Field class="min-w-[200px] flex-1">
@@ -90,7 +88,9 @@
             </FieldContent>
           </Field>
           <Button type="submit" variant="default" class="self-end">{{ t('Add') }}</Button>
-          <Button type="button" variant="outline" class="self-end" @click="showTagView = false">{{ t('Cancel') }}</Button>
+          <Button type="button" variant="outline" class="self-end" @click="showTagView = false">{{
+            t('Cancel')
+          }}</Button>
         </form>
       </div>
     </Modal>

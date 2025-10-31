@@ -11,7 +11,12 @@
       <Field>
         <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
         <FieldContent>
-          <Input v-model="formModel.secretKey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+          <Input
+            v-model="formModel.secretKey"
+            type="password"
+            autocomplete="off"
+            :placeholder="t('Please enter Secret Key')"
+          />
         </FieldContent>
       </Field>
     </div>

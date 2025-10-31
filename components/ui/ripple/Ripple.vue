@@ -13,15 +13,15 @@
 </template>
 
 <script setup lang="ts">
-import RippleCircle from './RippleCircle.vue';
+import RippleCircle from './RippleCircle.vue'
 interface Props {
-  baseCircleSize?: number;
-  baseCircleOpacity?: number;
-  spaceBetweenCircle?: number;
-  circleOpacityDowngradeRatio?: number;
-  circleClass?: string;
-  waveSpeed?: number;
-  numberOfCircles?: number;
+  baseCircleSize?: number
+  baseCircleOpacity?: number
+  spaceBetweenCircle?: number
+  circleOpacityDowngradeRatio?: number
+  circleClass?: string
+  waveSpeed?: number
+  numberOfCircles?: number
 }
 
 withDefaults(defineProps<Props>(), {
@@ -31,5 +31,5 @@ withDefaults(defineProps<Props>(), {
   waveSpeed: 80,
   spaceBetweenCircle: 70,
   numberOfCircles: 7,
-});
+})
 </script>

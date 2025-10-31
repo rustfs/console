@@ -47,16 +47,22 @@ const handleLogin = async () => {
 <template>
   <div class="lg:p-20 flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-neutral-800">
     <img src="~/assets/backgrounds/scillate.svg" class="absolute inset-0 z-0 opacity-45" alt="" />
-    <div class="flex-1 flex w-full z-10 max-w-7xl lg:max-h-[85vh] shadow-lg rounded-lg overflow-hidden mx-auto dark:bg-neutral-800 dark:border-neutral-700">
+    <div
+      class="flex-1 flex w-full z-10 max-w-7xl lg:max-h-[85vh] shadow-lg rounded-lg overflow-hidden mx-auto dark:bg-neutral-800 dark:border-neutral-700"
+    >
       <div class="hidden lg:block w-1/2">
         <auth-heros-static></auth-heros-static>
       </div>
-      <div class="w-full lg:w-1/2 flex flex-col justify-center items-center bg-white dark:bg-neutral-900 dark:border-neutral-700 relative">
+      <div
+        class="w-full lg:w-1/2 flex flex-col justify-center items-center bg-white dark:bg-neutral-900 dark:border-neutral-700 relative"
+      >
         <!-- 表单容器右上角的配置按钮 -->
         <div class="absolute top-4 right-4 z-10">
-          <NuxtLink to="/config"
+          <NuxtLink
+            to="/config"
             class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm hover:bg-gray-50 hover:text-gray-800 dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white transition-colors"
-            :title="t('Server Configuration')">
+            :title="t('Server Configuration')"
+          >
             <Icon name="ri:settings-3-line" class="text-sm" />
           </NuxtLink>
         </div>
@@ -79,13 +85,25 @@ const handleLogin = async () => {
                   <Field>
                     <FieldLabel for="accessKey">{{ t('Account') }}</FieldLabel>
                     <FieldContent>
-                      <Input id="accessKey" v-model="accessKeyAndSecretKey.accessKeyId" autocomplete="new-password" type="text" :placeholder="t('Please enter account')" />
+                      <Input
+                        id="accessKey"
+                        v-model="accessKeyAndSecretKey.accessKeyId"
+                        autocomplete="new-password"
+                        type="text"
+                        :placeholder="t('Please enter account')"
+                      />
                     </FieldContent>
                   </Field>
                   <Field>
                     <FieldLabel for="secretKey">{{ t('Key') }}</FieldLabel>
                     <FieldContent>
-                      <Input id="secretKey" v-model="accessKeyAndSecretKey.secretAccessKey" autocomplete="new-password" type="password" :placeholder="t('Please enter key')" />
+                      <Input
+                        id="secretKey"
+                        v-model="accessKeyAndSecretKey.secretAccessKey"
+                        autocomplete="new-password"
+                        type="password"
+                        :placeholder="t('Please enter key')"
+                      />
                     </FieldContent>
                   </Field>
                 </template>
@@ -94,7 +112,13 @@ const handleLogin = async () => {
                   <Field>
                     <FieldLabel for="stsAccessKey">{{ t('STS Username') }}</FieldLabel>
                     <FieldContent>
-                      <Input id="stsAccessKey" v-model="sts.accessKeyId" autocomplete="new-password" type="text" :placeholder="t('Please enter STS username')" />
+                      <Input
+                        id="stsAccessKey"
+                        v-model="sts.accessKeyId"
+                        autocomplete="new-password"
+                        type="text"
+                        :placeholder="t('Please enter STS username')"
+                      />
                     </FieldContent>
                   </Field>
                   <Field>
@@ -102,7 +126,13 @@ const handleLogin = async () => {
                       {{ t('STS Key') }}
                     </FieldLabel>
                     <FieldContent>
-                      <Input id="stsSecretKey" v-model="sts.secretAccessKey" autocomplete="new-password" type="password" :placeholder="t('Please enter STS key')" />
+                      <Input
+                        id="stsSecretKey"
+                        v-model="sts.secretAccessKey"
+                        autocomplete="new-password"
+                        type="password"
+                        :placeholder="t('Please enter STS key')"
+                      />
                     </FieldContent>
                   </Field>
                   <Field>
@@ -110,7 +140,13 @@ const handleLogin = async () => {
                       {{ t('STS Session Token') }}
                     </FieldLabel>
                     <FieldContent>
-                      <Input id="sessionToken" v-model="sts.sessionToken" autocomplete="new-password" type="text" :placeholder="t('Please enter STS session token')" />
+                      <Input
+                        id="sessionToken"
+                        v-model="sts.sessionToken"
+                        autocomplete="new-password"
+                        type="text"
+                        :placeholder="t('Please enter STS session token')"
+                      />
                     </FieldContent>
                   </Field>
                 </template>

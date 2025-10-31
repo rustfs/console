@@ -38,7 +38,7 @@ export enum PolicyAction {
 /**
  * 存储桶策略类型
  */
-export type BucketPolicyType = 'none' | 'readonly' | 'readwrite' | 'writeonly' | 'private' | 'public';
+export type BucketPolicyType = 'none' | 'readonly' | 'readwrite' | 'writeonly' | 'private' | 'public'
 
 /**
  * 存储桶策略常量
@@ -50,53 +50,53 @@ export const BucketPolicyConstants = {
   WriteOnly: 'writeonly' as BucketPolicyType,
   Private: 'private' as BucketPolicyType,
   Public: 'public' as BucketPolicyType,
-};
+}
 
 /**
  * 策略资源接口
  */
 export interface PolicyResource {
-  bucket: string;
-  object?: string;
+  bucket: string
+  object?: string
 }
 
 /**
  * 策略语句接口
  */
 export interface PolicyStatement {
-  Effect: PolicyEffect;
+  Effect: PolicyEffect
   Principal: {
-    AWS: string[];
-  };
-  Action: PolicyAction[];
-  Resource: string[];
-  Conditions?: Record<string, any>;
-  Sid?: string;
+    AWS: string[]
+  }
+  Action: PolicyAction[]
+  Resource: string[]
+  Conditions?: Record<string, any>
+  Sid?: string
 }
 
 /**
  * 存储桶策略接口
  */
 export interface BucketPolicy {
-  Version: string;
-  Statement: PolicyStatement[];
+  Version: string
+  Statement: PolicyStatement[]
 }
 
 // AWS 资源前缀
-const awsResourcePrefix = 'arn:aws:s3:::';
+const awsResourcePrefix = 'arn:aws:s3:::'
 
 // 预定义的权限集合
-const commonBucketActions = new Set<string>(['s3:GetBucketLocation']);
-const readOnlyBucketActions = new Set<string>(['s3:ListBucket']);
-const writeOnlyBucketActions = new Set<string>(['s3:ListBucketMultipartUploads']);
-const readOnlyObjectActions = new Set<string>(['s3:GetObject']);
+const commonBucketActions = new Set<string>(['s3:GetBucketLocation'])
+const readOnlyBucketActions = new Set<string>(['s3:ListBucket'])
+const writeOnlyBucketActions = new Set<string>(['s3:ListBucketMultipartUploads'])
+const readOnlyObjectActions = new Set<string>(['s3:GetObject'])
 const writeOnlyObjectActions = new Set<string>([
   's3:AbortMultipartUpload',
   's3:DeleteObject',
   's3:ListMultipartUploadParts',
   's3:PutObject',
-]);
-const readWriteObjectActions = new Set([...readOnlyObjectActions, ...writeOnlyObjectActions]);
+])
+const readWriteObjectActions = new Set([...readOnlyObjectActions, ...writeOnlyObjectActions])
 
 // 所有有效的动作集合
 const validActions = new Set([
@@ -105,50 +105,50 @@ const validActions = new Set([
   ...Array.from(writeOnlyBucketActions),
   ...Array.from(readOnlyObjectActions),
   ...Array.from(writeOnlyObjectActions),
-]);
+])
 
 /**
  * 集合操作工具函数
  */
 function setUnion<T>(...sets: Set<T>[]): Set<T> {
-  return new Set(sets.flatMap(set => [...set]));
+  return new Set(sets.flatMap(set => [...set]))
 }
 
 function setIntersection<T>(setA: Set<T>, setB: Set<T>): Set<T> {
-  return new Set([...setA].filter(x => setB.has(x)));
+  return new Set([...setA].filter(x => setB.has(x)))
 }
 
 function areSetsEqual(set1: Set<any>, set2: Set<any>): boolean {
-  if (set1.size !== set2.size) return false;
+  if (set1.size !== set2.size) return false
   for (const item of set1) {
-    if (!set2.has(item)) return false;
+    if (!set2.has(item)) return false
   }
-  return true;
+  return true
 }
 
 /**
  * 深度比较两个对象
  */
 function deepEqual(a: any, b: any): boolean {
-  return JSON.stringify(a) === JSON.stringify(b);
+  return JSON.stringify(a) === JSON.stringify(b)
 }
 
 /**
  * 条件合并接口
  */
 interface Condition {
-  [key: string]: { [key: string]: string | string[] };
+  [key: string]: { [key: string]: string | string[] }
 }
 
 /**
  * 合并条件映射
  */
 function mergeConditionMap(a: Condition, b: Condition): Condition {
-  const merged: Condition = { ...a };
+  const merged: Condition = { ...a }
   for (const [key, value] of Object.entries(b)) {
-    merged[key] = { ...merged[key], ...value };
+    merged[key] = { ...merged[key], ...value }
   }
-  return merged;
+  return merged
 }
 
 /**
@@ -156,22 +156,22 @@ function mergeConditionMap(a: Condition, b: Condition): Condition {
  */
 export function validateStatement(statement: PolicyStatement): boolean {
   if (!statement.Effect || !statement.Principal?.AWS || !statement.Action || !statement.Resource) {
-    return false;
+    return false
   }
 
   if (!Array.isArray(statement.Principal.AWS) || statement.Principal.AWS.length === 0) {
-    return false;
+    return false
   }
 
   if (!Array.isArray(statement.Action) || statement.Action.length === 0) {
-    return false;
+    return false
   }
 
   if (!Array.isArray(statement.Resource) || statement.Resource.length === 0) {
-    return false;
+    return false
   }
 
-  return true;
+  return true
 }
 
 /**
@@ -179,26 +179,26 @@ export function validateStatement(statement: PolicyStatement): boolean {
  */
 export function validatePolicy(policy: BucketPolicy): boolean {
   if (!policy.Version || !policy.Statement) {
-    return false;
+    return false
   }
 
   if (!Array.isArray(policy.Statement) || policy.Statement.length === 0) {
-    return false;
+    return false
   }
 
-  return policy.Statement.every(validateStatement);
+  return policy.Statement.every(validateStatement)
 }
 
 /**
  * 格式化资源 ARN
  */
 export function formatResourceArn(resource: PolicyResource): string {
-  const bucketName = resource.bucket;
+  const bucketName = resource.bucket
   if (!bucketName) {
-    throw new Error('Invalid resource: bucket is required');
+    throw new Error('Invalid resource: bucket is required')
   }
-  const objectKey = resource.object;
-  return objectKey ? `${awsResourcePrefix}${bucketName}/${objectKey}` : `${awsResourcePrefix}${bucketName}`;
+  const objectKey = resource.object
+  return objectKey ? `${awsResourcePrefix}${bucketName}/${objectKey}` : `${awsResourcePrefix}${bucketName}`
 }
 
 /**
@@ -206,38 +206,38 @@ export function formatResourceArn(resource: PolicyResource): string {
  */
 export function resourceMatch(pattern: string, resource: string): boolean {
   if (!pattern) {
-    return resource === pattern;
+    return resource === pattern
   }
   if (pattern === '*') {
-    return true;
+    return true
   }
-  const parts = pattern.split('*');
+  const parts = pattern.split('*')
   if (parts.length === 1) {
-    return resource === pattern;
+    return resource === pattern
   }
-  const tGlob = pattern.endsWith('*');
-  const end = parts.length - 1;
-  const firstPart = parts[0] ?? '';
+  const tGlob = pattern.endsWith('*')
+  const end = parts.length - 1
+  const firstPart = parts[0] ?? ''
   if (!resource.startsWith(firstPart)) {
-    return false;
+    return false
   }
-  let remainingResource = resource.slice(firstPart.length);
+  let remainingResource = resource.slice(firstPart.length)
   for (let i = 1; i < end; i++) {
-    const part = parts[i];
+    const part = parts[i]
     if (!part) {
-      continue;
+      continue
     }
     if (!remainingResource.includes(part)) {
-      return false;
+      return false
     }
-    const idx = remainingResource.indexOf(part) + part.length;
-    remainingResource = remainingResource.slice(idx);
+    const idx = remainingResource.indexOf(part) + part.length
+    remainingResource = remainingResource.slice(idx)
   }
-  const lastPart = parts[end] ?? '';
+  const lastPart = parts[end] ?? ''
   if (tGlob) {
-    return true;
+    return true
   }
-  return remainingResource.endsWith(lastPart) || resource.endsWith(lastPart);
+  return remainingResource.endsWith(lastPart) || resource.endsWith(lastPart)
 }
 
 /**
@@ -247,13 +247,13 @@ export function createBucketPolicy(statements: PolicyStatement[]): BucketPolicy 
   const policy: BucketPolicy = {
     Version: '2012-10-17',
     Statement: statements,
-  };
-
-  if (!validatePolicy(policy)) {
-    throw new Error('Invalid bucket policy');
   }
 
-  return policy;
+  if (!validatePolicy(policy)) {
+    throw new Error('Invalid bucket policy')
+  }
+
+  return policy
 }
 
 /**
@@ -271,13 +271,13 @@ export function createAllowStatement(
     },
     Action: actions,
     Resource: resources.map(formatResourceArn),
-  };
-
-  if (!validateStatement(statement)) {
-    throw new Error('Invalid policy statement');
   }
 
-  return statement;
+  if (!validateStatement(statement)) {
+    throw new Error('Invalid policy statement')
+  }
+
+  return statement
 }
 
 /**
@@ -295,13 +295,13 @@ export function createDenyStatement(
     },
     Action: actions,
     Resource: resources.map(formatResourceArn),
-  };
-
-  if (!validateStatement(statement)) {
-    throw new Error('Invalid policy statement');
   }
 
-  return statement;
+  if (!validateStatement(statement)) {
+    throw new Error('Invalid policy statement')
+  }
+
+  return statement
 }
 
 /**
@@ -309,14 +309,14 @@ export function createDenyStatement(
  */
 function appendStatement(statements: PolicyStatement[], statement: PolicyStatement): PolicyStatement[] {
   for (let i = 0; i < statements.length; i++) {
-    const existing = statements[i];
+    const existing = statements[i]
     if (!existing) {
-      continue;
+      continue
     }
 
-    const existingActions = existing.Action ?? [];
-    const existingResources = existing.Resource ?? [];
-    const existingPrincipals = existing.Principal?.AWS ?? [];
+    const existingActions = existing.Action ?? []
+    const existingResources = existing.Resource ?? []
+    const existingPrincipals = existing.Principal?.AWS ?? []
 
     // 检查是否可以合并动作
     if (
@@ -325,8 +325,8 @@ function appendStatement(statements: PolicyStatement[], statement: PolicyStateme
       areSetsEqual(new Set(existingPrincipals), new Set(statement.Principal.AWS)) &&
       deepEqual(existing.Conditions, statement.Conditions)
     ) {
-      existing.Resource = [...new Set([...existingResources, ...statement.Resource])];
-      return statements;
+      existing.Resource = [...new Set([...existingResources, ...statement.Resource])]
+      return statements
     }
 
     // 检查是否可以合并资源
@@ -336,14 +336,14 @@ function appendStatement(statements: PolicyStatement[], statement: PolicyStateme
       areSetsEqual(new Set(existingPrincipals), new Set(statement.Principal.AWS)) &&
       deepEqual(existing.Conditions, statement.Conditions)
     ) {
-      existing.Action = [...new Set([...existingActions, ...statement.Action])];
-      return statements;
+      existing.Action = [...new Set([...existingActions, ...statement.Action])]
+      return statements
     }
 
     // 检查资源交集
-    const resourceIntersection = setIntersection(new Set(existingResources), new Set(statement.Resource));
-    const actionIntersection = setIntersection(new Set(existingActions), new Set(statement.Action));
-    const principalIntersection = setIntersection(new Set(existingPrincipals), new Set(statement.Principal.AWS));
+    const resourceIntersection = setIntersection(new Set(existingResources), new Set(statement.Resource))
+    const actionIntersection = setIntersection(new Set(existingActions), new Set(statement.Action))
+    const principalIntersection = setIntersection(new Set(existingPrincipals), new Set(statement.Principal.AWS))
 
     if (
       areSetsEqual(resourceIntersection, new Set(statement.Resource)) &&
@@ -352,23 +352,23 @@ function appendStatement(statements: PolicyStatement[], statement: PolicyStateme
       areSetsEqual(principalIntersection, new Set(statement.Principal.AWS))
     ) {
       if (deepEqual(existing.Conditions, statement.Conditions)) {
-        return statements;
+        return statements
       }
 
       if (existing.Conditions && statement.Conditions) {
         if (areSetsEqual(new Set(existingResources), new Set(statement.Resource))) {
-          existing.Conditions = mergeConditionMap(existing.Conditions, statement.Conditions);
-          return statements;
+          existing.Conditions = mergeConditionMap(existing.Conditions, statement.Conditions)
+          return statements
         }
       }
     }
   }
 
   if (!(statement.Action.length === 0 && statement.Resource.length === 0)) {
-    return [...statements, statement];
+    return [...statements, statement]
   }
 
-  return statements;
+  return statements
 }
 
 /**
@@ -379,25 +379,25 @@ export function appendStatements(
   appendStatements: PolicyStatement[]
 ): PolicyStatement[] {
   for (const s of appendStatements) {
-    statements = appendStatement(statements, s);
+    statements = appendStatement(statements, s)
   }
-  return statements;
+  return statements
 }
 
 /**
  * 获取存储桶策略
  */
 export function getBucketPolicy(statements: PolicyStatement[], bucketName: string, prefix: string): BucketPolicyType {
-  const bucketResource = `${awsResourcePrefix}${bucketName}`;
-  const objectResource = `${awsResourcePrefix}${bucketName}/${prefix}*`;
+  const bucketResource = `${awsResourcePrefix}${bucketName}`
+  const objectResource = `${awsResourcePrefix}${bucketName}/${prefix}*`
 
-  let bucketCommonFound = false;
-  let bucketReadOnly = false;
-  let bucketWriteOnly = false;
-  let objReadOnly = false;
-  let objWriteOnly = false;
-  let isPrivate = false;
-  let isPublic = false;
+  let bucketCommonFound = false
+  let bucketReadOnly = false
+  let bucketWriteOnly = false
+  let objReadOnly = false
+  let objWriteOnly = false
+  let isPrivate = false
+  let isPublic = false
 
   // 检查是否为公共权限
   const hasPublicReadAccess = statements.some(
@@ -412,7 +412,7 @@ export function getBucketPolicy(statements: PolicyStatement[], bucketName: strin
           action === PolicyAction.ListBucket ||
           action === PolicyAction.GetBucketLocation
       )
-  );
+  )
 
   const hasOwnerWriteAccess = statements.some(
     s =>
@@ -426,11 +426,11 @@ export function getBucketPolicy(statements: PolicyStatement[], bucketName: strin
           action === PolicyAction.PutObjectTagging ||
           action === PolicyAction.DeleteObjectTagging
       )
-  );
+  )
 
   // 如果同时满足公共读取和所有者写入，则认为是公共权限
   if (hasPublicReadAccess && hasOwnerWriteAccess) {
-    return BucketPolicyConstants.Public;
+    return BucketPolicyConstants.Public
   }
 
   // 检查是否为私有权限
@@ -440,7 +440,7 @@ export function getBucketPolicy(statements: PolicyStatement[], bucketName: strin
       s.Principal.AWS.includes('arn:aws:iam::*:root') &&
       s.Resource.includes(objectResource) &&
       s.Action.includes(PolicyAction.AllActions)
-  );
+  )
 
   const hasDenyAllOthers = statements.some(
     s =>
@@ -448,56 +448,56 @@ export function getBucketPolicy(statements: PolicyStatement[], bucketName: strin
       s.Principal.AWS.includes('*') &&
       s.Resource.includes(objectResource) &&
       s.Action.includes(PolicyAction.AllActions)
-  );
+  )
 
   if (hasOwnerFullAccess && hasDenyAllOthers) {
-    return BucketPolicyConstants.Private;
+    return BucketPolicyConstants.Private
   }
 
   // 检查其他权限类型
   for (const s of statements) {
     // 检查存储桶权限
     if (s.Resource.includes(bucketResource)) {
-      const hasCommonActions = s.Action.some(action => commonBucketActions.has(action));
-      const hasReadOnlyActions = s.Action.some(action => readOnlyBucketActions.has(action));
-      const hasWriteOnlyActions = s.Action.some(action => writeOnlyBucketActions.has(action));
+      const hasCommonActions = s.Action.some(action => commonBucketActions.has(action))
+      const hasReadOnlyActions = s.Action.some(action => readOnlyBucketActions.has(action))
+      const hasWriteOnlyActions = s.Action.some(action => writeOnlyBucketActions.has(action))
 
       if (hasCommonActions && s.Effect === PolicyEffect.Allow) {
-        bucketCommonFound = true;
+        bucketCommonFound = true
       }
       if (hasReadOnlyActions && s.Effect === PolicyEffect.Allow) {
-        bucketReadOnly = true;
+        bucketReadOnly = true
       }
       if (hasWriteOnlyActions && s.Effect === PolicyEffect.Allow) {
-        bucketWriteOnly = true;
+        bucketWriteOnly = true
       }
     }
 
     // 检查对象权限
     if (s.Resource.includes(objectResource)) {
-      const hasReadOnlyActions = s.Action.some(action => readOnlyObjectActions.has(action));
-      const hasWriteOnlyActions = s.Action.some(action => writeOnlyObjectActions.has(action));
+      const hasReadOnlyActions = s.Action.some(action => readOnlyObjectActions.has(action))
+      const hasWriteOnlyActions = s.Action.some(action => writeOnlyObjectActions.has(action))
 
       if (hasReadOnlyActions && s.Effect === PolicyEffect.Allow) {
-        objReadOnly = true;
+        objReadOnly = true
       }
       if (hasWriteOnlyActions && s.Effect === PolicyEffect.Allow) {
-        objWriteOnly = true;
+        objWriteOnly = true
       }
     }
   }
 
   if (bucketCommonFound) {
     if (bucketReadOnly && bucketWriteOnly && objReadOnly && objWriteOnly) {
-      return BucketPolicyConstants.ReadWrite;
+      return BucketPolicyConstants.ReadWrite
     } else if (bucketReadOnly && objReadOnly) {
-      return BucketPolicyConstants.ReadOnly;
+      return BucketPolicyConstants.ReadOnly
     } else if (bucketWriteOnly && objWriteOnly) {
-      return BucketPolicyConstants.WriteOnly;
+      return BucketPolicyConstants.WriteOnly
     }
   }
 
-  return BucketPolicyConstants.None;
+  return BucketPolicyConstants.None
 }
 
 /**
@@ -513,7 +513,7 @@ export function createPrivatePolicy(bucketName: string, prefix: string): PolicyS
     ),
     // 拒绝所有其他访问
     createDenyStatement(['*'], [PolicyAction.AllActions], [{ bucket: bucketName, object: `${prefix}*` }]),
-  ];
+  ]
 }
 
 /**
@@ -538,7 +538,7 @@ export function createPublicPolicy(bucketName: string, prefix: string): PolicySt
       ],
       [{ bucket: bucketName, object: `${prefix}*` }]
     ),
-  ];
+  ]
 }
 
 /**
@@ -552,53 +552,53 @@ export function setBucketPolicy(
 ): PolicyStatement[] {
   // 移除现有策略
   const filteredStatements = statements.filter(s => {
-    const bucketResource = `${awsResourcePrefix}${bucketName}`;
-    const objectResource = `${awsResourcePrefix}${bucketName}/${prefix}*`;
-    return !s.Resource.includes(bucketResource) && !s.Resource.includes(objectResource);
-  });
+    const bucketResource = `${awsResourcePrefix}${bucketName}`
+    const objectResource = `${awsResourcePrefix}${bucketName}/${prefix}*`
+    return !s.Resource.includes(bucketResource) && !s.Resource.includes(objectResource)
+  })
 
   // 创建新策略
-  let newStatements: PolicyStatement[] = [];
+  let newStatements: PolicyStatement[] = []
 
   switch (policy) {
     case BucketPolicyConstants.Private:
-      newStatements = createPrivatePolicy(bucketName, prefix);
-      break;
+      newStatements = createPrivatePolicy(bucketName, prefix)
+      break
 
     case BucketPolicyConstants.Public:
-      newStatements = createPublicPolicy(bucketName, prefix);
-      break;
+      newStatements = createPublicPolicy(bucketName, prefix)
+      break
 
     default:
       // 添加通用存储桶权限
       newStatements.push(
         createAllowStatement(['*'], Array.from(commonBucketActions) as PolicyAction[], [{ bucket: bucketName }])
-      );
+      )
 
       // 根据策略类型添加其他权限
       if (policy === BucketPolicyConstants.ReadOnly || policy === BucketPolicyConstants.ReadWrite) {
         newStatements.push(
           createAllowStatement(['*'], Array.from(readOnlyBucketActions) as PolicyAction[], [{ bucket: bucketName }])
-        );
+        )
         newStatements.push(
           createAllowStatement(['*'], Array.from(readOnlyObjectActions) as PolicyAction[], [
             { bucket: bucketName, object: `${prefix}*` },
           ])
-        );
+        )
       }
 
       if (policy === BucketPolicyConstants.WriteOnly || policy === BucketPolicyConstants.ReadWrite) {
         newStatements.push(
           createAllowStatement(['*'], Array.from(writeOnlyBucketActions) as PolicyAction[], [{ bucket: bucketName }])
-        );
+        )
         newStatements.push(
           createAllowStatement(['*'], Array.from(writeOnlyObjectActions) as PolicyAction[], [
             { bucket: bucketName, object: `${prefix}*` },
           ])
-        );
+        )
       }
   }
 
   // 合并策略
-  return appendStatements(filteredStatements, newStatements);
+  return appendStatements(filteredStatements, newStatements)
 }

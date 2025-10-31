@@ -34,9 +34,7 @@ const message = useMessage()
 const clipboard = ref<ClipboardJS | null>(null)
 
 onMounted(() => {
-  clipboard.value = new ClipboardJS(
-    props.copyIcon ? `#${props.id}-btn-icon` : `#${props.id}-btn`
-  )
+  clipboard.value = new ClipboardJS(props.copyIcon ? `#${props.id}-btn-icon` : `#${props.id}-btn`)
 
   clipboard.value.on('success', function (e) {
     message.success(t('Copy Success'))
@@ -70,7 +68,15 @@ onUnmounted(() => {
     <Button v-if="!props.copyIcon" :id="`${props.id}-btn`" :data-clipboard-target="`#${props.id}`" variant="default">
       {{ t('Copy') }}
     </Button>
-    <Button v-else :id="`${props.id}-btn-icon`" variant="ghost" size="sm" class="shrink-0" :data-clipboard-target="`#${props.id}`" :title="t('Copy')">
+    <Button
+      v-else
+      :id="`${props.id}-btn-icon`"
+      variant="ghost"
+      size="sm"
+      class="shrink-0"
+      :data-clipboard-target="`#${props.id}`"
+      :title="t('Copy')"
+    >
       <Icon :size="18" name="ri:file-copy-line" />
       <span class="sr-only">{{ t('Copy') }}</span>
     </Button>

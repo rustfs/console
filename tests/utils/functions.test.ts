@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import {
-  formatBytes,
-  getBytes,
-  makeRandomString,
-  niceBytes
-} from '../../utils/functions'
+import { formatBytes, getBytes, makeRandomString, niceBytes } from '../../utils/functions'
 
 describe('formatBytes', () => {
   it('should format bytes correctly', () => {

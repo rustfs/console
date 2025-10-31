@@ -6,69 +6,69 @@
 // Download globe json file from https://geojson-maps.kyd.au/ and save in the same folder
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import ThreeGlobe from 'three-globe';
-import { AmbientLight, Color, DirectionalLight, PerspectiveCamera, PointLight, Scene, WebGLRenderer } from 'three';
-import contries from './globe.json';
-import { cn } from '@/lib/utils';
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
+import ThreeGlobe from 'three-globe'
+import { AmbientLight, Color, DirectionalLight, PerspectiveCamera, PointLight, Scene, WebGLRenderer } from 'three'
+import contries from './globe.json'
+import { cn } from '@/lib/utils'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 
 type Position = {
-  order: number;
-  startLat: number;
-  startLng: number;
-  endLat: number;
-  endLng: number;
-  arcAlt: number;
-  color: string;
-};
+  order: number
+  startLat: number
+  startLng: number
+  endLat: number
+  endLng: number
+  arcAlt: number
+  color: string
+}
 
 interface GlobeData {
-  size: number | undefined;
-  order: number;
-  color: (t: number) => string;
-  lat: number;
-  lng: number;
+  size: number | undefined
+  order: number
+  color: (t: number) => string
+  lat: number
+  lng: number
 }
 
 interface GlobeConfig {
-  pointSize?: number;
-  globeColor?: string;
-  showAtmosphere?: boolean;
-  atmosphereColor?: string;
-  atmosphereAltitude?: number;
-  emissive?: string;
-  emissiveIntensity?: number;
-  shininess?: number;
-  polygonColor?: string;
-  ambientLight?: string;
-  directionalLeftLight?: string;
-  directionalTopLight?: string;
-  pointLight?: string;
-  arcTime?: number;
-  arcLength?: number;
-  rings?: number;
-  maxRings?: number;
+  pointSize?: number
+  globeColor?: string
+  showAtmosphere?: boolean
+  atmosphereColor?: string
+  atmosphereAltitude?: number
+  emissive?: string
+  emissiveIntensity?: number
+  shininess?: number
+  polygonColor?: string
+  ambientLight?: string
+  directionalLeftLight?: string
+  directionalTopLight?: string
+  pointLight?: string
+  arcTime?: number
+  arcLength?: number
+  rings?: number
+  maxRings?: number
   initialPosition?: {
-    lat: number;
-    lng: number;
-  };
-  autoRotate?: boolean;
-  autoRotateSpeed?: number;
+    lat: number
+    lng: number
+  }
+  autoRotate?: boolean
+  autoRotateSpeed?: number
 }
 
 interface Props {
-  globeConfig?: GlobeConfig;
-  data?: Position[];
-  class?: string;
+  globeConfig?: GlobeConfig
+  data?: Position[]
+  class?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   globeConfig: () => {
-    return {};
+    return {}
   },
   data: () => [],
-});
+})
 
 const defaultGlobeConfig: GlobeConfig = {
   pointSize: 1,
@@ -85,111 +85,111 @@ const defaultGlobeConfig: GlobeConfig = {
   rings: 1,
   maxRings: 3,
   ...props.globeConfig,
-};
+}
 
-const githubGlobeRef = ref<HTMLCanvasElement | null>(null);
-const globeData = ref<GlobeData[]>([]);
+const githubGlobeRef = ref<HTMLCanvasElement | null>(null)
+const globeData = ref<GlobeData[]>([])
 
-let numberOfRings: number[] = [];
+let numberOfRings: number[] = []
 
-let renderer: WebGLRenderer | null = null;
-let scene: Scene | null = null;
-let camera: PerspectiveCamera | null = null;
-let controls: OrbitControls | null = null;
+let renderer: WebGLRenderer | null = null
+let scene: Scene | null = null
+let camera: PerspectiveCamera | null = null
+let controls: OrbitControls | null = null
 
-let globe: ThreeGlobe | null = null;
+let globe: ThreeGlobe | null = null
 
 onMounted(() => {
-  setupScene();
-  initGlobe();
-  startAnimation();
-  animate();
+  setupScene()
+  initGlobe()
+  startAnimation()
+  animate()
 
-  onWindowResize();
+  onWindowResize()
 
-  window.addEventListener('resize', onWindowResize, false);
+  window.addEventListener('resize', onWindowResize, false)
 
   watch(globeData, () => {
-    if (!globe || globeData.value.length === 0) return;
+    if (!globe || globeData.value.length === 0) return
 
-    const arcLength = props.data?.length ?? 0;
-    if (arcLength === 0) return;
+    const arcLength = props.data?.length ?? 0
+    if (arcLength === 0) return
 
-    numberOfRings = genRandomNumbers(0, arcLength, Math.floor((arcLength * 4) / 5));
+    numberOfRings = genRandomNumbers(0, arcLength, Math.floor((arcLength * 4) / 5))
 
-    globe.ringsData(globeData.value.filter((d, i) => numberOfRings.includes(i)));
-  });
-});
+    globe.ringsData(globeData.value.filter((d, i) => numberOfRings.includes(i)))
+  })
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener('resize', onWindowResize, false);
+  window.removeEventListener('resize', onWindowResize, false)
   if (controls) {
-    controls.dispose();
-    controls = null;
+    controls.dispose()
+    controls = null
   }
-  renderer?.dispose();
-  renderer = null;
-  scene = null;
-  camera = null;
-  globe = null;
-});
+  renderer?.dispose()
+  renderer = null
+  scene = null
+  camera = null
+  globe = null
+})
 
 function setupScene() {
   if (!githubGlobeRef.value) {
-    throw new Error('Canvas not initialized');
+    throw new Error('Canvas not initialized')
   }
 
-  const width = githubGlobeRef.value.clientWidth;
-  const height = githubGlobeRef.value.clientHeight;
+  const width = githubGlobeRef.value.clientWidth
+  const height = githubGlobeRef.value.clientHeight
 
-  renderer = new WebGLRenderer({ canvas: githubGlobeRef.value, antialias: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(width, height);
-  renderer.autoClear = false;
+  renderer = new WebGLRenderer({ canvas: githubGlobeRef.value, antialias: true })
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+  renderer.setSize(width, height)
+  renderer.autoClear = false
 
-  scene = new Scene();
+  scene = new Scene()
 
-  camera = new PerspectiveCamera();
-  camera.aspect = width / height;
-  camera.position.setX(0);
-  camera.position.setY(0);
-  camera.position.setZ(400);
+  camera = new PerspectiveCamera()
+  camera.aspect = width / height
+  camera.position.setX(0)
+  camera.position.setY(0)
+  camera.position.setZ(400)
 
-  const ambientLight = new AmbientLight(defaultGlobeConfig.ambientLight || '#ffffff', 0.6);
-  scene.add(ambientLight);
+  const ambientLight = new AmbientLight(defaultGlobeConfig.ambientLight || '#ffffff', 0.6)
+  scene.add(ambientLight)
 
-  const dLight1 = new DirectionalLight(defaultGlobeConfig.directionalLeftLight || '#ffffff', 1);
-  dLight1.position.set(-400, 100, 400);
-  camera.add(dLight1);
+  const dLight1 = new DirectionalLight(defaultGlobeConfig.directionalLeftLight || '#ffffff', 1)
+  dLight1.position.set(-400, 100, 400)
+  camera.add(dLight1)
 
-  const dLight2 = new DirectionalLight(defaultGlobeConfig.directionalTopLight || '#ffffff', 1);
-  dLight2.position.set(-200, 500, 200);
-  camera.add(dLight2);
+  const dLight2 = new DirectionalLight(defaultGlobeConfig.directionalTopLight || '#ffffff', 1)
+  dLight2.position.set(-200, 500, 200)
+  camera.add(dLight2)
 
-  const pLight = new PointLight(defaultGlobeConfig.pointLight || '#ffffff', 0.8);
-  pLight.position.set(-200, 500, 200);
-  camera.add(pLight);
+  const pLight = new PointLight(defaultGlobeConfig.pointLight || '#ffffff', 0.8)
+  pLight.position.set(-200, 500, 200)
+  camera.add(pLight)
 
-  camera.updateProjectionMatrix();
-  scene.add(camera);
+  camera.updateProjectionMatrix()
+  scene.add(camera)
 
-  controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableZoom = false;
-  controls.enablePan = false;
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.01;
-  controls.minDistance = 200;
-  controls.maxDistance = 500;
-  controls.rotateSpeed = defaultGlobeConfig.autoRotateSpeed || 0.8;
-  controls.zoomSpeed = 1;
-  controls.autoRotate = defaultGlobeConfig.autoRotate || false;
+  controls = new OrbitControls(camera, renderer.domElement)
+  controls.enableZoom = false
+  controls.enablePan = false
+  controls.enableDamping = true
+  controls.dampingFactor = 0.01
+  controls.minDistance = 200
+  controls.maxDistance = 500
+  controls.rotateSpeed = defaultGlobeConfig.autoRotateSpeed || 0.8
+  controls.zoomSpeed = 1
+  controls.autoRotate = defaultGlobeConfig.autoRotate || false
 
-  controls.minPolarAngle = Math.PI / 3.5;
-  controls.maxPolarAngle = Math.PI - Math.PI / 3;
+  controls.minPolarAngle = Math.PI / 3.5
+  controls.maxPolarAngle = Math.PI - Math.PI / 3
 }
 
 function initGlobe() {
-  buildData();
+  buildData()
 
   globe = new ThreeGlobe({
     waitForGlobeReady: true,
@@ -201,52 +201,52 @@ function initGlobe() {
     .showAtmosphere(defaultGlobeConfig.showAtmosphere!)
     .atmosphereColor(defaultGlobeConfig.atmosphereColor!)
     .atmosphereAltitude(defaultGlobeConfig.atmosphereAltitude!)
-    .hexPolygonColor(e => defaultGlobeConfig.polygonColor!);
+    .hexPolygonColor(e => defaultGlobeConfig.polygonColor!)
 
-  globe.rotateY(-Math.PI * (5 / 9));
-  globe.rotateZ(-Math.PI / 6);
+  globe.rotateY(-Math.PI * (5 / 9))
+  globe.rotateZ(-Math.PI / 6)
 
   const globeMaterial = globe.globeMaterial() as unknown as {
-    color: Color;
-    emissive: Color;
-    emissiveIntensity: number;
-    shininess: number;
-  };
+    color: Color
+    emissive: Color
+    emissiveIntensity: number
+    shininess: number
+  }
 
-  globeMaterial.color = new Color(defaultGlobeConfig.globeColor!);
-  globeMaterial.emissive = new Color(defaultGlobeConfig.emissive!);
-  globeMaterial.emissiveIntensity = defaultGlobeConfig.emissiveIntensity || 0.1;
-  globeMaterial.shininess = defaultGlobeConfig.shininess || 0.9;
+  globeMaterial.color = new Color(defaultGlobeConfig.globeColor!)
+  globeMaterial.emissive = new Color(defaultGlobeConfig.emissive!)
+  globeMaterial.emissiveIntensity = defaultGlobeConfig.emissiveIntensity || 0.1
+  globeMaterial.shininess = defaultGlobeConfig.shininess || 0.9
 
   if (scene) {
-    scene.add(globe);
+    scene.add(globe)
   }
 }
 
 function onWindowResize() {
   if (!githubGlobeRef.value || !renderer || !camera) {
-    return;
+    return
   }
 
-  const width = githubGlobeRef.value.clientWidth;
-  const height = githubGlobeRef.value.clientHeight;
+  const width = githubGlobeRef.value.clientWidth
+  const height = githubGlobeRef.value.clientHeight
 
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
+  camera.aspect = width / height
+  camera.updateProjectionMatrix()
 
-  renderer.setSize(width, height);
+  renderer.setSize(width, height)
 }
 function startAnimation() {
-  if (!globe) return;
-  const arcs = props.data ?? [];
-  const strokeValues = [0.32, 0.28, 0.3] as const;
+  if (!globe) return
+  const arcs = props.data ?? []
+  const strokeValues = [0.32, 0.28, 0.3] as const
   const getStroke = () => {
     if (!strokeValues.length) {
-      return 0.3;
+      return 0.3
     }
-    const index = Math.floor(Math.random() * strokeValues.length);
-    return strokeValues[index] ?? strokeValues[0];
-  };
+    const index = Math.floor(Math.random() * strokeValues.length)
+    return strokeValues[index] ?? strokeValues[0]
+  }
   globe
     .arcsData(arcs)
     .arcStartLat((d: any) => d.startLat * 1)
@@ -271,87 +271,87 @@ function startAnimation() {
     .ringColor((e: any) => (t: any) => e.color(t))
     .ringMaxRadius(defaultGlobeConfig.maxRings!)
     .ringPropagationSpeed(3)
-    .ringRepeatPeriod((defaultGlobeConfig.arcTime! * defaultGlobeConfig.arcLength!) / (defaultGlobeConfig.rings || 1));
+    .ringRepeatPeriod((defaultGlobeConfig.arcTime! * defaultGlobeConfig.arcLength!) / (defaultGlobeConfig.rings || 1))
 }
 
 function animate() {
   if (!globe || !renderer || !scene || !camera) {
-    requestAnimationFrame(animate);
-    return;
+    requestAnimationFrame(animate)
+    return
   }
-  globe.rotation.y += 0.01; // Rotate globe
+  globe.rotation.y += 0.01 // Rotate globe
 
-  renderer.render(scene, camera);
+  renderer.render(scene, camera)
 
-  requestAnimationFrame(animate);
+  requestAnimationFrame(animate)
 }
 
 function buildData() {
-  const arcs = props.data ?? [];
-  const pointSize = props.globeConfig?.pointSize ?? defaultGlobeConfig.pointSize ?? 1;
-  const points: GlobeData[] = [];
+  const arcs = props.data ?? []
+  const pointSize = props.globeConfig?.pointSize ?? defaultGlobeConfig.pointSize ?? 1
+  const points: GlobeData[] = []
 
   for (let i = 0; i < arcs.length; i++) {
-    const arc = arcs[i];
-    if (!arc) continue;
-    const rgb = hexToRgb(arc.color ?? '#ffffff');
+    const arc = arcs[i]
+    if (!arc) continue
+    const rgb = hexToRgb(arc.color ?? '#ffffff')
     const basePoint = {
       size: pointSize,
       order: arc.order,
       color: (t: number) => `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${1 - t})`,
-    };
+    }
     points.push({
       ...basePoint,
       lat: arc.startLat,
       lng: arc.startLng,
-    });
+    })
     points.push({
       ...basePoint,
       lat: arc.endLat,
       lng: arc.endLng,
-    });
+    })
   }
 
   // remove duplicates for same lat and lng
   const filteredPoints = points.filter(
     (v, i, a) => a.findIndex(v2 => ['lat', 'lng'].every(k => v2[k as 'lat' | 'lng'] === v[k as 'lat' | 'lng'])) === i
-  );
+  )
 
-  globeData.value = filteredPoints;
+  globeData.value = filteredPoints
 }
 
 function hexToRgb(color: string): { r: number; g: number; b: number } {
-  let hex = color.replace(/^#/, '');
+  let hex = color.replace(/^#/, '')
 
   // If the hex code is 3 characters, expand it to 6 characters
   if (hex.length === 3) {
     hex = hex
       .split('')
       .map(char => char + char)
-      .join('');
+      .join('')
   }
 
   // Parse the r, g, b values from the hex string
-  const bigint = parseInt(hex, 16);
-  const r = (bigint >> 16) & 255; // Extract the red component
-  const g = (bigint >> 8) & 255; // Extract the green component
-  const b = bigint & 255; // Extract the blue component
+  const bigint = parseInt(hex, 16)
+  const r = (bigint >> 16) & 255 // Extract the red component
+  const g = (bigint >> 8) & 255 // Extract the green component
+  const b = bigint & 255 // Extract the blue component
 
   // Return the RGB values as a string separated by spaces
   return {
     r,
     g,
     b,
-  };
+  }
 }
 
 function genRandomNumbers(min: number, max: number, count: number) {
-  const arr = [];
+  const arr = []
   while (arr.length < count) {
-    const r = Math.floor(Math.random() * (max - min)) + min;
-    if (arr.indexOf(r) === -1) arr.push(r);
+    const r = Math.floor(Math.random() * (max - min)) + min
+    if (arr.indexOf(r) === -1) arr.push(r)
   }
 
-  return arr;
+  return arr
 }
 </script>

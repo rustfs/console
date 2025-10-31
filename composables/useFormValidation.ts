@@ -48,10 +48,7 @@ export function useFormValidation<T extends z.ZodTypeAny>(schema: T) {
    * @param showMessage Whether to show error message
    * @returns Whether validation passed
    */
-  const validateWithMessage = (
-    data: unknown,
-    showMessage = true
-  ): data is z.infer<T> => {
+  const validateWithMessage = (data: unknown, showMessage = true): data is z.infer<T> => {
     const result = validate(data)
 
     if (!result.success && showMessage) {
@@ -59,9 +56,7 @@ export function useFormValidation<T extends z.ZodTypeAny>(schema: T) {
       if (firstError) {
         const fieldName = firstError.path.join('.')
         const errorMessage = firstError.message || t('Validation failed')
-        message.error(
-          fieldName ? `${fieldName}: ${errorMessage}` : errorMessage
-        )
+        message.error(fieldName ? `${fieldName}: ${errorMessage}` : errorMessage)
       } else {
         message.error(t('Validation failed'))
       }
@@ -76,17 +71,11 @@ export function useFormValidation<T extends z.ZodTypeAny>(schema: T) {
    * @param fieldPath Field path
    * @returns Error message or undefined
    */
-  const getFieldError = (
-    errors: z.ZodError | undefined,
-    fieldPath: (string | number)[]
-  ): string | undefined => {
+  const getFieldError = (errors: z.ZodError | undefined, fieldPath: (string | number)[]): string | undefined => {
     if (!errors) return undefined
 
-    const error = errors.errors.find((e) => {
-      return (
-        e.path.length === fieldPath.length &&
-        e.path.every((p, i) => p === fieldPath[i])
-      )
+    const error = errors.errors.find(e => {
+      return e.path.length === fieldPath.length && e.path.every((p, i) => p === fieldPath[i])
     })
 
     return error?.message
@@ -99,4 +88,3 @@ export function useFormValidation<T extends z.ZodTypeAny>(schema: T) {
     schema,
   }
 }
-

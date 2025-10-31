@@ -20,7 +20,9 @@
 
   <Drawer v-model="showDrawer" :title="t('Task Management')" size="lg">
     <div class="flex flex-col gap-4">
-      <Alert class="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+      <Alert
+        class="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
+      >
         <AlertDescription class="space-y-2 text-sm leading-relaxed">
           <p>
             <span class="font-medium text-amber-600 dark:text-amber-300">{{ t('Browser Warning') }}</span>

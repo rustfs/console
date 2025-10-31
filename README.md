@@ -117,6 +117,7 @@ SESSION_DURATION_SECONDS=43200
 ```
 
 The application automatically detects configuration from:
+
 1. Server config at `{SERVER_HOST}/config.json`
 2. localStorage saved configuration
 3. Current browser host
@@ -261,6 +262,7 @@ Add new languages by:
 3. Adding language switcher options in `components/language-switcher.vue`
 
 Currently supported languages:
+
 - English (`en`)
 - Chinese (`zh-CN`)
 - Turkish (`tr-TR`)

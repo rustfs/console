@@ -5,7 +5,7 @@
     </page-header>
 
     <div>
-    <Card class="space-y-4 shadow-none">
+      <Card class="space-y-4 shadow-none">
         <CardContent class="space-y-4">
           <div class="text-center">
             <h2 class="text-2xl font-bold">{{ t('Apache License') }}</h2>
@@ -16,7 +16,8 @@
           <ScrollArea class="h-[70vh] rounded-lg border">
             <pre class="whitespace-pre-wrap p-6 text-sm leading-6 text-muted-foreground">
         {{ licenseContent }}
-      </pre>
+      </pre
+            >
           </ScrollArea>
         </CardContent>
       </Card>

@@ -1,9 +1,9 @@
 <script setup lang="ts" generic="U extends ZodAny">
-import type { ZodAny } from "zod"
-import type { Config, ConfigItem, Shape } from "./interface"
-import { computed } from "vue"
-import { DEFAULT_ZOD_HANDLERS, INPUT_COMPONENTS } from "./constant"
-import useDependencies from "./dependencies"
+import type { ZodAny } from 'zod'
+import type { Config, ConfigItem, Shape } from './interface'
+import { computed } from 'vue'
+import { DEFAULT_ZOD_HANDLERS, INPUT_COMPONENTS } from './constant'
+import useDependencies from './dependencies'
 
 const props = defineProps<{
   fieldName: string
@@ -16,7 +16,7 @@ function isValidConfig(config: any): config is ConfigItem {
 }
 
 const delegatedProps = computed(() => {
-  if (props.shape && ["ZodObject", "ZodArray"].includes(props.shape.type)) {
+  if (props.shape && ['ZodObject', 'ZodArray'].includes(props.shape.type)) {
     return { schema: props.shape.schema }
   }
   return undefined
@@ -24,14 +24,14 @@ const delegatedProps = computed(() => {
 
 const resolvedComponent = computed(() => {
   if (isValidConfig(props.config)) {
-    if (typeof props.config.component === "string") {
+    if (typeof props.config.component === 'string') {
       return INPUT_COMPONENTS[props.config.component] ?? INPUT_COMPONENTS.string
     }
     return props.config.component
   }
 
   if (!props.shape) {
-    throw new Error("Shape is required for auto form field")
+    throw new Error('Shape is required for auto form field')
   }
 
   const handlerKey = DEFAULT_ZOD_HANDLERS[props.shape.type]

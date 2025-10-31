@@ -27,14 +27,7 @@ export default defineNuxtConfig({
     },
   },
 
-  modules: [
-    'shadcn-nuxt',
-    '@nuxtjs/i18n',
-    '@pinia/nuxt',
-    '@nuxt/icon',
-    '@vueuse/nuxt',
-    '@nuxt/image',
-  ],
+  modules: ['shadcn-nuxt', '@nuxtjs/i18n', '@pinia/nuxt', '@nuxt/icon', '@vueuse/nuxt', '@nuxt/image'],
   // Nuxt automatically reads the files in the plugins/ directory
   plugins: [],
   runtimeConfig: {
@@ -114,11 +107,9 @@ export default defineNuxtConfig({
      * Directory that the component lives in.
      * @default "./components/ui"
      */
-    componentDir: './components/ui'
+    componentDir: './components/ui',
   },
   vite: {
-    plugins: [
-      tailwindcss(),
-    ],
+    plugins: [tailwindcss()],
   },
 })

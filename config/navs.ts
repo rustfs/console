@@ -1,5 +1,5 @@
 // icons: https://icones.js.org/collection/ri
-import type { NavItem } from '~/types/app-config';
+import type { NavItem } from '~/types/app-config'
 
 export default [
   {
@@ -101,4 +101,4 @@ export default [
     target: '_blank',
     icon: 'ri:file-list-3-line',
   },
-] as NavItem[];
+] as NavItem[]

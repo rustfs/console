@@ -1,5 +1,5 @@
-import { defineStore } from 'pinia';
-import UploadTaskManager from '~/lib/upload-task-manager';
+import { defineStore } from 'pinia'
+import UploadTaskManager from '~/lib/upload-task-manager'
 
 export const useUploadTaskManagerStore = defineStore('uploadTaskManager', {
   state: () => ({
@@ -21,51 +21,51 @@ export const useUploadTaskManagerStore = defineStore('uploadTaskManager', {
   },
   actions: {
     addFiles(files: File[], bucketName: string, prefix?: string) {
-      console.log('addFiles', files.length, 'files to bucket', bucketName, 'prefix:', prefix);
+      console.log('addFiles', files.length, 'files to bucket', bucketName, 'prefix:', prefix)
 
       // Process large batches of files in chunks
-      const batchSize = 50;
+      const batchSize = 50
       if (files.length > batchSize) {
-        console.log(`Processing ${files.length} files in batches of ${batchSize}`);
+        console.log(`Processing ${files.length} files in batches of ${batchSize}`)
         for (let i = 0; i < files.length; i += batchSize) {
-          const batch = files.slice(i, i + batchSize);
-          this.taskManager.addFiles(batch, bucketName, prefix);
+          const batch = files.slice(i, i + batchSize)
+          this.taskManager.addFiles(batch, bucketName, prefix)
         }
       } else {
-        this.taskManager.addFiles(files, bucketName, prefix);
+        this.taskManager.addFiles(files, bucketName, prefix)
       }
     },
 
     getTasks() {
-      return this.taskManager.getTasks();
+      return this.taskManager.getTasks()
     },
 
     cancelTask(taskId: string) {
-      this.taskManager.cancelTask(taskId);
+      this.taskManager.cancelTask(taskId)
     },
 
     cancelAllTasks() {
-      this.taskManager.cancel();
+      this.taskManager.cancel()
     },
 
     removeTask(taskId: string) {
-      this.taskManager.removeTask(taskId);
+      this.taskManager.removeTask(taskId)
     },
 
     clearTasks() {
-      this.taskManager.clearTasks();
+      this.taskManager.clearTasks()
     },
 
     pauseTask(taskId: string) {
-      this.taskManager.pauseTask(taskId);
+      this.taskManager.pauseTask(taskId)
     },
     resumeTask(taskId: string) {
-      this.taskManager.resumeTask(taskId);
+      this.taskManager.resumeTask(taskId)
     },
 
     // Get statistics
     getStats() {
-      const tasks = this.tasks;
+      const tasks = this.tasks
       return {
         total: tasks.length,
         pending: tasks.filter(task => task.status === 'pending').length,
@@ -74,7 +74,7 @@ export const useUploadTaskManagerStore = defineStore('uploadTaskManager', {
         failed: tasks.filter(task => task.status === 'failed').length,
         canceled: tasks.filter(task => task.status === 'canceled').length,
         paused: tasks.filter(task => task.status === 'paused').length,
-      };
+      }
     },
   },
-});
+})

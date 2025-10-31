@@ -16,7 +16,12 @@
         <FieldContent class="space-y-2">
           <Popover v-model:open="policySelectorOpen">
             <PopoverTrigger as-child>
-              <Button type="button" variant="outline" class="min-h-10 justify-between gap-2" :aria-label="t('Select Group')">
+              <Button
+                type="button"
+                variant="outline"
+                class="min-h-10 justify-between gap-2"
+                :aria-label="t('Select Group')"
+              >
                 <span class="truncate">
                   {{ selectedPolicyLabels.length ? selectedPolicyLabels.join(', ') : t('Select user group policies') }}
                 </span>
@@ -29,8 +34,17 @@
                 <CommandList>
                   <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
                   <CommandGroup>
-                    <CommandItem v-for="option in policies" :key="option.value" :value="option.label" @select="() => togglePolicy(option.value)">
-                      <Icon name="ri:check-line" class="mr-2 size-4" :class="selectedPolicies.includes(option.value) ? 'opacity-100' : 'opacity-0'" />
+                    <CommandItem
+                      v-for="option in policies"
+                      :key="option.value"
+                      :value="option.label"
+                      @select="() => togglePolicy(option.value)"
+                    >
+                      <Icon
+                        name="ri:check-line"
+                        class="mr-2 size-4"
+                        :class="selectedPolicies.includes(option.value) ? 'opacity-100' : 'opacity-0'"
+                      />
                       <span>{{ option.label }}</span>
                     </CommandItem>
                   </CommandGroup>

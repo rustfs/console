@@ -19,4 +19,4 @@ module.exports = {
   useTabs: false, // 是否使用制表符（tab）缩进。
   vueIndentScriptAndStyle: false, // 是否缩进 Vue 文件中的代码<script>和<style>标签
   endOfLine: 'lf', // 与 `.editorconfig` 保持一致设置。指定换行符样式。（lf | crlf | cr | auto）
-};
+}

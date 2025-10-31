@@ -91,7 +91,7 @@ const bucketOptions = computed<SelectOption[]>(() => {
 // 自动设置第一个 bucket 为默认值（仅在组件初始化时且 modelValue 为空时）
 watch(
   () => bucketOptions.value,
-  (newOptions) => {
+  newOptions => {
     if (shouldAutoLoad.value && newOptions.length > 0 && modelValue.value === null) {
       const firstBucket = newOptions[0]
       if (firstBucket?.value) {
@@ -116,9 +116,7 @@ const selectedDisplayText = computed(() => {
   return `${displayLabel.value}: ${selectedOption.label}`
 })
 
-const containerClasses = computed(() =>
-  props.layout === 'inline' ? 'flex items-center gap-3' : 'flex flex-col gap-2'
-)
+const containerClasses = computed(() => (props.layout === 'inline' ? 'flex items-center gap-3' : 'flex flex-col gap-2'))
 
 const controlWrapperClasses = computed(() =>
   props.layout === 'inline' ? 'flex flex-col gap-1 min-w-[220px]' : 'flex flex-col gap-1'
@@ -136,7 +134,12 @@ const controlWrapperClasses = computed(() =>
         </SelectTrigger>
         <SelectContent>
           <template v-if="bucketOptions.length">
-            <SelectItem v-for="option in bucketOptions" :key="String(option.value)" :value="String(option.value)" :disabled="option.disabled">
+            <SelectItem
+              v-for="option in bucketOptions"
+              :key="String(option.value)"
+              :value="String(option.value)"
+              :disabled="option.disabled"
+            >
               {{ option.label }}
             </SelectItem>
           </template>

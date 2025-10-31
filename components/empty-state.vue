@@ -1,13 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '#components'
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { cn } from '@/lib/utils'
 import type { HTMLAttributes } from 'vue'
 

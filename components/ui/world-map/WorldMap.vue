@@ -83,27 +83,27 @@
 </template>
 
 <script setup lang="ts">
-import DottedMap from 'dotted-map';
-import { Motion } from 'motion-v';
+import DottedMap from 'dotted-map'
+import { Motion } from 'motion-v'
 
 interface Dot {
-  start: { lat: number; lng: number; label?: string };
-  end: { lat: number; lng: number; label?: string };
+  start: { lat: number; lng: number; label?: string }
+  end: { lat: number; lng: number; label?: string }
 }
 interface Props {
-  dots?: Array<Dot>;
-  class?: string;
-  lineColor?: string;
-  mapColor: string;
-  mapBgColor: string;
+  dots?: Array<Dot>
+  class?: string
+  lineColor?: string
+  mapColor: string
+  mapBgColor: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   dots: () => [],
   lineColor: '#0EA5E9',
-});
+})
 
-const map = new DottedMap({ height: 100, grid: 'diagonal' });
+const map = new DottedMap({ height: 100, grid: 'diagonal' })
 
 const svgMap = computed(() =>
   map.getSVG({
@@ -112,19 +112,19 @@ const svgMap = computed(() =>
     shape: 'circle',
     backgroundColor: props.mapBgColor,
   })
-);
+)
 
 function projectPoint(lat: number, lng: number) {
-  const x = (lng + 180) * (800 / 360);
-  const y = (90 - lat) * (400 / 180);
-  return { x, y };
+  const x = (lng + 180) * (800 / 360)
+  const y = (90 - lat) * (400 / 180)
+  return { x, y }
 }
 
 function createCurvedPath(dot: Dot) {
-  const start = projectPoint(dot.start.lat, dot.start.lng);
-  const end = projectPoint(dot.end.lat, dot.end.lng);
-  const midX = (start.x + end.x) / 2;
-  const midY = Math.min(start.y, end.y) - 50;
-  return `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`;
+  const start = projectPoint(dot.start.lat, dot.start.lng)
+  const end = projectPoint(dot.end.lat, dot.end.lng)
+  const midX = (start.x + end.x) / 2
+  const midY = Math.min(start.y, end.y) - 50
+  return `M ${start.x} ${start.y} Q ${midX} ${midY} ${end.x} ${end.y}`
 }
 </script>

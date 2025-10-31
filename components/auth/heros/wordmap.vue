@@ -4,20 +4,32 @@
       <img src="~/assets/logo.svg" class="max-w-28" alt="" />
       <div class="text-4xl my-6 font-semibold text-primary! px-0">
         <span :class="{ 'pr-1': locale !== 'zh' }">{{ t('Rust-based') }} </span>
-        <FlipWords :words="[
-          t('High Performance'),
-          t('Infinite Scaling'),
-          t('Secure & Reliable'),
-          t('Multi-Cloud Storage'),
-          t('S3 Compatible'),
-        ]" :duration="3000" class="text-4xl font-semibold text-primary! px-0" />
+        <FlipWords
+          :words="[
+            t('High Performance'),
+            t('Infinite Scaling'),
+            t('Secure & Reliable'),
+            t('Multi-Cloud Storage'),
+            t('S3 Compatible'),
+          ]"
+          :duration="3000"
+          class="text-4xl font-semibold text-primary! px-0"
+        />
         <div class="text-muted-foreground mt-2">
           {{ t('Reliable distributed file system') }}
         </div>
       </div>
     </div>
-    <WorldMap class="absolute inset-0" :dots="dots" :map-color="isDark ? '#FFFFFF40' : '#00000040'" :map-bg-color="isDark ? 'black' : '#f9fafb'" />
-    <a href=" https://www.rustfs.com" class="text-primary-500 inline-flex w-min items-center gap-2 leading-none p-2 px-5 border rounded-full border-blue-500">
+    <WorldMap
+      class="absolute inset-0"
+      :dots="dots"
+      :map-color="isDark ? '#FFFFFF40' : '#00000040'"
+      :map-bg-color="isDark ? 'black' : '#f9fafb'"
+    />
+    <a
+      href=" https://www.rustfs.com"
+      class="text-primary-500 inline-flex w-min items-center gap-2 leading-none p-2 px-5 border rounded-full border-blue-500"
+    >
       <span>{{ t('Visit website') }}</span>
       <Icon name="ri:arrow-right-long-fill" class="mr-2" />
     </a>

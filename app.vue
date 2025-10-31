@@ -1,9 +1,8 @@
 <template>
-
-  <Body class="bg-background overscroll-none font-sans antialiased" :class="[
-    activeTheme ? `theme-${activeTheme}` : '',
-    isScaled ? 'theme-scaled' : '',
-  ]">
+  <Body
+    class="bg-background overscroll-none font-sans antialiased"
+    :class="[activeTheme ? `theme-${activeTheme}` : '', isScaled ? 'theme-scaled' : '']"
+  >
     <ProvidersAppUiProvider>
       <NuxtLayout>
         <NuxtPage />

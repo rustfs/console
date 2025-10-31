@@ -20,8 +20,7 @@
               '[background-image:var(--white-gradient),var(--aurora)] dark:[background-image:var(--dark-gradient),var(--aurora)] bg-size-[300%,200%] bg-position-[50%_50%,50%_50%]',
               'aurora-background-gradient-after',
               'aurora-gradient-animation',
-              props.radialGradient &&
-                `mask-[radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]`
+              props.radialGradient && `mask-[radial-gradient(ellipse_at_100%_0%,black_10%,var(--transparent)_70%)]`
             )
           "
         ></div>
@@ -32,16 +31,16 @@
 </template>
 
 <script setup lang="ts">
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
 interface AuroraBackgroundProps {
-  radialGradient?: boolean;
-  class?: string;
+  radialGradient?: boolean
+  class?: string
 }
 
 const props = withDefaults(defineProps<AuroraBackgroundProps>(), {
   radialGradient: true,
-});
+})
 </script>
 
 <style scoped>

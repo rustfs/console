@@ -14,10 +14,20 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Tiers')" :empty-description="t('Add tiers to configure remote storage destinations.')" />
+    <DataTable
+      :table="table"
+      :is-loading="loading"
+      :empty-title="t('No Tiers')"
+      :empty-description="t('Add tiers to configure remote storage destinations.')"
+    />
 
     <tiers-new-form ref="newFormRef" @search="() => refresh()" />
-    <tiers-change-key ref="changeKeyRef" v-model:visible="changeKeyVisible" v-model:name="selectedTier" @search="() => refresh()" />
+    <tiers-change-key
+      ref="changeKeyRef"
+      v-model:visible="changeKeyVisible"
+      v-model:name="selectedTier"
+      @search="() => refresh()"
+    />
   </page>
 </template>
 

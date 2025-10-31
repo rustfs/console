@@ -20,7 +20,13 @@
     </page-header>
 
     <div class="space-y-4">
-      <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Create a user to get started.')" table-class="min-w-full" />
+      <DataTable
+        :table="table"
+        :is-loading="loading"
+        :empty-title="t('No Data')"
+        :empty-description="t('Create a user to get started.')"
+        table-class="min-w-full"
+      />
       <DataTablePagination :table="table" />
 
       <user-new-form ref="newItemRef" @search="getDataList" />
@@ -86,7 +92,7 @@ function addUserItem() {
   newItemRef.value?.openDialog()
 }
 
-const addToGroup = () => { }
+const addToGroup = () => {}
 
 async function getDataList() {
   loading.value = true
@@ -155,18 +161,22 @@ const columns: ColumnDef<UserRow>[] = [
                 {
                   default: () => [
                     h(AlertDialogHeader, {}, { default: () => h(AlertDialogTitle, {}, () => t('Confirm Delete')) }),
-                    h(AlertDialogFooter, {}, {
-                      default: () => [
-                        h(AlertDialogCancel, {}, () => t('Cancel')),
-                        h(
-                          AlertDialogAction,
-                          {
-                            onClick: () => deleteItem(row.original),
-                          },
-                          () => t('Delete')
-                        ),
-                      ],
-                    }),
+                    h(
+                      AlertDialogFooter,
+                      {},
+                      {
+                        default: () => [
+                          h(AlertDialogCancel, {}, () => t('Cancel')),
+                          h(
+                            AlertDialogAction,
+                            {
+                              onClick: () => deleteItem(row.original),
+                            },
+                            () => t('Delete')
+                          ),
+                        ],
+                      }
+                    ),
                   ],
                 }
               ),

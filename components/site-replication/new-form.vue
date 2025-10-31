@@ -1,11 +1,6 @@
 <template>
   <Dialog :open="visible" @update:open="handleOpenChange">
-    <DialogContent
-      class="max-w-4xl"
-      @pointerDownOutside.prevent
-      @interactOutside.prevent
-      @escapeKeyDown.prevent
-    >
+    <DialogContent class="max-w-4xl" @pointerDownOutside.prevent @interactOutside.prevent @escapeKeyDown.prevent>
       <DialogHeader class="space-y-2 text-left">
         <DialogTitle>{{ t('Add Site Replication') }}</DialogTitle>
         <DialogDescription>
@@ -19,30 +14,18 @@
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="space-y-2">
               <Label for="current-site-name">{{ t('Site Name') }}</Label>
-              <Input
-                id="current-site-name"
-                v-model="currentSite.name"
-                :placeholder="t('Site Name')"
-              />
+              <Input id="current-site-name" v-model="currentSite.name" :placeholder="t('Site Name')" />
             </div>
             <div class="space-y-2 sm:col-span-2">
               <Label for="current-site-endpoint">{{ t('Endpoint *') }}</Label>
-              <Input
-                id="current-site-endpoint"
-                v-model="currentSite.endpoint"
-                :placeholder="t('Endpoint')"
-              />
+              <Input id="current-site-endpoint" v-model="currentSite.endpoint" :placeholder="t('Endpoint')" />
               <p v-if="currentErrors.endpoint" class="text-sm text-destructive">
                 {{ currentErrors.endpoint }}
               </p>
             </div>
             <div class="space-y-2">
               <Label for="current-site-access">{{ t('Access Key *') }}</Label>
-              <Input
-                id="current-site-access"
-                v-model="currentSite.accessKey"
-                :placeholder="t('Access Key')"
-              />
+              <Input id="current-site-access" v-model="currentSite.accessKey" :placeholder="t('Access Key')" />
               <p v-if="currentErrors.accessKey" class="text-sm text-destructive">
                 {{ currentErrors.accessKey }}
               </p>
@@ -77,15 +60,9 @@
           </div>
 
           <div class="space-y-4">
-            <div
-              v-for="(site, index) in remoteSite"
-              :key="index"
-              class="space-y-4 rounded-lg border p-4"
-            >
+            <div v-for="(site, index) in remoteSite" :key="index" class="space-y-4 rounded-lg border p-4">
               <div class="flex items-start justify-between">
-                <p class="text-sm font-medium text-muted-foreground">
-                  {{ t('Remote Site') }} {{ index + 1 }}
-                </p>
+                <p class="text-sm font-medium text-muted-foreground">{{ t('Remote Site') }} {{ index + 1 }}</p>
                 <Button
                   v-if="remoteSite.length > 1"
                   type="button"
@@ -102,30 +79,18 @@
               <div class="grid gap-4 sm:grid-cols-2">
                 <div class="space-y-2">
                   <Label :for="`remote-site-name-${index}`">{{ t('Site Name') }}</Label>
-                  <Input
-                    :id="`remote-site-name-${index}`"
-                    v-model="site.name"
-                    :placeholder="t('Site Name')"
-                  />
+                  <Input :id="`remote-site-name-${index}`" v-model="site.name" :placeholder="t('Site Name')" />
                 </div>
                 <div class="space-y-2 sm:col-span-2">
                   <Label :for="`remote-site-endpoint-${index}`">{{ t('Endpoint *') }}</Label>
-                  <Input
-                    :id="`remote-site-endpoint-${index}`"
-                    v-model="site.endpoint"
-                    :placeholder="t('Endpoint')"
-                  />
+                  <Input :id="`remote-site-endpoint-${index}`" v-model="site.endpoint" :placeholder="t('Endpoint')" />
                   <p v-if="remoteErrors[index]?.endpoint" class="text-sm text-destructive">
                     {{ remoteErrors[index].endpoint }}
                   </p>
                 </div>
                 <div class="space-y-2">
                   <Label :for="`remote-site-access-${index}`">{{ t('Access Key *') }}</Label>
-                  <Input
-                    :id="`remote-site-access-${index}`"
-                    v-model="site.accessKey"
-                    :placeholder="t('Access Key')"
-                  />
+                  <Input :id="`remote-site-access-${index}`" v-model="site.accessKey" :placeholder="t('Access Key')" />
                   <p v-if="remoteErrors[index]?.accessKey" class="text-sm text-destructive">
                     {{ remoteErrors[index].accessKey }}
                   </p>
@@ -342,7 +307,10 @@ const save = () => {
     return
   }
   console.log('Current Site:', { ...currentSite })
-  console.log('Remote Site:', remoteSite.value.map(site => ({ ...site })))
+  console.log(
+    'Remote Site:',
+    remoteSite.value.map(site => ({ ...site }))
+  )
   visible.value = false
 }
 

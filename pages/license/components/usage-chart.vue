@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n';
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
+const { t } = useI18n()
 
 const lineOptions = ref<ECOption>({
   tooltip: {
@@ -41,9 +41,9 @@ const lineOptions = ref<ECOption>({
       ],
     },
   ],
-}) as Ref<ECOption>;
+}) as Ref<ECOption>
 
-useEcharts('lineRef', lineOptions);
+useEcharts('lineRef', lineOptions)
 </script>
 
 <template>

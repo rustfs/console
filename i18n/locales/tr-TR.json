@@ -988,5 +988,11 @@
   "Bucket Events": "Kova Etkinlikleri",
   "Tiered Storage": "Katmanlı Depolama",
   "SSE Settings": "SSE Ayarları",
-  "Documentation": "Dokümantasyon"
+  "Documentation": "Dokümantasyon",
+  "Rows per page": "Sayfa başına satır",
+  "Page {current} of {total}": "{total} sayfadan {current}. sayfa",
+  "First": "İlk",
+  "Prev": "Önceki",
+  "Next": "Sonraki",
+  "Last": "Son"
 }

@@ -6,6 +6,8 @@ import type { Table } from '@tanstack/vue-table'
 import { computed } from 'vue'
 import Selector from '~/components/selector.vue'
 
+const { t } = useI18n()
+
 const props = withDefaults(
   defineProps<{
     table: Table<TData>
@@ -40,7 +42,7 @@ const handlePageSizeChange = (value: number | string | boolean | null) => {
   <div :class="cn('flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between', props.class)">
     <div class="flex items-center gap-3">
       <span class="text-sm text-muted-foreground">
-        Rows per page
+        {{ t('Rows per page') }}
       </span>
       <Selector :options="pageSizeOptions.map(option => ({ label: String(option), value: option }))" :model-value="pagination.pageSize" class="w-24"
         @update:model-value="handlePageSizeChange" />
@@ -48,20 +50,20 @@ const handlePageSizeChange = (value: number | string | boolean | null) => {
 
     <div class="flex items-center gap-2">
       <span class="text-sm text-muted-foreground">
-        Page {{ pageCount === 0 ? 0 : currentPage }} of {{ pageCount }}
+        {{ t('Page {current} of {total}', { current: pageCount === 0 ? 0 : currentPage, total: pageCount }) }}
       </span>
       <div class="flex items-center gap-2">
         <Button variant="outline" size="sm" :disabled="!canPrevious" @click="props.table.setPageIndex(0)">
-          First
+          {{ t('First') }}
         </Button>
         <Button variant="outline" size="sm" :disabled="!canPrevious" @click="props.table.previousPage()">
-          Prev
+          {{ t('Prev') }}
         </Button>
         <Button variant="outline" size="sm" :disabled="!canNext" @click="props.table.nextPage()">
-          Next
+          {{ t('Next') }}
         </Button>
         <Button variant="outline" size="sm" :disabled="!canNext" @click="props.table.setPageIndex(Math.max(pageCount - 1, 0))">
-          Last
+          {{ t('Last') }}
         </Button>
       </div>
     </div>

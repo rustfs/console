@@ -988,5 +988,11 @@
   "Bucket Events": "Bucket Events",
   "Tiered Storage": "Tiered Storage",
   "SSE Settings": "SSE Settings",
-  "Documentation": "Documentation"
+  "Documentation": "Documentation",
+  "Rows per page": "Rows per page",
+  "Page {current} of {total}": "Page {current} of {total}",
+  "First": "First",
+  "Prev": "Prev",
+  "Next": "Next",
+  "Last": "Last"
 }

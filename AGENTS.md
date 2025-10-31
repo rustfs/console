@@ -17,9 +17,10 @@
 ## Coding Style & Naming Conventions
 - Use Prettier defaults (see `.prettierrc.ts`); run `pnpm lint` or `pnpm lint:fix`.
 - Vue files use `<script setup>` with TypeScript; prefer composables for shared logic.
-- Components use StudlyCase filenames (e.g. `BucketSelector.vue`) but reference via kebab-case in templates.
+- Component files use **kebab-case** (e.g. `bucket-selector.vue`), but reference them using **StudlyCase** in templates (e.g. `<BucketSelector />`).
 - Override shadcn primitives **outside** `components/ui/`; never edit files in that directory directly.
 - Render tabular data with the shared `DataTable` + `useDataTable` utilities unless a specific requirement makes them unsuitable.
+- Language pack files should exclude test directories when processing translation keys.
 
 ## Testing Guidelines
 - Vitest is the primary framework; add new suites under `tests/`.

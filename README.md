@@ -335,6 +335,122 @@ We welcome contributions! Please follow our contribution guidelines:
 8. **Push** to your branch: `git push origin feature/amazing-feature`
 9. **Submit** a Pull Request
 
+### Pre-Commit Checklist
+
+Before committing and pushing your changes, ensure all the following checks pass:
+
+#### Code Quality Checks
+
+- ✅ **Code Formatting**: Run `pnpm lint` to ensure all files are properly formatted
+  ```bash
+  pnpm lint
+  # If issues found, auto-fix with:
+  pnpm lint:fix
+  ```
+
+- ✅ **TypeScript Type Checking**: No type errors
+  ```bash
+  pnpm type-check
+  ```
+
+- ✅ **Linting**: No linting errors
+  ```bash
+  pnpm lint
+  ```
+
+#### Testing Requirements
+
+- ✅ **Unit Tests**: All unit tests pass
+  ```bash
+  pnpm test:run
+  ```
+
+- ✅ **Test Coverage**: Maintain or improve test coverage
+  - Statement coverage: > 95%
+  - Branch coverage: > 90%
+  - Function coverage: 100%
+  - Line coverage: > 95%
+
+- ✅ **Integration Tests**: Integration tests pass (if applicable)
+  ```bash
+  pnpm test:integration
+  ```
+
+- ✅ **Performance Tests**: Performance benchmarks pass (if applicable)
+  ```bash
+  pnpm test:performance
+  ```
+
+#### Build Verification
+
+- ✅ **Build Success**: Project builds without errors
+  ```bash
+  pnpm build
+  ```
+
+#### Security & Dependencies
+
+- ✅ **Security Audit**: No critical or high severity vulnerabilities
+  ```bash
+  pnpm audit --audit-level=moderate
+  ```
+
+- ✅ **Dependencies**: No unnecessary dependencies added
+- ✅ **Lock File**: `pnpm-lock.yaml` is up to date
+
+#### Code Review Requirements
+
+- ✅ **Self-Review**: Review your own code before submitting PR
+- ✅ **Code Comments**: Code is properly commented (English)
+- ✅ **No Debug Code**: Remove all `console.log` and debug statements
+- ✅ **TypeScript Types**: All types are properly defined
+- ✅ **Commit Messages**: All commit messages are in English following Conventional Commits
+
+#### Documentation
+
+- ✅ **Code Comments**: JSDoc comments for public APIs
+- ✅ **README Updates**: Update README if needed
+- ✅ **API Documentation**: Update API docs if needed
+- ✅ **Changelog**: Update changelog for user-facing changes
+
+### CI/CD Pipeline Checks
+
+All PRs will automatically run the following checks via GitHub Actions:
+
+#### 🔍 Code Quality Pipeline
+
+- **Code Formatting**: Prettier formatting check
+- **TypeScript**: Type checking with `vue-tsc`
+- **Dependencies**: Outdated packages and security audit
+- **Code Complexity**: Complexity analysis
+- **Documentation**: JSDoc coverage check
+- **Performance**: Performance benchmarks
+
+**Quality Score Requirements**:
+- 🎉 **Excellent** (90%+): Code quality is outstanding
+- 👍 **Good** (75%+): Code quality is solid
+- ⚠️ **Fair** (60%+): Consider addressing failing checks
+- ❌ **Needs Improvement** (<60%): Multiple issues need attention
+
+#### 🧪 Test Pipeline
+
+- **Linting**: ESLint and Prettier checks
+- **Type Checking**: TypeScript type validation
+- **Unit Tests**: Multi-version Node.js testing (20, 22)
+- **Integration Tests**: Full functional integration tests
+- **Performance Tests**: Performance benchmarks and stress tests
+- **Code Coverage**: Coverage report generation and upload
+- **Security Scan**: Dependency audit and CodeQL analysis
+- **Build Test**: Verify project builds successfully
+
+**Test Coverage Requirements**:
+- Statement coverage: > 95%
+- Branch coverage: > 90%
+- Function coverage: 100%
+- Line coverage: > 95%
+
+**Important**: All CI/CD checks must pass before your PR can be merged. Make sure to run these checks locally before pushing.
+
 ### Coding Standards
 
 - **TypeScript**: Use TypeScript for all new code with strict mode
@@ -343,6 +459,9 @@ We welcome contributions! Please follow our contribution guidelines:
 - **Comments**: All comments and documentation in English
 - **Testing**: Include tests for new features
 - **Performance**: Consider performance implications
+- **Code Formatting**: All code must be formatted with Prettier (checked in CI)
+- **Type Safety**: No TypeScript errors (checked in CI)
+- **Test Coverage**: Maintain high test coverage (>95% statements, >90% branches, 100% functions)
 
 ### Code Style
 

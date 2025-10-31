@@ -75,6 +75,8 @@
   "devDependencies": {
     "@aws-sdk/types": "^3.840.0",
     "@inspira-ui/plugins": "^0.0.1",
+    "@oxc-minify/binding-darwin-arm64": "^0.95.0",
+    "@oxc-transform/binding-darwin-arm64": "^0.95.0",
     "@tailwindcss/vite": "^4.1.16",
     "@types/aws4": "^1.11.6",
     "@types/lodash": "^4.17.20",

@@ -43,16 +43,40 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Detect package manager
+        id: detect-package-manager
+        run: |
+          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
+            echo "manager=pnpm" >> $GITHUB_OUTPUT
+            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
+            exit 0
+          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
+            echo "command=install" >> $GITHUB_OUTPUT
+            exit 0
+          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
+            echo "manager=npm" >> $GITHUB_OUTPUT
+            echo "command=ci" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "Unable to determine package manager"
+            exit 1
+          fi
+      - name: Setup pnpm
+        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
         run: |
-          npm ci
-          npm install --save-dev vitest jsdom @vitest/ui c8
+          ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+          ${{ steps.detect-package-manager.outputs.manager }} add -D vitest jsdom @vitest/ui c8
 
       - name: 🏷️ Extract version
         id: version
@@ -77,13 +101,13 @@ jobs:
 
       - name: 🔍 Validate code quality
         run: |
-          npm run lint
-          npm run type-check
+          ${{ steps.detect-package-manager.outputs.manager }} run lint
+          ${{ steps.detect-package-manager.outputs.manager }} run type-check
           echo "✅ Code quality checks passed!" >> $GITHUB_STEP_SUMMARY
 
       - name: 🏗️ Test build
         run: |
-          npm run build
+          ${{ steps.detect-package-manager.outputs.manager }} run build
           echo "✅ Build successful!" >> $GITHUB_STEP_SUMMARY
 
       - name: ✅ Validation summary
@@ -108,18 +132,42 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
 
+      - name: Detect package manager
+        id: detect-package-manager
+        run: |
+          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
+            echo "manager=pnpm" >> $GITHUB_OUTPUT
+            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
+            exit 0
+          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
+            echo "command=install" >> $GITHUB_OUTPUT
+            exit 0
+          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
+            echo "manager=npm" >> $GITHUB_OUTPUT
+            echo "command=ci" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "Unable to determine package manager"
+            exit 1
+          fi
+      - name: Setup pnpm
+        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
+          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: npm ci
+        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
 
       - name: 🏗️ Build for production
         run: |
-          npm run build
+          ${{ steps.detect-package-manager.outputs.manager }} run build
           echo "## 🏗️ Build Information" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version**: ${{ needs.pre-release-validation.outputs.version }}" >> $GITHUB_STEP_SUMMARY
@@ -133,7 +181,7 @@ jobs:
           tar -czf release-${{ needs.pre-release-validation.outputs.version }}.tar.gz \
             .output/ \
             package.json \
-            package-lock.json \
+            pnpm-lock.yaml \
             README.md \
             LICENSE
 

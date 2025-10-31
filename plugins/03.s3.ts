@@ -1,22 +1,22 @@
-import { S3Client } from '@aws-sdk/client-s3';
-import type { SiteConfig } from '~/types/config';
-import type { DeserializeHandler, DeserializeHandlerArguments, DeserializeHandlerOutput } from '@aws-sdk/types';
+import { S3Client } from '@aws-sdk/client-s3'
+import type { DeserializeHandler, DeserializeHandlerArguments, DeserializeHandlerOutput } from '@aws-sdk/types'
+import type { SiteConfig } from '~/types/config'
 
 interface S3Response {
   response?: {
-    body?: string;
-  };
-  [key: string]: any;
+    body?: string
+  }
+  [key: string]: any
 }
 
 export default defineNuxtPlugin({
   name: 's3-client',
   setup(nuxtApp) {
-    const { credentials, isAuthenticated } = useAuth();
-    const siteConfig = nuxtApp.$siteConfig as SiteConfig;
+    const { credentials, isAuthenticated } = useAuth()
+    const siteConfig = nuxtApp.$siteConfig as SiteConfig
 
     if (!isAuthenticated || !credentials.value) {
-      return;
+      return
     }
 
     const client = new S3Client({
@@ -30,58 +30,69 @@ export default defineNuxtPlugin({
         secretAccessKey: credentials.value?.SecretAccessKey || '',
         sessionToken: credentials.value?.SessionToken || '',
       },
-    });
+    })
 
     // 添加中间件处理XML响应和401错误
     client.middlewareStack.add(
       (next: DeserializeHandler<any, any>) =>
         async (args: DeserializeHandlerArguments<any>): Promise<DeserializeHandlerOutput<any>> => {
           try {
-            const response = (await next(args)) as S3Response;
+            const response = (await next(args)) as S3Response
 
             // 检查响应是否为XML格式
             if (response.response?.body && typeof response.response.body === 'string') {
-              const body = response.response.body.trim();
+              const body = response.response.body.trim()
 
               // 检查是否是空的XML响应
               if (body.match(/^<\?xml[^>]*\?><[^>]*><\/[^>]*>$/)) {
                 // 从XML标签名提取属性名
-                const tagName = body.match(/<([^>]*)><\/\1>/)?.[1];
+                const tagName = body.match(/<([^>]*)><\/\1>/)?.[1]
                 if (tagName) {
                   // 将XML标签名转换为驼峰命名
-                  const propertyName = tagName.replace(/(?:^|_)([a-z])/g, (_, letter) => letter.toUpperCase());
+                  const propertyName = tagName.replace(/(?:^|_)([a-z])/g, (_, letter) => letter.toUpperCase())
                   // 返回null，保持response结构
                   return {
                     response: response.response,
                     [propertyName]: null,
-                  } as unknown as DeserializeHandlerOutput<any>;
+                  } as unknown as DeserializeHandlerOutput<any>
                 }
               }
             }
 
-            return response as DeserializeHandlerOutput<any>;
+            return response as DeserializeHandlerOutput<any>
           } catch (error: any) {
+            // 处理401未授权错误
             if (error?.$metadata?.httpStatusCode === 401) {
-              await useAuth().logoutAndRedirect();
+              const { logout } = useAuth()
+              logout()
+              // 使用 navigateTo 而不是直接操作 window.location
+              await navigateTo('/auth/login')
+              // 返回一个空响应以符合类型要求
+              return {
+                response: {
+                  statusCode: 401,
+                  headers: {},
+                },
+              } as DeserializeHandlerOutput<any>
             }
 
             // 处理 S3 客户端错误，优先抛出 error.message 作为新的 Error
             if (error?.Code) {
-              throw new Error(error.Code);
+              throw new Error(error.Code)
             }
-            throw error;
+            throw error
           }
         },
       {
         step: 'deserialize',
         name: 'handleXmlResponse',
       }
-    );
+    )
 
     return {
       provide: {
         s3Client: client,
       },
-    };
+    }
   },
-});
+})

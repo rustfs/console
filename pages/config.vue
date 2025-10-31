@@ -1,7 +1,8 @@
 <script lang="ts" setup>
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { getLoginRoute } from '~/utils/routes'
 
 await setPageLayout('plain')
 
@@ -51,7 +52,7 @@ const validateAndSave = async () => {
 
     // 延迟后刷新页面并跳转，确保配置完全生效
     setTimeout(() => {
-      window.location.href = '/rustfs/console/auth/login'
+      window.location.href = getLoginRoute()
     }, 200)
   } catch (error) {
     console.error('URL validation error:', error) // 调试信息
@@ -74,7 +75,7 @@ const resetToCurrentHost = async () => {
 
   // 延迟后跳转到登录页面，确保配置完全生效
   setTimeout(() => {
-    window.location.href = '/rustfs/console/auth/login'
+    window.location.href = getLoginRoute()
   }, 200)
 }
 
@@ -151,7 +152,7 @@ onMounted(() => {
               {{ t('Need help?') }}
               <NuxtLink to="https://docs.rustfs.com" class="text-blue-600 hover:underline">{{
                 t('View Documentation')
-                }}</NuxtLink>
+              }}</NuxtLink>
             </p>
           </div>
 

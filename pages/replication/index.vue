@@ -4,13 +4,7 @@
       <h1 class="text-2xl font-bold">{{ t('Bucket Replication') }}</h1>
       <template #actions>
         <ActionBar class="w-full justify-end gap-3 sm:w-auto">
-          <BucketSelector
-            v-model="bucketName"
-            :placeholder="t('Please select bucket')"
-
-            selector-class="sm:w-56"
-            cache-key="replication-buckets"
-          />
+          <BucketSelector v-model="bucketName" :placeholder="t('Please select bucket')" selector-class="sm:w-56" cache-key="replication-buckets" />
           <Button variant="outline" @click="openForm">
             <Icon name="ri:add-line" class="size-4" />
             <span>{{ t('Add Replication Rule') }}</span>

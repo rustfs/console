@@ -138,7 +138,7 @@ jobs:
             ## 🔧 Recommended Actions
 
             1. Review the security audit report
-            2. Run \`npm audit fix\` to automatically fix vulnerabilities
+            2. Run \`pnpm audit fix\` to automatically fix vulnerabilities (or use the detected package manager)
             3. For vulnerabilities that cannot be auto-fixed, consider:
                - Updating to a secure version manually
                - Finding alternative packages

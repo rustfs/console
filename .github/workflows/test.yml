@@ -323,7 +323,7 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
 
       - name: 🔒 Run security audit
-        run: npm audit --audit-level=moderate
+        run: ${{ steps.detect-package-manager.outputs.manager }} audit --audit-level=moderate
 
       - name: 🔍 Run CodeQL Analysis
         uses: github/codeql-action/init@v3

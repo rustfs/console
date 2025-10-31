@@ -244,7 +244,7 @@ export function useBucket({ region }: { region?: string }) {
     return await $api.delete(`/remove-remote-target?bucket=${bucket}&arn=${arn}`);
   };
 
-  // 桶通知
+  // Bucket notifications
   const listBucketNotifications = async (bucket: string) => {
     const params = {
       Bucket: bucket,

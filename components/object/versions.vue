@@ -1,164 +1,173 @@
 <template>
-  <n-modal
-    :show="visible"
-    @update:show="emit('close')"
-    preset="card"
-    :title="t('Object Versions')"
-    class="max-w-screen-md"
-  >
-    <n-data-table :columns="columns" :data="versions" :pagination="pagination" />
-    <n-button class="mt-4" @click="$emit('close')">{{ t('Close') }}</n-button>
-  </n-modal>
+  <Modal v-model="visibleProxy" :title="t('Object Versions')" size="lg" :close-on-backdrop="false">
+    <div class="space-y-4 z-20">
+      <DataTable :table="table" :is-loading="loading" :empty-title="t('No Versions')" />
+      <div class="flex justify-end">
+        <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
+      </div>
+    </div>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, h } from 'vue';
-import { useObject } from '@/composables/useObject';
-import { useMessage } from 'naive-ui';
-import { GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import dayjs from 'dayjs';
-import { NButton } from 'naive-ui';
+import { Button } from '@/components/ui/button'
 
-const props = defineProps<{ bucketName: string; objectKey: string; visible: boolean }>();
-const emit = defineEmits(['close', 'preview', 'refresh-parent']);
-const { t } = useI18n();
-const message = useMessage();
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
+import { GetObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import type { ColumnDef } from '@tanstack/vue-table'
+import dayjs from 'dayjs'
+import { computed, h, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
-const versions = ref<any[]>([]);
-const pagination = ref({ page: 1, pageSize: 10 });
+const props = defineProps<{
+  bucketName: string
+  objectKey: string
+  visible: boolean
+}>()
 
-function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
+const emit = defineEmits<{
+  (e: 'close'): void
+  (e: 'preview', versionId: string): void
+  (e: 'refresh-parent'): void
+}>()
 
-function shortVersionId(versionId: string): string {
-  if (!versionId) return '';
-  // 以 - . / 分割，取最后一段
-  const parts = versionId.split(/[-./]/);
-  return parts[parts.length - 1];
-}
+const { t } = useI18n()
+const message = useMessage()
+const ActionButton = Button as unknown as any
 
-const columns = [
+const visibleProxy = computed({
+  get: () => props.visible,
+  set: value => {
+    if (!value) emit('close')
+  },
+})
+
+const versions = ref<any[]>([])
+const loading = ref(false)
+
+const objectApi = useObject({ bucket: props.bucketName })
+
+const columns = computed<ColumnDef<any, any>[]>(() => [
   {
-    title: t('VersionId'),
-    key: 'VersionId',
-    render(row: any) {
-      return shortVersionId(row.VersionId);
-    },
+    id: 'versionId',
+    header: () => t('VersionId'),
+    cell: ({ row }: any) => shortVersionId(row.original.VersionId),
   },
   {
-    title: t('LastModified'),
-    key: 'LastModified',
-    render(row: any) {
-      return row.LastModified ? dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss') : '';
-    },
+    id: 'lastModified',
+    header: () => t('LastModified'),
+    cell: ({ row }: any) => (row.original.LastModified ? dayjs(row.original.LastModified).format('YYYY-MM-DD HH:mm:ss') : ''),
   },
   {
-    title: t('Size'),
-    key: 'Size',
-    render(row: any) {
-      return typeof row.Size === 'number' ? formatBytes(row.Size) : '';
-    },
+    id: 'size',
+    header: () => t('Size'),
+    cell: ({ row }: any) => (typeof row.original.Size === 'number' ? formatBytes(row.original.Size) : ''),
   },
   {
-    title: t('Action'),
-    key: 'action',
-    render(row: any) {
-      return [
+    id: 'actions',
+    header: () => t('Action'),
+    cell: ({ row }: any) =>
+      h('div', { class: 'flex gap-2' }, [
         h(
-          'NButton',
+          ActionButton,
           {
-            size: 'small',
-            style: 'cursor: pointer;',
-            onClick: () => previewVersion(row),
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => previewVersion(row.original),
           },
-          t('Preview')
+          () => t('Preview')
         ),
         h(
-          'NButton',
+          ActionButton,
           {
-            size: 'small',
-            style: 'margin:0 8px;cursor: pointer;',
-            type: 'primary',
-            onClick: () => downloadVersion(row),
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => downloadVersion(row.original),
           },
-          t('Download')
+          () => t('Download')
         ),
         h(
-          'NButton',
+          ActionButton,
           {
-            size: 'small',
-            style: 'cursor: pointer;',
-            type: 'primary',
-            onClick: () => deleteVersion(row),
+            variant: 'destructive',
+            size: 'sm',
+            onClick: () => deleteVersion(row.original),
           },
-          t('Delete')
+          () => t('Delete')
         ),
-      ];
-    },
+      ]),
   },
-];
+])
+
+const { table } = useDataTable({
+  data: versions,
+  columns,
+})
 
 watch(
   () => props.visible,
-  val => {
-    if (val) fetchVersions();
+  value => {
+    if (value) fetchVersions()
   }
-);
+)
 
-async function fetchVersions() {
-  const { getObjectVersions } = useObject({ bucket: props.bucketName });
+const fetchVersions = async () => {
+  loading.value = true
   try {
-    const { Versions } = await getObjectVersions(props.objectKey);
-    versions.value = Versions || [];
-  } catch (e: any) {
-    message.error(t('Failed to fetch versions'));
+    const response = await objectApi.getObjectVersions(props.objectKey)
+    versions.value = response.Versions ?? []
+  } catch (error) {
+    message.error(t('Failed to fetch versions'))
+    versions.value = []
+  } finally {
+    loading.value = false
   }
 }
 
-async function previewVersion(row: any) {
-  // 触发父组件预览弹窗，传递 versionId
-  emit('preview', row.VersionId);
+const shortVersionId = (versionId: string) => {
+  if (!versionId) return ''
+  const parts = versionId.split(/[-./]/)
+  return parts[parts.length - 1]
 }
 
-// 新增：自定义带 versionId 的签名 URL 获取方法
-async function getSignedUrlWithVersion(key: string, versionId: string, expiresIn = 3600) {
-  // 直接用 useObject 里的 bucketName
-  const $client = useNuxtApp().$s3Client;
+const formatBytes = (bytes: number) => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`
+}
+
+const previewVersion = (row: any) => emit('preview', row.VersionId)
+
+const downloadVersion = async (row: any) => {
+  const url = await getSignedUrlWithVersion(props.objectKey, row.VersionId)
+  window.open(url, '_blank')
+}
+
+const deleteVersion = async (row: any) => {
+  try {
+    await objectApi.deleteObject(props.objectKey, row.VersionId)
+    message.success(t('Delete Success'))
+    fetchVersions()
+    emit('refresh-parent')
+  } catch (error: any) {
+    message.error(error?.message || t('Delete Failed'))
+  }
+}
+
+const getSignedUrlWithVersion = async (key: string, versionId: string, expiresIn = 3600) => {
+  const client = useNuxtApp().$s3Client
   const command = new GetObjectCommand({
     Bucket: props.bucketName,
     Key: key,
     VersionId: versionId,
-  });
-  return await _getSignedUrl($client, command, { expiresIn });
+  })
+  return await getSignedUrl(client, command, { expiresIn })
 }
 
-async function downloadVersion(row: any) {
-  try {
-    const url = await getSignedUrlWithVersion(props.objectKey, row.VersionId);
-    window.open(url, '_blank');
-  } catch (e: any) {
-    message.error(t('Download Failed'));
-  }
-}
-
-async function deleteVersion(row: any) {
-  const { deleteObject } = useObject({ bucket: props.bucketName });
-
-  try {
-    await deleteObject(props.objectKey, row.VersionId);
-    message.success(t('Delete Success'));
-
-    // 重新获取版本列表
-    await fetchVersions();
-    emit('refresh-parent');
-  } catch (e: any) {
-    message.error(t('Delete Failed'));
-  }
-}
+const closeModal = () => emit('close')
 </script>

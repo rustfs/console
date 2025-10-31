@@ -1,173 +1,192 @@
 <template>
-  <n-modal
-    v-model:show="visible"
-    :mask-closable="false"
-    preset="card"
-    :title="t('Add Bucket Replication Rule', { bucket: bucketName })"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }"
+  <Modal
+    v-model="visible"
+    :title="t('Add Replication Rule') + ` (${t('Bucket')}: ${bucketName || ''})`"
+    size="xl"
+    :close-on-backdrop="false"
   >
-    <n-card>
-      <n-form label-placement="left" :label-width="100" ref="formRef" :model="formData">
-        <n-form-item :label="t('Priority')" path="level">
-          <n-input v-model:value="formData.level" :placeholder="t('Please enter priority')" />
-        </n-form-item>
-        <n-form-item :label="t('Target Address')" path="endpoint">
-          <n-input
-            v-model:value="formData.endpoint"
-            :placeholder="t('Please enter target address') + ':127.0.0.1:9000'"
-          />
-        </n-form-item>
-        <n-form-item :label="t('Use TLS')" path="tls">
-          <n-switch v-model:value="formData.tls" :round="false" />
-        </n-form-item>
-        <n-form-item :label="t('Access Key')" path="accesskey">
-          <n-input v-model:value="formData.accesskey" :placeholder="t('Please enter Access Key')" />
-        </n-form-item>
-        <n-form-item :label="t('Secret Key')" path="secrretkey">
-          <n-input v-model:value="formData.secrretkey" :placeholder="t('Please enter Secret Key')" />
-        </n-form-item>
-        <n-form-item :label="t('Target Bucket')" path="bucket">
-          <n-input v-model:value="formData.bucket" :placeholder="t('Please enter target bucket')" />
-        </n-form-item>
-        <n-form-item :label="t('Region')" path="region">
-          <n-input v-model:value="formData.region" :placeholder="t('Please enter region')" />
-        </n-form-item>
-        <n-form-item :label="t('Replication Mode')" path="modeType">
-          <n-select
-            v-model:value="formData.modeType"
-            :placeholder="t('Please select replication mode')"
-            filterable
-            :options="modes"
-          />
-        </n-form-item>
+    <div class="space-y-6">
+      <div class="space-y-4">
+        <div class="grid gap-3 md:grid-cols-2">
+          <Field>
+            <FieldLabel>{{ t('Priority') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.level" type="number" min="1" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Mode') }}</FieldLabel>
+            <FieldContent>
+              <Selector v-model="formData.modeType" :options="modeOptions" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Endpoint') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.endpoint" :placeholder="t('Please enter endpoint')" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Bucket') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.bucket" :placeholder="t('Please enter bucket')" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
+            <FieldContent>
+              <Input
+                v-model="formData.secrretkey"
+                type="password"
+                autocomplete="off"
+                :placeholder="t('Please enter Secret Key')"
+              />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Region') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.region" :placeholder="t('Please enter region')" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Storage Class') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.storageType" :placeholder="t('Please enter storage class')" />
+            </FieldContent>
+          </Field>
+        </div>
 
-        <n-form-item v-if="formData.modeType === 'async'" :label="t('Bandwidth')" path="bandwidth">
-          <n-input-group>
-            <n-input v-model:value="formData.bandwidth" :placeholder="t('Please enter bandwidth')" />
-            <n-select
-              v-model:value="formData.unit"
-              :placeholder="t('Please select unit')"
-              filterable
-              :options="units"
-            />
-          </n-input-group>
-        </n-form-item>
-        <n-form-item :label="t('Health Check Duration')" path="timecheck">
-          <n-input v-model:value="formData.timecheck" :placeholder="t('Please enter health check duration')">
-            <template #suffix>s</template>
-          </n-input>
-        </n-form-item>
-        <n-form-item :label="t('Storage Type')" path="storageType">
-          <n-input v-model:value="formData.storageType" :placeholder="t('Please enter storage type')" />
-        </n-form-item>
+        <Field>
+          <FieldLabel>{{ t('Prefix') }}</FieldLabel>
+          <FieldContent>
+            <Input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
+          </FieldContent>
+        </Field>
 
-        <!-- 对象搜索 -->
-        <n-card :title="t('Object Search')">
-          <n-form-item :label="t('Prefix')">
-            <n-input v-model="formData.prefix" :placeholder="t('Please enter prefix')" />
-          </n-form-item>
-          <n-form-item :label="t('Tags')">
-            <n-dynamic-input
-              v-model:value="formData.tags"
-              preset="pair"
-              :key-placeholder="t('Tag Name')"
-              :value-placeholder="t('Tag Value')"
-            />
-          </n-form-item>
-        </n-card>
-
-        <!-- 复制选项 -->
-        <n-card class="my-4">
-          <n-collapse>
-            <n-collapse-item :title="t('Replication Options')" name="advanced">
-              <div style="text-align: right">
-                <n-form-item :label="t('Existing Objects')">
-                  <n-space align="center" justify="end">
-                    <n-switch v-model:value="formData.existingObject" :round="false" />
-                    <span class="ml-4 text-gray-500">{{ t('Replicate existing objects') }}</span>
-                  </n-space>
-                </n-form-item>
-                <!-- <n-form-item :label="t('Metadata Sync')">
-                  <n-space align="center" justify="end">
-                    <n-switch v-model:value="formData.deleteAllExpired" :round="false" />
-                    <span class="ml-4 text-gray-500">{{ t("Sync metadata") }}</span>
-                  </n-space>
-                </n-form-item> -->
-                <n-form-item :label="t('Delete Marker')">
-                  <n-space align="center" justify="end">
-                    <n-switch v-model:value="formData.expiredDeleteMark" :round="false" />
-                    <span class="ml-4 text-gray-500">{{ t('Replicate soft delete') }}</span>
-                  </n-space>
-                </n-form-item>
-                <!-- <n-form-item :label="t('Delete')">
-                  <n-space align="center" justify="end">
-                    <n-switch v-model:value="formData.deleteforever" :round="false" />
-                    <span class="ml-4 text-gray-500">{{ t("Replicate version delete") }}</span>
-                  </n-space>
-                </n-form-item> -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <FieldLabel class="text-sm font-medium">{{ t('Tags') }}</FieldLabel>
+            <Button variant="outline" size="sm" @click="addTag">
+              <Icon name="ri:add-line" class="size-4" />
+              {{ t('Add Tag') }}
+            </Button>
+          </div>
+          <div v-if="formData.tags.length" class="space-y-3">
+            <div
+              v-for="(tag, index) in formData.tags"
+              :key="index"
+              class="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
+            >
+              <Input v-model="tag.key" :placeholder="t('Tag Name')" />
+              <div class="flex items-center gap-2">
+                <Input v-model="tag.value" :placeholder="t('Tag Value')" class="flex-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  class="text-destructive"
+                  :disabled="formData.tags.length === 1"
+                  @click="removeTag(index)"
+                >
+                  <Icon name="ri:delete-bin-line" class="size-4" />
+                </Button>
               </div>
-            </n-collapse-item>
-          </n-collapse>
-        </n-card>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <n-space justify="center">
-          <n-button @click="handleCancel">{{ t('Cancel') }}</n-button>
-          <n-button type="primary" @click="handleSave">{{ t('Save') }}</n-button>
-        </n-space>
-      </n-form>
-    </n-card>
-  </n-modal>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium">{{ t('Use TLS') }}</p>
+            <p class="text-xs text-muted-foreground">{{ t('Enable secure transport when connecting to endpoint.') }}</p>
+          </div>
+          <Switch v-model="formData.tls" />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium">{{ t('Replicate Existing Objects') }}</p>
+            <p class="text-xs text-muted-foreground">
+              {{ t('Include objects that already exist in the source bucket.') }}
+            </p>
+          </div>
+          <Switch v-model="formData.existingObject" />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium">{{ t('Replicate Delete Markers') }}</p>
+            <p class="text-xs text-muted-foreground">{{ t('Sync delete markers to destination bucket.') }}</p>
+          </div>
+          <Switch v-model="formData.expiredDeleteMark" />
+        </div>
+
+        <div class="space-y-3" v-if="formData.modeType === 'async'">
+          <Field>
+            <FieldLabel>{{ t('Health Check Interval (seconds)') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.timecheck" type="number" min="1" class="w-32" />
+            </FieldContent>
+          </Field>
+          <Field>
+            <FieldLabel>{{ t('Bandwidth Limit') }}</FieldLabel>
+            <FieldContent>
+              <div class="flex items-center gap-2">
+                <Input v-model="formData.bandwidth" type="number" min="0" class="w-32" />
+                <Selector v-model="formData.unit" :options="unitOptions" class="w-28" />
+              </div>
+            </FieldContent>
+          </Field>
+        </div>
+      </div>
+    </div>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="handleCancel">{{ t('Cancel') }}</Button>
+        <Button variant="default" :loading="submitting" @click="handleSave">{{ t('Save') }}</Button>
+      </div>
+    </template>
+  </Modal>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { NForm, NFormItem, NInput, NDynamicInput, NCollapse, NCollapseItem, NSwitch, NButton } from 'naive-ui';
-import { useBucket } from '@/composables/useBucket';
-import { getBytes } from '@/utils/functions';
+<script setup lang="ts">
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-const { t } = useI18n();
+import { Icon } from '#components'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
+import { Switch } from '@/components/ui/switch'
+import { getBytes } from '@/utils/functions'
+import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
+import Selector from '~/components/selector.vue'
 
-const modes = [
-  {
-    label: t('Sync'),
-    value: 'sync',
-  },
-  {
-    label: t('Async'),
-    value: 'async',
-  },
-];
+const { t } = useI18n()
+const message = useMessage()
+const { setRemoteReplicationTarget, putBucketReplication, getBucketReplication } = useBucket({})
 
-const units = [
-  {
-    label: 'Mi',
-    value: 'Mi',
-  },
-  {
-    label: 'Gi',
-    value: 'Gi',
-  },
-  {
-    label: 'Ti',
-    value: 'Ti',
-  },
-  {
-    label: 'Pi',
-    value: 'Pi',
-  },
-  {
-    label: 'Ei',
-    value: 'Ei',
-  },
-];
+const props = defineProps<{
+  bucketName: string | null
+}>()
 
-const formRef = ref(null);
-const formData = ref({
+const emit = defineEmits<{
+  (e: 'success'): void
+}>()
+
+const visible = ref(false)
+const submitting = ref(false)
+
+const formData = reactive({
   level: '1',
   endpoint: '',
   tls: false,
@@ -181,210 +200,191 @@ const formData = ref({
   bandwidth: 100,
   storageType: 'STANDARD',
   prefix: '',
-  tags: [
-    {
-      key: '',
-      value: '',
-    },
-  ],
+  tags: [{ key: '', value: '' }],
   existingObject: true,
   expiredDeleteMark: true,
-  // deleteAllExpired: false,
-  delete: false,
-  deleteforever: false,
-});
+})
 
-const props = defineProps({
-  bucketName: {
-    type: String,
-    required: true,
-  },
-});
+const modeOptions = computed(() => [
+  { label: t('Asynchronous'), value: 'async' },
+  { label: t('Synchronous'), value: 'sync' },
+])
 
-const visible = ref(false);
-const open = () => {
-  visible.value = true;
-};
+const unitOptions = computed(() => [
+  { label: 'KiB/s', value: 'Ki' },
+  { label: 'MiB/s', value: 'Mi' },
+  { label: 'GiB/s', value: 'Gi' },
+])
 
-defineExpose({
-  open,
-});
+const addTag = () => {
+  formData.tags.push({ key: '', value: '' })
+}
 
-const emit = defineEmits(['success']);
-// 创建远程复制目标
-const { setRemoteReplicationTarget, putBucketReplication, getBucketReplication } = useBucket({});
+const removeTag = (index: number) => {
+  if (formData.tags.length === 1) return
+  formData.tags.splice(index, 1)
+}
+
+const resetForm = () => {
+  formData.level = '1'
+  formData.endpoint = ''
+  formData.tls = false
+  formData.accesskey = ''
+  formData.secrretkey = ''
+  formData.bucket = ''
+  formData.region = 'us-east-1'
+  formData.modeType = 'async'
+  formData.timecheck = '60'
+  formData.unit = 'Gi'
+  formData.bandwidth = 100
+  formData.storageType = 'STANDARD'
+  formData.prefix = ''
+  formData.tags = [{ key: '', value: '' }]
+  formData.existingObject = true
+  formData.expiredDeleteMark = true
+}
+
+const validate = () => {
+  if (!formData.endpoint) {
+    message.error(t('Please enter endpoint'))
+    return false
+  }
+  if (!formData.bucket) {
+    message.error(t('Please enter bucket'))
+    return false
+  }
+  if (!formData.accesskey || !formData.secrretkey) {
+    message.error(t('Please provide credentials'))
+    return false
+  }
+  if (formData.modeType === 'async' && Number(formData.timecheck) < 1) {
+    message.error(t('Please enter valid health check interval'))
+    return false
+  }
+  return true
+}
+
 const handleSave = async () => {
-  formRef.value?.validate(async errors => {
-    if (!errors) {
-      try {
-        let config = {
-          sourcebucket: props.bucketName,
-          endpoint: formData.value.endpoint,
-          credentials: {
-            accessKey: formData.value.accesskey,
-            secretKey: formData.value.secrretkey,
-            expiration: '0001-01-01T00:00:00Z',
-          },
-          targetbucket: formData.value.bucket,
-          secure: formData.value.tls,
-          region: formData.value.region,
-          path: 'auto',
-          api: 's3v4',
-          type: 'replication',
-          replicationSync: formData.value.modeType === 'sync' ? true : false,
-          healthCheckDuration: formData.value.timecheck - 0,
-          disableProxy: false,
-          resetBeforeDate: '0001-01-01T00:00:00Z',
-          totalDowntime: 0,
-          lastOnline: '0001-01-01T00:00:00Z',
-          isOnline: false,
-          latency: {
-            curr: 0,
-            avg: 0,
-            max: 0,
-          },
-          edge: false,
-          edgeSyncBeforeExpiry: false,
-        };
-
-        // 添加带宽
-        if (formData.value.modeType === 'async') {
-          // 根据单位转化为字节
-          config.bandwidth = Number(getBytes(formData.value.bandwidth, formData.value.unit, true)) || 0;
-        }
-        let targetRESP = await setRemoteReplicationTarget(props.bucketName, config);
-
-        if (!targetRESP) {
-          return;
-        }
-
-        // 获取已有的 replication 配置
-        let oldConfig = null;
-        try {
-          oldConfig = await getBucketReplication(props.bucketName);
-        } catch (e) {
-          console.log(e);
-          // 没有配置时会报错，忽略即可
-        }
-
-        // 构造新规则
-        const newRule = {
-          ID: `replication-rule-${Date.now()}`,
-          Status: 'Enabled',
-          Priority: parseInt(formData.value.level) || 1,
-          Filter: (() => {
-            const filter = {};
-            if (formData.value.prefix) {
-              filter.Prefix = formData.value.prefix;
-            }
-            const validTags = formData.value.tags.filter(tag => tag.key && tag.value);
-            if (validTags.length > 0) {
-              if (validTags.length === 1) {
-                filter.Tag = {
-                  Key: validTags[0].key,
-                  Value: validTags[0].value,
-                };
-              } else {
-                filter.And = {
-                  Prefix: formData.value.prefix || '',
-                  Tags: validTags.map(tag => ({
-                    Key: tag.key,
-                    Value: tag.value,
-                  })),
-                };
-              }
-            }
-            return filter;
-          })(),
-          SourceSelectionCriteria: {
-            SseKmsEncryptedObjects: {
-              Status: 'Enabled',
-            },
-          },
-          ExistingObjectReplication: {
-            Status: formData.value.existingObject ? 'Enabled' : 'Disabled',
-          },
-          DeleteMarkerReplication: {
-            Status: formData.value.expiredDeleteMark ? 'Enabled' : 'Disabled',
-          },
-          Destination: {
-            Bucket: targetRESP,
-            StorageClass: formData.value.storageType ? formData.value.storageType.toUpperCase() : 'STANDARD',
-            // ReplicateDelete: formData.value.deleteforever ? "Enabled" : "Disabled",
-          },
-        };
-
-        // 合并规则
-        let rules = [];
-        if (
-          oldConfig &&
-          oldConfig.ReplicationConfiguration &&
-          Array.isArray(oldConfig.ReplicationConfiguration.Rules)
-        ) {
-          // 如果有 oldConfig.ReplicationConfiguration.Rules
-          targetRESP = null;
-          // 查找是否有存在的Destination Bucket,如果存在则替换整个规则
-          const findOne = oldConfig.ReplicationConfiguration.Rules.find(rule => rule.Destination.Bucket === targetRESP);
-          if (findOne) {
-            // 如果有则替换
-            rules = [...oldConfig.ReplicationConfiguration.Rules].splice(
-              oldConfig.ReplicationConfiguration.Rules.indexOf(findOne),
-              1,
-              newRule
-            );
-          } else {
-            rules = [...oldConfig.ReplicationConfiguration.Rules, newRule];
-          }
-        } else {
-          rules = [newRule];
-        }
-
-        const params = {
-          Role: targetRESP,
-          Rules: rules,
-        };
-
-        // 创建复制规则
-        await putBucketReplication(props.bucketName, params);
-
-        emit('success');
-        handleCancel();
-      } catch (e) {
-        console.log('🚀 ~ handleSave ~ e:', e);
-        window.$message?.error?.(t('Save failed'));
-      }
+  if (!validate()) return
+  if (!props.bucketName) {
+    message.error(t('Bucket name is required'))
+    return
+  }
+  submitting.value = true
+  try {
+    const config: any = {
+      sourcebucket: props.bucketName,
+      endpoint: formData.endpoint,
+      credentials: {
+        accessKey: formData.accesskey,
+        secretKey: formData.secrretkey,
+        expiration: '0001-01-01T00:00:00Z',
+      },
+      targetbucket: formData.bucket,
+      secure: formData.tls,
+      region: formData.region,
+      path: 'auto',
+      api: 's3v4',
+      type: 'replication',
+      replicationSync: formData.modeType === 'sync',
+      healthCheckDuration: Number(formData.timecheck) || 60,
+      disableProxy: false,
+      resetBeforeDate: '0001-01-01T00:00:00Z',
+      totalDowntime: 0,
+      lastOnline: '0001-01-01T00:00:00Z',
+      isOnline: false,
+      latency: { curr: 0, avg: 0, max: 0 },
+      edge: false,
+      edgeSyncBeforeExpiry: false,
     }
-  });
-};
+
+    if (formData.modeType === 'async') {
+      config.bandwidth = Number(getBytes(String(formData.bandwidth), formData.unit, true)) || 0
+    }
+
+    const targetResponse = await setRemoteReplicationTarget(props.bucketName, config)
+    if (!targetResponse) {
+      throw new Error('Failed to create replication target')
+    }
+
+    let oldConfig: any = null
+    try {
+      oldConfig = await getBucketReplication(props.bucketName)
+    } catch (error) {
+      oldConfig = null
+    }
+
+    const newRule: any = {
+      ID: `replication-rule-${Date.now()}`,
+      Status: 'Enabled',
+      Priority: Number.parseInt(formData.level) || 1,
+      SourceSelectionCriteria: {
+        SseKmsEncryptedObjects: { Status: 'Enabled' },
+      },
+      ExistingObjectReplication: {
+        Status: formData.existingObject ? 'Enabled' : 'Disabled',
+      },
+      DeleteMarkerReplication: {
+        Status: formData.expiredDeleteMark ? 'Enabled' : 'Disabled',
+      },
+      Destination: {
+        Bucket: targetResponse,
+        StorageClass: formData.storageType || 'STANDARD',
+      },
+    }
+
+    const validTags = formData.tags.filter(tag => tag.key && tag.value)
+    const filter: any = {}
+
+    if (formData.prefix) {
+      filter.Prefix = formData.prefix
+    }
+
+    if (validTags.length === 1) {
+      const [singleTag] = validTags
+      if (singleTag) {
+        filter.Tag = { Key: singleTag.key, Value: singleTag.value }
+      }
+    } else if (validTags.length > 1) {
+      filter.And = {
+        ...(formData.prefix ? { Prefix: formData.prefix } : {}),
+        Tags: validTags.map(tag => ({ Key: tag.key, Value: tag.value })),
+      }
+      delete filter.Prefix
+    }
+
+    if (Object.keys(filter).length > 0) {
+      newRule.Filter = filter
+    }
+
+    const existingRules = oldConfig?.ReplicationConfiguration?.Rules ?? []
+    const payload = {
+      Role: targetResponse,
+      Rules: [...existingRules.filter((rule: any) => rule.Destination?.Bucket !== targetResponse), newRule],
+    }
+
+    await putBucketReplication(props.bucketName, payload)
+    message.success(t('Create Success'))
+    emit('success')
+    handleCancel()
+  } catch (error: any) {
+    console.error(error)
+    message.error(error?.message || t('Save failed'))
+  } finally {
+    submitting.value = false
+  }
+}
 
 const handleCancel = () => {
-  // 取消逻辑
-  visible.value = false;
-  formData = ref({
-    level: '1',
-    endpoint: '',
-    tls: false,
-    accesskey: '',
-    secrretkey: '',
-    bucket: '',
-    region: 'us-east-1',
-    modeType: 'async',
-    timecheck: '60',
-    unit: 'Gi',
-    bandwidth: 100,
-    storageType: 'STANDARD',
-    prefix: '',
-    tags: [
-      {
-        key: '',
-        value: '',
-      },
-    ],
-    existingObject: true,
-    expiredDeleteMark: true,
-    // deleteAllExpired: false,
-    delete: false,
-    deleteforever: false,
-  });
-};
+  visible.value = false
+  submitting.value = false
+  resetForm()
+}
+
+defineExpose({
+  open: () => {
+    resetForm()
+    visible.value = true
+  },
+})
 </script>

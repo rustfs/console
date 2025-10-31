@@ -31,7 +31,7 @@ export const parseApiError = async (response: Response): Promise<string> => {
         if (text.trim().startsWith('<')) {
           // 简单提取 <Message> 或 <Error> 标签内容
           const match = text.match(/<Message>(.*?)<\/Message>/i) || text.match(/<Error>(.*?)<\/Error>/i);
-          return match ? match[1] : text;
+          return match?.[1] ?? text;
         }
         return text;
       }

@@ -1,98 +1,87 @@
 <template>
-  <n-page-header subtitle="" @back="router.back()">
-    <template #title>
-      <div class="flex items-center justify-between">
-        <n-input :placeholder="t('Search')" v-model:value="searchTerm" @update:value="handleSearch">
-          <template #prefix>
-            <Icon name="ri:search-2-line" />
-          </template>
-        </n-input>
-      </div>
-    </template>
-    <template #extra>
-      <div class="flex items-center gap-4">
+  <div class="space-y-6">
+    <page-header>
+      <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable />
+      <template #actions>
         <object-upload-stats />
         <object-delete-stats />
-        <n-button @click="() => handleNewObject(true)">
-          <Icon name="ri:add-line" class="mr-2" />
+        <Button variant="outline" @click="() => handleNewObject(true)">
+          <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('New Folder') }}</span>
-        </n-button>
-        <n-button @click="() => (uploadPickerVisible = true)">
-          <Icon name="ri:file-add-line" class="mr-2" />
-          <span>{{ t('Upload File') + '/' + t('Folder') }}</span>
-        </n-button>
-        <n-button v-show="checkedKeys.length > 0" :disabled="!checkedKeys.length" type="error" @click="handleBatchDelete">
-          <template #icon>
-            <Icon name="ri:delete-bin-5-line"></Icon>
-          </template>
-          {{ t('Delete Selected') }}
-        </n-button>
-        <n-button v-show="checkedKeys.length > 0" :disabled="!checkedKeys.length" @click="downloadMultiple">
-          <Icon name="ri:download-cloud-2-line" class="mr-2" />
+        </Button>
+        <Button variant="outline" @click="() => (uploadPickerVisible = true)">
+          <Icon name="ri:file-add-line" class="size-4" />
+          <span>{{ t('Upload File') }}/{{ t('Folder') }}</span>
+        </Button>
+        <Button variant="outline" class="text-destructive border-destructive" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="handleBatchDelete">
+          <Icon name="ri:delete-bin-5-line" class="size-4" />
+          <span>{{ t('Delete Selected') }}</span>
+        </Button>
+        <Button variant="outline" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="downloadMultiple">
+          <Icon name="ri:download-cloud-2-line" class="size-4" />
           <span>{{ t('Download') }}</span>
-        </n-button>
-        <n-button @click="() => refresh()">
-          <Icon name="ri:refresh-line" class="mr-2" />
+        </Button>
+        <Button variant="outline" @click="handleRefresh">
+          <Icon name="ri:refresh-line" class="size-4" />
           <span>{{ t('Refresh') }}</span>
-        </n-button>
-      </div>
-    </template>
-  </n-page-header>
-  <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredObjects" :row-key="rowKey" @update:checked-row-keys="handleCheck"
-    :pagination="false" :bordered="false" />
-  <object-upload-picker :show="uploadPickerVisible" @update:show="
-    val => {
-      uploadPickerVisible = val
-      refresh()
-    }
-  " :bucketName="bucketName" :prefix="prefix" />
-  <object-new-form :show="newObjectFormVisible" :asPrefix="newObjectAsPrefix" @update:show="
-    val => {
-      newObjectFormVisible = val
-      refresh()
-    }
-  " :bucketName="bucketName" :prefix="prefix" />
-  <n-button-group class="ml-auto">
-    <n-button @click="goToPreviousPage" :disabled="!continuationToken">
-      <Icon name="ri:arrow-left-s-line" class="mr-2" />
-      <span>{{ t('Previous Page') }}</span>
-    </n-button>
-    <n-button @click="goToNextPage" :disabled="!nextToken">
-      <span>{{ t('Next Page') }}</span>
-      <Icon name="ri:arrow-right-s-line" class="ml-2" />
-    </n-button>
-  </n-button-group>
-  <object-info ref="infoRef" @refresh-parent="handleObjectDeleted" />
+        </Button>
+      </template>
+    </page-header>
+
+    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Objects')" :empty-description="t('Upload files or create folders to populate this bucket.')" />
+
+    <div class="flex justify-end gap-2">
+      <Button variant="outline" :disabled="!continuationToken" @click="goToPreviousPage">
+        <Icon name="ri:arrow-left-s-line" class="mr-2" />
+        <span>{{ t('Previous Page') }}</span>
+      </Button>
+      <Button variant="outline" :disabled="!nextToken" @click="goToNextPage">
+        <span>{{ t('Next Page') }}</span>
+        <Icon name="ri:arrow-right-s-line" class="ml-2" />
+      </Button>
+    </div>
+  </div>
+
+  <object-upload-picker :show="uploadPickerVisible" :bucketName="bucketName" :prefix="prefix" @update:show="val => {
+    uploadPickerVisible = val
+    refresh()
+  }" />
+  <object-new-form :show="newObjectFormVisible" :bucketName="bucketName" :prefix="prefix" :asPrefix="newObjectAsPrefix" @update:show="val => {
+    newObjectFormVisible = val
+    refresh()
+  }" />
+  <object-info ref="infoRef" :bucket-name="bucketName" @refresh-parent="handleObjectDeleted" />
 </template>
 
 <script setup lang="ts">
-const { $s3Client } = useNuxtApp()
-const { t } = useI18n()
-import { useAsyncData, useRoute, useRouter } from '#app'
+import { Button } from '@/components/ui/button'
+
 import { Icon, NuxtLink } from '#components'
-import { ListObjectsV2Command, type _Object, type CommonPrefix } from '@aws-sdk/client-s3'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
+import { ListObjectsV2Command } from '@aws-sdk/client-s3'
+import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
-import { NButton, NPopconfirm, NSpace, type DataTableColumns, type DataTableRowKey } from 'naive-ui'
 import { joinRelativeURL } from 'ufo'
-import { computed, ref, watch, type VNode } from 'vue'
-import { useBucket } from '~/composables/useBucket'
+import type { VNode } from 'vue'
+import { computed, h, ref, watch } from 'vue'
 import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
 import { useUploadTaskManagerStore } from '~/store/upload-tasks'
 
+const { $s3Client } = useNuxtApp()
+const { t } = useI18n()
 const route = useRoute()
-const router = useRouter()
 const dialog = useDialog()
-const message = useMessage()
 const props = defineProps<{ bucket: string; path: string }>()
 
 const uploadPickerVisible = ref(false)
 const newObjectFormVisible = ref(false)
 const newObjectAsPrefix = ref(false)
 const searchTerm = ref('')
+const loading = ref(false)
 
-// Add debounce function for search
 const debounce = (fn: Function, delay: number) => {
   let timer: NodeJS.Timeout | null = null
   return (...args: any[]) => {
@@ -104,505 +93,390 @@ const debounce = (fn: Function, delay: number) => {
 }
 
 const handleSearch = debounce(() => {
-  // Reset pagination when searching
-  if (continuationToken.value) {
-    continuationToken.value = undefined
-    tokenHistory.value = []
-  }
+  continuationToken.value = undefined
+  tokenHistory.value = []
+  refresh()
 }, 300)
 
-// 上传任务
+watch(searchTerm, () => {
+  handleSearch()
+})
+
 const uploadTaskStore = useUploadTaskManagerStore()
-const uploadTasks = computed(() => uploadTaskStore.tasks)
-
-// 删除任务
 const deleteTaskStore = useDeleteTaskManagerStore()
-const deleteTasks = computed(() => deleteTaskStore.tasks)
 
-// 当任务变化时，刷新数据
-watch(
-  () => uploadTasks,
-  () => setTimeout(refresh, 500),
-  { deep: true }
-)
-watch(
-  () => deleteTasks,
-  () => setTimeout(refresh, 500),
-  { deep: true }
-)
-
-// bucketName
-const bucketName = computed(() => props.bucket as string)
-// 当前路径的前缀, example: '/folder1/folder2/'
-const prefix = computed(() => decodeURIComponent(props.path as string))
-
-// query 参数
-const pageSize = computed(() => parseInt(route.query.pageSize as string, 10))
-// 将 continuationToken 改为 ref
-const continuationToken = ref<string | undefined>(undefined)
-
-// 新建文件夹
-const handleNewObject = (asPrefix: boolean) => {
-  newObjectFormVisible.value = true
-  newObjectAsPrefix.value = asPrefix
-}
-
-const bucketPath = (path?: string | Array<string>) => {
-  if (Array.isArray(path)) {
-    path = path.join('/')
-  }
-
-  return joinRelativeURL('/browser', encodeURIComponent(bucketName.value), path ? encodeURIComponent(path) : '')
-}
-
-interface RowData {
+type ObjectRow = {
   Key: string
   type: 'prefix' | 'object'
   Size: number
   LastModified: string
 }
 
-const infoRef = ref()
-const columns: DataTableColumns<RowData> = [
-  {
-    type: 'selection',
-  },
-  {
-    key: 'Key',
-    title: t('Object'),
-    render: (row: { Key: string; type: 'prefix' | 'object' }) => {
-      const displayKey = prefix.value ? row.Key.substring(prefix.value.length) : row.Key
-      let label: string | VNode = displayKey || '/'
-
-      if (row.type === 'prefix') {
-        label = h('span', { class: 'inline-flex items-center gap-2' }, [icon('ri:folder-line'), label])
-      }
-
-      const keyInUri = row.Key
-      return h(
-        NuxtLink,
-        {
-          href: row.type === 'prefix' ? bucketPath(keyInUri) : '',
-          class: 'block text-cyan-400 cursor-pointer',
-          onClick: (e: MouseEvent) => {
-            if (row.type === 'prefix') return
-            infoRef.value.openDrawer(bucketName.value, row.Key)
-            return
-          },
-        },
-        () => label
-      )
-    },
-  },
-  {
-    key: 'Size',
-    title: t('Size'),
-    render: (row: { Size: number }) => (row.Size ? formatBytes(row.Size) : ''),
-  },
-  {
-    key: 'LastModified',
-    title: t('Update Time'),
-    render: (row: { LastModified: string }) => {
-      return row.LastModified ? dayjs(row.LastModified).format('YYYY-MM-DD HH:mm:ss') : ''
-    },
-  },
-  {
-    title: t('Actions'),
-    key: 'actions',
-    align: 'center',
-    width: 250,
-    render: (row: RowData) => {
-      return h(
-        NSpace,
-        {
-          justify: 'center',
-        },
-        {
-          default: () => [
-            h(
-              NPopconfirm,
-              { onPositiveClick: () => handledownload(row) },
-              {
-                default: () => t('Confirm Download'),
-                trigger: () =>
-                  h(
-                    NButton,
-                    { size: 'small', secondary: true },
-                    {
-                      default: () => t('Download'),
-                      icon: () => h(Icon, { name: 'ri:download-2-line' }),
-                    }
-                  ),
-              }
-            ),
-            // 删除按钮 - 文件和文件夹都显示
-            h(
-              NPopconfirm,
-              { onPositiveClick: () => handleDeleteAllVersions(row) },
-              {
-                default: () =>
-                  h('div', [
-                    h(
-                      'div',
-                      { style: 'margin-bottom: 8px;' },
-                      row.type === 'object' ? t('Delete All Versions Warning') : t('Warning')
-                    ),
-                    h(
-                      'div',
-                      { style: 'color: #666; font-size: 12px;' },
-                      row.type === 'object'
-                        ? t('Delete All Versions Description')
-                        : t('Are you sure you want to delete this folder and all its contents?')
-                    ),
-                  ]),
-                trigger: () =>
-                  h(
-                    NButton,
-                    { size: 'small', type: 'error', secondary: true },
-                    {
-                      default: () => t('Delete'),
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
-                    }
-                  ),
-              }
-            ),
-          ],
-        }
-      )
-    },
-  },
-]
-
-interface ListObjectsResponse {
-  contents: _Object[]
-  commonPrefixes: CommonPrefix[]
-  nextContinuationToken: string | null
-  isTruncated: boolean
-}
-const randomString = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  let result = ''
-  for (let i = 0; i < 8; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return result
-}
-const salt = ref(randomString())
-// 在服务端获取数据
-const { data, refresh } = await useAsyncData<ListObjectsResponse>(
-  `objectsData-${salt.value}&${prefix.value}&${pageSize.value}&${continuationToken.value}`,
-  async () => {
-    const params = {
-      Bucket: bucketName.value,
-      MaxKeys: pageSize.value || 25,
-      Delimiter: '/',
-      Prefix: prefix.value || undefined,
-      ContinuationToken: continuationToken.value,
-    }
-
-    const result = await $s3Client.send(new ListObjectsV2Command(params))
-
-    return {
-      contents: result.Contents || [],
-      commonPrefixes: result.CommonPrefixes || [],
-      nextContinuationToken: result.NextContinuationToken || null,
-      isTruncated: result.IsTruncated ?? false,
-    }
-  }
-)
-
-watch(
-  continuationToken,
-  () => {
-    refresh()
-  },
-  { deep: true }
-)
-
-const contents = computed(() => data.value?.contents || [])
-const commonPrefixes = computed(() => data.value?.commonPrefixes || [])
-const nextToken = computed(() => data.value?.nextContinuationToken || null)
-
-const objects = computed(() => {
-  return commonPrefixes.value
-    .map(prefix => {
-      return {
-        Key: prefix.Prefix,
-        type: 'prefix',
-        Size: 0,
-      }
-    })
-    .concat(
-      contents.value.map(object => {
-        return {
-          Key: object.Key,
-          type: 'object',
-          Size: object.Size ?? 0,
-          LastModified: object.LastModified ?? new Date(0),
-        }
-      })
-    )
+const bucketName = computed(() => props.bucket)
+const prefix = computed(() => decodeURIComponent(props.path))
+const pageSize = computed(() => {
+  const q = route.query.pageSize
+  const s = Array.isArray(q) ? q[0] : q
+  const size = Number.parseInt(s ?? '', 10)
+  return Number.isFinite(size) && size > 0 ? size : 25
 })
 
-// New computed property to filter objects based on search term
-const filteredObjects = computed(() => {
-  if (!searchTerm.value.trim()) {
-    return objects.value
-  }
+const bucketPath = (path?: string | string[]) => {
+  const value = Array.isArray(path) ? path.join('/') : path
+  return joinRelativeURL('/browser', encodeURIComponent(bucketName.value), value ? encodeURIComponent(value) : '')
+}
 
-  const term = searchTerm.value.toLowerCase()
-  return objects.value.filter(obj => {
-    const displayKey = prefix.value ? obj.Key?.substring(prefix.value.length) : obj.Key
-    return displayKey?.toLowerCase().includes(term)
-  })
-})
+const continuationToken = ref<string | undefined>(undefined)
+const tokenHistory = ref<string[]>([])
+const nextToken = ref<string | undefined>(undefined)
 
-/** ************************************处理对象删除********************************* */
-// 处理对象被删除（从版本组件触发）
+const infoRef = ref<{ openDrawer: (bucket: string, key: string) => void }>()
+const message = useMessage()
+const objectApi = useObject({ bucket: bucketName.value })
+
+const handleNewObject = (asPrefix: boolean) => {
+  newObjectAsPrefix.value = asPrefix
+  newObjectFormVisible.value = true
+}
+
 const handleObjectDeleted = () => {
-  // 刷新文件列表
-  salt.value = randomString()
   refresh()
 }
 
-/** ************************************删除所有版本********************************* */
-// 删除文件的所有版本或文件夹及其内容
-const handleDeleteAllVersions = async (row: RowData) => {
+const fetchObjects = async (): Promise<ObjectRow[]> => {
+  loading.value = true
   try {
-    if (row.type === 'object') {
-      // 删除文件的所有版本
-      const { deleteAllVersions } = useObject({ bucket: bucketName.value })
-      await deleteAllVersions(row.Key)
-      message.success(t('Delete All Versions Success'))
-    } else if (row.type === 'prefix') {
-      // 删除文件夹及其所有内容
-      const { mapAllFiles } = useObject({ bucket: bucketName.value })
-      const files: string[] = []
+    const response = await $s3Client.send(new ListObjectsV2Command({
+      Bucket: bucketName.value,
+      Prefix: prefix.value,
+      Delimiter: '/',
+      ContinuationToken: continuationToken.value,
+      MaxKeys: pageSize.value,
+    }))
 
-      // 递归收集文件夹下的所有文件
-      await mapAllFiles(bucketName.value, row.Key, (fileKey: string) => {
-        files.push(fileKey)
-      })
+    nextToken.value = response.NextContinuationToken
 
-      if (files.length > 0) {
-        // 使用删除任务管理器删除所有文件
-        deleteTaskStore.addKeys(files, bucketName.value)
-        message.success(t('Delete task created'))
-      } else {
-        message.success(t('Delete Success'))
-      }
-    }
+    const prefixItems: ObjectRow[] = (response.CommonPrefixes ?? []).map(item => ({
+      Key: item.Prefix ?? '',
+      type: 'prefix' as const,
+      Size: 0,
+      LastModified: '',
+    }))
 
-    // 刷新数据
-    salt.value = randomString()
-    refresh()
-  } catch (error: any) {
-    console.error('Delete failed:', error)
-    message.error(t('Delete Failed'))
+    const objectItems: ObjectRow[] = (response.Contents ?? []).map(item => ({
+      Key: item.Key ?? '',
+      type: 'object' as const,
+      Size: item.Size ?? 0,
+      LastModified: item.LastModified ? item.LastModified.toISOString() : '',
+    }))
+
+    return [...prefixItems, ...objectItems]
+  } finally {
+    loading.value = false
   }
 }
 
-/** ************************************批量删除********************************* */
-function rowKey(row: any): string {
-  return row.Key || ''
+const asyncDataCacheKey = computed(() => {
+  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${searchTerm.value || 'all'}`
+})
+
+const displayKey = (key: string) => {
+  if (!prefix.value) return key
+  return key.startsWith(prefix.value) ? key.slice(prefix.value.length) : key
 }
 
-const checkedKeys = ref<DataTableRowKey[]>([])
-function handleCheck(keys: DataTableRowKey[]) {
-  // 过滤掉 undefined
-  checkedKeys.value = keys.filter((k): k is string => typeof k === 'string')
-  return checkedKeys
-}
-const objectApi = useObject({ bucket: bucketName.value })
-const bucketApi = useBucket({})
+const { data, refresh } = await useAsyncData<ObjectRow[]>(
+  asyncDataCacheKey,
+  async () => {
+    const objects = await fetchObjects()
+    const term = searchTerm.value.toLowerCase()
 
-// 批量删除
-function handleBatchDelete() {
-  dialog.error({
-    title: t('Warning'),
-    content: t('Are you sure you want to delete all selected objects?'),
-    positiveText: t('Confirm'),
-    negativeText: t('Cancel'),
-    onPositiveClick: async () => {
-      if (!checkedKeys.value.length) {
-        message.error(t('Please select at least one item'))
-        return
+    return objects.filter(item => {
+      if (term) {
+        const key = displayKey(item.Key).toLowerCase()
+        return key.includes(term)
       }
-      try {
-        await Promise.all(
-          checkedKeys.value.map(async item => {
-            const findOne = objects.value.find(obj => obj.Key === item)
-            // 目录删除
-            // 递归查询目录下的所有文件，然后删除
-            if (findOne?.type === 'prefix' && findOne?.Key) {
-              return await objectApi.mapAllFiles(bucketName.value, findOne.Key, (fileKey: string) => {
-                deleteTaskStore.addKeys([fileKey], bucketName.value)
-              })
-            }
-
-            return deleteTaskStore.addKeys([String(item)], bucketName.value)
-          })
-        )
-
-        message.success(t('Delete task created'))
-        salt.value = randomString()
-        refresh()
-      } catch (error) {
-        message.error(t('Delete Failed'))
-      }
-    },
-  })
-}
-/** ************************************批量删除********************************* */
-
-/** ************************************下载********************************* */
-// 下载
-const handledownload = async (item: any) => {
-  if (item.type === 'object') {
-    // 单文件下载
-    const msg = message.loading(t('Getting URL'))
-    const url = await objectApi.getSignedUrl(item.Key)
-    msg.destroy()
-    window.open(url, '_blank')
-  } else if (item.type === 'prefix') {
-    // 文件夹下载
-    const msg = message.loading(t('Preparing folder...'))
-    // 递归获取所有文件
-    const files: string[] = []
-    await objectApi.mapAllFiles(bucketName.value, item.Key, (fileKey: string) => {
-      files.push(fileKey)
+      return item.Key !== prefix.value
     })
+  },
+  {
+    default: () => [],
+    watch: [bucketName, prefix, continuationToken, searchTerm],
+  }
+)
 
-    if (files.length === 0) {
-      msg.destroy()
-      message.warning(t('Folder is empty'))
-      return
-    }
+const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
+  return [
+    {
+      id: 'object',
+      header: () => t('Object'),
+      cell: ({ row }: any) => {
+        const key = row.original.Key ?? ''
+        const displayKey = prefix.value ? key.substring(prefix.value.length) : key
 
-    msg.destroy()
-    const zip = new JSZip()
+        let label: string | VNode = displayKey || '/'
 
-    // 批量获取文件内容并添加到 zip
-    const downloadMsg = message.loading(t('Downloading files...'))
-    await Promise.all(
-      files.map(async fileKey => {
-        const url = await objectApi.getSignedUrl(fileKey)
-        const response = await fetch(url)
-        const blob = await response.blob()
-        // 保持相对路径
-        zip.file(fileKey.substring(item.Key.length), blob)
+        if (row.original.type === 'prefix') {
+          return h(
+            NuxtLink,
+            {
+              href: bucketPath(row.original.Key),
+              class: 'flex items-center gap-2 text-blue-500 hover:underline',
+            },
+            {
+              default: () => [h(Icon, { name: 'ri:folder-line', class: 'size-4' }), h('span', label)],
+            }
+          )
+        }
+        return h(
+          'button',
+          {
+            class: 'flex items-center gap-2 text-primary hover:underline',
+            onClick: () => infoRef.value?.openDrawer(bucketName.value, row.original.Key),
+          },
+          [h(Icon, { name: 'ri:file-line', class: 'size-4' }), h('span', label)]
+        )
+      },
+    },
+    {
+      id: 'size',
+      header: () => t('Size'),
+      cell: ({ row }: any) => (row.original.type === 'object' ? formatBytes(row.original.Size) : '-'),
+    },
+    {
+      id: 'lastModified',
+      header: () => t('Last Modified'),
+      cell: ({ row }: any) => (row.original.LastModified ? dayjs(row.original.LastModified).format('YYYY-MM-DD HH:mm:ss') : '-'),
+    },
+    {
+      id: 'actions',
+      header: () => t('Actions'),
+      enableSorting: false,
+      cell: ({ row }: any) =>
+        h('div', { class: 'flex items-center gap-2' }, [
+          row.original.type === 'object'
+            ? h(
+              Button,
+              {
+                variant: 'outline',
+                size: 'sm',
+                onClick: () => downloadFile(row.original.Key),
+              },
+              () => [h(Icon, { name: 'ri:download-cloud-2-line', class: 'size-4' }), h('span', t('Download'))]
+            )
+            : null,
+          h(
+            Button,
+            {
+              variant: 'outline',
+              size: 'sm',
+              onClick: () => confirmDelete([row.original.Key]),
+            },
+            () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
+          ),
+        ]),
+    },
+  ]
+})
+
+const { table, selectedRowIds } = useDataTable<ObjectRow>({
+  data,
+  columns,
+  getRowId: (row: any) => row.Key,
+  enableRowSelection: true,
+})
+
+// Use selectedRowIds from data-table instead of manually maintaining checkedKeys
+const checkedKeys = computed(() => selectedRowIds.value)
+
+watch(
+  () => uploadTaskStore.tasks,
+  () => setTimeout(() => refresh(), 500),
+  { deep: true }
+)
+
+watch(
+  () => deleteTaskStore.tasks,
+  () => setTimeout(() => refresh(), 500),
+  { deep: true }
+)
+
+const goToNextPage = () => {
+  if (!nextToken.value) return
+  if (continuationToken.value) {
+    tokenHistory.value.push(continuationToken.value)
+  }
+  continuationToken.value = nextToken.value
+  refresh()
+}
+
+const goToPreviousPage = () => {
+  const prev = tokenHistory.value.pop()
+  continuationToken.value = prev
+  refresh()
+}
+
+const handleRefresh = () => {
+  refresh()
+}
+
+const computeRelativeKey = (key: string) => {
+  if (!key) return ''
+  const base = prefix.value || ''
+  return base && key.startsWith(base) ? key.slice(base.length) : key
+}
+
+const collectKeysForDeletion = async (keys: string[]) => {
+  const rows = data.value ?? []
+  const rowMap = new Map(rows.map(item => [item.Key, item]))
+  const collected: string[] = []
+
+  for (const key of keys) {
+    if (!key) continue
+    const row = rowMap.get(key)
+    if (row?.type === 'prefix') {
+      await objectApi.mapAllFiles(bucketName.value, row.Key, fileKey => {
+        if (fileKey) {
+          collected.push(fileKey)
+        }
       })
-    )
-    downloadMsg.destroy()
+    } else {
+      collected.push(key)
+    }
+  }
 
-    // 生成 zip 并下载
-    const zipBlob = await zip.generateAsync({ type: 'blob' })
-    saveAs(zipBlob, `${item.Key.replace(/\/$/, '') || 'folder'}.zip`)
-    message.success(t('Download ready'))
+  return Array.from(new Set(collected))
+}
+
+const downloadFile = async (key: string) => {
+  if (!key) return
+  const loadingMsg = message.loading(t('Getting URL'), { duration: 0 })
+  try {
+    const url = await objectApi.getSignedUrl(key)
+    window.open(url, '_blank')
+  } catch (error: any) {
+    message.error(error?.message || t('Download Failed'))
+  } finally {
+    loadingMsg.destroy()
   }
 }
 
-// 批量下载
 const downloadMultiple = async () => {
   if (!checkedKeys.value.length) {
     message.warning(t('Please select at least one item'))
     return
   }
-  // 收集文件 loading
-  let collectMsg = message.loading(t('Collecting files'))
-  // 1. 找到所有选中的对象
-  const selectedItems = objects.value.filter(obj => checkedKeys.value.includes(obj.Key as string))
-  // 2. 递归收集所有文件
-  let allFiles: { key: string; relative: string }[] = []
-  for (const item of selectedItems) {
-    if (item.type === 'object') {
-      const key = item.Key || ''
-      const rel = prefix.value ? key.substring(prefix.value.length) : key
-      allFiles.push({ key, relative: rel })
-    } else if (item.type === 'prefix') {
-      const key = item.Key || ''
-      await objectApi.mapAllFiles(bucketName.value, key, fileKey => {
-        const rel = prefix.value ? fileKey.substring(prefix.value.length) : fileKey
-        allFiles.push({ key: fileKey, relative: rel })
-      })
-    }
-  }
-  collectMsg.destroy()
-  if (allFiles.length === 0) {
+
+  const selectedRows = (data.value ?? []).filter(item => checkedKeys.value.includes(item.Key))
+  if (!selectedRows.length) {
     message.warning(t('No files to download'))
     return
   }
-  // 下载文件 loading，带进度
-  let percent = ref(0)
-  const total = allFiles.length
+
+  const collecting = message.loading(t('Collecting files'), { duration: 0 })
+  const allFiles: { key: string; relative: string }[] = []
+
+  try {
+    for (const item of selectedRows) {
+      if (item.type === 'object') {
+        const relative = computeRelativeKey(item.Key)
+        allFiles.push({ key: item.Key, relative })
+      } else if (item.type === 'prefix') {
+        await objectApi.mapAllFiles(bucketName.value, item.Key, fileKey => {
+          const relative = computeRelativeKey(fileKey)
+          allFiles.push({ key: fileKey, relative })
+        })
+      }
+    }
+  } catch (error: any) {
+    collecting.destroy()
+    message.error(error?.message || t('Download Failed'))
+    return
+  }
+
+  collecting.destroy()
+
+  if (!allFiles.length) {
+    message.warning(t('No files to download'))
+    return
+  }
+
+  const zip = new JSZip()
   let finished = 0
-  let downloadMsg: any = null
-  const updateDownloadMsg = () => {
-    if (downloadMsg) downloadMsg.destroy()
-    downloadMsg = message.loading(`${t('Downloading files')} ${Math.round((finished / total) * 100)}%`, {
+  let destroyProgress: (() => void) | null | undefined
+
+  const updateProgress = () => {
+    if (destroyProgress) destroyProgress()
+    const handle = message.loading(`${t('Downloading files')} ${Math.round((finished / allFiles.length) * 100)}%`, {
       duration: 0,
     })
+    destroyProgress = handle.destroy
   }
-  updateDownloadMsg()
-  const zip = new JSZip()
-  await Promise.all(
-    allFiles.map(async ({ key, relative }) => {
-      const url = await objectApi.getSignedUrl(key)
-      const response = await fetch(url)
-      const blob = await response.blob()
-      zip.file(relative, blob)
-      finished++
-      updateDownloadMsg()
-    })
-  )
-  if (downloadMsg) downloadMsg.destroy()
-  const zipBlob = await zip.generateAsync({ type: 'blob' })
-  saveAs(zipBlob, `download.zip`)
+
+  updateProgress()
+
+  try {
+    await Promise.all(
+      allFiles.map(async ({ key, relative }) => {
+        const url = await objectApi.getSignedUrl(key)
+        const response = await fetch(url)
+        const blob = await response.blob()
+        zip.file(relative || key, blob)
+        finished++
+        updateProgress()
+      })
+    )
+  } catch (error: any) {
+    if (destroyProgress) destroyProgress()
+    message.error(error?.message || t('Download Failed'))
+    return
+  }
+
+  if (destroyProgress) destroyProgress()
+
+  const content = await zip.generateAsync({ type: 'blob' })
+  saveAs(content, `${bucketName.value || 'download'}.zip`)
   message.success(t('Download ready'))
 }
-/** ************************************下载********************************* */
 
-// 为了实现 "Previous" 功能，需要记录访问过的 token 列表。
-// 因为我们是通过路由导航，每次下一页时会改变 URL，从而 SSR 获取新数据。
-// 当访问过的 token 会体现在浏览器历史记录中。
-// 在这种设计中，每次点击 Next/Previous 都会换 URL，并生成新 SSR 页面。
-// 因此"上一页"可以通过浏览器后退实现，也可以在数据中保存 token 来人工实现。
-// 这里演示一个简化版本——在客户端保存 tokenHistory。
-// 请注意：刷新后 tokenHistory 会丢失，因为它是前端状态。
-const tokenHistory = ref<string[]>([])
-
-// 当页面加载后，如果 continuationToken 有值，就表示不是第一页
-// 将当前 continuationToken 添加到历史中
-if (continuationToken.value && !tokenHistory.value.includes(continuationToken.value)) {
-  tokenHistory.value.push(continuationToken.value)
+const confirmDelete = (keys: string[]) => {
+  dialog.error({
+    title: t('Warning'),
+    content: t('Are you sure you want to delete the selected objects?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
+    onPositiveClick: () => handleDelete(keys),
+  })
 }
 
-// previousToken 根据 tokenHistory 来确定
-// tokenHistory 中最后一个是当前页的 token，上一个则是 previousToken
-const previousToken = computed(() => {
-  if (tokenHistory.value.length < 2) return null
-  // 倒数第二个是上一页的 token
-  return tokenHistory.value[tokenHistory.value.length - 2]
-})
-
-// 修改分页方法
-function goToNextPage() {
-  if (nextToken.value) {
-    continuationToken.value = nextToken.value
-    tokenHistory.value.push(nextToken.value)
+const handleDelete = async (keys: string[]) => {
+  try {
+    const targets = await collectKeysForDeletion(keys)
+    if (!targets.length) {
+      message.success(t('Delete Success'))
+    } else {
+      deleteTaskStore.addKeys(targets, bucketName.value)
+      message.success(t('Delete task created'))
+    }
+    table.resetRowSelection()
+    refresh()
+  } catch (error: any) {
+    message.error(error?.message || t('Delete Failed'))
   }
 }
 
-function goToPreviousPage() {
-  if (previousToken.value) {
-    continuationToken.value = previousToken.value
-    // 将上一页 token 之后的记录删除
-    const prevIndex = tokenHistory.value.indexOf(previousToken.value)
-    tokenHistory.value.splice(prevIndex + 1)
-  } else {
-    // 回到第一页
-    continuationToken.value = undefined
-    tokenHistory.value = []
+const handleBatchDelete = () => {
+  if (!checkedKeys.value.length) {
+    message.warning(t('Please select at least one item'))
+    return
   }
+  confirmDelete([...checkedKeys.value])
+}
+
+const formatBytes = (bytes: number) => {
+  if (bytes === 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(1024))
+  return `${(bytes / 1024 ** i).toFixed(2)} ${units[i]}`
 }
 </script>

@@ -1,85 +1,149 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-const { t } = useI18n();
-const { $api } = useNuxtApp();
-const message = useMessage();
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
+
+const { t } = useI18n()
+const { $api } = useNuxtApp()
+const message = useMessage()
 
 interface PolicyItem {
-  name: string;
-  content: string | object;
+  name: string
+  content: string | object
 }
 
-const emit = defineEmits(['update:show', 'saved']);
-
 const props = defineProps<{
-  show: boolean;
-  policy: PolicyItem | null | undefined;
-}>();
+  show: boolean
+  policy: PolicyItem | null | undefined
+}>()
 
-const name = ref(props.policy?.name || '');
-const content = ref(
-  typeof props.policy?.content === 'object'
-    ? JSON.stringify(props.policy?.content, null, 2)
-    : props.policy?.content || ''
-);
+const emit = defineEmits<{
+  (e: 'update:show', value: boolean): void
+  (e: 'saved'): void
+}>()
+
+const form = reactive({
+  name: '',
+  content: '',
+})
+
+const errors = reactive({
+  name: '',
+  content: '',
+})
+
+const submitting = ref(false)
+
+const modalVisible = computed({
+  get: () => props.show,
+  set: value => emit('update:show', value),
+})
+
+const resetForm = () => {
+  form.name = props.policy?.name ?? ''
+  if (typeof props.policy?.content === 'object') {
+    form.content = JSON.stringify(props.policy.content, null, 2)
+  } else {
+    form.content = props.policy?.content ? String(props.policy.content) : ''
+  }
+  clearErrors()
+}
+
+const clearErrors = () => {
+  errors.name = ''
+  errors.content = ''
+}
 
 watch(
   () => props.policy,
-  newPolicy => {
-    if (newPolicy) {
-      name.value = newPolicy.name || '';
-      content.value =
-        typeof newPolicy.content === 'object' ? JSON.stringify(newPolicy.content, null, 2) : newPolicy.content || '';
-    }
+  () => {
+    resetForm()
   },
   { immediate: true }
-);
+)
 
-const closeModal = () => emit('update:show', false);
+const closeModal = () => {
+  emit('update:show', false)
+  submitting.value = false
+  resetForm()
+}
 
-async function submitForm() {
+const validate = () => {
+  clearErrors()
+  if (!form.name.trim()) {
+    errors.name = t('Please enter policy name')
+  }
+
+  if (!form.content.trim()) {
+    errors.content = t('Please enter policy content')
+  } else {
+    try {
+      JSON.parse(form.content)
+    } catch (error) {
+      errors.content = t('Policy format invalid')
+    }
+  }
+
+  return !errors.name && !errors.content
+}
+
+const submitForm = async () => {
+  if (!validate()) {
+    message.error(t('Please fill in the correct format'))
+    return
+  }
+
+  submitting.value = true
   try {
-    const res = await $api.put(`/add-canned-policy?name=${name.value}`, JSON.parse(content.value || '{}'));
-    message.success(t('Saved'));
-    closeModal();
-    emit('saved');
+    const payload = JSON.parse(form.content)
+    await $api.put(`/add-canned-policy?name=${encodeURIComponent(form.name.trim())}`, payload)
+    message.success(t('Saved'))
+    closeModal()
+    emit('saved')
   } catch (error) {
-    message.error(t('Save Failed'));
-    console.error('Error:', error);
+    console.error(error)
+    message.error(t('Save Failed'))
+  } finally {
+    submitting.value = false
   }
 }
 </script>
 
 <template>
-  <n-modal
-    :show="show"
-    @update:show="(val: boolean) => $emit('update:show', val)"
-    :mask-closable="false"
-    preset="card"
-    :title="t('Policy Original')"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }"
-  >
-    <n-form label-placement="top" label-align="left" :label-width="100">
-      <n-grid :cols="24" :x-gap="18">
-        <n-form-item-grid-item :span="24" :label="t('Policy Name')" path="name">
-          <n-input v-model:value="name" />
-        </n-form-item-grid-item>
-        <n-form-item-grid-item :span="24" :label="t('Policy Original')" path="content">
-          <n-scrollbar class="w-full max-h-[60vh]"> <json-editor v-model="content" /></n-scrollbar>
-        </n-form-item-grid-item>
-      </n-grid>
-    </n-form>
-    <template #action>
-      <n-space justify="center">
-        <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
-        <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
-      </n-space>
+  <Modal v-model="modalVisible" :title="t('Policy Original')" size="lg" :close-on-backdrop="false">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel for="policy-name">{{ t('Policy Name') }}</FieldLabel>
+        <FieldContent>
+          <Input id="policy-name" v-model="form.name" autocomplete="off" />
+        </FieldContent>
+        <FieldDescription v-if="errors.name" class="text-destructive">
+          {{ errors.name }}
+        </FieldDescription>
+      </Field>
+
+      <Field>
+        <FieldLabel for="policy-content">{{ t('Policy Original') }}</FieldLabel>
+        <FieldContent>
+          <div class="max-h-[60vh] overflow-auto rounded-md border">
+            <json-editor id="policy-content" v-model="form.content" />
+          </div>
+        </FieldContent>
+        <FieldDescription v-if="errors.content" class="text-destructive">
+          {{ errors.content }}
+        </FieldDescription>
+      </Field>
+    </div>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="closeModal()">{{ t('Cancel') }}</Button>
+        <Button variant="default" :loading="submitting" @click="submitForm">{{ t('Submit') }}</Button>
+      </div>
     </template>
-  </n-modal>
+  </Modal>
 </template>

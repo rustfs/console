@@ -1,106 +1,106 @@
 <script lang="ts" setup>
-await setPageLayout('plain');
+import { Button } from '@/components/ui/button'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Input } from '@/components/ui/input'
+import { getLoginRoute } from '~/utils/routes'
 
-import { onMounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
+await setPageLayout('plain')
 
-const { t } = useI18n();
-const router = useRouter();
-const message = useMessage();
+import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
+const { t } = useI18n()
+const router = useRouter()
+const message = useMessage()
 
-const serverHost = ref('');
-const isValid = ref(false);
+const serverHost = ref('')
+const isValid = ref(false)
 
 const validateAndSave = async () => {
   try {
     if (serverHost.value) {
-      // 更宽松的URL验证
-      let urlToValidate = serverHost.value.trim();
+      // More lenient URL validation
+      let urlToValidate = serverHost.value.trim()
 
-      // 如果没有协议，自动添加https://
+      // Auto-add https:// if no protocol is provided
       if (!urlToValidate.match(/^https?:\/\//)) {
-        urlToValidate = 'https://' + urlToValidate;
+        urlToValidate = 'https://' + urlToValidate
       }
 
-      // 验证URL格式
-      const url = new URL(urlToValidate);
-      console.log('Valid URL:', url.href); // 调试信息
+      // Validate URL format
+      const url = new URL(urlToValidate)
+      console.log('Valid URL:', url.href) // Debug info
 
-      // 保存原始输入（如果用户没输入协议，就保存添加了协议的版本）
-      const urlToSave = serverHost.value.match(/^https?:\/\//) ? serverHost.value : urlToValidate;
-      localStorage.setItem('rustfs-server-host', urlToSave);
+      // Save original input (if user didn't provide protocol, save the version with protocol added)
+      const urlToSave = serverHost.value.match(/^https?:\/\//) ? serverHost.value : urlToValidate
+      localStorage.setItem('rustfs-server-host', urlToSave)
 
-      // 如果我们自动添加了协议，更新输入框显示
+      // If we auto-added protocol, update the input field display
       if (!serverHost.value.match(/^https?:\/\//)) {
-        serverHost.value = urlToValidate;
+        serverHost.value = urlToValidate
       }
     } else {
-      // 如果为空，清除localStorage，使用默认值
-      localStorage.removeItem('rustfs-server-host');
+      // If empty, clear localStorage to use default value
+      localStorage.removeItem('rustfs-server-host')
     }
 
-    // 清除配置缓存
-    const { configManager } = await import('~/utils/config');
-    configManager.clearCache();
+    // Clear config cache
+    const { configManager } = await import('~/utils/config')
+    configManager.clearCache()
 
-    message.success(t('Server configuration saved successfully'));
+    message.success(t('Server configuration saved successfully'))
 
-    // 延迟后刷新页面并跳转，确保配置完全生效
+    // Refresh page and redirect after delay to ensure config is fully applied
     setTimeout(() => {
-      window.location.href = '/rustfs/console/auth/login';
-    }, 200);
+      window.location.href = getLoginRoute()
+    }, 200)
   } catch (error) {
-    console.error('URL validation error:', error); // 调试信息
-    message.error(t('Invalid server address format') + ': ' + (error as Error).message);
+    console.error('URL validation error:', error) // Debug info
+    message.error(t('Invalid server address format') + ': ' + (error as Error).message)
   }
-};
+}
 
 const resetToCurrentHost = async () => {
-  // 清除localStorage中的配置，让系统回到默认状态（使用当前host）
-  localStorage.removeItem('rustfs-server-host');
+  // Clear localStorage config to return to default state (use current host)
+  localStorage.removeItem('rustfs-server-host')
 
-  // 清除配置缓存
-  const { configManager } = await import('~/utils/config');
-  configManager.clearCache();
+  // Clear config cache
+  const { configManager } = await import('~/utils/config')
+  configManager.clearCache()
 
-  // 清空输入框，表示使用默认配置
-  serverHost.value = '';
+  // Clear input field to indicate using default config
+  serverHost.value = ''
 
-  message.success(t('Reset to default successfully'));
+  message.success(t('Reset to default successfully'))
 
-  // 延迟后跳转到登录页面，确保配置完全生效
+  // Redirect to login page after delay to ensure config is fully applied
   setTimeout(() => {
-    window.location.href = '/rustfs/console/auth/login';
-  }, 200);
-};
+    window.location.href = getLoginRoute()
+  }, 200)
+}
 
 const skipConfig = () => {
-  router.push('/auth/login');
-};
+  router.push('/auth/login')
+}
 
 onMounted(() => {
-  // 检查是否已有配置
-  const saved = localStorage.getItem('rustfs-server-host');
+  // Check if config already exists
+  const saved = localStorage.getItem('rustfs-server-host')
   if (saved) {
-    serverHost.value = saved;
-    isValid.value = true;
+    serverHost.value = saved
+    isValid.value = true
   }
-});
+})
 </script>
 
 <template>
-  <div class="lg:p-20 flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-neutral-800">
+  <page>
     <img src="~/assets/backgrounds/scillate.svg" class="absolute inset-0 z-0 opacity-45" alt="" />
-    <div
-      class="flex-1 flex w-full z-10 max-w-7xl lg:max-h-[85vh] shadow-lg rounded-lg overflow-hidden mx-auto dark:bg-neutral-800 dark:border-neutral-700"
-    >
+    <div class="flex-1 flex w-full z-10 max-w-7xl lg:max-h-[85vh] shadow-lg rounded-lg overflow-hidden mx-auto dark:bg-neutral-800 dark:border-neutral-700">
       <div class="hidden lg:block w-1/2">
         <auth-heros-static></auth-heros-static>
       </div>
-      <div
-        class="w-full lg:w-1/2 flex flex-col justify-center items-center bg-white dark:bg-neutral-900 dark:border-neutral-700 relative"
-      >
+      <div class="w-full lg:w-1/2 flex flex-col justify-center items-center bg-white dark:bg-neutral-900 dark:border-neutral-700 relative">
         <div class="max-w-sm w-full p-4 sm:p-7">
           <img src="~/assets/logo.svg" class="max-w-28" alt="" />
           <div class="py-6">
@@ -116,44 +116,31 @@ onMounted(() => {
             <!-- Form -->
             <form @submit.prevent="validateAndSave" autocomplete="off">
               <div class="grid gap-y-6">
-                <div>
-                  <label for="serverHost" class="block text-sm mb-2 dark:text-white">{{ t('Server Address') }}</label>
-                  <div class="text-xs text-gray-500 mb-2">
+                <Field>
+                  <FieldLabel for="serverHost">{{ t('Server Address') }}</FieldLabel>
+                  <FieldDescription>
                     {{ t('Leave empty to use current host as default') }}
-                  </div>
-                  <n-input
-                    v-model:value="serverHost"
-                    type="text"
-                    :placeholder="t('Please enter server address (e.g., http://localhost:9000)')"
-                  />
-                  <div class="text-xs text-gray-500 mt-1">
+                  </FieldDescription>
+                  <FieldContent>
+                    <Input id="serverHost" v-model="serverHost" type="text" :placeholder="t('Please enter server address (e.g., http://localhost:9000)')" />
+                  </FieldContent>
+                  <FieldDescription>
                     {{ t('Example: http://localhost:9000 or https://your-domain.com') }}
-                  </div>
-                </div>
+                  </FieldDescription>
+                </Field>
 
                 <div class="flex gap-3">
-                  <button
-                    type="submit"
-                    class="flex-1 py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:bg-blue-700 disabled:opacity-50 disabled:pointer-events-none"
-                  >
+                  <Button type="submit" class="flex-1">
                     {{ t('Save Configuration') }}
-                  </button>
+                  </Button>
 
-                  <button
-                    type="button"
-                    @click="resetToCurrentHost"
-                    class="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800"
-                  >
+                  <Button type="button" variant="outline" @click="resetToCurrentHost">
                     {{ t('Reset') }}
-                  </button>
+                  </Button>
 
-                  <button
-                    type="button"
-                    @click="skipConfig"
-                    class="py-3 px-4 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800"
-                  >
+                  <Button type="button" variant="outline" @click="skipConfig">
                     {{ t('Skip') }}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </form>
@@ -180,5 +167,5 @@ onMounted(() => {
         </div>
       </div>
     </div>
-  </div>
+  </page>
 </template>

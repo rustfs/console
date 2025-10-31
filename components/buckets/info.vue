@@ -1,205 +1,319 @@
 <template>
-  <n-drawer v-model:show="visibel" :width="502">
-    <n-drawer-content :title="t('Bucket Configuration') + `(${bucketName})`" closable>
-      <n-descriptions :column="2" label-placement="top" bordered label-class="w-1/2">
-        <n-descriptions-item>
-          <template #label>
-            <span>{{ t('Access Policy') }}</span>
-            <n-button class="align-middle" quaternary round type="primary" @click="editPolicy">
-              <Icon name="ri:edit-2-line" class="mr-2" />
-              <span>{{ t('Edit') }}</span>
-            </n-button>
-          </template>
-          {{policyOptions.find(item => item.value === bucketPolicy)?.label}}
-        </n-descriptions-item>
+  <Drawer v-model="visible" :title="drawerTitle" size="xl">
+    <div class="space-y-6">
+      <ItemGroup class="space-y-4">
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader>
+            <ItemTitle>{{ t('Access Policy') }}</ItemTitle>
+            <ItemActions>
+              <Button variant="outline" size="sm" class="shrink-0" @click="editPolicy">
+                <Icon name="ri:edit-2-line" class="mr-2 size-4" />
+                <span>{{ t('Edit') }}</span>
+              </Button>
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent>
+            <ItemDescription class="text-sm">{{ currentPolicyLabel }}</ItemDescription>
+          </ItemContent>
+        </Item>
 
-        <n-descriptions-item>
-          <template #label>
-            <span class="mr-2">{{ t('Encryption') }}</span>
-            <n-button class="align-middle" quaternary round type="primary" @click="editEncript">
-              <Icon name="ri:edit-2-line" class="mr-2" />
-              <span>{{ t('Edit') }}</span>
-            </n-button>
-          </template>
-          <span v-if="encryptFormValue.encrypt === 'disabled'">{{ t('Disabled') }}</span>
-          <span v-else-if="encryptFormValue.encrypt === 'SSE-KMS'">SSE-KMS</span>
-          <span v-else-if="encryptFormValue.encrypt === 'SSE-S3'">SSE-S3</span>
-          <span v-else>{{ t('Disabled') }}</span>
-        </n-descriptions-item>
-        <!-- <n-descriptions-item>
-        <template #label>
-          副本
-          <n-button class="align-middle" quaternary round type="primary">
-            <Icon name="ri:edit-2-line" class="mr-2" />
-          </n-button>
-        </template>
-        关闭
-      </n-descriptions-item> -->
-        <n-descriptions-item class="w-1/2">
-          <template #label>
-            {{ t('Tag') }}
-            <n-button class="align-middle" round quaternary type="primary" @click="addTag">
-              <Icon name="ri:add-line" size="16" class="mr-2" />
-              <span>{{ t('Add') }}</span>
-            </n-button>
-          </template>
-          <n-tag class="m-2" v-for="(tag, index) in tags" type="info" @click="editTag(index)" closable @close="handledeleteTag(index)">
-            {{ tag.Key }}:{{ tag.Value }}
-          </n-tag>
-        </n-descriptions-item>
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader class="items-start">
+            <div class="flex flex-col gap-1">
+              <ItemTitle>{{ t('Encryption') }}</ItemTitle>
+              <ItemDescription class="text-xs text-muted-foreground">
+                {{ encryptionLabel }}
+              </ItemDescription>
+            </div>
+            <ItemActions>
+              <Button variant="outline" size="sm" class="shrink-0" @click="editEncrypt">
+                <Icon name="ri:edit-2-line" class="mr-2 size-4" />
+                <span>{{ t('Edit') }}</span>
+              </Button>
+            </ItemActions>
+          </ItemHeader>
+        </Item>
 
-        <n-descriptions-item>
-          <template #label>{{ t('Object Lock') }}</template>
-          <n-switch :disabled="true" v-model:value="lockStatus" :loading="objectLockLoading" :round="false" @update:value="handleChangeVersionStatus" />
-        </n-descriptions-item>
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader>
+            <ItemTitle>{{ t('Tag') }}</ItemTitle>
+            <ItemActions>
+              <Button variant="outline" size="sm" class="shrink-0" @click="addTag">
+                <Icon name="ri:add-line" class="mr-2 size-4" />
+                <span>{{ t('Add') }}</span>
+              </Button>
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent>
+            <div v-if="tags.length" class="flex flex-wrap gap-2">
+              <div
+                v-for="(tag, index) in tags"
+                :key="`${tag.Key}-${index}`"
+                class="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs"
+              >
+                <button type="button" class="text-left" @click="editTag(index)">{{ tag.Key }}:{{ tag.Value }}</button>
+                <Button variant="ghost" size="sm" class="h-6 w-6 p-0" @click.stop="handleDeleteTag(index)">
+                  <Icon name="ri:close-line" class="size-3.5" />
+                </Button>
+              </div>
+            </div>
+            <ItemDescription v-else class="text-sm">
+              {{ t('No Data') }}
+            </ItemDescription>
+          </ItemContent>
+        </Item>
 
-        <n-descriptions-item>
-          <template #label>{{ t('Version Control') }}</template>
-          <n-switch v-model:value="versioningStatus" :disabled="lockStatus == true" checked-value="Enabled" unchecked-value="Suspended" :round="false" :loading="statusLoading"
-            @update:value="handleChangeVersionStatus" />
-        </n-descriptions-item>
-      </n-descriptions>
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader>
+            <ItemTitle>{{ t('Object Lock') }}</ItemTitle>
+            <ItemActions>
+              <Spinner v-if="objectLockLoading" class="size-3 text-muted-foreground" />
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent class="flex flex-col gap-3">
+            <div class="flex items-center justify-between gap-3">
+              <p class="text-sm font-medium text-foreground">{{ t('Object Lock') }}</p>
+              <Switch v-model="lockStatus" disabled />
+            </div>
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <p class="text-sm font-medium text-foreground">{{ t('Version Control') }}</p>
+                <Spinner v-if="statusLoading" class="size-3 text-muted-foreground" />
+              </div>
+              <Switch
+                :modelValue="versioningStatus === 'Enabled'"
+                :disabled="lockStatus || statusLoading"
+                @update:modelValue="handleVersionToggle"
+              />
+            </div>
+          </ItemContent>
+        </Item>
 
-      <!-- retention -->
-      <n-descriptions :column="2" label-placement="top" bordered label-class="w-1/2">
-        <n-descriptions-item>
-          <template #label>{{ t('Retention') }}</template>
-          <n-tag type="success" size="small" v-if="retentionEnabled" @click="editRetention">
-            {{ t('Enabled') }}
-            <template #icon>
-              <Icon name="ri:checkbox-circle-fill" />
-            </template>
-          </n-tag>
-          <n-tag type="error" size="small" v-else @click="editRetention">
-            {{ t('Disabled') }}
-            <template #icon>
-              <Icon name="ri:close-circle-fill" />
-            </template>
-          </n-tag>
-        </n-descriptions-item>
-        <n-descriptions-item>
-          <template #label>{{ t('Retention Mode') }}</template>
-          {{ t(retentionFormValue.retentionMode || '') }}
-        </n-descriptions-item>
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader class="items-start">
+            <div>
+              <ItemTitle>{{ t('Retention') }}</ItemTitle>
+              <ItemDescription class="text-xs text-muted-foreground">
+                {{ retentionEnabled ? t('Enabled') : t('Disabled') }}
+              </ItemDescription>
+            </div>
+            <ItemActions>
+              <Button variant="outline" size="sm" class="shrink-0" @click="editRetention">
+                <span>{{ t('Edit') }}</span>
+              </Button>
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <p class="text-xs text-muted-foreground">{{ t('Retention Mode') }}</p>
+                <p class="text-sm text-foreground">
+                  {{ retentionFormValue.retentionMode ? t(retentionFormValue.retentionMode) : '-' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-muted-foreground">{{ t('Retention Unit') }}</p>
+                <p class="text-sm text-foreground">
+                  {{ retentionFormValue.retentionUnit ? t(retentionFormValue.retentionUnit) : '-' }}
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-muted-foreground">{{ t('Retention Period') }}</p>
+                <p class="text-sm text-foreground">
+                  {{ retentionFormValue.retentionPeriod ?? '-' }}
+                </p>
+              </div>
+            </div>
+          </ItemContent>
+        </Item>
+      </ItemGroup>
+    </div>
+  </Drawer>
 
-        <n-descriptions-item>
-          <template #label>{{ t('Retention Unit') }}</template>
-          {{ t(retentionFormValue.retentionUnit || '') }}
-        </n-descriptions-item>
-        <n-descriptions-item>
-          <template #label>{{ t('Retention Period') }}</template>
-          {{ retentionFormValue.retentionPeriod || '' }}
-        </n-descriptions-item>
-      </n-descriptions>
-    </n-drawer-content>
+  <Modal v-model="showPolicyModal" :title="t('Set Policy')" size="xl">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel>{{ t('Policy') }}</FieldLabel>
+        <FieldContent>
+          <Selector
+            v-model="policyFormValue.policy"
+            :options="policyOptions"
+            :placeholder="t('Please select policy')"
+          />
+        </FieldContent>
+      </Field>
+      <Field v-if="policyFormValue.policy === 'custom'">
+        <FieldLabel>{{ t('Policy Content') }}</FieldLabel>
+        <FieldContent>
+          <div class="max-h-[60vh] overflow-y-auto rounded-md border p-2">
+            <json-editor v-model="policyFormValue.content" />
+          </div>
+        </FieldContent>
+      </Field>
+    </div>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="showPolicyModal = false">
+          {{ t('Cancel') }}
+        </Button>
+        <Button variant="default" @click="submitPolicyForm">
+          {{ t('Confirm') }}
+        </Button>
+      </div>
+    </template>
+  </Modal>
 
-    <!-- policy -->
-    <n-modal v-model:show="showPolicyModal" :title="t('Set Policy')" preset="card" draggable :style="{ width: '750px' }">
-      <n-form ref="policyFormRef" :inline="policyFormValue.policy !== 'custom'" :label-width="80" :model="policyFormValue">
-        <n-form-item :label="t('Policy')" path="" class="flex-auto">
-          <n-select v-model:value="policyFormValue.policy" :placeholder="t('Please select policy')" :options="policyOptions" />
-        </n-form-item>
-        <n-form-item :span="24" v-if="policyFormValue.policy == 'custom'" :label="t('Policy Content')" path="content">
-          <n-scrollbar class="w-full max-h-[60vh]"><json-editor v-model="policyFormValue.content" /></n-scrollbar>
-        </n-form-item>
-        <n-form-item>
-          <n-button type="primary" @click="submitPolicyForm">{{ t('Confirm') }}</n-button>
-          <n-button class="mx-4" @click="showPolicyModal = false">{{ t('Cancel') }}</n-button>
-        </n-form-item>
-      </n-form>
-    </n-modal>
+  <Modal v-model="showTagModal" :title="t('Set Tag')" size="md">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel>{{ t('Tag Key') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="tagFormValue.name" :placeholder="t('Tag Key Placeholder')" />
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>{{ t('Tag Value') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="tagFormValue.value" :placeholder="t('Please enter tag value')" />
+        </FieldContent>
+      </Field>
+    </div>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="showTagModal = false">
+          {{ t('Cancel') }}
+        </Button>
+        <Button variant="default" @click="submitTagForm">
+          {{ t('Confirm') }}
+        </Button>
+      </div>
+    </template>
+  </Modal>
 
-    <!-- tag -->
-    <n-modal v-model:show="showTagModal" :title="t('Set Tag')" preset="card" draggable :style="{ width: '550px' }">
-      <n-form ref="formRef" inline :label-width="80" :model="tagFormValue">
-        <n-form-item :label="t('Tag Key')" path="name">
-          <n-input v-model:value="tagFormValue.name" :placeholder="t('Tag Key Placeholder')" />
-        </n-form-item>
-        <n-form-item :label="t('Tag Value')" path="value">
-          <n-input v-model:value="tagFormValue.value" :placeholder="t('Please enter tag value')" />
-        </n-form-item>
-        <n-form-item>
-          <n-button type="primary" @click="submitTagForm">{{ t('Confirm') }}</n-button>
-          <n-button class="mx-4" @click="showTagModal = false">{{ t('Cancel') }}</n-button>
-        </n-form-item>
-      </n-form>
-    </n-modal>
+  <Modal v-model="showEncryptModal" :title="t('Enable Storage Encryption')" size="md">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel>{{ t('Encryption Type') }}</FieldLabel>
+        <FieldContent>
+          <Selector
+            v-model="encryptFormValue.encrypt"
+            :options="encryptionOptions"
+            :placeholder="t('Please select encryption type')"
+          />
+        </FieldContent>
+      </Field>
+      <Field v-if="encryptFormValue.encrypt === 'SSE-KMS'">
+        <FieldLabel>KMS Key ID</FieldLabel>
+        <FieldContent>
+          <Selector
+            v-model="encryptFormValue.kmsKeyId"
+            :options="kmsKeyOptions"
+            :placeholder="t('Please select KMS key')"
+          />
+        </FieldContent>
+      </Field>
+    </div>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="showEncryptModal = false">
+          {{ t('Cancel') }}
+        </Button>
+        <Button variant="default" @click="submitEncryptForm">
+          {{ t('Confirm') }}
+        </Button>
+      </div>
+    </template>
+  </Modal>
 
-    <!-- Encrypt -->
-    <n-modal v-model:show="showEncryptModal" :title="t('Enable Storage Encryption')" preset="card" draggable :style="{ width: '550px' }">
-      <n-form ref="encryptFormRef" label-placemen="left" label-width="auto" inline :model="encryptFormValue">
-        <n-form-item :label="t('Encryption Type')" path="encrypt" class="flex-auto">
-          <n-select v-model:value="encryptFormValue.encrypt" :placeholder="t('Please select encryption type')" :options="encryptOptions" />
-        </n-form-item>
-        <n-form-item v-if="encryptFormValue.encrypt == 'SSE-KMS'" label="KMS Key ID" path="kmsKeyId" class="flex-auto">
-          <n-select v-model:value="encryptFormValue.kmsKeyId" :placeholder="t('Please select KMS key')" :options="kmsKeyOptions" />
-        </n-form-item>
-
-        <n-form-item>
-          <n-button type="primary" @click="submitEncryptForm">{{ t('Confirm') }}</n-button>
-          <n-button class="mx-4" @click="showEncryptModal = false">{{ t('Cancel') }}</n-button>
-        </n-form-item>
-      </n-form>
-    </n-modal>
-
-    <!-- retention -->
-    <n-modal v-model:show="showRetentionModal" :title="t('Set Retention')" preset="card" draggable :style="{ width: '550px' }">
-      <n-form ref="retentionFormRef" label-placemen="left" label-width="auto" :model="retentionFormValue">
-        <n-form-item :label="t('Retention Mode')" path="retentionMode" class="flex-auto">
-          <n-radio-group v-model:value="retentionFormValue.retentionMode">
-            <n-radio value="COMPLIANCE">{{ t('COMPLIANCE') }}</n-radio>
-            <n-radio value="GOVERNANCE">{{ t('GOVERNANCE') }}</n-radio>
-          </n-radio-group>
-        </n-form-item>
-
-        <n-form-item :label="t('Retention Unit')" path="retentionUnit" class="flex-auto">
-          <n-radio-group v-model:value="retentionFormValue.retentionUnit">
-            <n-radio value="Days">{{ t('DAYS') }}</n-radio>
-            <n-radio value="Years">{{ t('YEARS') }}</n-radio>
-          </n-radio-group>
-        </n-form-item>
-
-        <n-form-item :label="t('Retention Period')" path="retentionPeriod" class="flex-auto">
-          <n-input-number v-model:value="retentionFormValue.retentionPeriod" />
-        </n-form-item>
-
-        <n-form-item>
-          <n-button type="primary" @click="submitRetentionForm">{{ t('Confirm') }}</n-button>
-          <n-button class="mx-4" @click="showRetentionModal = false">{{ t('Cancel') }}</n-button>
-        </n-form-item>
-      </n-form>
-    </n-modal>
-  </n-drawer>
+  <Modal v-model="showRetentionModal" :title="t('Set Retention')" size="md">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel>{{ t('Retention Mode') }}</FieldLabel>
+        <FieldContent>
+          <RadioGroup v-model="retentionFormValue.retentionMode" class="grid gap-2 sm:grid-cols-2">
+            <label
+              v-for="option in retentionModeOptions"
+              :key="option.value"
+              class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+            >
+              <RadioGroupItem :value="option.value" class="mt-0.5" />
+              <span class="text-sm font-medium">{{ option.label }}</span>
+            </label>
+          </RadioGroup>
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>{{ t('Retention Unit') }}</FieldLabel>
+        <FieldContent>
+          <RadioGroup v-model="retentionFormValue.retentionUnit" class="grid gap-2 sm:grid-cols-2">
+            <label
+              v-for="option in retentionUnitOptions"
+              :key="option.value"
+              class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+            >
+              <RadioGroupItem :value="option.value" class="mt-0.5" />
+              <span class="text-sm font-medium">{{ option.label }}</span>
+            </label>
+          </RadioGroup>
+        </FieldContent>
+      </Field>
+      <Field>
+        <FieldLabel>{{ t('Retention Period') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="retentionPeriodInput" type="number" />
+        </FieldContent>
+      </Field>
+    </div>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="showRetentionModal = false">
+          {{ t('Cancel') }}
+        </Button>
+        <Button variant="default" @click="submitRetentionForm">
+          {{ t('Confirm') }}
+        </Button>
+      </div>
+    </template>
+  </Modal>
 </template>
 
 <script setup lang="ts">
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
 import { Icon } from '#components'
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
+import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemHeader, ItemTitle } from '@/components/ui/item'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Spinner } from '@/components/ui/spinner'
+import { Switch } from '@/components/ui/switch'
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import Drawer from '~/components/drawer.vue'
+import Modal from '~/components/modal.vue'
+import Selector from '~/components/selector.vue'
+import type { BucketPolicyType } from '~/utils/bucket-policy'
+import { getBucketPolicy as detectBucketPolicy, setBucketPolicy } from '~/utils/bucket-policy'
+
 const { t } = useI18n()
+const message = useMessage()
 const dialog = useDialog()
-const visibel = ref(false)
+
+const visible = ref(false)
 const bucketName = ref('')
+
+const drawerTitle = computed(() => `${t('Bucket Configuration')}(${bucketName.value || '-'})`)
+
 const openDrawer = (bucket: string) => {
-  visibel.value = true
+  visible.value = true
   bucketName.value = bucket
-  // 在服务端获取数据
   getData()
 }
-defineExpose({
-  openDrawer,
-})
 
-const getData = async () => {
-  await getTags()
-  await getVersioningStatus()
-  await getObjectLockConfig()
-  await getBucketEncryptionFn()
-  await getbucketPolicy()
-}
+defineExpose({ openDrawer })
 
-const message = useMessage()
 const {
   getBucketTagging,
-  deleteBucket,
   putBucketTagging,
   putBucketVersioning,
   getBucketVersioning,
@@ -212,189 +326,206 @@ const {
   deleteBucketEncryption,
 } = useBucket({})
 
-// 使用 SSE 相关功能
 const { getKeyList } = useSSE()
 
-/**********object lock ***********************/
 const lockStatus = ref(false)
 const objectLockLoading = ref(false)
 const retentionEnabled = ref(false)
 
+const retentionFormValue = ref<{
+  retentionMode: string | null
+  retentionPeriod: number | null
+  retentionUnit: string | null
+}>({
+  retentionMode: null,
+  retentionPeriod: null,
+  retentionUnit: null,
+})
+
+const policyFormValue = ref({
+  policy: 'private',
+  content: '{}',
+})
+const bucketPolicy = ref('public')
+const showPolicyModal = ref(false)
+
+const encryptFormValue = ref({
+  encrypt: 'disabled',
+  kmsKeyId: '',
+})
+const showEncryptModal = ref(false)
+const kmsKeyOptions = ref<{ label: string; value: string }[]>([])
+
+const versioningStatus = ref<'Enabled' | 'Suspended' | undefined>('Suspended')
+const statusLoading = ref(false)
+
+interface Tag {
+  Key: string
+  Value: string
+}
+
+const tags = ref<Tag[]>([])
+const showTagModal = ref(false)
+const tagFormValue = ref({
+  name: '',
+  value: '',
+})
+const editingTagIndex = ref(-1)
+
+const showRetentionModal = ref(false)
+
+const retentionPeriodInput = computed({
+  get: () => (retentionFormValue.value.retentionPeriod ?? '').toString(),
+  set: value => {
+    if (!value) {
+      retentionFormValue.value.retentionPeriod = null
+      return
+    }
+    const numeric = Number.parseInt(value, 10)
+    retentionFormValue.value.retentionPeriod = Number.isFinite(numeric) ? numeric : null
+  },
+})
+
+const policyOptions = computed(() => [
+  { label: t('Public'), value: 'public' },
+  { label: t('Private'), value: 'private' },
+  { label: t('Custom'), value: 'custom' },
+])
+
+const encryptionOptions = computed(() => [
+  { label: t('Disabled'), value: 'disabled' },
+  { label: 'SSE-KMS', value: 'SSE-KMS' },
+  { label: 'SSE-S3', value: 'SSE-S3' },
+])
+
+const retentionModeOptions = computed(() => [
+  { label: t('COMPLIANCE'), value: 'COMPLIANCE' },
+  { label: t('GOVERNANCE'), value: 'GOVERNANCE' },
+])
+
+const retentionUnitOptions = computed(() => [
+  { label: t('DAYS'), value: 'Days' },
+  { label: t('YEARS'), value: 'Years' },
+])
+
+const currentPolicyLabel = computed(() => {
+  const option = policyOptions.value.find(option => option.value === bucketPolicy.value)
+  if (option) return option.label
+  if (bucketPolicy.value === 'custom') return t('Custom')
+  return bucketPolicy.value
+})
+
+const encryptionLabel = computed(() => {
+  if (encryptFormValue.value.encrypt === 'SSE-KMS') return 'SSE-KMS'
+  if (encryptFormValue.value.encrypt === 'SSE-S3') return 'SSE-S3'
+  return t('Disabled')
+})
+
+const getData = async () => {
+  await Promise.allSettled([
+    getTags(),
+    getVersioningStatus(),
+    getObjectLockConfig(),
+    getBucketEncryptionInfo(),
+    loadBucketPolicy(),
+  ])
+}
+
 const getObjectLockConfig = async () => {
   objectLockLoading.value = true
-  getObjectLockConfiguration(bucketName.value)
-    .then(res => {
-      if (res.ObjectLockConfiguration?.ObjectLockEnabled) {
-        lockStatus.value = res.ObjectLockConfiguration?.ObjectLockEnabled == 'Enabled' ? true : false
-        if (res.ObjectLockConfiguration?.Rule) {
-          retentionEnabled.value = true
-          retentionFormValue.value.retentionMode = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Mode || null
-          retentionFormValue.value.retentionPeriod =
-            res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days ||
-            res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years ||
-            null
-          retentionFormValue.value.retentionUnit = res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Years
-            ? 'Years'
-            : res.ObjectLockConfiguration?.Rule?.DefaultRetention?.Days
-              ? 'Days'
-              : ''
-        }
+  try {
+    const res = await getObjectLockConfiguration(bucketName.value)
+    if (res.ObjectLockConfiguration?.ObjectLockEnabled === 'Enabled') {
+      lockStatus.value = true
+      const rule = res.ObjectLockConfiguration.Rule?.DefaultRetention
+      if (rule) {
+        retentionEnabled.value = true
+        retentionFormValue.value.retentionMode = rule.Mode ?? null
+        retentionFormValue.value.retentionPeriod = rule.Days ?? rule.Years ?? null
+        retentionFormValue.value.retentionUnit = rule.Years ? 'Years' : rule.Days ? 'Days' : null
       } else {
-        lockStatus.value = false
         retentionEnabled.value = false
         retentionFormValue.value.retentionMode = null
         retentionFormValue.value.retentionPeriod = null
         retentionFormValue.value.retentionUnit = null
       }
-    })
-    .finally(() => {
-      objectLockLoading.value = false
-    })
+    } else {
+      lockStatus.value = false
+      retentionEnabled.value = false
+      retentionFormValue.value.retentionMode = null
+      retentionFormValue.value.retentionPeriod = null
+      retentionFormValue.value.retentionUnit = null
+    }
+  } finally {
+    objectLockLoading.value = false
+  }
 }
 
-/**********object lock ***********************/
-
-/******** policy ***********************/
-import { getBucketPolicy as getBucketPolicyFn, setBucketPolicy } from '~/utils/bucket-policy'
-
-const bucketPolicy = ref('public')
-const getbucketPolicy = async () => {
+const loadBucketPolicy = async () => {
   try {
     const res = await getBucketPolicy(bucketName.value)
     if (res.Policy) {
       policyFormValue.value.content = res.Policy
-
-      bucketPolicy.value = getBucketPolicyFn(JSON.parse(res.Policy).Statement, bucketName.value, '')
+      const parsed = detectBucketPolicy(JSON.parse(res.Policy).Statement, bucketName.value, '')
+      bucketPolicy.value = parsed === 'none' ? 'custom' : parsed
       policyFormValue.value.policy = bucketPolicy.value
-      if (bucketPolicy.value == 'none') {
-        bucketPolicy.value = 'custom'
-        policyFormValue.value.policy = 'custom'
-      }
     } else {
       bucketPolicy.value = 'public'
+      policyFormValue.value.policy = 'public'
     }
   } catch (error: any) {
-    // Handle 404 error when no policy exists
     console.error('Error fetching bucket policy:', error)
-    // Set default values for private policy
     bucketPolicy.value = 'private'
     policyFormValue.value.policy = 'private'
     policyFormValue.value.content = '{}'
   }
 }
 
-const policyFormValue = ref({
-  policy: 'private',
-  content: '{}',
-})
-const showPolicyModal = ref(false)
 const editPolicy = () => {
   showPolicyModal.value = true
 }
 
-const submitPolicyForm = () => {
-  if (policyFormValue.value.policy == 'custom') {
-    let polictStr = JSON.stringify(JSON.parse(policyFormValue.value.content))
-    console.log(polictStr)
-    putBucketPolicy(bucketName.value, polictStr)
-      .then(() => {
-        message.success(t('Edit Success'))
-        showPolicyModal.value = false
-        getbucketPolicy()
-      })
-      .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message)
-      })
-  } else {
-    const policys = setBucketPolicy([], policyFormValue.value.policy as BucketPolicyType, bucketName.value, '')
-    console.log('🚀 ~ policys:', policys)
-    putBucketPolicy(bucketName.value, JSON.stringify({ Version: '2012-10-17', Statement: policys }))
-      .then(() => {
-        message.success(t('Edit Success'))
-        showPolicyModal.value = false
-        getbucketPolicy()
-      })
-      .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message)
-      })
+const submitPolicyForm = async () => {
+  try {
+    if (policyFormValue.value.policy === 'custom') {
+      const parsed = JSON.stringify(JSON.parse(policyFormValue.value.content))
+      await putBucketPolicy(bucketName.value, parsed)
+    } else {
+      const statements = setBucketPolicy([], policyFormValue.value.policy as BucketPolicyType, bucketName.value, '')
+      await putBucketPolicy(bucketName.value, JSON.stringify({ Version: '2012-10-17', Statement: statements }))
+    }
+    message.success(t('Edit Success'))
+    showPolicyModal.value = false
+    await loadBucketPolicy()
+  } catch (error: any) {
+    message.error(`${t('Edit Failed')}: ${error.message}`)
   }
 }
-const policyOptions = [
-  {
-    label: t('Public'),
-    value: 'public',
-  },
-  {
-    label: t('Private'),
-    value: 'private',
-  },
-  {
-    label: t('Custom'),
-    value: 'custom',
-  },
-]
 
-/******** policy ***********************/
+const editEncrypt = () => {
+  showEncryptModal.value = true
+  if (encryptFormValue.value.encrypt === 'SSE-KMS') {
+    fetchKMSKeys()
+  }
+}
 
-/********Encrypt ***********************/
-const showEncryptModal = ref(false)
-const encryptFormValue = ref({
-  encrypt: 'disabled',
-  kmsKeyId: '',
-})
-
-// KMS 密钥列表
-const kmsKeyOptions = ref([])
-
-const encryptOptions = [
-  {
-    label: t('Disabled'),
-    value: 'disabled',
-  },
-  {
-    label: 'SSE-KMS',
-    value: 'SSE-KMS',
-  },
-  {
-    label: 'SSE-S3',
-    value: 'SSE-S3',
-  },
-]
-
-const getBucketEncryptionFn = async () => {
+const getBucketEncryptionInfo = async () => {
   try {
     const res = await getBucketEncryption(bucketName.value)
-    if (
-      res &&
-      res.ServerSideEncryptionConfiguration &&
-      res.ServerSideEncryptionConfiguration.Rules &&
-      res.ServerSideEncryptionConfiguration.Rules.length > 0
-    ) {
-      const rule = res.ServerSideEncryptionConfiguration.Rules[0]
-      if (rule.ApplyServerSideEncryptionByDefault) {
-        const sseAlgorithm = rule.ApplyServerSideEncryptionByDefault.SSEAlgorithm
-        if (sseAlgorithm) {
-          // 将AWS S3算法值转换为显示值
-          if (sseAlgorithm === 'aws:kms') {
-            encryptFormValue.value.encrypt = 'SSE-KMS'
-          } else if (sseAlgorithm === 'AES256') {
-            encryptFormValue.value.encrypt = 'SSE-S3'
-          } else {
-            encryptFormValue.value.encrypt = sseAlgorithm
-          }
-        }
-        const kmsKeyId = rule.ApplyServerSideEncryptionByDefault.KMSMasterKeyID
-        if (kmsKeyId) {
-          encryptFormValue.value.kmsKeyId = kmsKeyId
-        }
-      }
+    const rule = res.ServerSideEncryptionConfiguration?.Rules?.[0]
+    const defaultRule = rule?.ApplyServerSideEncryptionByDefault
+    if (defaultRule?.SSEAlgorithm === 'aws:kms') {
+      encryptFormValue.value.encrypt = 'SSE-KMS'
+      encryptFormValue.value.kmsKeyId = defaultRule.KMSMasterKeyID ?? ''
+    } else if (defaultRule?.SSEAlgorithm === 'AES256') {
+      encryptFormValue.value.encrypt = 'SSE-S3'
+      encryptFormValue.value.kmsKeyId = ''
     } else {
       encryptFormValue.value.encrypt = 'disabled'
       encryptFormValue.value.kmsKeyId = ''
     }
   } catch (error: any) {
-    // 如果没有加密配置，设置为禁用状态
-    if (error.status === 404) {
+    if (error?.status === 404) {
       encryptFormValue.value.encrypt = 'disabled'
       encryptFormValue.value.kmsKeyId = ''
     } else {
@@ -403,224 +534,152 @@ const getBucketEncryptionFn = async () => {
   }
 }
 
-// 获取 KMS 密钥列表
 const fetchKMSKeys = async () => {
   try {
     const response = await getKeyList()
-    if (response && response.keys) {
-      kmsKeyOptions.value = response.keys.map((key: any) => {
-        // 优先使用 tags.name，然后是 description，最后是 key_id
-        const keyName = key.tags?.name || key.description || `Key-${key.key_id?.substring(0, 8)}`
-        return {
-          label: keyName,
-          value: key.key_id,
-        }
-      })
-    }
+    kmsKeyOptions.value = (response?.keys || []).map((key: any) => {
+      const label = key.tags?.name || key.description || `Key-${key.key_id?.substring(0, 8)}`
+      return { label, value: key.key_id }
+    })
   } catch (error) {
     console.error('Failed to fetch KMS keys:', error)
     message.error(t('Failed to fetch KMS keys'))
   }
 }
 
-// 监听加密类型变化，当选择 SSE-KMS 时自动获取 KMS 密钥列表
 watch(
   () => encryptFormValue.value.encrypt,
-  newValue => {
-    if (newValue === 'SSE-KMS') {
+  value => {
+    if (value === 'SSE-KMS') {
       fetchKMSKeys()
     }
   }
 )
-const editEncript = () => {
-  showEncryptModal.value = true
-  // 当选择 SSE-KMS 时，获取 KMS 密钥列表
-  if (encryptFormValue.value.encrypt === 'SSE-KMS') {
-    fetchKMSKeys()
-  }
-}
-const submitEncryptForm = () => {
-  if (encryptFormValue.value.encrypt === 'disabled') {
-    // 禁用加密
-    deleteBucketEncryption(bucketName.value)
-      .then(() => {
-        message.success(t('Edit Success'))
-        showEncryptModal.value = false
+
+const submitEncryptForm = async () => {
+  try {
+    if (encryptFormValue.value.encrypt === 'disabled') {
+      await deleteBucketEncryption(bucketName.value)
+    } else if (encryptFormValue.value.encrypt === 'SSE-KMS') {
+      if (!encryptFormValue.value.kmsKeyId) {
+        message.error(t('Please select a KMS key for SSE-KMS encryption'))
+        return
+      }
+      await putBucketEncryption(bucketName.value, {
+        Rules: [
+          {
+            ApplyServerSideEncryptionByDefault: {
+              SSEAlgorithm: 'aws:kms',
+              KMSMasterKeyID: encryptFormValue.value.kmsKeyId,
+            },
+          },
+        ],
       })
-      .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message)
+    } else {
+      await putBucketEncryption(bucketName.value, {
+        Rules: [
+          {
+            ApplyServerSideEncryptionByDefault: {
+              SSEAlgorithm: 'AES256',
+            },
+          },
+        ],
       })
-  } else if (encryptFormValue.value.encrypt === 'SSE-KMS') {
-    // 验证是否选择了 KMS Key
-    if (!encryptFormValue.value.kmsKeyId) {
-      message.error(t('Please select a KMS key for SSE-KMS encryption'))
-      return
     }
-
-    // 启用 SSE-KMS 加密
-    putBucketEncryption(bucketName.value, {
-      Rules: [
-        {
-          ApplyServerSideEncryptionByDefault: {
-            SSEAlgorithm: 'aws:kms',
-            KMSMasterKeyID: encryptFormValue.value.kmsKeyId,
-          },
-        },
-      ],
-    })
-      .then(() => {
-        message.success(t('Edit Success'))
-        showEncryptModal.value = false
-      })
-      .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message)
-      })
-  } else if (encryptFormValue.value.encrypt === 'SSE-S3') {
-    // 启用 SSE-S3 加密
-    putBucketEncryption(bucketName.value, {
-      Rules: [
-        {
-          ApplyServerSideEncryptionByDefault: {
-            SSEAlgorithm: 'AES256',
-          },
-        },
-      ],
-    })
-      .then(() => {
-        message.success(t('Edit Success'))
-        showEncryptModal.value = false
-      })
-      .catch(error => {
-        message.error(t('Edit Failed') + ': ' + error.message)
-      })
+    message.success(t('Edit Success'))
+    showEncryptModal.value = false
+    await getBucketEncryptionInfo()
+  } catch (error: any) {
+    message.error(`${t('Edit Failed')}: ${error.message}`)
   }
 }
 
-/********Encrypt ***********************/
-
-/********versioning ***********************/
-const versioningStatus: any = ref('')
-const statusLoading = ref(false)
-// 获取版本控制状态
 const getVersioningStatus = async () => {
   try {
     const resp = await getBucketVersioning(bucketName.value)
-    versioningStatus.value = resp.Status
+    versioningStatus.value = resp.Status as 'Enabled' | 'Suspended' | undefined
   } catch (error) {
     console.error('get version fail:', error)
   }
 }
 
-const handleChangeVersionStatus = async (value: string) => {
+const handleVersionToggle = async (value: boolean) => {
+  if (statusLoading.value) return
+  const target = value ? 'Enabled' : 'Suspended'
+  const previous = versioningStatus.value
   statusLoading.value = true
-  putBucketVersioning(bucketName.value, value)
-    .then(() => {
-      message.success(t('Edit Success'))
-      getVersioningStatus()
-    })
-    .finally(() => {
-      statusLoading.value = false
-      versioningStatus.value = versioningStatus.value == 'Suspended' ? 'Enabled' : 'Suspended'
-    })
+  try {
+    await putBucketVersioning(bucketName.value, target)
+    versioningStatus.value = target
+    message.success(t('Edit Success'))
+  } catch (error: any) {
+    versioningStatus.value = previous
+    message.error(`${t('Edit Failed')}: ${error.message}`)
+  } finally {
+    statusLoading.value = false
+  }
 }
 
-/********versioning ***********************/
-
-/********tag ***********************/
-// 定义标签的类型
-interface Tag {
-  Key: string
-  Value: string
-}
-const showTagModal = ref(false)
-
-const tagFormValue = ref({
-  name: '',
-  value: '',
-})
-// 获取标签
-const tags = ref<Tag[]>([])
 const getTags = async () => {
   const resp: any = await getBucketTagging(bucketName.value)
   tags.value = resp.TagSet || []
 }
 
 const addTag = () => {
-  nowTagIndex.value = -1
-  tagFormValue.value = { name: '', value: '' } // 清空表单
+  editingTagIndex.value = -1
+  tagFormValue.value = { name: '', value: '' }
   showTagModal.value = true
 }
 
-const submitTagForm = () => {
-  if (!tagFormValue.value.name || !tagFormValue.value.value) {
-    message.error(t('Please fill in complete tag information'))
-    return
-  }
-
-  if (nowTagIndex.value === -1) {
-    tags.value.push({ Key: tagFormValue.value.name, Value: tagFormValue.value.value })
-  }
-  if (nowTagIndex.value !== -1) {
-    tags.value[nowTagIndex.value] = {
-      Key: tagFormValue.value.name,
-      Value: tagFormValue.value.value,
-    }
-  }
-  // 调用 putBucketTagging 接口
-  putBucketTagging(bucketName.value, { TagSet: tags.value })
-    .then(() => {
-      showTagModal.value = false // 关闭模态框
-      message.success(t('Tag Update Success'))
-    })
-    .catch(error => {
-      message.error(t('Tag Update Failed') + ': ' + error.message)
-    })
-}
-
-const nowTagIndex = ref(-1)
-// 编辑标签
 const editTag = (index: number) => {
-  nowTagIndex.value = index
+  editingTagIndex.value = index
   const nowTag = tags.value[index]
-  tagFormValue.value = { name: nowTag.Key, value: nowTag.Value } // 填充表单
-  showTagModal.value = true // 打开模态框
+  if (!nowTag) return
+  tagFormValue.value = { name: nowTag.Key, value: nowTag.Value }
+  showTagModal.value = true
 }
-const handledeleteTag = (index: number) => {
+
+const handleDeleteTag = (index: number) => {
   dialog.error({
     title: t('Warning'),
     content: t('Delete Tag Confirm'),
     positiveText: t('Confirm'),
     negativeText: t('Cancel'),
     onPositiveClick: async () => {
-      nowTagIndex.value = index
-      tags.value.splice(index, 1) // 从标签列表中删除
-
-      // 调用 putBucketTagging 接口
-      putBucketTagging(bucketName.value, { TagSet: tags.value })
-        .then(() => {
-          message.success(t('Tag Update Success'))
-        })
-        .catch(error => {
-          message.error(t('Tag Delete Failed') + ': ' + error.message)
-        })
+      tags.value.splice(index, 1)
+      try {
+        await putBucketTagging(bucketName.value, { TagSet: tags.value })
+        message.success(t('Tag Update Success'))
+      } catch (error: any) {
+        message.error(`${t('Tag Delete Failed')}: ${error.message}`)
+      }
     },
   })
 }
-/********tag ***********************/
 
-/********retention ***********************/
-interface RetentionFormValue {
-  retentionMode: string | null
-  retentionPeriod: number | null
-  retentionUnit: string | null
+const submitTagForm = async () => {
+  if (!tagFormValue.value.name || !tagFormValue.value.value) {
+    message.error(t('Please fill in complete tag information'))
+    return
+  }
+
+  if (editingTagIndex.value === -1) {
+    tags.value.push({ Key: tagFormValue.value.name, Value: tagFormValue.value.value })
+  } else {
+    tags.value[editingTagIndex.value] = {
+      Key: tagFormValue.value.name,
+      Value: tagFormValue.value.value,
+    }
+  }
+
+  try {
+    await putBucketTagging(bucketName.value, { TagSet: tags.value })
+    message.success(t('Tag Update Success'))
+    showTagModal.value = false
+  } catch (error: any) {
+    message.error(`${t('Tag Update Failed')}: ${error.message}`)
+  }
 }
-
-const showRetentionModal = ref(false)
-const retentionFormValue = ref<RetentionFormValue>({
-  retentionMode: null,
-  retentionPeriod: null,
-  retentionUnit: null,
-})
 
 const editRetention = () => {
   if (!lockStatus.value) {
@@ -630,32 +689,29 @@ const editRetention = () => {
   showRetentionModal.value = true
 }
 
-const submitRetentionForm = () => {
-  console.log(retentionFormValue.value)
-  if (
-    retentionFormValue.value.retentionMode == null ||
-    retentionFormValue.value.retentionPeriod == null ||
-    retentionFormValue.value.retentionUnit == null
-  ) {
+const submitRetentionForm = async () => {
+  const { retentionMode, retentionPeriod, retentionUnit } = retentionFormValue.value
+  if (!retentionMode || !retentionPeriod || !retentionUnit) {
     message.error(t('Please fill in complete retention information'))
     return
   }
 
-  putObjectLockConfiguration(bucketName.value, {
-    ObjectLockEnabled: 'Enabled',
-    Rule: {
-      DefaultRetention: {
-        Mode: retentionFormValue.value.retentionMode,
-        Days: retentionFormValue.value.retentionUnit == 'Days' ? retentionFormValue.value.retentionPeriod : null,
-        Years: retentionFormValue.value.retentionUnit == 'Years' ? retentionFormValue.value.retentionPeriod : null,
+  try {
+    await putObjectLockConfiguration(bucketName.value, {
+      ObjectLockEnabled: 'Enabled',
+      Rule: {
+        DefaultRetention: {
+          Mode: retentionMode,
+          Days: retentionUnit === 'Days' ? retentionPeriod : null,
+          Years: retentionUnit === 'Years' ? retentionPeriod : null,
+        },
       },
-    },
-  }).then(() => {
+    })
     message.success(t('Edit Success'))
     showRetentionModal.value = false
-    getObjectLockConfig()
-  })
-};
-
-/********retention ***********************/
+    await getObjectLockConfig()
+  } catch (error: any) {
+    message.error(`${t('Edit Failed')}: ${error.message}`)
+  }
+}
 </script>

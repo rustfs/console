@@ -1,16 +1,13 @@
-import AutoImport from 'unplugin-auto-import/vite';
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
-import Components from 'unplugin-vue-components/vite';
-
-const appName = process.env.APP_NAME || 'RustFS';
-const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '');
-const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.';
+import tailwindcss from '@tailwindcss/vite'
+const appName = process.env.APP_NAME || 'RustFS'
+const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '')
+const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   ssr: false,
   css: ['~/assets/css/tailwind.css', '~/assets/css/overrides.css'],
-  compatibilityDate: '2025-04-13',
+  compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   app: {
     baseURL: baseUrl,
@@ -31,11 +28,10 @@ export default defineNuxtConfig({
   },
 
   modules: [
-    '@nuxtjs/tailwindcss',
+    'shadcn-nuxt',
     '@nuxtjs/i18n',
     '@pinia/nuxt',
     '@nuxt/icon',
-    'nuxtjs-naive-ui',
     '@vueuse/nuxt',
     '@nuxt/image',
   ],
@@ -109,18 +105,20 @@ export default defineNuxtConfig({
   typescript: {
     typeCheck: true,
   },
+  shadcn: {
+    /**
+     * Prefix for all the imported component
+     */
+    prefix: '',
+    /**
+     * Directory that the component lives in.
+     * @default "./components/ui"
+     */
+    componentDir: './components/ui'
+  },
   vite: {
     plugins: [
-      AutoImport({
-        imports: [
-          {
-            'naive-ui': ['useDialog', 'useMessage', 'useNotification', 'useLoadingBar'],
-          },
-        ],
-      }),
-      Components({
-        resolvers: [NaiveUiResolver()],
-      }),
+      tailwindcss(),
     ],
   },
-});
+})

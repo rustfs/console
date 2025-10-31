@@ -1,14 +1,24 @@
+<script setup lang="ts">
+import AppSidebar from '@/components/app-sidebar.vue'
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+const showSidebar = computed(() => !route.path.startsWith('/auth'))
+</script>
+
 <template>
-  <n-space vertical>
-    <n-layout class="h-full">
-      <n-layout has-sider class="h-full">
-        <sidebar />
-        <div class="h-screen overflow-y-auto flex flex-col flex-1">
-          <div class="flex-1">
-            <slot />
-          </div>
-        </div>
-      </n-layout>
-    </n-layout>
-  </n-space>
+  <SidebarProvider v-if="showSidebar">
+    <AppSidebar />
+    <SidebarInset>
+      <div class="flex flex-1 flex-col gap-4 pt-0 p-6">
+        <AppTopNav />
+        <slot />
+      </div>
+    </SidebarInset>
+  </SidebarProvider>
+  <div v-else class="min-h-screen bg-background">
+    <slot />
+  </div>
 </template>

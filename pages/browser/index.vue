@@ -1,219 +1,199 @@
 <template>
-  <div>
+  <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Buckets') }}</h1>
+      <h1 class="text-2xl font-bold">{{ t('Buckets') }}</h1>
+      <template #actions>
+        <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable class="max-w-sm" />
+        <Button variant="outline" @click="formVisible = true">
+          <Icon name="ri:add-line" class="size-4" />
+          <span>{{ t('Create Bucket') }}</span>
+        </Button>
+        <Button variant="outline" @click="() => refresh()">
+          <Icon name="ri:refresh-line" class="size-4" />
+          <span>{{ t('Refresh') }}</span>
+        </Button>
       </template>
     </page-header>
-    <page-content class="flex flex-col gap-4 overflow-y-auto">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center justify-between">
-          <n-input v-model:value="searchTerm" :placeholder="t('Search')">
-            <template #prefix>
-              <Icon name="ri:search-2-line" />
-            </template>
-          </n-input>
-        </div>
 
-        <div class="flex items-center gap-4">
-          <n-button @click="() => (formVisible = true)">
-            <Icon name="ri:add-line" class="mr-2" />
-            <span>{{ t('Create Bucket') }}</span>
-          </n-button>
-          <n-button @click="async () => refresh()">
-            <Icon name="ri:refresh-line" class="mr-2" />
-            <span>{{ t('Refresh') }}</span>
-          </n-button>
-        </div>
-      </div>
-      <n-data-table class="border dark:border-neutral-700 rounded overflow-hidden" :columns="columns" :data="filteredData" :pagination="false" :bordered="false" />
-    </page-content>
+    <DataTable :table="table" :is-loading="pending" :empty-title="t('No Buckets')" :empty-description="t('Create a bucket to start storing objects.')" />
+  </page>
 
-    <buckets-new-form :show="formVisible" @update:show="handleFormClosed"></buckets-new-form>
-    <buckets-info ref="infoRef"></buckets-info>
-  </div>
+  <buckets-new-form :show="formVisible" @update:show="handleFormClosed" />
+  <buckets-info ref="infoRef" />
 </template>
 
 <script lang="ts" setup>
+import { Button } from '@/components/ui/button'
+
 import { Icon, NuxtLink } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
+import { niceBytes } from '@/utils/functions'
+import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
-import { NButton, NPopconfirm, NSpace, type DataTableColumns } from 'naive-ui'
+import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { niceBytes } from '../../utils/functions'
 
 const { t } = useI18n()
+const message = useMessage()
+const dialog = useDialog()
 const { listBuckets, deleteBucket } = useBucket({})
-const formVisible = ref(false)
-const searchTerm = ref('')
 const systemApi = useSystem()
 
-interface RowData {
+const formVisible = ref(false)
+const searchTerm = ref('')
+
+interface BucketRow {
   Name: string
   CreationDate: string
-  Count?: number | undefined
-  Size?: number | undefined // Optional size field for future use
+  Count?: number
+  Size?: string
 }
 
-interface BucketInfo {
-  size: number
-  replication_pending_size_v1: number
-  replication_failed_size_v1: number
-  replicated_size_v1: number
-  replication_pending_count_v1: number
-  replication_failed_count_v1: number
-  objects_count: number
-  object_size_histogram: object
-  object_versions_histogram: object
-  versions_count: number
-  delete_markers_count: number
-  replica_size: number
-  replica_count: number
-  replication_info: object
-}
-interface BucketInfoList {
-  [prop: string]: BucketInfo
-}
+type BucketUsageMap = Record<string, { objects_count?: number; size?: number } | undefined>
 
-const columns: DataTableColumns<RowData> = [
-  {
-    title: t('Bucket'),
-    key: 'Name',
-    render: (row: { Name: string }) => {
-      return h(
-        NuxtLink,
-        {
-          href: `/browser/${encodeURIComponent(row.Name)}`,
-          class: 'flex items-center gap-2',
-        },
-        {
-          default: () => [icon('ri:archive-line'), row.Name],
-        }
-      )
-    },
-  },
-  {
-    title: t('Creation Date'),
-    key: 'CreationDate',
-    render: (row: RowData) => {
-      return dayjs(row.CreationDate).format('YYYY-MM-DD HH:mm:ss')
-    },
-  },
-  {
-    title: t('Object Count'),
-    key: 'Count',
-  },
-  {
-    title: t('Size'),
-    key: 'Size',
-  },
-  {
-    title: t('Actions'),
-    key: 'actions',
-    align: 'center',
-    width: 240,
-    render: (row: RowData) => {
-      return h(
-        NSpace,
-        {
-          justify: 'center',
-        },
-        {
-          default: () => [
-            h(
-              NPopconfirm,
-              { onPositiveClick: () => deleteItem(row) },
-              {
-                default: () => t('Confirm Delete'),
-                trigger: () =>
-                  h(
-                    NButton,
-                    { size: 'small', type: 'error' },
-                    {
-                      default: () => t('Delete'),
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
-                    }
-                  )
-              }
-            ),
-            h(
-              NButton,
-              {
-                size: 'small',
-                secondary: true,
-                onClick: e => handleRowClick(row, e),
-              },
-              {
-                default: () => t('Settings'),
-                icon: () => h(Icon, { name: 'ri:settings-5-line' }),
-              }
-            ),
-          ],
-        }
-      )
-    },
-  },
-]
-
-const { data, refresh } = await useAsyncData(
+const { data, pending, refresh } = await useAsyncData<BucketRow[]>(
   'buckets',
   async () => {
     const response = await listBuckets()
-    const resp = await systemApi.getDataUsageInfo()
-    const bucketsInfo: BucketInfoList = resp?.buckets_usage || {}
+    const usage = await systemApi.getDataUsageInfo()
+    const bucketUsage = (usage?.buckets_usage ?? {}) as BucketUsageMap
 
-    return (
-      response.Buckets?.map(item => {
-        return {
-          Name: item.Name,
-          CreationDate: item.CreationDate,
-          Count: (item.Name && bucketsInfo[item.Name]?.objects_count) || 0,
-          Size: niceBytes(((item.Name && bucketsInfo[item.Name]?.size) || 0) + ''), // Optional size field for future use
+    const buckets = (response.Buckets ?? [])
+      .map(item => {
+        const name = item?.Name
+        if (!name) {
+          return null
         }
-      })?.sort((a: any, b: any) => {
-        return a.Name.localeCompare(b.Name)
-      }) || []
-    )
+        const stats = bucketUsage[name]
+        const objectsCount = typeof stats?.objects_count === 'number' ? stats.objects_count : 0
+        const totalSize = typeof stats?.size === 'number' ? stats.size : 0
+
+        const bucketRow: BucketRow = {
+          Name: name,
+          CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : '',
+          Count: objectsCount,
+          Size: niceBytes(String(totalSize)),
+        }
+
+        return bucketRow
+      })
+      .filter((bucket): bucket is BucketRow => bucket !== null)
+      .sort((a, b) => a.Name.localeCompare(b.Name))
+
+    return buckets
   },
-  { default: () => [] }
+  { default: () => [] as BucketRow[] }
 )
 
 const filteredData = computed(() => {
-  if (!searchTerm.value) {
-    return data.value
-  }
-
+  const buckets = (data.value ?? []) as BucketRow[]
+  if (!searchTerm.value) return buckets
   const term = searchTerm.value.toLowerCase()
-  return data.value.filter(bucket => bucket.Name?.toLowerCase().includes(term))
+  return buckets.filter(bucket => bucket.Name.toLowerCase().includes(term))
 })
 
-const infoRef = ref()
-const handleRowClick = (row: RowData, e: Event) => {
-  e.stopPropagation()
-  infoRef.value.openDrawer(row.Name)
+const columns: ColumnDef<BucketRow>[] = [
+  {
+    header: () => t('Bucket'),
+    accessorKey: 'Name',
+    cell: ({ row }) =>
+      h(
+        NuxtLink,
+        {
+          href: `/browser/${encodeURIComponent(row.original.Name)}`,
+          class: 'flex items-center gap-2 text-primary hover:underline',
+        },
+        () => [h(Icon, { name: 'ri:archive-line', class: 'size-4' }), row.original.Name]
+      ),
+  },
+  {
+    header: () => t('Creation Date'),
+    accessorKey: 'CreationDate',
+    cell: ({ row }) => dayjs(row.original.CreationDate).format('YYYY-MM-DD HH:mm:ss'),
+  },
+  {
+    header: () => t('Object Count'),
+    accessorKey: 'Count',
+    cell: ({ row }) => row.original.Count?.toLocaleString() ?? '0',
+  },
+  {
+    header: () => t('Size'),
+    accessorKey: 'Size',
+  },
+  {
+    id: 'actions',
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: ({ row }) =>
+      h('div', { class: 'flex items-center gap-2' }, [
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => openInfo(row.original.Name),
+          },
+          () => [h(Icon, { name: 'ri:settings-5-line', class: 'size-4' }), h('span', t('Settings'))]
+        ),
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => confirmDelete(row.original),
+          },
+          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
+        ),
+      ]),
+  },
+]
+
+const { table } = useDataTable<BucketRow>({
+  data: filteredData,
+  columns,
+  getRowId: row => row.Name,
+})
+
+const infoRef = ref<{ openDrawer: (name: string) => void }>()
+
+const handleFormClosed = (value: boolean) => {
+  formVisible.value = value
+  if (!value) refresh()
 }
 
-const message = useMessage()
-const deleteItem = async (row: RowData) => {
+const openInfo = (name: string) => {
+  infoRef.value?.openDrawer(name)
+}
+
+const confirmDelete = (row: BucketRow) => {
+  dialog.error({
+    title: t('Warning'),
+    content: t('Are you sure you want to delete this bucket?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
+    onPositiveClick: () => deleteItem(row),
+  })
+}
+
+const deleteItem = async (row: BucketRow) => {
   const objectApi = useObject({ bucket: row.Name })
 
-  const files = await objectApi.listObject(row.Name)
-  console.log('🚀 ~ deleteItem ~ files:', files)
+  const files = await objectApi.listObject(row.Name, undefined, 1)
+  const hasObjects = Boolean(files?.Contents?.some(item => Boolean(item?.Key)))
+    || Boolean(files?.CommonPrefixes?.length)
 
-  if (files.KeyCount || files.CommonPrefixes?.length) {
-    message.error(t('Bucket is not empty, please delete contents first'))
+  if (hasObjects) {
+    message.error(t('Bucket is not empty'))
     return
   }
-  deleteBucket(row.Name)
-    .then(() => {
-      message.success(t('Delete Success'))
-      refresh()
-    })
-    .catch(error => {
-      message.error(t('Delete Failed'))
-    })
-}
-const handleFormClosed = (show: boolean) => {
-  formVisible.value = show
-  refresh()
+
+  try {
+    await deleteBucket(row.Name)
+    message.success(t('Delete Success'))
+    await refresh()
+  } catch (error: any) {
+    message.error(error?.response?.data?.message || t('Delete Failed'))
+  }
 }
 </script>

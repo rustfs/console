@@ -1,244 +1,174 @@
 <template>
-  <div>
+  <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Tiers') }}</h1>
+      <h1 class="text-2xl font-bold">{{ t('Tiers') }}</h1>
+      <template #actions>
+        <Button variant="outline" @click="openNewForm">
+          <Icon name="ri:add-line" class="size-4" />
+          <span>{{ t('Add Tier') }}</span>
+        </Button>
+        <Button variant="outline" @click="() => refresh()">
+          <Icon name="ri:refresh-line" class="size-4" />
+          <span>{{ t('Refresh') }}</span>
+        </Button>
       </template>
     </page-header>
-    <page-content class="flex flex-col gap-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center justify-between">
-          <n-input v-model:value="searchTerm" :placeholder="t('Search')">
-            <template #prefix>
-              <Icon name="ri:search-2-line" />
-            </template>
-          </n-input>
-        </div>
 
-        <div class="flex items-center gap-4">
-          <n-button @click="() => addForm()">
-            <Icon name="ri:add-line" class="mr-2" />
-            <span>{{ t('Add Tier') }}</span>
-          </n-button>
-          <n-button @click="async () => refresh()">
-            <Icon name="ri:refresh-line" class="mr-2" />
-            <span>{{ t('Refresh') }}</span>
-          </n-button>
-        </div>
-      </div>
-      <n-data-table
-        class="border dark:border-neutral-700 rounded overflow-hidden"
-        :columns="columns"
-        :data="filteredData"
-        :pagination="false"
-        :bordered="false"
-      />
-      <tiers-new-form ref="newFormRef" @search="refresh"></tiers-new-form>
-      <tiers-change-key
-        v-model:visible="changeKeyVisible"
-        v-model:name="editName"
-        ref="infoRef"
-        @search="refresh"
-      ></tiers-change-key>
-    </page-content>
-  </div>
+    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Tiers')" :empty-description="t('Add tiers to configure remote storage destinations.')" />
+
+    <tiers-new-form ref="newFormRef" @search="() => refresh()" />
+    <tiers-change-key ref="changeKeyRef" v-model:visible="changeKeyVisible" v-model:name="selectedTier" @search="() => refresh()" />
+  </page>
 </template>
 
-<script lang="ts" setup>
-import { Icon } from '#components';
-import { NButton, NSpace, type DataTableColumns, NPopconfirm } from 'naive-ui';
-import { useI18n } from 'vue-i18n';
-const usetier = useTiers();
+<script setup lang="ts">
+import { Button } from '@/components/ui/button'
 
-const { t } = useI18n();
-const searchTerm = ref('');
+import { Icon } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
+import type { ColumnDef } from '@tanstack/vue-table'
+import { h, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-interface S3Config {
-  name: string;
-  endpoint: string;
-  accessKey: string;
-  secretKey: string;
-  bucket: string;
-  prefix: string;
-  region: string;
-  usage: string;
-  objects: string;
-  versions: string;
-  storageClass: string;
+const { t } = useI18n()
+const message = useMessage()
+const dialog = useDialog()
+const usetier = useTiers()
+
+interface TierRow {
+  type: string
+  [key: string]: any
 }
 
-interface RowData {
-  type: string;
-  rustfs?: S3Config;
-  minio?: S3Config;
-  s3?: S3Config;
-}
+const tiersData = ref<TierRow[]>([])
+const loading = ref(false)
 
-const getConfig = (row: RowData): S3Config | undefined => {
+const getConfig = (row: TierRow) => {
   switch (row.type) {
     case 'rustfs':
-      return row.rustfs;
+      return row.rustfs
     case 'minio':
-      return row.minio;
+      return row.minio
     case 's3':
-      return row.s3;
+      return row.s3
+    default:
+      return undefined
   }
-};
+}
 
-const columns: DataTableColumns<RowData> = [
+const columns: ColumnDef<TierRow>[] = [
   {
-    title: t('Tier Type'),
-    key: 'type',
-    render: row => row.type,
+    header: () => t('Tier Type'),
+    accessorKey: 'type',
+    cell: ({ row }) => h('span', { class: 'capitalize' }, row.original.type || '-'),
   },
   {
-    title: t('Name'),
-    key: 'name',
-    render: row => getConfig(row)?.name,
+    id: 'name',
+    header: () => t('Name'),
+    accessorFn: row => getConfig(row)?.name || '-',
   },
   {
-    title: t('Endpoint'),
-    key: 'endpoint',
-    render: row => getConfig(row)?.endpoint,
+    id: 'endpoint',
+    header: () => t('Endpoint'),
+    accessorFn: row => getConfig(row)?.endpoint || '-',
   },
   {
-    title: t('Bucket'),
-    key: 'bucket',
-    render: row => getConfig(row)?.bucket,
+    id: 'bucket',
+    header: () => t('Bucket'),
+    accessorFn: row => getConfig(row)?.bucket || '-',
   },
   {
-    title: t('Prefix'),
-    key: 'prefix',
-    render: row => getConfig(row)?.prefix,
+    id: 'prefix',
+    header: () => t('Prefix'),
+    accessorFn: row => getConfig(row)?.prefix || '-',
   },
   {
-    title: t('Region'),
-    key: 'region',
-    render: row => getConfig(row)?.region,
+    id: 'region',
+    header: () => t('Region'),
+    accessorFn: row => getConfig(row)?.region || '-',
   },
-  // {
-  //   title: t('Storage Class'),
-  //   key: 'storageClass',
-  //   render: (row) => {
-  //     // 只有 s3 类型才有 storageclass
-  //     if (row.type === 's3') {
-  //       return row.s3?.storageClass;
-  //     }
-  //     return '-';
-  //   },
-  // },
-  // {
-  //   title: t('Usage'),
-  //   key: 'usage',
-  //   render: (row) => getConfig(row)?.usage,
-  // },
-  // {
-  //   title: t('Objects'),
-  //   key: 'objects',
-  //   render: (row) => getConfig(row)?.objects,
-  // },
-  // {
-  //   title: t('Version'),
-  //   key: 'versions',
-  //   render: (row) => getConfig(row)?.versions,
-  // },
   {
-    title: t('Actions'),
-    key: 'actions',
-    align: 'center',
-    width: 140,
-    render: (row: RowData) => {
-      return h(
-        NSpace,
-        {
-          justify: 'center',
-        },
-        {
-          default: () => [
-            h(
-              NPopconfirm,
-              { onPositiveClick: () => deleteItem(row) },
-              {
-                default: () => t('Confirm Delete'),
-                trigger: () =>
-                  h(
-                    NButton,
-                    { size: 'small', secondary: true },
-                    {
-                      default: () => '',
-                      icon: () => h(Icon, { name: 'ri:delete-bin-5-line' }),
-                    }
-                  ),
-              }
-            ),
-            h(
-              NButton,
-              {
-                size: 'small',
-                secondary: true,
-                onClick: e => handleRowClick(row, e),
-              },
-              {
-                default: () => '',
-                icon: () => h(Icon, { name: 'ri:edit-2-line' }),
-              }
-            ),
-          ],
-        }
-      );
-    },
+    id: 'actions',
+    header: () => t('Actions'),
+    enableSorting: false,
+    cell: ({ row }) =>
+      h('div', { class: 'flex items-centergap-2' }, [
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => openChangeKey(row.original),
+          },
+          () => [h(Icon, { name: 'ri:key-2-line', class: 'size-4' }), h('span', t('Update Key'))]
+        ),
+        h(
+          Button,
+          {
+            variant: 'outline',
+            size: 'sm',
+            onClick: () => confirmDelete(row.original),
+          },
+          () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
+        ),
+      ]),
   },
-];
+]
 
-const { data, refresh } = await useAsyncData(
-  'tier',
-  async () => {
-    const response = await usetier.listTiers();
-    return response;
-  },
-  { default: () => [] }
-);
+const { table } = useDataTable<TierRow>({
+  data: tiersData,
+  columns,
+  getRowId: row => `${row.type}-${getConfig(row)?.name}`,
+})
 
-const filteredData = computed(() => {
-  if (!searchTerm.value) {
-    return data.value;
+const loadTiers = async () => {
+  loading.value = true
+  try {
+    const response = await usetier.listTiers()
+    tiersData.value = response ?? []
+  } catch (error) {
+    tiersData.value = []
+  } finally {
+    loading.value = false
   }
+}
 
-  const term = searchTerm.value.toLowerCase();
-  return data.value.filter(
-    (tier: any) =>
-      tier.name.toLowerCase().includes(term) ||
-      tier.endpoint.toLowerCase().includes(term) ||
-      tier.bucket.toLowerCase().includes(term)
-  );
-});
+const refresh = async () => {
+  await loadTiers()
+}
 
-const infoRef = ref();
-const changeKeyVisible = ref(false);
-const editName: any = ref('');
-const handleRowClick = (row: RowData, e: Event) => {
-  e.stopPropagation();
-  changeKeyVisible.value = true;
-  editName.value = getConfig(row)?.name;
-};
+loadTiers()
 
-const message = useMessage();
-const deleteItem = async (row: RowData) => {
-  const config = getConfig(row) || { name: '' };
-  if (!config.name) return;
-  usetier
-    .removeTiers(config.name)
-    .then(() => {
-      message.success(t('Delete Success'));
-      refresh();
-    })
-    .catch(error => {
-      message.error(t('Delete Failed'));
-    });
-};
+const newFormRef = ref<{ open: () => void }>()
+const openNewForm = () => newFormRef.value?.open()
 
-const newFormRef = ref();
-const addForm = async () => {
-  newFormRef.value.open();
-};
+const changeKeyRef = ref()
+const changeKeyVisible = ref(false)
+const selectedTier = ref('')
+
+const openChangeKey = (row: TierRow) => {
+  selectedTier.value = getConfig(row)?.name || ''
+  changeKeyVisible.value = true
+}
+
+const confirmDelete = (row: TierRow) => {
+  dialog.error({
+    title: t('Warning'),
+    content: t('Are you sure you want to delete this tier?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
+    onPositiveClick: () => deleteTier(row),
+  })
+}
+
+const deleteTier = async (row: TierRow) => {
+  try {
+    await usetier.removeTiers(getConfig(row)?.name || '')
+    message.success(t('Delete Success'))
+    refresh()
+  } catch (error: any) {
+    message.error(error?.message || t('Delete Failed'))
+  }
+}
 </script>

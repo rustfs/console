@@ -1,168 +1,149 @@
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { configManager } from '~/utils/config';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-const { t } = useI18n();
-const message = useMessage();
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { configManager } from '~/utils/config'
 
-// 当前配置信息
+const { t } = useI18n()
+const message = useMessage()
+
 const currentConfig = ref({
   serverHost: '',
-  api: {
-    baseURL: '',
-  },
-  s3: {
-    endpoint: '',
-    region: '',
-  },
-});
+  api: { baseURL: '' },
+  s3: { endpoint: '', region: '' },
+})
 
-// 表单数据
 const formData = ref({
   serverHost: '',
-});
+})
 
-const loading = ref(false);
+const loading = ref(false)
 
-// 加载当前配置
 const loadCurrentConfig = async () => {
   try {
-    const config = await configManager.loadConfig();
-    currentConfig.value = config;
-    formData.value.serverHost = config.serverHost;
+    const config = await configManager.loadConfig()
+    currentConfig.value = config
+    formData.value.serverHost = config.serverHost
   } catch (error) {
-    message.error(t('Failed to load current configuration'));
+    message.error(t('Failed to load current configuration'))
   }
-};
+}
 
-// 保存配置
 const saveConfig = async () => {
   if (!formData.value.serverHost) {
-    message.error(t('Please enter server address'));
-    return;
+    message.error(t('Please enter server address'))
+    return
   }
 
-  loading.value = true;
+  loading.value = true
   try {
-    // 更宽松的URL验证
-    let urlToValidate = formData.value.serverHost.trim();
-
-    // 如果没有协议，自动添加https://
-    if (!urlToValidate.match(/^https?:\/\//)) {
-      urlToValidate = 'https://' + urlToValidate;
+    let urlToValidate = formData.value.serverHost.trim()
+    if (!/^https?:\/\//.test(urlToValidate)) {
+      urlToValidate = 'https://' + urlToValidate
     }
 
-    // 验证URL格式
-    const url = new URL(urlToValidate);
+    const url = new URL(urlToValidate)
+    const urlToSave = /^https?:\/\//.test(formData.value.serverHost)
+      ? formData.value.serverHost
+      : urlToValidate
 
-    // 保存原始输入（如果用户没输入协议，就保存添加了协议的版本）
-    const urlToSave = formData.value.serverHost.match(/^https?:\/\//) ? formData.value.serverHost : urlToValidate;
-    localStorage.setItem('rustfs-server-host', urlToSave);
+    localStorage.setItem('rustfs-server-host', urlToSave)
 
-    // 如果我们自动添加了协议，更新输入框显示
-    if (!formData.value.serverHost.match(/^https?:\/\//)) {
-      formData.value.serverHost = urlToValidate;
+    if (!/^https?:\/\//.test(formData.value.serverHost)) {
+      formData.value.serverHost = urlToValidate
     }
 
-    // 清除配置缓存
-    configManager.clearCache();
+    configManager.clearCache()
+    message.success(t('Configuration saved successfully'))
 
-    message.success(t('Configuration saved successfully'));
-
-    // 延迟后刷新页面，确保配置完全生效
     setTimeout(() => {
-      window.location.reload();
-    }, 200);
+      window.location.reload()
+    }, 200)
   } catch (error) {
-    message.error(t('Invalid server address format'));
+    message.error(t('Invalid server address format'))
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-// 重置配置
 const resetConfig = async () => {
-  localStorage.removeItem('rustfs-server-host');
-  configManager.clearCache();
-
-  message.success(t('Configuration reset successfully'));
-
-  // 延迟后刷新页面，确保配置完全生效
+  localStorage.removeItem('rustfs-server-host')
+  configManager.clearCache()
+  message.success(t('Configuration reset successfully'))
   setTimeout(() => {
-    window.location.reload();
-  }, 200);
-};
+    window.location.reload()
+  }, 200)
+}
 
 onMounted(() => {
-  loadCurrentConfig();
-});
+  loadCurrentConfig()
+})
+
+const currentItems = computed(() => [
+  { label: t('Server Host'), value: currentConfig.value.serverHost || t('Not configured') },
+  { label: t('API Base URL'), value: currentConfig.value.api.baseURL || t('Not configured') },
+  { label: t('S3 Endpoint'), value: currentConfig.value.s3.endpoint || t('Not configured') },
+  { label: t('S3 Region'), value: currentConfig.value.s3.region || t('Not configured') },
+])
 </script>
 
 <template>
-  <div>
+  <page>
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Settings') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Settings') }}</h1>
     </page-header>
 
-    <page-content>
-      <!-- 当前配置显示 -->
-      <n-card :title="t('Current Configuration')" class="mb-6">
-        <n-descriptions :columns="1" :bordered="true">
-          <n-descriptions-item :label="t('Server Host')">
-            {{ currentConfig.serverHost || t('Not configured') }}
-          </n-descriptions-item>
-          <n-descriptions-item :label="t('API Base URL')">
-            {{ currentConfig.api.baseURL || t('Not configured') }}
-          </n-descriptions-item>
-          <n-descriptions-item :label="t('S3 Endpoint')">
-            {{ currentConfig.s3.endpoint || t('Not configured') }}
-          </n-descriptions-item>
-          <n-descriptions-item :label="t('S3 Region')">
-            {{ currentConfig.s3.region || t('Not configured') }}
-          </n-descriptions-item>
-        </n-descriptions>
-      </n-card>
+    <div class="flex flex-col gap-6">
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold">{{ t('Current Configuration') }}</h2>
+        <dl class="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div v-for="item in currentItems" :key="item.label" class="rounded-md border p-3">
+            <dt class="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {{ item.label }}
+            </dt>
+            <dd class="mt-1 text-sm">{{ item.value }}</dd>
+          </div>
+        </dl>
+      </div>
 
-      <!-- 配置表单 -->
-      <n-card :title="t('Server Configuration')">
-        <n-form @submit.prevent="saveConfig">
-          <n-form-item :label="t('Server Address')" required>
-            <n-input
-              v-model:value="formData.serverHost"
-              :placeholder="t('Please enter server address (e.g., http://localhost:9000)')"
-              clearable
-            />
-            <template #feedback>
-              <div class="text-xs text-gray-500">
-                {{ t('Example: http://localhost:9000 or https://your-domain.com') }}
-              </div>
-            </template>
-          </n-form-item>
+      <div class="space-y-4">
+        <h2 class="text-lg font-semibold">{{ t('Server Configuration') }}</h2>
+        <form class="space-y-4" @submit.prevent="saveConfig">
+          <Field>
+            <FieldLabel>{{ t('Server Address') }}</FieldLabel>
+            <FieldContent>
+              <Input v-model="formData.serverHost" :placeholder="t('Please enter server address (e.g., http://localhost:9000)')" autocomplete="off" />
+            </FieldContent>
+            <FieldDescription>
+              {{ t('Example: http://localhost:9000 or https://your-domain.com') }}
+            </FieldDescription>
+          </Field>
 
-          <n-form-item>
-            <n-space>
-              <n-button type="primary" @click="saveConfig" :loading="loading">
-                {{ t('Save Configuration') }}
-              </n-button>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button type="submit" variant="default" :loading="loading">
+              {{ t('Save Configuration') }}
+            </Button>
+            <Button type="button" variant="outline" @click="resetConfig">
+              {{ t('Reset to Default') }}
+            </Button>
+          </div>
+        </form>
 
-              <n-button @click="resetConfig">
-                {{ t('Reset to Default') }}
-              </n-button>
-            </n-space>
-          </n-form-item>
-        </n-form>
-
-        <n-alert type="info" :title="t('Configuration Information')" class="mt-4">
-          <ul class="list-disc list-inside space-y-1 text-sm">
-            <li>{{ t('Configuration is saved locally in your browser') }}</li>
-            <li>{{ t('Page will refresh automatically after saving configuration') }}</li>
-            <li>{{ t('Make sure the server address is accessible from your network') }}</li>
-          </ul>
-        </n-alert>
-      </n-card>
-    </page-content>
-  </div>
+        <Alert>
+          <AlertTitle>{{ t('Configuration Information') }}</AlertTitle>
+          <AlertDescription>
+            <ul class="list-disc list-inside space-y-1 text-sm">
+              <li>{{ t('Configuration is saved locally in your browser') }}</li>
+              <li>{{ t('Page will refresh automatically after saving configuration') }}</li>
+              <li>{{ t('Make sure the server address is accessible from your network') }}</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+      </div>
+    </div>
+  </page>
 </template>

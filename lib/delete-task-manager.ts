@@ -51,7 +51,7 @@ class DeleteTaskManager {
       retryCount: 0,
     }));
 
-    // 批量添加任务
+    // Add tasks in batch
     this.tasks.push(...newTasks);
     console.log('🗑️ Added keys to delete queue:', keys.length, 'keys');
     console.log('🔍 Current state:', {
@@ -61,7 +61,7 @@ class DeleteTaskManager {
       totalTasks: this.tasks.length,
       pendingTasks: this.tasks.filter(t => t.status === 'pending').length,
     });
-    // 强制重置状态并立即处理队列
+    // Force reset state and process queue immediately
     this.isStarted = true;
     this.isProcessing = false;
     this.processQueue();
@@ -75,10 +75,10 @@ class DeleteTaskManager {
 
     if (!this.isStarted) {
       this.isStarted = true;
-      this.isProcessing = false; // 确保重置处理状态
+      this.isProcessing = false; // Ensure processing state is reset
     }
 
-    // 立即处理队列
+    // Process queue immediately
     if (!this.isProcessing) {
       this.processQueue();
     }
@@ -93,14 +93,14 @@ class DeleteTaskManager {
   cancel() {
     console.log('❌ Canceling all delete tasks');
 
-    // 取消所有待处理的任务
+    // Cancel all pending tasks
     this.tasks
       .filter(task => task.status === 'pending')
       .forEach(task => {
         task.status = 'canceled';
       });
 
-    // 取消所有正在进行的删除
+    // Cancel all ongoing deletions
     this.tasks
       .filter(task => task.status === 'deleting' && task.abortController)
       .forEach(task => {
@@ -123,9 +123,9 @@ class DeleteTaskManager {
   removeTask(taskId: string) {
     const taskIndex = this.tasks.findIndex(task => task.id === taskId);
     if (taskIndex !== -1) {
-      // 如果任务正在进行，先取消它
+      // If task is in progress, cancel it first
       const task = this.tasks[taskIndex];
-      if (task.status === 'deleting' && task.abortController) {
+      if (task?.status === 'deleting' && task.abortController) {
         task.abortController.abort();
       }
       this.tasks.splice(taskIndex, 1);
@@ -139,17 +139,17 @@ class DeleteTaskManager {
 
   clearTasks() {
     console.log('🧹 Clearing all delete tasks');
-    // 先取消所有正在进行的任务
+    // Cancel all ongoing tasks first
     this.cancel();
-    // 清空任务列表
+    // Clear task list
     this.tasks.splice(0, this.tasks.length);
-    // 重置所有状态
+    // Reset all state
     this.activeDeletes = 0;
     this.isStarted = false;
     this.isProcessing = false;
   }
 
-  // 重写队列处理逻辑，使用更简单的方式
+  // Rewrite queue processing logic using a simpler approach
   private async processQueue() {
     if (!this.isStarted) {
       console.log('⏸️ Task manager not started, skipping queue processing');
@@ -168,7 +168,7 @@ class DeleteTaskManager {
       const pendingTasks = this.tasks.filter(task => task.status === 'pending');
       console.log(`🔄 Processing queue: ${pendingTasks.length} pending, ${this.activeDeletes} active`);
 
-      // 启动新的删除任务
+      // Start new delete tasks
       while (this.activeDeletes < this.maxConcurrentUploads && pendingTasks.length > 0) {
         const nextTask = pendingTasks.shift();
         if (!nextTask) break;
@@ -176,11 +176,11 @@ class DeleteTaskManager {
         this.activeDeletes++;
         console.log(`▶️ Starting delete task: ${nextTask.id} (${nextTask.key})`);
 
-        // 立即启动删除任务，不等待
+        // Start delete task immediately, don't wait
         this.executeDelete(nextTask);
       }
 
-      // 如果还有待处理的任务，延迟继续处理
+      // If there are still pending tasks, continue processing after delay
       const remainingPending = this.tasks.filter(task => task.status === 'pending').length;
       if (remainingPending > 0) {
         console.log(`⏳ ${remainingPending} tasks remaining, will retry in 1 second`);
@@ -191,7 +191,7 @@ class DeleteTaskManager {
       } else {
         console.log('✅ No more pending tasks, queue processing complete');
         this.isProcessing = false;
-        // 所有任务完成时自动重置 isStarted
+        // Auto-reset isStarted when all tasks complete
         if (this.activeDeletes === 0) {
           this.isStarted = false;
         }
@@ -215,14 +215,14 @@ class DeleteTaskManager {
     } catch (error: any) {
       console.error(`❌ Delete failed for ${task.key}:`, error.message);
 
-      // 检查是否是取消操作
+      // Check if this is a cancel operation
       if (error.name === 'AbortError' || error.message?.includes('canceled')) {
         task.status = 'canceled';
         console.log(`❌ Delete canceled: ${task.key}`);
         return;
       }
 
-      // 检查是否应该重试
+      // Check if should retry
       if (this.shouldRetry(task, error)) {
         console.log(`🔄 Will retry delete: ${task.key} (attempt ${(task.retryCount || 0) + 1})`);
         await this.retryTask(task);
@@ -235,7 +235,7 @@ class DeleteTaskManager {
       this.activeDeletes--;
       console.log(`📊 Delete completed, ${this.activeDeletes} active deletes remaining`);
 
-      // 继续处理队列 - 这是关键的修复
+      // Continue processing queue - this is the key fix
       if (this.isStarted) {
         setTimeout(() => {
           if (!this.isProcessing) {
@@ -247,17 +247,17 @@ class DeleteTaskManager {
   }
 
   private shouldRetry(task: DeleteTask, error: any): boolean {
-    // 如果任务被取消，不重试
+    // If task is canceled, don't retry
     if (task.status === 'canceled') {
       return false;
     }
 
-    // 如果达到最大重试次数，不重试
+    // If max retries reached, don't retry
     if ((task.retryCount || 0) >= this.maxRetries) {
       return false;
     }
 
-    // 检查错误类型，某些错误不应该重试
+    // Check error type, some errors should not be retried
     const errorMessage = error.message?.toLowerCase() || '';
     const nonRetryableErrors = ['access denied', 'forbidden', 'invalid credentials', 'bucket not found', 'no such key'];
 
@@ -270,7 +270,7 @@ class DeleteTaskManager {
     task.progress = 0;
     task.error = undefined;
 
-    // 等待一段时间后重试
+    // Wait before retrying
     const retryCount = task.retryCount || 1;
     await new Promise(resolve => setTimeout(resolve, this.retryDelay * retryCount));
 

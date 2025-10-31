@@ -1,67 +1,68 @@
 <template>
-  <n-modal :show="show" @update:show="(val: boolean) => $emit('update:show', val)" size="huge">
-    <n-card class="max-w-screen-md">
-      <template #header>
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span>{{ t('New Form', { type: displayType }) }}</span>
-          <n-button size="small" ghost @click="closeModal">{{ t('Close') }}</n-button>
-        </div>
-      </template>
-      <div class="flex flex-col gap-4">
-        <!-- <div class="flex items-center gap-4">
-          <div>新建{{ displayType }}</div>
-          <div class="text-cyan-600">{{ bucketName }}{{ prefix || '/' }}</div>
-        </div> -->
+  <Modal v-model="modalVisible" :title="t('New Form', { type: displayType })" size="md" :close-on-backdrop="false">
+    <div class="space-y-4">
+      <Alert>
+        <AlertDescription>{{ t('Overwrite Warning') }}</AlertDescription>
+      </Alert>
 
-        <n-alert title="" type="info">
-          {{ t('Overwrite Warning') }}
-        </n-alert>
+      <Input v-model="objectKey" :placeholder="t('Name Placeholder', { type: displayType })" autocomplete="off" />
 
-        <div class="flex items-center gap-4">
-          <n-input :placeholder="t('Name Placeholder', { type: displayType })" v-model:value="objectKey" />
-        </div>
-
-        <div class="flex justify-center gap-4">
-          <n-button type="primary" :disabled="objectKey.trim().length < 1" @click="handlePutObject">
-            {{ t('Create') }}
-          </n-button>
-        </div>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
+        <Button variant="default" :disabled="objectKey.trim().length < 1" @click="handlePutObject">
+          {{ t('Create') }}
+        </Button>
       </div>
-    </n-card>
-  </n-modal>
+    </div>
+  </Modal>
 </template>
 
 <script setup lang="ts">
-import { joinRelativeURL } from 'ufo';
-import { computed, defineEmits, defineProps } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-const { t } = useI18n();
-const emit = defineEmits(['update:show']);
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { joinRelativeURL } from 'ufo'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
-const props = defineProps<{ show: boolean; bucketName: string; prefix: string; asPrefix?: boolean }>();
+const { t } = useI18n()
+const emit = defineEmits<{
+  (e: 'update:show', value: boolean): void
+}>()
 
-const closeModal = () => emit('update:show', false);
+const props = defineProps<{
+  show: boolean
+  bucketName: string
+  prefix: string
+  asPrefix?: boolean
+}>()
 
-const displayType = computed(() => (props.asPrefix ? t('New Folder') : t('New File')));
+const modalVisible = computed({
+  get: () => props.show,
+  set: value => emit('update:show', value),
+})
 
-const objectKey = ref('');
+const displayType = computed(() => (props.asPrefix ? t('New Folder') : t('New File')))
+const objectKey = ref('')
 
-const { putObject } = useObject({ bucket: props.bucketName });
+const { putObject } = useObject({ bucket: props.bucketName })
+const $message = useMessage()
 
-const $message = useMessage();
+const closeModal = () => emit('update:show', false)
 
-const handlePutObject = () => {
-  const suffix = props.asPrefix ? '/' : '';
-  const cleanedKey = objectKey.value.replace(/^\/+|\/+$/g, ''); // 移除开头和结尾的 `/`
-  putObject(joinRelativeURL(props.prefix, cleanedKey, suffix), '')
-    .then(() => {
-      emit('update:show', false);
-      objectKey.value = '';
-      $message.success(t('Create Success'));
-    })
-    .catch(e => {
-      $message.error(e.message);
-    });
-};
+const handlePutObject = async () => {
+  const suffix = props.asPrefix ? '/' : ''
+  const cleanedKey = objectKey.value.replace(/^\/+|\/+$/g, '')
+
+  try {
+    await putObject(joinRelativeURL(props.prefix, cleanedKey, suffix), '')
+    emit('update:show', false)
+    objectKey.value = ''
+    $message.success(t('Create Success'))
+  } catch (error: any) {
+    $message.error(error?.message || t('Create Failed'))
+  }
+}
 </script>

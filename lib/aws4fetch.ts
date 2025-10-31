@@ -322,8 +322,15 @@ export class AwsV4Signer {
         return true;
       })
       .map(pair => pair.map(p => encodeRfc3986(encodeURIComponent(p))))
-      // NOTE: Previously there was a TypeScript error about "k1 is possibly undefined" due to noUncheckedIndexedAccess
-      .sort(([k1, v1], [k2, v2]) => (k1 < k2 ? -1 : k1 > k2 ? 1 : v1 < v2 ? -1 : v1 > v2 ? 1 : 0))
+      .sort((a, b) => {
+        const [k1 = '', v1 = ''] = a ?? []
+        const [k2 = '', v2 = ''] = b ?? []
+        if (k1 < k2) return -1
+        if (k1 > k2) return 1
+        if (v1 < v2) return -1
+        if (v1 > v2) return 1
+        return 0
+      })
       .map(pair => pair.join('='))
       .join('&');
   }
@@ -513,9 +520,10 @@ function buf2hex(arrayBuffer: ArrayBuffer) {
   let out = '';
   for (let idx = 0; idx < buffer.length; idx++) {
     const n = buffer[idx];
-    // NOTE: "n is possibly undefined" due to overzealous noUncheckedIndexedAccess
+    if (n === undefined) {
+      continue;
+    }
     out += HEX_CHARS[(n >>> 4) & 0xf];
-    // NOTE: "n is possibly undefined" due to overzealous noUncheckedIndexedAccess
     out += HEX_CHARS[n & 0xf];
   }
   return out;

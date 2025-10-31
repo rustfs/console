@@ -2,89 +2,89 @@ export const usePolicies = () => {
   const { $api } = useNuxtApp();
 
   /**
-   * 获取策略列表
-   * @returns
+   * Get list of policies
+   * @returns List of policies
    */
   const listPolicies = async () => {
     return await $api.get('/list-canned-policies');
   };
 
   /**
-   * 添加策略
-   * @param data
-   * @returns
+   * Add a policy
+   * @param data Policy data
+   * @returns Created policy
    */
   const addPolicy = async (data: any) => {
     return await $api.post('/add-canned-policy', data);
   };
 
   /**
-   * 获取策略详情
-   * @param policyName
-   * @returns
+   * Get policy details
+   * @param policyName Policy name
+   * @returns Policy details
    */
   const getPolicy = async (policyName: string) => {
     return await $api.get(`/info-canned-policy?name=${encodeURIComponent(policyName)}`);
   };
 
   /**
-   * 获取策略用户列表
-   * @param policyName
-   * @returns
+   * Get list of users for a policy
+   * @param policyName Policy name
+   * @returns List of users
    */
   const listUsersForPolicy = async (policyName: string) => {
     return await $api.get(`/policy/${encodeURIComponent(policyName)}/users`);
   };
 
   /**
-   * 获取策略组列表
-   * @param policyName
-   * @returns
+   * Get list of groups for a policy
+   * @param policyName Policy name
+   * @returns List of groups
    */
   const listGroupsForPolicy = async (policyName: string) => {
     return await $api.get(`/groups`);
   };
 
   /**
-   * 删除策略
-   * @param policyName
-   * @returns
+   * Delete a policy
+   * @param policyName Policy name
+   * @returns Deletion result
    */
   const removePolicy = async (policyName: string) => {
     return await $api.delete(`/remove-canned-policy?name=${encodeURIComponent(policyName)}`, {});
   };
 
   /**
-   * 批量设置策略
-   * @param data
-   * @returns
+   * Set policies in batch
+   * @param data Batch policy data
+   * @returns Result
    */
   const setPolicyMultiple = async (data: any) => {
     return await $api.put(`/set-policy-multi`, data);
   };
 
   /**
-   * 设置用户或者用户组的策略
-   * @param data
-   * @returns
+   * Set policy for user or user group
+   * @param data Policy assignment data
+   * @returns Result
    */
   const setUserOrGroupPolicy = async (data: any) => {
     return await $api.put(`/set-user-or-group-policy`, {}, { params: data });
   };
 
   /**
-   * 根据用户的名称获取策略原文
-   * @param userName
-   * @returns
+   * Get policy document by user name
+   * @param userName User name
+   * @returns Policy document
    */
   const getPolicyByUserName = async (userName: string) => {
-    // 获取用户策略组
+    // Get user policy groups
     const userInfo = await $api.get(`/user-info?accessKey=${userName}`);
     const policyName = userInfo?.policyName?.split(',') || [];
 
-    // 获取用户所在分组
+    // Get user's group memberships
     const memberOf = userInfo?.memberOf;
-    // 获取分组的策略
+    // Get group policies
     if (memberOf && memberOf.length > 0) {
       const promises = memberOf.map(async (element: string) => {
         const groupInfo: { policy?: string } = await $api.get(`/group?group=${encodeURIComponent(element)}`);
@@ -97,24 +97,24 @@ export const usePolicies = () => {
       });
     }
 
-    // 去重
+    // Remove duplicates
     let uniquePolicyName: string[] = [];
     if (policyName.length) {
       uniquePolicyName = Array.from(new Set(policyName));
     }
 
     let policyStatement: any = [];
-    // 获取所有剩余的策略策略原文
+    // Get all remaining policy documents
     if (uniquePolicyName.length) {
       const policyPromises = uniquePolicyName.map(async (element: any) => {
         const policyInfo = await getPolicy(element);
-        // 格式化policy
+        // Format policy
         let policyRes = JSON.parse(policyInfo.policy);
         if (policyRes?.Statement) {
           policyStatement.push(...policyRes.Statement);
         }
       });
-      // 等待所有的请求完成
+      // Wait for all requests to complete
       await Promise.all(policyPromises);
     }
 

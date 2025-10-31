@@ -23,6 +23,11 @@ export default [
     icon: 'ri:file-user-line',
   },
   {
+    label: 'User Groups',
+    to: '/user-groups',
+    icon: 'ri:group-line',
+  },
+  {
     label: 'Import/Export',
     to: '/import-export',
     icon: 'ri:download-2-line',

@@ -1,56 +1,53 @@
 <template>
-  <n-dropdown :options="options" placement="right-end" @select="handleDropdownClick">
-    <div class="flex items-center border-t dark:border-neutral-800 p-4">
-      <div class="rounded-full h-8 w-8 object-cover bg-gray-100 border overflow-hidden">
-        <img class="min-h-full" size="small" src="~/assets/img/rustfs.png" />
-      </div>
-      <template v-if="!isCollapsed">
-        <span class="px-2">{{ t('RustFS') }}</span>
-        <Icon name="ri:more-2-line" class="ml-auto text-xl" />
-      </template>
-    </div>
-  </n-dropdown>
+  <DropdownMenu>
+    <DropdownMenuTrigger as-child>
+      <Button variant="ghost">
+        <div class="flex items-center gap-3">
+          <span class="flex h-8 w-8 items-center justify-center rounded-full border bg-muted">
+            <img src="~/assets/img/rustfs.png" alt="RustFS" class="h-8 w-8 rounded-full object-cover" />
+          </span>
+        </div>
+        <Icon v-if="!isCollapsed" name="ri:more-2-line" class="h-4 w-4 text-muted-foreground" />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent class="w-48" align="end" side="top">
+      <DropdownMenuItem @select="handleLogout">
+        <Icon name="ri:logout-box-r-line" class="h-4 w-4" />
+        <span>{{ t('Logout') }}</span>
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
 </template>
 
 <script lang="ts" setup>
-import { Icon } from '#components';
-import { defineProps, withDefaults } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { Icon } from '#components'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { defineProps, toRef, withDefaults } from 'vue'
+import { useI18n } from 'vue-i18n'
 
-const { t } = useI18n();
-const { logout } = useAuth();
-const router = useRouter();
-
-const handleLogout = async () => {
-  await logout();
-  router.push('/auth/login');
-};
-
-const handleDropdownClick = (key: string) => {
-  if (key === 'logout') {
-    handleLogout();
-  }
-};
+const { t } = useI18n()
+const { logout } = useAuth()
+const router = useRouter()
 
 const props = withDefaults(
   defineProps<{
-    isCollapsed?: boolean;
+    isCollapsed?: boolean
   }>(),
   {
     isCollapsed: false,
   }
-);
+)
 
-const options = [
-  // {
-  //   label: t('Profile'),
-  //   key: 'profile',
-  //   icon: () => icon('ri:account-box-line')
-  // },
-  {
-    label: t('Logout'),
-    key: 'logout',
-    icon: () => icon('ri:logout-box-r-line'),
-  },
-];
+const isCollapsed = toRef(props, 'isCollapsed')
+
+const handleLogout = async () => {
+  await logout()
+  router.push('/auth/login')
+}
 </script>

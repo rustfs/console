@@ -23,7 +23,7 @@ export const useUploadTaskManagerStore = defineStore('uploadTaskManager', {
     addFiles(files: File[], bucketName: string, prefix?: string) {
       console.log('addFiles', files.length, 'files to bucket', bucketName, 'prefix:', prefix);
 
-      // 对于大量文件，分批处理
+      // Process large batches of files in chunks
       const batchSize = 50;
       if (files.length > batchSize) {
         console.log(`Processing ${files.length} files in batches of ${batchSize}`);
@@ -63,7 +63,7 @@ export const useUploadTaskManagerStore = defineStore('uploadTaskManager', {
       this.taskManager.resumeTask(taskId);
     },
 
-    // 获取统计信息
+    // Get statistics
     getStats() {
       const tasks = this.tasks;
       return {

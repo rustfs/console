@@ -21,7 +21,7 @@ export const useDeleteTaskManagerStore = defineStore('DeleteTaskManager', {
     addKeys(keys: string[], bucketName: string, prefix?: string) {
       console.log('addKeys', keys.length, 'keys to bucket', bucketName, 'prefix:', prefix);
 
-      // 对于大量文件，分批处理
+      // Process large batches of keys in chunks
       const batchSize = 50;
       if (keys.length > batchSize) {
         console.log(`Processing ${keys.length} keys in batches of ${batchSize}`);
@@ -54,7 +54,7 @@ export const useDeleteTaskManagerStore = defineStore('DeleteTaskManager', {
       this.taskManager.clearTasks();
     },
 
-    // 获取统计信息
+    // Get statistics
     getStats() {
       const tasks = this.tasks;
       return {

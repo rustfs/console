@@ -1,182 +1,140 @@
 <template>
   <div v-if="hasLicense">
     <page-header>
-      <template #title>
-        <h1 class="text-2xl font-bold">{{ t('Enterprise License') }}</h1>
-      </template>
+      <h1 class="text-2xl font-bold">{{ t('Enterprise License') }}</h1>
     </page-header>
-    <page-content>
-      <!-- 顶部信息 -->
-      <n-card>
-        <n-flex justify="space-between" class="top-info py-4 px-2">
-          <n-space vertical v-if="false">
-            <n-space
-              ><n-tag type="success">{{ t('Enterprise License') }}</n-tag>
-              <n-text style="line-height: 28px" type="success">{{ t('Status') }}：{{ t('Normal') }}</n-text></n-space
-            >
-            <n-space>{{ t('License Valid Until') }}：{{ endDate }}</n-space>
-          </n-space>
-          <n-space vertical v-else>
-            <n-space
-              ><n-tag type="error">{{ t('Enterprise License') }}</n-tag>
-              <n-text style="line-height: 28px" type="error">{{ t('Status') }}：{{ t('Expired') }}</n-text></n-space
-            >
-            <n-space>{{ t('License Valid Until') }}：{{ endDate }}</n-space>
-          </n-space>
-          <n-space>
-            <n-button type="primary" @click="updateLicense">
-              <Icon name="ri:upload-fill" class="mx-2"></Icon>
-              {{ t('Update License') }}</n-button
-            >
-            <n-button type="default" @click="contactSupport"
-              ><Icon name="ri:customer-service-2-line" class="mx-2"></Icon>
-              <a
-                href="https://ww18.53kf.com/webCompany.php?arg=11003151&kf_sign=DA4MDMTc0Ng4MjE1MjEzODAyNDkyMDAyNzMwMDMxNTE%253D&style=2"
-                target="_blank"
-                >{{ t('Contact Support') }}</a
-              >
-            </n-button>
-          </n-space>
-        </n-flex>
 
-        <!-- 许可证有效期进度条 -->
-        <!-- <div class="progress-bar px-2" >
-        <n-progress :percentage="calculateProgressPercentage(startDate,endDate)" indicator-placement="outside" :height="4"> <span style="text-align: center">剩余{{100-calculateProgressPercentage(startDate,endDate)}}%</span></n-progress>
-      </div> -->
-      </n-card>
-      <!-- 存储使用统计和带宽使用统计 -->
-      <!-- <n-flex class="flex my-4">
-      <n-card class="chart-container"  title="存储使用统计">
-        <Echarts1></Echarts1>
-      </n-card>
-      <n-card class="chart-container" title="带宽使用统计">
-        <Echarts2></Echarts2>
-      </n-card>
-    </n-flex> -->
-      <!-- 许可证详情 -->
-      <n-card :title="t('License Details')" class="license-details mt-4">
-        <n-descriptions :columns="2" :bordered="true">
-          <n-descriptions-item :label="t('Licensed Company')">{{ t('No License') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('License Key')">{{ licenseKey }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Licensed Users')">{{ t('Unlimited') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Support Level')">{{ t('Enterprise') }} (7x24x365)</n-descriptions-item>
-        </n-descriptions>
-      </n-card>
+    <div class="space-y-6">
+      <Card class="shadow-none">
+        <CardContent class="space-y-4">
+          <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center gap-3">
+                <Badge :variant="hasValidLicense ? 'default' : 'destructive'">
+                  {{ t('Enterprise License') }}
+                </Badge>
+                <span :class="['text-sm font-medium', hasValidLicense ? 'text-emerald-600' : 'text-rose-500']">
+                  {{ t('Status') }}：{{ hasValidLicense ? t('Normal') : t('Expired') }}
+                </span>
+              </div>
+              <p class="text-sm text-muted-foreground">
+                {{ t('License Valid Until') }}：{{ endDate }}
+              </p>
+            </div>
 
-      <!-- 软件服务 -->
-      <n-card :title="t('Customer Service')" class="license-details mt-4">
-        <n-descriptions :columns="2" :bordered="true">
-          <n-descriptions-item :label="t('Service Hotline')"> 400-033-5363 </n-descriptions-item>
-          <n-descriptions-item :label="t('Version')">v2.3</n-descriptions-item>
-          <n-descriptions-item :label="t('Service Email')">hello@rustfs.com</n-descriptions-item>
-          <n-descriptions-item :label="t('Enterprise Service Level')">{{ t('Platinum Service') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('On-site Technical Service')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Remote Technical Support')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Technical Training')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('On-site Deployment')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Emergency Response')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Response Level')">{{ t('One-hour Response') }}</n-descriptions-item>
-        </n-descriptions>
-      </n-card>
+            <div class="flex flex-wrap items-center gap-3">
+              <Button variant="default" @click="updateLicense">
+                <Icon name="ri:upload-fill" class="mr-2 size-4" />
+                {{ t('Update License') }}
+              </Button>
+              <Button variant="outline" @click="contactSupport">
+                <Icon name="ri:customer-service-2-line" class="mr-2 size-4" />
+                {{ t('Contact Support') }}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      <!-- 功能权限列表 -->
-      <n-card class="mt-4" :title="t('Feature Permissions')">
-        <n-data-table :data="permissions" :bordered="true" :single-line="false" :columns="columns" />
-      </n-card>
+      <div class="grid gap-6 lg:grid-cols-2">
+        <Card class="shadow-none">
+          <CardContent class="space-y-4">
+            <p class="text-base font-semibold">{{ t('License Details') }}</p>
+            <dl class="grid gap-4 sm:grid-cols-2">
+              <div v-for="item in licenseDetails" :key="item.label" class="space-y-1">
+                <dt class="text-xs font-medium uppercase text-muted-foreground">{{ item.label }}</dt>
+                <dd class="text-sm text-foreground">{{ item.value }}</dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
 
-      <!-- 技术参数 -->
-      <n-card :title="t('Technical Parameters')" class="license-details mt-4">
-        <n-descriptions :columns="2" :bordered="true">
-          <n-descriptions-item :label="t('Service Hotline')"> 400-033-5363 </n-descriptions-item>
-          <n-descriptions-item :label="t('Supported OS')">Windows、Linux、MacOS</n-descriptions-item>
-          <n-descriptions-item :label="t('Supported CPU Architecture')"
-            >Amd64、ARM、AMR64、MIPS64、S390X、PPC64LE</n-descriptions-item
-          >
-          <n-descriptions-item :label="t('Virtualization Platform Support')"
-            >VMWare、Kubernetes、KVM、Zstack、云宏</n-descriptions-item
-          >
-          <n-descriptions-item :label="t('Development Language Requirements')"
-            >{{ t('Memory safe backend language such as') }}：Golang、Rust</n-descriptions-item
-          >
-          <n-descriptions-item :label="t('SNND Mode')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('SNMD Mode')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('MNMD Mode')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Bucket Count')">{{ t('Unlimited') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Object Count')">{{ t('Unlimited') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('EC Mode')">{{ t('Reed-Solomon Matrix') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Access Control')">IAM Policy</n-descriptions-item>
-          <n-descriptions-item :label="t('Secure Transport')">{{ t('Supports HTTPS, TLS') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Bucket Policy')">{{ t('Public, Private, Custom') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Single Object')">{{ t('Max 50TB') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Data Redundancy')">{{ t('Supports Erasure Coding') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Data Backup')">{{
-            t('Supports local and cross-datacenter backup')
-          }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Scalability')">{{
-            t('Horizontal scaling, no single point of failure')
-          }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Read/Write Performance')">{{
-            t('High concurrency, low latency')
-          }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Identity Authentication Expansion')">OpenID、LDAP</n-descriptions-item>
-          <n-descriptions-item :label="t('S3 Compatibility')">{{
-            t('Fully compatible with Amazon S3 API')
-          }}</n-descriptions-item>
-          <n-descriptions-item :label="t('SDK Support')">{{
-            t('Supports multiple programming languages including Java, Python, Go, Node.js')
-          }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Bucket Notification')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('RustyVault Encryption')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('HashiCorp Encryption')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Lifecycle Management')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('s3fs')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Prometheus')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Bucket Quota')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Audit')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Logs')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Object Repair')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('WORM')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Remote Tiering')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Tiering Transfer')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Object Sharing')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Load Balancing')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Object Tags')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Multipart Upload')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Key Creation')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Key Expiration')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Disk Bad Spot Check')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Bitrot')">{{ t('Supported') }}</n-descriptions-item>
-          <n-descriptions-item :label="t('Version Control')">{{ t('Supported') }}</n-descriptions-item>
-        </n-descriptions>
-      </n-card>
-    </page-content>
+        <Card class="shadow-none">
+          <CardContent class="space-y-4">
+            <p class="text-base font-semibold">{{ t('Customer Service') }}</p>
+            <dl class="grid gap-4 sm:grid-cols-2">
+              <div v-for="item in serviceInfo" :key="item.label" class="space-y-1">
+                <dt class="text-xs font-medium uppercase text-muted-foreground">{{ item.label }}</dt>
+                <dd class="text-sm text-foreground">{{ item.value }}</dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card class="shadow-none">
+        <CardContent class="space-y-4">
+          <p class="text-base font-semibold">{{ t('Feature Permissions') }}</p>
+          <DataTable :table="permissionsTable" />
+        </CardContent>
+      </Card>
+
+      <Card class="shadow-none">
+        <CardContent class="space-y-4">
+          <p class="text-base font-semibold">{{ t('Technical Parameters') }}</p>
+          <dl class="grid gap-4 sm:grid-cols-2">
+            <div v-for="item in technicalParameters" :key="item.label" class="space-y-1">
+              <dt class="text-xs font-medium uppercase text-muted-foreground">{{ item.label }}</dt>
+              <dd class="text-sm text-foreground">{{ item.value }}</dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
+    </div>
   </div>
 
-  <LicenseArticle v-else></LicenseArticle>
+  <LicenseArticle v-else />
 </template>
 
 <script setup lang="ts">
-import { Icon } from '#components';
-import dayjs from 'dayjs';
-import { NButton } from 'naive-ui';
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { SiteConfig } from '~/types/config';
-import LicenseArticle from './components/license-article.vue';
+import { Icon } from '#components'
+import DataTable from '@/components/data-table/data-table.vue'
+import { useDataTable } from '@/components/data-table/useDataTable'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import type { ColumnDef } from '@tanstack/vue-table'
+import dayjs from 'dayjs'
+import { computed, h, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { SiteConfig } from '~/types/config'
+import LicenseArticle from './components/license-article.vue'
 
-const { t } = useI18n();
-const siteConfig = useNuxtApp().$siteConfig as SiteConfig;
-// 由于移除了license配置，始终显示无许可证状态
-const hasLicense = false;
+const { t } = useI18n()
+const siteConfig = useNuxtApp().$siteConfig as SiteConfig
+const hasLicense = false
+const hasValidLicense = false
+const endDate = dayjs().format('YYYY-MM-DD')
 
-// 服务开始
-const startDate = new Date('2025-01-01');
-// 服务结束 - 使用默认日期
-const endDate = dayjs().format('YYYY-MM-DD');
+const licenseKey = ref('RUSTFS-ENTERPRISE-127-183')
 
-// 数据
-const licenseKey = ref('RUSTFS-ENTERPRISE-127-183');
-const permissions = ref([
+const licenseDetails = computed(() => [
+  { label: t('Licensed Company'), value: t('No License') },
+  { label: t('License Key'), value: licenseKey.value },
+  { label: t('Licensed Users'), value: t('Unlimited') },
+  { label: t('Support Level'), value: `${t('Enterprise')} (7x24x365)` },
+])
+
+const serviceInfo = computed(() => [
+  { label: t('Service Hotline'), value: '400-033-5363' },
+  { label: t('Version'), value: 'v2.3' },
+  { label: t('Service Email'), value: 'hello@rustfs.com' },
+  { label: t('Enterprise Service Level'), value: t('Platinum Service') },
+  { label: t('On-site Technical Service'), value: t('Supported') },
+  { label: t('Remote Technical Support'), value: t('Supported') },
+  { label: t('Technical Training'), value: t('Supported') },
+  { label: t('On-site Deployment'), value: t('Supported') },
+  { label: t('Emergency Response'), value: t('Supported') },
+  { label: t('Response Level'), value: t('One-hour Response') },
+])
+
+interface PermissionItem {
+  name: string
+  description: string
+  status: string
+}
+
+const permissions = computed<PermissionItem[]>(() => [
   {
     name: t('Single Machine Multiple Disks'),
     description: t(
@@ -198,59 +156,87 @@ const permissions = ref([
     ),
     status: t('Enabled'),
   },
-  {
-    name: t('Logging System'),
-    description: t(
-      'Records various events and operations during system operation for subsequent analysis and troubleshooting, providing flexible log level settings and query interfaces'
-    ),
-    status: t('Enabled'),
-  },
-]);
+])
 
-// 列表
-const columns = ref([
-  { title: t('Feature Name'), key: 'name' },
-  { title: t('Feature Description'), key: 'description' },
+const permissionsColumns: ColumnDef<PermissionItem>[] = [
   {
-    title: t('Status'),
-    key: 'status',
-    render(row: any) {
-      return h(
-        NButton,
-        {
-          size: 'small',
-          type: row.status === t('Enabled') ? 'success' : 'default',
-        },
-        { default: () => row.status }
-      );
-    },
+    id: 'name',
+    header: () => t('Name'),
+    cell: ({ row }) => h('span', { class: 'font-medium' }, row.original.name),
   },
-]);
+  {
+    id: 'description',
+    header: () => t('Description'),
+    cell: ({ row }) => h('span', { class: 'text-muted-foreground' }, row.original.description),
+  },
+  {
+    id: 'status',
+    header: () => t('Status'),
+    cell: ({ row }) => h(Badge, { variant: 'default' }, () => row.original.status),
+  },
+]
 
-// 方法
-const updateLicense = () => {
-  console.log('更新许可证');
-};
+const { table: permissionsTable } = useDataTable<PermissionItem>({
+  data: permissions,
+  columns: permissionsColumns,
+  getRowId: row => row.name,
+})
+
+const technicalParameters = computed(() => [
+  { label: t('Service Hotline'), value: '400-033-5363' },
+  { label: t('Supported OS'), value: 'Windows、Linux、MacOS' },
+  { label: t('Supported CPU Architecture'), value: 'Amd64、ARM、AMR64、MIPS64、S390X、PPC64LE' },
+  { label: t('Virtualization Platform Support'), value: 'KVM、VMware、Hyper-V、Docker、Kubernetes' },
+  { label: t('Development Language Requirements'), value: 'C++、Java、Rust、Go、Python、Node.js' },
+  { label: t('SNND Mode'), value: t('Supported') },
+  { label: t('SNMD Mode'), value: t('Supported') },
+  { label: t('MNMD Mode'), value: t('Supported') },
+  { label: t('Bucket Count'), value: t('Unlimited') },
+  { label: t('Object Count'), value: t('Unlimited') },
+  { label: t('EC Mode'), value: t('Reed-Solomon Matrix') },
+  { label: t('Access Control'), value: 'IAM Policy' },
+  { label: t('Secure Transport'), value: t('Supports HTTPS, TLS') },
+  { label: t('Bucket Policy'), value: t('Public, Private, Custom') },
+  { label: t('Single Object'), value: t('Max 50TB') },
+  { label: t('Data Redundancy'), value: t('Supports Erasure Coding') },
+  { label: t('Data Backup'), value: t('Supported') },
+  { label: t('Scalability'), value: t('Supported') },
+  { label: t('Read/Write Performance'), value: t('Supports high concurrency operations') },
+  { label: t('Identity Authentication Expansion'), value: 'OpenID、LDAP' },
+  { label: t('S3 Compatibility'), value: t('Supported') },
+  { label: t('SDK Support'), value: 'Java、Python、Go、Rust、Node.js' },
+  { label: t('Bucket Notification'), value: t('Supported') },
+  { label: t('RustyVault Encryption'), value: t('Supported') },
+  { label: t('HashiCorp Encryption'), value: t('Supported') },
+  { label: t('Lifecycle Management'), value: t('Supported') },
+  { label: t('s3fs'), value: t('Supported') },
+  { label: t('Prometheus'), value: t('Supported') },
+  { label: t('Bucket Quota'), value: t('Supported') },
+  { label: t('Audit'), value: t('Supported') },
+  { label: t('Logs'), value: t('Supported') },
+  { label: t('Object Repair'), value: t('Supported') },
+  { label: t('WORM'), value: t('Supported') },
+  { label: t('Remote Tiering'), value: t('Supported') },
+  { label: t('Tiering Transfer'), value: t('Supported') },
+  { label: t('Object Sharing'), value: t('Supported') },
+  { label: t('Load Balancing'), value: t('Supported') },
+  { label: t('Object Tags'), value: t('Supported') },
+  { label: t('Multipart Upload'), value: t('Supported') },
+  { label: t('Key Creation'), value: t('Supported') },
+  { label: t('Key Expiration'), value: t('Supported') },
+  { label: t('Disk Bad Spot Check'), value: t('Supported') },
+  { label: t('Bitrot'), value: t('Supported') },
+  { label: t('Version Control'), value: t('Supported') },
+])
 
 const contactSupport = () => {
-  console.log('联系支持');
-};
+  window.open(
+    'https://ww18.53kf.com/webCompany.php?arg=11003151&kf_sign=DA4MDMTc0Ng4MjE1MjEzODAyNDkyMDAyNzMwMDMxNTE%253D&style=2',
+    '_blank'
+  )
+}
 
-function calculateProgressPercentage(startDate: Date, endDate: Date) {
-  const startTimestamp = startDate.getTime();
-  const endTimestamp = endDate.getTime();
-  const currentTimestamp = new Date().getTime();
-
-  const elapsed = currentTimestamp - startTimestamp;
-  const totalDuration = endTimestamp - startTimestamp;
-
-  if (totalDuration === 0) {
-    return 0; // 避免除以零的情况
-  }
-
-  const progressPercentage = Number((elapsed / totalDuration).toFixed(2)) * 100;
-  return progressPercentage;
+const updateLicense = () => {
+  // 占位逻辑
 }
 </script>
-
-<style lang="scss" scoped></style>

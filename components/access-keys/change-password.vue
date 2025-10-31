@@ -1,167 +1,158 @@
 <script setup lang="ts">
-import type { FormItemRule } from 'naive-ui';
-import { useI18n } from 'vue-i18n';
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 
-const { t } = useI18n();
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { computed, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
+const { createUser } = useUsers()
+
+const { t } = useI18n()
 
 interface Props {
-  visible: boolean;
+  visible: boolean
 }
-const { visible } = defineProps<Props>();
+const { visible } = defineProps<Props>()
 
-const emit = defineEmits<Emits>();
-const defaultFormModal = {
+const emit = defineEmits<Emits>()
+const formModel = reactive({
   current_secret_key: '',
   new_secret_key: '',
   re_new_secret_key: '',
-};
-const formModel = ref({ ...defaultFormModal });
-// 验证规则
-const rules = {
-  current_secret_key: [
-    {
-      required: true,
-      message: t('Please enter current password'),
-      trigger: 'blur',
-    },
-  ],
-  new_secret_key: [
-    {
-      required: true,
-      message: t('Please enter new password'),
-      trigger: 'blur',
-    },
-  ],
-  re_new_secret_key: [
-    {
-      required: true,
-      message: t('Please enter new password again'),
-      trigger: 'blur',
-    },
-    {
-      validator: validatePasswordSame,
-      message: t('The two passwords are inconsistent'),
-      trigger: ['blur', 'password-input'],
-    },
-  ],
-};
-// 再次输入密码的时候验证两次输入的密码是否一致
-function validatePasswordSame(rule: FormItemRule, value: string): boolean {
-  return value === formModel.value.new_secret_key;
-}
+})
 
-// 输入密码时候验证与下发已经输入的重复密码是否一致
-const rPasswordFormItemRef = ref();
-function handlePasswordInput() {
-  if (formModel.value.re_new_secret_key) {
-    rPasswordFormItemRef.value?.validate({ trigger: 'password-input' });
-  }
-}
+const errors = reactive({
+  current_secret_key: '',
+  new_secret_key: '',
+  re_new_secret_key: '',
+})
 
-// 提交确认
-const formRef = ref();
-const { $api } = useNuxtApp();
-const message = useMessage();
-function submitForm(e: MouseEvent) {
-  e.preventDefault();
-  formRef.value?.validate(async (errors: any) => {
-    if (errors) {
-      return;
-    }
-
-    try {
-      const res = await $api.post('/account/change-password', {
-        current_secret_key: formModel.value.current_secret_key,
-        new_secret_key: formModel.value.new_secret_key,
-      });
-      message.success(t('Updated successfully'));
-      closeModal();
-    } catch (error) {
-      message.error(t('Update failed'));
-    }
-  });
-}
-
-interface Emits {
-  (e: 'update:visible', visible: boolean): void;
-}
+const submitting = ref(false)
+const message = useMessage()
+const { $api } = useNuxtApp()
 
 const modalVisible = computed({
   get() {
-    return visible;
+    return visible
   },
-  set(visible) {
-    closeModal(visible);
+  set(value) {
+    closeModal(value)
   },
-});
+})
+
+interface Emits {
+  (e: 'update:visible', visible: boolean): void
+}
+
+function clearForm() {
+  formModel.current_secret_key = ''
+  formModel.new_secret_key = ''
+  formModel.re_new_secret_key = ''
+  Object.keys(errors).forEach(key => {
+    errors[key as keyof typeof errors] = ''
+  })
+}
+
 function closeModal(visible = false) {
-  emit('update:visible', visible);
+  emit('update:visible', visible)
+  if (!visible) {
+    clearForm()
+    submitting.value = false
+  }
+}
+
+function validate() {
+  errors.current_secret_key = formModel.current_secret_key ? '' : t('Please enter current password')
+  errors.new_secret_key = formModel.new_secret_key ? '' : t('Please enter new password')
+
+  if (!formModel.re_new_secret_key) {
+    errors.re_new_secret_key = t('Please enter new password again')
+  } else if (formModel.re_new_secret_key !== formModel.new_secret_key) {
+    errors.re_new_secret_key = t('The two passwords are inconsistent')
+  } else {
+    errors.re_new_secret_key = ''
+  }
+
+  return !errors.current_secret_key && !errors.new_secret_key && !errors.re_new_secret_key
+}
+
+async function submitForm() {
+  if (!validate()) {
+    message.error(t('Please fill in the correct format'))
+    return
+  }
+
+  submitting.value = true
+  try {
+    const userInfo = await $api.get(`/accountinfo`)
+    await createUser({
+      accessKey: userInfo.account_name,
+      secretKey: formModel.new_secret_key,
+      status: 'enabled',
+    })
+    message.success(t('Updated successfully'))
+    closeModal()
+  } catch (error) {
+    console.error(error)
+    message.error(t('Update failed'))
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
 
 <template>
-  <n-modal
-    v-model:show="modalVisible"
-    :mask-closable="false"
-    preset="card"
-    :title="t('Change current account password')"
-    class="max-w-screen-md"
-    sizer="huge"
-    :segmented="{
-      content: true,
-      action: true,
-    }"
-  >
-    <n-card>
-      <n-form
-        ref="formRef"
-        label-placement="left"
-        :model="formModel"
-        :rules="rules"
-        label-align="left"
-        :label-width="130"
-      >
-        <n-grid :cols="24" :x-gap="18">
-          <n-form-item-grid-item :span="24" :label="t('Current Password')" path="current_secret_key">
-            <n-input v-model:value="formModel.current_secret_key" show-password-on="mousedown" type="password" />
-          </n-form-item-grid-item>
-          <n-form-item-grid-item :span="24" :label="t('New Password')" path="new_secret_key">
-            <n-input
-              ref="nPasswordFormItemRef"
-              v-model:value="formModel.new_secret_key"
-              show-password-on="mousedown"
-              type="password"
-              @input="handlePasswordInput"
-            />
-          </n-form-item-grid-item>
-          <n-form-item-grid-item
-            ref="rPasswordFormItemRef"
-            :span="24"
-            :label="t('Confirm New Password')"
-            path="re_new_secret_key"
-          >
-            <n-input
-              v-model:value="formModel.re_new_secret_key"
-              :disabled="!formModel.new_secret_key"
-              show-password-on="mousedown"
-              type="password"
-              @keydown.enter.prevent
-            />
-          </n-form-item-grid-item>
-        </n-grid>
-      </n-form>
-    </n-card>
-    <template #action>
-      <n-space justify="center">
-        <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
-        <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
-      </n-space>
-    </template>
-  </n-modal>
-</template>
+  <Modal v-model="modalVisible" :title="t('Change current account password')" size="md" :close-on-backdrop="false">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel for="password-current">{{ t('Current Password') }}</FieldLabel>
+        <FieldContent>
+          <Input id="password-current" v-model="formModel.current_secret_key" type="password" autocomplete="off" />
+        </FieldContent>
+        <FieldDescription v-if="errors.current_secret_key" class="text-destructive">
+          {{ errors.current_secret_key }}
+        </FieldDescription>
+      </Field>
 
-<style scoped>
-.n-date-picker {
-  width: 100%;
-}
-</style>
+      <Field>
+        <FieldLabel for="password-new">{{ t('New Password') }}</FieldLabel>
+        <FieldContent>
+          <Input id="password-new" v-model="formModel.new_secret_key" type="password" autocomplete="off" />
+        </FieldContent>
+        <FieldDescription v-if="errors.new_secret_key" class="text-destructive">
+          {{ errors.new_secret_key }}
+        </FieldDescription>
+      </Field>
+
+      <Field>
+        <FieldLabel for="password-new-confirm">{{ t('Confirm New Password') }}</FieldLabel>
+        <FieldContent>
+          <Input
+            id="password-new-confirm"
+            v-model="formModel.re_new_secret_key"
+            type="password"
+            autocomplete="off"
+            :disabled="!formModel.new_secret_key"
+          />
+        </FieldContent>
+        <FieldDescription v-if="errors.re_new_secret_key" class="text-destructive">
+          {{ errors.re_new_secret_key }}
+        </FieldDescription>
+      </Field>
+    </div>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="closeModal()">
+          {{ t('Cancel') }}
+        </Button>
+        <Button variant="default" :disabled="submitting" @click="submitForm">
+          <Spinner v-if="submitting" class="size-4" />
+          <span>{{ t('Submit') }}</span>
+        </Button>
+      </div>
+    </template>
+  </Modal>
+</template>

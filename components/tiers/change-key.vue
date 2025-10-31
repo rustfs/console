@@ -1,122 +1,106 @@
 <template>
-  <n-modal
-    v-model:show="modalVisible"
-    :mask-closable="false"
-    preset="card"
-    :title="t('Update Key') + '：' + name"
-    class="max-w-screen-md"
-    :segmented="{
-      content: true,
-      action: true,
-    }"
-  >
-    <n-card>
-      <n-form
-        ref="formRef"
-        label-placement="left"
-        :model="formModel"
-        :rules="rules"
-        label-align="center"
-        :label-width="130"
-      >
-        <n-grid :cols="24" :x-gap="18">
-          <n-form-item-gi :span="24" :label="t('Access Key')" path="accessKey">
-            <n-input v-model:value="formModel.accessKey" />
-          </n-form-item-gi>
-          <n-form-item-gi :span="24" :label="t('Secret Key')" path="secretKey">
-            <n-input v-model:value="formModel.secretKey" show-password-on="mousedown" type="password" />
-          </n-form-item-gi>
-        </n-grid>
-      </n-form>
-    </n-card>
-    <template #action>
-      <n-space justify="center">
-        <n-button @click="closeModal()">{{ t('Cancel') }}</n-button>
-        <n-button type="primary" @click="submitForm">{{ t('Submit') }}</n-button>
-      </n-space>
+  <Modal v-model="visibleProxy" :title="t('Update Key') + '：' + nameProxy" size="md" :close-on-backdrop="false">
+    <div class="space-y-4">
+      <Field>
+        <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.accessKey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
+        </FieldContent>
+      </Field>
+
+      <Field>
+        <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
+        <FieldContent>
+          <Input v-model="formModel.secretKey" type="password" autocomplete="off" :placeholder="t('Please enter Secret Key')" />
+        </FieldContent>
+      </Field>
+    </div>
+
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="closeModal()">{{ t('Cancel') }}</Button>
+        <Button variant="default" :loading="submitting" @click="submitForm">{{ t('Submit') }}</Button>
+      </div>
     </template>
-  </n-modal>
+  </Modal>
 </template>
+
 <script setup lang="ts">
-import type { FormInst } from 'naive-ui';
-import { computed, ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-const usetier = useTiers();
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
-const { t } = useI18n();
-interface Props {
-  visible: boolean;
-  name: string;
-}
-const { visible, name } = defineProps<Props>();
-const message = useMessage();
+import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
+import { computed, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import Modal from '~/components/modal.vue'
 
-const emit = defineEmits<Emits>();
-const defaultFormModal = {
+const { t } = useI18n()
+const message = useMessage()
+const usetier = useTiers()
+
+const props = defineProps<{
+  visible: boolean
+  name: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:visible', visible: boolean): void
+  (e: 'update:name', name: string): void
+  (e: 'search'): void
+}>()
+
+const visibleProxy = computed({
+  get: () => props.visible,
+  set: value => emit('update:visible', value),
+})
+
+const nameProxy = computed({
+  get: () => props.name,
+  set: value => emit('update:name', value),
+})
+
+const formModel = reactive({
   accessKey: '',
   secretKey: '',
-};
-const formModel = ref({ ...defaultFormModal });
+})
 
-// 验证
-const rules = ref({
-  accessKey: {
-    required: true,
-    trigger: ['blur', 'input'],
-    message: t('Please enter Access Key'),
-  },
-  secretKey: {
-    required: true,
-    trigger: ['blur', 'input'],
-    message: t('Please enter Secret Key'),
-  },
-});
+const submitting = ref(false)
 
-interface Emits {
-  (e: 'update:visible', visible: boolean): void;
-  (e: 'search'): void;
-}
-
-const modalVisible = computed({
-  get() {
-    return visible;
-  },
-  set(visible) {
-    closeModal(visible);
-  },
-});
-function closeModal(visible = false) {
-  emit('update:visible', visible);
-  formModel.value = { ...defaultFormModal };
-}
-
-const formRef = ref<FormInst | null>(null);
-async function submitForm(e: MouseEvent) {
-  // e.preventDefault()
-  formRef.value?.validate(async errors => {
-    if (!errors) {
-      try {
-        // const res = await createServiceAccount({
-        //   ...formModel.value,
-        //   policy: !formModel.value.impliedPolicy ? JSON.stringify(JSON.parse(formModel.value.policy)) : null,
-        //   expiration: formModel.value.expiry ? new Date(formModel.value.expiry).toISOString() : null,
-        // })
-        const res = await usetier.updateTiers(name, {
-          ...formModel.value,
-        });
-        message.success(t('Update Success'));
-        closeModal();
-        emit('search');
-      } catch (error) {
-        console.log('🚀 ~ submitForm ~ error:', error);
-        message.error(t('Update Failed'));
-      }
-    } else {
-      console.log(errors);
-      message.error(t('Please fill in the correct format'));
+watch(
+  () => props.visible,
+  value => {
+    if (value) {
+      formModel.accessKey = ''
+      formModel.secretKey = ''
     }
-  });
+  }
+)
+
+const closeModal = () => {
+  emit('update:visible', false)
+  submitting.value = false
+  formModel.accessKey = ''
+  formModel.secretKey = ''
+}
+
+const submitForm = async () => {
+  if (!formModel.accessKey || !formModel.secretKey) {
+    message.error(t('Please fill in the correct format'))
+    return
+  }
+  submitting.value = true
+  try {
+    await usetier.updateTiers(props.name, {
+      accessKey: formModel.accessKey,
+      secretKey: formModel.secretKey,
+    })
+    message.success(t('Update Success'))
+    emit('search')
+    closeModal()
+  } catch (error: any) {
+    message.error(error?.message || t('Update Failed'))
+  } finally {
+    submitting.value = false
+  }
 }
 </script>
-
-<style scoped></style>

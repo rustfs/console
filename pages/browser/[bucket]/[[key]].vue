@@ -1,21 +1,16 @@
 <template>
-  <div>
-    <div>
-      <page-header>
-        <template #title>
-          <div class="flex items-center gap-4">
-            <h1 @click="$router.push(bucketPath())" class="cursor-pointer">{{ bucketName }}</h1>
-            <object-path-links :object-key="key" @click="path => $router.push(bucketPath(path))" />
-          </div>
-        </template>
-      </page-header>
-      <page-content class="flex flex-col gap-4">
-        <object-list v-if="isObjectList" :bucket="bucketName" :path="key" />
-        <object-view v-else :bucket="bucketName" :object-key="key" />
-      </page-content>
+  <page>
+    <page-header>
+      <div class="flex items-center gap-4">
+        <h1 @click="$router.push(bucketPath())" class="cursor-pointer">{{ bucketName }}</h1>
+        <object-path-links :object-key="key" @click="path => $router.push(bucketPath(path))" />
+      </div>
+    </page-header>
+    <div class="flex flex-col gap-4">
+      <object-list v-if="isObjectList" :bucket="bucketName" :path="key" />
+      <object-view v-else :bucket-name="bucketName" :object-key="key" />
     </div>
-    <footer />
-  </div>
+  </page>
 </template>
 
 <script lang="ts" setup>
@@ -32,7 +27,7 @@ const router = useRouter()
 
 // bucketName 和 pageSize 来自路由
 const bucketName = computed(() => route.params.bucket as string)
-// 检测bucketName是否存在，使用 head bucket 接口,如果不存在跳转到/browser
+
 const isBucketExist = () => {
   return useBucket({ region: route.params.region as string })
     .headBucket(bucketName.value)

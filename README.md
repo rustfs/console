@@ -342,6 +342,7 @@ Before committing and pushing your changes, ensure all the following checks pass
 #### Code Quality Checks
 
 - ✅ **Code Formatting**: Run `pnpm lint` to ensure all files are properly formatted
+
   ```bash
   pnpm lint
   # If issues found, auto-fix with:
@@ -349,11 +350,13 @@ Before committing and pushing your changes, ensure all the following checks pass
   ```
 
 - ✅ **TypeScript Type Checking**: No type errors
+
   ```bash
   pnpm type-check
   ```
 
 - ✅ **Linting**: No linting errors
+
   ```bash
   pnpm lint
   ```
@@ -361,6 +364,7 @@ Before committing and pushing your changes, ensure all the following checks pass
 #### Testing Requirements
 
 - ✅ **Unit Tests**: All unit tests pass
+
   ```bash
   pnpm test:run
   ```
@@ -372,11 +376,13 @@ Before committing and pushing your changes, ensure all the following checks pass
   - Line coverage: > 95%
 
 - ✅ **Integration Tests**: Integration tests pass (if applicable)
+
   ```bash
   pnpm test:integration
   ```
 
 - ✅ **Performance Tests**: Performance benchmarks pass (if applicable)
+
   ```bash
   pnpm test:performance
   ```
@@ -384,6 +390,7 @@ Before committing and pushing your changes, ensure all the following checks pass
 #### Build Verification
 
 - ✅ **Build Success**: Project builds without errors
+
   ```bash
   pnpm build
   ```
@@ -391,6 +398,7 @@ Before committing and pushing your changes, ensure all the following checks pass
 #### Security & Dependencies
 
 - ✅ **Security Audit**: No critical or high severity vulnerabilities
+
   ```bash
   pnpm audit --audit-level=moderate
   ```
@@ -427,6 +435,7 @@ All PRs will automatically run the following checks via GitHub Actions:
 - **Performance**: Performance benchmarks
 
 **Quality Score Requirements**:
+
 - 🎉 **Excellent** (90%+): Code quality is outstanding
 - 👍 **Good** (75%+): Code quality is solid
 - ⚠️ **Fair** (60%+): Consider addressing failing checks
@@ -444,6 +453,7 @@ All PRs will automatically run the following checks via GitHub Actions:
 - **Build Test**: Verify project builds successfully
 
 **Test Coverage Requirements**:
+
 - Statement coverage: > 95%
 - Branch coverage: > 90%
 - Function coverage: 100%

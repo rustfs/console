@@ -340,73 +340,6 @@ jobs:
           fi
 
   # ============================================================================
-  # 性能基准
-  # ============================================================================
-  benchmarks:
-    name: ⚡ Performance Benchmarks
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.19.0
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
-
-      - name: 📥 Install dependencies
-        run: |
-          ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
-          ${{ steps.detect-package-manager.outputs.manager }} add -D vitest jsdom
-
-      - name: ⚡ Run performance benchmarks
-        run: |
-          echo "## ⚡ Performance Benchmarks" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # 运行性能测试并提取结果
-          if npx vitest run tests/utils/config-helpers.performance.test.ts --reporter=json > perf-results.json 2>/dev/null; then
-            echo "✅ Performance tests completed successfully!" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "See the detailed performance test results in the test artifacts." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "⚠️ Performance tests encountered issues. Check the logs for details." >> $GITHUB_STEP_SUMMARY
-          fi
-
-      - name: 📊 Upload benchmark results
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-benchmarks
-          path: perf-results.json
-          retention-days: 30
-
-  # ============================================================================
   # 质量总结
   # ============================================================================
   quality-summary:
@@ -419,7 +352,6 @@ jobs:
         dependencies,
         complexity,
         documentation,
-        benchmarks,
       ]
     if: always()
 
@@ -437,19 +369,17 @@ jobs:
           echo "| Dependencies | ${{ needs.dependencies.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Code Complexity | ${{ needs.complexity.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Documentation | ${{ needs.documentation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Performance | ${{ needs.benchmarks.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 计算总体质量分数
           passed=0
-          total=6
+          total=5
 
           ${{ needs.formatting.result == 'success' }} && passed=$((passed + 1))
           ${{ needs.typescript.result == 'success' }} && passed=$((passed + 1))
           ${{ needs.dependencies.result == 'success' }} && passed=$((passed + 1))
           ${{ needs.complexity.result == 'success' }} && passed=$((passed + 1))
           ${{ needs.documentation.result == 'success' }} && passed=$((passed + 1))
-          ${{ needs.benchmarks.result == 'success' }} && passed=$((passed + 1))
 
           score=$((passed * 100 / total))
 

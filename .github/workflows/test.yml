@@ -190,67 +190,6 @@ jobs:
           retention-days: 7
 
   # ============================================================================
-  # 性能测试
-  # ============================================================================
-  performance-tests:
-    name: ⚡ Performance Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    needs: [unit-tests, integration-tests]
-
-    steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v4
-
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.19.0
-      - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
-
-      - name: 📥 Install dependencies
-        run: |
-          ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
-          ${{ steps.detect-package-manager.outputs.manager }} add -D vitest jsdom @vitest/ui c8
-
-      - name: ⚡ Run performance tests
-        run: npx vitest run tests/utils/config-helpers.performance.test.ts --reporter=verbose
-
-      - name: 📊 Upload performance test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: performance-test-results
-          path: |
-            coverage/
-            performance-report.json
-          retention-days: 7
-
-  # ============================================================================
   # 代码覆盖率
   # ============================================================================
   coverage:
@@ -300,6 +239,8 @@ jobs:
 
       - name: 📊 Run tests with coverage
         run: npx vitest run tests/utils/config-helpers*.test.ts --coverage --reporter=verbose
+        env:
+          CI: true
 
       - name: 📤 Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -457,7 +398,7 @@ jobs:
     name: 📋 Test Summary
     runs-on: ubuntu-latest
     needs:
-      [unit-tests, integration-tests, performance-tests, coverage, build-test]
+      [unit-tests, integration-tests, coverage, build-test]
     if: always()
 
     steps:
@@ -476,7 +417,6 @@ jobs:
           echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Integration Tests | ${{ needs.integration-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Performance Tests | ${{ needs.performance-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Coverage | ${{ needs.coverage.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build Test | ${{ needs.build-test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -486,7 +426,7 @@ jobs:
           echo "- **Workflow**: [\#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
 
       - name: 🎉 Success notification
-        if: needs.unit-tests.result == 'success' && needs.integration-tests.result == 'success' && needs.coverage.result == 'success'
+        if: needs.unit-tests.result == 'success' && needs.integration-tests.result == 'success' && needs.coverage.result == 'success' && needs.build-test.result == 'success'
         run: |
           echo "🎉 All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY

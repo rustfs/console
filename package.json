@@ -16,7 +16,6 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:config-helpers": "vitest run tests/utils/config-helpers",
-    "test:performance": "vitest run tests/utils/config-helpers.performance.test.ts",
     "test:integration": "vitest run tests/utils/config-helpers.integration.test.ts",
     "test:watch": "vitest --watch"
   },

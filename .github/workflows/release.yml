@@ -347,10 +347,9 @@ jobs:
 
           echo "" >> CHANGELOG.md
           echo "### 🧪 Testing" >> CHANGELOG.md
-          echo "- ✅ Unit tests: 100% coverage" >> CHANGELOG.md
-          echo "- ✅ Integration tests: All scenarios covered" >> CHANGELOG.md
-          echo "- ✅ Performance tests: All benchmarks passed" >> CHANGELOG.md
-          echo "- ✅ Browser compatibility: Chrome, Firefox, Safari" >> CHANGELOG.md
+            echo "- ✅ Unit tests: 100% coverage" >> CHANGELOG.md
+            echo "- ✅ Integration tests: All scenarios covered" >> CHANGELOG.md
+            echo "- ✅ Browser compatibility: Chrome, Firefox, Safari" >> CHANGELOG.md
 
           echo "" >> CHANGELOG.md
           echo "### 📦 Assets" >> CHANGELOG.md

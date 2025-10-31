@@ -376,15 +376,8 @@ Before committing and pushing your changes, ensure all the following checks pass
   - Line coverage: > 95%
 
 - ✅ **Integration Tests**: Integration tests pass (if applicable)
-
   ```bash
   pnpm test:integration
-  ```
-
-- ✅ **Performance Tests**: Performance benchmarks pass (if applicable)
-
-  ```bash
-  pnpm test:performance
   ```
 
 #### Build Verification
@@ -447,7 +440,6 @@ All PRs will automatically run the following checks via GitHub Actions:
 - **Type Checking**: TypeScript type validation
 - **Unit Tests**: Multi-version Node.js testing (20, 22)
 - **Integration Tests**: Full functional integration tests
-- **Performance Tests**: Performance benchmarks and stress tests
 - **Code Coverage**: Coverage report generation and upload
 - **Security Scan**: Dependency audit and CodeQL analysis
 - **Build Test**: Verify project builds successfully

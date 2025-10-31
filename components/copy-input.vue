@@ -44,7 +44,7 @@ onMounted(() => {
   })
 
   clipboard.value.on('error', async function () {
-    // 如果复制失败，则使用 navigator.clipboard.writeText 进行复制
+    // If copy fails, use navigator.clipboard.writeText as fallback
     try {
       if (navigator.clipboard && model.value) {
         await navigator.clipboard.writeText(model.value)

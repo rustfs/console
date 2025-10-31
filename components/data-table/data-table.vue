@@ -51,31 +51,31 @@ const getColumnStyles = (column: Column<TData, unknown>) => {
   <div :class="cn('flex flex-col gap-4', props.class)">
     <component :is="bodyHeight ? ScrollArea : 'div'" :class="bodyHeight ? cn('rounded-md border', bodyHeight) : undefined">
       <UiTable :class="bodyHeight ? tableClass : cn('border rounded-md', tableClass)">
-        <!-- 表头 -->
+        <!-- Table Header -->
         <TableHeader :class="stickyHeader ? 'sticky top-0 z-10 bg-muted/40 backdrop-blur' : ''">
-          <TableRow 
-            v-for="headerGroup in table.getHeaderGroups()" 
-            :key="headerGroup.id" 
+          <TableRow
+            v-for="headerGroup in table.getHeaderGroups()"
+            :key="headerGroup.id"
             :class="stickyHeader ? 'bg-muted/40 backdrop-blur' : undefined"
           >
-            <TableHead 
-              v-for="header in headerGroup.headers" 
-              :key="header.id" 
+            <TableHead
+              v-for="header in headerGroup.headers"
+              :key="header.id"
               :class="bodyHeight ? undefined : 'py-2'"
               :style="getColumnStyles(header.column)"
             >
-              <FlexRender 
+              <FlexRender
                 v-if="!header.isPlaceholder"
-                :render="header.column.columnDef.header" 
-                :props="header.getContext()" 
+                :render="header.column.columnDef.header"
+                :props="header.getContext()"
               />
             </TableHead>
           </TableRow>
         </TableHeader>
 
-        <!-- 表体 -->
+        <!-- Table Body -->
         <TableBody>
-          <!-- 加载中 -->
+          <!-- Loading -->
           <TableRow v-if="isLoading">
             <TableCell :colspan="visibleColumnCount" class="h-48 text-center align-middle">
               <div class="flex flex-col items-center gap-2">
@@ -85,17 +85,17 @@ const getColumnStyles = (column: Column<TData, unknown>) => {
             </TableCell>
           </TableRow>
 
-          <!-- 有数据 -->
+          <!-- Data Rows -->
           <TableRow
             v-else-if="hasRows"
-            v-for="row in table.getRowModel().rows" 
-            :key="row.id" 
-            :data-state="row.getIsSelected() ? 'selected' : undefined" 
+            v-for="row in table.getRowModel().rows"
+            :key="row.id"
+            :data-state="row.getIsSelected() ? 'selected' : undefined"
             class="transition-colors hover:bg-muted/40"
           >
-            <TableCell 
-              v-for="cell in row.getVisibleCells()" 
-              :key="cell.id" 
+            <TableCell
+              v-for="cell in row.getVisibleCells()"
+              :key="cell.id"
               :class="bodyHeight ? undefined : 'py-2'"
               :style="getColumnStyles(cell.column)"
             >
@@ -103,7 +103,7 @@ const getColumnStyles = (column: Column<TData, unknown>) => {
             </TableCell>
           </TableRow>
 
-          <!-- 空状态 -->
+          <!-- Empty State -->
           <TableRow v-else>
             <TableCell :colspan="visibleColumnCount" class="h-48">
               <EmptyState :title="emptyTitle" :description="emptyDescription">

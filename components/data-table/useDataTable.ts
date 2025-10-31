@@ -27,26 +27,26 @@ export interface UseDataTableOptions<TData extends RowData> {
   manualSorting?: boolean
   getRowId?: TableOptions<TData>['getRowId']
   /**
-   * 是否启用行选择功能（会自动添加选择列）
+   * Whether to enable row selection (will automatically add selection column)
    * @default false
    */
   enableRowSelection?: boolean
 }
 
 export interface UseDataTableReturn<TData extends RowData> {
-  /** TanStack Table 实例，提供所有表格操作方法 */
+  /** TanStack Table instance providing all table operations */
   table: ReturnType<typeof useVueTable<TData>>
-  /** 选中的行数据数组（响应式） */
+  /** Array of selected row data (reactive) */
   selectedRows: Ref<TData[]>
-  /** 选中的行 ID 数组（响应式，需要提供 getRowId） */
+  /** Array of selected row IDs (reactive, requires getRowId) */
   selectedRowIds: Ref<string[]>
 }
 
 /**
- * 创建选择列（按照 shadcn-vue 官方文档实现）
- * 参考：https://www.shadcn-vue.com/docs/components/data-table.html#row-selection
+ * Create selection column (implemented according to shadcn-vue official docs)
+ * Reference: https://www.shadcn-vue.com/docs/components/data-table.html#row-selection
  *
- * 关键：reka-ui Checkbox 使用 modelValue/onUpdate:modelValue 而不是 checked/onUpdate:checked
+ * Key: reka-ui Checkbox uses modelValue/onUpdate:modelValue instead of checked/onUpdate:checked
  */
 function createSelectColumn<TData extends RowData>(): ColumnDef<TData> {
   return {
@@ -86,7 +86,7 @@ export function useDataTable<TData extends RowData>(
 
   const dataRef = computed(() => toValue(options.data))
 
-  // 如果启用了行选择，自动在列定义前添加选择列
+  // If row selection is enabled, automatically prepend selection column to column definitions
   const columnsRef = computed(() => {
     const baseColumns = toValue(options.columns)
 
@@ -131,12 +131,12 @@ export function useDataTable<TData extends RowData>(
     getPaginationRowModel: options.manualPagination ? undefined : getPaginationRowModel(),
   })
 
-  // 计算选中的行数据（响应式）
+  // Compute selected row data (reactive)
   const selectedRows = computed(() => {
     return table.getSelectedRowModel().rows.map(row => row.original)
   })
 
-  // 计算选中的行 ID（响应式）
+  // Compute selected row IDs (reactive)
   const selectedRowIds = computed(() => {
     return table.getSelectedRowModel().rows.map(row => row.id)
   })

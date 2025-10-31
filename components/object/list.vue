@@ -286,7 +286,7 @@ const { table, selectedRowIds } = useDataTable<ObjectRow>({
   enableRowSelection: true,
 })
 
-// 使用 data-table 提供的 selectedRowIds 替代手动维护的 checkedKeys
+// Use selectedRowIds from data-table instead of manually maintaining checkedKeys
 const checkedKeys = computed(() => selectedRowIds.value)
 
 watch(

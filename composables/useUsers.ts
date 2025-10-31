@@ -25,10 +25,10 @@ export const useUsers = () => {
   };
 
   /**
-   * 修改用户状态
-   * @param name
-   * @param data
-   * @returns
+   * Change user status
+   * @param name User name
+   * @param data Status data
+   * @returns Result
    */
   const changeUserStatus = async (name: string, data: any) => {
     return await $api.put(`/set-user-status?accessKey=${encodeURIComponent(name)}&status=${data.status}`, data);

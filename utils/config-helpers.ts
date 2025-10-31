@@ -1,8 +1,8 @@
 /**
- * @fileoverview 配置管理工具模块
+ * @fileoverview Configuration management utility module
  *
- * 提供统一的配置获取、验证、保存和管理功能。
- * 支持多种配置源：服务器、localStorage、浏览器、默认配置。
+ * Provides unified configuration retrieval, validation, saving, and management functionality.
+ * Supports multiple configuration sources: server, localStorage, browser, default config.
  *
  * @author Assistant
  * @version 2.0.0
@@ -12,67 +12,67 @@ import type { SiteConfig } from '~/types/config';
 import { logger } from './logger';
 
 // ============================================================================
-// 类型定义
+// Type Definitions
 // ============================================================================
 
 /**
- * 配置来源类型
+ * Configuration source type
  */
 type ConfigSource = 'browser' | 'localStorage' | 'server' | 'default';
 
 /**
- * 服务器配置响应类型（部分配置，用于合并）
+ * Server configuration response type (partial config, used for merging)
  */
 interface ServerConfigResponse {
-  /** API 配置 */
+  /** API configuration */
   api?: {
-    /** API 基础 URL */
+    /** API base URL */
     baseURL?: string;
   };
-  /** S3 配置 */
+  /** S3 configuration */
   s3?: {
-    /** S3 端点 */
+    /** S3 endpoint */
     endpoint?: string;
-    /** S3 区域 */
+    /** S3 region */
     region?: string;
-    /** 访问密钥 ID */
+    /** Access key ID */
     accessKeyId?: string;
-    /** 秘密访问密钥 */
+    /** Secret access key */
     secretAccessKey?: string;
   };
-  /** 会话配置 */
+  /** Session configuration */
   session?: {
-    /** 会话持续时间（秒） */
+    /** Session duration in seconds */
     durationSeconds?: number;
   };
 }
 
 /**
- * 配置获取结果
+ * Configuration retrieval result
  */
 interface ConfigResult {
-  /** 获取到的配置，如果失败则为 null */
+  /** Retrieved configuration, null if failed */
   config: SiteConfig | null;
-  /** 配置来源 */
+  /** Configuration source */
   source: ConfigSource;
-  /** 错误信息（如果有） */
+  /** Error message (if any) */
   error?: string;
 }
 
 /**
- * 主机信息
+ * Host information
  */
 interface HostInfo {
-  /** 协议（http/https） */
+  /** Protocol (http/https) */
   protocol: string;
-  /** 主机名和端口 */
+  /** Hostname and port */
   host: string;
-  /** 完整的服务器主机地址 */
+  /** Complete server host address */
   serverHost: string;
 }
 
 // ============================================================================
-// 常量定义
+// Constants
 // ============================================================================
 
 const STORAGE_KEY = 'rustfs-server-host';
@@ -82,18 +82,18 @@ const CONFIG_PATH = '/config.json';
 const REQUEST_TIMEOUT = 5000;
 
 // ============================================================================
-// 工具函数
+// Utility Functions
 // ============================================================================
 
 /**
- * 检查是否在浏览器环境
- * @returns 如果在浏览器环境中返回 true，否则返回 false
+ * Check if in browser environment
+ * @returns Returns true if in browser environment, false otherwise
  */
 const isBrowser = (): boolean => typeof window !== 'undefined';
 
 /**
- * 获取当前主机信息
- * @returns 主机信息对象，如果不在浏览器环境中则返回 null
+ * Get current host information
+ * @returns Host info object, returns null if not in browser environment
  */
 const getCurrentHostInfo = (): HostInfo | null => {
   if (!isBrowser()) return null;
@@ -106,18 +106,18 @@ const getCurrentHostInfo = (): HostInfo | null => {
 };
 
 /**
- * 验证服务器配置响应
- * @param config - 待验证的配置对象
- * @returns 如果是有效的服务器配置则返回 true
+ * Validate server configuration response
+ * @param config - Configuration object to validate
+ * @returns Returns true if valid server configuration
  */
 const isValidServerConfig = (config: unknown): config is ServerConfigResponse => {
   return typeof config === 'object' && config !== null;
 };
 
 /**
- * 创建默认配置
- * @param serverHost - 服务器主机地址
- * @returns 完整的站点配置对象
+ * Create default configuration
+ * @param serverHost - Server host address
+ * @returns Complete site configuration object
  *
  * @example
  * ```typescript
@@ -141,20 +141,20 @@ export const createDefaultConfig = (serverHost: string): SiteConfig => {
 };
 
 // ============================================================================
-// 配置获取函数
+// Configuration Retrieval Functions
 // ============================================================================
 
 /**
- * 从localStorage获取保存的主机配置
- * @returns 配置获取结果，包含配置对象、来源和可能的错误信息
+ * Get saved host configuration from localStorage
+ * @returns Configuration retrieval result, containing config object, source, and possible error message
  *
  * @example
  * ```typescript
  * const result = getStoredHostConfig()
  * if (result.config) {
- *   console.log('使用保存的配置:', result.config.serverHost)
+ *   console.log('Using saved config:', result.config.serverHost)
  * } else {
- *   console.log('获取失败:', result.error)
+ *   console.log('Retrieval failed:', result.error)
  * }
  * ```
  */
@@ -181,12 +181,12 @@ export const getStoredHostConfig = (): ConfigResult => {
 };
 
 /**
- * 获取当前浏览器主机配置
- * @returns 基于当前浏览器地址的配置获取结果
+ * Get current browser host configuration
+ * @returns Configuration retrieval result based on current browser address
  *
  * @example
  * ```typescript
- * // 如果当前页面是 https://localhost:3000
+ * // If current page is https://localhost:3000
  * const result = getCurrentBrowserConfig()
  * console.log(result.config?.serverHost) // 'https://localhost:3000'
  * ```
@@ -202,7 +202,7 @@ export const getCurrentBrowserConfig = (): ConfigResult => {
 };
 
 /**
- * 从服务器获取原始配置数据
+ * Fetch raw configuration data from server
  */
 const fetchRawConfigFromServer = async (serverHost: string): Promise<ServerConfigResponse | null> => {
   const configUrl = `${serverHost}${CONFIG_PATH}`;
@@ -235,7 +235,7 @@ const fetchRawConfigFromServer = async (serverHost: string): Promise<ServerConfi
 };
 
 /**
- * 合并服务器配置与默认配置
+ * Merge server configuration with default configuration
  */
 const mergeServerConfig = (baseConfig: SiteConfig, serverConfig: ServerConfigResponse): SiteConfig => {
   return {
@@ -258,7 +258,7 @@ const mergeServerConfig = (baseConfig: SiteConfig, serverConfig: ServerConfigRes
 };
 
 /**
- * 从服务器获取配置并与默认配置合并
+ * Fetch configuration from server and merge with default configuration
  */
 export const fetchConfigFromServer = async (): Promise<ConfigResult> => {
   const browserResult = getCurrentBrowserConfig();
@@ -280,53 +280,53 @@ export const fetchConfigFromServer = async (): Promise<ConfigResult> => {
 };
 
 // ============================================================================
-// 高级配置获取函数
+// Advanced Configuration Retrieval Functions
 // ============================================================================
 
 /**
- * 获取配置的优先级策略：server > localStorage > browser > default
+ * Configuration priority strategy: server > localStorage > browser > default
  *
- * 按照以下优先级顺序尝试获取配置：
- * 1. 服务器配置（从当前主机的 /config.json 获取）
- * 2. localStorage 中保存的配置
- * 3. 当前浏览器主机配置
- * 4. 默认配置（localhost:9000）
+ * Attempts to retrieve configuration in the following priority order:
+ * 1. Server configuration (from current host's /config.json)
+ * 2. Configuration saved in localStorage
+ * 3. Current browser host configuration
+ * 4. Default configuration (localhost:9000)
  *
- * @returns Promise 包含最终获取到的配置结果
+ * @returns Promise containing the final configuration retrieval result
  *
  * @example
  * ```typescript
  * const result = await getConfig()
  * if (result.config) {
- *   console.log(`使用 ${result.source} 配置:`, result.config.serverHost)
+ *   console.log(`Using ${result.source} config:`, result.config.serverHost)
  * }
  * ```
  */
 export const getConfig = async (): Promise<ConfigResult> => {
-  // 1. 尝试从服务器获取配置
+  // 1. Try to get configuration from server
   const serverResult = await fetchConfigFromServer();
   if (serverResult.config && serverResult.source === 'server') {
     return serverResult;
   }
 
-  // 2. 尝试从 localStorage 获取配置
+  // 2. Try to get configuration from localStorage
   const storedResult = getStoredHostConfig();
   if (storedResult.config) {
     return storedResult;
   }
 
-  // 3. 使用当前浏览器配置
+  // 3. Use current browser configuration
   const browserResult = getCurrentBrowserConfig();
   if (browserResult.config) {
     return browserResult;
   }
 
-  // 4. 使用默认配置
+  // 4. Use default configuration
   return getServerDefaultConfig();
 };
 
 /**
- * 获取服务端默认配置
+ * Get server default configuration
  */
 export const getServerDefaultConfig = (): ConfigResult => {
   const defaultServerHost = 'http://localhost:9000';
@@ -335,11 +335,11 @@ export const getServerDefaultConfig = (): ConfigResult => {
 };
 
 // ============================================================================
-// 兼容性函数（保持向后兼容）
+// Compatibility Functions (for backward compatibility)
 // ============================================================================
 
 /**
- * @deprecated 使用 getStoredHostConfig() 替代
+ * @deprecated Use getStoredHostConfig() instead
  */
 export const getStoredHostConfigLegacy = (): SiteConfig | null => {
   const result = getStoredHostConfig();
@@ -347,7 +347,7 @@ export const getStoredHostConfigLegacy = (): SiteConfig | null => {
 };
 
 /**
- * @deprecated 使用 getCurrentBrowserConfig() 替代
+ * @deprecated Use getCurrentBrowserConfig() instead
  */
 export const getCurrentBrowserConfigLegacy = (): SiteConfig | null => {
   const result = getCurrentBrowserConfig();
@@ -355,11 +355,11 @@ export const getCurrentBrowserConfigLegacy = (): SiteConfig | null => {
 };
 
 // ============================================================================
-// 配置管理函数
+// Configuration Management Functions
 // ============================================================================
 
 /**
- * 保存主机配置到 localStorage
+ * Save host configuration to localStorage
  */
 export const saveHostConfig = (serverHost: string): ConfigResult => {
   if (!isBrowser()) {
@@ -367,7 +367,7 @@ export const saveHostConfig = (serverHost: string): ConfigResult => {
   }
 
   try {
-    // 验证 URL 格式
+    // Validate URL format
     new URL(serverHost);
     localStorage.setItem(STORAGE_KEY, serverHost);
 
@@ -382,7 +382,7 @@ export const saveHostConfig = (serverHost: string): ConfigResult => {
 };
 
 /**
- * 清除保存的主机配置
+ * Clear saved host configuration
  */
 export const clearStoredHostConfig = (): boolean => {
   if (!isBrowser()) return false;
@@ -398,7 +398,7 @@ export const clearStoredHostConfig = (): boolean => {
 };
 
 /**
- * 验证配置是否完整
+ * Validate if configuration is complete
  */
 export const validateConfig = (config: SiteConfig): { valid: boolean; errors: string[] } => {
   const errors: string[] = [];
@@ -426,11 +426,11 @@ export const validateConfig = (config: SiteConfig): { valid: boolean; errors: st
 };
 
 // ============================================================================
-// 调试和工具函数
+// Debugging and Utility Functions
 // ============================================================================
 
 /**
- * 获取所有可用的配置源信息（用于调试）
+ * Get all available configuration source information (for debugging)
  */
 export const getConfigSources = async (): Promise<{
   browser: ConfigResult;

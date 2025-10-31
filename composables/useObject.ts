@@ -57,7 +57,7 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
       Key: key,
     };
 
-    // 如果版本ID存在且不是null版本ID，则传递版本ID
+    // If version ID exists and is not null version ID, pass the version ID
     if (versionId) {
       params.VersionId = versionId;
     }
@@ -228,15 +228,15 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
 
   async function deleteAllVersions(key: string) {
     try {
-      // 获取对象的所有版本
+      // Get all versions of the object
       const versions = await getObjectVersions(key);
       const versionsToDelete = versions.Versions || [];
       const deleteMarkers = versions.DeleteMarkers || [];
 
-      // 删除所有版本
+      // Delete all versions
       const deletePromises = versionsToDelete.map(version => deleteObject(key, version.VersionId));
 
-      // 删除所有删除标记
+      // Delete all delete markers
       const deleteMarkerPromises = deleteMarkers.map(marker => deleteObject(key, marker.VersionId));
 
       await Promise.all([...deletePromises, ...deleteMarkerPromises]);

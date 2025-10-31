@@ -48,13 +48,13 @@ class UploadTaskManager {
   }
 
   addFiles(files: File[], bucketName: string, prefix?: string) {
-    // 只从未完成的任务中过滤已存在的任务
+    // Filter existing tasks only from incomplete tasks
     const existKeys = new Set(
       this.tasks
         .filter(task => ['pending', 'uploading', 'failed', 'paused'].includes(task.status))
         .map(task => `${task.bucketName}/${task.prefix || ''}${task.file.name}`)
     );
-    // 过滤已存在的任务
+    // Filter out existing tasks
     const newTasks = files
       .filter(file => !existKeys.has(`${bucketName}/${prefix || ''}${file.name}`))
       .map(file => ({
@@ -83,14 +83,14 @@ class UploadTaskManager {
   }
 
   cancel() {
-    // 取消所有待处理的任务
+    // Cancel all pending tasks
     this.tasks
       .filter(task => task.status === 'pending')
       .forEach(task => {
         task.status = 'canceled';
       });
 
-    // 取消所有正在进行的上传
+    // Cancel all ongoing uploads
     this.tasks
       .filter(task => task.status === 'uploading' && task.abortController)
       .forEach(task => {
@@ -113,7 +113,7 @@ class UploadTaskManager {
   removeTask(taskId: string) {
     const taskIndex = this.tasks.findIndex(task => task.id === taskId);
     if (taskIndex !== -1) {
-      // 如果任务正在进行，先取消它
+      // If task is in progress, cancel it first
       const task = this.tasks[taskIndex];
       if (task?.status === 'uploading' && task.abortController) {
         task.abortController.abort();
@@ -127,11 +127,11 @@ class UploadTaskManager {
   }
 
   clearTasks() {
-    // 先取消所有正在进行的任务
+    // Cancel all ongoing tasks first
     this.cancel();
-    // 清空任务列表
+    // Clear task list
     this.tasks.splice(0, this.tasks.length);
-    // 重置状态
+    // Reset state
     this.activeUploads = 0;
     this.isStarted = false;
   }
@@ -147,8 +147,8 @@ class UploadTaskManager {
   async resumeTask(taskId: string) {
     const task = this.tasks.find(t => t.id === taskId);
     if (task && task.status === 'paused') {
-      task._pauseRequested = false; // 恢复前清除暂停标记
-      // 1. 校验 uploadId 是否有效
+      task._pauseRequested = false; // Clear pause flag before resuming
+      // 1. Validate if uploadId is valid
       try {
         if (task.uploadId) {
           const listParts = await this.s3Client.send(
@@ -159,22 +159,22 @@ class UploadTaskManager {
             })
           );
 
-          // 2. 以 S3 返回的分片为准，更新 task.completedParts
+          // 2. Update task.completedParts based on S3 returned parts
           task.completedParts = (listParts.Parts || []).map((p: any) => ({
             ETag: p.ETag,
             PartNumber: p.PartNumber,
           }));
 
-          // 3. 开始断点续传
+          // 3. Start resumable upload
           this.startUpload(task);
         } else {
-          // 没有 uploadId，直接重新上传
+          // No uploadId, restart upload directly
           task.completedParts = [];
           this.startUpload(task);
         }
       } catch (e: any) {
         if (e.name === 'NoSuchUpload' || (typeof e.message === 'string' && e.message.includes('Invalid upload id'))) {
-          // uploadId 已失效，重新发起分片上传
+          // uploadId expired, restart multipart upload
           task.uploadId = undefined;
           task.completedParts = [];
           this.startUpload(task);
@@ -185,13 +185,13 @@ class UploadTaskManager {
     }
   }
 
-  // 简化的队列处理逻辑
+  // Simplified queue processing logic
   private async processQueue() {
     if (!this.isStarted) {
       return;
     }
 
-    // 启动新的上传任务
+    // Start new upload tasks
     while (this.activeUploads < this.maxConcurrentUploads) {
       const nextTask = this.tasks.find(task => task.status === 'pending');
       if (!nextTask) {
@@ -199,13 +199,13 @@ class UploadTaskManager {
       }
 
       this.activeUploads++;
-      // 不等待，直接启动异步上传
+      // Don't wait, start async upload directly
       this.startUpload(nextTask).catch(console.error);
     }
 
-    // 如果还有待处理的任务，继续处理
+    // If there are still pending tasks, continue processing
     if (this.tasks.some(task => task.status === 'pending')) {
-      // 使用 setTimeout 避免阻塞主线程
+      // Use setTimeout to avoid blocking main thread
       setTimeout(() => {
         this.processQueue();
       }, 100);
@@ -225,21 +225,21 @@ class UploadTaskManager {
       task.status = 'completed';
       task.progress = 100;
     } catch (error: any) {
-      // 判断是否为“暂停”操作
+      // Check if this is a "pause" operation
       if (task._pauseRequested && (error.message === 'Upload paused' || error.message === 'Request aborted')) {
         task.status = 'paused';
         return;
       }
-      // 只有真正取消时才清理
+      // Only cleanup on actual cancellation
       if (error.name === 'AbortError' || error.message?.includes('canceled')) {
-        // 这里才调用 AbortMultipartUploadCommand
+        // Call AbortMultipartUploadCommand here
         task.status = 'canceled';
         return;
       }
 
       console.error('Upload failed:', error.message, 'Task:', task.id);
 
-      // 检查是否应该重试
+      // Check if should retry
       if (this.shouldRetry(task, error)) {
         await this.retryTask(task);
       } else {
@@ -248,7 +248,7 @@ class UploadTaskManager {
       }
     } finally {
       this.activeUploads--;
-      // 继续处理队列
+      // Continue processing queue
       if (this.isStarted) {
         setTimeout(() => this.processQueue(), 50);
       }
@@ -256,17 +256,17 @@ class UploadTaskManager {
   }
 
   private shouldRetry(task: UploadTask, error: any): boolean {
-    // 如果任务被取消，不重试
+    // If task is canceled, don't retry
     if (task.status === 'canceled') {
       return false;
     }
 
-    // 如果达到最大重试次数，不重试
+    // If max retries reached, don't retry
     if ((task.retryCount || 0) >= this.maxRetries) {
       return false;
     }
 
-    // 如果是 S3 返回的 4xx 错误，直接 failed
+    // If S3 returns 4xx error, mark as failed directly
     if (
       error.$metadata &&
       error.$metadata.httpStatusCode &&
@@ -276,7 +276,7 @@ class UploadTaskManager {
       return false;
     }
 
-    // 检查错误类型，某些错误不应该重试
+    // Check error type, some errors should not be retried
     const errorMessage = error.message?.toLowerCase() || '';
     const nonRetryableErrors = [
       'access denied',
@@ -295,7 +295,7 @@ class UploadTaskManager {
     task.progress = 0;
     task.error = undefined;
 
-    // 等待一段时间后重试
+    // Wait before retrying
     const retryCount = task.retryCount || 1;
     await new Promise(resolve => setTimeout(resolve, this.retryDelay * retryCount));
 
@@ -329,7 +329,7 @@ class UploadTaskManager {
 
     try {
       if (!uploadId) {
-        // 创建分片上传
+        // Create multipart upload
         const createCommand = new CreateMultipartUploadCommand({
           Bucket: bucketName,
           Key: Key,
@@ -346,12 +346,12 @@ class UploadTaskManager {
         throw new Error('Failed to create multipart upload');
       }
       const totalChunks = Math.ceil(file.size / this.chunkSize);
-      // 上传分片
+      // Upload parts
       for (let partNumber = 1; partNumber <= totalChunks; partNumber++) {
         if (abortController.signal.aborted) {
           throw new Error('Upload paused');
         }
-        // 跳过已完成分片
+        // Skip already completed parts
         if (completedParts.some(p => p.PartNumber === partNumber)) continue;
         const start = (partNumber - 1) * this.chunkSize;
         const end = Math.min(start + this.chunkSize, file.size);
@@ -373,7 +373,7 @@ class UploadTaskManager {
         task.completedParts = completedParts;
         task.progress = Math.round((completedParts.length / totalChunks) * 100);
       }
-      // 完成分片上传
+      // Complete multipart upload
       const completeCommand = new CompleteMultipartUploadCommand({
         Bucket: bucketName,
         Key: Key,
@@ -383,11 +383,11 @@ class UploadTaskManager {
       await this.s3Client.send(completeCommand, {
         abortSignal: abortController.signal,
       });
-      // 上传完成后清理 uploadId 和 completedParts
+      // Clean up uploadId and completedParts after upload completes
       task.uploadId = undefined;
       task.completedParts = undefined;
     } catch (error: any) {
-      // 只在“非暂停”情况下才调用 AbortMultipartUploadCommand
+      // Only call AbortMultipartUploadCommand when not paused
       if (!task._pauseRequested) {
         try {
           const { AbortMultipartUploadCommand } = await import('@aws-sdk/client-s3');

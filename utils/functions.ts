@@ -1,12 +1,12 @@
-// 定义单位
+// Define units
 const UNITS = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB']
 const K8S_UNITS = ['B', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi']
 
 /**
- * 将字节数转换为可读格式
- * @param {string} x - 字节数的字符串表示
- * @param {boolean} isK8sUnits - 是否使用 K8s 单位
- * @returns {string} - 可读格式的字节数
+ * Convert byte count to human-readable format
+ * @param {string} x - String representation of byte count
+ * @param {boolean} isK8sUnits - Whether to use K8s units
+ * @returns {string} - Human-readable byte count
  */
 export function niceBytes(x: string, isK8sUnits: boolean = false): string {
   const n = Number.parseInt(x, 10) || 0
@@ -14,10 +14,10 @@ export function niceBytes(x: string, isK8sUnits: boolean = false): string {
 }
 
 /**
- * 将整数字节数转换为可读格式
- * @param {number} n - 字节数
- * @param {boolean} isK8sUnits - 是否使用 K8s 单位
- * @returns {string} - 可读格式的字节数
+ * Convert integer byte count to human-readable format
+ * @param {number} n - Byte count
+ * @param {boolean} isK8sUnits - Whether to use K8s units
+ * @returns {string} - Human-readable byte count
  */
 export function formatBytes(n: number, isK8sUnits: boolean = false): string {
   const l = Math.floor(Math.log(n) / Math.log(1024)) || 0
@@ -30,22 +30,22 @@ export function formatBytes(n: number, isK8sUnits: boolean = false): string {
 }
 
 /**
- * 将值和单位转换为字节数的字符串表示
- * @param {string} value - 数值的字符串表示
- * @param {string} unit - 单位
- * @param {boolean} fromK8s - 是否从 K8s 单位转换
- * @returns {string} - 字节数的字符串表示
+ * Convert value and unit to string representation of byte count
+ * @param {string} value - String representation of value
+ * @param {string} unit - Unit
+ * @param {boolean} fromK8s - Whether converting from K8s units
+ * @returns {string} - String representation of byte count
  */
 export function getBytes(value: string, unit: string, fromK8s: boolean = false): string {
   return convertToBytes(value, unit, fromK8s).toString(10)
 }
 
 /**
- * 将值和单位转换为字节数
- * @param {string} value - 数值的字符串表示
- * @param {string} unit - 单位
- * @param {boolean} fromK8s - 是否从 K8s 单位转换
- * @returns {number} - 字节数
+ * Convert value and unit to byte count
+ * @param {string} value - String representation of value
+ * @param {string} unit - Unit
+ * @param {boolean} fromK8s - Whether converting from K8s units
+ * @returns {number} - Byte count
  */
 function convertToBytes(value: string, unit: string, fromK8s: boolean = false): number {
   const vl: number = Number.parseFloat(value)
@@ -60,16 +60,16 @@ function convertToBytes(value: string, unit: string, fromK8s: boolean = false): 
 }
 
 /**
- * 生成随机长度的字符串
- * @param length
- * @returns
+ * Generate random string of specified length
+ * @param length - Length of the string to generate
+ * @returns Random string
  */
 export function makeRandomString(length = 20): string {
   let initstr = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'
-  // 将字符串转换为数组
+  // Convert string to array
   const arr = initstr.split('')
 
-  // 打乱数组
+  // Shuffle array
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
     const current = arr[i]
@@ -80,7 +80,7 @@ export function makeRandomString(length = 20): string {
     }
   }
 
-  // 将数组转换回字符串
+  // Convert array back to string
   initstr = arr.join('')
 
   return initstr.slice(0, length)

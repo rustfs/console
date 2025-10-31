@@ -262,7 +262,7 @@ const handleSubmit = async () => {
       const currentResponse = await listBucketNotifications(props.bucketName)
       currentNotifications = currentResponse || {}
     } catch (error) {
-      console.warn('获取当前通知配置失败，将使用空配置:', error)
+      console.warn('Failed to get current notification config, will use empty config:', error)
       currentNotifications = {}
     }
 
@@ -372,7 +372,7 @@ const handleSubmit = async () => {
     emit('success')
     resetForm()
   } catch (error) {
-    console.error('创建 bucket notification 失败:', error)
+    console.error('Failed to create bucket notification:', error)
     message.error(t('Create Failed'))
   }
 }

@@ -1,6 +1,6 @@
 # Config Helpers Test Suite
 
-This is a comprehensive test suite for the `config-helpers.ts` module, including unit tests, integration tests, performance tests, and edge case tests.
+This is a comprehensive test suite for the `config-helpers.ts` module, including unit tests, integration tests, and edge case tests.
 
 ## Test Structure
 
@@ -10,7 +10,6 @@ tests/
 ├── utils/
 │   ├── config-helpers.test.ts                 # Main unit tests
 │   ├── config-helpers.integration.test.ts     # Integration tests and edge cases
-│   ├── config-helpers.performance.test.ts     # Performance and stress tests
 │   └── test-helpers.ts                        # Test utilities and Mock functions
 └── README.md                                   # This file
 ```
@@ -19,10 +18,7 @@ tests/
 
 ```bash
 # Install test dependencies
-npm install --save-dev vitest jsdom @vitest/ui c8
-
-# Or using yarn
-yarn add --dev vitest jsdom @vitest/ui c8
+pnpm add -D vitest jsdom @vitest/ui c8
 ```
 
 ## Running Tests
@@ -31,35 +27,32 @@ yarn add --dev vitest jsdom @vitest/ui c8
 
 ```bash
 # Run all tests
-npm run test
+pnpm test
 
 # Run tests and generate coverage report
-npm run test:coverage
+pnpm test:coverage
 
 # Run test UI interface
-npm run test:ui
+pnpm test:ui
 
 # Run tests once (CI mode)
-npm run test:run
+pnpm test:run
 ```
 
 ### Targeted Tests
 
 ```bash
 # Run only config-helpers related tests
-npm run test:config-helpers
-
-# Run only performance tests
-npm run test:performance
+pnpm test:config-helpers
 
 # Run only integration tests
-npm run test:integration
+pnpm test:integration
 
 # Run specific test file
-npx vitest tests/utils/config-helpers.test.ts
+pnpm exec vitest tests/utils/config-helpers.test.ts
 
 # Run specific test case
-npx vitest -t "getCurrentBrowserConfig"
+pnpm exec vitest -t "getCurrentBrowserConfig"
 ```
 
 ## Test Coverage
@@ -85,15 +78,6 @@ npx vitest -t "getCurrentBrowserConfig"
 - ✅ **Concurrent Operations**: Race conditions, concurrent read/write
 - ✅ **Cross-browser Compatibility**: Behavior in different environments
 - ✅ **Error Recovery**: Network errors, JSON parsing errors, storage exceptions
-
-### 3. Performance Tests (`config-helpers.performance.test.ts`)
-
-- ✅ **Single Function Performance**: Execution time benchmarks
-- ✅ **Batch Operations**: Large data processing capability
-- ✅ **Concurrent Performance**: Stability under high concurrency
-- ✅ **Memory Management**: Memory leak detection
-- ✅ **Network Performance**: Slow network, timeout handling
-- ✅ **Stress Tests**: Performance under extreme load
 
 ## Test Utilities (`test-helpers.ts`)
 
@@ -145,26 +129,6 @@ npx vitest -t "getCurrentBrowserConfig"
 2. **Concurrent Operations**: Simultaneous read/write, race conditions, resource contention
 3. **Performance Limits**: Large amounts of data, high-frequency operations, memory pressure
 
-## Performance Benchmarks
-
-### Execution Time Requirements
-
-- `getCurrentBrowserConfig`: < 1ms
-- `saveHostConfig`: < 5ms
-- `validateConfig`: < 1ms
-- `fetchConfigFromServer`: < 100ms (mock environment)
-
-### Batch Operation Requirements
-
-- 1000 configuration retrievals: < 1 second
-- 100 configuration saves: average < 10ms per operation
-- 1000 configuration validations: average < 0.5ms per operation
-
-### Concurrent Performance Requirements
-
-- 50 concurrent requests: < 1 second completion
-- 200 extreme concurrent operations: all succeed
-
 ## CI/CD Integration
 
 ### GitHub Actions Example
@@ -177,13 +141,17 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
         with:
-          node-version: '18'
-      - run: npm ci
-      - run: npm run test:run
-      - run: npm run test:coverage
+          version: 10.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:run
+      - run: pnpm test:coverage
 ```
 
 ### Coverage Requirements
@@ -199,27 +167,27 @@ jobs:
 
 ```bash
 # Using describe or it names
-npx vitest -t "getCurrentBrowserConfig should create config based on current browser location"
+pnpm exec vitest -t "getCurrentBrowserConfig should create config based on current browser location"
 
 # Using file path and line number
-npx vitest tests/utils/config-helpers.test.ts:45
+pnpm exec vitest tests/utils/config-helpers.test.ts:45
 ```
 
 ### Viewing Detailed Output
 
 ```bash
 # Show detailed test output
-npx vitest --reporter=verbose
+pnpm exec vitest --reporter=verbose
 
 # Show coverage details
-npx vitest --coverage --reporter=verbose
+pnpm exec vitest --coverage --reporter=verbose
 ```
 
 ### Debug Mode
 
 ```bash
 # Run in Node.js debug mode
-npx vitest --inspect-brk
+pnpm exec vitest --inspect-brk
 
 # Using VS Code debugger
 # Add configuration in .vscode/launch.json
@@ -231,7 +199,7 @@ npx vitest --inspect-brk
 2. **Mock Management**: Reset mocks in `beforeEach`, clean up in `afterEach`
 3. **Clear Assertions**: Use specific assertions, avoid overly broad checks
 4. **Error Testing**: Test both success and failure paths
-5. **Performance Monitoring**: Regularly run performance tests, monitor for performance regressions
+5. **Code Coverage**: Maintain high coverage (> 95%), focus on testing edge conditions and error paths
 
 ## Troubleshooting
 
@@ -254,7 +222,7 @@ npx vitest --inspect-brk
 
 ### Adding New Tests
 
-1. Determine test type (unit/integration/performance)
+1. Determine test type (unit/integration)
 2. Choose appropriate test file
 3. Use existing test utilities and mocks
 4. Follow naming conventions and structure

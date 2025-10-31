@@ -7,6 +7,7 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Modal from '~/components/modal.vue'
+const { createUser } = useUsers()
 
 const { t } = useI18n()
 
@@ -85,9 +86,11 @@ async function submitForm() {
 
   submitting.value = true
   try {
-    await $api.post('/account/change-password', {
-      current_secret_key: formModel.current_secret_key,
-      new_secret_key: formModel.new_secret_key,
+    const userInfo = await $api.get(`/accountinfo`)
+    await createUser({
+      accessKey: userInfo.account_name,
+      secretKey: formModel.new_secret_key,
+      status: 'enabled',
     })
     message.success(t('Updated successfully'))
     closeModal()
@@ -126,7 +129,13 @@ async function submitForm() {
       <Field>
         <FieldLabel for="password-new-confirm">{{ t('Confirm New Password') }}</FieldLabel>
         <FieldContent>
-          <Input id="password-new-confirm" v-model="formModel.re_new_secret_key" type="password" autocomplete="off" :disabled="!formModel.new_secret_key" />
+          <Input
+            id="password-new-confirm"
+            v-model="formModel.re_new_secret_key"
+            type="password"
+            autocomplete="off"
+            :disabled="!formModel.new_secret_key"
+          />
         </FieldContent>
         <FieldDescription v-if="errors.re_new_secret_key" class="text-destructive">
           {{ errors.re_new_secret_key }}

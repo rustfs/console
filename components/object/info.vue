@@ -104,10 +104,14 @@
             <FieldLabel>{{ t('Retention Mode') }}</FieldLabel>
             <FieldContent>
               <RadioGroup v-model="retentionMode" class="grid gap-2 sm:grid-cols-2">
-                <label v-for="option in [
-                  { label: t('COMPLIANCE'), value: 'COMPLIANCE' },
-                  { label: t('GOVERNANCE'), value: 'GOVERNANCE' },
-                ]" :key="option.value" class="flex items-start gap-3 rounded-md border border-border/50 p-3">
+                <label
+                  v-for="option in [
+                    { label: t('COMPLIANCE'), value: 'COMPLIANCE' },
+                    { label: t('GOVERNANCE'), value: 'GOVERNANCE' },
+                  ]"
+                  :key="option.value"
+                  class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                >
                   <RadioGroupItem :value="option.value" class="mt-0.5" />
                   <span class="text-sm font-medium">{{ option.label }}</span>
                 </label>
@@ -130,8 +134,14 @@
     </Modal>
 
     <object-preview-modal v-model:show="showPreview" :object="previewObject ?? object" />
-    <ObjectVersions :bucket-name="bucketName" :object-key="object?.Key || ''" :visible="showVersions" @close="handleVersionsClose" @preview="handlePreviewVersion"
-      @refresh-parent="handleVersionsRefresh" />
+    <ObjectVersions
+      :bucket-name="bucketName"
+      :object-key="object?.Key || ''"
+      :visible="showVersions"
+      @close="handleVersionsClose"
+      @preview="handlePreviewVersion"
+      @refresh-parent="handleVersionsRefresh"
+    />
   </Drawer>
 </template>
 

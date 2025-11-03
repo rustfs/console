@@ -118,8 +118,8 @@ watch(
 const fetchVersions = async () => {
   loading.value = true
   try {
-    const response = await objectApi.getObjectVersions(props.objectKey)
-    versions.value = response.Versions ?? []
+    const response = await objectApi.listObjectVersions(props.objectKey)
+    versions.value = response.Versions
   } catch (error) {
     message.error(t('Failed to fetch versions'))
     versions.value = []

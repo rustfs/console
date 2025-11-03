@@ -1,18 +1,18 @@
 import {
   DeleteObjectCommand,
+  DeleteObjectTaggingCommand,
   GetObjectCommand,
+  GetObjectLegalHoldCommand,
+  GetObjectRetentionCommand,
+  GetObjectTaggingCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
-  PutObjectCommand,
-  GetObjectTaggingCommand,
-  PutObjectTaggingCommand,
-  DeleteObjectTaggingCommand,
-  GetObjectRetentionCommand,
-  PutObjectRetentionCommand,
-  GetObjectLegalHoldCommand,
-  PutObjectLegalHoldCommand,
   ListObjectVersionsCommand,
   ObjectLockRetentionMode,
+  PutObjectCommand,
+  PutObjectLegalHoldCommand,
+  PutObjectRetentionCommand,
+  PutObjectTaggingCommand,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
@@ -211,19 +211,29 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     return await $client.send(new PutObjectLegalHoldCommand(params))
   }
 
-  async function getObjectVersions(key: string) {
+  async function listObjectVersions(key: string) {
     const params = {
       Bucket: bucket,
-      Prefix: key,
+      Prefix: key, // match "abc" and "abcd"
+      Delimiter: '/', // has no effect on "abcd", can keep or remove
     }
 
-    return await $client.send(new ListObjectVersionsCommand(params))
+    const res = await $client.send(new ListObjectVersionsCommand(params))
+
+    const Versions = (res.Versions ?? []).filter(v => v.Key === key)
+    const DeleteMarkers = (res.DeleteMarkers ?? []).filter(m => m.Key === key)
+
+    // Sort by LastModified desc
+    Versions.sort((a, b) => +new Date(b.LastModified!) - +new Date(a.LastModified!))
+    DeleteMarkers.sort((a, b) => +new Date(b.LastModified!) - +new Date(a.LastModified!))
+
+    return { ...res, Versions, DeleteMarkers }
   }
 
   async function deleteAllVersions(key: string) {
     try {
       // Get all versions of the object
-      const versions = await getObjectVersions(key)
+      const versions = await listObjectVersions(key)
       const versionsToDelete = versions.Versions || []
       const deleteMarkers = versions.DeleteMarkers || []
 
@@ -258,7 +268,7 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     getObjectLegalHold,
     putObjectLegalHold,
     setLegalHold: (key: string, enabled: boolean) => putObjectLegalHold(key, { Status: enabled ? 'ON' : 'OFF' }),
-    getObjectVersions,
+    listObjectVersions,
     deleteAllVersions,
   }
 }

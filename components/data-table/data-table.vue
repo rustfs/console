@@ -2,14 +2,7 @@
 import EmptyState from '@/components/empty-state.vue'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Spinner } from '@/components/ui/spinner'
-import {
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Table as UiTable,
-} from '@/components/ui/table'
+import { TableBody, TableCell, TableHead, TableHeader, TableRow, Table as UiTable } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import type { Column, Table } from '@tanstack/vue-table'
 import { FlexRender } from '@tanstack/vue-table'
@@ -41,15 +34,31 @@ const visibleColumnCount = computed(() => props.table.getVisibleLeafColumns().le
 const hasRows = computed(() => props.table.getRowModel().rows.length > 0)
 
 const getColumnStyles = (column: Column<TData, unknown>) => {
-  const maxWidth = column.columnDef.meta?.maxWidth
-  if (maxWidth == null) return undefined
-  return { maxWidth: typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth }
+  const meta = column.columnDef.meta
+  if (!meta) return undefined
+
+  const styles: Record<string, string> = {}
+
+  if (meta.width != null) {
+    styles.width = typeof meta.width === 'number' ? `${meta.width}px` : meta.width
+  }
+  if (meta.minWidth != null) {
+    styles.minWidth = typeof meta.minWidth === 'number' ? `${meta.minWidth}px` : meta.minWidth
+  }
+  if (meta.maxWidth != null) {
+    styles.maxWidth = typeof meta.maxWidth === 'number' ? `${meta.maxWidth}px` : meta.maxWidth
+  }
+
+  return Object.keys(styles).length > 0 ? styles : undefined
 }
 </script>
 
 <template>
   <div :class="cn('flex flex-col gap-4', props.class)">
-    <component :is="bodyHeight ? ScrollArea : 'div'" :class="bodyHeight ? cn('rounded-md border', bodyHeight) : undefined">
+    <component
+      :is="bodyHeight ? ScrollArea : 'div'"
+      :class="bodyHeight ? cn('rounded-md border', bodyHeight) : undefined"
+    >
       <UiTable :class="bodyHeight ? tableClass : cn('border rounded-md', tableClass)">
         <!-- Table Header -->
         <TableHeader :class="stickyHeader ? 'sticky top-0 z-10 bg-muted/40 backdrop-blur' : ''">

@@ -3,7 +3,12 @@
     <page-header>
       <h1 class="text-2xl font-bold">{{ t('Events') }}</h1>
       <template #actions>
-        <BucketSelector v-model="bucketName" :placeholder="t('Please select bucket')" selector-class="w-full" cache-key="events-buckets" />
+        <BucketSelector
+          v-model="bucketName"
+          :placeholder="t('Please select bucket')"
+          selector-class="w-full"
+          cache-key="events-buckets"
+        />
         <Button type="button" variant="outline" @click="handleNew">
           <Icon class="size-4" name="ri:add-line" />
           <span>{{ t('Add Event Subscription') }}</span>
@@ -15,7 +20,12 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Data')" :empty-description="t('Add Event Subscription to get started')" />
+    <DataTable
+      :table="table"
+      :is-loading="loading"
+      :empty-title="t('No Data')"
+      :empty-description="t('Add Event Subscription to get started')"
+    />
 
     <events-new-form v-if="bucketName" ref="newRef" :bucketName="bucketName" @success="refresh" />
   </page>
@@ -76,15 +86,13 @@ const columns: ColumnDef<NotificationItem>[] = [
   {
     id: 'type',
     header: () => t('Type'),
-    cell: ({ row }) =>
-      h(Badge, { class: typeBadgeClasses[row.original.type] }, () => row.original.type),
+    cell: ({ row }) => h(Badge, { class: typeBadgeClasses[row.original.type] }, () => row.original.type),
     meta: { maxWidth: '7rem' },
   },
   {
     id: 'arn',
     header: () => t('ARN'),
-    cell: ({ row }) =>
-      h('span', { class: 'line-clamp-2 break-all font-medium' }, row.original.arn),
+    cell: ({ row }) => h('span', { class: 'line-clamp-2 break-all font-medium' }, row.original.arn),
     meta: { maxWidth: '180px' },
   },
   {
@@ -94,9 +102,7 @@ const columns: ColumnDef<NotificationItem>[] = [
       h(
         'div',
         { class: 'flex flex-wrap gap-1' },
-        getDisplayEvents(row.original.events).map(event =>
-          h(Badge, { variant: 'secondary', key: event }, () => event)
-        )
+        getDisplayEvents(row.original.events).map(event => h(Badge, { variant: 'secondary', key: event }, () => event))
       ),
     meta: { maxWidth: '13rem' },
   },
@@ -127,10 +133,7 @@ const columns: ColumnDef<NotificationItem>[] = [
             class: 'gap-2',
             onClick: (event: Event) => handleRowDelete(row.original, event),
           },
-          () => [
-            h(Icon, { class: 'size-4', name: 'ri:delete-bin-7-line' }),
-            h('span', t('Delete')),
-          ]
+          () => [h(Icon, { class: 'size-4', name: 'ri:delete-bin-7-line' }), h('span', t('Delete'))]
         ),
       ]),
     meta: { maxWidth: '6rem' },
@@ -153,7 +156,7 @@ watch(
 
     await refresh()
   },
-  { immediate: true },
+  { immediate: true }
 )
 
 const handleRowDelete = async (row: NotificationItem, event?: Event) => {
@@ -184,16 +187,12 @@ const handleRowDelete = async (row: NotificationItem, event?: Event) => {
 
     if (row.type === 'Lambda' && currentNotifications.LambdaFunctionConfigurations) {
       updatedConfigurations = currentNotifications.LambdaFunctionConfigurations.filter(
-        (config: any) => config.Id !== row.id,
+        (config: any) => config.Id !== row.id
       )
     } else if (row.type === 'SQS' && currentNotifications.QueueConfigurations) {
-      updatedConfigurations = currentNotifications.QueueConfigurations.filter(
-        (config: any) => config.Id !== row.id,
-      )
+      updatedConfigurations = currentNotifications.QueueConfigurations.filter((config: any) => config.Id !== row.id)
     } else if (row.type === 'SNS' && currentNotifications.TopicConfigurations) {
-      updatedConfigurations = currentNotifications.TopicConfigurations.filter(
-        (config: any) => config.Id !== row.id,
-      )
+      updatedConfigurations = currentNotifications.TopicConfigurations.filter((config: any) => config.Id !== row.id)
     }
 
     const newNotificationConfig = {

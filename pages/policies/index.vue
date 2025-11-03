@@ -11,7 +11,12 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Policies')" :empty-description="t('Create a policy to manage access control templates.')" />
+    <DataTable
+      :table="table"
+      :is-loading="loading"
+      :empty-title="t('No Policies')"
+      :empty-description="t('Create a policy to manage access control templates.')"
+    />
 
     <policies-form-item v-model:show="showPolicyForm" :policy="current" @saved="fetchPolicies" />
   </page>
@@ -67,6 +72,9 @@ const columns: ColumnDef<PolicyRow>[] = [
     header: () => t('Actions'),
     enableSorting: false,
     enableHiding: false,
+    meta: {
+      width: 200,
+    },
     cell: ({ row }) =>
       h('div', { class: 'flex items-center gap-2' }, [
         h(

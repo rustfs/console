@@ -17,7 +17,12 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="pending" :empty-title="t('No Destinations')" :empty-description="t('Create an event destination to forward notifications.')" />
+    <DataTable
+      :table="table"
+      :is-loading="pending"
+      :empty-title="t('No Destinations')"
+      :empty-description="t('Create an event destination to forward notifications.')"
+    />
 
     <events-target-new-form ref="newFormRef" @search="() => refresh()" />
   </page>
@@ -76,6 +81,9 @@ const columns: ColumnDef<RowData>[] = [
     header: () => t('Actions'),
     enableSorting: false,
     enableHiding: false,
+    meta: {
+      width: 90,
+    },
     cell: ({ row }) =>
       h('div', { class: 'flex items-center gap-2' }, [
         h(

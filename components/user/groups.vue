@@ -16,7 +16,12 @@
         <FieldContent class="space-y-2">
           <Popover v-model:open="groupSelectorOpen">
             <PopoverTrigger as-child>
-              <Button type="button" variant="outline" class="min-h-10 justify-between gap-2" :aria-label="t('Select Group')">
+              <Button
+                type="button"
+                variant="outline"
+                class="min-h-10 justify-between gap-2"
+                :aria-label="t('Select Group')"
+              >
                 <span class="truncate">
                   {{ selectedGroupLabels.length ? selectedGroupLabels.join(', ') : t('Select Group') }}
                 </span>
@@ -29,8 +34,17 @@
                 <CommandList>
                   <CommandEmpty>{{ t('No Data') }}</CommandEmpty>
                   <CommandGroup>
-                    <CommandItem v-for="option in groups" :key="option.value" :value="option.label" @select="() => toggleGroup(option.value)">
-                      <Icon name="ri:check-line" class="mr-2 size-4" :class="selectedGroups.includes(option.value) ? 'opacity-100' : 'opacity-0'" />
+                    <CommandItem
+                      v-for="option in groups"
+                      :key="option.value"
+                      :value="option.label"
+                      @select="() => toggleGroup(option.value)"
+                    >
+                      <Icon
+                        name="ri:check-line"
+                        class="mr-2 size-4"
+                        :class="selectedGroups.includes(option.value) ? 'opacity-100' : 'opacity-0'"
+                      />
                       <span>{{ option.label }}</span>
                     </CommandItem>
                   </CommandGroup>
@@ -38,12 +52,9 @@
               </Command>
             </PopoverContent>
           </Popover>
-          <div v-if="selectedGroups.length" class="flex flex-wrap gap-2">
-            <Badge v-for="value in selectedGroups" :key="value" variant="secondary">{{ value }}</Badge>
-          </div>
         </FieldContent>
       </Field>
-      <div class="flex items-center gap-2 sm:self-start">
+      <div class="flex items-center gap-2 sm:self-end">
         <Button variant="ghost" @click="cancelEditing">
           {{ t('Cancel') }}
         </Button>
@@ -51,6 +62,9 @@
           {{ t('Submit') }}
         </Button>
       </div>
+    </div>
+    <div v-if="selectedGroups.length" class="flex flex-wrap gap-2">
+      <Badge v-for="value in selectedGroups" :key="value" variant="secondary">{{ value }}</Badge>
     </div>
 
     <DataTable :table="table" />

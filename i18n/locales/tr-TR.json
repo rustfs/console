@@ -849,5 +849,6 @@
   "Validation failed": "Doğrulama başarısız",
   "API request failed": "API isteği başarısız",
   "Operation failed": "İşlem başarısız",
-  "Create a user to get started": "Başlamak için bir kullanıcı oluşturun"
+  "Create a user to get started": "Başlamak için bir kullanıcı oluşturun",
+  "Get Notification Config Failed": "Bildirim Yapılandırması Alınamadı"
 }

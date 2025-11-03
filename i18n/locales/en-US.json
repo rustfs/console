@@ -849,5 +849,6 @@
   "Validation failed": "Validation failed",
   "API request failed": "API request failed",
   "Operation failed": "Operation failed",
-  "Create a user to get started": "Create a user to get started"
+  "Create a user to get started": "Create a user to get started",
+  "Get Notification Config Failed": "Get Notification Config Failed"
 }

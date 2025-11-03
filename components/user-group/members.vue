@@ -129,11 +129,11 @@ const changeMembers = async () => {
       groupStatus: 'enabled',
     })
 
-    message.success('修改成功')
+    message.success(t('Edit Success'))
     editStatus.value = false
     emit('search')
   } catch (error) {
-    message.error('修改失败')
+    message.error(t('Edit Failed'))
   }
 }
 </script>

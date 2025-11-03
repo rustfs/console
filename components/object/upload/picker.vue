@@ -7,7 +7,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="space-y-1">
           <p class="text-sm font-medium text-muted-foreground">{{ t('Target Bucket') }}: {{ bucketName }}</p>
-          <p class="text-xs text-muted-foreground">{{ t('Current Prefix') }}: {{ prefix || '/' }}</p>
+          <p class="text-xs text-muted-foreground">{{ t('Current Prefix') }}: <span class="text-blue-500">{{ prefix || '/' }}</span></p>
         </div>
 
         <ActionBar>
@@ -28,10 +28,7 @@
         </AlertDescription>
       </Alert>
 
-      <Alert
-        v-if="isMemoryWarning"
-        class="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100"
-      >
+      <Alert v-if="isMemoryWarning" class="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
         <AlertDescription>
           {{ t('Large File Count Warning', { count: totalFileCount.toLocaleString(), max: MAX_FILES_LIMIT }) }}
         </AlertDescription>
@@ -44,30 +41,16 @@
             <p v-if="totalFileCount > 0">{{ t('Total Files') }}: {{ totalFileCount.toLocaleString() }}</p>
             <p v-if="totalFileCount > 0">{{ t('Memory Usage') }}: {{ getMemoryUsageLevel() }}</p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="!hasFiles || isFolderLoading || isAdding"
-            @click="clearAllFiles"
-          >
+          <Button variant="outline" size="sm" :disabled="!hasFiles || isFolderLoading || isAdding" @click="clearAllFiles">
             <Icon name="ri:delete-bin-line" class="size-4" />
             {{ t('Clear All') }}
           </Button>
         </div>
 
         <!-- objects list / drag area -->
-        <div
-          class="rounded-md border-t transition"
-          :class="isDragOver ? 'border-primary bg-primary/5' : ''"
-          @dragenter.prevent="handleDragEnter"
-          @dragover.prevent="handleDragOver"
-          @dragleave.prevent="handleDragLeave"
-          @drop.prevent="handleDrop"
-        >
-          <div
-            v-if="!selectedItems.length"
-            class="flex h-[40vh] flex-col items-center justify-center gap-4 p-6 text-center"
-          >
+        <div class="rounded-md border-t transition" :class="isDragOver ? 'border-primary bg-primary/5' : ''" @dragenter.prevent="handleDragEnter" @dragover.prevent="handleDragOver"
+          @dragleave.prevent="handleDragLeave" @drop.prevent="handleDrop">
+          <div v-if="!selectedItems.length" class="flex h-[40vh] flex-col items-center justify-center gap-4 p-6 text-center">
             <Icon name="ri:cloud-upload-line" class="size-10 text-muted-foreground" />
             <p class="text-base font-medium text-muted-foreground">{{ t('No Selection') }}</p>
             <p class="max-w-[320px] text-sm text-muted-foreground">
@@ -94,10 +77,7 @@
                 <tr v-for="(item, index) in selectedItems" :key="item.uid" class="border-b last:border-b-0">
                   <td class="px-3 py-2">
                     <div class="flex items-start gap-2">
-                      <Icon
-                        :name="item.type === 'folder' ? 'ri:folder-3-line' : 'ri:file-line'"
-                        class="mt-0.5 size-4 text-muted-foreground"
-                      />
+                      <Icon :name="item.type === 'folder' ? 'ri:folder-3-line' : 'ri:file-line'" class="mt-0.5 size-4 text-muted-foreground" />
                       <div>
                         <div class="font-medium text-foreground truncate max-w-md">
                           {{ item.name }}<span v-if="item.type === 'folder'">/</span>
@@ -144,12 +124,7 @@
         <Button variant="outline" :disabled="!hasFiles || isAdding || isFolderLoading">
           {{ t('Configure') }}
         </Button>
-        <Button
-          variant="default"
-          :disabled="!hasFiles || isAdding || isFolderLoading"
-          :loading="isAdding"
-          @click="handleUpload"
-        >
+        <Button variant="default" :disabled="!hasFiles || isAdding || isFolderLoading" :loading="isAdding" @click="handleUpload">
           {{ t('Start Upload') }}
         </Button>
       </div>
@@ -238,7 +213,7 @@ const clearAllFiles = () => {
 
   if (typeof window !== 'undefined' && 'gc' in window && typeof (window as any).gc === 'function') {
     try {
-      ;(window as any).gc()
+      ; (window as any).gc()
     } catch {
       // ignore
     }

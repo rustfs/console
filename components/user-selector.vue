@@ -75,7 +75,10 @@ const loadUsers = async () => {
 const toggleUser = (value: string) => {
   const currentValue = [...props.modelValue]
   if (currentValue.includes(value)) {
-    emit('update:modelValue', currentValue.filter(item => item !== value))
+    emit(
+      'update:modelValue',
+      currentValue.filter(item => item !== value)
+    )
   } else {
     emit('update:modelValue', [...currentValue, value])
   }
@@ -107,11 +110,7 @@ defineExpose({
             :aria-label="displayLabel"
           >
             <span class="truncate">
-              {{
-                selectedUserLabels.length
-                  ? selectedUserLabels.join(', ')
-                  : displayPlaceholder
-              }}
+              {{ selectedUserLabels.length ? selectedUserLabels.join(', ') : displayPlaceholder }}
             </span>
             <Icon class="size-4 text-muted-foreground" name="ri:arrow-down-s-line" />
           </Button>
@@ -140,12 +139,11 @@ defineExpose({
           </Command>
         </PopoverContent>
       </Popover>
-      <div v-if="showBadges && modelValue.length" class="flex flex-wrap gap-2">
-        <Badge v-for="value in modelValue" :key="value" variant="secondary">
-          {{ userLabelMap[value] ?? value }}
-        </Badge>
-      </div>
     </FieldContent>
   </Field>
+  <!-- <div v-if="showBadges && modelValue.length" class="flex flex-wrap gap-2">
+    <Badge v-for="value in modelValue" :key="value" variant="secondary">
+      {{ userLabelMap[value] ?? value }}
+    </Badge>
+  </div> -->
 </template>
-

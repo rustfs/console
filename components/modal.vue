@@ -61,8 +61,12 @@ const handleEscape = (event: Event) => {
 
 <template>
   <Dialog :open="modelValue" @update:open="handleUpdateOpen">
-    <DialogContent :class="cn(sizeClassMap[size], props.class, contentClass)" @pointerDownOutside="handlePointerOutside" @interactOutside="handlePointerOutside"
-      @escapeKeyDown="handleEscape">
+    <DialogContent
+      :class="cn(sizeClassMap[size], props.class, contentClass)"
+      @pointerDownOutside="handlePointerOutside"
+      @interactOutside="handlePointerOutside"
+      @escapeKeyDown="handleEscape"
+    >
       <DialogHeader v-if="title || description || $slots.header" class="text-left">
         <slot name="header">
           <DialogTitle v-if="title">{{ title }}</DialogTitle>
@@ -70,11 +74,11 @@ const handleEscape = (event: Event) => {
         </slot>
       </DialogHeader>
 
-      <div class="max-h-[80vh]">
+      <div class="max-h-[80vh] overflow-scroll">
         <slot />
       </div>
 
-      <DialogFooter v-if="showFooter && $slots.footer">
+      <DialogFooter v-if="showFooter && $slots.footer" class="border-t pt-4">
         <slot name="footer" />
       </DialogFooter>
     </DialogContent>

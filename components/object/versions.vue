@@ -1,10 +1,7 @@
 <template>
   <Modal v-model="visibleProxy" :title="t('Object Versions')" size="lg" :close-on-backdrop="false">
     <div class="space-y-4 z-20">
-      <DataTable :table="table" :is-loading="loading" :empty-title="t('No Versions')" />
-      <div class="flex justify-end">
-        <Button variant="outline" @click="closeModal">{{ t('Close') }}</Button>
-      </div>
+      <DataTable class="pb-4" :table="table" :is-loading="loading" :empty-title="t('No Versions')" />
     </div>
   </Modal>
 </template>

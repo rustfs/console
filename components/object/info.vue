@@ -310,8 +310,8 @@ const viewVersions = () => {
   showVersions.value = true
 }
 
-const openPreview = (target?: any) => {
-  const source = target ?? object.value
+const openPreview = () => {
+  const source = object.value
   if (!source) return
   previewObject.value = source
   showPreview.value = true

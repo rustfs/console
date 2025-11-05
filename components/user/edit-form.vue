@@ -1,9 +1,13 @@
 <template>
   <Modal v-model="visible" :title="user.accessKey || t('Account')" size="lg" :close-on-backdrop="false">
     <div class="space-y-4">
-      <div class="flex items-center justify-between rounded-md border px-3 py-2">
+      <div class="flex items-center justify-start gap-2 rounded-md border px-3 py-2">
         <span class="text-sm text-muted-foreground">{{ t('Status') }}</span>
         <Switch v-model="statusBoolean" />
+        <Button variant="outline" @click="handleChangeSecretKey" class="ml-auto">
+          <Icon name="ri:key-2-line" class="size-4" />
+          <span>{{ t('Change Secret Key') }}</span>
+        </Button>
       </div>
 
       <Tabs v-model="activeTab" class="flex flex-col gap-4">
@@ -27,6 +31,8 @@
       <user-notice ref="noticeRef" @search="refreshUser" />
     </div>
   </Modal>
+
+  <user-change-secret-key v-model:visible="changeSecretKeyVisible" :access-key="user.accessKey" />
 </template>
 
 <script setup lang="ts">
@@ -39,6 +45,7 @@ import Modal from '~/components/modal.vue'
 const { t } = useI18n()
 const visible = ref(false)
 const activeTab = ref('groups')
+const changeSecretKeyVisible = ref(false)
 const { getUser, changeUserStatus } = useUsers()
 
 interface UserInfo {
@@ -83,6 +90,11 @@ const refreshUser = async () => {
 const noticeRef = ref()
 const noticeDialog = (data: any) => {
   noticeRef.value?.openDialog(data)
+}
+
+const handleChangeSecretKey = () => {
+  visible.value = false
+  changeSecretKeyVisible.value = true
 }
 
 async function openDialog(row: any) {

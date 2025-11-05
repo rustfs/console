@@ -11,20 +11,26 @@
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent class="w-48" align="end" side="top">
+      <DropdownMenuItem @select="handleChangePassword">
+        <Icon name="ri:lock-password-line" class="h-4 w-4" />
+        <span>{{ t('Change Password') }}</span>
+      </DropdownMenuItem>
       <DropdownMenuItem @select="handleLogout">
         <Icon name="ri:logout-box-r-line" class="h-4 w-4" />
         <span>{{ t('Logout') }}</span>
       </DropdownMenuItem>
     </DropdownMenuContent>
   </DropdownMenu>
+  <AccessKeysChangePassword v-model:visible="changePasswordVisible" />
 </template>
 
 <script lang="ts" setup>
 import { Icon } from '#components'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { defineProps, toRef, withDefaults } from 'vue'
+import { defineProps, ref, toRef, withDefaults } from 'vue'
 import { useI18n } from 'vue-i18n'
+import AccessKeysChangePassword from '@/components/access-keys/change-password.vue'
 
 const { t } = useI18n()
 const { logout } = useAuth()
@@ -40,6 +46,11 @@ const props = withDefaults(
 )
 
 const isCollapsed = toRef(props, 'isCollapsed')
+const changePasswordVisible = ref(false)
+
+const handleChangePassword = () => {
+  changePasswordVisible.value = true
+}
 
 const handleLogout = async () => {
   await logout()

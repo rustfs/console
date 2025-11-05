@@ -4,10 +4,10 @@
       <h1 class="text-2xl font-bold">{{ t('Access Keys') }}</h1>
       <template #actions>
         <SearchInput v-model="searchTerm" :placeholder="t('Search Access Key')" clearable class="max-w-xs" />
-        <Button variant="outline" @click="changePasswordVisible = true">
+        <!-- <Button variant="outline" @click="changePasswordVisible = true">
           <Icon name="ri:key-2-line" class="size-4" />
           <span>{{ t('Change Password') }}</span>
-        </Button>
+        </Button> -->
         <Button variant="outline" v-if="selectedKeys.length" :disabled="!selectedKeys.length" @click="deleteSelected">
           <Icon name="ri:delete-bin-5-line" class="size-4" />
           <span>{{ t('Delete Selected') }}</span>

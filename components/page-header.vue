@@ -1,5 +1,5 @@
 <template>
-  <div class="sticky top-0 z-10 flex flex-col justify-between gap-2 md:flex-row">
+  <div class="sticky bg-background top-0 z-10 flex flex-col justify-between gap-2 md:flex-row">
     <div class="space-y-2">
       <slot />
       <slot name="description"></slot>

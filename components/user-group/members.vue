@@ -19,12 +19,17 @@
               :placeholder="t('Select user group members')"
             />
           </div>
-          <div class="flex items-center gap-2 sm:self-start">
+          <div class="flex items-center gap-2 sm:self-end">
             <Button type="button" variant="outline" @click="changeMembers">{{ t('Submit') }}</Button>
           </div>
         </div>
       </CardContent>
     </Card>
+    <div v-if="editStatus && members.length" class="flex flex-wrap gap-2">
+      <Badge v-for="value in members" :key="value" variant="secondary">
+        {{ value }}
+      </Badge>
+    </div>
 
     <DataTable :table="table" />
   </div>
@@ -124,11 +129,11 @@ const changeMembers = async () => {
       groupStatus: 'enabled',
     })
 
-    message.success('修改成功')
+    message.success(t('Edit Success'))
     editStatus.value = false
     emit('search')
   } catch (error) {
-    message.error('修改失败')
+    message.error(t('Edit Failed'))
   }
 }
 </script>

@@ -130,6 +130,9 @@ const columns: ColumnDef<BucketRow>[] = [
     id: 'actions',
     header: () => t('Actions'),
     enableSorting: false,
+    meta: {
+      width: 200,
+    },
     cell: ({ row }) =>
       h('div', { class: 'flex items-center gap-2' }, [
         h(

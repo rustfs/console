@@ -75,7 +75,7 @@ const refreshUser = async () => {
   user.value = {
     accessKey: user.value.accessKey,
     memberOf: latest.memberOf ?? [],
-    policy: latest.policy ?? [],
+    policy: latest.policyName?.split(',') ?? [],
     status: latest.status ?? 'enabled',
   }
 }

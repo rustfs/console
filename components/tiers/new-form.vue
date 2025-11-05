@@ -52,24 +52,40 @@
             </FieldContent>
           </Field>
 
-          <Field>
-            <FieldLabel>{{ t('Access Key') }}</FieldLabel>
-            <FieldContent>
-              <Input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
-            </FieldContent>
-          </Field>
+          <template v-if="isGCS">
+            <Field>
+              <FieldLabel>{{ t('Credentials') }} (JSON)</FieldLabel>
+              <FieldContent>
+                <Textarea
+                  v-model="formData.creds"
+                  :placeholder="t('Please enter GCS credentials JSON')"
+                  autocomplete="off"
+                  :rows="6"
+                />
+              </FieldContent>
+            </Field>
+          </template>
 
-          <Field>
-            <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
-            <FieldContent>
-              <Input
-                v-model="formData.secretkey"
-                type="password"
-                autocomplete="off"
-                :placeholder="t('Please enter Secret Key')"
-              />
-            </FieldContent>
-          </Field>
+          <template v-else>
+            <Field>
+              <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+              <FieldContent>
+                <Input v-model="formData.accesskey" :placeholder="t('Please enter Access Key')" autocomplete="off" />
+              </FieldContent>
+            </Field>
+
+            <Field>
+              <FieldLabel>{{ t('Secret Key') }}</FieldLabel>
+              <FieldContent>
+                <Input
+                  v-model="formData.secretkey"
+                  type="password"
+                  autocomplete="off"
+                  :placeholder="t('Please enter Secret Key')"
+                />
+              </FieldContent>
+            </Field>
+          </template>
 
           <Field>
             <FieldLabel>{{ t('Bucket') }}</FieldLabel>
@@ -116,13 +132,20 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field'
-import { reactive, ref } from 'vue'
+import { reactive, ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import RustfsIcon from '~/assets/logo.svg'
 import AWSIcon from '~/assets/svg/aws.svg'
 import MinioIcon from '~/assets/svg/minio.svg'
+import AliyunIcon from '~/assets/svg/aliyun.svg'
+import TencentIcon from '~/assets/svg/tenxunyun.svg'
+import HuaweiIcon from '~/assets/svg/huaweiyun.svg'
+import AzureIcon from '~/assets/svg/azure.svg'
+import GoogleIcon from '~/assets/svg/google.svg'
+import CloudflareIcon from '~/assets/svg/cloudflare.svg'
 import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
@@ -133,6 +156,22 @@ const typeOptions = [
   { label: t('RustFS'), value: 'rustfs', iconUrl: RustfsIcon, description: t('RustFS built-in cold storage') },
   { label: t('Minio'), value: 'minio', iconUrl: MinioIcon, description: t('External MinIO tier') },
   { label: t('AWS S3'), value: 's3', iconUrl: AWSIcon, description: t('Standard AWS S3 tier') },
+  {
+    label: t('Aliyun OSS'),
+    value: 'aliyun',
+    iconUrl: AliyunIcon,
+    description: t('Alibaba Cloud Object Storage Service'),
+  },
+  { label: t('Tencent COS'), value: 'tencent', iconUrl: TencentIcon, description: t('Tencent Cloud Object Storage') },
+  {
+    label: t('Huawei OBS'),
+    value: 'huaweicloud',
+    iconUrl: HuaweiIcon,
+    description: t('Huawei Cloud Object Storage Service'),
+  },
+  { label: t('Azure Blob'), value: 'azure', iconUrl: AzureIcon, description: t('Microsoft Azure Blob Storage') },
+  { label: t('Google Cloud Storage'), value: 'gcs', iconUrl: GoogleIcon, description: t('Google Cloud Storage') },
+  { label: t('Cloudflare R2'), value: 'r2', iconUrl: CloudflareIcon, description: t('Cloudflare R2 Storage') },
 ]
 
 const visible = ref(false)
@@ -145,11 +184,14 @@ const formData = reactive({
   endpoint: '',
   accesskey: '',
   secretkey: '',
+  creds: '',
   bucket: '',
   prefix: '',
   region: '',
   storageclass: 'STANDARD',
 })
+
+const isGCS = computed(() => formData.type === 'gcs')
 
 const errors = reactive({
   name: '',
@@ -175,6 +217,7 @@ const resetForm = () => {
   formData.endpoint = ''
   formData.accesskey = ''
   formData.secretkey = ''
+  formData.creds = ''
   formData.bucket = ''
   formData.prefix = ''
   formData.region = ''
@@ -203,18 +246,25 @@ const handleSave = async () => {
   if (!validate()) return
   submitting.value = true
   try {
+    const config: any = {
+      name: formData.name,
+      endpoint: formData.endpoint,
+      bucket: formData.bucket,
+      prefix: formData.prefix,
+      region: formData.region,
+      storageClass: formData.storageclass,
+    }
+
+    if (isGCS.value) {
+      config.creds = formData.creds
+    } else {
+      config.accessKey = formData.accesskey
+      config.secretKey = formData.secretkey
+    }
+
     const payload = {
       type: formData.type,
-      [formData.type]: {
-        name: formData.name,
-        endpoint: formData.endpoint,
-        bucket: formData.bucket,
-        prefix: formData.prefix,
-        region: formData.region,
-        accessKey: formData.accesskey,
-        secretKey: formData.secretkey,
-        storageClass: formData.storageclass,
-      },
+      [formData.type]: config,
     }
 
     await usetier.addTiers(payload)

@@ -212,7 +212,7 @@ const handleRowDelete = async (row: NotificationItem, event?: Event) => {
     message.success(t('Delete Success'))
     await refresh()
   } catch (error: any) {
-    console.error('删除通知配置失败:', error)
+    console.error(t('Delete Failed'), error)
     message.error(`${t('Delete Failed')}: ${error.message || error}`)
   } finally {
     loading.value = false
@@ -294,7 +294,7 @@ const refresh = async () => {
 
     pageData.value = notifications
   } catch (error) {
-    console.error('获取通知配置失败:', error)
+    console.error(t('Get Notification Config Failed'), error)
     pageData.value = []
   } finally {
     loading.value = false

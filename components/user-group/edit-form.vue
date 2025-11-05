@@ -13,10 +13,10 @@
         </TabsList>
 
         <TabsContent value="users" class="mt-0">
-          <users-group-members :group="group" @search="getGroupData(group.name)" />
+          <user-group-members :group="group" @search="getGroupData(group.name)" />
         </TabsContent>
         <TabsContent value="policy" class="mt-0">
-          <users-group-policies :group="group" @search="getGroupData(group.name)" />
+          <user-group-policies :group="group" @search="getGroupData(group.name)" />
         </TabsContent>
       </Tabs>
     </div>

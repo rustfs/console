@@ -72,6 +72,9 @@ const columns: ColumnDef<PolicyRow>[] = [
     header: () => t('Actions'),
     enableSorting: false,
     enableHiding: false,
+    meta: {
+      width: 200,
+    },
     cell: ({ row }) =>
       h('div', { class: 'flex items-center gap-2' }, [
         h(

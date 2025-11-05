@@ -24,7 +24,7 @@
         :table="table"
         :is-loading="loading"
         :empty-title="t('No Data')"
-        :empty-description="t('Create a user to get started.')"
+        :empty-description="t('Create a user to get started')"
         table-class="min-w-full"
       />
       <DataTablePagination :table="table" />
@@ -122,6 +122,9 @@ const columns: ColumnDef<UserRow>[] = [
     header: () => t('Actions'),
     enableSorting: false,
     enableHiding: false,
+    meta: {
+      width: 200,
+    },
     cell: ({ row }) =>
       h('div', { class: 'flex items-center gap-2' }, [
         h(

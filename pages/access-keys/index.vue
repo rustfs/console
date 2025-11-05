@@ -118,6 +118,9 @@ const columns: ColumnDef<RowData>[] = [
     header: () => t('Actions'),
     enableSorting: false,
     enableHiding: false,
+    meta: {
+      width: 200,
+    },
     cell: ({ row }) =>
       h('div', { class: 'flex justify-center gap-2' }, [
         h(

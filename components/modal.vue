@@ -74,11 +74,11 @@ const handleEscape = (event: Event) => {
         </slot>
       </DialogHeader>
 
-      <div class="max-h-[80vh]">
+      <div class="max-h-[80vh] overflow-scroll">
         <slot />
       </div>
 
-      <DialogFooter v-if="showFooter && $slots.footer">
+      <DialogFooter v-if="showFooter && $slots.footer" class="border-t pt-4">
         <slot name="footer" />
       </DialogFooter>
     </DialogContent>

@@ -139,11 +139,11 @@ defineExpose({
           </Command>
         </PopoverContent>
       </Popover>
-      <div v-if="showBadges && modelValue.length" class="flex flex-wrap gap-2">
-        <Badge v-for="value in modelValue" :key="value" variant="secondary">
-          {{ userLabelMap[value] ?? value }}
-        </Badge>
-      </div>
     </FieldContent>
   </Field>
+  <!-- <div v-if="showBadges && modelValue.length" class="flex flex-wrap gap-2">
+    <Badge v-for="value in modelValue" :key="value" variant="secondary">
+      {{ userLabelMap[value] ?? value }}
+    </Badge>
+  </div> -->
 </template>

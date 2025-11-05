@@ -62,6 +62,18 @@ const getConfig = (row: TierRow) => {
       return row.minio
     case 's3':
       return row.s3
+    case 'aliyun':
+      return row.aliyun
+    case 'tencent':
+      return row.tencent
+    case 'huaweicloud':
+      return row.huaweicloud
+    case 'azure':
+      return row.azure
+    case 'gcs':
+      return row.gcs
+    case 'r2':
+      return row.r2
     default:
       return undefined
   }

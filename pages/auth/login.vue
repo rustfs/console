@@ -29,14 +29,14 @@ const handleLogin = async () => {
   const credentials = method.value === 'accessKeyAndSecretKey' ? accessKeyAndSecretKey.value : sts.value
 
   try {
-    // 使用配置管理器获取配置（优先使用localStorage中的配置）
+    // use configManager to get config .use localStorage first, then use the config to login
     const { configManager } = await import('~/utils/config')
     const currentConfig = await configManager.loadConfig()
 
     await auth.login(credentials, currentConfig)
 
     message.success(t('Login Success'))
-    // 重新加载页面以确保新的配置生效
+    // reload the page to ensure the new config is applied
     window.location.reload()
   } catch (error) {
     message.error(t('Login Failed'))
@@ -56,7 +56,7 @@ const handleLogin = async () => {
       <div
         class="w-full lg:w-1/2 flex flex-col justify-center items-center bg-white dark:bg-neutral-900 dark:border-neutral-700 relative"
       >
-        <!-- 表单容器右上角的配置按钮 -->
+        <!-- config button in the top right corner of the form container -->
         <div class="absolute top-4 right-4 z-10">
           <NuxtLink
             to="/config"

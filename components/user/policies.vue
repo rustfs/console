@@ -52,12 +52,9 @@
               </Command>
             </PopoverContent>
           </Popover>
-          <div v-if="selectedPolicies.length" class="flex flex-wrap gap-2">
-            <Badge v-for="value in selectedPolicies" :key="value" variant="secondary">{{ value }}</Badge>
-          </div>
         </FieldContent>
       </Field>
-      <div class="flex items-center gap-2 sm:self-start">
+      <div class="flex items-center gap-2 sm:self-end">
         <Button variant="ghost" @click="cancelEditing">
           {{ t('Cancel') }}
         </Button>
@@ -65,6 +62,9 @@
           {{ t('Submit') }}
         </Button>
       </div>
+    </div>
+    <div v-if="selectedPolicies.length" class="flex flex-wrap gap-2">
+      <Badge v-for="value in selectedPolicies" :key="value" variant="secondary">{{ value }}</Badge>
     </div>
 
     <DataTable :table="table" />

@@ -34,9 +34,22 @@ const visibleColumnCount = computed(() => props.table.getVisibleLeafColumns().le
 const hasRows = computed(() => props.table.getRowModel().rows.length > 0)
 
 const getColumnStyles = (column: Column<TData, unknown>) => {
-  const maxWidth = column.columnDef.meta?.maxWidth
-  if (maxWidth == null) return undefined
-  return { maxWidth: typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth }
+  const meta = column.columnDef.meta
+  if (!meta) return undefined
+
+  const styles: Record<string, string> = {}
+
+  if (meta.width != null) {
+    styles.width = typeof meta.width === 'number' ? `${meta.width}px` : meta.width
+  }
+  if (meta.minWidth != null) {
+    styles.minWidth = typeof meta.minWidth === 'number' ? `${meta.minWidth}px` : meta.minWidth
+  }
+  if (meta.maxWidth != null) {
+    styles.maxWidth = typeof meta.maxWidth === 'number' ? `${meta.maxWidth}px` : meta.maxWidth
+  }
+
+  return Object.keys(styles).length > 0 ? styles : undefined
 }
 </script>
 

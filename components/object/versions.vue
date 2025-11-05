@@ -95,6 +95,7 @@ const columns = computed<ColumnDef<any, any>[]>(() => [
           {
             variant: 'destructive',
             size: 'sm',
+            class: 'text-white',
             onClick: () => deleteVersion(row.original),
           },
           () => t('Delete')

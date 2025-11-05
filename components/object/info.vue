@@ -29,18 +29,34 @@
           <ItemTitle>{{ t('Info') }}</ItemTitle>
         </ItemHeader>
         <ItemContent class="space-y-3 text-sm">
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-muted-foreground">{{ t('Object Name') }}</span>
-            <span>{{ object?.Key }}</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-muted-foreground">{{ t('Object Size') }}</span>
-            <span>{{ object?.ContentLength }}</span>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="font-medium text-muted-foreground">{{ t('Object Type') }}</span>
-            <span>{{ object?.ContentType }}</span>
-          </div>
+          <TooltipProvider>
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-muted-foreground">{{ t('Object Name') }}</span>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <span class="max-w-[60%] truncate">{{ object?.Key }}</span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p class="max-w-xs break-all">{{ object?.Key }}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-muted-foreground">{{ t('Object Size') }}</span>
+              <span>{{ object?.ContentLength }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-muted-foreground">{{ t('Object Type') }}</span>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <span class="max-w-[60%] truncate">{{ object?.ContentType }}</span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p class="max-w-xs break-all">{{ object?.ContentType }}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
           <div class="flex items-center justify-between">
             <span class="font-medium text-muted-foreground">ETag</span>
             <span>{{ object?.ETag }}</span>
@@ -161,6 +177,7 @@ import { Input } from '@/components/ui/input'
 import { Item, ItemContent, ItemHeader, ItemTitle } from '@/components/ui/item'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import Drawer from '~/components/drawer.vue'
 import Modal from '~/components/modal.vue'
 

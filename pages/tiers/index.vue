@@ -14,10 +14,20 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Tiers')" :empty-description="t('Add tiers to configure remote storage destinations.')" />
+    <DataTable
+      :table="table"
+      :is-loading="loading"
+      :empty-title="t('No Tiers')"
+      :empty-description="t('Add tiers to configure remote storage destinations.')"
+    />
 
     <tiers-new-form ref="newFormRef" @search="() => refresh()" />
-    <tiers-change-key ref="changeKeyRef" v-model:visible="changeKeyVisible" v-model:name="selectedTier" @search="() => refresh()" />
+    <tiers-change-key
+      ref="changeKeyRef"
+      v-model:visible="changeKeyVisible"
+      v-model:name="selectedTier"
+      @search="() => refresh()"
+    />
   </page>
 </template>
 
@@ -52,6 +62,18 @@ const getConfig = (row: TierRow) => {
       return row.minio
     case 's3':
       return row.s3
+    case 'aliyun':
+      return row.aliyun
+    case 'tencent':
+      return row.tencent
+    case 'huaweicloud':
+      return row.huaweicloud
+    case 'azure':
+      return row.azure
+    case 'gcs':
+      return row.gcs
+    case 'r2':
+      return row.r2
     default:
       return undefined
   }

@@ -313,6 +313,7 @@ const { table, selectedRowIds } = useDataTable<ObjectRow>({
   columns,
   getRowId: (row: any) => row.Key,
   enableRowSelection: true,
+  manualPagination: true,
 })
 
 // Use selectedRowIds from data-table instead of manually maintaining checkedKeys

@@ -76,9 +76,64 @@
               <span v-if="retainUntilDate" class="text-xs text-muted-foreground">{{ retainUntilDate }}</span>
             </div>
           </div>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span class="font-medium text-muted-foreground">{{ t('Temporary URL Expiration') }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2">
+                <Input
+                  v-model.number="expirationDays"
+                  type="number"
+                  :min="0"
+                  :max="7"
+                  :placeholder="t('Days')"
+                  class="w-20"
+                  @input="validateAndUpdateExpiration"
+                />
+                <span class="text-sm text-muted-foreground">{{ t('Days') }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <Input
+                  v-model.number="expirationHours"
+                  type="number"
+                  :min="0"
+                  :max="expirationDays > 0 ? 23 : 24"
+                  :placeholder="t('Hours')"
+                  class="w-20"
+                  @input="validateAndUpdateExpiration"
+                />
+                <span class="text-sm text-muted-foreground">{{ t('Hours') }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <Input
+                  v-model.number="expirationMinutes"
+                  type="number"
+                  :min="0"
+                  :max="59"
+                  :placeholder="t('Minutes')"
+                  class="w-20"
+                  @input="validateAndUpdateExpiration"
+                />
+                <span class="text-sm text-muted-foreground">{{ t('Minutes') }}</span>
+              </div>
+            </div>
+            <div v-if="expirationError" class="text-xs text-destructive">{{ expirationError }}</div>
+            <div v-if="totalExpirationSeconds > 0" class="text-xs text-muted-foreground">
+              {{ t('Total Duration') }}: {{ formatDuration(totalExpirationSeconds) }}
+            </div>
+          </div>
           <div class="flex items-center gap-2">
             <Input v-model="signedUrl" :placeholder="t('Temporary URL')" readonly />
-            <Button variant="outline" size="sm" :disabled="!object?.Key" @click="copyTemporaryUrl">
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="!object?.Key || !isExpirationValid"
+              @click="generateTemporaryUrl"
+            >
+              {{ t('Generate URL') }}
+            </Button>
+            <Button variant="outline" size="sm" :disabled="!signedUrl" @click="copyTemporaryUrl">
               {{ t('Copy') }}
             </Button>
           </div>
@@ -205,11 +260,17 @@ const previewObject = ref<any | null>(null)
 
 const tagFormValue = ref({ Key: '', Value: '' })
 
-const { getObjectInfo, setLegalHold, putObjectTags, getObjectTags, getObjectRetention, putObjectRetention } = useObject(
-  {
-    bucket: props.bucketName,
-  }
-)
+const {
+  getObjectInfo,
+  setLegalHold,
+  putObjectTags,
+  getObjectTags,
+  getObjectRetention,
+  putObjectRetention,
+  getSignedUrl,
+} = useObject({
+  bucket: props.bucketName,
+})
 
 const openDrawer = async (_bucket: string, key: string) => {
   visible.value = true
@@ -221,12 +282,143 @@ const openDrawer = async (_bucket: string, key: string) => {
     message.error(t('Failed to fetch object info'))
   }
 }
+// 有效期输入（天数、小时、分钟）
+const expirationDays = ref<number>(0)
+const expirationHours = ref<number>(0)
+const expirationMinutes = ref<number>(0)
+const expirationError = ref<string>('')
+const totalExpirationSeconds = ref<number>(0)
+const isExpirationValid = ref<boolean>(false)
+
+// 一周的秒数
+const ONE_WEEK_SECONDS = 7 * 24 * 60 * 60 // 604800
+
+// 计算总时长（秒数）
+const calculateTotalSeconds = (days: number, hours: number, minutes: number): number => {
+  return days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60
+}
+
+// 验证有效期输入
+const validateExpiration = (): boolean => {
+  expirationError.value = ''
+
+  // 处理空值和非数字值，转换为0
+  const days = Number(expirationDays.value) || 0
+  const hours = Number(expirationHours.value) || 0
+  const minutes = Number(expirationMinutes.value) || 0
+
+  // 检查是否为有效数字
+  if (isNaN(days) || isNaN(hours) || isNaN(minutes)) {
+    return false
+  }
+
+  // 检查分钟范围 (0-59)
+  if (minutes < 0 || minutes > 59) {
+    expirationError.value = t('Minutes must be between 0 and 59')
+    return false
+  }
+
+  // 检查小时范围
+  if (hours < 0) {
+    expirationError.value = t('Hours must be between 0 and 23')
+    return false
+  }
+
+  // 如果天数大于0，小时不能超过23
+  if (days > 0 && hours > 23) {
+    expirationError.value = t('Hours must be between 0 and 23')
+    return false
+  }
+
+  // 如果天数为0，小时不能超过24
+  if (days === 0 && hours > 24) {
+    expirationError.value = t('Hours must be between 0 and 24 when days is 0')
+    return false
+  }
+
+  // 检查天数范围 (0-7)
+  if (days < 0 || days > 7) {
+    expirationError.value = t('Days must be between 0 and 7')
+    return false
+  }
+
+  // 如果小时为24，自动转换为1天0小时（在计算时处理）
+  let finalDays = days
+  let finalHours = hours
+  if (hours === 24 && days === 0) {
+    finalDays = 1
+    finalHours = 0
+  }
+
+  // 计算总时长
+  const totalSeconds = calculateTotalSeconds(finalDays, finalHours, minutes)
+
+  // 检查总时长不能超过一周
+  if (totalSeconds > ONE_WEEK_SECONDS) {
+    expirationError.value = t('Total duration cannot exceed 7 days')
+    return false
+  }
+
+  // 检查至少有一个值大于0
+  if (totalSeconds === 0) {
+    return false
+  }
+
+  totalExpirationSeconds.value = totalSeconds
+  return true
+}
+
+// 验证并更新有效期
+const validateAndUpdateExpiration = () => {
+  isExpirationValid.value = validateExpiration()
+}
+
+// 格式化时长显示
+const formatDuration = (seconds: number): string => {
+  if (seconds === 0) return ''
+
+  const days = Math.floor(seconds / (24 * 60 * 60))
+  const hours = Math.floor((seconds % (24 * 60 * 60)) / (60 * 60))
+  const minutes = Math.floor((seconds % (60 * 60)) / 60)
+
+  const parts: string[] = []
+  if (days > 0) parts.push(`${days} ${t('Days')}`)
+  if (hours > 0) parts.push(`${hours} ${t('Hours')}`)
+  if (minutes > 0) parts.push(`${minutes} ${t('Minutes')}`)
+
+  return parts.join(' ')
+}
+
+// 生成临时链接
+const generateTemporaryUrl = async () => {
+  if (!object.value?.Key) return
+
+  if (!validateExpiration()) {
+    message.error(expirationError.value || t('Please enter a valid expiration time'))
+    return
+  }
+
+  try {
+    const url = await getSignedUrl(object.value.Key, totalExpirationSeconds.value)
+    signedUrl.value = url
+    message.success(t('URL generated successfully'))
+  } catch (error: any) {
+    message.error(error?.message || t('Failed to generate URL'))
+  }
+}
 
 const loadObjectInfo = async (key: string) => {
   const info = await getObjectInfo(key)
   object.value = info
   lockStatus.value = info?.ObjectLockLegalHoldStatus === 'ON'
-  signedUrl.value = info?.SignedUrl || ''
+  // 默认不生成分享链接，重置有效期输入
+  expirationDays.value = 0
+  expirationHours.value = 0
+  expirationMinutes.value = 0
+  signedUrl.value = ''
+  expirationError.value = ''
+  totalExpirationSeconds.value = 0
+  isExpirationValid.value = false
 }
 
 const fetchTags = async (key: string) => {

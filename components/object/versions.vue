@@ -163,7 +163,7 @@ const getSignedUrlWithVersion = async (key: string, versionId: string, expiresIn
   const command = new GetObjectCommand({
     Bucket: props.bucketName,
     Key: key,
-    VersionId: versionId,
+    VersionId: versionId == '00000000-0000-0000-0000-000000000000' ? undefined : versionId,
   })
   return await getSignedUrl(client, command, { expiresIn })
 }

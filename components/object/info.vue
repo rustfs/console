@@ -517,7 +517,7 @@ const handlePreviewVersion = async (versionId: string) => {
         new HeadObjectCommand({
           Bucket: props.bucketName,
           Key: object.value.Key,
-          VersionId: versionId,
+          VersionId: versionId == '00000000-0000-0000-0000-000000000000' ? undefined : versionId,
         })
       ),
       presignGetObject(
@@ -525,7 +525,7 @@ const handlePreviewVersion = async (versionId: string) => {
         new GetObjectCommand({
           Bucket: props.bucketName,
           Key: object.value.Key,
-          VersionId: versionId,
+          VersionId: versionId == '00000000-0000-0000-0000-000000000000' ? undefined : versionId,
         }),
         { expiresIn: 3600 }
       ),
@@ -534,7 +534,7 @@ const handlePreviewVersion = async (versionId: string) => {
       ...head,
       Key: object.value.Key,
       SignedUrl: signed,
-      VersionId: versionId,
+      VersionId: versionId == '00000000-0000-0000-0000-000000000000' ? undefined : versionId,
     }
     showPreview.value = true
   } catch (error: any) {

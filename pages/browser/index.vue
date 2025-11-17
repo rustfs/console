@@ -160,6 +160,7 @@ const columns: ColumnDef<BucketRow>[] = [
 const { table } = useDataTable<BucketRow>({
   data: filteredData,
   columns,
+  manualPagination: true,
   getRowId: row => row.Name,
 })
 

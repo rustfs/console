@@ -152,7 +152,8 @@ watch(
     formModel.name = props.user.name ?? ''
     formModel.description = props.user.description ?? ''
     formModel.impliedPolicy = props.user.impliedPolicy ?? true
-    formModel.expiry = props.user.expiration ?? null
+    formModel.expiry =
+      props.user.expiration && props.user.expiration !== '9999-01-01T00:00:00Z' ? props.user.expiration : null
     formModel.policy = props.user.policy ?? '{}'
     formModel.accountStatus = props.user.accountStatus ?? 'on'
     loadParentPolicy()
@@ -174,10 +175,10 @@ const cancelEdit = () => {
 }
 
 const validateForm = () => {
-  if (!formModel.expiry) {
-    message.error(t('Please select expiration date'))
-    return false
-  }
+  // if (!formModel.expiry) {
+  //   message.error(t('Please select expiration date'))
+  //   return false
+  // }
   if (!formModel.impliedPolicy) {
     try {
       JSON.parse(formModel.policy || '{}')

@@ -212,7 +212,7 @@ watch(searchTerm, value => {
 })
 
 const formatExpiration = (value?: string) => {
-  if (!value) return '-'
+  if (!value || value == '9999-01-01T00:00:00Z') return '-'
   const date = dayjs(value)
   if (!date.isValid()) return '-'
   return date.format('YYYY-MM-DD HH:mm')
@@ -305,10 +305,10 @@ const validateForm = () => {
     message.error(t('Secret Key length must be between 8 and 40 characters'))
     return false
   }
-  if (!formModel.expiry) {
-    message.error(t('Please select expiration date'))
-    return false
-  }
+  // if (!formModel.expiry) {
+  //   message.error(t('Please select expiration date'))
+  //   return false
+  // }
   if (!formModel.impliedPolicy) {
     try {
       JSON.parse(formModel.policy || '{}')
@@ -336,7 +336,7 @@ const submitForm = async () => {
       ...formModel,
       targetUser: props.user.accessKey,
       policy: formModel.impliedPolicy ? null : JSON.stringify(JSON.parse(formModel.policy || '{}')),
-      expiration: formModel.expiry ? new Date(formModel.expiry).toISOString() : null,
+      expiration: formModel.expiry ? new Date(formModel.expiry).toISOString() : '9999-01-01T00:00:00.000Z',
     }
     const res = await createServiceAccount(payload)
     message.success(t('Add Success'))

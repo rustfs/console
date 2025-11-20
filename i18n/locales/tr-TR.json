@@ -866,5 +866,6 @@
   "API request failed": "API isteği başarısız",
   "Operation failed": "İşlem başarısız",
   "Create a user to get started": "Başlamak için bir kullanıcı oluşturun",
-  "Get Notification Config Failed": "Bildirim Yapılandırması Alınamadı"
+  "Get Notification Config Failed": "Bildirim Yapılandırması Alınamadı",
+  "empty is indicates permanent validity": "boş, kalıcı geçerlilik gösterir"
 }

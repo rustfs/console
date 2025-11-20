@@ -93,7 +93,12 @@ const columns: ColumnDef<RowData>[] = [
     accessorKey: 'expiration',
     header: () => t('Expiration'),
     cell: ({ row }) =>
-      h('span', row.original.expiration ? dayjs(row.original.expiration).format('YYYY-MM-DD HH:mm') : '-'),
+      h(
+        'span',
+        row.original.expiration && row.original.expiration !== '9999-01-01T00:00:00Z'
+          ? dayjs(row.original.expiration).format('YYYY-MM-DD HH:mm')
+          : '-'
+      ),
   },
   {
     accessorKey: 'accountStatus',

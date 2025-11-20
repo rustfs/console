@@ -47,7 +47,8 @@ async function openDialog(row: any) {
     formModel.accesskey = row.accessKey
     const policyValue = typeof res.policy === 'string' ? res.policy : JSON.stringify(res.policy ?? {})
     formModel.policy = policyValue
-    formModel.expiry = res.expiration ? dayjs(res.expiration).toISOString() : null
+    formModel.expiry =
+      res.expiration && res.expiration !== '9999-01-01T00:00:00Z' ? dayjs(res.expiration).toISOString() : null
     formModel.name = res.name ?? ''
     formModel.description = res.description ?? ''
     formModel.status = res.accountStatus ?? 'on'
@@ -78,7 +79,7 @@ async function submitForm() {
       newStatus: formModel.status,
       newName: formModel.name,
       newDescription: formModel.description,
-      newExpiration: formModel.expiry ? dayjs(formModel.expiry).toISOString() : undefined,
+      newExpiration: formModel.expiry ? dayjs(formModel.expiry).toISOString() : '9999-01-01T00:00:00Z',
     })
     message.success(t('Updated successfully'))
     closeModal()

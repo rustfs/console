@@ -22,7 +22,7 @@
       </Field>
 
       <Field>
-        <FieldLabel for="create-expiry">{{ t('Expiry') }}</FieldLabel>
+        <FieldLabel for="create-expiry">{{ t('Expiry') }}({{ t('empty is indicates permanent validity') }})</FieldLabel>
         <FieldContent>
           <DateTimePicker
             id="create-expiry"
@@ -181,15 +181,16 @@ function validate() {
     errors.secretKey = t('Secret Key length must be between 8 and 40 characters')
   }
 
-  if (!formModel.expiry) {
-    errors.expiry = t('Please select expiry date')
-  }
+  // remove expiry validation
+  // if (!formModel.expiry) {
+  //   errors.expiry = t('Please select expiry date')
+  // }
 
   if (!formModel.name) {
     errors.name = t('Please enter name')
   }
 
-  return !errors.accessKey && !errors.secretKey && !errors.expiry && !errors.name
+  return !errors.accessKey && !errors.secretKey && !errors.name
 }
 
 async function submitForm() {
@@ -214,7 +215,7 @@ async function submitForm() {
     const payload = {
       ...formModel,
       policy: customPolicy,
-      expiration: formModel.expiry,
+      expiration: formModel.expiry ? formModel.expiry : '9999-01-01T00:00:00.000Z',
     }
 
     const res = await createServiceAccount(payload)

@@ -19,6 +19,7 @@
 ## Coding Style & Naming Conventions
 
 - Use Prettier defaults (see `.prettierrc.ts`); run `pnpm lint` or `pnpm lint:fix`.
+- **Always run `pnpm run lint:fix` after making code changes to ensure formatting compliance before committing.**
 - Vue files use `<script setup>` with TypeScript; prefer composables for shared logic.
 - Component files use **kebab-case** (e.g. `bucket-selector.vue`), but reference them using **StudlyCase** in templates (e.g. `<BucketSelector />`).
 - Override shadcn primitives **outside** `components/ui/`; never edit files in that directory directly.

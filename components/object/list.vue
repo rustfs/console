@@ -1,7 +1,13 @@
 <template>
   <div class="space-y-6">
     <page-header>
-      <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable />
+      <div class="flex flex-wrap items-center gap-4 min-w-[40vw]">
+        <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable class="lg:max-w-sm" />
+        <label class="flex items-center gap-2 text-sm text-muted-foreground">
+          <Checkbox v-model="showDeleted" />
+          <span>{{ t('Show Deleted Objects') }}</span>
+        </label>
+      </div>
       <template #actions>
         <object-upload-stats />
         <object-delete-stats />
@@ -81,11 +87,15 @@
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+
+import { useLocalStorage } from '@vueuse/core'
 
 import { Icon, NuxtLink } from '#components'
 import DataTable from '@/components/data-table/data-table.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
 import { ListObjectsV2Command } from '@aws-sdk/client-s3'
+import type { HttpRequest } from '@smithy/protocol-http'
 import type { ColumnDef } from '@tanstack/vue-table'
 import dayjs from 'dayjs'
 import { saveAs } from 'file-saver'
@@ -107,6 +117,7 @@ const newObjectFormVisible = ref(false)
 const newObjectAsPrefix = ref(false)
 const searchTerm = ref('')
 const loading = ref(false)
+const showDeleted = useLocalStorage('object-list-show-deleted', false)
 
 const debounce = (fn: Function, delay: number) => {
   let timer: NodeJS.Timeout | null = null
@@ -172,15 +183,26 @@ const handleObjectDeleted = () => {
 const fetchObjects = async (): Promise<ObjectRow[]> => {
   loading.value = true
   try {
-    const response = await $s3Client.send(
-      new ListObjectsV2Command({
-        Bucket: bucketName.value,
-        Prefix: prefix.value,
-        Delimiter: '/',
-        ContinuationToken: continuationToken.value,
-        MaxKeys: pageSize.value,
-      })
-    )
+    const command = new ListObjectsV2Command({
+      Bucket: bucketName.value,
+      Prefix: prefix.value,
+      Delimiter: '/',
+      ContinuationToken: continuationToken.value,
+      MaxKeys: pageSize.value,
+    })
+
+    if (showDeleted.value) {
+      command.middlewareStack.add(
+        next => async args => {
+          const request = args.request as HttpRequest
+          request.headers['X-Rustfs-Include-Deleted'] = 'true'
+          return next(args)
+        },
+        { step: 'build', name: 'includeDeletedObjectsMiddleware', tags: ['INCLUDE_DELETED'] }
+      )
+    }
+
+    const response = await $s3Client.send(command)
 
     nextToken.value = response.NextContinuationToken
 
@@ -200,12 +222,17 @@ const fetchObjects = async (): Promise<ObjectRow[]> => {
 
     return [...prefixItems, ...objectItems]
   } finally {
-    loading.value = false
+    // 200ms delay to avoid flickering
+    setTimeout(() => {
+      loading.value = false
+    }, 200)
   }
 }
 
 const asyncDataCacheKey = computed(() => {
-  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${searchTerm.value || 'all'}`
+  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${searchTerm.value || 'all'}-${
+    showDeleted.value ? 'withDeleted' : 'withoutDeleted'
+  }`
 })
 
 const displayKey = (key: string) => {
@@ -229,9 +256,15 @@ const { data, refresh } = await useAsyncData<ObjectRow[]>(
   },
   {
     default: () => [],
-    watch: [bucketName, prefix, continuationToken, searchTerm],
+    watch: [bucketName, prefix, continuationToken, searchTerm, showDeleted],
   }
 )
+
+watch(showDeleted, () => {
+  continuationToken.value = undefined
+  tokenHistory.value = []
+  refresh()
+})
 
 const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
   return [

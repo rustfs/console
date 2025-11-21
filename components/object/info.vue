@@ -564,13 +564,12 @@ watch(
 
 const download = async () => {
   if (!object.value) return
-  const url = joinRelativeURL(
-    '/browser',
-    encodeURIComponent(props.bucketName),
-    'download',
-    encodeURIComponent(object.value.Key)
-  )
-  window.open(url, '_blank')
+  try {
+    const url = await getSignedUrl(object.value.Key)
+    window.open(url, '_blank')
+  } catch (error: any) {
+    message.error(error?.message || t('Download Failed'))
+  }
 }
 
 const copyTemporaryUrl = async () => {

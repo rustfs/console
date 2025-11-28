@@ -305,11 +305,29 @@ const bucketName = ref('')
 const drawerTitle = computed(() => `${t('Bucket Configuration')}(${bucketName.value || '-'})`)
 
 const openDrawer = (bucket: string) => {
+  resetData()
   visible.value = true
   bucketName.value = bucket
   getData()
 }
 
+const resetData = () => {
+  lockStatus.value = false
+  versioningStatus.value = 'Suspended'
+  retentionEnabled.value = false
+  retentionFormValue.value.retentionMode = null
+  retentionFormValue.value.retentionPeriod = null
+  retentionFormValue.value.retentionUnit = null
+  policyFormValue.value = {
+    policy: 'private',
+    content: '{}',
+  }
+  encryptFormValue.value = {
+    encrypt: 'disabled',
+    kmsKeyId: '',
+  }
+  tags.value = []
+}
 defineExpose({ openDrawer })
 
 const {

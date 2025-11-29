@@ -168,7 +168,7 @@ import Progress from '@/components/ui/progress/Progress.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Modal from '~/components/modal.vue'
-import { useUploadTaskManagerStore } from '~/store/upload-tasks'
+import { useTaskManagerStore } from '~/store/tasks'
 
 const props = defineProps<{
   show: boolean
@@ -203,7 +203,7 @@ interface OptimizedFileGroup {
 
 const { t } = useI18n()
 const message = useMessage()
-const uploadTaskManagerStore = useUploadTaskManagerStore()
+const uploadTaskManagerStore = useTaskManagerStore()
 
 const visible = computed({
   get: () => props.show,
@@ -477,7 +477,7 @@ const handleUpload = async () => {
       for (let i = 0; i < files.length; i += 50) {
         const batch = files.slice(i, i + 50)
         await new Promise(resolve => setTimeout(resolve, 0))
-        await Promise.resolve(uploadTaskManagerStore.addFiles(batch, bucket, prefix))
+        await Promise.resolve(uploadTaskManagerStore.addUploadFiles(batch, bucket, prefix))
         processed += batch.length
         addProgress.value = Math.round((processed / totals) * 100)
       }

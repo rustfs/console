@@ -9,8 +9,11 @@
         </label>
       </div>
       <template #actions>
-        <object-upload-stats />
-        <object-delete-stats />
+        <object-task-stats :tasks="taskStore.tasks" :on-clear-tasks="taskStore.clearTasks">
+          <template #task-list="{ tasks }">
+            <object-task-list :tasks="tasks" />
+          </template>
+        </object-task-stats>
         <!-- <Button variant="outline" @click="() => handleNewObject(true)">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('New Folder') }}</span>
@@ -102,9 +105,8 @@ import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import { joinRelativeURL } from 'ufo'
 import type { VNode } from 'vue'
-import { computed, h, ref, watch } from 'vue'
-import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
-import { useUploadTaskManagerStore } from '~/store/upload-tasks'
+import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useTaskManagerStore } from '~/store/tasks'
 
 const { $s3Client } = useNuxtApp()
 const { t } = useI18n()
@@ -139,8 +141,7 @@ watch(searchTerm, () => {
   handleSearch()
 })
 
-const uploadTaskStore = useUploadTaskManagerStore()
-const deleteTaskStore = useDeleteTaskManagerStore()
+const taskStore = useTaskManagerStore()
 
 type ObjectRow = {
   Key: string
@@ -352,17 +353,22 @@ const { table, selectedRowIds } = useDataTable<ObjectRow>({
 // Use selectedRowIds from data-table instead of manually maintaining checkedKeys
 const checkedKeys = computed(() => selectedRowIds.value)
 
-watch(
-  () => uploadTaskStore.tasks,
-  () => setTimeout(() => refresh(), 500),
-  { deep: true }
-)
+// 监听任务完成事件，只在所有任务完成时刷新列表
+// 这样可以避免在上传/删除大量文件时频繁刷新
+// 保存事件处理函数引用，以便在卸载时正确清理
+const handleAllTasksCompleted = () => {
+  refresh()
+}
 
-watch(
-  () => deleteTaskStore.tasks,
-  () => setTimeout(() => refresh(), 500),
-  { deep: true }
-)
+onMounted(() => {
+  // 监听所有任务全部完成事件（上传/删除）
+  taskStore.on('drained', handleAllTasksCompleted)
+})
+
+onUnmounted(() => {
+  // 清理事件监听器
+  taskStore.off('drained', handleAllTasksCompleted)
+})
 
 const goToNextPage = () => {
   if (!nextToken.value) return
@@ -518,7 +524,7 @@ const handleDelete = async (keys: string[]) => {
     if (!targets.length) {
       message.success(t('Delete Success'))
     } else {
-      deleteTaskStore.addKeys(targets, bucketName.value)
+      taskStore.addDeleteKeys(targets, bucketName.value)
       message.success(t('Delete task created'))
     }
     table.resetRowSelection()

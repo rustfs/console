@@ -22,7 +22,13 @@
           <Icon name="ri:file-add-line" class="size-4" />
           <span>{{ t('Upload File') }}/{{ t('Folder') }}</span>
         </Button>
-        <Button variant="outline" class="text-destructive border-destructive" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="handleBatchDelete">
+        <Button
+          variant="outline"
+          class="text-destructive border-destructive"
+          :disabled="!checkedKeys.length"
+          v-show="checkedKeys.length"
+          @click="handleBatchDelete"
+        >
           <Icon name="ri:delete-bin-5-line" class="size-4" />
           <span>{{ t('Delete Selected') }}</span>
         </Button>
@@ -37,7 +43,12 @@
       </template>
     </page-header>
 
-    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Objects')" :empty-description="t('Upload files or create folders to populate this bucket.')" />
+    <DataTable
+      :table="table"
+      :is-loading="loading"
+      :empty-title="t('No Objects')"
+      :empty-description="t('Upload files or create folders to populate this bucket.')"
+    />
 
     <div class="flex justify-end gap-2">
       <Button variant="outline" :disabled="!continuationToken" @click="goToPreviousPage">
@@ -51,18 +62,29 @@
     </div>
   </div>
 
-  <object-upload-picker :show="uploadPickerVisible" :bucketName="bucketName" :prefix="prefix" @update:show="
-    val => {
-      uploadPickerVisible = val
-      refresh()
-    }
-  " />
-  <object-new-form :show="newObjectFormVisible" :bucketName="bucketName" :prefix="prefix" :asPrefix="newObjectAsPrefix" @update:show="
-    val => {
-      newObjectFormVisible = val
-      refresh()
-    }
-  " />
+  <object-upload-picker
+    :show="uploadPickerVisible"
+    :bucketName="bucketName"
+    :prefix="prefix"
+    @update:show="
+      val => {
+        uploadPickerVisible = val
+        refresh()
+      }
+    "
+  />
+  <object-new-form
+    :show="newObjectFormVisible"
+    :bucketName="bucketName"
+    :prefix="prefix"
+    :asPrefix="newObjectAsPrefix"
+    @update:show="
+      val => {
+        newObjectFormVisible = val
+        refresh()
+      }
+    "
+  />
   <object-info ref="infoRef" :bucket-name="bucketName" @refresh-parent="handleObjectDeleted" />
 </template>
 
@@ -209,8 +231,9 @@ const fetchObjects = async (): Promise<ObjectRow[]> => {
 }
 
 const asyncDataCacheKey = computed(() => {
-  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${searchTerm.value || 'all'}-${showDeleted.value ? 'withDeleted' : 'withoutDeleted'
-    }`
+  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${searchTerm.value || 'all'}-${
+    showDeleted.value ? 'withDeleted' : 'withoutDeleted'
+  }`
 })
 
 const displayKey = (key: string) => {
@@ -296,14 +319,14 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
         h('div', { class: 'flex items-center gap-2' }, [
           row.original.type === 'object'
             ? h(
-              Button,
-              {
-                variant: 'outline',
-                size: 'sm',
-                onClick: () => downloadFile(row.original.Key),
-              },
-              () => [h(Icon, { name: 'ri:download-cloud-2-line', class: 'size-4' }), h('span', t('Download'))]
-            )
+                Button,
+                {
+                  variant: 'outline',
+                  size: 'sm',
+                  onClick: () => downloadFile(row.original.Key),
+                },
+                () => [h(Icon, { name: 'ri:download-cloud-2-line', class: 'size-4' }), h('span', t('Download'))]
+              )
             : null,
           h(
             Button,

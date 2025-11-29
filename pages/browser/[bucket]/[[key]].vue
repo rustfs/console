@@ -28,7 +28,7 @@ const router = useRouter()
 // bucketName 和 pageSize 来自路由
 const bucketName = computed(() => route.params.bucket as string)
 
-const isBucketExist = () => {
+const validateBucket = () => {
   return useBucket({ region: route.params.region as string })
     .headBucket(bucketName.value)
     .then(res => {
@@ -40,7 +40,7 @@ const isBucketExist = () => {
     })
 }
 
-isBucketExist()
+validateBucket()
 
 // 当前路径的前缀, example: 'folder1/folder2/'
 const key = computed(() => decodeURIComponent(route.params.key as string))

@@ -9,8 +9,11 @@
         </label>
       </div>
       <template #actions>
-        <object-upload-stats />
-        <object-delete-stats />
+        <object-task-stats :tasks="taskStore.tasks" :on-clear-tasks="taskStore.clearTasks">
+          <template #task-list="{ tasks }">
+            <object-task-list :tasks="tasks" />
+          </template>
+        </object-task-stats>
         <!-- <Button variant="outline" @click="() => handleNewObject(true)">
           <Icon name="ri:add-line" class="size-4" />
           <span>{{ t('New Folder') }}</span>
@@ -19,13 +22,7 @@
           <Icon name="ri:file-add-line" class="size-4" />
           <span>{{ t('Upload File') }}/{{ t('Folder') }}</span>
         </Button>
-        <Button
-          variant="outline"
-          class="text-destructive border-destructive"
-          :disabled="!checkedKeys.length"
-          v-show="checkedKeys.length"
-          @click="handleBatchDelete"
-        >
+        <Button variant="outline" class="text-destructive border-destructive" :disabled="!checkedKeys.length" v-show="checkedKeys.length" @click="handleBatchDelete">
           <Icon name="ri:delete-bin-5-line" class="size-4" />
           <span>{{ t('Delete Selected') }}</span>
         </Button>
@@ -40,12 +37,7 @@
       </template>
     </page-header>
 
-    <DataTable
-      :table="table"
-      :is-loading="loading"
-      :empty-title="t('No Objects')"
-      :empty-description="t('Upload files or create folders to populate this bucket.')"
-    />
+    <DataTable :table="table" :is-loading="loading" :empty-title="t('No Objects')" :empty-description="t('Upload files or create folders to populate this bucket.')" />
 
     <div class="flex justify-end gap-2">
       <Button variant="outline" :disabled="!continuationToken" @click="goToPreviousPage">
@@ -59,29 +51,18 @@
     </div>
   </div>
 
-  <object-upload-picker
-    :show="uploadPickerVisible"
-    :bucketName="bucketName"
-    :prefix="prefix"
-    @update:show="
-      val => {
-        uploadPickerVisible = val
-        refresh()
-      }
-    "
-  />
-  <object-new-form
-    :show="newObjectFormVisible"
-    :bucketName="bucketName"
-    :prefix="prefix"
-    :asPrefix="newObjectAsPrefix"
-    @update:show="
-      val => {
-        newObjectFormVisible = val
-        refresh()
-      }
-    "
-  />
+  <object-upload-picker :show="uploadPickerVisible" :bucketName="bucketName" :prefix="prefix" @update:show="
+    val => {
+      uploadPickerVisible = val
+      refresh()
+    }
+  " />
+  <object-new-form :show="newObjectFormVisible" :bucketName="bucketName" :prefix="prefix" :asPrefix="newObjectAsPrefix" @update:show="
+    val => {
+      newObjectFormVisible = val
+      refresh()
+    }
+  " />
   <object-info ref="infoRef" :bucket-name="bucketName" @refresh-parent="handleObjectDeleted" />
 </template>
 
@@ -102,9 +83,8 @@ import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
 import { joinRelativeURL } from 'ufo'
 import type { VNode } from 'vue'
-import { computed, h, ref, watch } from 'vue'
-import { useDeleteTaskManagerStore } from '~/store/delete-tasks'
-import { useUploadTaskManagerStore } from '~/store/upload-tasks'
+import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useTaskManagerStore } from '~/store/tasks'
 
 const { $s3Client } = useNuxtApp()
 const { t } = useI18n()
@@ -139,8 +119,7 @@ watch(searchTerm, () => {
   handleSearch()
 })
 
-const uploadTaskStore = useUploadTaskManagerStore()
-const deleteTaskStore = useDeleteTaskManagerStore()
+const taskStore = useTaskManagerStore()
 
 type ObjectRow = {
   Key: string
@@ -230,9 +209,8 @@ const fetchObjects = async (): Promise<ObjectRow[]> => {
 }
 
 const asyncDataCacheKey = computed(() => {
-  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${searchTerm.value || 'all'}-${
-    showDeleted.value ? 'withDeleted' : 'withoutDeleted'
-  }`
+  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${searchTerm.value || 'all'}-${showDeleted.value ? 'withDeleted' : 'withoutDeleted'
+    }`
 })
 
 const displayKey = (key: string) => {
@@ -318,14 +296,14 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
         h('div', { class: 'flex items-center gap-2' }, [
           row.original.type === 'object'
             ? h(
-                Button,
-                {
-                  variant: 'outline',
-                  size: 'sm',
-                  onClick: () => downloadFile(row.original.Key),
-                },
-                () => [h(Icon, { name: 'ri:download-cloud-2-line', class: 'size-4' }), h('span', t('Download'))]
-              )
+              Button,
+              {
+                variant: 'outline',
+                size: 'sm',
+                onClick: () => downloadFile(row.original.Key),
+              },
+              () => [h(Icon, { name: 'ri:download-cloud-2-line', class: 'size-4' }), h('span', t('Download'))]
+            )
             : null,
           h(
             Button,
@@ -352,17 +330,22 @@ const { table, selectedRowIds } = useDataTable<ObjectRow>({
 // Use selectedRowIds from data-table instead of manually maintaining checkedKeys
 const checkedKeys = computed(() => selectedRowIds.value)
 
-watch(
-  () => uploadTaskStore.tasks,
-  () => setTimeout(() => refresh(), 500),
-  { deep: true }
-)
+// 监听任务完成事件，只在所有任务完成时刷新列表
+// 这样可以避免在上传/删除大量文件时频繁刷新
+// 保存事件处理函数引用，以便在卸载时正确清理
+const handleAllTasksCompleted = () => {
+  refresh()
+}
 
-watch(
-  () => deleteTaskStore.tasks,
-  () => setTimeout(() => refresh(), 500),
-  { deep: true }
-)
+onMounted(() => {
+  // 监听所有任务全部完成事件（上传/删除）
+  taskStore.on('drained', handleAllTasksCompleted)
+})
+
+onUnmounted(() => {
+  // 清理事件监听器
+  taskStore.off('drained', handleAllTasksCompleted)
+})
 
 const goToNextPage = () => {
   if (!nextToken.value) return
@@ -518,7 +501,7 @@ const handleDelete = async (keys: string[]) => {
     if (!targets.length) {
       message.success(t('Delete Success'))
     } else {
-      deleteTaskStore.addKeys(targets, bucketName.value)
+      taskStore.addDeleteKeys(targets, bucketName.value)
       message.success(t('Delete task created'))
     }
     table.resetRowSelection()

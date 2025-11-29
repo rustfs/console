@@ -16,12 +16,30 @@
 - `pnpm vue-tsc --noEmit` – perform a strict type check.
 - `pnpm lint` – run `vue-tsc` and Prettier (format check only).
 
+## Mandatory Code Quality Checks
+
+**⚠️ CRITICAL: These checks MUST pass before every commit.**
+
+Before committing any code changes, you MUST run and pass:
+
+1. **TypeScript Type Check**: `pnpm vue-tsc --noEmit`
+   - Ensures all TypeScript types are correct
+   - Must have zero errors before committing
+
+2. **Prettier Format Check**: `pnpm prettier --check .`
+   - Ensures all code follows formatting standards
+   - If it fails, run `pnpm lint:fix` to auto-fix formatting issues
+
+**Automated Enforcement**: The pre-commit hook (`scripts/pre-commit-check.sh`) automatically runs these checks. If any check fails, the commit will be blocked.
+
+**Quick Fix Command**: If checks fail, run `pnpm lint:fix` to auto-fix formatting, then address any TypeScript errors manually.
+
 ## Coding Style & Naming Conventions
 
 - Use Prettier defaults (see `.prettierrc.ts`); run `pnpm lint` or `pnpm lint:fix`.
 - **Always run `pnpm run lint:fix` after making code changes to ensure formatting compliance before committing.**
 - Vue files use `<script setup>` with TypeScript; prefer composables for shared logic.
-- Component files use **kebab-case** (e.g. `bucket-selector.vue`), but reference them using **StudlyCase** in templates (e.g. `<BucketSelector />`).
+- Component files use **kebab-case** (e.g. `bucket-selector.vue`), but reference them using **StudlyCase** in templates (e.g., `<BucketSelector />`).
 - Override shadcn primitives **outside** `components/ui/`; never edit files in that directory directly.
 - Render tabular data with the shared `DataTable` + `useDataTable` utilities unless a specific requirement makes them unsuitable.
 - Language pack files should exclude test directories when processing translation keys.

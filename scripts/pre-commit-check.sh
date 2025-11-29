@@ -11,17 +11,19 @@ if ! pnpm install --frozen-lockfile --dry-run > /dev/null 2>&1; then
   exit 1
 fi
 
-# Run linting
-echo "🔍 Running linter..."
-pnpm run lint || {
-  echo "❌ Linting failed. Run 'pnpm lint:fix' to auto-fix"
+# Run Prettier format check (must pass)
+echo "🎨 Running Prettier format check..."
+pnpm prettier --check . || {
+  echo "❌ Prettier format check failed"
+  echo "   Run 'pnpm lint:fix' to auto-fix formatting issues"
   exit 1
 }
 
-# Run type checking
-echo "📘 Running type check..."
-pnpm run type-check || {
-  echo "❌ Type checking failed"
+# Run TypeScript type check (must pass)
+echo "📘 Running TypeScript type check..."
+pnpm vue-tsc --noEmit || {
+  echo "❌ TypeScript type check failed"
+  echo "   Fix all TypeScript errors before committing"
   exit 1
 }
 

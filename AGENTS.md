@@ -22,17 +22,25 @@
 
 Before committing any code changes, you MUST run and pass:
 
-1. **TypeScript Type Check**: `pnpm vue-tsc --noEmit`
+1. **Lockfile Sync Check**: `pnpm install --frozen-lockfile`
+   - Ensures `pnpm-lock.yaml` is in sync with `package.json`
+   - **MUST run `pnpm install` after modifying `package.json` and commit the updated `pnpm-lock.yaml`**
+   - CI will fail if lockfile is out of sync
+
+2. **TypeScript Type Check**: `pnpm vue-tsc --noEmit`
    - Ensures all TypeScript types are correct
    - Must have zero errors before committing
 
-2. **Prettier Format Check**: `pnpm prettier --check .`
+3. **Prettier Format Check**: `pnpm prettier --check .`
    - Ensures all code follows formatting standards
    - If it fails, run `pnpm lint:fix` to auto-fix formatting issues
 
 **Automated Enforcement**: The pre-commit hook (`scripts/pre-commit-check.sh`) automatically runs these checks. If any check fails, the commit will be blocked.
 
-**Quick Fix Command**: If checks fail, run `pnpm lint:fix` to auto-fix formatting, then address any TypeScript errors manually.
+**Quick Fix Command**: If checks fail:
+1. Run `pnpm install` to sync lockfile (if package.json changed)
+2. Run `pnpm lint:fix` to auto-fix formatting
+3. Address any TypeScript errors manually
 
 ## Coding Style & Naming Conventions
 

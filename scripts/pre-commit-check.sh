@@ -3,11 +3,13 @@ set -e
 
 echo "🔍 Running pre-commit checks..."
 
-# Check if pnpm-lock.yaml is in sync
+# Check if pnpm-lock.yaml is in sync (CRITICAL - must pass)
 echo "📦 Checking pnpm-lock.yaml sync..."
 if ! pnpm install --frozen-lockfile --dry-run > /dev/null 2>&1; then
-  echo "❌ Error: pnpm-lock.yaml is out of sync with package.json"
+  echo "❌ CRITICAL ERROR: pnpm-lock.yaml is out of sync with package.json"
+  echo "   This will cause CI to fail!"
   echo "   Run: pnpm install"
+  echo "   Then commit the updated pnpm-lock.yaml"
   exit 1
 fi
 

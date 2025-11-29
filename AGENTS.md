@@ -38,6 +38,7 @@ Before committing any code changes, you MUST run and pass:
 **Automated Enforcement**: The pre-commit hook (`scripts/pre-commit-check.sh`) automatically runs these checks. If any check fails, the commit will be blocked.
 
 **Quick Fix Command**: If checks fail:
+
 1. Run `pnpm install` to sync lockfile (if package.json changed)
 2. Run `pnpm lint:fix` to auto-fix formatting
 3. Address any TypeScript errors manually

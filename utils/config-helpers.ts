@@ -45,6 +45,13 @@ interface ServerConfigResponse {
     /** Session duration in seconds */
     durationSeconds?: number
   }
+  /** Release configuration */
+  release?: {
+    /** Release version */
+    version?: string
+    /** Release date */
+    date?: string
+  }
 }
 
 /**
@@ -78,7 +85,7 @@ interface HostInfo {
 const STORAGE_KEY = 'rustfs-server-host'
 const DEFAULT_REGION = 'us-east-1'
 const API_PATH = '/rustfs/admin/v3'
-const CONFIG_PATH = '/config.json'
+const CONFIG_PATH = '/rustfs/console/config.json'
 const REQUEST_TIMEOUT = 5000
 
 // ============================================================================
@@ -206,6 +213,7 @@ export const getCurrentBrowserConfig = (): ConfigResult => {
  */
 const fetchRawConfigFromServer = async (serverHost: string): Promise<ServerConfigResponse | null> => {
   const configUrl = `${serverHost}${CONFIG_PATH}`
+  console.log('🚀 ~ fetchRawConfigFromServer ~ configUrl:', configUrl)
 
   try {
     const response = await fetch(configUrl, {
@@ -254,6 +262,13 @@ const mergeServerConfig = (baseConfig: SiteConfig, serverConfig: ServerConfigRes
           durationSeconds: serverConfig.session.durationSeconds || 0,
         }
       : baseConfig.session,
+    release:
+      serverConfig.release && serverConfig.release.version && serverConfig.release.date
+        ? {
+            version: serverConfig.release.version,
+            date: serverConfig.release.date,
+          }
+        : baseConfig.release,
   }
 }
 

@@ -18,6 +18,13 @@ export interface RustFSConfig {
     endpoint: string
     region: string
   }
+  session?: {
+    durationSeconds: number
+  }
+  release?: {
+    version?: string
+    date?: string
+  }
 }
 
 // 添加配置缓存
@@ -67,6 +74,7 @@ export const configManager = {
             secretAccessKey: '',
           },
           session: runtimeConfig.public.session,
+          release: runtimeConfig.public.release,
         }
       }
     } catch (error) {
@@ -124,6 +132,17 @@ export const configManager = {
           }
         }
       }
+    }
+
+    // 无论配置来源如何，最后必须使用服务器的release信息
+    try {
+      const serverConfig = await this.loadConfigFromServer()
+      if (serverConfig && serverConfig.release && serverConfig.release.version && serverConfig.release.date) {
+        config.release = serverConfig.release
+      }
+    } catch (error) {
+      logger.warn('Failed to get release info from server:', error)
+      // 继续使用现有的release信息，不影响其他配置
     }
 
     // 缓存配置

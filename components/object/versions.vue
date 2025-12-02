@@ -144,7 +144,12 @@ const previewVersion = (row: any) => emit('preview', row.VersionId)
 
 const downloadVersion = async (row: any) => {
   const url = await getSignedUrlWithVersion(props.objectKey, row.VersionId)
-  window.open(url, '_blank')
+  fetch(url).then(async response => {
+    // 获取头信息
+    const headers: any = response.headers
+    let blob = await response.blob()
+    exportFile({ headers, data: blob }, props.objectKey.split('/').pop() || '')
+  })
 }
 
 const deleteVersion = async (row: any) => {

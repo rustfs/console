@@ -213,7 +213,6 @@ export const getCurrentBrowserConfig = (): ConfigResult => {
  */
 const fetchRawConfigFromServer = async (serverHost: string): Promise<ServerConfigResponse | null> => {
   const configUrl = `${serverHost}${CONFIG_PATH}`
-  console.log('🚀 ~ fetchRawConfigFromServer ~ configUrl:', configUrl)
 
   try {
     const response = await fetch(configUrl, {

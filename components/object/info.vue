@@ -566,7 +566,12 @@ const download = async () => {
   if (!object.value) return
   try {
     const url = await getSignedUrl(object.value.Key)
-    window.open(url, '_blank')
+    fetch(url).then(async response => {
+      // 获取头信息
+      const headers: any = response.headers
+      let blob = await response.blob()
+      exportFile({ headers, data: blob }, object.value.Key.split('/').pop() || '')
+    })
   } catch (error: any) {
     message.error(error?.message || t('Download Failed'))
   }

@@ -422,7 +422,12 @@ const downloadFile = async (key: string) => {
   const loadingMsg = message.loading(t('Getting URL'), { duration: 0 })
   try {
     const url = await objectApi.getSignedUrl(key)
-    window.open(url, '_blank')
+    fetch(url).then(async response => {
+      // 获取头信息
+      const headers: any = response.headers
+      let blob = await response.blob()
+      exportFile({ headers, data: blob }, key.split('/').pop() || '')
+    })
   } catch (error: any) {
     message.error(error?.message || t('Download Failed'))
   } finally {

@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <page-header>
       <div class="flex flex-wrap items-center gap-4 min-w-[40vw]">
-        <SearchInput v-model="searchTerm" :placeholder="t('Search')" clearable class="lg:max-w-sm" />
+        <FilterInput v-model="searchTerm" :placeholder="t('Filter From This Page')" clearable class="lg:max-w-sm" />
         <label class="flex items-center gap-2 text-sm text-muted-foreground">
           <Checkbox v-model="showDeleted" />
           <span>{{ t('Show Deleted Objects') }}</span>
@@ -49,8 +49,9 @@
       :empty-title="t('No Objects')"
       :empty-description="t('Upload files or create folders to populate this bucket.')"
     />
+    <DataTablePagination :table="table" />
 
-    <div class="flex justify-end gap-2">
+    <!-- <div class="flex justify-end gap-2">
       <Button variant="outline" :disabled="!continuationToken" @click="goToPreviousPage">
         <Icon name="ri:arrow-left-s-line" class="mr-2" />
         <span>{{ t('Previous Page') }}</span>
@@ -59,7 +60,7 @@
         <span>{{ t('Next Page') }}</span>
         <Icon name="ri:arrow-right-s-line" class="ml-2" />
       </Button>
-    </div>
+    </div> -->
   </div>
 
   <object-upload-picker

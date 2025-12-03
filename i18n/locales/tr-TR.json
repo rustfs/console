@@ -869,5 +869,6 @@
   "Create a user to get started": "Başlamak için bir kullanıcı oluşturun",
   "Get Notification Config Failed": "Bildirim Yapılandırması Alınamadı",
   "empty is indicates permanent validity": "boş, kalıcı geçerlilik gösterir",
-  "Create user groups to organize permissions": "Kullanıcı grupları oluşturarak izinleri düzenleyin"
+  "Create user groups to organize permissions": "Kullanıcı grupları oluşturarak izinleri düzenleyin",
+  "Filter From This Page": "Bu sayfadan filtreleme yapın"
 }

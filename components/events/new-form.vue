@@ -53,7 +53,7 @@
                   <Checkbox
                     :checked="formData.events.includes(event.value)"
                     class="mt-1"
-                    @update:checked="handleEventChecked(event.value, $event)"
+                    @update:modelValue="handleEventChecked(event.value, $event)"
                   />
                   <span>{{ t(event.labelKey) }}</span>
                 </label>

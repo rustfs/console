@@ -19,7 +19,7 @@
       :table="table"
       :is-loading="loading"
       :empty-title="t('No Data')"
-      :empty-description="t('Create user groups to organize permissions.')"
+      :empty-description="t('Create user groups to organize permissions')"
       table-class="min-w-full"
     />
     <DataTablePagination :table="table" class="px-2 py-3" />

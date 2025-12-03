@@ -868,5 +868,6 @@
   "Operation failed": "操作失败",
   "Create a user to get started": "开始创建一个用户",
   "Get Notification Config Failed": "获取通知配置失败",
-  "empty is indicates permanent validity": "空表示永久有效"
+  "empty is indicates permanent validity": "空表示永久有效",
+  "Create user groups to organize permissions": "创建用户组以组织权限"
 }

@@ -75,6 +75,12 @@ export default defineNuxtConfig({
         file: 'en-US.json',
       },
       {
+        code: 'fr',
+        iso: 'fr-FR',
+        name: 'Français',
+        file: 'fr-FR.json',
+      },
+      {
         code: 'tr',
         iso: 'tr-TR',
         name: 'Turkish',

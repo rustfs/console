@@ -25,7 +25,6 @@ import { useRoute } from 'vue-router'
 import type { AppConfig, NavItem } from '~/types/app-config'
 
 const appConfig = useAppConfig() as unknown as AppConfig
-const $config = useNuxtApp().$config
 const route = useRoute()
 const { t } = useI18n()
 const { state } = useSidebar()
@@ -174,7 +173,7 @@ const getLabel = (item: NavItem) => t(item.label)
 
     <SidebarFooter class="mt-auto flex flex-col gap-3 px-2 pb-2">
       <!--添加一块显示版本的地方  -->
-      <div class="text-sm border-t py-2 text-center">RUSTFS {{ $config?.public.release?.version || 'unknown' }}</div>
+      <div class="text-sm border-t py-2 text-center">RUSTFS {{ $siteConfig?.release?.version || '' }}</div>
     </SidebarFooter>
 
     <SidebarRail />

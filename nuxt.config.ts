@@ -53,7 +53,7 @@ export default defineNuxtConfig({
 
       // 版本信息
       release: {
-        version: process.env.VERSION || 'dev-0.0.0',
+        version: process.env.VERSION || '',
         date: process.env.RELEASE_DATE || new Date().toISOString().slice(0, 10),
       },
 

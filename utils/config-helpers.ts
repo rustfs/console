@@ -55,6 +55,18 @@ interface ServerConfigResponse {
 }
 
 /**
+ * Version configuration response type (partial config, used for merging)
+ */
+interface VersionConfigResponse {
+  /** Release version */
+  version?: string
+  /** Release date */
+  date?: string
+  /** Version information */
+  versionInfo?: string
+}
+
+/**
  * Configuration retrieval result
  */
 interface ConfigResult {
@@ -86,6 +98,7 @@ const STORAGE_KEY = 'rustfs-server-host'
 const DEFAULT_REGION = 'us-east-1'
 const API_PATH = '/rustfs/admin/v3'
 const CONFIG_PATH = '/rustfs/console/config.json'
+const VERSION_PATH = '/rustfs/console/version'
 const REQUEST_TIMEOUT = 5000
 
 // ============================================================================
@@ -211,7 +224,7 @@ export const getCurrentBrowserConfig = (): ConfigResult => {
 /**
  * Fetch raw configuration data from server
  */
-const fetchRawConfigFromServer = async (serverHost: string): Promise<ServerConfigResponse | null> => {
+export const fetchRawConfigFromServer = async (serverHost: string): Promise<ServerConfigResponse | null> => {
   const configUrl = `${serverHost}${CONFIG_PATH}`
 
   try {
@@ -237,6 +250,41 @@ const fetchRawConfigFromServer = async (serverHost: string): Promise<ServerConfi
     return data
   } catch (error) {
     logger.warn(`Error fetching config from server: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    return null
+  }
+}
+
+/**
+ * Fetch version configuration data from server
+ */
+export const fetchVersionConfigFromServer = async (serverHost: string): Promise<VersionConfigResponse | null> => {
+  const configUrl = `${serverHost}${VERSION_PATH}`
+
+  try {
+    const response = await fetch(configUrl, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT),
+    })
+
+    if (!response.ok) {
+      logger.warn(`Failed to fetch version config from ${configUrl}: ${response.status} ${response.statusText}`)
+      return null
+    }
+
+    const data: VersionConfigResponse = await response.json()
+
+    if (!(typeof data === 'object' && data !== null)) {
+      logger.warn('Invalid version config: not a valid object')
+      return null
+    }
+
+    logger.info(`Successfully loaded version config from server: ${configUrl}`)
+    return data
+  } catch (error) {
+    logger.warn(
+      `Error fetching version config from server: ${error instanceof Error ? error.message : 'Unknown error'}`
+    )
     return null
   }
 }

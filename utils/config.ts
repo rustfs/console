@@ -7,6 +7,8 @@ import {
   getCurrentBrowserConfig,
   getServerDefaultConfig,
   fetchConfigFromServer,
+  fetchRawConfigFromServer,
+  fetchVersionConfigFromServer,
 } from './config-helpers'
 
 export interface RustFSConfig {
@@ -33,25 +35,6 @@ let configCacheTime = 0
 const CACHE_DURATION = 60000 // 1分钟缓存
 
 export const configManager = {
-  // 获取当前host配置
-  getCurrentHostConfig(): SiteConfig {
-    // 优先使用localStorage中保存的配置
-    const storedResult = getStoredHostConfig()
-    if (storedResult.config) {
-      return storedResult.config
-    }
-
-    // 使用当前浏览器地址
-    const browserResult = getCurrentBrowserConfig()
-    if (browserResult.config) {
-      return browserResult.config
-    }
-
-    // 服务端fallback
-    const defaultResult = getServerDefaultConfig()
-    return defaultResult.config!
-  },
-
   // 从 nuxt runtimeconfig 读取配置
   loadRuntimeConfig(): SiteConfig | null {
     try {
@@ -111,38 +94,35 @@ export const configManager = {
     if (storedResult.config) {
       config = storedResult.config
     } else {
-      // // 2. 尝试从服务器获取配置 (当前浏览器host:9001/config.json)
-      // const serverConfig = await this.loadConfigFromServer()
-      // if (serverConfig) {
-      //   config = serverConfig
-      // } else {
-      // 3. 使用当前浏览器地址
+      // 2.  使用当前浏览器地址
       const browserResult = getCurrentBrowserConfig()
       if (browserResult.config) {
         config = browserResult.config
       } else {
-        // 4. 使用 runtimeconfig
+        // 3. 使用 runtimeconfig
         const runtimeConfig = this.loadRuntimeConfig()
         if (runtimeConfig) {
           config = runtimeConfig
         } else {
-          // 5. 最后使用服务端默认值
+          // 4. 最后使用localhost默认值
           const defaultResult = getServerDefaultConfig()
           config = defaultResult.config!
         }
-        // }
       }
     }
 
-    // 无论配置来源如何，最后必须使用服务器的release信息
+    // get version config from server
     try {
-      const serverConfig = await this.loadConfigFromServer()
-      if (serverConfig && serverConfig.release && serverConfig.release.version && serverConfig.release.date) {
-        config.release = serverConfig.release
+      // get version config from server api  (next version)
+      const serverConfig = await fetchRawConfigFromServer(config.serverHost)
+      if (serverConfig && serverConfig?.release?.version && serverConfig?.release?.date) {
+        config.release = {
+          version: serverConfig.release.version,
+          date: serverConfig.release.date,
+        }
       }
     } catch (error) {
       logger.warn('Failed to get release info from server:', error)
-      // 继续使用现有的release信息，不影响其他配置
     }
 
     // 缓存配置
@@ -161,27 +141,5 @@ export const configManager = {
   async hasValidConfig(): Promise<boolean> {
     const config = await this.loadConfig()
     return !!(config?.serverHost && config?.api?.baseURL)
-  },
-
-  // 强制从服务器重新加载配置并更新缓存
-  async reloadConfigFromServer(): Promise<SiteConfig | null> {
-    try {
-      // 清除缓存
-      this.clearCache()
-
-      // 从服务器加载配置
-      const config = await this.loadConfigFromServer()
-      if (config) {
-        // 更新缓存
-        configCache = config
-        configCacheTime = Date.now()
-        logger.info('Configuration reloaded from server successfully')
-      }
-      return config
-    } catch (error) {
-      const configError = handleConfigError(error, 'reloading config from server')
-      logger.error('Failed to reload config from server:', configError.message)
-      return null
-    }
   },
 }

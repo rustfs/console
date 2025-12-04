@@ -1,7 +1,7 @@
 import tailwindcss from '@tailwindcss/vite'
-const appName = process.env.APP_NAME || 'RustFS'
+const appName = process.env.APP_NAME || 'NIMAG'
 const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '')
-const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.'
+const appDescription = process.env.APP_DESCRIPTION || 'On veille sur votre informatique pour que vous avanciez l\'esprit léger'
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -73,6 +73,12 @@ export default defineNuxtConfig({
         iso: 'en-US',
         name: 'English',
         file: 'en-US.json',
+      },
+      {
+        code: 'fr',
+        iso: 'fr-FR',
+        name: 'Français',
+        file: 'fr-FR.json',
       },
       {
         code: 'tr',

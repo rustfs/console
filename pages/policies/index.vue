@@ -11,12 +11,15 @@
       </template>
     </page-header>
 
-    <DataTable
-      :table="table"
-      :is-loading="loading"
-      :empty-title="t('No Policies')"
-      :empty-description="t('Create a policy to manage access control templates.')"
-    />
+    <div class="space-y-3">
+      <DataTable
+        :table="table"
+        :is-loading="loading"
+        :empty-title="t('No Policies')"
+        :empty-description="t('Create a policy to manage access control templates.')"
+      />
+      <DataTablePagination :table="table" class="px-2 py-3" />
+    </div>
 
     <policies-form-item v-model:show="showPolicyForm" :policy="current" @saved="fetchPolicies" />
   </page>
@@ -27,6 +30,7 @@ import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
 import DataTable from '@/components/data-table/data-table.vue'
+import DataTablePagination from '@/components/data-table/data-table-pagination.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
 import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, onMounted, ref, watch } from 'vue'

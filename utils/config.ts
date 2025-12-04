@@ -111,26 +111,26 @@ export const configManager = {
     if (storedResult.config) {
       config = storedResult.config
     } else {
-      // 2. 尝试从服务器获取配置 (当前浏览器host:9001/config.json)
-      const serverConfig = await this.loadConfigFromServer()
-      if (serverConfig) {
-        config = serverConfig
+      // // 2. 尝试从服务器获取配置 (当前浏览器host:9001/config.json)
+      // const serverConfig = await this.loadConfigFromServer()
+      // if (serverConfig) {
+      //   config = serverConfig
+      // } else {
+      // 3. 使用当前浏览器地址
+      const browserResult = getCurrentBrowserConfig()
+      if (browserResult.config) {
+        config = browserResult.config
       } else {
-        // 3. 使用当前浏览器地址
-        const browserResult = getCurrentBrowserConfig()
-        if (browserResult.config) {
-          config = browserResult.config
+        // 4. 使用 runtimeconfig
+        const runtimeConfig = this.loadRuntimeConfig()
+        if (runtimeConfig) {
+          config = runtimeConfig
         } else {
-          // 4. 使用 runtimeconfig
-          const runtimeConfig = this.loadRuntimeConfig()
-          if (runtimeConfig) {
-            config = runtimeConfig
-          } else {
-            // 5. 最后使用服务端默认值
-            const defaultResult = getServerDefaultConfig()
-            config = defaultResult.config!
-          }
+          // 5. 最后使用服务端默认值
+          const defaultResult = getServerDefaultConfig()
+          config = defaultResult.config!
         }
+        // }
       }
     }
 

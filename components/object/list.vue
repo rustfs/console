@@ -49,9 +49,7 @@
       :empty-title="t('No Objects')"
       :empty-description="t('Upload files or create folders to populate this bucket.')"
     />
-    <DataTablePagination :table="table" />
-
-    <!-- <div class="flex justify-end gap-2">
+    <div class="flex justify-end gap-2">
       <Button variant="outline" :disabled="!continuationToken" @click="goToPreviousPage">
         <Icon name="ri:arrow-left-s-line" class="mr-2" />
         <span>{{ t('Previous Page') }}</span>
@@ -60,7 +58,7 @@
         <span>{{ t('Next Page') }}</span>
         <Icon name="ri:arrow-right-s-line" class="ml-2" />
       </Button>
-    </div> -->
+    </div>
   </div>
 
   <object-upload-picker

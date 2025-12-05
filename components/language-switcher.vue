@@ -27,22 +27,19 @@ const languageConfig = {
   zh: { text: '中文', icon: 'ri:translate-2' },
   fr: { text: 'Français', icon: 'ri:translate' },
   tr: { text: 'Türkçe', icon: 'ri:translate' },
-  // 以下语言包尚未翻译，暂时隐藏
-  // ja: { text: '日本語', icon: 'ri:translate' },
-  // ko: { text: '한국어', icon: 'ri:translate' },
-  // de: { text: 'Deutsch', icon: 'ri:translate' },
-  // es: { text: 'Español', icon: 'ri:translate' },
-  // pt: { text: 'Português', icon: 'ri:translate' },
-  // it: { text: 'Italiano', icon: 'ri:translate' },
-  // ru: { text: 'Русский', icon: 'ri:translate' },
+  ja: { text: '日本語', icon: 'ri:translate' },
+  ko: { text: '한국어', icon: 'ri:translate' },
+  de: { text: 'Deutsch', icon: 'ri:translate' },
+  es: { text: 'Español', icon: 'ri:translate' },
+  pt: { text: 'Português', icon: 'ri:translate' },
+  it: { text: 'Italiano', icon: 'ri:translate' },
+  ru: { text: 'Русский', icon: 'ri:translate' },
 } as const
 
-const options = [
-  { label: 'English', key: 'en' },
-  { label: '中文', key: 'zh' },
-  { label: 'Français', key: 'fr' },
-  { label: 'Türkçe', key: 'tr' },
-]
+const options = Object.entries(languageConfig).map(([key, config]) => ({
+  label: config.text,
+  key,
+}))
 
 const currentLanguage = computed(() => {
   return languageConfig[locale.value as keyof typeof languageConfig] || languageConfig.en

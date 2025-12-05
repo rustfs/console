@@ -65,6 +65,7 @@ Before committing any code changes, you MUST run and pass:
 - Follow conventional, action-oriented commit subjects (e.g. `feat: add bucket selector`).
 - Each pull request should include: a concise summary, linked issue or task, screenshots for UI work, and testing notes (`pnpm test:run`, `pnpm vue-tsc`, etc.).
 - Keep PRs scoped; large refactors should be coordinated in advance.
+- Commit message and PR title must be in English.
 
 ## UI Theme Overrides
 

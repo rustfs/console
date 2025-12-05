@@ -111,14 +111,13 @@ export const configManager = {
       }
     }
 
-    // get version config from server
     try {
-      // get version config from server api  (next version)
-      const serverConfig = await fetchRawConfigFromServer(config.serverHost)
-      if (serverConfig && serverConfig?.release?.version && serverConfig?.release?.date) {
+      // get version config from server api
+      const serverConfig = await fetchVersionConfigFromServer(config.serverHost)
+      if (serverConfig && serverConfig?.version && serverConfig?.date) {
         config.release = {
-          version: serverConfig.release.version,
-          date: serverConfig.release.date,
+          version: serverConfig.version,
+          date: serverConfig.date,
         }
       }
     } catch (error) {

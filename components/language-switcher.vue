@@ -25,22 +25,27 @@ const { locale, setLocale } = useI18n()
 const languageConfig = {
   en: { text: 'English', icon: 'ri:translate' },
   zh: { text: '中文', icon: 'ri:translate-2' },
-  tr: { text: 'Türkçe', icon: 'ri:translate' },
   fr: { text: 'Français', icon: 'ri:translate' },
+  tr: { text: 'Türkçe', icon: 'ri:translate' },
+  ja: { text: '日本語', icon: 'ri:translate' },
+  ko: { text: '한국어', icon: 'ri:translate' },
+  de: { text: 'Deutsch', icon: 'ri:translate' },
+  es: { text: 'Español', icon: 'ri:translate' },
+  pt: { text: 'Português', icon: 'ri:translate' },
+  it: { text: 'Italiano', icon: 'ri:translate' },
+  ru: { text: 'Русский', icon: 'ri:translate' },
 } as const
 
-const options = [
-  { label: 'English', key: 'en' },
-  { label: '中文', key: 'zh' },
-  { label: 'Türkçe', key: 'tr' },
-  { label: 'Français', key: 'fr' },
-]
+const options = Object.entries(languageConfig).map(([key, config]) => ({
+  label: config.text,
+  key,
+}))
 
 const currentLanguage = computed(() => {
   return languageConfig[locale.value as keyof typeof languageConfig] || languageConfig.en
 })
 
 const handleSelect = async (key: string) => {
-  await setLocale(key as 'en' | 'zh' | 'tr' | 'fr')
+  await setLocale(key as 'en' | 'zh' | 'fr' | 'tr' | 'ja' | 'ko' | 'de' | 'es' | 'pt' | 'it' | 'ru')
 }
 </script>

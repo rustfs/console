@@ -1,15 +1,12 @@
 import type { SiteConfig } from '~/types/config'
-import { handleConfigError } from './error-handler'
-import { logger } from './logger'
 import {
-  createDefaultConfig,
-  getStoredHostConfig,
+  fetchRawConfigFromServer,
   getCurrentBrowserConfig,
   getServerDefaultConfig,
-  fetchConfigFromServer,
-  fetchRawConfigFromServer,
-  fetchVersionConfigFromServer,
+  getStoredHostConfig,
 } from './config-helpers'
+import { handleConfigError } from './error-handler'
+import { logger } from './logger'
 
 export interface RustFSConfig {
   serverHost: string
@@ -65,18 +62,6 @@ export const configManager = {
       logger.warn('Failed to load runtime config:', configError.message)
     }
     return null
-  },
-
-  // 从服务器获取配置 (当前浏览器host:9001/config.json)
-  async loadConfigFromServer(): Promise<SiteConfig | null> {
-    try {
-      const result = await fetchConfigFromServer()
-      return result.config
-    } catch (error) {
-      const configError = handleConfigError(error, 'server config loading')
-      logger.warn('Failed to load config from server:', configError.message)
-      return null
-    }
   },
 
   // 加载配置：优先使用localStorage，然后尝试服务器配置，当前host，最后是runtimeconfig

@@ -37,14 +37,14 @@ const subInfo = computed(() => props.task.subInfo)
 const statusText = computed(() => {
   const action = actionLabel.value
   const map: Record<string, string> = {
-    pending: `${action} ${t('Waiting')}`,
-    running: `${action} ${t('In Progress')}`,
-    completed: `${action} ${t('Success Status')}`,
-    failed: `${action} ${t('Failed Status')}`,
-    paused: `${action} ${t('Paused')}`,
-    canceled: `${action} ${t('Canceled')}`,
+    pending: `${t(action)}${t('waiting')}`,
+    running: `${t(action)}${t('in progress')}`,
+    completed: `${t(action)}${t('success')}`,
+    failed: `${t(action)}${t('failed')}`,
+    paused: `${t(action)}${t('paused')}`,
+    canceled: `${t(action)}${t('canceled')}`,
   }
-  return map[props.task.status] ?? `${action} ${t('In Progress')}`
+  return map[props.task.status] ?? `${t(action)}${t('in progress')}`
 })
 
 const remove = () => store.removeTask(props.task.id)

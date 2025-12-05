@@ -26,12 +26,14 @@ const languageConfig = {
   en: { text: 'English', icon: 'ri:translate' },
   zh: { text: '中文', icon: 'ri:translate-2' },
   tr: { text: 'Türkçe', icon: 'ri:translate' },
+  fr: { text: 'Français', icon: 'ri:translate' },
 } as const
 
 const options = [
   { label: 'English', key: 'en' },
   { label: '中文', key: 'zh' },
   { label: 'Türkçe', key: 'tr' },
+  { label: 'Français', key: 'fr' },
 ]
 
 const currentLanguage = computed(() => {
@@ -39,6 +41,6 @@ const currentLanguage = computed(() => {
 })
 
 const handleSelect = async (key: string) => {
-  await setLocale(key as 'en' | 'zh' | 'tr')
+  await setLocale(key as 'en' | 'zh' | 'tr' | 'fr')
 }
 </script>

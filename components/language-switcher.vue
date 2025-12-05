@@ -46,6 +46,6 @@ const currentLanguage = computed(() => {
 })
 
 const handleSelect = async (key: string) => {
-  await setLocale(key as 'en' | 'zh' | 'fr' | 'tr')
+  await setLocale(key as 'en' | 'zh' | 'fr' | 'tr' | 'ja' | 'ko' | 'de' | 'es' | 'pt' | 'it' | 'ru')
 }
 </script>

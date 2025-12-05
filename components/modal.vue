@@ -74,7 +74,7 @@ const handleEscape = (event: Event) => {
         </slot>
       </DialogHeader>
 
-      <div class="max-h-[80vh] overflow-scroll">
+      <div class="max-h-[80vh] overflow-auto">
         <slot />
       </div>
 

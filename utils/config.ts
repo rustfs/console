@@ -3,7 +3,7 @@ import {
   fetchRawConfigFromServer,
   getCurrentBrowserConfig,
   getServerDefaultConfig,
-  getStoredHostConfig
+  getStoredHostConfig,
 } from './config-helpers'
 import { handleConfigError } from './error-handler'
 import { logger } from './logger'

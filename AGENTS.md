@@ -66,6 +66,7 @@ Before committing any code changes, you MUST run and pass:
 - Each pull request should include: a concise summary, linked issue or task, screenshots for UI work, and testing notes (`pnpm test:run`, `pnpm vue-tsc`, etc.).
 - Keep PRs scoped; large refactors should be coordinated in advance.
 - Commit message and PR title must be in English.
+- **⚠️ MANDATORY: PR descriptions MUST strictly follow the format specified in `.github/pull_request_template.md`**. All required sections must be filled out completely and accurately before submitting a PR.
 
 ## UI Theme Overrides
 

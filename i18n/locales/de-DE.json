@@ -31,6 +31,7 @@
   "Add Tier": "Tier hinzufügen",
   "Add User": "Benutzer hinzufügen",
   "Add User Group": "Benutzergruppe hinzufügen",
+  "Inherited from group": "Vererbt von Gruppe",
   "Add failed": "Hinzufügen fehlgeschlagen",
   "Add group members": "Gruppenmitglieder hinzufügen",
   "Add replication rules to sync objects across buckets.": "Replikationsregeln hinzufügen, um Objekte zwischen Buckets zu synchronisieren.",

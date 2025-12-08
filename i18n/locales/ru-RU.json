@@ -31,6 +31,7 @@
   "Add Tier": "Добавить уровень",
   "Add User": "Добавить пользователя",
   "Add User Group": "Добавить группу пользователей",
+  "Inherited from group": "Наследовано от группы",
   "Add failed": "Ошибка добавления",
   "Add group members": "Добавить участников группы",
   "Add replication rules to sync objects across buckets.": "Добавьте правила репликации для синхронизации объектов между бакетами.",

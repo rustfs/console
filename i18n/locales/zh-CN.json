@@ -31,6 +31,7 @@
   "Add Tier": "添加存储层",
   "Add User": "新增用户",
   "Add User Group": "新增用户组",
+  "Inherited from group": "继承自分组",
   "Add failed": "添加失败",
   "Add group members": "添加组成员",
   "Add replication rules to sync objects across buckets.": "添加复制规则以同步存储桶之间的对象。",

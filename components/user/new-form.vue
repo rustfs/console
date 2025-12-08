@@ -105,6 +105,10 @@
                       :key="option.value"
                       :value="option.label"
                       @select="() => togglePolicy(option.value)"
+                      :class="{
+                        'opacity-70 cursor-not-allowed': editForm.groupInheritedPolicies.includes(option.value),
+                      }"
+                      :disabled="editForm.groupInheritedPolicies.includes(option.value)"
                     >
                       <Icon
                         name="ri:check-line"
@@ -112,6 +116,11 @@
                         :class="editForm.policies.includes(option.value) ? 'opacity-100' : 'opacity-0'"
                       />
                       <span>{{ option.label }}</span>
+                      <span
+                        v-if="editForm.groupInheritedPolicies.includes(option.value)"
+                        class="ml-2 text-xs text-muted-foreground opacity-70"
+                        >({{ t('Inherited from group') }})</span
+                      >
                     </CommandItem>
                   </CommandGroup>
                 </CommandList>
@@ -147,13 +156,15 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useI18n } from 'vue-i18n'
+import { useNuxtApp } from '#app'
 import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const message = useMessage()
 const { createUser } = useUsers()
 const { listPolicies, setUserOrGroupPolicy } = usePolicies()
-const { listGroup, updateGroupMembers } = useGroups()
+const { listGroup, updateGroupMembers, getGroup } = useGroups()
+const { $api } = useNuxtApp()
 
 const emit = defineEmits<{
   (e: 'search'): void
@@ -167,6 +178,8 @@ const editForm = reactive({
   secretKey: '',
   groups: [] as string[],
   policies: [] as string[],
+  // 存储从分组继承的策略，这些策略不可取消
+  groupInheritedPolicies: [] as string[],
 })
 
 const errors = reactive({
@@ -200,6 +213,7 @@ const resetForm = () => {
   editForm.secretKey = ''
   editForm.groups = []
   editForm.policies = []
+  editForm.groupInheritedPolicies = []
   errors.accessKey = ''
   errors.secretKey = ''
   groupSelectorOpen.value = false
@@ -284,6 +298,43 @@ const submitForm = async () => {
   }
 }
 
+// 获取分组的策略
+const getGroupPolicies = async (groupName: string) => {
+  try {
+    const groupInfo: { policy?: string } = await getGroup(groupName)
+    return groupInfo.policy ? groupInfo.policy.split(',') : []
+  } catch (error) {
+    console.error('获取分组策略失败:', error)
+    return []
+  }
+}
+
+// 更新分组继承的策略
+const updateGroupInheritedPolicies = async () => {
+  // 清空当前的分组继承策略
+  editForm.groupInheritedPolicies = []
+
+  // 获取所有选中分组的策略
+  if (editForm.groups.length > 0) {
+    const promises = editForm.groups.map(group => getGroupPolicies(group))
+    const results = await Promise.all(promises)
+
+    // 合并所有分组的策略并去重
+    const inheritedPolicies = Array.from(new Set(results.flat()))
+    editForm.groupInheritedPolicies = inheritedPolicies
+  }
+
+  // 更新策略列表，确保分组继承的策略被选中且不可取消
+  updateSelectedPolicies()
+}
+
+// 更新选中的策略，确保分组继承的策略被选中
+const updateSelectedPolicies = () => {
+  // 合并用户手动选择的策略和分组继承的策略
+  const allPolicies = Array.from(new Set([...editForm.policies, ...editForm.groupInheritedPolicies]))
+  editForm.policies = allPolicies
+}
+
 const getPoliciesList = async () => {
   const res = await listPolicies()
   policiesList.value = Object.keys(res ?? {})
@@ -302,15 +353,25 @@ const getGroupsList = async () => {
   }))
 }
 
-const toggleGroup = (value: string) => {
+const toggleGroup = async (value: string) => {
   if (editForm.groups.includes(value)) {
+    // 移除分组
     editForm.groups = editForm.groups.filter(item => item !== value)
   } else {
+    // 添加分组
     editForm.groups = [...editForm.groups, value]
   }
+
+  // 更新分组继承的策略
+  await updateGroupInheritedPolicies()
 }
 
 const togglePolicy = (value: string) => {
+  // 如果是分组继承的策略，不能取消选中
+  if (editForm.groupInheritedPolicies.includes(value)) {
+    return
+  }
+
   if (editForm.policies.includes(value)) {
     editForm.policies = editForm.policies.filter(item => item !== value)
   } else {

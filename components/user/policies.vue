@@ -39,6 +39,8 @@
                       :key="option.value"
                       :value="option.label"
                       @select="() => togglePolicy(option.value)"
+                      :disabled="inheritedPolicies.includes(option.value) && selectedPolicies.includes(option.value)"
+                      class="group"
                     >
                       <Icon
                         name="ri:check-line"
@@ -46,6 +48,12 @@
                         :class="selectedPolicies.includes(option.value) ? 'opacity-100' : 'opacity-0'"
                       />
                       <span>{{ option.label }}</span>
+                      <span
+                        v-if="inheritedPolicies.includes(option.value)"
+                        class="ml-2 text-xs text-muted-foreground opacity-70 transition-opacity"
+                      >
+                        {{ t('(Inherited from group)') }}
+                      </span>
                     </CommandItem>
                   </CommandGroup>
                 </CommandList>
@@ -83,10 +91,38 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import type { ColumnDef } from '@tanstack/vue-table'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useGroups } from '@/composables/useGroups'
 
-const { listPolicies, setUserOrGroupPolicy } = usePolicies()
+const { listPolicies, setUserOrGroupPolicy, getPolicyByUserName } = usePolicies()
+const { listGroup } = useGroups()
 const { t } = useI18n()
 const message = useMessage()
+
+// 存储用户继承的策略
+const inheritedPolicies = ref<string[]>([])
+
+// 获取用户继承的策略
+const loadInheritedPolicies = async () => {
+  if (!props.user?.accessKey) return
+  try {
+    const userPolicies = await getPolicyByUserName(props.user.accessKey)
+    if (userPolicies?.Statement) {
+      // 提取来自组的继承策略
+      const inheritedPolicyNames = new Set<string>()
+      userPolicies.Statement.forEach((statement: any) => {
+        if (statement.Origin?.type === 'group' || statement.Origin?.type === 'both') {
+          // 如果策略来自组或同时来自组和直接分配，将其添加到继承策略列表
+          if (statement.Origin?.policyName) {
+            inheritedPolicyNames.add(statement.Origin.policyName)
+          }
+        }
+      })
+      inheritedPolicies.value = Array.from(inheritedPolicyNames)
+    }
+  } catch (error) {
+    console.error('Failed to load inherited policies:', error)
+  }
+}
 
 const props = defineProps<{
   user: {
@@ -153,9 +189,10 @@ const loadPolicies = async () => {
   }
 }
 
-onMounted(() => {
-  loadPolicies()
+onMounted(async () => {
+  await loadPolicies()
   selectedPolicies.value = [...currentPolicies.value]
+  await loadInheritedPolicies()
 })
 
 watch(
@@ -167,6 +204,12 @@ watch(
   },
   { immediate: true }
 )
+
+watch(editStatus, async val => {
+  if (val) {
+    await loadInheritedPolicies()
+  }
+})
 
 const startEditing = () => {
   selectedPolicies.value = [...currentPolicies.value]
@@ -182,9 +225,17 @@ const cancelEditing = () => {
 
 const togglePolicy = (value: string) => {
   if (selectedPolicies.value.includes(value)) {
+    // 如果是继承的策略，禁止删除
+    if (inheritedPolicies.value.includes(value)) {
+      // 不再显示弹出消息，而是通过UI禁用删除功能
+      return
+    }
     selectedPolicies.value = selectedPolicies.value.filter(item => item !== value)
   } else {
-    selectedPolicies.value = [...selectedPolicies.value, value]
+    // 确保添加的策略不重复
+    if (!selectedPolicies.value.includes(value)) {
+      selectedPolicies.value = [...selectedPolicies.value, value]
+    }
   }
 }
 

@@ -31,6 +31,7 @@
   "Add Tier": "Ajouter un niveau",
   "Add User": "Ajouter un utilisateur",
   "Add User Group": "Ajouter un groupe d'utilisateurs",
+  "Inherited from group": "Hérité de groupe",
   "Add failed": "Échec de l'ajout",
   "Add group members": "Ajouter des membres au groupe",
   "Add replication rules to sync objects across buckets.": "Ajoutez des règles de réplication pour synchroniser les objets entre les compartiments.",

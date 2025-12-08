@@ -60,6 +60,22 @@ export const usePolicies = () => {
    * @returns Result
    */
   const setPolicyMultiple = async (data: any) => {
+    // Add basic deduplication for policy names if applicable
+    // This handles common batch policy assignment patterns
+    if (data.policyName && Array.isArray(data.policyName)) {
+      data.policyName = Array.from(new Set(data.policyName))
+    }
+    // Handle potential different structure where policies might be in a 'policies' array
+    if (data.policies && Array.isArray(data.policies)) {
+      // If policies array contains objects with policyName, deduplicate based on policyName
+      const policyNameMap = new Map()
+      data.policies.forEach((policy: any) => {
+        if (policy.policyName && !policyNameMap.has(policy.policyName)) {
+          policyNameMap.set(policy.policyName, policy)
+        }
+      })
+      data.policies = Array.from(policyNameMap.values())
+    }
     return await $api.put(`/set-policy-multi`, data)
   }
 
@@ -69,6 +85,10 @@ export const usePolicies = () => {
    * @returns Result
    */
   const setUserOrGroupPolicy = async (data: any) => {
+    // Ensure policy names are unique before sending to API
+    if (data.policyName && Array.isArray(data.policyName)) {
+      data.policyName = Array.from(new Set(data.policyName))
+    }
     return await $api.put(`/set-user-or-group-policy`, {}, { params: data })
   }
 
@@ -80,37 +100,56 @@ export const usePolicies = () => {
   const getPolicyByUserName = async (userName: string) => {
     // Get user policy groups
     const userInfo = await $api.get(`/user-info?accessKey=${userName}`)
-    const policyName = userInfo?.policyName?.split(',') || []
+    const directPolicyNames = userInfo?.policyName?.split(',') || []
 
     // Get user's group memberships
-    const memberOf = userInfo?.memberOf
+    const memberOf = userInfo?.memberOf || []
     // Get group policies
-    if (memberOf && memberOf.length > 0) {
-      const promises = memberOf.map(async (element: string) => {
-        const groupInfo: { policy?: string } = await $api.get(`/group?group=${encodeURIComponent(element)}`)
-        const groupPolicyName: string[] = groupInfo.policy ? groupInfo.policy.split(',') : []
-        return groupPolicyName
+    const groupPoliciesMap: Record<string, string[]> = {}
+    if (memberOf.length > 0) {
+      const promises = memberOf.map(async (groupName: string) => {
+        const groupInfo: { policy?: string } = await $api.get(`/group?group=${encodeURIComponent(groupName)}`)
+        const groupPolicyNames: string[] = groupInfo.policy ? groupInfo.policy.split(',') : []
+        if (groupPolicyNames.length > 0) {
+          groupPoliciesMap[groupName] = groupPolicyNames
+        }
       })
-      const results = await Promise.all(promises)
-      results.forEach(policyNames => {
-        policyName.push(...policyNames)
-      })
+      await Promise.all(promises)
     }
 
-    // Remove duplicates
-    let uniquePolicyName: string[] = []
-    if (policyName.length) {
-      uniquePolicyName = Array.from(new Set(policyName))
-    }
+    // Collect all unique policy names
+    const allPolicyNames = new Set<string>()
+    directPolicyNames.forEach((policyName: string) => allPolicyNames.add(policyName))
+    Object.values(groupPoliciesMap).forEach((policyNames: string[]) => {
+      policyNames.forEach((policyName: string) => allPolicyNames.add(policyName))
+    })
 
     let policyStatement: any = []
-    // Get all remaining policy documents
-    if (uniquePolicyName.length) {
-      const policyPromises = uniquePolicyName.map(async (element: any) => {
-        const policyInfo = await getPolicy(element)
+    // Get all policy documents
+    if (allPolicyNames.size > 0) {
+      const policyPromises = Array.from(allPolicyNames).map(async (policyName: string) => {
+        const policyInfo = await getPolicy(policyName)
         // Format policy
         let policyRes = JSON.parse(policyInfo.policy)
         if (policyRes?.Statement) {
+          // Add origin information to each statement
+          policyRes.Statement = policyRes.Statement.map((statement: any) => {
+            // Check if this policy is direct or inherited from groups
+            const isDirect = directPolicyNames.includes(policyName)
+            const groupOrigins = Object.entries(groupPoliciesMap)
+              .filter(([_, policies]) => policies.includes(policyName))
+              .map(([groupName]) => groupName)
+
+            return {
+              ...statement,
+              Sid: statement.Sid || policyName, // Use policy name as Sid if not provided
+              Origin: {
+                type: isDirect && groupOrigins.length > 0 ? 'both' : isDirect ? 'direct' : 'group',
+                groups: groupOrigins,
+                policyName: policyName,
+              },
+            }
+          })
           policyStatement.push(...policyRes.Statement)
         }
       })

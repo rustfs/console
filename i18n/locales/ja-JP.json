@@ -31,6 +31,7 @@
   "Add Tier": "ティアを追加",
   "Add User": "ユーザーを追加",
   "Add User Group": "ユーザーグループを追加",
+  "Inherited from group": "グループから継承",
   "Add failed": "追加に失敗しました",
   "Add group members": "グループメンバーを追加",
   "Add replication rules to sync objects across buckets.": "バケット間でオブジェクトを同期するレプリケーションルールを追加します。",

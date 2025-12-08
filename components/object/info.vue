@@ -117,6 +117,15 @@
                 />
                 <span class="text-sm text-muted-foreground">{{ t('Minutes') }}</span>
               </div>
+              <Button
+                class="ml-auto"
+                variant="outline"
+                size="sm"
+                :disabled="!object?.Key || !isExpirationValid"
+                @click="generateTemporaryUrl"
+              >
+                {{ t('Generate URL') }}
+              </Button>
             </div>
             <div v-if="expirationError" class="text-xs text-destructive">{{ expirationError }}</div>
             <div v-if="totalExpirationSeconds > 0" class="text-xs text-muted-foreground">
@@ -124,18 +133,7 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <Input v-model="signedUrl" :placeholder="t('Temporary URL')" readonly />
-            <Button
-              variant="outline"
-              size="sm"
-              :disabled="!object?.Key || !isExpirationValid"
-              @click="generateTemporaryUrl"
-            >
-              {{ t('Generate URL') }}
-            </Button>
-            <Button variant="outline" size="sm" :disabled="!signedUrl" @click="copyTemporaryUrl">
-              {{ t('Copy') }}
-            </Button>
+            <copy-input v-model="signedUrl" class="w-full" :readonly="true" :copy-icon="true" />
           </div>
         </ItemContent>
       </Item>
@@ -574,16 +572,6 @@ const download = async () => {
     })
   } catch (error: any) {
     message.error(error?.message || t('Download Failed'))
-  }
-}
-
-const copyTemporaryUrl = async () => {
-  if (!signedUrl.value) return
-  try {
-    await navigator.clipboard.writeText(signedUrl.value)
-    message.success(t('Copy Success'))
-  } catch {
-    message.error(t('Copy Failed'))
   }
 }
 

@@ -1,9 +1,9 @@
 import type { SiteConfig } from '~/types/config'
 import {
-  fetchRawConfigFromServer,
   getCurrentBrowserConfig,
   getServerDefaultConfig,
   getStoredHostConfig,
+  fetchVersionConfigFromServer,
 } from './config-helpers'
 import { handleConfigError } from './error-handler'
 import { logger } from './logger'

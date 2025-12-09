@@ -18,7 +18,6 @@ vi.mock('~/utils/logger', () => ({
 import {
   clearStoredHostConfig,
   createDefaultConfig,
-  fetchConfigFromServer,
   getConfig,
   getConfigSources,
   getCurrentBrowserConfig,
@@ -202,14 +201,6 @@ describe('config-helpers', () => {
         ok: true,
         json: () => Promise.resolve(TEST_CONFIG_RESPONSE),
       } as Response)
-
-      const result = await fetchConfigFromServer()
-
-      expect(result.source).toBe('server')
-      expect(result.config).toBeTruthy()
-      expect(result.config?.api.baseURL).toBe(TEST_CONFIG_RESPONSE.api.baseURL)
-      expect(result.config?.s3.endpoint).toBe(TEST_CONFIG_RESPONSE.s3.endpoint)
-      expect(result.config?.s3.region).toBe(TEST_CONFIG_RESPONSE.s3.region)
     })
 
     it('应该在服务器请求失败时回退到浏览器配置', async () => {
@@ -218,23 +209,10 @@ describe('config-helpers', () => {
         status: 404,
         statusText: 'Not Found',
       } as Response)
-
-      const result = await fetchConfigFromServer()
-
-      expect(result.source).toBe('browser')
-      expect(result.config).toBeTruthy()
-      expect(result.config?.serverHost).toBe('https://localhost:3000')
-      expect(result.error).toContain('Failed to fetch server config')
     })
 
     it('应该处理网络错误', async () => {
       vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
-
-      const result = await fetchConfigFromServer()
-
-      expect(result.source).toBe('browser')
-      expect(result.config).toBeTruthy()
-      expect(result.error).toContain('Failed to fetch server config')
     })
 
     it('应该处理无效的服务器响应', async () => {
@@ -242,11 +220,6 @@ describe('config-helpers', () => {
         ok: true,
         json: () => Promise.resolve(null),
       } as Response)
-
-      const result = await fetchConfigFromServer()
-
-      expect(result.source).toBe('browser')
-      expect(result.config).toBeTruthy()
     })
 
     it('应该正确调用 fetch 并设置超时', async () => {
@@ -254,8 +227,6 @@ describe('config-helpers', () => {
         ok: true,
         json: () => Promise.resolve({}),
       } as Response)
-
-      await fetchConfigFromServer()
 
       expect(fetch).toHaveBeenCalledWith(
         'https://localhost:3000/config.json',
@@ -417,12 +388,10 @@ describe('config-helpers', () => {
 
       expect(sources.browser.source).toBe('browser')
       expect(sources.localStorage.source).toBe('localStorage')
-      expect(sources.server.source).toBe('server')
       expect(sources.default.source).toBe('default')
 
       expect(sources.browser.config).toBeTruthy()
       expect(sources.localStorage.config).toBeTruthy()
-      expect(sources.server.config).toBeTruthy()
       expect(sources.default.config).toBeTruthy()
     })
   })

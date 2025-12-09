@@ -97,7 +97,6 @@ interface HostInfo {
 const STORAGE_KEY = 'rustfs-server-host'
 const DEFAULT_REGION = 'us-east-1'
 const API_PATH = '/rustfs/admin/v3'
-const CONFIG_PATH = '/rustfs/console/config.json'
 const VERSION_PATH = '/rustfs/console/version'
 const REQUEST_TIMEOUT = 5000
 
@@ -123,15 +122,6 @@ const getCurrentHostInfo = (): HostInfo | null => {
   const serverHost = `${protocol}://${host}`
 
   return { protocol, host, serverHost }
-}
-
-/**
- * Validate server configuration response
- * @param config - Configuration object to validate
- * @returns Returns true if valid server configuration
- */
-const isValidServerConfig = (config: unknown): config is ServerConfigResponse => {
-  return typeof config === 'object' && config !== null
 }
 
 /**
@@ -222,39 +212,6 @@ export const getCurrentBrowserConfig = (): ConfigResult => {
 }
 
 /**
- * Fetch raw configuration data from server
- */
-export const fetchRawConfigFromServer = async (serverHost: string): Promise<ServerConfigResponse | null> => {
-  const configUrl = `${serverHost}${CONFIG_PATH}`
-
-  try {
-    const response = await fetch(configUrl, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT),
-    })
-
-    if (!response.ok) {
-      logger.warn(`Failed to fetch config from ${configUrl}: ${response.status} ${response.statusText}`)
-      return null
-    }
-
-    const data = await response.json()
-
-    if (!isValidServerConfig(data)) {
-      logger.warn('Invalid server config: not a valid object')
-      return null
-    }
-
-    logger.info(`Successfully loaded config from server: ${configUrl}`)
-    return data
-  } catch (error) {
-    logger.warn(`Error fetching config from server: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    return null
-  }
-}
-
-/**
  * Fetch version configuration data from server
  */
 export const fetchVersionConfigFromServer = async (serverHost: string): Promise<VersionConfigResponse | null> => {
@@ -319,28 +276,6 @@ const mergeServerConfig = (baseConfig: SiteConfig, serverConfig: ServerConfigRes
   }
 }
 
-/**
- * Fetch configuration from server and merge with default configuration
- */
-export const fetchConfigFromServer = async (): Promise<ConfigResult> => {
-  const browserResult = getCurrentBrowserConfig()
-  if (!browserResult.config) {
-    return { config: null, source: 'server', error: browserResult.error }
-  }
-
-  const serverConfig = await fetchRawConfigFromServer(browserResult.config.serverHost)
-  if (!serverConfig) {
-    return {
-      config: browserResult.config,
-      source: 'browser',
-      error: 'Failed to fetch server config, using browser config',
-    }
-  }
-
-  const mergedConfig = mergeServerConfig(browserResult.config, serverConfig)
-  return { config: mergedConfig, source: 'server' }
-}
-
 // ============================================================================
 // Advanced Configuration Retrieval Functions
 // ============================================================================
@@ -365,12 +300,6 @@ export const fetchConfigFromServer = async (): Promise<ConfigResult> => {
  * ```
  */
 export const getConfig = async (): Promise<ConfigResult> => {
-  // 1. Try to get configuration from server
-  const serverResult = await fetchConfigFromServer()
-  if (serverResult.config && serverResult.source === 'server') {
-    return serverResult
-  }
-
   // 2. Try to get configuration from localStorage
   const storedResult = getStoredHostConfig()
   if (storedResult.config) {
@@ -497,13 +426,11 @@ export const validateConfig = (config: SiteConfig): { valid: boolean; errors: st
 export const getConfigSources = async (): Promise<{
   browser: ConfigResult
   localStorage: ConfigResult
-  server: ConfigResult
   default: ConfigResult
 }> => {
-  const [browser, localStorage, server] = await Promise.all([
+  const [browser, localStorage] = await Promise.all([
     Promise.resolve(getCurrentBrowserConfig()),
     Promise.resolve(getStoredHostConfig()),
-    fetchConfigFromServer(),
   ])
 
   const defaultConfig = getServerDefaultConfig()
@@ -511,7 +438,6 @@ export const getConfigSources = async (): Promise<{
   return {
     browser,
     localStorage,
-    server,
     default: defaultConfig,
   }
 }

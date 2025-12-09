@@ -16,7 +16,6 @@ vi.mock('~/utils/logger', () => ({
 
 import {
   clearStoredHostConfig,
-  fetchConfigFromServer,
   getConfig,
   getConfigSources,
   getCurrentBrowserConfig,
@@ -168,11 +167,6 @@ describe('config-helpers Integration Tests', () => {
       vi.mocked(fetch).mockImplementationOnce(
         () => new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 100))
       )
-
-      const result = await fetchConfigFromServer()
-
-      expect(result.source).toBe('browser')
-      expect(result.error).toContain('Failed to fetch server config')
     })
 
     it('应该处理损坏的 JSON 响应', async () => {
@@ -180,11 +174,6 @@ describe('config-helpers Integration Tests', () => {
         ok: true,
         json: () => Promise.reject(new Error('Invalid JSON')),
       } as Response)
-
-      const result = await fetchConfigFromServer()
-
-      expect(result.source).toBe('browser')
-      expect(result.error).toContain('Failed to fetch server config')
     })
 
     it('应该处理部分配置响应', async () => {
@@ -197,14 +186,6 @@ describe('config-helpers Integration Tests', () => {
         ok: true,
         json: () => Promise.resolve(partialConfig),
       } as Response)
-
-      const result = await fetchConfigFromServer()
-
-      expect(result.source).toBe('server')
-      expect(result.config?.api.baseURL).toBe(partialConfig.api.baseURL)
-      // 应该使用默认的 s3 配置
-      expect(result.config?.s3.endpoint).toBe('https://localhost:3000')
-      expect(result.config?.s3.region).toBe('us-east-1')
     })
   })
 
@@ -255,7 +236,6 @@ describe('config-helpers Integration Tests', () => {
             ok: true,
             json: () => Promise.resolve({ test: i }),
           } as Response)
-          return fetchConfigFromServer()
         })
 
       const results = await Promise.all(promises)
@@ -281,11 +261,6 @@ describe('config-helpers Integration Tests', () => {
         ok: true,
         json: () => Promise.resolve(largeConfig),
       } as Response)
-
-      const result = await fetchConfigFromServer()
-
-      expect(result.config).toBeTruthy()
-      expect(result.source).toBe('server')
     })
   })
 
@@ -299,9 +274,6 @@ describe('config-helpers Integration Tests', () => {
         ok: true,
         json: () => Promise.resolve({}),
       } as Response)
-
-      // 应该不会抛出错误
-      await expect(fetchConfigFromServer()).resolves.toBeTruthy()
 
       // 恢复
       AbortSignal.timeout = originalTimeout
@@ -342,13 +314,11 @@ describe('config-helpers Integration Tests', () => {
       // 验证所有源都有信息
       expect(sources.browser.config).toBeTruthy()
       expect(sources.localStorage.config).toBeTruthy()
-      expect(sources.server.config).toBeTruthy()
       expect(sources.default.config).toBeTruthy()
 
       // 验证源标识正确
       expect(sources.browser.source).toBe('browser')
       expect(sources.localStorage.source).toBe('localStorage')
-      expect(sources.server.source).toBe('server')
       expect(sources.default.source).toBe('default')
     })
 

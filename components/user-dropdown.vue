@@ -11,7 +11,7 @@
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent class="w-48" align="end" side="top">
-      <DropdownMenuItem @select="handleChangePassword">
+      <DropdownMenuItem v-if="!isAdmin" @select="handleChangePassword">
         <Icon name="ri:lock-password-line" class="h-4 w-4" />
         <span>{{ t('Change Password') }}</span>
       </DropdownMenuItem>
@@ -28,13 +28,14 @@
 import { Icon } from '#components'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { defineProps, ref, toRef, withDefaults } from 'vue'
+// import { defineProps, ref, toRef, withDefaults } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AccessKeysChangePassword from '@/components/access-keys/change-password.vue'
 
 const { t } = useI18n()
 const { logout } = useAuth()
 const router = useRouter()
+const { isAdminUser } = useUsers()
 
 const props = withDefaults(
   defineProps<{
@@ -56,4 +57,10 @@ const handleLogout = async () => {
   await logout()
   router.push('/auth/login')
 }
+
+const isAdmin = ref(false)
+onMounted(async () => {
+  const adminInfo = await isAdminUser()
+  isAdmin.value = adminInfo?.isAdmin || false
+})
 </script>

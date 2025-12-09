@@ -73,6 +73,11 @@ export const useUsers = () => {
     return await $api.post(`/user/${encodeURIComponent(name)}/service-account-credentials`, data)
   }
 
+  // isAdminUser
+  const isAdminUser = async () => {
+    return await $api.get(`/is-admin`)
+  }
+
   return {
     listUsers,
     createUser,
@@ -87,5 +92,6 @@ export const useUsers = () => {
     listAllUserServiceAccounts,
     createAUserServiceAccount,
     createServiceAccountCredentials,
+    isAdminUser,
   }
 }

@@ -61,6 +61,6 @@ const handleLogout = async () => {
 const isAdmin = ref(false)
 onMounted(async () => {
   const adminInfo = await isAdminUser()
-  isAdmin.value = adminInfo?.isAdmin || false
+  isAdmin.value = adminInfo?.is_admin || false
 })
 </script>

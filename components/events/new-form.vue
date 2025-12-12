@@ -197,11 +197,11 @@ const handleSubmit = async () => {
 
   try {
     const eventMapping: Record<string, string[]> = {
-      PUT: ['s3:0bjectCreated:*'],
-      GET: ['s3:0bjectAccessed:*'],
-      DELETE: ['s3:0bjectRemoved:*'],
+      PUT: ['s3:ObjectCreated:*'],
+      GET: ['s3:ObjectAccessed:*'],
+      DELETE: ['s3:ObjectRemoved:*'],
       REPLICA: ['s3:Replication:*'],
-      RESTORE: ['s3:ObjectRestore:*', 's3:0bjectTransition:*'],
+      RESTORE: ['s3:ObjectRestore:*', 's3:ObjectTransition:*'],
       SCANNER: ['s3:Scanner:ManyVersions', 's3:Scanner:BigPrefix'],
     }
 

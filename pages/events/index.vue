@@ -57,12 +57,12 @@ interface NotificationItem {
 }
 
 const eventDisplayMapping: Record<string, string> = {
-  's3:0bjectCreated:*': 'PUT',
-  's3:0bjectAccessed:*': 'GET',
-  's3:0bjectRemoved:*': 'DELETE',
+  's3:ObjectCreated:*': 'PUT',
+  's3:ObjectAccessed:*': 'GET',
+  's3:ObjectRemoved:*': 'DELETE',
   's3:Replication:*': 'REPLICA',
   's3:ObjectRestore:*': 'RESTORE',
-  's3:0bjectTransition:*': 'RESTORE',
+  's3:ObjectTransition:*': 'RESTORE',
   's3:Scanner:ManyVersions': 'SCANNER',
   's3:Scanner:BigPrefix': 'SCANNER',
 }

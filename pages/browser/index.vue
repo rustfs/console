@@ -44,6 +44,7 @@ const message = useMessage()
 const dialog = useDialog()
 const { listBuckets, deleteBucket } = useBucket({})
 const systemApi = useSystem()
+const { isAdmin } = useAuth()
 
 const formVisible = ref(false)
 const searchTerm = ref('')
@@ -61,8 +62,13 @@ const { data, pending, refresh } = await useAsyncData<BucketRow[]>(
   'buckets',
   async () => {
     const response = await listBuckets()
-    const usage = await systemApi.getDataUsageInfo()
-    const bucketUsage = (usage?.buckets_usage ?? {}) as BucketUsageMap
+
+    // Only admin users can fetch data usage info
+    let bucketUsage: BucketUsageMap = {}
+    if (isAdmin.value) {
+      const usage = await systemApi.getDataUsageInfo()
+      bucketUsage = (usage?.buckets_usage ?? {}) as BucketUsageMap
+    }
 
     const buckets = (response.Buckets ?? [])
       .map(item => {
@@ -70,15 +76,19 @@ const { data, pending, refresh } = await useAsyncData<BucketRow[]>(
         if (!name) {
           return null
         }
-        const stats = bucketUsage[name]
-        const objectsCount = typeof stats?.objects_count === 'number' ? stats.objects_count : 0
-        const totalSize = typeof stats?.size === 'number' ? stats.size : 0
 
         const bucketRow: BucketRow = {
           Name: name,
           CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : '',
-          Count: objectsCount,
-          Size: niceBytes(String(totalSize)),
+        }
+
+        // Only add Count and Size for admin users
+        if (isAdmin.value) {
+          const stats = bucketUsage[name]
+          const objectsCount = typeof stats?.objects_count === 'number' ? stats.objects_count : 0
+          const totalSize = typeof stats?.size === 'number' ? stats.size : 0
+          bucketRow.Count = objectsCount
+          bucketRow.Size = niceBytes(String(totalSize))
         }
 
         return bucketRow
@@ -98,35 +108,44 @@ const filteredData = computed(() => {
   return buckets.filter(bucket => bucket.Name.toLowerCase().includes(term))
 })
 
-const columns: ColumnDef<BucketRow>[] = [
-  {
-    header: () => t('Bucket'),
-    accessorKey: 'Name',
-    cell: ({ row }) =>
-      h(
-        NuxtLink,
-        {
-          href: `/browser/${encodeURIComponent(row.original.Name)}`,
-          class: 'flex items-center gap-2 text-primary hover:underline',
-        },
-        () => [h(Icon, { name: 'ri:archive-line', class: 'size-4' }), row.original.Name]
-      ),
-  },
-  {
-    header: () => t('Creation Date'),
-    accessorKey: 'CreationDate',
-    cell: ({ row }) => dayjs(row.original.CreationDate).format('YYYY-MM-DD HH:mm:ss'),
-  },
-  {
-    header: () => t('Object Count'),
-    accessorKey: 'Count',
-    cell: ({ row }) => row.original.Count?.toLocaleString() ?? '0',
-  },
-  {
-    header: () => t('Size'),
-    accessorKey: 'Size',
-  },
-  {
+const columns = computed<ColumnDef<BucketRow>[]>(() => {
+  const baseColumns: ColumnDef<BucketRow>[] = [
+    {
+      header: () => t('Bucket'),
+      accessorKey: 'Name',
+      cell: ({ row }) =>
+        h(
+          NuxtLink,
+          {
+            href: `/browser/${encodeURIComponent(row.original.Name)}`,
+            class: 'flex items-center gap-2 text-primary hover:underline',
+          },
+          () => [h(Icon, { name: 'ri:archive-line', class: 'size-4' }), row.original.Name]
+        ),
+    },
+    {
+      header: () => t('Creation Date'),
+      accessorKey: 'CreationDate',
+      cell: ({ row }) => dayjs(row.original.CreationDate).format('YYYY-MM-DD HH:mm:ss'),
+    },
+  ]
+
+  // Only admin users can see Count and Size columns
+  if (isAdmin.value) {
+    baseColumns.push(
+      {
+        header: () => t('Object Count'),
+        accessorKey: 'Count',
+        cell: ({ row }) => row.original.Count?.toLocaleString() ?? '0',
+      },
+      {
+        header: () => t('Size'),
+        accessorKey: 'Size',
+      }
+    )
+  }
+
+  baseColumns.push({
     id: 'actions',
     header: () => t('Actions'),
     enableSorting: false,
@@ -154,8 +173,10 @@ const columns: ColumnDef<BucketRow>[] = [
           () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
         ),
       ]),
-  },
-]
+  })
+
+  return baseColumns
+})
 
 const { table } = useDataTable<BucketRow>({
   data: filteredData,

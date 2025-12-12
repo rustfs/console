@@ -33,7 +33,7 @@ import { useI18n } from 'vue-i18n'
 import AccessKeysChangePassword from '@/components/access-keys/change-password.vue'
 
 const { t } = useI18n()
-const { logout } = useAuth()
+const { logout, isAdmin, setIsAdmin } = useAuth()
 const router = useRouter()
 const { isAdminUser } = useUsers()
 
@@ -58,9 +58,8 @@ const handleLogout = async () => {
   router.push('/auth/login')
 }
 
-const isAdmin = ref(false)
 onMounted(async () => {
   const adminInfo = await isAdminUser()
-  isAdmin.value = adminInfo?.is_admin || false
+  setIsAdmin(adminInfo?.is_admin || false)
 })
 </script>

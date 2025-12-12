@@ -384,7 +384,10 @@ const handleSave = async () => {
   }
   submitting.value = true
   try {
-    const currentConfig = await getBucketLifecycleConfiguration(props.bucketName)
+    let currentConfig = null
+    try {
+      currentConfig = await getBucketLifecycleConfiguration(props.bucketName)
+    } catch (err) {}
     const newRule: any = {
       ID: randomUUID(),
       Status: 'Enabled',
@@ -427,7 +430,7 @@ const handleSave = async () => {
       }
     }
 
-    const existingRules = currentConfig.Rules || []
+    const existingRules = currentConfig?.Rules || []
     const payload = {
       Rules: [...existingRules, newRule],
     }

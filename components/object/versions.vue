@@ -146,7 +146,10 @@ const downloadVersion = async (row: any) => {
   const url = await getSignedUrlWithVersion(props.objectKey, row.VersionId)
   fetch(url).then(async response => {
     // 获取头信息
-    const headers: any = response.headers
+    const headers: any = {
+      'content-type': response.headers.get('content-type') || 'application/octet-stream',
+      filename: response.headers.get('content-disposition')?.split('filename=')[1] || '',
+    }
     let blob = await response.blob()
     exportFile({ headers, data: blob }, props.objectKey.split('/').pop() || '')
   })

@@ -423,7 +423,10 @@ const downloadFile = async (key: string) => {
     const url = await objectApi.getSignedUrl(key)
     fetch(url).then(async response => {
       // 获取头信息
-      const headers: any = response.headers
+      const headers: any = {
+        'content-type': response.headers.get('content-type') || 'application/octet-stream',
+        filename: response.headers.get('content-disposition')?.split('filename=')[1] || '',
+      }
       let blob = await response.blob()
       exportFile({ headers, data: blob }, key.split('/').pop() || '')
     })

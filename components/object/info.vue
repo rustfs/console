@@ -565,13 +565,15 @@ const download = async () => {
   try {
     const url = await getSignedUrl(object.value.Key)
     fetch(url).then(async response => {
+      const filename = object.value.Key.split('/').pop() || ''
       // 获取头信息，将 Headers 对象转换为普通对象
+      // 如果服务器没有返回 content-type，根据文件扩展名推断
       const headers: any = {
-        'content-type': response.headers.get('content-type') || 'application/octet-stream',
+        'content-type': getContentType(response.headers, filename),
         filename: response.headers.get('content-disposition')?.split('filename=')[1] || '',
       }
       let blob = await response.blob()
-      exportFile({ headers, data: blob }, object.value.Key.split('/').pop() || '')
+      exportFile({ headers, data: blob }, filename)
     })
   } catch (error: any) {
     message.error(error?.message || t('Download Failed'))

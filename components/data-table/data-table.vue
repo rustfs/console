@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import type { Column, Table } from '@tanstack/vue-table'
 import { FlexRender } from '@tanstack/vue-table'
 import { computed } from 'vue'
+import { Icon } from '#components'
 
 const props = withDefaults(
   defineProps<{
@@ -51,6 +52,26 @@ const getColumnStyles = (column: Column<TData, unknown>) => {
 
   return Object.keys(styles).length > 0 ? styles : undefined
 }
+
+const canSort = (column: Column<TData, unknown>) => {
+  const def = column.columnDef as any
+  // 如果 enableSorting 明确设置为 false，则不显示排序
+  if (def.enableSorting === false) {
+    return false
+  }
+
+  // 直接检查列定义对象中是否真的存在 accessorKey 或 accessorFn
+  // 使用 Object.prototype.hasOwnProperty.call 来确保属性直接存在于对象上
+  const hasAccessorKey =
+    Object.prototype.hasOwnProperty.call(def, 'accessorKey') &&
+    typeof def.accessorKey === 'string' &&
+    def.accessorKey.length > 0
+
+  const hasAccessorFn = Object.prototype.hasOwnProperty.call(def, 'accessorFn') && typeof def.accessorFn === 'function'
+
+  // 只有明确配置了 accessorKey 或 accessorFn 时才显示排序
+  return hasAccessorKey || hasAccessorFn
+}
 </script>
 
 <template>
@@ -73,11 +94,19 @@ const getColumnStyles = (column: Column<TData, unknown>) => {
               :class="bodyHeight ? undefined : 'py-2'"
               :style="getColumnStyles(header.column)"
             >
-              <FlexRender
-                v-if="!header.isPlaceholder"
-                :render="header.column.columnDef.header"
-                :props="header.getContext()"
-              />
+              <template v-if="!header.isPlaceholder">
+                <div
+                  v-if="canSort(header.column)"
+                  class="flex items-center gap-2 cursor-pointer select-none hover:text-foreground"
+                  @click="header.column.getToggleSortingHandler()?.($event)"
+                >
+                  <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />
+                  <Icon v-if="header.column.getIsSorted() === 'asc'" name="ri:arrow-up-s-line" class="size-4" />
+                  <Icon v-else-if="header.column.getIsSorted() === 'desc'" name="ri:arrow-down-s-line" class="size-4" />
+                  <Icon v-else name="ri:arrow-up-down-line" class="size-4 text-muted-foreground opacity-50" />
+                </div>
+                <FlexRender v-else :render="header.column.columnDef.header" :props="header.getContext()" />
+              </template>
             </TableHead>
           </TableRow>
         </TableHeader>

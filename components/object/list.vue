@@ -271,6 +271,10 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
     {
       id: 'object',
       header: () => t('Object'),
+      accessorFn: row => {
+        const key = row.Key ?? ''
+        return prefix.value ? key.substring(prefix.value.length) : key
+      },
       cell: ({ row }: any) => {
         const key = row.original.Key ?? ''
         const displayKey = prefix.value ? key.substring(prefix.value.length) : key
@@ -302,11 +306,16 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
     {
       id: 'size',
       header: () => t('Size'),
+      accessorFn: row => (row.type === 'object' ? row.Size : -1),
       cell: ({ row }: any) => (row.original.type === 'object' ? formatBytes(row.original.Size) : '-'),
     },
     {
       id: 'lastModified',
       header: () => t('Last Modified'),
+      accessorFn: row => {
+        if (row.type === 'prefix' || !row.LastModified) return ''
+        return new Date(row.LastModified).getTime()
+      },
       cell: ({ row }: any) =>
         row.original.LastModified ? dayjs(row.original.LastModified).format('YYYY-MM-DD HH:mm:ss') : '-',
     },

@@ -89,7 +89,7 @@ const columns: ColumnDef<ReplicationRule>[] = [
     cell: ({ row }) => h('span', String(row.original.Priority ?? '-')),
   },
   {
-    accessorKey: 'Filter',
+    id: 'Filter',
     header: () => t('Prefix'),
     cell: ({ row }) => h('span', row.original.Filter?.Prefix || '-'),
   },

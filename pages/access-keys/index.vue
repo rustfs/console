@@ -114,7 +114,7 @@ const columns: ColumnDef<RowData>[] = [
     cell: ({ row }) => h('span', row.original.name || '-'),
   },
   {
-    accessorKey: 'description',
+    id: 'description',
     header: () => t('Description'),
     cell: ({ row }) => h('span', row.original.description || '-'),
   },

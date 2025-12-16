@@ -3,7 +3,11 @@
     <page-header>
       <div class="flex items-center gap-4">
         <h1 @click="$router.push(bucketPath())" class="cursor-pointer">{{ bucketName }}</h1>
-        <object-path-links :object-key="key" @click="path => $router.push(bucketPath(path))" />
+        <object-path-links
+          :object-key="key"
+          :bucket-name="bucketName"
+          @click="path => $router.push(bucketPath(path))"
+        />
       </div>
     </page-header>
     <div class="flex flex-col gap-4">

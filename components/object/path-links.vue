@@ -1,6 +1,6 @@
 <template>
   <template v-for="segment in displaySegments">
-    <span class="text-gray-500">/</span>
+    <span class="text-gray-500">&nbsp;/&nbsp;</span>
     <button
       @click="() => handleOnClick(segment)"
       :class="{ 'text-blue-500 hover:underline': segment.index > -1, 'cursor-default': segment.index === -1 }"

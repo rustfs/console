@@ -74,7 +74,7 @@ const handleEscape = (event: Event) => {
         </slot>
       </DialogHeader>
 
-      <div class="max-h-[80vh]">
+      <div class="max-h-[80vh] overflow-auto px-2 -mx-2">
         <slot />
       </div>
 

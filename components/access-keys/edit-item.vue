@@ -94,49 +94,53 @@ async function submitForm() {
 </script>
 
 <template>
-  <Modal v-model="visible" :title="t('Edit Key')" size="lg" :close-on-backdrop="false">
-    <div class="space-y-4">
-      <Field>
-        <FieldLabel>{{ t('Access Key') }}</FieldLabel>
-        <FieldContent>
-          <Input v-model="formModel.accesskey" disabled />
-        </FieldContent>
-      </Field>
+  <Modal v-model="visible" :title="t('Edit Key')" size="xl" content-class="sm:max-w-6xl" :close-on-backdrop="false">
+    <div class="flex flex-col gap-4 lg:flex-row">
+      <div class="flex w-full flex-col gap-4 lg:w-72 lg:shrink-0">
+        <Field>
+          <FieldLabel>{{ t('Access Key') }}</FieldLabel>
+          <FieldContent>
+            <Input v-model="formModel.accesskey" disabled />
+          </FieldContent>
+        </Field>
 
-      <Field>
-        <FieldLabel>{{ t('Policy') }}</FieldLabel>
-        <FieldContent>
-          <json-editor v-model="formModel.policy" />
-        </FieldContent>
-      </Field>
+        <Field>
+          <FieldLabel>{{ t('Expiry') }}</FieldLabel>
+          <FieldContent>
+            <DateTimePicker v-model="formModel.expiry" :min="minExpiry" />
+          </FieldContent>
+        </Field>
 
-      <Field>
-        <FieldLabel>{{ t('Expiry') }}</FieldLabel>
-        <FieldContent>
-          <DateTimePicker v-model="formModel.expiry" :min="minExpiry" />
-        </FieldContent>
-      </Field>
+        <Field>
+          <FieldLabel>{{ t('Name') }}</FieldLabel>
+          <FieldContent>
+            <Input v-model="formModel.name" />
+          </FieldContent>
+        </Field>
 
-      <Field>
-        <FieldLabel>{{ t('Name') }}</FieldLabel>
-        <FieldContent>
-          <Input v-model="formModel.name" />
-        </FieldContent>
-      </Field>
+        <Field>
+          <FieldLabel>{{ t('Description') }}</FieldLabel>
+          <FieldContent>
+            <Textarea v-model="formModel.description" :rows="2" />
+          </FieldContent>
+        </Field>
 
-      <Field>
-        <FieldLabel>{{ t('Description') }}</FieldLabel>
-        <FieldContent>
-          <Textarea v-model="formModel.description" :rows="2" />
-        </FieldContent>
-      </Field>
+        <Field orientation="responsive">
+          <FieldLabel class="text-sm font-medium">{{ t('Status') }}</FieldLabel>
+          <FieldContent class="flex justify-end">
+            <Switch v-model="statusBoolean" />
+          </FieldContent>
+        </Field>
+      </div>
 
-      <Field orientation="responsive">
-        <FieldLabel class="text-sm font-medium">{{ t('Status') }}</FieldLabel>
-        <FieldContent class="flex justify-end">
-          <Switch v-model="statusBoolean" />
-        </FieldContent>
-      </Field>
+      <div class="flex-1 max-h-[60vh] overflow-auto">
+        <Field class="h-full">
+          <FieldLabel>{{ t('Policy') }}</FieldLabel>
+          <FieldContent class="h-full">
+            <json-editor v-model="formModel.policy" class="h-full" />
+          </FieldContent>
+        </Field>
+      </div>
     </div>
 
     <template #footer>

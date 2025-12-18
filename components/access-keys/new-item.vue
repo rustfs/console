@@ -1,74 +1,90 @@
 <template>
-  <Modal v-model="modalVisible" :title="t('Create Key')" size="lg" :close-on-backdrop="false">
-    <div class="space-y-4">
-      <Field>
-        <FieldLabel for="create-access-key">{{ t('Access Key') }}</FieldLabel>
-        <FieldContent>
-          <Input id="create-access-key" v-model="formModel.accessKey" autocomplete="off" />
-        </FieldContent>
-        <FieldDescription v-if="errors.accessKey" class="text-destructive">
-          {{ errors.accessKey }}
-        </FieldDescription>
-      </Field>
+  <Modal
+    v-model="modalVisible"
+    :title="t('Create Key')"
+    size="xl"
+    :content-class="formModel.impliedPolicy ? undefined : 'sm:max-w-6xl'"
+    :close-on-backdrop="false"
+  >
+    <div class="flex flex-col gap-4 lg:flex-row">
+      <div
+        :class="
+          formModel.impliedPolicy ? 'flex flex-1 flex-col gap-4' : 'flex w-full flex-col gap-4 lg:w-72 lg:shrink-0'
+        "
+      >
+        <Field>
+          <FieldLabel for="create-access-key">{{ t('Access Key') }}</FieldLabel>
+          <FieldContent>
+            <Input id="create-access-key" v-model="formModel.accessKey" autocomplete="off" />
+          </FieldContent>
+          <FieldDescription v-if="errors.accessKey" class="text-destructive">
+            {{ errors.accessKey }}
+          </FieldDescription>
+        </Field>
 
-      <Field>
-        <FieldLabel for="create-secret-key">{{ t('Secret Key') }}</FieldLabel>
-        <FieldContent>
-          <Input id="create-secret-key" v-model="formModel.secretKey" type="password" autocomplete="off" />
-        </FieldContent>
-        <FieldDescription v-if="errors.secretKey" class="text-destructive">
-          {{ errors.secretKey }}
-        </FieldDescription>
-      </Field>
+        <Field>
+          <FieldLabel for="create-secret-key">{{ t('Secret Key') }}</FieldLabel>
+          <FieldContent>
+            <Input id="create-secret-key" v-model="formModel.secretKey" type="password" autocomplete="off" />
+          </FieldContent>
+          <FieldDescription v-if="errors.secretKey" class="text-destructive">
+            {{ errors.secretKey }}
+          </FieldDescription>
+        </Field>
 
-      <Field>
-        <FieldLabel for="create-expiry">{{ t('Expiry') }}({{ t('empty is indicates permanent validity') }})</FieldLabel>
-        <FieldContent>
-          <DateTimePicker
-            id="create-expiry"
-            v-model="formModel.expiry"
-            :min="minExpiry"
-            :placeholder="t('Please select expiry date')"
-          />
-        </FieldContent>
-        <FieldDescription v-if="errors.expiry" class="text-destructive">
-          {{ errors.expiry }}
-        </FieldDescription>
-      </Field>
+        <Field>
+          <FieldLabel for="create-expiry"
+            >{{ t('Expiry') }}({{ t('empty is indicates permanent validity') }})</FieldLabel
+          >
+          <FieldContent>
+            <DateTimePicker
+              id="create-expiry"
+              v-model="formModel.expiry"
+              :min="minExpiry"
+              :placeholder="t('Please select expiry date')"
+            />
+          </FieldContent>
+          <FieldDescription v-if="errors.expiry" class="text-destructive">
+            {{ errors.expiry }}
+          </FieldDescription>
+        </Field>
 
-      <Field>
-        <FieldLabel for="create-name">{{ t('Name') }}</FieldLabel>
-        <FieldContent>
-          <Input id="create-name" v-model="formModel.name" autocomplete="off" />
-        </FieldContent>
-        <FieldDescription v-if="errors.name" class="text-destructive">
-          {{ errors.name }}
-        </FieldDescription>
-      </Field>
+        <Field>
+          <FieldLabel for="create-name">{{ t('Name') }}</FieldLabel>
+          <FieldContent>
+            <Input id="create-name" v-model="formModel.name" autocomplete="off" />
+          </FieldContent>
+          <FieldDescription v-if="errors.name" class="text-destructive">
+            {{ errors.name }}
+          </FieldDescription>
+        </Field>
 
-      <Field>
-        <FieldLabel for="create-description">{{ t('Description') }}</FieldLabel>
-        <FieldContent>
-          <Textarea id="create-description" v-model="formModel.description" :rows="3" />
-        </FieldContent>
-      </Field>
+        <Field>
+          <FieldLabel for="create-description">{{ t('Description') }}</FieldLabel>
+          <FieldContent>
+            <Textarea id="create-description" v-model="formModel.description" :rows="3" />
+          </FieldContent>
+        </Field>
 
-      <Field orientation="responsive" class="items-start gap-3 rounded-md border p-3">
-        <FieldLabel class="text-sm font-medium">{{ t('Use main account policy') }}</FieldLabel>
-        <FieldContent class="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-          <p class="text-xs text-muted-foreground">
-            {{ t('Automatically inherit the main account policy when enabled.') }}
-          </p>
-          <Switch v-model="formModel.impliedPolicy" />
-        </FieldContent>
-      </Field>
+        <Field orientation="responsive" class="items-start gap-3 rounded-md border p-3">
+          <FieldLabel class="text-sm font-medium">{{ t('Use main account policy') }}</FieldLabel>
+          <FieldContent class="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <p class="text-xs text-muted-foreground">
+              {{ t('Automatically inherit the main account policy when enabled.') }}
+            </p>
+            <Switch v-model="formModel.impliedPolicy" />
+          </FieldContent>
+        </Field>
+      </div>
 
-      <Field v-if="!formModel.impliedPolicy">
-        <FieldLabel>{{ t('Current user policy') }}</FieldLabel>
-        <FieldContent>
-          <json-editor v-model="formModel.policy" />
-        </FieldContent>
-      </Field>
+      <div v-if="!formModel.impliedPolicy" class="flex-1 max-h-[60vh] overflow-auto">
+        <Field class="h-full">
+          <FieldLabel>{{ t('Current user policy') }}</FieldLabel>
+          <FieldContent class="h-full">
+            <json-editor v-model="formModel.policy" class="h-full" />
+          </FieldContent>
+        </Field>
+      </div>
     </div>
 
     <template #footer>

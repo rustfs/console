@@ -88,7 +88,7 @@ const handleLogin = async () => {
                       <Input
                         id="accessKey"
                         v-model="accessKeyAndSecretKey.accessKeyId"
-                        autocomplete="new-password"
+                        autocomplete="username"
                         type="text"
                         :placeholder="t('Please enter account')"
                       />
@@ -100,7 +100,7 @@ const handleLogin = async () => {
                       <Input
                         id="secretKey"
                         v-model="accessKeyAndSecretKey.secretAccessKey"
-                        autocomplete="new-password"
+                        autocomplete="current-password"
                         type="password"
                         :placeholder="t('Please enter key')"
                       />

@@ -29,7 +29,7 @@
           </div>
         </div>
 
-        <div class="space-y-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field>
             <FieldLabel>{{ t('Name') }} (A-Z,0-9,_)</FieldLabel>
             <FieldContent>

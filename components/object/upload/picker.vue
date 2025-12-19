@@ -143,9 +143,9 @@
       </div>
 
       <div class="flex justify-end gap-2">
-        <Button variant="outline" :disabled="!hasFiles || isAdding || isFolderLoading">
+        <!-- <Button variant="outline" :disabled="!hasFiles || isAdding || isFolderLoading">
           {{ t('Configure') }}
-        </Button>
+        </Button> -->
         <Button
           variant="default"
           :disabled="!hasFiles || isAdding || isFolderLoading"
@@ -404,13 +404,75 @@ const handleDragLeave = () => {
   isDragOver.value = false
 }
 
-const handleDrop = (event: DragEvent) => {
+const getFilesFromEntry = (entry: FileSystemEntry, path = ''): Promise<{ file: File; relativePath: string }[]> => {
+  return new Promise(resolve => {
+    if (entry.isFile) {
+      ;(entry as FileSystemFileEntry).file(file => {
+        resolve([{ file, relativePath: path + file.name }])
+      })
+    } else if (entry.isDirectory) {
+      const dirReader = (entry as FileSystemDirectoryEntry).createReader()
+      let entries: FileSystemEntry[] = []
+      function readEntries() {
+        dirReader.readEntries(async results => {
+          if (!results.length) {
+            const files = await Promise.all(entries.map(e => getFilesFromEntry(e, path + entry.name + '/')))
+            resolve(files.flat())
+          } else {
+            entries.push(...results)
+            readEntries()
+          }
+        })
+      }
+      readEntries()
+    }
+  })
+}
+
+const handleDrop = async (event: DragEvent) => {
   if (isFolderLoading.value || isAdding.value) return
   isDragOver.value = false
 
+  const dtItems = event.dataTransfer?.items
+  if (dtItems && dtItems.length && dtItems[0] && typeof dtItems[0].webkitGetAsEntry === 'function') {
+    let allFiles: { file: File; relativePath: string }[] = []
+    isFolderLoading.value = true
+    for (let i = 0; i < dtItems.length; i++) {
+      const item = dtItems[i]
+      if (!item) continue
+      const entry = typeof item.webkitGetAsEntry === 'function' ? item.webkitGetAsEntry() : null
+      if (entry) {
+        // 递归读取所有文件
+        // eslint-disable-next-line no-await-in-loop
+        const files = await getFilesFromEntry(entry)
+        allFiles.push(...files)
+      }
+    }
+    isFolderLoading.value = false
+    if (!ensureCapacity(allFiles.length)) return
+
+    const items = allFiles.map(({ file, relativePath }) => ({
+      uid: createUid(),
+      type: 'file' as const,
+      name: relativePath,
+      size: file.size,
+      files: [
+        {
+          file,
+          prefix:
+            props.prefix +
+            (relativePath.includes('/') ? relativePath.substring(0, relativePath.lastIndexOf('/') + 1) : ''),
+        },
+      ],
+    }))
+    selectedItems.value.push(...items)
+    setTimeout(checkMemoryUsage, 500)
+    return
+  }
+
+  // fallback: 仅文件
   const droppedFiles = event.dataTransfer?.files ? Array.from(event.dataTransfer.files) : []
   if (!droppedFiles.length) return
-
   if (!ensureCapacity(droppedFiles.length)) return
 
   const items = droppedFiles.map(file => ({

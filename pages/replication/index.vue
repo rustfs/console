@@ -177,7 +177,16 @@ const handleRowDelete = async (rule: ReplicationRule) => {
       await deleteBucketReplication(bucketName.value as string)
       await deleteRemoteReplicationTarget(bucketName.value as string, rule.Destination?.Bucket ?? '')
     } else {
+      // 获取当前配置以获取 Role 字段
+      const currentConfig = await getBucketReplication(bucketName.value as string)
+      const role = currentConfig?.ReplicationConfiguration?.Role
+
+      if (!role) {
+        throw new Error('Replication configuration Role is missing')
+      }
+
       await putBucketReplication(bucketName.value as string, {
+        Role: role,
         Rules: remaining,
       })
     }

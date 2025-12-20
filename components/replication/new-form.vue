@@ -304,7 +304,8 @@ const handleSave = async () => {
 
     const targetResponse = await setRemoteReplicationTarget(props.bucketName, config)
     if (!targetResponse) {
-      throw new Error('Failed to create replication target')
+      // throw new Error('Failed to create replication target')
+      return
     }
 
     let oldConfig: any = null

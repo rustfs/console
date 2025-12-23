@@ -34,6 +34,7 @@ const languageConfig = {
   pt: { text: 'Português', icon: 'ri:translate' },
   it: { text: 'Italiano', icon: 'ri:translate' },
   ru: { text: 'Русский', icon: 'ri:translate' },
+  id: { text: 'Bahasa Indonesia', icon: 'ri:translate' },
 } as const
 
 const options = Object.entries(languageConfig).map(([key, config]) => ({
@@ -46,6 +47,6 @@ const currentLanguage = computed(() => {
 })
 
 const handleSelect = async (key: string) => {
-  await setLocale(key as 'en' | 'zh' | 'fr' | 'tr' | 'ja' | 'ko' | 'de' | 'es' | 'pt' | 'it' | 'ru')
+  await setLocale(key as 'en' | 'zh' | 'fr' | 'tr' | 'ja' | 'ko' | 'de' | 'es' | 'pt' | 'it' | 'ru' | 'id')
 }
 </script>

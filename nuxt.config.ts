@@ -134,6 +134,12 @@ export default defineNuxtConfig({
         name: 'Türkçe',
         file: 'tr-TR.json',
       },
+      {
+        code: 'id',
+        iso: 'id-ID',
+        name: 'Bahasa Indonesia',
+        file: 'id-ID.json',
+      },
     ],
     langDir: 'locales',
     detectBrowserLanguage: {

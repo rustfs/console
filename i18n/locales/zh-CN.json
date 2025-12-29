@@ -878,5 +878,9 @@
   "Get Notification Config Failed": "获取通知配置失败",
   "empty is indicates permanent validity": "空表示永久有效",
   "Create user groups to organize permissions": "创建用户组以组织权限",
-  "Filter From This Page": "从本页筛选"
+  "Filter From This Page": "从本页筛选",
+  "Invalid JSON format": "JSON 格式无效",
+  "JSON content is empty": "JSON 内容为空",
+  "JSON formatted successfully": "JSON 格式化成功",
+  "JSON is already formatted": "JSON 已格式化"
 }

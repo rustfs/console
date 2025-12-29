@@ -879,5 +879,9 @@
   "Get Notification Config Failed": "Recupero configurazione notifica non riuscito",
   "empty is indicates permanent validity": "Vuoto indica validità permanente",
   "Create user groups to organize permissions": "Crea gruppi utenti per organizzare le autorizzazioni",
-  "Filter From This Page": "Filtra da questa pagina"
+  "Filter From This Page": "Filtra da questa pagina",
+  "Invalid JSON format": "Formato JSON non valido",
+  "JSON content is empty": "Il contenuto JSON è vuoto",
+  "JSON formatted successfully": "JSON formattato con successo",
+  "JSON is already formatted": "JSON è già formattato"
 }

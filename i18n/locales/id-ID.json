@@ -879,5 +879,9 @@
   "Get Notification Config Failed": "Gagal Mengambil Konfigurasi Notifikasi",
   "empty is indicates permanent validity": "kosong menandakan validitas permanen",
   "Create user groups to organize permissions": "Buat grup pengguna untuk mengatur izin",
-  "Filter From This Page": "Filter Dari Halaman Ini"
+  "Filter From This Page": "Filter Dari Halaman Ini",
+  "Invalid JSON format": "Format JSON tidak valid",
+  "JSON content is empty": "Konten JSON kosong",
+  "JSON formatted successfully": "JSON berhasil diformat",
+  "JSON is already formatted": "JSON sudah diformat"
 }

@@ -879,5 +879,9 @@
   "Get Notification Config Failed": "알림 구성 가져오기 실패",
   "empty is indicates permanent validity": "비어 있으면 영구 유효성을 나타냅니다",
   "Create user groups to organize permissions": "권한을 구성하는 사용자 그룹을 생성하세요",
-  "Filter From This Page": "이 페이지에서 필터링"
+  "Filter From This Page": "이 페이지에서 필터링",
+  "Invalid JSON format": "잘못된 JSON 형식",
+  "JSON content is empty": "JSON 내용이 비어 있습니다",
+  "JSON formatted successfully": "JSON 형식화 성공",
+  "JSON is already formatted": "JSON이 이미 형식화되었습니다"
 }

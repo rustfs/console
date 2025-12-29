@@ -878,5 +878,9 @@
   "Get Notification Config Failed": "Bildirim Yapılandırması Alınamadı",
   "empty is indicates permanent validity": "boş, kalıcı geçerlilik gösterir",
   "Create user groups to organize permissions": "Kullanıcı grupları oluşturarak izinleri düzenleyin",
-  "Filter From This Page": "Bu sayfadan filtreleme yapın"
+  "Filter From This Page": "Bu sayfadan filtreleme yapın",
+  "Invalid JSON format": "Geçersiz JSON formatı",
+  "JSON content is empty": "JSON içeriği boş",
+  "JSON formatted successfully": "JSON başarıyla formatlandı",
+  "JSON is already formatted": "JSON zaten formatlanmış"
 }

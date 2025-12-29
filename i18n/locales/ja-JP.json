@@ -879,5 +879,9 @@
   "Get Notification Config Failed": "通知設定の取得に失敗しました",
   "empty is indicates permanent validity": "空は永続的な有効性を示します",
   "Create user groups to organize permissions": "権限を整理するユーザーグループを作成します",
-  "Filter From This Page": "このページからフィルター"
+  "Filter From This Page": "このページからフィルター",
+  "Invalid JSON format": "無効なJSON形式",
+  "JSON content is empty": "JSONコンテンツが空です",
+  "JSON formatted successfully": "JSONのフォーマットが成功しました",
+  "JSON is already formatted": "JSONは既にフォーマットされています"
 }

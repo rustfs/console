@@ -879,5 +879,9 @@
   "Get Notification Config Failed": "Ошибка получения конфигурации уведомлений",
   "empty is indicates permanent validity": "Пустое значение указывает на постоянную действительность",
   "Create user groups to organize permissions": "Создайте группы пользователей для организации разрешений",
-  "Filter From This Page": "Фильтровать с этой страницы"
+  "Filter From This Page": "Фильтровать с этой страницы",
+  "Invalid JSON format": "Неверный формат JSON",
+  "JSON content is empty": "Содержимое JSON пусто",
+  "JSON formatted successfully": "JSON успешно отформатирован",
+  "JSON is already formatted": "JSON уже отформатирован"
 }

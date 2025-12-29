@@ -879,5 +879,9 @@
   "Get Notification Config Failed": "Benachrichtigungskonfiguration abrufen fehlgeschlagen",
   "empty is indicates permanent validity": "Leer bedeutet dauerhafte Gültigkeit",
   "Create user groups to organize permissions": "Benutzergruppen erstellen, um Berechtigungen zu organisieren",
-  "Filter From This Page": "Von dieser Seite filtern"
+  "Filter From This Page": "Von dieser Seite filtern",
+  "Invalid JSON format": "Ungültiges JSON-Format",
+  "JSON content is empty": "JSON-Inhalt ist leer",
+  "JSON formatted successfully": "JSON erfolgreich formatiert",
+  "JSON is already formatted": "JSON ist bereits formatiert"
 }

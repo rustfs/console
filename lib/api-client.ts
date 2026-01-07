@@ -63,17 +63,23 @@ class ApiClient {
 
     logger.log('[request] response:', response)
 
-    if (!response.ok) {
-      const errorMsg = await parseApiError(response)
-      throw new Error(errorMsg)
-    }
-
-    // Handle 401 Unauthorized error
+    // Handle auth errors first so we can redirect before throwing
     if (response.status === 401) {
       if (this.errorHandler) {
         await this.errorHandler.handle401()
       }
       return
+    }
+    if (response.status === 403) {
+      if (this.errorHandler) {
+        await this.errorHandler.handle403()
+      }
+      return
+    }
+
+    if (!response.ok) {
+      const errorMsg = await parseApiError(response)
+      throw new Error(errorMsg)
     }
 
     // 204 or body length is 0

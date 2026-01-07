@@ -883,5 +883,8 @@
   "Invalid JSON format": "Formato JSON non valido",
   "JSON content is empty": "Il contenuto JSON è vuoto",
   "JSON formatted successfully": "JSON formattato con successo",
-  "JSON is already formatted": "JSON è già formattato"
+  "JSON is already formatted": "JSON è già formattato",
+  "Access Denied": "Accesso Negato",
+  "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "Non hai il permesso di accedere a questa pagina. Ciò può essere dovuto a permessi insufficienti o al fatto di non essere connesso.",
+  "Back to Home": "Torna alla Home"
 }

@@ -882,5 +882,8 @@
   "Invalid JSON format": "JSON 格式无效",
   "JSON content is empty": "JSON 内容为空",
   "JSON formatted successfully": "JSON 格式化成功",
-  "JSON is already formatted": "JSON 已格式化"
+  "JSON is already formatted": "JSON 已格式化",
+  "Access Denied": "无权限访问",
+  "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "您没有访问该页面的权限，可能是权限不足或未登录。",
+  "Back to Home": "返回首页"
 }

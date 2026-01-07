@@ -35,6 +35,9 @@ export default defineNuxtPlugin({
         logout()
         await navigateToRoute('/auth/login', { external: true })
       },
+      onForbidden: async () => {
+        await navigateToRoute('/403', { external: true })
+      },
     })
 
     const apiClient = new ApiClient(adminApiClient, {

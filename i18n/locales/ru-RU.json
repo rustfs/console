@@ -883,5 +883,8 @@
   "Invalid JSON format": "Неверный формат JSON",
   "JSON content is empty": "Содержимое JSON пусто",
   "JSON formatted successfully": "JSON успешно отформатирован",
-  "JSON is already formatted": "JSON уже отформатирован"
+  "JSON is already formatted": "JSON уже отформатирован",
+  "Access Denied": "Доступ запрещен",
+  "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "У вас нет разрешения на доступ к этой странице. Это может быть связано с недостаточными разрешениями или тем, что вы не вошли в систему.",
+  "Back to Home": "Вернуться на главную"
 }

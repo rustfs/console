@@ -882,5 +882,8 @@
   "Invalid JSON format": "Geçersiz JSON formatı",
   "JSON content is empty": "JSON içeriği boş",
   "JSON formatted successfully": "JSON başarıyla formatlandı",
-  "JSON is already formatted": "JSON zaten formatlanmış"
+  "JSON is already formatted": "JSON zaten formatlanmış",
+  "Access Denied": "Erişim Reddedildi",
+  "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "Bu sayfaya erişim izniniz yok. Bu, yetersiz izinler veya giriş yapmamış olmanızdan kaynaklanabilir.",
+  "Back to Home": "Ana Sayfaya Dön"
 }

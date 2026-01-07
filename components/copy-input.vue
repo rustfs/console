@@ -73,7 +73,7 @@ onUnmounted(() => {
       :id="`${props.id}-btn-icon`"
       variant="ghost"
       size="sm"
-      class="shrink-0"
+      class="shrink-0 outline"
       :data-clipboard-target="`#${props.id}`"
       :title="t('Copy')"
     >

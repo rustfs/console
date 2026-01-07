@@ -28,9 +28,9 @@
         <ItemHeader class="items-center">
           <ItemTitle>{{ t('Info') }}</ItemTitle>
         </ItemHeader>
-        <ItemContent class="space-y-3 text-sm">
+        <ItemContent class="space-y-3 text-sm w-full min-w-0">
           <TooltipProvider>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-3 min-w-0">
               <span class="font-medium text-muted-foreground">{{ t('Object Name') }}</span>
               <Tooltip>
                 <TooltipTrigger as-child>
@@ -41,11 +41,11 @@
                 </TooltipContent>
               </Tooltip>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-3 min-w-0">
               <span class="font-medium text-muted-foreground">{{ t('Object Size') }}</span>
               <span>{{ object?.ContentLength }}</span>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-3 min-w-0">
               <span class="font-medium text-muted-foreground">{{ t('Object Type') }}</span>
               <Tooltip>
                 <TooltipTrigger as-child>
@@ -57,15 +57,15 @@
               </Tooltip>
             </div>
           </TooltipProvider>
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-3 min-w-0">
             <span class="font-medium text-muted-foreground">ETag</span>
             <span>{{ object?.ETag }}</span>
           </div>
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-3 min-w-0">
             <span class="font-medium text-muted-foreground">{{ t('Last Modified Time') }}</span>
             <span>{{ object?.LastModified }}</span>
           </div>
-          <div class="flex items-center justify-between">
+          <div class="flex items-center justify-between gap-3 min-w-0">
             <span class="font-medium text-muted-foreground">{{ t('Legal Hold') }}</span>
             <Switch :checked="lockStatus" @update:checked="toggleLegalHold" />
           </div>
@@ -76,11 +76,12 @@
               <span v-if="retainUntilDate" class="text-xs text-muted-foreground">{{ retainUntilDate }}</span>
             </div>
           </div>
+          <div class="line-divider border-t"></div>
           <div class="flex flex-col gap-3">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-3 min-w-0">
               <span class="font-medium text-muted-foreground">{{ t('Temporary URL Expiration') }}</span>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex justify-between flex-wrap items-center gap-3">
               <div class="flex items-center gap-2">
                 <Input
                   v-model.number="expirationDays"
@@ -117,16 +118,16 @@
                 />
                 <span class="text-sm text-muted-foreground">{{ t('Minutes') }}</span>
               </div>
-              <Button
-                class="ml-auto"
-                variant="outline"
-                size="sm"
-                :disabled="!object?.Key || !isExpirationValid"
-                @click="generateTemporaryUrl"
-              >
-                {{ t('Generate URL') }}
-              </Button>
             </div>
+            <Button
+              class="w-full sm:w-auto"
+              variant="default"
+              size="sm"
+              :disabled="!object?.Key || !isExpirationValid"
+              @click="generateTemporaryUrl"
+            >
+              {{ t('Generate URL') }}
+            </Button>
             <div v-if="expirationError" class="text-xs text-destructive">{{ expirationError }}</div>
             <div v-if="totalExpirationSeconds > 0" class="text-xs text-muted-foreground">
               {{ t('Total Duration') }}: {{ formatDuration(totalExpirationSeconds) }}

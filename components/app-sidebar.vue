@@ -28,7 +28,7 @@ const appConfig = useAppConfig() as unknown as AppConfig
 const route = useRoute()
 const { t } = useI18n()
 const { state } = useSidebar()
-
+const { isAdmin } = useAuth()
 const isCollapsed = computed(() => state.value === 'collapsed')
 const brandInitial = computed(() => appConfig.name?.charAt(0)?.toUpperCase() ?? 'R')
 
@@ -37,6 +37,9 @@ const navGroups = computed(() => {
   let current: NavItem[] = []
 
   for (const nav of appConfig.navs) {
+    if (nav.isAdminOnly && !isAdmin.value) {
+      continue
+    }
     if (nav.type === 'divider') {
       if (current.length) {
         groups.push(current)

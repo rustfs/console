@@ -454,6 +454,7 @@
   "No Tasks": "タスクなし",
   "No Tiers": "ティアなし",
   "No Versions": "バージョンなし",
+  "Delete All Versions": "すべてのバージョンを削除",
   "No bucket selected": "バケットが選択されていません",
   "No buckets found": "バケットが見つかりません",
   "No buckets match your search": "検索に一致するバケットがありません",

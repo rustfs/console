@@ -8,6 +8,11 @@ export interface DeleteTask extends ManagedTask<DeleteStatus> {
   key: string
   bucketName: string
   prefix?: string
+  /**
+   * Optional object version id.
+   * When provided, the delete operation will target the specific version.
+   */
+  versionId?: string
   actionLabel: string
   displayName: string
   subInfo: string
@@ -21,6 +26,11 @@ export interface DeleteTaskConfig {
 export interface DeleteTaskHelpers {
   handler: TaskHandler<DeleteTask, DeleteStatus>
   createTasks: (keys: string[], bucketName: string, prefix?: string) => DeleteTask[]
+  createVersionedTasks: (
+    items: { key: string; versionId?: string }[],
+    bucketName: string,
+    prefix?: string
+  ) => DeleteTask[]
 }
 
 const lifecycle: TaskLifecycleStatus<DeleteStatus> = {
@@ -36,13 +46,14 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
   const retryDelay = config.retryDelay ?? 1000
 
   const perform: TaskHandler<DeleteTask, DeleteStatus>['perform'] = async task => {
-    const { key, bucketName, prefix } = task
+    const { key, bucketName, prefix, versionId } = task
     const abortController = new AbortController()
     task.abortController = abortController
 
     const command = new DeleteObjectCommand({
       Bucket: bucketName,
       Key: (prefix || '') + key,
+      ...(versionId ? { VersionId: versionId } : {}),
     })
 
     await s3Client.send(command, { abortSignal: abortController.signal })
@@ -66,24 +77,39 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
     retryDelay,
   }
 
-  const createTasks = (keys: string[], bucketName: string, prefix?: string) =>
-    keys.map(key => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${key}`,
+  const createTasksFromItems = (
+    items: { key: string; versionId?: string }[],
+    bucketName: string,
+    prefix?: string
+  ): DeleteTask[] =>
+    items.map(item => ({
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${item.key}-${item.versionId ?? 'latest'}`,
       kind: 'delete' as const,
-      key,
+      key: item.key,
+      versionId: item.versionId,
       status: lifecycle.pending,
       progress: 0,
       bucketName,
       prefix: prefix ?? '',
       actionLabel: 'Delete',
-      displayName: key,
-      subInfo: '',
+      displayName: item.key,
+      subInfo: item.versionId ? `Version: ${item.versionId}` : '',
       error: undefined,
       abortController: undefined,
       retryCount: 0,
     }))
 
-  return { handler, createTasks }
+  const createTasks = (keys: string[], bucketName: string, prefix?: string) =>
+    createTasksFromItems(
+      keys.map(key => ({ key })),
+      bucketName,
+      prefix
+    )
+
+  const createVersionedTasks = (items: { key: string; versionId?: string }[], bucketName: string, prefix?: string) =>
+    createTasksFromItems(items, bucketName, prefix)
+
+  return { handler, createTasks, createVersionedTasks }
 }
 
 export type {

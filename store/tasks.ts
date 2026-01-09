@@ -83,6 +83,11 @@ export const useTaskManagerStore = defineStore('taskManager', {
       this.taskManager.enqueue(newTasks)
     },
 
+    addDeleteVersionedItems(items: { key: string; versionId?: string }[], bucketName: string, prefix?: string) {
+      const newTasks = this.deleteHelpers.createVersionedTasks(items, bucketName, prefix)
+      this.taskManager.enqueue(newTasks)
+    },
+
     // 通用控制
     cancelTask(taskId: string) {
       this.taskManager.cancelTask(taskId)

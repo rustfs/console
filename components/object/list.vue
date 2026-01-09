@@ -85,11 +85,48 @@
     "
   />
   <object-info ref="infoRef" :bucket-name="bucketName" @refresh-parent="handleObjectDeleted" />
+
+  <AlertDialog v-model:open="deleteDialogOpen">
+    <AlertDialogContent class="sm:max-w-md">
+      <AlertDialogHeader>
+        <AlertDialogTitle>{{ t('Warning') }}</AlertDialogTitle>
+        <AlertDialogDescription>
+          <p>{{ t('Are you sure you want to delete the selected objects?') }}</p>
+          <div v-if="bucketVersioningEnabled" class="mt-4 flex items-center gap-2">
+            <Checkbox v-model="deleteAllVersions" />
+            <span>{{ t('Delete All Versions') }}</span>
+          </div>
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel as-child>
+          <Button variant="outline" class="w-full sm:w-auto text-foreground">
+            {{ t('Cancel') }}
+          </Button>
+        </AlertDialogCancel>
+        <AlertDialogAction as-child @click.prevent="handleConfirmDelete">
+          <Button variant="destructive" class="w-full sm:w-auto text-white">
+            {{ t('Confirm') }}
+          </Button>
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
 </template>
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 import { useLocalStorage } from '@vueuse/core'
 
@@ -110,7 +147,6 @@ import { useTaskManagerStore } from '~/store/tasks'
 const { $s3Client } = useNuxtApp()
 const { t } = useI18n()
 const route = useRoute()
-const dialog = useDialog()
 const props = defineProps<{ bucket: string; path: string }>()
 
 const uploadPickerVisible = ref(false)
@@ -119,6 +155,10 @@ const newObjectAsPrefix = ref(false)
 const searchTerm = ref('')
 const loading = ref(false)
 const showDeleted = useLocalStorage('object-list-show-deleted', false)
+
+const deleteDialogOpen = ref(false)
+const deleteDialogKeys = ref<string[]>([])
+const deleteAllVersions = ref(false)
 
 const debounce = (fn: Function, delay: number) => {
   let timer: NodeJS.Timeout | null = null
@@ -170,6 +210,8 @@ const nextToken = ref<string | undefined>(undefined)
 const infoRef = ref<{ openDrawer: (bucket: string, key: string) => void }>()
 const message = useMessage()
 const objectApi = useObject({ bucket: bucketName.value })
+const { getBucketVersioning } = useBucket({})
+const bucketVersioningEnabled = ref(false)
 
 const handleNewObject = (asPrefix: boolean) => {
   newObjectAsPrefix.value = asPrefix
@@ -178,6 +220,15 @@ const handleNewObject = (asPrefix: boolean) => {
 
 const handleObjectDeleted = () => {
   refresh()
+}
+
+const loadBucketVersioningStatus = async () => {
+  try {
+    const resp = await getBucketVersioning(bucketName.value)
+    bucketVersioningEnabled.value = resp.Status === 'Enabled'
+  } catch (error) {
+    bucketVersioningEnabled.value = false
+  }
 }
 
 const fetchObjects = async (): Promise<ObjectRow[]> => {
@@ -341,7 +392,7 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
             {
               variant: 'outline',
               size: 'sm',
-              onClick: () => confirmDelete([row.original.Key]),
+              onClick: () => openDeleteDialog([row.original.Key]),
             },
             () => [h(Icon, { name: 'ri:delete-bin-5-line', class: 'size-4' }), h('span', t('Delete'))]
           ),
@@ -371,6 +422,7 @@ const handleAllTasksCompleted = () => {
 onMounted(() => {
   // 监听所有任务全部完成事件（上传/删除）
   taskStore.on('drained', handleAllTasksCompleted)
+  loadBucketVersioningStatus()
 })
 
 onUnmounted(() => {
@@ -526,14 +578,22 @@ const downloadMultiple = async () => {
   message.success(t('Download ready'))
 }
 
-const confirmDelete = (keys: string[]) => {
-  dialog.error({
-    title: t('Warning'),
-    content: t('Are you sure you want to delete the selected objects?'),
-    positiveText: t('Confirm'),
-    negativeText: t('Cancel'),
-    onPositiveClick: () => handleDelete(keys),
-  })
+const openDeleteDialog = (keys: string[]) => {
+  deleteDialogKeys.value = keys
+  deleteAllVersions.value = false
+  deleteDialogOpen.value = true
+}
+
+const handleConfirmDelete = async () => {
+  const keys = [...deleteDialogKeys.value]
+  deleteDialogOpen.value = false
+  if (!keys.length) return
+
+  if (bucketVersioningEnabled.value && deleteAllVersions.value) {
+    await handleDeleteAllVersions(keys)
+  } else {
+    await handleDelete(keys)
+  }
 }
 
 const handleDelete = async (keys: string[]) => {
@@ -552,12 +612,58 @@ const handleDelete = async (keys: string[]) => {
   }
 }
 
+const handleDeleteAllVersions = async (keys: string[]) => {
+  try {
+    const targets = await collectKeysForDeletion(keys)
+    if (!targets.length) {
+      message.success(t('Delete Success'))
+    } else {
+      const items: { key: string; versionId?: string }[] = []
+
+      for (const key of targets) {
+        if (!key) continue
+        const versions = await objectApi.listObjectVersions(key)
+        const versionItems = (versions.Versions || [])
+          .filter(v => v.Key === key && v.VersionId)
+          .map(v => ({
+            key,
+            versionId: v.VersionId!,
+          }))
+        const deleteMarkers = (versions.DeleteMarkers || [])
+          .filter(m => m.Key === key && m.VersionId)
+          .map(m => ({
+            key,
+            versionId: m.VersionId!,
+          }))
+
+        if (versionItems.length === 0 && deleteMarkers.length === 0) {
+          // 如果没有版本信息，退回到删除当前对象（等价于非版本桶）
+          items.push({ key })
+        } else {
+          items.push(...versionItems, ...deleteMarkers)
+        }
+      }
+
+      if (!items.length) {
+        message.success(t('Delete Success'))
+      } else {
+        ;(taskStore as any).addDeleteVersionedItems(items, bucketName.value)
+        message.success(t('Delete task created'))
+      }
+    }
+    table.resetRowSelection()
+    refresh()
+  } catch (error: any) {
+    message.error(error?.message || t('Delete Failed'))
+  }
+}
+
 const handleBatchDelete = () => {
   if (!checkedKeys.value.length) {
     message.warning(t('Please select at least one item'))
     return
   }
-  confirmDelete([...checkedKeys.value])
+  openDeleteDialog([...checkedKeys.value])
 }
 
 const formatBytes = (bytes: number) => {

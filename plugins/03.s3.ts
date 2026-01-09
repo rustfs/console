@@ -63,6 +63,10 @@ export default defineNuxtPlugin({
           } catch (error: any) {
             // Handle 401 Unauthorized error
             if (error?.$metadata?.httpStatusCode === 401) {
+              // Notice the logout and redirect
+              const { t } = useI18n()
+              const message = useMessage()
+              message.error(t('Your session has expired. Please log in again.'))
               const { logout } = useAuth()
               logout()
               // Use navigateTo instead of directly manipulating window.location

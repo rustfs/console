@@ -8,7 +8,18 @@
         <div class="space-y-1">
           <p class="text-sm font-medium text-muted-foreground">{{ t('Target Bucket') }}: {{ bucketName }}</p>
           <p class="text-xs text-muted-foreground">
-            {{ t('Current Prefix') }}: <span class="text-blue-500">{{ prefix || '/' }}</span>
+            {{ t('Current Prefix') }}:
+            <span class="me-2">{{ props.prefix }}</span>
+            <span v-if="!isEditingSuffix" class="text-blue-500 cursor-pointer" @click="startEditSuffix">
+              {{ editableSuffix || t('Setting prefix') }}
+            </span>
+            <Input
+              v-else
+              v-model="editableSuffix"
+              class="inline-block w-40 h-6 text-xs"
+              @blur="finishEditSuffix"
+              @keyup.enter="finishEditSuffix"
+            />
           </p>
         </div>
 
@@ -164,6 +175,7 @@ import { Button } from '@/components/ui/button'
 
 import { Icon } from '#components'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import Input from '@/components/ui/input/Input.vue'
 import Progress from '@/components/ui/progress/Progress.vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -179,7 +191,23 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
   (e: 'submit'): void
+  (e: 'update:prefix', value: string): void
 }>()
+
+const isEditingSuffix = ref(false)
+const editableSuffix = ref('')
+
+const startEditSuffix = () => {
+  isEditingSuffix.value = true
+}
+
+const finishEditSuffix = () => {
+  isEditingSuffix.value = false
+  if (editableSuffix.value && !editableSuffix.value.endsWith('/')) {
+    editableSuffix.value += '/'
+  }
+  emit('update:prefix', `${props.prefix}${editableSuffix.value}`)
+}
 
 interface FileItem {
   file: File
@@ -298,7 +326,7 @@ const handleFileSelect = (event: Event) => {
     type: 'file' as const,
     name: file.name,
     size: file.size,
-    files: [{ file, prefix: props.prefix }],
+    files: [{ file, prefix: `${props.prefix}${editableSuffix.value}` }],
   }))
 
   selectedItems.value.push(...items)
@@ -371,7 +399,7 @@ const handleFolderSelect = async (event: Event) => {
         fileCount: group.fileCount,
         files: group.files.map(file => ({
           file,
-          prefix: `${props.prefix}${folderPath ? `${folderPath}/` : ''}`,
+          prefix: `${props.prefix}${editableSuffix.value}${folderPath ? `${folderPath}/` : ''}`,
         })),
       })
     }
@@ -460,7 +488,7 @@ const handleDrop = async (event: DragEvent) => {
         {
           file,
           prefix:
-            props.prefix +
+            `${props.prefix}${editableSuffix.value}` +
             (relativePath.includes('/') ? relativePath.substring(0, relativePath.lastIndexOf('/') + 1) : ''),
         },
       ],

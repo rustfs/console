@@ -885,5 +885,6 @@
   "JSON is already formatted": "JSON zaten formatlanmış",
   "Access Denied": "Erişim Reddedildi",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "Bu sayfaya erişim izniniz yok. Bu, yetersiz izinler veya giriş yapmamış olmanızdan kaynaklanabilir.",
-  "Back to Home": "Ana Sayfaya Dön"
+  "Back to Home": "Ana Sayfaya Dön",
+  "Setting prefix": "Ayar ön eki"
 }

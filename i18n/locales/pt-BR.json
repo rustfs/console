@@ -886,5 +886,6 @@
   "JSON is already formatted": "JSON já está formatado",
   "Access Denied": "Acesso Negado",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "Você não tem permissão para acessar esta página. Isso pode ser devido a permissões insuficientes ou não estar conectado.",
-  "Back to Home": "Voltar ao Início"
+  "Back to Home": "Voltar ao Início",
+  "Setting prefix": "Configurar prefixo"
 }

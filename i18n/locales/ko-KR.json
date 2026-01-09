@@ -886,5 +886,6 @@
   "JSON is already formatted": "JSON이 이미 형식화되었습니다",
   "Access Denied": "액세스 거부",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "이 페이지에 액세스할 권한이 없습니다. 권한이 부족하거나 로그인하지 않았을 수 있습니다.",
-  "Back to Home": "홈으로 돌아가기"
+  "Back to Home": "홈으로 돌아가기",
+  "Setting prefix": "설정 접두사"
 }

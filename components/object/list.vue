@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <page-header>
       <div class="flex flex-wrap items-center gap-4 min-w-[40vw]">
-        <FilterInput v-model="searchTerm" :placeholder="t('Filter From This Page')" clearable class="lg:max-w-sm" />
+        <FilterInput v-model="searchTerm" :placeholder="t('Search')" clearable class="lg:max-w-sm" />
         <label class="flex items-center gap-2 text-sm text-muted-foreground">
           <Checkbox v-model="showDeleted" />
           <span>{{ t('Show Deleted Objects') }}</span>
@@ -176,10 +176,6 @@ const handleSearch = debounce(() => {
   refresh()
 }, 300)
 
-watch(searchTerm, () => {
-  handleSearch()
-})
-
 const taskStore = useTaskManagerStore()
 
 type ObjectRow = {
@@ -240,6 +236,7 @@ const fetchObjects = async (): Promise<ObjectRow[]> => {
       Delimiter: '/',
       ContinuationToken: continuationToken.value,
       MaxKeys: pageSize.value,
+      StartAfter: searchTerm.value,
     })
 
     if (showDeleted.value) {
@@ -286,28 +283,15 @@ const asyncDataCacheKey = computed(() => {
   }`
 })
 
-const displayKey = (key: string) => {
-  if (!prefix.value) return key
-  return key.startsWith(prefix.value) ? key.slice(prefix.value.length) : key
-}
-
 const { data, refresh } = await useAsyncData<ObjectRow[]>(
   asyncDataCacheKey,
   async () => {
     const objects = await fetchObjects()
-    const term = searchTerm.value.toLowerCase()
-
-    return objects.filter(item => {
-      if (term) {
-        const key = displayKey(item.Key).toLowerCase()
-        return key.includes(term)
-      }
-      return item.Key !== prefix.value
-    })
+    return objects
   },
   {
     default: () => [],
-    watch: [bucketName, prefix, continuationToken, searchTerm, showDeleted],
+    watch: [bucketName, prefix, searchTerm, continuationToken, showDeleted],
   }
 )
 

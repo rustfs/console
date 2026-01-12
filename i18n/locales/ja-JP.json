@@ -888,5 +888,6 @@
   "Access Denied": "アクセス拒否",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "このページにアクセスする権限がありません。権限が不足しているか、ログインしていない可能性があります。",
   "Back to Home": "ホームに戻る",
-  "Setting prefix": "設定プレフィックス"
+  "Setting prefix": "設定プレフィックス",
+  "Your session has expired. Please log in again.": "セッションが期限切れです。再ログインしてください。"
 }

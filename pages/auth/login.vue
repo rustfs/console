@@ -6,9 +6,11 @@ await setPageLayout('plain')
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 
+const route = useRoute()
 const { t } = useI18n()
 const method = ref<'accessKeyAndSecretKey' | 'sts'>('accessKeyAndSecretKey')
 const accessKeyAndSecretKey = ref({
@@ -24,6 +26,16 @@ const sts = ref({
 
 const message = useMessage()
 const auth = useAuth()
+
+// 检查是否有未授权提示
+onMounted(() => {
+  if (route.query.unauthorized === 'true') {
+    message.warning(t('Your session has expired. Please log in again.'))
+    // 清理 URL 中的 query 参数，避免刷新时重复显示
+    const router = useRouter()
+    router.replace({ query: { ...route.query, unauthorized: undefined } })
+  }
+})
 
 const handleLogin = async () => {
   const credentials = method.value === 'accessKeyAndSecretKey' ? accessKeyAndSecretKey.value : sts.value

@@ -888,5 +888,6 @@
   "Access Denied": "Zugriff verweigert",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "Sie haben keine Berechtigung, auf diese Seite zuzugreifen. Dies kann auf unzureichende Berechtigungen oder nicht angemeldet sein zurückzuführen sein.",
   "Back to Home": "Zurück zur Startseite",
-  "Setting prefix": "Präfix einstellen"
+  "Setting prefix": "Präfix einstellen",
+  "Your session has expired. Please log in again.": "Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an."
 }

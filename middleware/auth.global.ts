@@ -11,6 +11,6 @@ export default defineNuxtRouteMiddleware((to, from) => {
   }
 
   if (!isAuthenticated) {
-    return navigateTo('/auth/login')
+    return navigateTo('/auth/login?unauthorized=true')
   }
 })

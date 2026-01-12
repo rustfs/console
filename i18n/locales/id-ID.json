@@ -888,5 +888,6 @@
   "Access Denied": "Akses Ditolak",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "Anda tidak memiliki izin untuk mengakses halaman ini. Ini mungkin karena izin tidak cukup atau tidak masuk.",
   "Back to Home": "Kembali ke Beranda",
-  "Setting prefix": "Setting prefix"
+  "Setting prefix": "Setting prefix",
+  "Your session has expired. Please log in again.": "Sesi Anda telah kadaluarsa. Silakan login kembali."
 }

@@ -887,5 +887,6 @@
   "JSON is already formatted": "JSON 已格式化",
   "Access Denied": "无权限访问",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "您没有访问该页面的权限，可能是权限不足或未登录。",
-  "Back to Home": "返回首页"
+  "Back to Home": "返回首页",
+  "Your session has expired. Please log in again.": "您的会话已过期。请重新登录。"
 }

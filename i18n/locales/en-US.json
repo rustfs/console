@@ -888,5 +888,6 @@
   "JSON is already formatted": "JSON is already formatted",
   "Access Denied": "Access Denied",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.",
-  "Back to Home": "Back to Home"
+  "Back to Home": "Back to Home",
+  "Your session has expired. Please log in again.": "Your session has expired. Please log in again."
 }

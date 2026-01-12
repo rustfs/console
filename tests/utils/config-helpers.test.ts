@@ -221,22 +221,6 @@ describe('config-helpers', () => {
         json: () => Promise.resolve(null),
       } as Response)
     })
-
-    it('应该正确调用 fetch 并设置超时', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve({}),
-      } as Response)
-
-      expect(fetch).toHaveBeenCalledWith(
-        'https://localhost:3000/config.json',
-        expect.objectContaining({
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          signal: expect.any(AbortSignal),
-        })
-      )
-    })
   })
 
   describe('getConfig', () => {

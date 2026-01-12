@@ -283,11 +283,6 @@ const mergeServerConfig = (baseConfig: SiteConfig, serverConfig: ServerConfigRes
 /**
  * Configuration priority strategy: server > localStorage > browser > default
  *
- * Attempts to retrieve configuration in the following priority order:
- * 1. Server configuration (from current host's /config.json)
- * 2. Configuration saved in localStorage
- * 3. Current browser host configuration
- * 4. Default configuration (localhost:9000)
  *
  * @returns Promise containing the final configuration retrieval result
  *

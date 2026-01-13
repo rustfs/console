@@ -143,7 +143,12 @@
     <Modal v-model="showTagView" :title="t('Set Tags')" size="lg">
       <div class="space-y-4">
         <div class="flex flex-wrap gap-2">
-          <Badge v-for="tag in tags" :key="tag.Key" variant="secondary"> {{ tag.Key }}: {{ tag.Value }} </Badge>
+          <Badge v-for="tag in tags" :key="tag.Key" variant="secondary" class="gap-1 pr-1">
+            {{ tag.Key }}: {{ tag.Value }}
+            <button class="hover:text-destructive transition-colors" @click.stop="confirmDeleteTag(tag.Key)">
+              <Icon name="ri:close-line" class="size-3" />
+            </button>
+          </Badge>
         </div>
         <form class="space-y-4" @submit.prevent="submitTagForm">
           <div class="grid gap-4 sm:grid-cols-2">
@@ -237,6 +242,7 @@ import Modal from '~/components/modal.vue'
 
 const { t } = useI18n()
 const message = useMessage()
+const dialog = useDialog()
 const { $s3Client } = useNuxtApp()
 
 const props = defineProps<{
@@ -467,6 +473,30 @@ const submitTagForm = async () => {
     message.success(t('Create Success'))
   } catch (error: any) {
     message.error(error?.message || t('Create Failed'))
+  }
+}
+
+const confirmDeleteTag = (tagKey: string) => {
+  dialog.warning({
+    title: t('Delete Tag'),
+    content: t('Are you sure you want to delete this tag?'),
+    positiveText: t('Confirm'),
+    negativeText: t('Cancel'),
+    onPositiveClick: () => {
+      removeTag(tagKey)
+    },
+  })
+}
+
+const removeTag = async (tagKey: string) => {
+  if (!object.value) return
+  try {
+    const nextTags = tags.value.filter(tag => tag.Key !== tagKey)
+    await putObjectTags(object.value.Key, nextTags)
+    tags.value = nextTags
+    message.success(t('Delete Success'))
+  } catch (error: any) {
+    message.error(error?.message || t('Delete Failed'))
   }
 }
 

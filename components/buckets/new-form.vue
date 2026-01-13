@@ -27,6 +27,34 @@
         </FieldContent>
       </Field>
 
+      <Field orientation="responsive" class="items-center">
+        <FieldLabel>{{ t('Bucket Quota') }}</FieldLabel>
+        <FieldContent class="flex justify-end">
+          <Switch v-model="quotaEnabled" />
+        </FieldContent>
+      </Field>
+
+      <div v-if="quotaEnabled" class="space-y-4 rounded-lg border p-4">
+        <Field>
+          <FieldLabel>{{ t('Quota Size') }}</FieldLabel>
+          <FieldContent>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <Input v-model="quotaSize" type="number" class="sm:w-32" />
+              <RadioGroup v-model="quotaUnit" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <label
+                  v-for="unit in ['MiB', 'GiB', 'TiB', 'PiB']"
+                  :key="unit"
+                  class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                >
+                  <RadioGroupItem :value="unit" class="mt-0.5" />
+                  <span class="text-sm font-medium">{{ unit }}</span>
+                </label>
+              </RadioGroup>
+            </div>
+          </FieldContent>
+        </Field>
+      </div>
+
       <div v-if="objectLock" class="space-y-4 rounded-lg border p-4">
         <Field orientation="responsive" class="items-center">
           <FieldLabel>{{ t('Retention') }}</FieldLabel>
@@ -90,12 +118,13 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Modal from '~/components/modal.vue'
+import { getBytes } from '~/utils/functions'
 
 const props = defineProps<{
   show: boolean
@@ -107,7 +136,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 const message = useMessage()
-const { createBucket, putBucketVersioning, putObjectLockConfiguration } = useBucket({})
+const { createBucket, putBucketVersioning, putObjectLockConfiguration, putBucketQuota } = useBucket({})
 
 const modalVisible = computed({
   get: () => props.show,
@@ -121,6 +150,9 @@ const retentionEnabled = ref(false)
 const retentionMode = ref<'COMPLIANCE' | 'GOVERNANCE'>('COMPLIANCE')
 const retentionPeriod = ref('180')
 const retentionUnit = ref<'day' | 'year'>('day')
+const quotaEnabled = ref(false)
+const quotaSize = ref('1')
+const quotaUnit = ref('GiB')
 const creating = ref(false)
 
 watch(objectLock, (value: boolean) => {
@@ -186,6 +218,9 @@ const resetForm = () => {
   retentionMode.value = 'COMPLIANCE'
   retentionPeriod.value = '180'
   retentionUnit.value = 'day'
+  quotaEnabled.value = false
+  quotaSize.value = '1'
+  quotaUnit.value = 'GiB'
 }
 
 const closeModal = () => {
@@ -222,6 +257,17 @@ const handleCreateBucket = async () => {
 
     if (version.value) {
       await putBucketVersioning(bucketName, 'Enabled')
+    }
+
+    if (quotaEnabled.value) {
+      try {
+        await putBucketQuota(bucketName, {
+          quota: Number.parseInt(getBytes(quotaSize.value, quotaUnit.value), 10),
+          quota_type: 'HARD',
+        })
+      } catch (e: any) {
+        message.error(t('Quota Save Failed') + ': ' + e.message)
+      }
     }
 
     try {

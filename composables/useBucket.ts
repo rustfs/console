@@ -262,6 +262,28 @@ export function useBucket({ region }: { region?: string }) {
 
   /********************rustfs Replication target  end********************/
 
+  /************************* bucket quota start********************************* */
+  const getBucketQuota = async (bucket: string) => {
+    return await $api.get(`/quota/${bucket}`)
+  }
+
+  const putBucketQuota = async (bucket: string, quota: any) => {
+    return await $api.put(`/quota/${bucket}`, quota)
+  }
+
+  const deleteBucketQuota = async (bucket: string) => {
+    return await $api.delete(`/quota/${bucket}`)
+  }
+  const getBucketQuotaUsage = async (bucket: string) => {
+    return await $api.get(`/quota-stats/${bucket}`)
+  }
+
+  const checkBucketQuota = async (bucket: string) => {
+    return await $api.get(`/quota-check/${bucket}`)
+  }
+
+  /************************* bucket quota End********************************* */
+
   return {
     listBuckets,
     createBucket,
@@ -293,5 +315,10 @@ export function useBucket({ region }: { region?: string }) {
     deleteRemoteReplicationTarget,
     listBucketNotifications,
     putBucketNotifications,
+    getBucketQuota,
+    putBucketQuota,
+    deleteBucketQuota,
+    getBucketQuotaUsage,
+    checkBucketQuota,
   }
 }

@@ -65,7 +65,7 @@
 
         <Item variant="outline" class="flex-col items-stretch gap-4">
           <ItemHeader>
-            <ItemTitle>{{ t('Object Lock') }}</ItemTitle>
+            <!-- <ItemTitle>{{ t('Object Lock') }}</ItemTitle> -->
             <ItemActions>
               <Spinner v-if="objectLockLoading" class="size-3 text-muted-foreground" />
             </ItemActions>
@@ -85,6 +85,38 @@
                 :disabled="lockStatus || statusLoading"
                 @update:modelValue="handleVersionToggle"
               />
+            </div>
+          </ItemContent>
+        </Item>
+
+        <Item variant="outline" class="flex-col items-stretch gap-4">
+          <ItemHeader class="items-start">
+            <div>
+              <ItemTitle>{{ t('Bucket Quota') }}</ItemTitle>
+              <ItemDescription class="text-xs text-muted-foreground">
+                {{ quotaInfo?.quota ? t('Enabled') : t('Disabled') }}
+              </ItemDescription>
+            </div>
+            <ItemActions>
+              <Button variant="outline" size="sm" class="shrink-0" @click="editQuota">
+                <span>{{ t('Edit') }}</span>
+              </Button>
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent v-if="quotaInfo?.quota">
+            <div class="grid gap-3 sm:grid-cols-2">
+              <div>
+                <p class="text-xs text-muted-foreground">{{ t('Quota Size') }}</p>
+                <p class="text-sm text-foreground">
+                  {{ formatBytes(quotaInfo.quota) }}
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-muted-foreground">{{ t('Usage') }}</p>
+                <p class="text-sm text-foreground">
+                  {{ formatBytes(quotaInfo.size) }} ({{ ((quotaInfo.size / quotaInfo.quota) * 100).toFixed(1) }}%)
+                </p>
+              </div>
             </div>
           </ItemContent>
         </Item>
@@ -225,6 +257,47 @@
     </template>
   </Modal>
 
+  <Modal v-model="showQuotaModal" :title="t('Set Bucket Quota')" size="md">
+    <div class="space-y-4">
+      <Field orientation="responsive" class="items-center">
+        <FieldLabel>{{ t('Bucket Quota') }}</FieldLabel>
+        <FieldContent class="flex justify-end">
+          <Switch v-model="quotaFormValue.enabled" />
+        </FieldContent>
+      </Field>
+      <div v-if="quotaFormValue.enabled" class="space-y-4 rounded-lg border p-4">
+        <Field>
+          <FieldLabel>{{ t('Quota Size') }}</FieldLabel>
+          <FieldContent>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <Input v-model="quotaFormValue.size" type="number" class="sm:w-32" />
+              <RadioGroup v-model="quotaFormValue.unit" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <label
+                  v-for="unit in ['MiB', 'GiB', 'TiB', 'PiB']"
+                  :key="unit"
+                  class="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                >
+                  <RadioGroupItem :value="unit" class="mt-0.5" />
+                  <span class="text-sm font-medium">{{ unit }}</span>
+                </label>
+              </RadioGroup>
+            </div>
+          </FieldContent>
+        </Field>
+      </div>
+    </div>
+    <template #footer>
+      <div class="flex justify-end gap-2">
+        <Button variant="outline" @click="showQuotaModal = false">
+          {{ t('Cancel') }}
+        </Button>
+        <Button variant="default" @click="submitQuotaForm">
+          {{ t('Confirm') }}
+        </Button>
+      </div>
+    </template>
+  </Modal>
+
   <Modal v-model="showRetentionModal" :title="t('Set Retention')" size="md">
     <div class="space-y-4">
       <Field>
@@ -294,6 +367,7 @@ import Modal from '~/components/modal.vue'
 import Selector from '~/components/selector.vue'
 import type { BucketPolicyType } from '~/utils/bucket-policy'
 import { getBucketPolicy as detectBucketPolicy, setBucketPolicy } from '~/utils/bucket-policy'
+import { formatBytes, getBytes } from '~/utils/functions'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -327,6 +401,12 @@ const resetData = () => {
     kmsKeyId: '',
   }
   tags.value = []
+  quotaInfo.value = null
+  quotaFormValue.value = {
+    enabled: false,
+    size: '1',
+    unit: 'GiB',
+  }
 }
 defineExpose({ openDrawer })
 
@@ -342,6 +422,9 @@ const {
   getBucketEncryption,
   putBucketEncryption,
   deleteBucketEncryption,
+  getBucketQuota,
+  putBucketQuota,
+  deleteBucketQuota,
 } = useBucket({})
 
 const { getKeyList } = useSSE()
@@ -349,6 +432,19 @@ const { getKeyList } = useSSE()
 const lockStatus = ref(false)
 const objectLockLoading = ref(false)
 const retentionEnabled = ref(false)
+
+const quotaInfo = ref<{
+  quota: number | null
+  size: number
+  quota_type: string
+} | null>(null)
+const quotaLoading = ref(false)
+const showQuotaModal = ref(false)
+const quotaFormValue = ref({
+  enabled: false,
+  size: '1',
+  unit: 'GiB',
+})
 
 const retentionFormValue = ref<{
   retentionMode: string | null
@@ -446,7 +542,65 @@ const getData = async () => {
     getObjectLockConfig(),
     getBucketEncryptionInfo(),
     loadBucketPolicy(),
+    getQuota(),
   ])
+}
+
+const getQuota = async () => {
+  quotaLoading.value = true
+  try {
+    const res = await getBucketQuota(bucketName.value)
+    quotaInfo.value = res
+  } catch (error: any) {
+    console.error('Failed to get bucket quota:', error)
+    quotaInfo.value = null
+  } finally {
+    quotaLoading.value = false
+  }
+}
+
+const editQuota = () => {
+  if (quotaInfo.value?.quota && quotaInfo.value.quota > 0) {
+    // Attempt to parse the current quota into size and unit
+    const bytes = quotaInfo.value.quota
+    const units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
+    let l = Math.floor(Math.log(bytes) / Math.log(1024)) || 0
+    if (l < 2) l = 2 // Default to MiB if smaller than MiB
+    if (l > 5) l = 5 // Cap at PiB
+    const value = bytes / 1024 ** l
+    const unit = units[l] as string
+    quotaFormValue.value = {
+      enabled: true,
+      size: value.toFixed(0),
+      unit: unit,
+    }
+  } else {
+    quotaFormValue.value = {
+      enabled: false,
+      size: '1',
+      unit: 'GiB',
+    }
+  }
+  showQuotaModal.value = true
+}
+
+const submitQuotaForm = async () => {
+  try {
+    if (!quotaFormValue.value.enabled) {
+      await deleteBucketQuota(bucketName.value)
+    } else {
+      const bytes = Number.parseInt(getBytes(quotaFormValue.value.size, quotaFormValue.value.unit), 10)
+      await putBucketQuota(bucketName.value, {
+        quota: bytes,
+        quota_type: 'HARD',
+      })
+    }
+    message.success(t('Edit Success'))
+    showQuotaModal.value = false
+    await getQuota()
+  } catch (error: any) {
+    message.error(`${t('Edit Failed')}: ${error.message}`)
+  }
 }
 
 const getObjectLockConfig = async () => {

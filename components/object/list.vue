@@ -455,7 +455,7 @@ const computeRelativeKey = (key: string) => {
   return base && key.startsWith(base) ? key.slice(base.length) : key
 }
 
-const collectKeysForDeletion = async (keys: string[]) => {
+const collectKeysForDeletion = async (keys: string[], forceDelete = false) => {
   const rows = data.value ?? []
   const rowMap = new Map(rows.map(item => [item.Key, item]))
   const collected: string[] = []
@@ -464,11 +464,18 @@ const collectKeysForDeletion = async (keys: string[]) => {
     if (!key) continue
     const row = rowMap.get(key)
     if (row?.type === 'prefix') {
-      await objectApi.mapAllFiles(bucketName.value, row.Key, fileKey => {
-        if (fileKey) {
-          collected.push(fileKey)
-        }
-      })
+      // 始终包含前缀本身，确保即使文件夹为空也能调用删除接口
+      collected.push(row.Key)
+
+      // 如果不是强制删除，则需要展开所有文件以进行逐个删除
+      // 如果是强制删除，后端支持通过 X-Rustfs-Force-Delete 递归删除前缀，无需展开
+      if (!forceDelete) {
+        await objectApi.mapAllFiles(bucketName.value, row.Key, fileKey => {
+          if (fileKey) {
+            collected.push(fileKey)
+          }
+        })
+      }
     } else {
       collected.push(key)
     }
@@ -614,42 +621,12 @@ const handleDelete = async (keys: string[]) => {
 
 const handleDeleteAllVersions = async (keys: string[]) => {
   try {
-    const targets = await collectKeysForDeletion(keys)
+    const targets = await collectKeysForDeletion(keys, true)
     if (!targets.length) {
       message.success(t('Delete Success'))
     } else {
-      const items: { key: string; versionId?: string }[] = []
-
-      for (const key of targets) {
-        if (!key) continue
-        const versions = await objectApi.listObjectVersions(key)
-        const versionItems = (versions.Versions || [])
-          .filter(v => v.Key === key && v.VersionId)
-          .map(v => ({
-            key,
-            versionId: v.VersionId!,
-          }))
-        const deleteMarkers = (versions.DeleteMarkers || [])
-          .filter(m => m.Key === key && m.VersionId)
-          .map(m => ({
-            key,
-            versionId: m.VersionId!,
-          }))
-
-        if (versionItems.length === 0 && deleteMarkers.length === 0) {
-          // 如果没有版本信息，退回到删除当前对象（等价于非版本桶）
-          items.push({ key })
-        } else {
-          items.push(...versionItems, ...deleteMarkers)
-        }
-      }
-
-      if (!items.length) {
-        message.success(t('Delete Success'))
-      } else {
-        ;(taskStore as any).addDeleteVersionedItems(items, bucketName.value)
-        message.success(t('Delete task created'))
-      }
+      taskStore.addDeleteKeys(targets, bucketName.value, undefined, { forceDelete: true })
+      message.success(t('Delete task created'))
     }
     table.resetRowSelection()
     refresh()

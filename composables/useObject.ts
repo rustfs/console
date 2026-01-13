@@ -15,6 +15,7 @@ import {
   PutObjectTaggingCommand,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl as _getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import type { HttpRequest } from '@smithy/protocol-http'
 
 export function useObject({ bucket, region }: { bucket: string; region?: string }) {
   const $client = useNuxtApp().$s3Client
@@ -47,7 +48,18 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
     return await $client.send(new PutObjectCommand(params))
   }
 
-  const deleteObject = async (key: string, versionId?: string) => {
+  const attachForceDeleteHeader = (command: DeleteObjectCommand) => {
+    command.middlewareStack.add(
+      next => async args => {
+        const request = args.request as HttpRequest
+        request.headers['X-Rustfs-Force-Delete'] = 'true'
+        return next(args)
+      },
+      { step: 'build', name: 'forceDeleteMiddleware', tags: ['FORCE_DELETE'] }
+    )
+  }
+
+  const deleteObject = async (key: string, versionId?: string, options?: { forceDelete?: boolean }) => {
     const params: {
       Bucket: string
       Key: string
@@ -57,12 +69,14 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
       Key: key,
     }
 
-    // If version ID exists and is not null version ID, pass the version ID
     if (versionId) {
       params.VersionId = versionId
     }
 
-    return await $client.send(new DeleteObjectCommand(params))
+    const command = new DeleteObjectCommand(params)
+    if (options?.forceDelete) attachForceDeleteHeader(command)
+
+    return await $client.send(command)
   }
 
   const listObject = async (bucket: string, prefix: string | undefined = undefined, pageSize: number = 25) => {
@@ -232,19 +246,7 @@ export function useObject({ bucket, region }: { bucket: string; region?: string 
 
   async function deleteAllVersions(key: string) {
     try {
-      // Get all versions of the object
-      const versions = await listObjectVersions(key)
-      const versionsToDelete = versions.Versions || []
-      const deleteMarkers = versions.DeleteMarkers || []
-
-      // Delete all versions
-      const deletePromises = versionsToDelete.map(version => deleteObject(key, version.VersionId))
-
-      // Delete all delete markers
-      const deleteMarkerPromises = deleteMarkers.map(marker => deleteObject(key, marker.VersionId))
-
-      await Promise.all([...deletePromises, ...deleteMarkerPromises])
-
+      await deleteObject(key, undefined, { forceDelete: true })
       return { success: true }
     } catch (error) {
       console.error('Error deleting all versions:', error)

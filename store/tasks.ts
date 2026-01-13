@@ -78,13 +78,18 @@ export const useTaskManagerStore = defineStore('taskManager', {
     },
 
     // 删除
-    addDeleteKeys(keys: string[], bucketName: string, prefix?: string) {
-      const newTasks = this.deleteHelpers.createTasks(keys, bucketName, prefix)
+    addDeleteKeys(keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) {
+      const newTasks = this.deleteHelpers.createTasks(keys, bucketName, prefix, options)
       this.taskManager.enqueue(newTasks)
     },
 
-    addDeleteVersionedItems(items: { key: string; versionId?: string }[], bucketName: string, prefix?: string) {
-      const newTasks = this.deleteHelpers.createVersionedTasks(items, bucketName, prefix)
+    addDeleteVersionedItems(
+      items: { key: string; versionId?: string }[],
+      bucketName: string,
+      prefix?: string,
+      options?: { forceDelete?: boolean }
+    ) {
+      const newTasks = this.deleteHelpers.createVersionedTasks(items, bucketName, prefix, options)
       this.taskManager.enqueue(newTasks)
     },
 

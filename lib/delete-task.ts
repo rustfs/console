@@ -1,4 +1,5 @@
 import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import type { HttpRequest } from '@smithy/protocol-http'
 import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from './task-manager'
 
 export type DeleteStatus = 'pending' | 'running' | 'completed' | 'failed' | 'canceled'
@@ -13,6 +14,11 @@ export interface DeleteTask extends ManagedTask<DeleteStatus> {
    * When provided, the delete operation will target the specific version.
    */
   versionId?: string
+  /**
+   * When true, instructs backend to force delete (e.g., delete all versions)
+   * without enumerating individual object versions.
+   */
+  forceDelete?: boolean
   actionLabel: string
   displayName: string
   subInfo: string
@@ -25,11 +31,17 @@ export interface DeleteTaskConfig {
 
 export interface DeleteTaskHelpers {
   handler: TaskHandler<DeleteTask, DeleteStatus>
-  createTasks: (keys: string[], bucketName: string, prefix?: string) => DeleteTask[]
+  createTasks: (
+    keys: string[],
+    bucketName: string,
+    prefix?: string,
+    options?: { forceDelete?: boolean }
+  ) => DeleteTask[]
   createVersionedTasks: (
     items: { key: string; versionId?: string }[],
     bucketName: string,
-    prefix?: string
+    prefix?: string,
+    options?: { forceDelete?: boolean }
   ) => DeleteTask[]
 }
 
@@ -45,8 +57,19 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
   const maxRetries = config.maxRetries ?? 3
   const retryDelay = config.retryDelay ?? 1000
 
+  const attachForceDeleteHeader = (command: DeleteObjectCommand) => {
+    command.middlewareStack.add(
+      next => async args => {
+        const request = args.request as HttpRequest
+        request.headers['X-Rustfs-Force-Delete'] = 'true'
+        return next(args)
+      },
+      { step: 'build', name: 'forceDeleteMiddleware', tags: ['FORCE_DELETE'] }
+    )
+  }
+
   const perform: TaskHandler<DeleteTask, DeleteStatus>['perform'] = async task => {
-    const { key, bucketName, prefix, versionId } = task
+    const { key, bucketName, prefix, versionId, forceDelete } = task
     const abortController = new AbortController()
     task.abortController = abortController
 
@@ -55,6 +78,8 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
       Key: (prefix || '') + key,
       ...(versionId ? { VersionId: versionId } : {}),
     })
+
+    if (forceDelete) attachForceDeleteHeader(command)
 
     await s3Client.send(command, { abortSignal: abortController.signal })
     task.progress = 100
@@ -78,7 +103,7 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
   }
 
   const createTasksFromItems = (
-    items: { key: string; versionId?: string }[],
+    items: { key: string; versionId?: string; forceDelete?: boolean }[],
     bucketName: string,
     prefix?: string
   ): DeleteTask[] =>
@@ -87,6 +112,7 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
       kind: 'delete' as const,
       key: item.key,
       versionId: item.versionId,
+      forceDelete: item.forceDelete,
       status: lifecycle.pending,
       progress: 0,
       bucketName,
@@ -99,15 +125,24 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
       retryCount: 0,
     }))
 
-  const createTasks = (keys: string[], bucketName: string, prefix?: string) =>
+  const createTasks = (keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) =>
     createTasksFromItems(
-      keys.map(key => ({ key })),
+      keys.map(key => ({ key, forceDelete: options?.forceDelete })),
       bucketName,
       prefix
     )
 
-  const createVersionedTasks = (items: { key: string; versionId?: string }[], bucketName: string, prefix?: string) =>
-    createTasksFromItems(items, bucketName, prefix)
+  const createVersionedTasks = (
+    items: { key: string; versionId?: string }[],
+    bucketName: string,
+    prefix?: string,
+    options?: { forceDelete?: boolean }
+  ) =>
+    createTasksFromItems(
+      items.map(item => ({ ...item, forceDelete: options?.forceDelete })),
+      bucketName,
+      prefix
+    )
 
   return { handler, createTasks, createVersionedTasks }
 }

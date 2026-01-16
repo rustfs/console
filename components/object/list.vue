@@ -160,26 +160,6 @@ const deleteDialogOpen = ref(false)
 const deleteDialogKeys = ref<string[]>([])
 const deleteAllVersions = ref(false)
 
-const debounce = (fn: Function, delay: number) => {
-  let timer: NodeJS.Timeout | null = null
-  return (...args: any[]) => {
-    if (timer) clearTimeout(timer)
-    timer = setTimeout(() => {
-      fn(...args)
-    }, delay)
-  }
-}
-
-const handleSearch = debounce(() => {
-  continuationToken.value = undefined
-  tokenHistory.value = []
-  refresh()
-}, 300)
-
-watch(searchTerm, () => {
-  handleSearch()
-})
-
 const taskStore = useTaskManagerStore()
 
 type ObjectRow = {
@@ -212,11 +192,6 @@ const message = useMessage()
 const objectApi = useObject({ bucket: bucketName.value })
 const { getBucketVersioning } = useBucket({})
 const bucketVersioningEnabled = ref(false)
-
-const handleNewObject = (asPrefix: boolean) => {
-  newObjectAsPrefix.value = asPrefix
-  newObjectFormVisible.value = true
-}
 
 const handleObjectDeleted = () => {
   refresh()
@@ -281,7 +256,7 @@ const fetchObjects = async (): Promise<ObjectRow[]> => {
 }
 
 const asyncDataCacheKey = computed(() => {
-  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${searchTerm.value || 'all'}-${
+  return `objects-${bucketName.value}-${prefix.value}-${continuationToken.value || 'start'}-${
     showDeleted.value ? 'withDeleted' : 'withoutDeleted'
   }`
 })
@@ -294,27 +269,31 @@ const displayKey = (key: string) => {
 const { data, refresh } = await useAsyncData<ObjectRow[]>(
   asyncDataCacheKey,
   async () => {
-    const objects = await fetchObjects()
-    const term = searchTerm.value.toLowerCase()
-
-    return objects.filter(item => {
-      if (term) {
-        const key = displayKey(item.Key).toLowerCase()
-        return key.includes(term)
-      }
-      return item.Key !== prefix.value
-    })
+    return await fetchObjects()
   },
   {
     default: () => [],
-    watch: [bucketName, prefix, continuationToken, searchTerm, showDeleted],
+    watch: [bucketName, prefix, continuationToken, showDeleted],
   }
 )
+
+const filteredData = computed(() => {
+  const objects = data.value ?? []
+  const term = searchTerm.value.toLowerCase()
+
+  return objects.filter(item => {
+    if (term) {
+      const key = displayKey(item.Key).toLowerCase()
+      return key.includes(term)
+    }
+    return item.Key !== prefix.value
+  })
+})
 
 watch(showDeleted, () => {
   continuationToken.value = undefined
   tokenHistory.value = []
-  refresh()
+  // refresh()
 })
 
 const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
@@ -402,7 +381,7 @@ const columns = computed<ColumnDef<ObjectRow, any>[]>(() => {
 })
 
 const { table, selectedRowIds } = useDataTable<ObjectRow>({
-  data,
+  data: filteredData,
   columns,
   getRowId: (row: any) => row.Key,
   enableRowSelection: true,
@@ -436,13 +415,13 @@ const goToNextPage = () => {
     tokenHistory.value.push(continuationToken.value)
   }
   continuationToken.value = nextToken.value
-  refresh()
+  // refresh()
 }
 
 const goToPreviousPage = () => {
   const prev = tokenHistory.value.pop()
   continuationToken.value = prev
-  refresh()
+  // refresh()
 }
 
 const handleRefresh = () => {

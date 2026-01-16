@@ -8,6 +8,7 @@
 
 <script setup lang="ts">
 import { Button } from '@/components/ui/button'
+import { Icon } from '#components'
 
 import DataTable from '@/components/data-table/data-table.vue'
 import { useDataTable } from '@/components/data-table/useDataTable'
@@ -47,11 +48,37 @@ const loading = ref(false)
 
 const objectApi = useObject({ bucket: props.bucketName })
 
+const copyVersionId = async (versionId: string) => {
+  if (!versionId) return
+  try {
+    await navigator.clipboard.writeText(versionId)
+    message.success(t('Copy Success'))
+  } catch (error) {
+    message.error(t('Copy Failed'))
+  }
+}
+
 const columns = computed<ColumnDef<any, any>[]>(() => [
   {
     id: 'versionId',
     header: () => t('VersionId'),
-    cell: ({ row }: any) => shortVersionId(row.original.VersionId),
+    cell: ({ row }: any) => {
+      const versionId = row.original.VersionId || ''
+      return h('div', { class: 'flex items-center gap-2' }, [
+        h('span', { class: 'font-mono text-sm' }, versionId),
+        h(
+          ActionButton,
+          {
+            variant: 'ghost',
+            size: 'sm',
+            class: 'h-6 w-6 p-0 shrink-0',
+            onClick: () => copyVersionId(versionId),
+            title: t('Copy'),
+          },
+          () => h(Icon, { name: 'ri:file-copy-line', size: 14 })
+        ),
+      ])
+    },
   },
   {
     id: 'lastModified',

@@ -28,7 +28,7 @@ const appConfig = useAppConfig() as unknown as AppConfig
 const route = useRoute()
 const { t } = useI18n()
 const { state } = useSidebar()
-const { isAdmin } = useAuth()
+const { isAdmin, canAccessPath } = usePermissions()
 const isCollapsed = computed(() => state.value === 'collapsed')
 const brandInitial = computed(() => appConfig.name?.charAt(0)?.toUpperCase() ?? 'R')
 
@@ -40,6 +40,36 @@ const navGroups = computed(() => {
     if (nav.isAdminOnly && !isAdmin.value) {
       continue
     }
+
+    // Check children visibility
+    let visibleChildren: NavItem[] = []
+    if (nav.children?.length) {
+      visibleChildren = nav.children.filter(child => {
+        if (child.isAdminOnly && !isAdmin.value) return false
+        if (child.to && !canAccessPath(child.to)) return false
+        return true
+      })
+
+      // If no children are visible and parent has no link, skip
+      if (visibleChildren.length === 0 && !nav.to) {
+        continue
+      }
+    } else {
+      // No children, check self
+      if (nav.to && !canAccessPath(nav.to)) {
+        continue
+      }
+    }
+
+    // Create a copy to avoid mutating original config
+    const navItem = { ...nav }
+    if (visibleChildren.length > 0) {
+      navItem.children = visibleChildren
+    } else {
+      // If we kept the parent but filtered all children (and parent has link), remove children prop
+      delete navItem.children
+    }
+
     if (nav.type === 'divider') {
       if (current.length) {
         groups.push(current)
@@ -48,7 +78,7 @@ const navGroups = computed(() => {
       continue
     }
 
-    current.push(nav)
+    current.push(navItem)
   }
 
   if (current.length) {

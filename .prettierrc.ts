@@ -1,5 +1,7 @@
+import { type Config } from 'prettier'
+
 // 参考配置
-module.exports = {
+const config: Config = {
   arrowParens: 'always', //箭头函数的参数无论有几个，都要括号包裹
   bracketSameLine: true, //在多行元素的最后一行放置 > 符号，而不是单独一行
   bracketSpacing: true, //在对象中的括号之间打印空格`{x: 1}` 格式化为 `{ x: 1 }`
@@ -18,5 +20,7 @@ module.exports = {
   trailingComma: 'none', //对象的最后一个属性末尾是否添加 `,`
   useTabs: false, // 是否使用制表符（tab）缩进。
   vueIndentScriptAndStyle: false, // 是否缩进 Vue 文件中的代码<script>和<style>标签
-  endOfLine: 'lf', // 与 `.editorconfig` 保持一致设置。指定换行符样式。（lf | crlf | cr | auto）
+  endOfLine: 'lf', // 与 `.editorconfig` 保持一致设置。指定换行符样式。（lf | crlf | cr | auto)
 }
+
+export default config

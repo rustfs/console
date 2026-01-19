@@ -19,7 +19,6 @@
 
 <script lang="ts" setup>
 import { useRoute } from '#app'
-import { endsWith } from 'lodash'
 import { joinRelativeURL } from 'ufo'
 import { computed } from 'vue'
 
@@ -55,7 +54,7 @@ const bucketPath = (path: string | Array<string> = '') => {
   }
 
   if (path.length > 1) {
-    path = endsWith(path, '/') ? path : path + '/'
+    path = path.endsWith('/') ? path : path + '/'
   }
 
   return joinRelativeURL('/browser', encodeURIComponent(bucketName.value), encodeURIComponent(path))

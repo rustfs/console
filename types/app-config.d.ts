@@ -8,10 +8,3 @@ export interface NavItem {
   key?: string
   children?: NavItem[]
 }
-
-export interface AppConfig {
-  navs: NavItem[]
-  name: string
-  description: string
-  [key: string]: any
-}

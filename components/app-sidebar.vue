@@ -22,15 +22,16 @@ import {
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import type { AppConfig, NavItem } from '~/types/app-config'
+import type { NavItem } from '~/types/app-config'
 
-const appConfig = useAppConfig() as unknown as AppConfig
+const appConfig = useAppConfig()
+const config = useRuntimeConfig()
 const route = useRoute()
 const { t } = useI18n()
 const { state } = useSidebar()
 const { isAdmin, canAccessPath } = usePermissions()
 const isCollapsed = computed(() => state.value === 'collapsed')
-const brandInitial = computed(() => appConfig.name?.charAt(0)?.toUpperCase() ?? 'R')
+const brandInitial = computed(() => config.public.appName.charAt(0).toUpperCase() ?? 'R')
 
 const navGroups = computed(() => {
   const groups: NavItem[][] = []

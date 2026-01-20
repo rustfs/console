@@ -35,6 +35,11 @@ Before committing any code changes, you MUST run and pass:
    - Ensures all code follows formatting standards
    - If it fails, run `pnpm lint:fix` to auto-fix formatting issues
 
+4. **Test Coverage Check**: Review and update tests for code changes
+   - **MUST review test cases** when modifying code: add tests for new features, update tests for changed behavior, remove tests for removed features
+   - Run `pnpm test:run` to ensure all tests pass and verify test coverage
+   - Ensure test cases accurately reflect the current implementation
+
 **Automated Enforcement**: The pre-commit hook (`scripts/pre-commit-check.sh`) automatically runs these checks. If any check fails, the commit will be blocked.
 
 **Quick Fix Command**: If checks fail:
@@ -42,6 +47,7 @@ Before committing any code changes, you MUST run and pass:
 1. Run `pnpm install` to sync lockfile (if package.json changed)
 2. Run `pnpm lint:fix` to auto-fix formatting
 3. Address any TypeScript errors manually
+4. Review and update test cases as needed, then run `pnpm test:run` to verify
 
 ## Coding Style & Naming Conventions
 
@@ -58,7 +64,13 @@ Before committing any code changes, you MUST run and pass:
 - Vitest is the primary framework; add new suites under `tests/`.
 - Name files `*.spec.ts` or `*.test.ts` and mirror source structure.
 - Keep tests deterministic; mock network calls through provided composables.
-- Run `pnpm test:run` before submitting major changes.
+- **⚠️ CRITICAL: Every code change MUST include corresponding test updates:**
+  - **New features**: Add comprehensive test cases covering happy paths and edge cases
+  - **Modified behavior**: Update existing tests to reflect new implementation
+  - **Removed features**: Remove or update tests for deprecated/removed functionality
+  - **Bug fixes**: Add regression tests to prevent future occurrences
+- Run `pnpm test:run` before submitting any changes to ensure all tests pass.
+- Verify test coverage and ensure critical paths are adequately tested.
 
 ## Commit & Pull Request Guidelines
 

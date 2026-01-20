@@ -1,5 +1,4 @@
-const fs = require('fs')
-const path = require('path')
+import fs from 'node:fs'
 
 // 读取英文语言包
 const enPath = 'i18n/locales/en-US.json'

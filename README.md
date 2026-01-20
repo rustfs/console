@@ -16,7 +16,7 @@ A modern web management console for [RustFS](https://github.com/rustfs/rustfs) d
 ### Prerequisites
 
 - Node.js >= 22.0.0
-- pnpm >= 10.19.0
+- pnpm >= 10.27.0 (managed via corepack or mise)
 - RustFS backend running
 
 ### Installation
@@ -163,7 +163,7 @@ Output: `.output/public` (static files)
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
-RUN corepack enable && corepack prepare pnpm@10.19.0 --activate
+RUN corepack enable && corepack prepare pnpm@10.27.0 --activate
 RUN pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm build

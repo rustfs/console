@@ -192,9 +192,6 @@ importers:
       jsdom:
         specifier: ^27.0.0
         version: 27.0.1(postcss@8.5.6)
-      pnpm:
-        specifier: ^10.19.0
-        version: 10.19.0
       prettier:
         specifier: ^3.2.5
         version: 3.6.2
@@ -5567,11 +5564,6 @@ packages:
 
   pkg-types@2.3.0:
     resolution: {integrity: sha512-SIqCzDRg0s9npO5XQ3tNZioRY1uK06lA41ynBC1YmFTmnY6FjUjVt6s4LoADmwoig1qqD0oK8h1p/8mlMx8Oig==}
-
-  pnpm@10.19.0:
-    resolution: {integrity: sha512-yfxyNukq31yK9C/VvxYS35nCzrYvJwRwMvRyCzP46s3eMRhl6RxBHyd09hjYLzIICOy1Fxi/qCwGDEunx2oyuA==}
-    engines: {node: '>=18.12'}
-    hasBin: true
 
   point-in-polygon-hao@1.2.4:
     resolution: {integrity: sha512-x2pcvXeqhRHlNRdhLs/tgFapAbSSe86wa/eqmj1G6pWftbEs5aVRJhRGM6FYSUERKu0PjekJzMq0gsI2XyiclQ==}
@@ -13164,8 +13156,6 @@ snapshots:
       confbox: 0.2.2
       exsolve: 1.0.8
       pathe: 2.0.3
-
-  pnpm@10.19.0: {}
 
   point-in-polygon-hao@1.2.4:
     dependencies:

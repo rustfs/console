@@ -21,40 +21,6 @@ import { logger } from './logger'
 type ConfigSource = 'browser' | 'localStorage' | 'server' | 'default'
 
 /**
- * Server configuration response type (partial config, used for merging)
- */
-interface ServerConfigResponse {
-  /** API configuration */
-  api?: {
-    /** API base URL */
-    baseURL?: string
-  }
-  /** S3 configuration */
-  s3?: {
-    /** S3 endpoint */
-    endpoint?: string
-    /** S3 region */
-    region?: string
-    /** Access key ID */
-    accessKeyId?: string
-    /** Secret access key */
-    secretAccessKey?: string
-  }
-  /** Session configuration */
-  session?: {
-    /** Session duration in seconds */
-    durationSeconds?: number
-  }
-  /** Release configuration */
-  release?: {
-    /** Release version */
-    version?: string
-    /** Release date */
-    date?: string
-  }
-}
-
-/**
  * Version configuration response type (partial config, used for merging)
  */
 interface VersionConfigResponse {
@@ -246,42 +212,12 @@ export const fetchVersionConfigFromServer = async (serverHost: string): Promise<
   }
 }
 
-/**
- * Merge server configuration with default configuration
- */
-const mergeServerConfig = (baseConfig: SiteConfig, serverConfig: ServerConfigResponse): SiteConfig => {
-  return {
-    ...baseConfig,
-    api: {
-      baseURL: serverConfig.api?.baseURL || baseConfig.api.baseURL,
-    },
-    s3: {
-      endpoint: serverConfig.s3?.endpoint || baseConfig.s3.endpoint,
-      region: serverConfig.s3?.region || baseConfig.s3.region,
-      accessKeyId: serverConfig.s3?.accessKeyId || baseConfig.s3.accessKeyId,
-      secretAccessKey: serverConfig.s3?.secretAccessKey || baseConfig.s3.secretAccessKey,
-    },
-    session: serverConfig.session
-      ? {
-          durationSeconds: serverConfig.session.durationSeconds || 0,
-        }
-      : baseConfig.session,
-    release:
-      serverConfig.release && serverConfig.release.version && serverConfig.release.date
-        ? {
-            version: serverConfig.release.version,
-            date: serverConfig.release.date,
-          }
-        : baseConfig.release,
-  }
-}
-
 // ============================================================================
 // Advanced Configuration Retrieval Functions
 // ============================================================================
 
 /**
- * Configuration priority strategy: server > localStorage > browser > default
+ * Configuration priority strategy: localStorage > browser > default
  *
  *
  * @returns Promise containing the final configuration retrieval result
@@ -295,19 +231,19 @@ const mergeServerConfig = (baseConfig: SiteConfig, serverConfig: ServerConfigRes
  * ```
  */
 export const getConfig = async (): Promise<ConfigResult> => {
-  // 2. Try to get configuration from localStorage
+  // 1. Try to get configuration from localStorage
   const storedResult = getStoredHostConfig()
   if (storedResult.config) {
     return storedResult
   }
 
-  // 3. Use current browser configuration
+  // 2. Use current browser configuration
   const browserResult = getCurrentBrowserConfig()
   if (browserResult.config) {
     return browserResult
   }
 
-  // 4. Use default configuration
+  // 3. Use default configuration
   return getServerDefaultConfig()
 }
 

@@ -70,30 +70,17 @@ describe('config-helpers Integration Tests', () => {
       expect(fallbackResult.config?.serverHost).toBe('https://localhost:3000')
     })
 
-    it('应该正确处理服务器配置优先级', async () => {
+    it('应该正确处理配置优先级', async () => {
       const savedHost = 'https://saved.example.com'
-      const serverConfig = {
-        api: { baseURL: 'https://server.example.com/api' },
-        s3: { endpoint: 'https://s3.server.com' },
-      }
 
       // 保存一个配置到 localStorage
       saveHostConfig(savedHost)
 
-      // Mock 服务器返回配置
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(serverConfig),
-      } as Response)
-
       const result = await getConfig()
 
-      // 应该使用服务器配置，而不是 localStorage 配置
-      expect(result.source).toBe('server')
-      expect(result.config?.api.baseURL).toBe(serverConfig.api.baseURL)
-      expect(result.config?.s3.endpoint).toBe(serverConfig.s3.endpoint)
-      // 但 serverHost 应该来自当前浏览器
-      expect(result.config?.serverHost).toBe('https://localhost:3000')
+      // 应该使用 localStorage 配置
+      expect(result.source).toBe('localStorage')
+      expect(result.config?.serverHost).toBe(savedHost)
     })
   })
 
@@ -191,13 +178,6 @@ describe('config-helpers Integration Tests', () => {
 
   describe('并发和竞态条件测试', () => {
     it('应该处理并发的配置获取请求', async () => {
-      vi.mocked(fetch).mockImplementation(() =>
-        Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ api: { baseURL: 'test' } }),
-        } as Response)
-      )
-
       // 同时发起多个请求
       const promises = Array(5)
         .fill(null)
@@ -207,11 +187,9 @@ describe('config-helpers Integration Tests', () => {
       // 所有请求都应该成功
       results.forEach(result => {
         expect(result.config).toBeTruthy()
-        expect(result.source).toBe('server')
+        // 应该使用浏览器配置（因为没有 localStorage 配置）
+        expect(result.source).toBe('browser')
       })
-
-      // fetch 应该被调用 5 次
-      expect(fetch).toHaveBeenCalledTimes(5)
     })
 
     it('应该处理快速的保存和获取操作', () => {

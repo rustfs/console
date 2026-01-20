@@ -224,21 +224,8 @@ describe('config-helpers', () => {
   })
 
   describe('getConfig', () => {
-    it('应该优先使用服务器配置', async () => {
-      vi.mocked(fetch).mockResolvedValueOnce({
-        ok: true,
-        json: () => Promise.resolve(TEST_CONFIG_RESPONSE),
-      } as Response)
-
-      const result = await getConfig()
-
-      expect(result.source).toBe('server')
-      expect(result.config?.api.baseURL).toBe(TEST_CONFIG_RESPONSE.api.baseURL)
-    })
-
-    it('应该在服务器配置失败时使用 localStorage 配置', async () => {
+    it('应该优先使用 localStorage 配置', async () => {
       localStorage.setItem('rustfs-server-host', TEST_SERVER_HOST)
-      vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
 
       const result = await getConfig()
 
@@ -246,13 +233,27 @@ describe('config-helpers', () => {
       expect(result.config?.serverHost).toBe(TEST_SERVER_HOST)
     })
 
-    it('应该在前两个选项失败时使用浏览器配置', async () => {
-      vi.mocked(fetch).mockRejectedValueOnce(new Error('Network error'))
+    it('应该在 localStorage 没有配置时使用浏览器配置', async () => {
+      localStorage.clear()
 
       const result = await getConfig()
 
       expect(result.source).toBe('browser')
       expect(result.config?.serverHost).toBe('https://localhost:3000')
+    })
+
+    it('应该在浏览器配置不可用时使用默认配置', async () => {
+      localStorage.clear()
+      const originalWindow = global.window
+      // @ts-ignore
+      delete global.window
+
+      const result = await getConfig()
+
+      expect(result.source).toBe('default')
+      expect(result.config?.serverHost).toBe('http://localhost:9000')
+
+      global.window = originalWindow
     })
 
     it('应该在所有选项失败时使用默认配置', async () => {

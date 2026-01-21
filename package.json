@@ -42,7 +42,6 @@
     "@vueuse/nuxt": "^14.1.0",
     "axios": "^1.10.0",
     "class-variance-authority": "^0.7.1",
-    "clipboard": "^2.0.11",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
     "dotted-map": "^2.2.3",

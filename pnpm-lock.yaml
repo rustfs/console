@@ -68,9 +68,6 @@ importers:
       '@vueuse/nuxt':
         specifier: ^14.1.0
         version: 14.1.0(magicast@0.5.1)(nuxt@4.2.2(@parcel/watcher@2.5.4)(@types/node@24.9.1)(@vue/compiler-sfc@3.5.27)(cac@6.7.14)(db0@0.3.4)(eslint@9.38.0(jiti@2.6.1))(ioredis@5.9.2)(lightningcss@1.30.2)(magicast@0.5.1)(optionator@0.9.4)(rollup@4.55.2)(terser@5.46.0)(typescript@5.9.3)(vite@7.3.1(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))(vue-tsc@2.2.12(typescript@5.9.3))(xml2js@0.6.2)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))
-      axios:
-        specifier: ^1.10.0
-        version: 1.12.2
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -119,9 +116,6 @@ importers:
       reka-ui:
         specifier: ^2.6.0
         version: 2.6.0(typescript@5.9.3)(vue@3.5.27(typescript@5.9.3))
-      strip-json-comments:
-        specifier: ^5.0.2
-        version: 5.0.3
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
@@ -156,12 +150,6 @@ importers:
       '@aws-sdk/types':
         specifier: ^3.840.0
         version: 3.914.0
-      '@oxc-minify/binding-darwin-arm64':
-        specifier: ^0.95.0
-        version: 0.95.0
-      '@oxc-transform/binding-darwin-arm64':
-        specifier: ^0.95.0
-        version: 0.95.0
       '@tailwindcss/vite':
         specifier: ^4.1.18
         version: 4.1.18(vite@7.3.1(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))
@@ -174,9 +162,6 @@ importers:
       '@types/three':
         specifier: ^0.182.0
         version: 0.182.0
-      '@vitalets/google-translate-api':
-        specifier: ^9.2.1
-        version: 9.2.1
       '@vitest/coverage-v8':
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4)
@@ -1675,12 +1660,6 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
-  '@oxc-minify/binding-darwin-arm64@0.95.0':
-    resolution: {integrity: sha512-uvRkBVsh88DgMqddCIHcL1tKycKThfzLHNuBOm7csfpOD85TJimpl/1qAfrTCNrdaiteFK4U9QRKBdDvZay4RQ==}
-    engines: {node: ^20.19.0 || >=22.12.0}
-    cpu: [arm64]
-    os: [darwin]
-
   '@oxc-minify/binding-darwin-x64@0.102.0':
     resolution: {integrity: sha512-AcB8ZZ711w4hTDhMfMHNjT2d+hekTQ2XmNSUBqJdXB+a2bJbE50UCRq/nxXl44zkjaQTit3lcQbFvhk2wwKcpw==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -3053,9 +3032,6 @@ packages:
   '@types/geojson@7946.0.16':
     resolution: {integrity: sha512-6C8nqWur3j98U6+lXDfTUWIfgvZU+EumvpHKcYjujKH7woYyLj2sUmff0tRhrqM7BohUw7Pz3ZB1jj2gW9Fvmg==}
 
-  '@types/http-errors@1.8.2':
-    resolution: {integrity: sha512-EqX+YQxINb+MeXaIqYDASb6U6FCHbWjkj4a1CKDBks3d/QiB2+PqBLyO72vLDgAO1wUI4O+9gweRcQK11bTL/w==}
-
   '@types/istanbul-lib-coverage@2.0.6':
     resolution: {integrity: sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w==}
 
@@ -3188,10 +3164,6 @@ packages:
     resolution: {integrity: sha512-68326CAWJmd6P1cUgUmufor5d4ocPbpLxiy9TKG6U/a4aWEx9aC+NIzaDI6GmBZVpt3+MkO3OwnQ2YcgJg12Qw==}
     engines: {node: '>=20'}
     hasBin: true
-
-  '@vitalets/google-translate-api@9.2.1':
-    resolution: {integrity: sha512-zlwQWSjXUZhbZQ6qwtIQ7GdYXFQmJ4wYqzcrYJUxtvzQQwUP+uKUb/SRJaBOQuBntjBjzcdcJoLFrpCKUbIkOg==}
-    engines: {node: '>=14'}
 
   '@vitejs/plugin-vue-jsx@5.1.3':
     resolution: {integrity: sha512-I6Zr8cYVr5WHMW5gNOP09DNqW9rgO8RX73Wa6Czgq/0ndpTfJM4vfDChfOT1+3KtdrNqilNBtNlFwVeB02ZzGw==}
@@ -4671,10 +4643,6 @@ packages:
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
 
-  http-errors@2.0.0:
-    resolution: {integrity: sha512-FtwrG/euBzaEjYeRqOgly7G0qviiXoJWnvEH2Z1plBdXgbyjv34pHTSb9zoeHMyDy33+DWy5Wt9Wo+TURtOYSQ==}
-    engines: {node: '>= 0.8'}
-
   http-errors@2.0.1:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
     engines: {node: '>= 0.8'}
@@ -6037,10 +6005,6 @@ packages:
   standard-as-callback@2.1.0:
     resolution: {integrity: sha512-qoRRSyROncaz1z0mvYqIE4lCd9p2R90i6GxW3uZv5ucSu8tU7B5HXUP1gG8pVZsYNVaXjk8ClXHPttLyxAL48A==}
 
-  statuses@2.0.1:
-    resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
-    engines: {node: '>= 0.8'}
-
   statuses@2.0.2:
     resolution: {integrity: sha512-DvEy55V3DB7uknRo+4iOGT5fP1slR8wQohVdknigZPMpMstaKJQWhwiYBACJE3Ul2pTnATihhBYnRhZQHGBiRw==}
     engines: {node: '>= 0.8'}
@@ -6072,10 +6036,6 @@ packages:
   strip-json-comments@3.1.1:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
-
-  strip-json-comments@5.0.3:
-    resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
-    engines: {node: '>=14.16'}
 
   strip-literal@3.1.0:
     resolution: {integrity: sha512-8r3mkIM/2+PpjHoOtiAW8Rg3jJLHaV7xPwG+YRGrv6FP0wwk/toTpATxWYOW0BKdWwl82VT2tFYi5DlROa0Mxg==}
@@ -8924,8 +8884,6 @@ snapshots:
   '@oxc-minify/binding-darwin-arm64@0.102.0':
     optional: true
 
-  '@oxc-minify/binding-darwin-arm64@0.95.0': {}
-
   '@oxc-minify/binding-darwin-x64@0.102.0':
     optional: true
 
@@ -9074,7 +9032,8 @@ snapshots:
   '@oxc-transform/binding-darwin-arm64@0.102.0':
     optional: true
 
-  '@oxc-transform/binding-darwin-arm64@0.95.0': {}
+  '@oxc-transform/binding-darwin-arm64@0.95.0':
+    optional: true
 
   '@oxc-transform/binding-darwin-x64@0.102.0':
     optional: true
@@ -10088,8 +10047,6 @@ snapshots:
 
   '@types/geojson@7946.0.16': {}
 
-  '@types/http-errors@1.8.2': {}
-
   '@types/istanbul-lib-coverage@2.0.6': {}
 
   '@types/json-schema@7.0.15': {}
@@ -10300,14 +10257,6 @@ snapshots:
       - encoding
       - rollup
       - supports-color
-
-  '@vitalets/google-translate-api@9.2.1':
-    dependencies:
-      '@types/http-errors': 1.8.2
-      http-errors: 2.0.0
-      node-fetch: 2.7.0
-    transitivePeerDependencies:
-      - encoding
 
   '@vitejs/plugin-vue-jsx@5.1.3(vite@7.3.1(@types/node@24.9.1)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(yaml@2.8.2))(vue@3.5.27(typescript@5.9.3))':
     dependencies:
@@ -10793,7 +10742,8 @@ snapshots:
 
   async@3.2.6: {}
 
-  asynckit@0.4.0: {}
+  asynckit@0.4.0:
+    optional: true
 
   autoprefixer@10.4.23(postcss@8.5.6):
     dependencies:
@@ -10811,6 +10761,7 @@ snapshots:
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
+    optional: true
 
   axobject-query@4.1.0: {}
 
@@ -10917,6 +10868,7 @@ snapshots:
     dependencies:
       es-errors: 1.3.0
       function-bind: 1.1.2
+    optional: true
 
   callsites@3.1.0: {}
 
@@ -10995,6 +10947,7 @@ snapshots:
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
+    optional: true
 
   commander@11.1.0: {}
 
@@ -11398,7 +11351,8 @@ snapshots:
     dependencies:
       robust-predicates: 3.0.2
 
-  delayed-stream@1.0.0: {}
+  delayed-stream@1.0.0:
+    optional: true
 
   denque@2.1.0: {}
 
@@ -11450,6 +11404,7 @@ snapshots:
       call-bind-apply-helpers: 1.0.2
       es-errors: 1.3.0
       gopd: 1.2.0
+    optional: true
 
   duplexer@0.1.2: {}
 
@@ -11503,9 +11458,11 @@ snapshots:
 
   errx@0.1.0: {}
 
-  es-define-property@1.0.1: {}
+  es-define-property@1.0.1:
+    optional: true
 
-  es-errors@1.3.0: {}
+  es-errors@1.3.0:
+    optional: true
 
   es-module-lexer@1.7.0: {}
 
@@ -11514,6 +11471,7 @@ snapshots:
   es-object-atoms@1.1.1:
     dependencies:
       es-errors: 1.3.0
+    optional: true
 
   es-set-tostringtag@2.1.0:
     dependencies:
@@ -11521,6 +11479,7 @@ snapshots:
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
       hasown: 2.0.2
+    optional: true
 
   esbuild@0.25.11:
     optionalDependencies:
@@ -11801,7 +11760,8 @@ snapshots:
 
   flatted@3.3.3: {}
 
-  follow-redirects@1.15.11: {}
+  follow-redirects@1.15.11:
+    optional: true
 
   foreground-child@3.3.1:
     dependencies:
@@ -11815,6 +11775,7 @@ snapshots:
       es-set-tostringtag: 2.1.0
       hasown: 2.0.2
       mime-types: 2.1.35
+    optional: true
 
   fraction.js@5.3.4: {}
 
@@ -11857,6 +11818,7 @@ snapshots:
       has-symbols: 1.1.0
       hasown: 2.0.2
       math-intrinsics: 1.1.0
+    optional: true
 
   get-port-please@3.2.0: {}
 
@@ -11864,6 +11826,7 @@ snapshots:
     dependencies:
       dunder-proto: 1.0.1
       es-object-atoms: 1.1.1
+    optional: true
 
   get-stream@6.0.1: {}
 
@@ -11924,7 +11887,8 @@ snapshots:
       slash: 5.1.0
       unicorn-magic: 0.4.0
 
-  gopd@1.2.0: {}
+  gopd@1.2.0:
+    optional: true
 
   graceful-fs@4.2.11: {}
 
@@ -11948,11 +11912,13 @@ snapshots:
 
   has-flag@4.0.0: {}
 
-  has-symbols@1.1.0: {}
+  has-symbols@1.1.0:
+    optional: true
 
   has-tostringtag@1.0.2:
     dependencies:
       has-symbols: 1.1.0
+    optional: true
 
   hasown@2.0.2:
     dependencies:
@@ -11971,14 +11937,6 @@ snapshots:
       whatwg-encoding: 3.1.1
 
   html-escaper@2.0.2: {}
-
-  http-errors@2.0.0:
-    dependencies:
-      depd: 2.0.0
-      inherits: 2.0.4
-      setprototypeof: 1.2.0
-      statuses: 2.0.1
-      toidentifier: 1.0.1
 
   http-errors@2.0.1:
     dependencies:
@@ -12504,7 +12462,8 @@ snapshots:
       tinyqueue: 2.0.3
       vt-pbf: 3.1.3
 
-  math-intrinsics@1.1.0: {}
+  math-intrinsics@1.1.0:
+    optional: true
 
   mdn-data@2.0.28: {}
 
@@ -12525,13 +12484,15 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.1
 
-  mime-db@1.52.0: {}
+  mime-db@1.52.0:
+    optional: true
 
   mime-db@1.54.0: {}
 
   mime-types@2.1.35:
     dependencies:
       mime-db: 1.52.0
+    optional: true
 
   mime-types@3.0.2:
     dependencies:
@@ -13323,7 +13284,8 @@ snapshots:
 
   protocols@2.0.2: {}
 
-  proxy-from-env@1.1.0: {}
+  proxy-from-env@1.1.0:
+    optional: true
 
   punycode@2.3.1: {}
 
@@ -13650,8 +13612,6 @@ snapshots:
 
   standard-as-callback@2.1.0: {}
 
-  statuses@2.0.1: {}
-
   statuses@2.0.2: {}
 
   std-env@3.10.0: {}
@@ -13686,8 +13646,6 @@ snapshots:
   strip-final-newline@3.0.0: {}
 
   strip-json-comments@3.1.1: {}
-
-  strip-json-comments@5.0.3: {}
 
   strip-literal@3.1.0:
     dependencies:

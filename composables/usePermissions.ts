@@ -17,7 +17,6 @@ export const usePermissions = () => {
       const userInfo = await $api.get('/accountinfo')
       let userInfoPolicy = userInfo.policy as string
       userPolicy.value = JSON.parse(userInfoPolicy) as ConsolePolicy
-      console.log('🚀 ~ fetchUserPolicy ~  userPolicy.value:', userPolicy.value)
     } catch (e) {
       console.error('Failed to fetch user policy', e)
       userPolicy.value = null

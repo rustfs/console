@@ -37,16 +37,16 @@ const navGroups = computed(() => {
   let current: NavItem[] = []
 
   for (const nav of appConfig.navs) {
-    if (nav.isAdminOnly && !isAdmin.value) {
-      continue
-    }
-
     // Check children visibility
     let visibleChildren: NavItem[] = []
     if (nav.children?.length) {
       visibleChildren = nav.children.filter(child => {
-        if (child.isAdminOnly && !isAdmin.value) return false
         if (child.to && !canAccessPath(child.to)) return false
+        
+        // If child is admin only and user is not admin, but has permission (checked above), allow it.
+        // If child has no path (unlikely for leaf) and is admin only, hide it.
+        if (child.isAdminOnly && !isAdmin.value && !child.to) return false
+        
         return true
       })
 
@@ -58,6 +58,11 @@ const navGroups = computed(() => {
       // No children, check self
       if (nav.to && !canAccessPath(nav.to)) {
         continue
+      }
+      
+      // If no path and no children (e.g. divider), check isAdminOnly
+      if (!nav.to && nav.isAdminOnly && !isAdmin.value) {
+         continue
       }
     }
 

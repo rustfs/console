@@ -1,4 +1,3 @@
-
 import { resourceMatch } from './bucket-policy'
 import { CONSOLE_SCOPES } from './console-permissions'
 
@@ -18,6 +17,55 @@ export interface ConsolePolicy {
  */
 function matchAction(policyActions: string[], requestAction: string): boolean {
   return policyActions.some(pattern => resourceMatch(pattern, requestAction))
+}
+
+// Define implied scopes based on MinIO permissions
+const IMPLIED_SCOPES: Record<string, string[]> = {
+  [CONSOLE_SCOPES.VIEW_BROWSER]: [
+    's3:ListAllMyBuckets',
+    's3:ListBucket',
+    's3:GetBucketLocation',
+    's3:GetObject',
+    's3:PutObject',
+    's3:DeleteObject',
+    's3:*',
+  ],
+  [CONSOLE_SCOPES.VIEW_POLICIES]: [
+    'admin:ListUserPolicies',
+    'admin:CreatePolicy',
+    'admin:DeletePolicy',
+    'admin:GetPolicy',
+    'admin:*',
+  ],
+  [CONSOLE_SCOPES.VIEW_USERS]: [
+    'admin:ListUsers',
+    'admin:CreateUser',
+    'admin:GetUser',
+    'admin:EnableUser',
+    'admin:DisableUser',
+    'admin:DeleteUser',
+    'admin:*',
+  ],
+  [CONSOLE_SCOPES.VIEW_USER_GROUPS]: ['admin:ListGroups', 'admin:AddUserToGroup', 'admin:GetGroup', 'admin:*'],
+  [CONSOLE_SCOPES.VIEW_PERFORMANCE]: ['admin:ServerInfo', 'admin:OBDInfo', 'admin:ServerTrace', 'admin:*'],
+  [CONSOLE_SCOPES.VIEW_IMPORT_EXPORT]: ['admin:ConfigUpdate', 'admin:*'],
+  [CONSOLE_SCOPES.VIEW_BUCKET_EVENTS]: [
+    's3:GetBucketNotification',
+    's3:PutBucketNotification',
+    's3:ListenNotification',
+    's3:ListenBucketNotification',
+    's3:*',
+  ],
+  [CONSOLE_SCOPES.VIEW_BUCKET_REPLICATION]: [
+    's3:GetReplicationConfiguration',
+    's3:PutReplicationConfiguration',
+    's3:*',
+  ],
+  [CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE]: ['s3:GetLifecycleConfiguration', 's3:PutLifecycleConfiguration', 's3:*'],
+  [CONSOLE_SCOPES.VIEW_TIERED_STORAGE]: ['admin:ConfigUpdate', 'admin:*'],
+  [CONSOLE_SCOPES.VIEW_EVENT_DESTINATIONS]: ['admin:ConfigUpdate', 'admin:*'],
+  [CONSOLE_SCOPES.VIEW_SSE_SETTINGS]: ['admin:ConfigUpdate', 'admin:*', 'kms:*'],
+  [CONSOLE_SCOPES.VIEW_LICENSE]: ['admin:ServerInfo', 'admin:*'],
 }
 
 /**
@@ -48,15 +96,13 @@ export function hasConsolePermission(
   resource: string = 'console'
 ): boolean {
   if (!policy) return false
-  
+
   const statements = Array.isArray(policy) ? policy : policy.Statement || []
   if (statements.length === 0) return false
 
   // 1. Check for specific Deny
-  const denied = statements.some(s =>
-    s.Effect === 'Deny' &&
-    matchAction(s.Action, action) &&
-    matchResource(s.Resource, resource)
+  const denied = statements.some(
+    s => s.Effect === 'Deny' && matchAction(s.Action, action) && matchResource(s.Resource, resource)
   )
 
   if (denied) return false
@@ -67,21 +113,37 @@ export function hasConsolePermission(
   // This likely means if they have 'consoleAdmin' action ALLOWED, they get everything.
   // But we are checking for a specific action (e.g. 'console:Browser').
   // So we should check if the policy allows 'console:Browser' OR 'consoleAdmin' OR 'console:*'.
-  
+
   // We check if ANY allow statement matches the requested action OR 'consoleAdmin' (if that's considered a super-permission)
   const allowed = statements.some(s => {
     if (s.Effect !== 'Allow') return false
-    
+
     // Check if statement allows the specific action
     const actionMatch = matchAction(s.Action, action)
-    
+
     // Check if statement allows consoleAdmin (superuser for console)
     const adminMatch = matchAction(s.Action, CONSOLE_SCOPES.CONSOLE_ADMIN)
-    
+
     // Check if statement allows console:* (common pattern)
     const wildcardMatch = matchAction(s.Action, 'console:*')
 
-    return (actionMatch || adminMatch || wildcardMatch) && matchResource(s.Resource, resource)
+    // Check if statement allows admin:* (superuser)
+    const adminStarMatch = matchAction(s.Action, 'admin:*')
+
+    const explicitMatch =
+      (actionMatch || adminMatch || wildcardMatch || adminStarMatch) && matchResource(s.Resource, resource)
+    if (explicitMatch) return true
+
+    // Check implied scopes
+    const impliedActions = IMPLIED_SCOPES[action]
+    if (impliedActions) {
+      // If any of the implied actions are allowed by the policy
+      if (impliedActions.some(implied => matchAction(s.Action, implied))) {
+        return true
+      }
+    }
+
+    return false
   })
 
   return allowed
@@ -96,7 +158,7 @@ export function hasConsoleScopes(
   matchAll: boolean = true
 ): boolean {
   if (!scopes || scopes.length === 0) return true
-  
+
   if (matchAll) {
     return scopes.every(scope => hasConsolePermission(policy, scope))
   } else {

@@ -22,9 +22,6 @@ export default defineNuxtRouteMiddleware(async (to, from) => {
 
   // Check permission for the route
   if (!canAccessPath(to.path)) {
-    return abortNavigation({
-      statusCode: 403,
-      message: 'You do not have permission to access this page.',
-    })
+    return navigateTo('/403')
   }
 })

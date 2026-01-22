@@ -49,7 +49,7 @@ const handleLogin = async () => {
 
     message.success(t('Login Success'))
     // reload the page to ensure the new config is applied
-    window.location.reload()
+    window.location.href = buildRoute('/')
   } catch (error) {
     message.error(t('Login Failed'))
   }

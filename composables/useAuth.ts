@@ -77,7 +77,7 @@ export function useAuth() {
     setIsAdmin,
     getIsAdmin,
     credentials: ref<Credentials | undefined>(getCredentials()),
-    isAuthenticated: ref(isValidCredentials(store.value)),
+    isAuthenticated: computed(() => isValidCredentials(store.value)),
     isAdmin: computed(() => isAdminStore.value),
   }
 }

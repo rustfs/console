@@ -12,6 +12,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { createDialogController, dialogControllerKey } from '@/lib/ui/dialog'
 import { createMessageApi, messageInjectionKey } from '@/lib/ui/message'
 import { provide } from 'vue'
+import 'vue-sonner/style.css'
 
 const dialogController = createDialogController()
 const messageApi = createMessageApi()

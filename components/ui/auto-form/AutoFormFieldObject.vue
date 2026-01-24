@@ -63,7 +63,7 @@ provide(FieldContextKey, fieldContext)
                   :config="config?.[key as keyof typeof config] as ConfigItem"
                   :field-name="`${fieldName}.${key.toString()}`"
                   :label="key.toString()"
-                  :shape="shape"
+                  :shape="shape as Shape"
                 />
               </template>
             </AccordionContent>

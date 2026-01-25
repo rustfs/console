@@ -62,7 +62,7 @@ provide(FieldContextKey, fieldContext)
             </AccordionTrigger>
 
             <AccordionContent>
-              <template v-for="(field, index) of fields" :key="field.key">
+              <template v-for="(field, index) in fields" :key="field.key">
                 <div class="mb-4 p-1">
                   <AutoFormField
                     :field-name="`${fieldName}[${index}]`"

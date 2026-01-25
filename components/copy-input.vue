@@ -4,8 +4,6 @@ import { Input } from '@/components/ui/input'
 
 import { Icon } from '#components'
 import { useMessage } from '@/lib/ui/message'
-import ClipboardJS from 'clipboard'
-import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -31,50 +29,41 @@ const props = defineProps({
 const model = defineModel<string>()
 
 const message = useMessage()
-const clipboard = ref<ClipboardJS | null>(null)
 
-onMounted(() => {
-  clipboard.value = new ClipboardJS(props.copyIcon ? `#${props.id}-btn-icon` : `#${props.id}-btn`)
+const { copy } = useClipboard()
 
-  clipboard.value.on('success', function (e) {
+async function handleCopyGeneratedUrl() {
+  try {
+    if (!model.value) throw new Error('No value to copy')
+
+    await copy(model.value)
+
     message.success(t('Copy Success'))
-    e.clearSelection()
-  })
-
-  clipboard.value.on('error', async function () {
-    // If copy fails, use navigator.clipboard.writeText as fallback
-    try {
-      if (navigator.clipboard && model.value) {
-        await navigator.clipboard.writeText(model.value)
-        message.success(t('Copy Success'))
-      } else {
-        message.error(t('Copy Failed'))
-      }
-    } catch {
-      message.error(t('Copy Failed'))
-    }
-  })
-})
-
-onUnmounted(() => {
-  clipboard.value?.destroy()
-  clipboard.value = null
-})
+  } catch (error) {
+    message.error(t('Copy Failed'))
+  }
+}
 </script>
 
 <template>
   <div class="flex h-full items-center gap-2">
     <Input v-model="model" :readonly="props.readonly" :id="props.id" class="flex-1" />
-    <Button v-if="!props.copyIcon" :id="`${props.id}-btn`" :data-clipboard-target="`#${props.id}`" variant="default">
+    <Button
+      v-if="!props.copyIcon"
+      @click="handleCopyGeneratedUrl"
+      :id="`${props.id}-btn`"
+      :data-clipboard-target="`#${props.id}`"
+      variant="default"
+    >
       {{ t('Copy') }}
     </Button>
     <Button
       v-else
+      @click="handleCopyGeneratedUrl"
       :id="`${props.id}-btn-icon`"
       variant="ghost"
       size="sm"
       class="shrink-0 outline"
-      :data-clipboard-target="`#${props.id}`"
       :title="t('Copy')"
     >
       <Icon :size="18" name="ri:file-copy-line" />

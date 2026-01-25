@@ -80,7 +80,7 @@ const formComponentProps = computed(() => {
 <template>
   <component :is="formComponent" v-bind="formComponentProps">
     <slot name="customAutoForm" :fields="fields">
-      <template v-for="(shape, key) of shapes" :key="key">
+      <template v-for="(shape, key) in shapes" :key="key">
         <slot
           :shape="shape"
           :name="key.toString() as keyof z.infer<T>"
@@ -90,7 +90,7 @@ const formComponentProps = computed(() => {
           <AutoFormField
             :config="fieldConfig?.[key as keyof typeof fieldConfig] as ConfigItem"
             :field-name="key.toString()"
-            :shape="shape"
+            :shape="shape as Shape"
           />
         </slot>
       </template>

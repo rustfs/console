@@ -1,7 +1,8 @@
 import tailwindcss from '@tailwindcss/vite'
+
 const appName = process.env.APP_NAME || 'RustFS'
-const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '')
 const appDescription = process.env.APP_DESCRIPTION || 'RustFS is a distributed file system written in Rust.'
+const baseUrl = (process.env.BASE_URL || '/rustfs/console/').replace(/\/$/, '')
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -32,6 +33,8 @@ export default defineNuxtConfig({
   plugins: [],
   runtimeConfig: {
     public: {
+      appName,
+      appDescription,
       session: {
         // 临时凭证有效期
         durationSeconds: Number(process.env.SESSION_DURATION_SECONDS) || 3600 * 12,

@@ -22,15 +22,16 @@ import {
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
-import type { AppConfig, NavItem } from '~/types/app-config'
+import type { NavItem } from '~/types/app-config'
 
-const appConfig = useAppConfig() as unknown as AppConfig
+const appConfig = useAppConfig()
+const config = useRuntimeConfig()
 const route = useRoute()
 const { t } = useI18n()
 const { state } = useSidebar()
 const { isAdmin, canAccessPath } = usePermissions()
 const isCollapsed = computed(() => state.value === 'collapsed')
-const brandInitial = computed(() => appConfig.name?.charAt(0)?.toUpperCase() ?? 'R')
+const brandInitial = computed(() => config.public.appName.charAt(0).toUpperCase() ?? 'R')
 
 const navGroups = computed(() => {
   const groups: NavItem[][] = []
@@ -42,11 +43,11 @@ const navGroups = computed(() => {
     if (nav.children?.length) {
       visibleChildren = nav.children.filter(child => {
         if (child.to && !canAccessPath(child.to)) return false
-        
+
         // If child is admin only and user is not admin, but has permission (checked above), allow it.
         // If child has no path (unlikely for leaf) and is admin only, hide it.
         if (child.isAdminOnly && !isAdmin.value && !child.to) return false
-        
+
         return true
       })
 
@@ -59,10 +60,10 @@ const navGroups = computed(() => {
       if (nav.to && !canAccessPath(nav.to)) {
         continue
       }
-      
+
       // If no path and no children (e.g. divider), check isAdminOnly
       if (!nav.to && nav.isAdminOnly && !isAdmin.value) {
-         continue
+        continue
       }
     }
 

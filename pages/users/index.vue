@@ -50,8 +50,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { ColumnDef } from '@tanstack/vue-table'
+import dayjs from 'dayjs'
 import { computed, h, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
@@ -63,6 +65,10 @@ const message = useMessage()
 
 interface UserRow {
   accessKey: string
+  policyName?: string
+  status: string
+  memberOf?: string[]
+  updatedAt: string
   [key: string]: unknown
 }
 
@@ -72,6 +78,25 @@ const listData = ref<UserRow[]>([])
 
 const newItemRef = ref()
 const editItemRef = ref()
+
+function formatDate(dateStr?: string) {
+  if (!dateStr) return '-'
+
+  let d = dayjs(dateStr)
+  if (d.isValid()) return d.format('YYYY-MM-DD HH:mm:ss')
+
+  // Handle specific format: "2026-01-25 19:10:26.046437141 +00:00:00"
+  const [date, timeRaw, offsetRaw] = dateStr.split(' ')
+  if (date && timeRaw && offsetRaw) {
+    const time = timeRaw.substring(0, 12) // HH:mm:ss.SSS
+    const offset = offsetRaw.substring(0, 6) // +HH:mm
+    const isoStr = `${date}T${time}${offset}`
+    d = dayjs(isoStr)
+    if (d.isValid()) return d.format('YYYY-MM-DD HH:mm:ss')
+  }
+
+  return '-'
+}
 
 async function deleteItem(row: UserRow) {
   try {
@@ -101,7 +126,7 @@ async function getDataList() {
     listData.value = Object.entries(res).map(([username, info]) => ({
       accessKey: username,
       ...(typeof info === 'object' ? info : {}),
-    }))
+    })) as UserRow[]
   } catch (error) {
     message.error(t('Failed to get data'))
   } finally {
@@ -116,6 +141,33 @@ const columns: ColumnDef<UserRow>[] = [
     header: () => t('Name'),
     cell: ({ row }) => h('span', { class: 'font-medium' }, row.original.accessKey),
     filterFn: 'includesString',
+  },
+  {
+    accessorKey: 'policyName',
+    header: () => t('Policy Name'),
+    cell: ({ row }) => h('span', row.original.policyName || ''),
+  },
+  {
+    accessorKey: 'status',
+    header: () => t('Status'),
+    cell: ({ row }) =>
+      h(
+        Badge,
+        {
+          variant: row.original.status === 'enabled' ? 'secondary' : 'outline',
+        },
+        () => (row.original.status === 'enabled' ? t('Enabled') : row.original.status)
+      ),
+  },
+  {
+    accessorKey: 'memberOf',
+    header: () => t('Member Of'),
+    cell: ({ row }) => h('span', row.original.memberOf?.join(', ') || ''),
+  },
+  {
+    accessorKey: 'updatedAt',
+    header: () => t('Updated At'),
+    cell: ({ row }) => h('span', formatDate(row.original.updatedAt)),
   },
   {
     id: 'actions',
@@ -195,6 +247,7 @@ const { table, selectedRows, selectedRowIds } = useDataTable<UserRow>({
   columns,
   getRowId: row => row.accessKey,
   enableRowSelection: true,
+  initialSorting: [{ id: 'updatedAt', desc: true }],
 })
 
 const selectedKeys = computed(() => selectedRowIds.value)

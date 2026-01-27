@@ -31,6 +31,7 @@ export interface UseDataTableOptions<TData extends RowData> {
    * @default false
    */
   enableRowSelection?: boolean
+  initialSorting?: SortingState
 }
 
 export interface UseDataTableReturn<TData extends RowData> {
@@ -74,7 +75,7 @@ function createSelectColumn<TData extends RowData>(): ColumnDef<TData> {
 }
 
 export function useDataTable<TData extends RowData>(options: UseDataTableOptions<TData>): UseDataTableReturn<TData> {
-  const sorting = ref<SortingState>([])
+  const sorting = ref<SortingState>(options.initialSorting ?? [])
   const columnFilters = ref<ColumnFiltersState>([])
   const rowSelection = ref<RowSelectionState>({})
   const pagination = ref<PaginationState>({

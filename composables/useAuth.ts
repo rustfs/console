@@ -13,9 +13,14 @@ interface Credentials {
 export function useAuth() {
   const store = useLocalStorage('auth.credentials', {})
   const isAdminStore = useLocalStorage('auth.isAdmin', false)
+  const permanentStore = useLocalStorage<Credentials | undefined>('auth.permanent', undefined)
 
   const setCredentials = (credentials: Credentials) => {
     store.value = credentials
+  }
+
+  const setPermanentCredentials = (credentials: Credentials) => {
+    permanentStore.value = credentials
   }
 
   const getCredentials = () => {
@@ -24,6 +29,10 @@ export function useAuth() {
     }
 
     return store.value
+  }
+
+  const getPermanentCredentials = () => {
+    return permanentStore.value
   }
 
   const setIsAdmin = (value: boolean) => {
@@ -57,11 +66,30 @@ export function useAuth() {
       Expiration: credentialsResponse.Expiration?.toISOString(),
     })
 
+    // If it's not an STS login (i.e., no SessionToken), save it as permanent credentials.
+    // Or if it's an STS login but without a SessionToken (theoretically shouldn't happen).
+    // In reality, AwsCredentialIdentity might contain a SessionToken.
+    // We only save it when explicitly logging in with AccessKey/SecretKey (usually no SessionToken, or user intent is clear).
+    // Simple check here: if no SessionToken, or STS login with very long expiration?
+    // Usually STS login has a SessionToken.
+    // Note: The passed credentials parameter can be a function (IdentityProvider) or an object.
+    // If it's an object and has no SessionToken, we consider it permanent credentials.
+    if (typeof credentials === 'object' && !('sessionToken' in credentials && credentials.sessionToken)) {
+      setPermanentCredentials({
+        AccessKeyId: credentials.accessKeyId,
+        SecretAccessKey: credentials.secretAccessKey,
+      })
+    } else {
+      // Clear old permanent credentials to avoid confusion
+      permanentStore.value = undefined
+    }
+
     return credentialsResponse
   }
 
   const logout = () => {
     store.value = {}
+    permanentStore.value = undefined
     isAdminStore.value = false
   }
 
@@ -77,6 +105,7 @@ export function useAuth() {
     setIsAdmin,
     getIsAdmin,
     credentials: ref<Credentials | undefined>(getCredentials()),
+    permanentCredentials: ref<Credentials | undefined>(getPermanentCredentials()),
     isAuthenticated: computed(() => isValidCredentials(store.value)),
     isAdmin: computed(() => isAdminStore.value),
   }

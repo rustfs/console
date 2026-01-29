@@ -244,6 +244,7 @@ const { t } = useI18n()
 const message = useMessage()
 const dialog = useDialog()
 const { $s3Client } = useNuxtApp()
+const { credentials, permanentCredentials } = useAuth()
 
 const props = defineProps<{
   bucketName: string
@@ -287,7 +288,7 @@ const openDrawer = async (_bucket: string, key: string) => {
     message.error(t('Failed to fetch object info'))
   }
 }
-// 有效期输入（天数、小时、分钟）
+// Expiration input (days, hours, minutes)
 const expirationDays = ref<number>(0)
 const expirationHours = ref<number>(0)
 const expirationMinutes = ref<number>(0)
@@ -295,90 +296,15 @@ const expirationError = ref<string>('')
 const totalExpirationSeconds = ref<number>(0)
 const isExpirationValid = ref<boolean>(false)
 
-// 一周的秒数
+// Seconds in a week
 const ONE_WEEK_SECONDS = 7 * 24 * 60 * 60 // 604800
 
-// 计算总时长（秒数）
+// Calculate total duration (seconds)
 const calculateTotalSeconds = (days: number, hours: number, minutes: number): number => {
   return days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60
 }
 
-// 验证有效期输入
-const validateExpiration = (): boolean => {
-  expirationError.value = ''
-
-  // 处理空值和非数字值，转换为0
-  const days = Number(expirationDays.value) || 0
-  const hours = Number(expirationHours.value) || 0
-  const minutes = Number(expirationMinutes.value) || 0
-
-  // 检查是否为有效数字
-  if (isNaN(days) || isNaN(hours) || isNaN(minutes)) {
-    return false
-  }
-
-  // 检查分钟范围 (0-59)
-  if (minutes < 0 || minutes > 59) {
-    expirationError.value = t('Minutes must be between 0 and 59')
-    return false
-  }
-
-  // 检查小时范围
-  if (hours < 0) {
-    expirationError.value = t('Hours must be between 0 and 23')
-    return false
-  }
-
-  // 如果天数大于0，小时不能超过23
-  if (days > 0 && hours > 23) {
-    expirationError.value = t('Hours must be between 0 and 23')
-    return false
-  }
-
-  // 如果天数为0，小时不能超过24
-  if (days === 0 && hours > 24) {
-    expirationError.value = t('Hours must be between 0 and 24 when days is 0')
-    return false
-  }
-
-  // 检查天数范围 (0-7)
-  if (days < 0 || days > 7) {
-    expirationError.value = t('Days must be between 0 and 7')
-    return false
-  }
-
-  // 如果小时为24，自动转换为1天0小时（在计算时处理）
-  let finalDays = days
-  let finalHours = hours
-  if (hours === 24 && days === 0) {
-    finalDays = 1
-    finalHours = 0
-  }
-
-  // 计算总时长
-  const totalSeconds = calculateTotalSeconds(finalDays, finalHours, minutes)
-
-  // 检查总时长不能超过一周
-  if (totalSeconds > ONE_WEEK_SECONDS) {
-    expirationError.value = t('Total duration cannot exceed 7 days')
-    return false
-  }
-
-  // 检查至少有一个值大于0
-  if (totalSeconds === 0) {
-    return false
-  }
-
-  totalExpirationSeconds.value = totalSeconds
-  return true
-}
-
-// 验证并更新有效期
-const validateAndUpdateExpiration = () => {
-  isExpirationValid.value = validateExpiration()
-}
-
-// 格式化时长显示
+// Format duration display
 const formatDuration = (seconds: number): string => {
   if (seconds === 0) return ''
 
@@ -394,7 +320,95 @@ const formatDuration = (seconds: number): string => {
   return parts.join(' ')
 }
 
-// 生成临时链接
+// Validate expiration input
+const validateExpiration = (): boolean => {
+  expirationError.value = ''
+
+  // Handle empty values and non-numeric values, convert to 0
+  const days = Number(expirationDays.value) || 0
+  const hours = Number(expirationHours.value) || 0
+  const minutes = Number(expirationMinutes.value) || 0
+
+  // Check if valid numbers
+  if (isNaN(days) || isNaN(hours) || isNaN(minutes)) {
+    return false
+  }
+
+  // Check minutes range (0-59)
+  if (minutes < 0 || minutes > 59) {
+    expirationError.value = t('Minutes must be between 0 and 59')
+    return false
+  }
+
+  // Check hours range
+  if (hours < 0) {
+    expirationError.value = t('Hours must be between 0 and 23')
+    return false
+  }
+
+  // If days > 0, hours cannot exceed 23
+  if (days > 0 && hours > 23) {
+    expirationError.value = t('Hours must be between 0 and 23')
+    return false
+  }
+
+  // If days is 0, hours cannot exceed 24
+  if (days === 0 && hours > 24) {
+    expirationError.value = t('Hours must be between 0 and 24 when days is 0')
+    return false
+  }
+
+  // Check days range (0-7)
+  if (days < 0 || days > 7) {
+    expirationError.value = t('Days must be between 0 and 7')
+    return false
+  }
+
+  // If hours is 24, automatically convert to 1 day 0 hours (handled in calculation)
+  let finalDays = days
+  let finalHours = hours
+  if (hours === 24 && days === 0) {
+    finalDays = 1
+    finalHours = 0
+  }
+
+  // Calculate total duration
+  const totalSeconds = calculateTotalSeconds(finalDays, finalHours, minutes)
+
+  // Check total duration cannot exceed one week
+  if (totalSeconds > ONE_WEEK_SECONDS) {
+    expirationError.value = t('Total duration cannot exceed 7 days')
+    return false
+  }
+
+  // Check at least one value is greater than 0
+  if (totalSeconds === 0) {
+    return false
+  }
+
+  // Check if exceeds current session expiration
+  if (credentials.value?.Expiration && !permanentCredentials.value) {
+    const expirationDate = new Date(credentials.value.Expiration)
+    const now = new Date()
+    const remainingSeconds = Math.floor((expirationDate.getTime() - now.getTime()) / 1000)
+
+    // If remaining time <= 0, session expired
+    if (remainingSeconds <= 0) {
+      expirationError.value = t('Session expired, please login again')
+      return false
+    }
+  }
+
+  totalExpirationSeconds.value = totalSeconds
+  return true
+}
+
+// Validate and update expiration
+const validateAndUpdateExpiration = () => {
+  isExpirationValid.value = validateExpiration()
+}
+
+// Generate temporary URL
 const generateTemporaryUrl = async () => {
   if (!object.value?.Key) return
 
@@ -404,7 +418,38 @@ const generateTemporaryUrl = async () => {
   }
 
   try {
-    const url = await getSignedUrl(object.value.Key, totalExpirationSeconds.value)
+    let url = ''
+    if (permanentCredentials.value) {
+      // If permanent credentials exist, use them to generate signed URL
+      // Dynamic import to avoid large initial bundle, or since we are client-side, we can use AWS SDK directly
+      // But here we need to create a new Client instance, because global $s3Client is STS-based (possibly)
+      // Or we could reuse getSignedUrl logic in useObject, but need to pass different client
+      const { S3Client, GetObjectCommand } = await import('@aws-sdk/client-s3')
+      const { getSignedUrl: presignGetObject } = await import('@aws-sdk/s3-request-presigner')
+
+      const { $siteConfig } = useNuxtApp()
+      const siteConfig = $siteConfig as any
+
+      const tempClient = new S3Client({
+        endpoint: siteConfig.s3.endpoint,
+        region: siteConfig.s3.region || 'us-east-1',
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: permanentCredentials.value.AccessKeyId!,
+          secretAccessKey: permanentCredentials.value.SecretAccessKey!,
+        },
+      })
+
+      const command = new GetObjectCommand({
+        Bucket: props.bucketName,
+        Key: object.value.Key,
+      })
+
+      url = await presignGetObject(tempClient, command, { expiresIn: totalExpirationSeconds.value })
+    } else {
+      url = await getSignedUrl(object.value.Key, totalExpirationSeconds.value)
+    }
+
     signedUrl.value = url
     message.success(t('URL generated successfully'))
   } catch (error: any) {
@@ -416,7 +461,7 @@ const loadObjectInfo = async (key: string) => {
   const info = await getObjectInfo(key)
   object.value = info
   lockStatus.value = info?.ObjectLockLegalHoldStatus === 'ON'
-  // 默认不生成分享链接，重置有效期输入
+  // Default not to generate share link, reset expiration input
   expirationDays.value = 0
   expirationHours.value = 0
   expirationMinutes.value = 0

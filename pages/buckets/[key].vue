@@ -13,32 +13,44 @@
         <TabsTrigger value="overview" class="px-4">
           {{ t('Overview') }}
         </TabsTrigger>
-        <TabsTrigger value="lifecycle" class="px-4">
-          {{ t('Lifecycle') }}
-        </TabsTrigger>
-        <TabsTrigger value="replication" class="px-4">
-          {{ t('Replication') }}
-        </TabsTrigger>
-        <TabsTrigger value="events" class="px-4">
-          {{ t('Events') }}
-        </TabsTrigger>
+        <template v-if="hasPermission(CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE)">
+          <TabsTrigger value="lifecycle" class="px-4">
+            {{ t('Lifecycle') }}
+          </TabsTrigger>
+        </template>
+        <template v-if="hasPermission(CONSOLE_SCOPES.VIEW_BUCKET_REPLICATION)">
+          <TabsTrigger value="replication" class="px-4">
+            {{ t('Replication') }}
+          </TabsTrigger>
+        </template>
+        <template v-if="hasPermission(CONSOLE_SCOPES.VIEW_BUCKET_EVENTS)">
+          <TabsTrigger value="events" class="px-4">
+            {{ t('Events') }}
+          </TabsTrigger>
+        </template>
       </TabsList>
 
       <TabsContent value="overview" class="space-y-4 outline-none">
         <buckets-info :bucket="bucketName" />
       </TabsContent>
 
-      <TabsContent value="lifecycle" class="space-y-4 outline-none">
-        <LifecycleConfig :bucketName="bucketName" />
-      </TabsContent>
+      <template v-if="hasPermission(CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE)">
+        <TabsContent value="lifecycle" class="space-y-4 outline-none">
+          <LifecycleConfig :bucketName="bucketName" />
+        </TabsContent>
+      </template>
 
-      <TabsContent value="replication" class="space-y-4 outline-none">
-        <ReplicationConfig :bucketName="bucketName" />
-      </TabsContent>
+      <template v-if="hasPermission(CONSOLE_SCOPES.VIEW_BUCKET_REPLICATION)">
+        <TabsContent value="replication" class="space-y-4 outline-none">
+          <ReplicationConfig :bucketName="bucketName" />
+        </TabsContent>
+      </template>
 
-      <TabsContent value="events" class="space-y-4 outline-none">
-        <EventsConfig :bucketName="bucketName" />
-      </TabsContent>
+      <template v-if="hasPermission(CONSOLE_SCOPES.VIEW_BUCKET_EVENTS)">
+        <TabsContent value="events" class="space-y-4 outline-none">
+          <EventsConfig :bucketName="bucketName" />
+        </TabsContent>
+      </template>
     </Tabs>
   </page>
 </template>
@@ -52,8 +64,10 @@ import BucketsInfo from '@/components/buckets/info.vue'
 import ReplicationConfig from '@/components/replication/ReplicationConfig.vue'
 import LifecycleConfig from '@/components/lifecycle/LifecycleConfig.vue'
 import EventsConfig from '@/components/events/EventsConfig.vue'
+import { CONSOLE_SCOPES } from '~/utils/console-permissions'
 
 const { t } = useI18n()
+const { hasPermission } = usePermissions()
 const route = useRoute()
 const bucketName = computed(() => decodeURIComponent(route.params.key as string))
 </script>

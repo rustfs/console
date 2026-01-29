@@ -166,7 +166,7 @@ import { Icon } from '#components'
 import { Field, FieldContent, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { getBytes } from '@/utils/functions'
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Modal from '~/components/modal.vue'
 import Selector from '~/components/selector.vue'
@@ -188,7 +188,7 @@ const submitting = ref(false)
 
 const formData = reactive({
   level: '1',
-  endpoint: '',
+  endpoint: 'http://',
   tls: false,
   accesskey: '',
   secrretkey: '',
@@ -204,6 +204,25 @@ const formData = reactive({
   existingObject: true,
   expiredDeleteMark: true,
 })
+
+watch(
+  () => formData.tls,
+  val => {
+    if (val) {
+      if (formData.endpoint.startsWith('http://')) {
+        formData.endpoint = formData.endpoint.replace('http://', 'https://')
+      } else if (!formData.endpoint.startsWith('https://')) {
+        formData.endpoint = 'https://' + formData.endpoint
+      }
+    } else {
+      if (formData.endpoint.startsWith('https://')) {
+        formData.endpoint = formData.endpoint.replace('https://', 'http://')
+      } else if (!formData.endpoint.startsWith('http://')) {
+        formData.endpoint = 'http://' + formData.endpoint
+      }
+    }
+  }
+)
 
 const modeOptions = computed(() => [
   { label: t('Asynchronous'), value: 'async' },
@@ -227,7 +246,7 @@ const removeTag = (index: number) => {
 
 const resetForm = () => {
   formData.level = '1'
-  formData.endpoint = ''
+  formData.endpoint = 'http://'
   formData.tls = false
   formData.accesskey = ''
   formData.secrretkey = ''

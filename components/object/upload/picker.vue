@@ -199,6 +199,19 @@ const isEditingSuffix = ref(false)
 const editableSuffix = ref('')
 
 const startEditSuffix = () => {
+  if (selectedItems.value.length > 0) {
+    dialog.warning({
+      title: t('Warning'),
+      content: t('Modifying the prefix will clear all selected files. Do you want to continue?'),
+      positiveText: t('Confirm'),
+      negativeText: t('Cancel'),
+      onPositiveClick: () => {
+        clearAllFiles()
+        isEditingSuffix.value = true
+      },
+    })
+    return
+  }
   isEditingSuffix.value = true
 }
 

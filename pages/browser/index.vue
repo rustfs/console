@@ -24,7 +24,6 @@
   </page>
 
   <buckets-new-form :show="formVisible" @update:show="handleFormClosed" />
-  <buckets-info ref="infoRef" />
 </template>
 
 <script lang="ts" setup>
@@ -40,6 +39,7 @@ import { computed, h, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
+const router = useRouter()
 const message = useMessage()
 const dialog = useDialog()
 const { listBuckets, deleteBucket } = useBucket({})
@@ -159,7 +159,7 @@ const columns = computed<ColumnDef<BucketRow>[]>(() => {
           {
             variant: 'outline',
             size: 'sm',
-            onClick: () => openInfo(row.original.Name),
+            onClick: () => router.push(`/buckets/${encodeURIComponent(row.original.Name)}`),
           },
           () => [h(Icon, { name: 'ri:settings-5-line', class: 'size-4' }), h('span', t('Settings'))]
         ),
@@ -185,15 +185,9 @@ const { table } = useDataTable<BucketRow>({
   getRowId: row => row.Name,
 })
 
-const infoRef = ref<{ openDrawer: (name: string) => void }>()
-
 const handleFormClosed = (value: boolean) => {
   formVisible.value = value
   if (!value) refresh()
-}
-
-const openInfo = (name: string) => {
-  infoRef.value?.openDrawer(name)
 }
 
 const confirmDelete = (row: BucketRow) => {

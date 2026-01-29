@@ -575,7 +575,7 @@ const handleConfirmDelete = async () => {
   deleteDialogOpen.value = false
   if (!keys.length) return
 
-  if (bucketVersioningEnabled.value && deleteAllVersions.value) {
+  if ((bucketVersioningEnabled.value && deleteAllVersions.value) || !bucketVersioningEnabled.value) {
     await handleDeleteAllVersions(keys)
   } else {
     await handleDelete(keys)

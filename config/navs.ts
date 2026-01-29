@@ -47,29 +47,29 @@ export default [
   //   to: '/site-replication',
   //   icon: 'ri:upload-cloud-2-line',
   // },
-  {
-    label: 'Bucket Setting',
-    icon: 'ri:settings-2-line',
-    isAdminOnly: true,
-    children: [
-      {
-        label: 'Bucket Events',
-        to: '/events',
-        icon: 'ri:broadcast-line',
-      },
-      {
-        label: 'Bucket Replication',
-        to: '/replication',
-        icon: 'ri:file-copy-line',
-      },
+  // {
+  //   label: 'Bucket Setting',
+  //   icon: 'ri:settings-2-line',
+  //   isAdminOnly: true,
+  //   children: [
+  //     {
+  //       label: 'Bucket Events',
+  //       to: '/events',
+  //       icon: 'ri:broadcast-line',
+  //     },
+  //     {
+  //       label: 'Bucket Replication',
+  //       to: '/replication',
+  //       icon: 'ri:file-copy-line',
+  //     },
 
-      {
-        label: 'Lifecycle',
-        to: '/lifecycle',
-        icon: 'ri:exchange-2-line',
-      },
-    ],
-  },
+  //     {
+  //       label: 'Lifecycle',
+  //       to: '/lifecycle',
+  //       icon: 'ri:exchange-2-line',
+  //     },
+  //   ],
+  // },
 
   {
     label: 'divider',

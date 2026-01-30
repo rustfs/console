@@ -7,15 +7,15 @@ export const usePermissions = () => {
 
   // Store user policy in global state
   const userPolicy = useState<ConsolePolicy | null>('user-policy', () => null)
+  const userInfo = useState<any>('user-info', () => null)
   const isLoading = useState<boolean>('user-policy-loading', () => false)
 
   const fetchUserPolicy = async () => {
-    if (isAdmin.value) return
-
     isLoading.value = true
     try {
-      const userInfo = await $api.get('/accountinfo')
-      let userInfoPolicy = userInfo.policy as string
+      const info = await $api.get('/accountinfo')
+      userInfo.value = info
+      let userInfoPolicy = info.policy as string
       userPolicy.value = JSON.parse(userInfoPolicy) as ConsolePolicy
     } catch (e) {
       console.error('Failed to fetch user policy', e)
@@ -79,6 +79,7 @@ export const usePermissions = () => {
 
   return {
     userPolicy,
+    userInfo,
     isLoading,
     fetchUserPolicy,
     hasPermission,

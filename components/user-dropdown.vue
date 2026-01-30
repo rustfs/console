@@ -11,6 +11,12 @@
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent class="w-48" align="end" side="top">
+      <DropdownMenuItem>
+        <!-- 显示用户名 -->
+        <Icon name="ri:user-line" class="h-4 w-4" />
+        <span v-if="!isAdmin">{{ userInfo?.account_name }}</span>
+        <span v-else>rustfsAdmin</span>
+      </DropdownMenuItem>
       <DropdownMenuItem v-if="!isAdmin" @select="handleChangePassword">
         <Icon name="ri:lock-password-line" class="h-4 w-4" />
         <span>{{ t('Change Password') }}</span>
@@ -34,6 +40,7 @@ import AccessKeysChangePassword from '@/components/access-keys/change-password.v
 
 const { t } = useI18n()
 const { logout, isAdmin, setIsAdmin } = useAuth()
+const { userInfo } = usePermissions()
 const router = useRouter()
 const { isAdminUser } = useUsers()
 

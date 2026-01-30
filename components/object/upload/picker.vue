@@ -552,39 +552,6 @@ const handleUpload = async () => {
   const filesToUpload = allFiles.value
   if (!filesToUpload.length) return
 
-  // Check bucket quota
-  try {
-    const quotaRes = await getBucketQuota(props.bucketName)
-    if (quotaRes && quotaRes.quota && quotaRes.quota > 0) {
-      const totalSize = filesToUpload.reduce((sum, item) => sum + item.file.size, 0)
-      const remaining = quotaRes.quota - quotaRes.size
-      if (totalSize > remaining) {
-        return new Promise(resolve => {
-          dialog.warning({
-            title: t('Bucket Quota Insufficient'),
-            content: t('Quota Warning Content', {
-              total: formatBytes(totalSize),
-              remaining: formatBytes(remaining),
-            }),
-            positiveText: t('Continue Upload'),
-            negativeText: t('Cancel'),
-            onPositiveClick: async () => {
-              await proceedUpload(filesToUpload)
-              resolve(true)
-            },
-            onNegativeClick: () => {
-              resolve(false)
-            },
-          })
-        })
-      }
-    }
-  } catch (error) {
-    console.error('Failed to check bucket quota:', error)
-    // If check fails, we might still want to proceed or warn.
-    // Usually, we proceed if the error is "not found" (meaning no quota set).
-  }
-
   await proceedUpload(filesToUpload)
 }
 

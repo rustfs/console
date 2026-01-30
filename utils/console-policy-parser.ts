@@ -40,6 +40,13 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
     's3:DeleteBucketPolicy',
     's3:*',
   ],
+  [CONSOLE_SCOPES.VIEW_ACCESS_KEYS]: [
+    'admin:ListServiceAccounts',
+    'admin:CreateServiceAccount',
+    'admin:UpdateServiceAccount',
+    'admin:RemoveServiceAccount',
+    'admin:*',
+  ],
   [CONSOLE_SCOPES.VIEW_POLICIES]: [
     'admin:ListUserPolicies',
     'admin:CreatePolicy',

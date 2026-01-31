@@ -12,18 +12,26 @@ interface S3Response {
   [key: string]: unknown
 }
 
-const S3Context = createContext<S3Client | null>(null)
+interface S3ContextValue {
+  client: S3Client | null
+  isReady: boolean
+}
+
+const S3Context = createContext<S3ContextValue>({ client: null, isReady: false })
 
 export function S3Provider({ children }: { children: React.ReactNode }) {
   const { credentials, isAuthenticated, logout } = useAuth()
   const [s3Client, setS3Client] = useState<S3Client | null>(null)
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated || !credentials?.AccessKeyId) {
       setS3Client(null)
+      setIsReady(true)
       return
     }
 
+    setIsReady(false)
     let cancelled = false
 
     configManager.loadConfig().then((siteConfig: SiteConfig) => {
@@ -83,6 +91,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
       )
 
       setS3Client(client)
+      setIsReady(true)
     })
 
     return () => {
@@ -90,11 +99,11 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, credentials?.AccessKeyId, logout])
 
-  return <S3Context.Provider value={s3Client}>{children}</S3Context.Provider>
+  return <S3Context.Provider value={{ client: s3Client, isReady }}>{children}</S3Context.Provider>
 }
 
 export function useS3() {
-  const client = useContext(S3Context)
+  const { client } = useContext(S3Context)
   if (!client) {
     throw new Error("useS3 must be used within S3Provider")
   }
@@ -102,5 +111,11 @@ export function useS3() {
 }
 
 export function useS3Optional() {
-  return useContext(S3Context)
+  const { client } = useContext(S3Context)
+  return client
+}
+
+export function useS3Ready() {
+  const { client, isReady } = useContext(S3Context)
+  return { client, isReady }
 }

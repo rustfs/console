@@ -90,15 +90,6 @@ export function ObjectList({
     [bucket]
   )
 
-  const loadBucketVersioningStatus = React.useCallback(async () => {
-    try {
-      const resp = await getBucketVersioning(bucket)
-      setBucketVersioningEnabled((resp as { Status?: string })?.Status === "Enabled")
-    } catch {
-      setBucketVersioningEnabled(false)
-    }
-  }, [bucket, getBucketVersioning])
-
   const fetchObjects = React.useCallback(async () => {
     setLoading(true)
     try {
@@ -136,15 +127,23 @@ export function ObjectList({
     } finally {
       setTimeout(() => setLoading(false), 200)
     }
-  }, [bucket, prefix, pageSize, continuationToken, showDeleted, objectApi])
+  }, [bucket, prefix, pageSize, continuationToken, showDeleted, objectApi.listObject])
 
   React.useEffect(() => {
     fetchObjects()
-  }, [fetchObjects])
+  }, [bucket, prefix, pageSize, continuationToken, showDeleted])
 
   React.useEffect(() => {
+    const loadBucketVersioningStatus = async () => {
+      try {
+        const resp = await getBucketVersioning(bucket)
+        setBucketVersioningEnabled((resp as { Status?: string })?.Status === "Enabled")
+      } catch {
+        setBucketVersioningEnabled(false)
+      }
+    }
     loadBucketVersioningStatus()
-  }, [loadBucketVersioningStatus])
+  }, [bucket, getBucketVersioning])
 
   React.useEffect(() => {
     setContinuationToken(undefined)

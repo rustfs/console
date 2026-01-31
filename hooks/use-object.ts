@@ -1,5 +1,6 @@
 "use client"
 
+import { useCallback } from "react"
 import {
   DeleteObjectCommand,
   GetObjectCommand,
@@ -27,18 +28,27 @@ function attachIncludeDeletedHeader(command: ListObjectsV2Command) {
 export function useObject(bucket: string) {
   const client = useS3()
 
-  const headObject = async (key: string) => {
-    return client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }))
-  }
+  const headObject = useCallback(
+    async (key: string) => {
+      return client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }))
+    },
+    [client, bucket]
+  )
 
-  const getSignedUrlFn = async (key: string, expiresIn = 3600) => {
-    const command = new GetObjectCommand({ Bucket: bucket, Key: key })
-    return getSignedUrl(client, command, { expiresIn })
-  }
+  const getSignedUrlFn = useCallback(
+    async (key: string, expiresIn = 3600) => {
+      const command = new GetObjectCommand({ Bucket: bucket, Key: key })
+      return getSignedUrl(client, command, { expiresIn })
+    },
+    [client, bucket]
+  )
 
-  const putObject = async (key: string, body: Blob | string) => {
-    return client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: body }))
-  }
+  const putObject = useCallback(
+    async (key: string, body: Blob | string) => {
+      return client.send(new PutObjectCommand({ Bucket: bucket, Key: key, Body: body }))
+    },
+    [client, bucket]
+  )
 
   const attachForceDeleteHeader = (command: DeleteObjectCommand) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,80 +64,92 @@ export function useObject(bucket: string) {
     )
   }
 
-  const deleteObject = async (
-    key: string,
-    versionId?: string,
-    options?: { forceDelete?: boolean }
-  ) => {
-    const params: { Bucket: string; Key: string; VersionId?: string } = {
-      Bucket: bucket,
-      Key: key,
-    }
-    if (versionId) params.VersionId = versionId
+  const deleteObject = useCallback(
+    async (
+      key: string,
+      versionId?: string,
+      options?: { forceDelete?: boolean }
+    ) => {
+      const params: { Bucket: string; Key: string; VersionId?: string } = {
+        Bucket: bucket,
+        Key: key,
+      }
+      if (versionId) params.VersionId = versionId
 
-    const command = new DeleteObjectCommand(params)
-    if (options?.forceDelete) attachForceDeleteHeader(command)
+      const command = new DeleteObjectCommand(params)
+      if (options?.forceDelete) attachForceDeleteHeader(command)
 
-    return client.send(command)
-  }
+      return client.send(command)
+    },
+    [client, bucket]
+  )
 
-  const listObject = async (
-    bucketName: string,
-    prefix?: string,
-    pageSize = 25,
-    continuationToken?: string,
-    options?: { includeDeleted?: boolean }
-  ) => {
-    const command = new ListObjectsV2Command({
-      Bucket: bucketName,
-      Prefix: prefix,
-      MaxKeys: pageSize,
-      Delimiter: "/",
-      ContinuationToken: continuationToken,
-    })
-    if (options?.includeDeleted) {
-      attachIncludeDeletedHeader(command)
-    }
-    return client.send(command)
-  }
-
-  const mapAllFiles = async (
-    bucketName: string,
-    prefix: string,
-    callback: (fileKey: string) => void
-  ) => {
-    let isTruncated = true
-    let continuationToken: string | undefined
-
-    while (isTruncated) {
-      const data = await client.send(
-        new ListObjectsV2Command({
-          Bucket: bucketName,
-          Prefix: prefix,
-          ContinuationToken: continuationToken,
-        })
-      )
-
-      data.Contents?.forEach((item) => {
-        if (item.Key) callback(item.Key)
+  const listObject = useCallback(
+    async (
+      bucketName: string,
+      prefix?: string,
+      pageSize = 25,
+      continuationToken?: string,
+      options?: { includeDeleted?: boolean }
+    ) => {
+      const command = new ListObjectsV2Command({
+        Bucket: bucketName,
+        Prefix: prefix,
+        MaxKeys: pageSize,
+        Delimiter: "/",
+        ContinuationToken: continuationToken,
       })
+      if (options?.includeDeleted) {
+        attachIncludeDeletedHeader(command)
+      }
+      return client.send(command)
+    },
+    [client]
+  )
 
-      isTruncated = data.IsTruncated ?? false
-      continuationToken = data.NextContinuationToken
-    }
-  }
+  const mapAllFiles = useCallback(
+    async (
+      bucketName: string,
+      prefix: string,
+      callback: (fileKey: string) => void
+    ) => {
+      let isTruncated = true
+      let continuationToken: string | undefined
 
-  const getObjectInfo = async (key: string) => {
-    const [meta, signedUrl] = await Promise.all([
-      headObject(key),
-      getSignedUrlFn(key),
-    ])
-    return {
-      ...meta,
-      Key: key,
-      SignedUrl: signedUrl,
-    }
-  }
+      while (isTruncated) {
+        const data = await client.send(
+          new ListObjectsV2Command({
+            Bucket: bucketName,
+            Prefix: prefix,
+            ContinuationToken: continuationToken,
+          })
+        )
+
+        data.Contents?.forEach((item) => {
+          if (item.Key) callback(item.Key)
+        })
+
+        isTruncated = data.IsTruncated ?? false
+        continuationToken = data.NextContinuationToken
+      }
+    },
+    [client]
+  )
+
+  const getObjectInfo = useCallback(
+    async (key: string) => {
+      const [meta, signedUrl] = await Promise.all([
+        headObject(key),
+        getSignedUrlFn(key),
+      ])
+      return {
+        ...meta,
+        Key: key,
+        SignedUrl: signedUrl,
+      }
+    },
+    [headObject, getSignedUrlFn]
+  )
 
   return {
     headObject,

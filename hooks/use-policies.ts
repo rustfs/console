@@ -27,8 +27,16 @@ export function usePolicies() {
     policyName?: string[]
     userOrGroup?: string
     isGroup?: boolean
-  }) =>
-    api.put("/set-user-or-group-policy", {}, { params: data as Record<string, string> })
+  }) => {
+    const uniquePolicies = data.policyName
+      ? Array.from(new Set(data.policyName))
+      : undefined
+    const params: Record<string, string> = {}
+    if (uniquePolicies?.length) params.policyName = uniquePolicies.join(",")
+    if (data.userOrGroup) params.userOrGroup = data.userOrGroup
+    if (data.isGroup !== undefined) params.isGroup = String(data.isGroup)
+    return api.put("/set-user-or-group-policy", {}, { params })
+  }
 
   return {
     listPolicies,

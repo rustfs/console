@@ -1,89 +1,84 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useState, useEffect, useCallback, useMemo } from "react"
-import { useTranslation } from "react-i18next"
-import {
-  RiAddLine,
-  RiRefreshLine,
-  RiDeleteBin5Line,
-} from "@remixicon/react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Page } from "@/components/page"
-import { PageHeader } from "@/components/page-header"
-import { BucketSelector } from "@/components/bucket-selector"
-import { DataTable } from "@/components/data-table/data-table"
-import { useDataTable } from "@/hooks/use-data-table"
-import { useBucket } from "@/hooks/use-bucket"
-import { useDialog } from "@/lib/ui/dialog"
-import { useMessage } from "@/lib/ui/message"
-import type { ColumnDef } from "@tanstack/react-table"
+import * as React from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { RiAddLine, RiRefreshLine, RiDeleteBin5Line } from "@remixicon/react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Page } from "@/components/page";
+import { PageHeader } from "@/components/page-header";
+import { BucketSelector } from "@/components/bucket-selector";
+import { DataTable } from "@/components/data-table/data-table";
+import { useDataTable } from "@/hooks/use-data-table";
+import { useBucket } from "@/hooks/use-bucket";
+import { LifecycleNewForm } from "@/components/lifecycle/lifecycle-new-form";
+import { useDialog } from "@/lib/ui/dialog";
+import { useMessage } from "@/lib/ui/message";
+import type { ColumnDef } from "@tanstack/react-table";
 
 interface LifecycleRule {
-  ID?: string
-  Status?: string
+  ID?: string;
+  Status?: string;
   Filter?: {
-    Prefix?: string
-    Tag?: { Key: string; Value: string }
+    Prefix?: string;
+    Tag?: { Key: string; Value: string };
     And?: {
-      Prefix?: string
-      Tags?: Array<{ Key: string; Value: string }>
-    }
-  }
+      Prefix?: string;
+      Tags?: Array<{ Key: string; Value: string }>;
+    };
+  };
   Expiration?: {
-    Days?: number
-    Date?: string
-    StorageClass?: string
-    ExpiredObjectDeleteMarker?: boolean
-  }
-  NoncurrentVersionExpiration?: { NoncurrentDays?: number }
-  Transitions?: Array<{ Days?: number; StorageClass?: string }>
+    Days?: number;
+    Date?: string;
+    StorageClass?: string;
+    ExpiredObjectDeleteMarker?: boolean;
+  };
+  NoncurrentVersionExpiration?: { NoncurrentDays?: number };
+  Transitions?: Array<{ Days?: number; StorageClass?: string }>;
   NoncurrentVersionTransitions?: Array<{
-    NoncurrentDays?: number
-    StorageClass?: string
-  }>
+    NoncurrentDays?: number;
+    StorageClass?: string;
+  }>;
 }
 
 export default function LifecyclePage() {
-  const { t } = useTranslation()
-  const message = useMessage()
-  const dialog = useDialog()
+  const { t } = useTranslation();
+  const message = useMessage();
+  const dialog = useDialog();
   const {
     getBucketLifecycleConfiguration,
     deleteBucketLifecycle,
     putBucketLifecycleConfiguration,
-  } = useBucket()
+  } = useBucket();
 
-  const [bucketName, setBucketName] = useState<string | null>(null)
-  const [data, setData] = useState<LifecycleRule[]>([])
-  const [loading, setLoading] = useState(false)
+  const [bucketName, setBucketName] = useState<string | null>(null);
+  const [data, setData] = useState<LifecycleRule[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [newFormOpen, setNewFormOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!bucketName) {
-      setData([])
-      return
+      setData([]);
+      return;
     }
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await getBucketLifecycleConfiguration(bucketName)
+      const response = await getBucketLifecycleConfiguration(bucketName);
       const rules = [...(response?.Rules ?? [])]
         .map((r) => r as LifecycleRule)
-        .sort((a, b) => (a.ID ?? "").localeCompare(b.ID ?? ""))
-      setData(rules)
+        .sort((a, b) => (a.ID ?? "").localeCompare(b.ID ?? ""));
+      setData(rules);
     } catch {
-      setData([])
+      setData([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [
-    bucketName,
-    getBucketLifecycleConfiguration,
-  ])
+  }, [bucketName, getBucketLifecycleConfiguration]);
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    loadData();
+  }, [loadData]);
 
   const columns: ColumnDef<LifecycleRule>[] = useMemo(
     () => [
@@ -165,14 +160,14 @@ export default function LifecyclePage() {
         ),
       },
     ],
-    [t]
-  )
+    [t],
+  );
 
   const { table } = useDataTable<LifecycleRule>({
     data,
     columns,
     getRowId: (row) => row.ID ?? JSON.stringify(row),
-  })
+  });
 
   const confirmDelete = (row: LifecycleRule) => {
     dialog.error({
@@ -181,29 +176,27 @@ export default function LifecyclePage() {
       positiveText: t("Confirm"),
       negativeText: t("Cancel"),
       onPositiveClick: () => handleRowDelete(row),
-    })
-  }
+    });
+  };
 
   const handleRowDelete = async (row: LifecycleRule) => {
-    const remaining = data.filter((item) => item.ID !== row.ID)
-    if (!bucketName) return
+    const remaining = data.filter((item) => item.ID !== row.ID);
+    if (!bucketName) return;
 
     try {
       if (remaining.length === 0) {
-        await deleteBucketLifecycle(bucketName)
+        await deleteBucketLifecycle(bucketName);
       } else {
         await putBucketLifecycleConfiguration(bucketName, {
           Rules: remaining,
-        })
+        });
       }
-      message.success(t("Delete Success"))
-      loadData()
+      message.success(t("Delete Success"));
+      loadData();
     } catch (error) {
-      message.error(
-        (error as Error).message || t("Delete Failed")
-      )
+      message.error((error as Error).message || t("Delete Failed"));
     }
-  }
+  };
 
   return (
     <Page>
@@ -217,7 +210,8 @@ export default function LifecyclePage() {
             />
             <Button
               variant="outline"
-              onClick={() => message.info(t("Add Lifecycle Rule form coming soon"))}
+              onClick={() => setNewFormOpen(true)}
+              disabled={!bucketName}
             >
               <RiAddLine className="size-4" aria-hidden />
               <span>{t("Add Lifecycle Rule")}</span>
@@ -237,9 +231,18 @@ export default function LifecyclePage() {
         isLoading={loading}
         emptyTitle={t("No Data")}
         emptyDescription={t(
-          "Create lifecycle rules to automate object transitions and expiration."
+          "Create lifecycle rules to automate object transitions and expiration.",
         )}
       />
+
+      {bucketName && (
+        <LifecycleNewForm
+          open={newFormOpen}
+          onOpenChange={setNewFormOpen}
+          bucketName={bucketName}
+          onSuccess={loadData}
+        />
+      )}
     </Page>
-  )
+  );
 }

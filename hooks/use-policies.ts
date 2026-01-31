@@ -23,7 +23,11 @@ export function usePolicies() {
 
   const setPolicyMultiple = async (data: Record<string, unknown>) => api.put("/set-policy-multi", data)
 
-  const setUserOrGroupPolicy = async (data: Record<string, unknown>) =>
+  const setUserOrGroupPolicy = async (data: {
+    policyName?: string[]
+    userOrGroup?: string
+    isGroup?: boolean
+  }) =>
     api.put("/set-user-or-group-policy", {}, { params: data as Record<string, string> })
 
   return {

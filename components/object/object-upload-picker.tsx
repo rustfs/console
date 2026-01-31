@@ -155,7 +155,7 @@ export function ObjectUploadPicker({
             ref={folderInputRef}
             type="file"
             className="hidden"
-            {...({ webkitdirectory: true, directory: true } as React.InputHTMLAttributes<HTMLInputElement>)}
+            {...({ webkitdirectory: "true", directory: "true" } as React.InputHTMLAttributes<HTMLInputElement>)}
             onChange={handleFolderSelect}
           />
 

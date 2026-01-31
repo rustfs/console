@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import {
   CreateBucketCommand,
   DeleteBucketCommand,
@@ -38,206 +39,288 @@ export function useBucket() {
   const client = useS3();
   const api = useApi();
 
-  const listBuckets = async () => {
+  const listBuckets = useCallback(async () => {
     return client.send(new ListBucketsCommand({}));
-  };
+  }, [client]);
 
-  const createBucket = async (params: {
-    Bucket: string;
-    ObjectLockEnabledForBucket?: boolean;
-  }) => {
-    return client.send(new CreateBucketCommand(params));
-  };
+  const createBucket = useCallback(
+    async (params: { Bucket: string; ObjectLockEnabledForBucket?: boolean }) => {
+      return client.send(new CreateBucketCommand(params));
+    },
+    [client]
+  );
 
-  const headBucket = async (bucket: string) => {
-    return client.send(new HeadBucketCommand({ Bucket: bucket }));
-  };
+  const headBucket = useCallback(
+    async (bucket: string) => {
+      return client.send(new HeadBucketCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const deleteBucket = async (bucket: string) => {
-    return client.send(new DeleteBucketCommand({ Bucket: bucket }));
-  };
+  const deleteBucket = useCallback(
+    async (bucket: string) => {
+      return client.send(new DeleteBucketCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const getBucketTagging = async (bucket: string) => {
-    return client.send(new GetBucketTaggingCommand({ Bucket: bucket }));
-  };
+  const getBucketTagging = useCallback(
+    async (bucket: string) => {
+      return client.send(new GetBucketTaggingCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const putBucketTagging = async (bucket: string, tagging: unknown) => {
-    return client.send(
-      new PutBucketTaggingCommand({
-        Bucket: bucket,
-        Tagging: tagging as never,
-      }),
-    );
-  };
+  const putBucketTagging = useCallback(
+    async (bucket: string, tagging: unknown) => {
+      return client.send(
+        new PutBucketTaggingCommand({
+          Bucket: bucket,
+          Tagging: tagging as never,
+        })
+      );
+    },
+    [client]
+  );
 
-  const deleteBucketTagging = async (bucket: string) => {
-    return client.send(new DeleteBucketTaggingCommand({ Bucket: bucket }));
-  };
+  const deleteBucketTagging = useCallback(
+    async (bucket: string) => {
+      return client.send(new DeleteBucketTaggingCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const putBucketVersioning = async (bucket: string, status: string) => {
-    return client.send(
-      new PutBucketVersioningCommand({
-        Bucket: bucket,
-        VersioningConfiguration: {
-          Status:
-            status === "Enabled"
-              ? BucketVersioningStatus.Enabled
-              : BucketVersioningStatus.Suspended,
-          MFADelete: MFADelete.Enabled,
-        },
-      }),
-    );
-  };
+  const putBucketVersioning = useCallback(
+    async (bucket: string, status: string) => {
+      return client.send(
+        new PutBucketVersioningCommand({
+          Bucket: bucket,
+          VersioningConfiguration: {
+            Status:
+              status === "Enabled"
+                ? BucketVersioningStatus.Enabled
+                : BucketVersioningStatus.Suspended,
+            MFADelete: MFADelete.Enabled,
+          },
+        })
+      );
+    },
+    [client]
+  );
 
-  const getBucketVersioning = async (bucket: string) => {
-    return client.send(new GetBucketVersioningCommand({ Bucket: bucket }));
-  };
+  const getBucketVersioning = useCallback(
+    async (bucket: string) => {
+      return client.send(new GetBucketVersioningCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const getBucketPolicy = async (bucket: string) => {
-    return client.send(new GetBucketPolicyCommand({ Bucket: bucket }));
-  };
+  const getBucketPolicy = useCallback(
+    async (bucket: string) => {
+      return client.send(new GetBucketPolicyCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const getBucketPolicyStatus = async (bucket: string) => {
-    return client.send(new GetBucketPolicyStatusCommand({ Bucket: bucket }));
-  };
+  const getBucketPolicyStatus = useCallback(
+    async (bucket: string) => {
+      return client.send(new GetBucketPolicyStatusCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const putBucketPolicy = async (bucket: string, policy: string) => {
-    return client.send(
-      new PutBucketPolicyCommand({ Bucket: bucket, Policy: policy }),
-    );
-  };
+  const putBucketPolicy = useCallback(
+    async (bucket: string, policy: string) => {
+      return client.send(
+        new PutBucketPolicyCommand({ Bucket: bucket, Policy: policy })
+      );
+    },
+    [client]
+  );
 
-  const getObjectLockConfiguration = async (bucket: string) => {
-    return client.send(
-      new GetObjectLockConfigurationCommand({ Bucket: bucket }),
-    );
-  };
+  const getObjectLockConfiguration = useCallback(
+    async (bucket: string) => {
+      return client.send(
+        new GetObjectLockConfigurationCommand({ Bucket: bucket })
+      );
+    },
+    [client]
+  );
 
-  const putObjectLockConfiguration = async (
-    bucket: string,
-    objectLockConfiguration: unknown,
-  ) => {
-    return client.send(
-      new PutObjectLockConfigurationCommand({
-        Bucket: bucket,
-        ObjectLockConfiguration: objectLockConfiguration as never,
-      }),
-    );
-  };
+  const putObjectLockConfiguration = useCallback(
+    async (bucket: string, objectLockConfiguration: unknown) => {
+      return client.send(
+        new PutObjectLockConfigurationCommand({
+          Bucket: bucket,
+          ObjectLockConfiguration: objectLockConfiguration as never,
+        })
+      );
+    },
+    [client]
+  );
 
-  const getBucketLifecycleConfiguration = async (bucket: string) => {
-    return client.send(
-      new GetBucketLifecycleConfigurationCommand({ Bucket: bucket }),
-    );
-  };
+  const getBucketLifecycleConfiguration = useCallback(
+    async (bucket: string) => {
+      return client.send(
+        new GetBucketLifecycleConfigurationCommand({ Bucket: bucket })
+      );
+    },
+    [client]
+  );
 
-  const putBucketLifecycleConfiguration = async (
-    bucket: string,
-    lifecycleConfiguration: unknown,
-  ) => {
-    return client.send(
-      new PutBucketLifecycleConfigurationCommand({
-        Bucket: bucket,
-        LifecycleConfiguration: lifecycleConfiguration as never,
-      }),
-    );
-  };
+  const putBucketLifecycleConfiguration = useCallback(
+    async (bucket: string, lifecycleConfiguration: unknown) => {
+      return client.send(
+        new PutBucketLifecycleConfigurationCommand({
+          Bucket: bucket,
+          LifecycleConfiguration: lifecycleConfiguration as never,
+        })
+      );
+    },
+    [client]
+  );
 
-  const deleteBucketLifecycle = async (bucket: string) => {
-    return client.send(new DeleteBucketLifecycleCommand({ Bucket: bucket }));
-  };
+  const deleteBucketLifecycle = useCallback(
+    async (bucket: string) => {
+      return client.send(new DeleteBucketLifecycleCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const putObjectRetention = async (
-    bucket: string,
-    key: string,
-    retention: unknown,
-  ) => {
-    return client.send(
-      new PutObjectRetentionCommand({
-        Bucket: bucket,
-        Key: key,
-        Retention: retention as never,
-      }),
-    );
-  };
+  const putObjectRetention = useCallback(
+    async (bucket: string, key: string, retention: unknown) => {
+      return client.send(
+        new PutObjectRetentionCommand({
+          Bucket: bucket,
+          Key: key,
+          Retention: retention as never,
+        })
+      );
+    },
+    [client]
+  );
 
-  const getObjectRetention = async (bucket: string, key: string) => {
-    return client.send(
-      new GetObjectRetentionCommand({ Bucket: bucket, Key: key }),
-    );
-  };
+  const getObjectRetention = useCallback(
+    async (bucket: string, key: string) => {
+      return client.send(
+        new GetObjectRetentionCommand({ Bucket: bucket, Key: key })
+      );
+    },
+    [client]
+  );
 
-  const getBucketEncryption = async (bucket: string) => {
-    return client.send(new GetBucketEncryptionCommand({ Bucket: bucket }));
-  };
+  const getBucketEncryption = useCallback(
+    async (bucket: string) => {
+      return client.send(new GetBucketEncryptionCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const putBucketEncryption = async (bucket: string, encryption: unknown) => {
-    return client.send(
-      new PutBucketEncryptionCommand({
-        Bucket: bucket,
-        ServerSideEncryptionConfiguration: encryption as never,
-      }),
-    );
-  };
+  const putBucketEncryption = useCallback(
+    async (bucket: string, encryption: unknown) => {
+      return client.send(
+        new PutBucketEncryptionCommand({
+          Bucket: bucket,
+          ServerSideEncryptionConfiguration: encryption as never,
+        })
+      );
+    },
+    [client]
+  );
 
-  const deleteBucketEncryption = async (bucket: string) => {
-    return client.send(new DeleteBucketEncryptionCommand({ Bucket: bucket }));
-  };
+  const deleteBucketEncryption = useCallback(
+    async (bucket: string) => {
+      return client.send(new DeleteBucketEncryptionCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const getBucketReplication = async (bucket: string) => {
-    return client.send(new GetBucketReplicationCommand({ Bucket: bucket }));
-  };
+  const getBucketReplication = useCallback(
+    async (bucket: string) => {
+      return client.send(new GetBucketReplicationCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const putBucketReplication = async (bucket: string, replication: unknown) => {
-    return client.send(
-      new PutBucketReplicationCommand({
-        Bucket: bucket,
-        ReplicationConfiguration: replication as never,
-      }),
-    );
-  };
+  const putBucketReplication = useCallback(
+    async (bucket: string, replication: unknown) => {
+      return client.send(
+        new PutBucketReplicationCommand({
+          Bucket: bucket,
+          ReplicationConfiguration: replication as never,
+        })
+      );
+    },
+    [client]
+  );
 
-  const deleteBucketReplication = async (bucket: string) => {
-    return client.send(new DeleteBucketReplicationCommand({ Bucket: bucket }));
-  };
+  const deleteBucketReplication = useCallback(
+    async (bucket: string) => {
+      return client.send(new DeleteBucketReplicationCommand({ Bucket: bucket }));
+    },
+    [client]
+  );
 
-  const deleteRemoteReplicationTarget = async (bucket: string, arn: string) => {
-    return api.delete(
-      `/remove-remote-target?bucket=${bucket}&arn=${encodeURIComponent(arn)}`,
-    );
-  };
+  const deleteRemoteReplicationTarget = useCallback(
+    async (bucket: string, arn: string) => {
+      return api.delete(
+        `/remove-remote-target?bucket=${bucket}&arn=${encodeURIComponent(arn)}`
+      );
+    },
+    [api]
+  );
 
-  const setRemoteReplicationTarget = async (bucket: string, data: unknown) => {
-    return api.put(
-      `/set-remote-target?bucket=${encodeURIComponent(bucket)}`,
-      data,
-    );
-  };
+  const setRemoteReplicationTarget = useCallback(
+    async (bucket: string, data: unknown) => {
+      return api.put(
+        `/set-remote-target?bucket=${encodeURIComponent(bucket)}`,
+        data
+      );
+    },
+    [api]
+  );
 
-  const listBucketNotifications = async (bucket: string) => {
-    return client.send(
-      new GetBucketNotificationConfigurationCommand({ Bucket: bucket }),
-    );
-  };
+  const listBucketNotifications = useCallback(
+    async (bucket: string) => {
+      return client.send(
+        new GetBucketNotificationConfigurationCommand({ Bucket: bucket })
+      );
+    },
+    [client]
+  );
 
-  const putBucketNotifications = async (bucket: string, data: unknown) => {
-    return client.send(
-      new PutBucketNotificationConfigurationCommand({
-        Bucket: bucket,
-        NotificationConfiguration: data as never,
-      }),
-    );
-  };
+  const putBucketNotifications = useCallback(
+    async (bucket: string, data: unknown) => {
+      return client.send(
+        new PutBucketNotificationConfigurationCommand({
+          Bucket: bucket,
+          NotificationConfiguration: data as never,
+        })
+      );
+    },
+    [client]
+  );
 
-  const getBucketQuota = async (bucket: string) => api.get(`/quota/${bucket}`);
-  const putBucketQuota = async (bucket: string, quota: unknown) =>
-    api.put(`/quota/${bucket}`, quota);
-  const deleteBucketQuota = async (bucket: string) =>
-    api.delete(`/quota/${bucket}`);
-  const getBucketQuotaUsage = async (bucket: string) =>
-    api.get(`/quota-stats/${bucket}`);
-  const checkBucketQuota = async (bucket: string) =>
-    api.get(`/quota-check/${bucket}`);
+  const getBucketQuota = useCallback(
+    async (bucket: string) => api.get(`/quota/${bucket}`),
+    [api]
+  );
+  const putBucketQuota = useCallback(
+    async (bucket: string, quota: unknown) => api.put(`/quota/${bucket}`, quota),
+    [api]
+  );
+  const deleteBucketQuota = useCallback(
+    async (bucket: string) => api.delete(`/quota/${bucket}`),
+    [api]
+  );
+  const getBucketQuotaUsage = useCallback(
+    async (bucket: string) => api.get(`/quota-stats/${bucket}`),
+    [api]
+  );
+  const checkBucketQuota = useCallback(
+    async (bucket: string) => api.get(`/quota-check/${bucket}`),
+    [api]
+  );
 
   return {
     listBuckets,

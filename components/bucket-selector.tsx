@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import {
   Select,
@@ -42,6 +42,7 @@ export function BucketSelector({
 
   const [buckets, setBuckets] = useState<Array<{ label: string; value: string }>>([])
   const [loading, setLoading] = useState(true)
+  const hasAutoSelected = useRef(false)
 
   useEffect(() => {
     let cancelled = false
@@ -72,7 +73,8 @@ export function BucketSelector({
   }, [listBuckets])
 
   useEffect(() => {
-    if (!loading && buckets.length > 0 && value === null) {
+    if (!loading && buckets.length > 0 && value === null && !hasAutoSelected.current) {
+      hasAutoSelected.current = true
       onChange(buckets[0].value)
     }
   }, [loading, buckets, value, onChange])

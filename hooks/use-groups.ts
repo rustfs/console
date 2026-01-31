@@ -1,33 +1,49 @@
 "use client"
 
+import { useCallback } from "react"
 import { useApi } from "@/contexts/api-context"
 
 export function useGroups() {
   const api = useApi()
 
-  const listGroup = async () => api.get("/groups")
+  const listGroup = useCallback(async () => api.get("/groups"), [api])
 
-  const getGroup = async (name: string) =>
-    api.get(`/group?group=${encodeURIComponent(name)}`)
+  const getGroup = useCallback(
+    async (name: string) => api.get(`/group?group=${encodeURIComponent(name)}`),
+    [api]
+  )
 
-  const createGroup = async (data: Record<string, unknown>) =>
-    api.post("/groups", data)
+  const createGroup = useCallback(
+    async (data: Record<string, unknown>) => api.post("/groups", data),
+    [api]
+  )
 
-  const removeGroup = async (name: string) =>
-    api.delete(`/group/${encodeURIComponent(name)}`)
+  const removeGroup = useCallback(
+    async (name: string) => api.delete(`/group/${encodeURIComponent(name)}`),
+    [api]
+  )
 
-  const updateGroup = async (name: string, data: Record<string, unknown>) =>
-    api.put(`/group/${encodeURIComponent(name)}`, data)
+  const updateGroup = useCallback(
+    async (name: string, data: Record<string, unknown>) =>
+      api.put(`/group/${encodeURIComponent(name)}`, data),
+    [api]
+  )
 
-  const updateGroupStatus = async (name: string, data: { status: string }) =>
-    api.put(`/set-group-status?group=${encodeURIComponent(name)}&status=${data.status}`, data)
+  const updateGroupStatus = useCallback(
+    async (name: string, data: { status: string }) =>
+      api.put(`/set-group-status?group=${encodeURIComponent(name)}&status=${data.status}`, data),
+    [api]
+  )
 
-  const updateGroupMembers = async (data: {
-    group: string
-    members: string[]
-    isRemove: boolean
-    groupStatus?: string
-  }) => api.put("/update-group-members", data)
+  const updateGroupMembers = useCallback(
+    async (data: {
+      group: string
+      members: string[]
+      isRemove: boolean
+      groupStatus?: string
+    }) => api.put("/update-group-members", data),
+    [api]
+  )
 
   return {
     listGroup,

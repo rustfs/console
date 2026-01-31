@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldContent, FieldLabel, FieldDescription } from "@/components/ui/field"
 import { useMessage } from "@/lib/ui/message"
-import { useApi } from "@/contexts/api-context"
+import { useApiOptional } from "@/contexts/api-context"
 import { useUsers } from "@/hooks/use-users"
 
 interface ChangePasswordProps {
@@ -25,7 +25,7 @@ interface ChangePasswordProps {
 export function AccessKeysChangePassword({ visible, onVisibleChange }: ChangePasswordProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const api = useApi()
+  const api = useApiOptional()
   const { createUser } = useUsers()
 
   const [currentSecretKey, setCurrentSecretKey] = useState("")
@@ -73,6 +73,10 @@ export function AccessKeysChangePassword({ visible, onVisibleChange }: ChangePas
 
     setSubmitting(true)
     try {
+      if (!api) {
+        message.error(t("API not ready"))
+        return
+      }
       const userInfo = (await api.get("/accountinfo")) as { account_name?: string }
       await createUser({
         accessKey: userInfo?.account_name ?? "",

@@ -3,7 +3,6 @@
 import {
   createContext,
   useContext,
-  useMemo,
   useEffect,
   useState,
 } from "react"
@@ -15,19 +14,26 @@ import { configManager } from "@/lib/config"
 import { getLoginRoute } from "@/lib/routes"
 import type { SiteConfig } from "@/types/config"
 
-const ApiContext = createContext<ApiClient | null>(null)
+interface ApiContextValue {
+  api: ApiClient | null
+  isReady: boolean
+}
+
+const ApiContext = createContext<ApiContextValue>({ api: null, isReady: false })
 
 export function ApiProvider({ children }: { children: React.ReactNode }) {
   const { credentials, isAuthenticated, logout } = useAuth()
   const [apiClient, setApiClient] = useState<ApiClient | null>(null)
-  const [config, setConfig] = useState<SiteConfig | null>(null)
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated || !credentials?.AccessKeyId) {
       setApiClient(null)
+      setIsReady(true)
       return
     }
 
+    setIsReady(false)
     let cancelled = false
 
     configManager.loadConfig().then((siteConfig) => {
@@ -62,8 +68,8 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
         errorHandler,
       })
 
-      setConfig(siteConfig)
       setApiClient(client)
+      setIsReady(true)
     })
 
     return () => {
@@ -71,15 +77,15 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, credentials?.AccessKeyId, logout])
 
-  const value = apiClient
-
   return (
-    <ApiContext.Provider value={value}>{children}</ApiContext.Provider>
+    <ApiContext.Provider value={{ api: apiClient, isReady }}>
+      {children}
+    </ApiContext.Provider>
   )
 }
 
 export function useApi() {
-  const api = useContext(ApiContext)
+  const { api } = useContext(ApiContext)
   if (!api) {
     throw new Error("useApi must be used within ApiProvider")
   }
@@ -87,5 +93,11 @@ export function useApi() {
 }
 
 export function useApiOptional() {
-  return useContext(ApiContext)
+  const { api } = useContext(ApiContext)
+  return api
+}
+
+export function useApiReady() {
+  const { api, isReady } = useContext(ApiContext)
+  return { api, isReady }
 }

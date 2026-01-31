@@ -13,6 +13,10 @@ import {
   RiSecurePaymentLine,
   RiCopyrightLine,
   RiFileList3Line,
+  RiBroadcastLine,
+  RiFileCopyLine,
+  RiExchange2Line,
+  RiUploadCloud2Line,
 } from "@remixicon/react"
 import type { ComponentType } from "react"
 
@@ -29,6 +33,10 @@ const iconMap: Record<string, ComponentType<{ className?: string }>> = {
   "ri:secure-payment-line": RiSecurePaymentLine,
   "ri:copyright-line": RiCopyrightLine,
   "ri:file-list-3-line": RiFileList3Line,
+  "ri:broadcast-line": RiBroadcastLine,
+  "ri:file-copy-line": RiFileCopyLine,
+  "ri:exchange-2-line": RiExchange2Line,
+  "ri:upload-cloud-2-line": RiUploadCloud2Line,
 }
 
 export function getIconComponent(name?: string): ComponentType<{ className?: string }> | null {

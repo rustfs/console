@@ -16,6 +16,7 @@ import { SearchInput } from "@/components/search-input"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useEventTarget } from "@/hooks/use-event-target"
+import { EventsTargetNewForm } from "@/components/events-target/events-target-new-form"
 import { useDialog } from "@/lib/ui/dialog"
 import { useMessage } from "@/lib/ui/message"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -35,6 +36,7 @@ export default function EventsTargetPage() {
   const [data, setData] = useState<RowData[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [newFormOpen, setNewFormOpen] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -162,7 +164,7 @@ export default function EventsTargetPage() {
             </div>
             <Button
               variant="outline"
-              onClick={() => message.info(t("Coming soon"))}
+              onClick={() => setNewFormOpen(true)}
             >
               <RiAddLine className="size-4" aria-hidden />
               <span>{t("Add Event Destination")}</span>
@@ -186,6 +188,12 @@ export default function EventsTargetPage() {
         emptyDescription={t(
           "Create an event destination to forward notifications."
         )}
+      />
+
+      <EventsTargetNewForm
+        open={newFormOpen}
+        onOpenChange={setNewFormOpen}
+        onSuccess={loadData}
       />
     </Page>
   )

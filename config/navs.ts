@@ -49,6 +49,30 @@ export default [
     isAdminOnly: true,
   },
   {
+    label: "Bucket Events",
+    to: "/events",
+    icon: "ri:broadcast-line",
+    isAdminOnly: true,
+  },
+  {
+    label: "Bucket Replication",
+    to: "/replication",
+    icon: "ri:file-copy-line",
+    isAdminOnly: true,
+  },
+  {
+    label: "Lifecycle",
+    to: "/lifecycle",
+    icon: "ri:exchange-2-line",
+    isAdminOnly: true,
+  },
+  {
+    label: "Site Replication",
+    to: "/site-replication",
+    icon: "ri:upload-cloud-2-line",
+    isAdminOnly: true,
+  },
+  {
     label: "Tiered Storage",
     to: "/tiers",
     icon: "ri:stack-line",

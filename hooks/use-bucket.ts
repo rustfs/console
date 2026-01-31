@@ -166,6 +166,10 @@ export function useBucket() {
     return client.send(new DeleteBucketReplicationCommand({ Bucket: bucket }))
   }
 
+  const deleteRemoteReplicationTarget = async (bucket: string, arn: string) => {
+    return api.delete(`/remove-remote-target?bucket=${bucket}&arn=${encodeURIComponent(arn)}`)
+  }
+
   const listBucketNotifications = async (bucket: string) => {
     return client.send(new GetBucketNotificationConfigurationCommand({ Bucket: bucket }))
   }
@@ -211,6 +215,7 @@ export function useBucket() {
     getBucketReplication,
     putBucketReplication,
     deleteBucketReplication,
+    deleteRemoteReplicationTarget,
     listBucketNotifications,
     putBucketNotifications,
     getBucketQuota,

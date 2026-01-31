@@ -1,92 +1,126 @@
 "use client"
 
-import { useApi } from "@/contexts/api-context"
+import { useCallback } from "react"
+import { useApiOptional } from "@/contexts/api-context"
 
 export function useUsers() {
-  const api = useApi()
+  const api = useApiOptional()
 
-  const listUsers = async () => {
+  const listUsers = useCallback(async () => {
+    if (!api) return null
     return api.get("/list-users")
-  }
+  }, [api])
 
-  const createUser = async (data: Record<string, unknown>) => {
-    const { accessKey, ...rest } = data
-    return api.put(
-      `/add-user?accessKey=${encodeURIComponent(accessKey as string)}`,
-      rest
-    )
-  }
+  const createUser = useCallback(
+    async (data: Record<string, unknown>) => {
+      if (!api) return null
+      const { accessKey, ...rest } = data
+      return api.put(
+        `/add-user?accessKey=${encodeURIComponent(accessKey as string)}`,
+        rest
+      )
+    },
+    [api]
+  )
 
-  const getUser = async (name: string) => {
-    return api.get(`/user-info?accessKey=${encodeURIComponent(name)}`)
-  }
+  const getUser = useCallback(
+    async (name: string) => {
+      if (!api) return null
+      return api.get(`/user-info?accessKey=${encodeURIComponent(name)}`)
+    },
+    [api]
+  )
 
-  const updateUser = async (name: string, data: Record<string, unknown>) => {
-    return api.put(`/user/${encodeURIComponent(name)}`, data)
-  }
+  const updateUser = useCallback(
+    async (name: string, data: Record<string, unknown>) => {
+      if (!api) return null
+      return api.put(`/user/${encodeURIComponent(name)}`, data)
+    },
+    [api]
+  )
 
-  const changeUserStatus = async (
-    name: string,
-    data: { status: string }
-  ) => {
-    return api.put(
-      `/set-user-status?accessKey=${encodeURIComponent(name)}&status=${data.status}`,
-      data
-    )
-  }
+  const changeUserStatus = useCallback(
+    async (name: string, data: { status: string }) => {
+      if (!api) return null
+      return api.put(
+        `/set-user-status?accessKey=${encodeURIComponent(name)}&status=${data.status}`,
+        data
+      )
+    },
+    [api]
+  )
 
-  const deleteUser = async (name: string) => {
-    return api.delete(`/remove-user?accessKey=${encodeURIComponent(name)}`, {})
-  }
+  const deleteUser = useCallback(
+    async (name: string) => {
+      if (!api) return null
+      return api.delete(`/remove-user?accessKey=${encodeURIComponent(name)}`, {})
+    },
+    [api]
+  )
 
-  const updateUserGroups = async (
-    name: string,
-    data: Record<string, unknown>
-  ) => {
-    return api.put(`/user/${encodeURIComponent(name)}/groups`, data)
-  }
+  const updateUserGroups = useCallback(
+    async (name: string, data: Record<string, unknown>) => {
+      if (!api) return null
+      return api.put(`/user/${encodeURIComponent(name)}/groups`, data)
+    },
+    [api]
+  )
 
-  const getUserPolicy = async () => {
+  const getUserPolicy = useCallback(async () => {
+    if (!api) return null
     return api.get("/user/policy")
-  }
+  }, [api])
 
-  const getSaUserPolicy = async (name: string) => {
-    return api.get(`/user/${encodeURIComponent(name)}/policies`)
-  }
+  const getSaUserPolicy = useCallback(
+    async (name: string) => {
+      if (!api) return null
+      return api.get(`/user/${encodeURIComponent(name)}/policies`)
+    },
+    [api]
+  )
 
-  const setPolicy = async (data: Record<string, unknown>) => {
-    return api.put("/set-policy", data)
-  }
+  const setPolicy = useCallback(
+    async (data: Record<string, unknown>) => {
+      if (!api) return null
+      return api.put("/set-policy", data)
+    },
+    [api]
+  )
 
-  const listAllUserServiceAccounts = async (name: string) => {
-    return api.get(
-      `/user/${encodeURIComponent(name)}/service-accounts`
-    )
-  }
+  const listAllUserServiceAccounts = useCallback(
+    async (name: string) => {
+      if (!api) return null
+      return api.get(`/user/${encodeURIComponent(name)}/service-accounts`)
+    },
+    [api]
+  )
 
-  const createAUserServiceAccount = async (
-    name: string,
-    data: Record<string, unknown>
-  ) => {
-    return api.post(
-      `/user/${encodeURIComponent(name)}/service-accounts`,
-      data
-    )
-  }
+  const createAUserServiceAccount = useCallback(
+    async (name: string, data: Record<string, unknown>) => {
+      if (!api) return null
+      return api.post(
+        `/user/${encodeURIComponent(name)}/service-accounts`,
+        data
+      )
+    },
+    [api]
+  )
 
-  const createServiceAccountCredentials = async (
-    name: string,
-    data: Record<string, unknown>
-  ) => {
-    return api.post(
-      `/user/${encodeURIComponent(name)}/service-account-credentials`,
-      data
-    )
-  }
+  const createServiceAccountCredentials = useCallback(
+    async (name: string, data: Record<string, unknown>) => {
+      if (!api) return null
+      return api.post(
+        `/user/${encodeURIComponent(name)}/service-account-credentials`,
+        data
+      )
+    },
+    [api]
+  )
 
-  const isAdminUser = async () => {
+  const isAdminUser = useCallback(async () => {
+    if (!api) return null
     return api.get("/is-admin") as Promise<{ is_admin?: boolean }>
-  }
+  }, [api])
 
   return {
     listUsers,

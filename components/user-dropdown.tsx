@@ -32,7 +32,9 @@ export function UserDropdown() {
 
   useEffect(() => {
     isAdminUser().then((adminInfo) => {
-      setIsAdmin(adminInfo?.is_admin ?? false)
+      if (adminInfo) {
+        setIsAdmin(adminInfo.is_admin ?? false)
+      }
     })
   }, [isAdminUser, setIsAdmin])
 

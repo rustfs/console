@@ -26,12 +26,14 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated || !credentials?.AccessKeyId) {
-      setS3Client(null)
-      setIsReady(true)
+      queueMicrotask(() => {
+        setS3Client(null)
+        setIsReady(true)
+      })
       return
     }
 
-    setIsReady(false)
+    queueMicrotask(() => setIsReady(false))
     let cancelled = false
 
     configManager.loadConfig().then((siteConfig: SiteConfig) => {
@@ -50,7 +52,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
         },
       })
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      /* eslint-disable @typescript-eslint/no-explicit-any -- AWS SDK middleware types are complex */
       client.middlewareStack.add(
         ((next: any) =>
           async (args: any) => {
@@ -89,6 +91,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
           }) as any,
         { step: "deserialize", name: "handleXmlResponse" }
       )
+      /* eslint-enable @typescript-eslint/no-explicit-any */
 
       setS3Client(client)
       setIsReady(true)

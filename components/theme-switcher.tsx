@@ -21,18 +21,13 @@ export function ThemeSwitcher() {
   const { t } = useTranslation()
   const { theme, setTheme } = useTheme()
 
-  const currentIcon = () => {
-    switch (theme) {
-      case "dark":
-        return RiMoonFill
-      case "light":
-        return RiSunFill
-      default:
-        return RiContrast2Line
-    }
-  }
-
-  const Icon = currentIcon()
+  const themeIconMap = {
+    dark: RiMoonFill,
+    light: RiSunFill,
+    system: RiContrast2Line,
+  } as const
+  const themeKey = (theme ?? "system") as keyof typeof themeIconMap
+  const Icon = themeIconMap[themeKey] ?? RiContrast2Line
 
   return (
     <DropdownMenu>

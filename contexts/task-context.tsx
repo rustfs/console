@@ -57,16 +57,19 @@ const TaskContext = React.createContext<{
   setTaskPanelOpen: () => {},
 })
 
+type ManagerState = {
+  manager: TaskManager<AnyTask, string>
+  uploadHelpers: ReturnType<typeof createUploadTaskHelpers>
+  deleteHelpers: ReturnType<typeof createDeleteTaskHelpers>
+} | null
+
 export function TaskProvider({ children }: { children: React.ReactNode }) {
   const client = useS3Optional()
   const [isTaskPanelOpen, setTaskPanelOpen] = React.useState(false)
-  const ref = React.useRef<{
-    manager: TaskManager<AnyTask, string>
-    uploadHelpers: ReturnType<typeof createUploadTaskHelpers>
-    deleteHelpers: ReturnType<typeof createDeleteTaskHelpers>
-  } | null>(null)
+  const [managerState, setManagerState] = React.useState<ManagerState>(null)
 
-  if (client && !ref.current) {
+  React.useEffect(() => {
+    if (!client) return
     const uploadHelpers = createUploadTaskHelpers(client, {
       chunkSize: 16,
       maxRetries: 3,
@@ -85,15 +88,15 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       maxRetries: 3,
       retryDelay: 1000,
     })
-    ref.current = { manager, uploadHelpers, deleteHelpers }
-  }
+    setManagerState({ manager, uploadHelpers, deleteHelpers })
+  }, [client])
 
-  const taskManager = ref.current?.manager ?? emptyManager
+  const taskManager = managerState?.manager ?? emptyManager
 
   const addUploadFiles = React.useCallback(
     (items: { file: File; key: string }[], bucketName: string) => {
-      if (!ref.current) return
-      const { manager, uploadHelpers } = ref.current
+      if (!managerState) return
+      const { manager, uploadHelpers } = managerState
       const allTasks = manager.getTasks() as Array<{ status: string; bucketName?: string; key?: string }>
       const activeKeys = new Set(
         allTasks
@@ -105,7 +108,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
         .filter((t) => !activeKeys.has(`${t.bucketName}/${t.key}`))
       manager.enqueue(newTasks as AnyTask[])
     },
-    []
+    [managerState]
   )
 
   const addDeleteKeys = React.useCallback(
@@ -115,12 +118,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       prefix?: string,
       options?: { forceDelete?: boolean }
     ) => {
-      if (!ref.current) return
-      const { manager, deleteHelpers } = ref.current
+      if (!managerState) return
+      const { manager, deleteHelpers } = managerState
       const newTasks = deleteHelpers.createTasks(keys, bucketName, prefix, options)
       manager.enqueue(newTasks as AnyTask[])
     },
-    []
+    [managerState]
   )
 
   const value = React.useMemo(

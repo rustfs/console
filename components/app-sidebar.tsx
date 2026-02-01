@@ -41,7 +41,11 @@ const RELEASE_VERSION = process.env.NEXT_PUBLIC_VERSION ?? ""
 function NavIcon({ name }: { name?: string }) {
   const Icon = getIconComponent(name)
   if (!Icon) return null
-  return <Icon className="size-4 shrink-0" />
+  // Icon from static map lookup; rule flags dynamic lookup as "component during render"
+  return (
+    // eslint-disable-next-line react-hooks/static-components -- icon from static map
+    <Icon className="size-4 shrink-0" />
+  )
 }
 
 function hasChildren(item: NavItem) {

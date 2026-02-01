@@ -28,12 +28,14 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated || !credentials?.AccessKeyId) {
-      setApiClient(null)
-      setIsReady(true)
+      queueMicrotask(() => {
+        setApiClient(null)
+        setIsReady(true)
+      })
       return
     }
 
-    setIsReady(false)
+    queueMicrotask(() => setIsReady(false))
     let cancelled = false
 
     configManager.loadConfig().then((siteConfig) => {

@@ -83,7 +83,7 @@ export function EventsNewForm({
   }, [getEventTargetArnList])
 
   useEffect(() => {
-    loadArnList()
+    queueMicrotask(() => loadArnList())
   }, [loadArnList])
 
   const resetForm = useCallback(() => {
@@ -97,7 +97,7 @@ export function EventsNewForm({
 
   useEffect(() => {
     if (open) {
-      resetForm()
+      queueMicrotask(() => resetForm())
     }
   }, [open, resetForm])
 

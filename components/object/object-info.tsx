@@ -57,7 +57,7 @@ export function ObjectInfo({
   objectKey,
   open,
   onOpenChange,
-  onRefresh,
+  onRefresh: _onRefresh,
 }: ObjectInfoProps) {
   const { t } = useTranslation()
   const message = useMessage()
@@ -211,11 +211,14 @@ export function ObjectInfo({
   )
 
   const loadObjectInfoRef = React.useRef(loadObjectInfo)
-  loadObjectInfoRef.current = loadObjectInfo
   const fetchTagsRef = React.useRef(fetchTags)
-  fetchTagsRef.current = fetchTags
   const fetchRetentionRef = React.useRef(fetchRetention)
-  fetchRetentionRef.current = fetchRetention
+
+  React.useEffect(() => {
+    loadObjectInfoRef.current = loadObjectInfo
+    fetchTagsRef.current = fetchTags
+    fetchRetentionRef.current = fetchRetention
+  }, [loadObjectInfo, fetchTags, fetchRetention])
 
   React.useEffect(() => {
     if (open && objectKey) {

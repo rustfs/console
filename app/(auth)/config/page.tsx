@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { useState, Suspense } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -34,14 +34,9 @@ function ConfigPageContent() {
   const router = useRouter()
   const message = useMessage()
 
-  const [serverHost, setServerHost] = useState("")
-
-  useEffect(() => {
-    const saved = localStorage.getItem("rustfs-server-host")
-    if (saved) {
-      setServerHost(saved)
-    }
-  }, [])
+  const [serverHost, setServerHost] = useState(() =>
+    typeof window !== "undefined" ? localStorage.getItem("rustfs-server-host") ?? "" : ""
+  )
 
   const validateAndSave = async (e: React.FormEvent) => {
     e.preventDefault()

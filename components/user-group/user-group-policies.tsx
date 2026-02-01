@@ -47,13 +47,14 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
   const [policies, setPolicies] = React.useState<{ label: string; value: string }[]>([])
   const [selectedPolicies, setSelectedPolicies] = React.useState<string[]>([])
 
+  const policyStr = group?.policy
   const currentPolicies = React.useMemo(() => {
-    if (!group?.policy) return []
-    return group.policy
+    if (!policyStr) return []
+    return policyStr
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean)
-  }, [group?.policy])
+  }, [policyStr])
 
   const policiesData = React.useMemo<PolicyItem[]>(
     () => currentPolicies.map((name) => ({ name })),

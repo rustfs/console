@@ -32,7 +32,7 @@ export function UserGroupEditForm({
   open,
   onOpenChange,
   row,
-  onSuccess,
+  onSuccess: _onSuccess,
 }: UserGroupEditFormProps) {
   const { t } = useTranslation()
   const { getGroup, updateGroupStatus } = useGroups()
@@ -45,21 +45,24 @@ export function UserGroupEditForm({
   const [activeTab, setActiveTab] = React.useState("users")
   const [statusBoolean, setStatusBoolean] = React.useState(true)
 
+  const getGroupData = React.useCallback(
+    async (name: string) => {
+      const data = (await getGroup(name)) as GroupInfo
+      setGroup(data)
+    },
+    [getGroup]
+  )
+
   React.useEffect(() => {
     if (open && row?.name) {
       getGroupData(row.name)
       setActiveTab("users")
     }
-  }, [open, row?.name])
+  }, [open, row?.name, getGroupData])
 
   React.useEffect(() => {
     setStatusBoolean(group.status === "enabled")
   }, [group.status])
-
-  const getGroupData = async (name: string) => {
-    const data = (await getGroup(name)) as GroupInfo
-    setGroup(data)
-  }
 
   const handleGroupStatusChange = async (status: string) => {
     if (status === group.status) return

@@ -1,8 +1,7 @@
-/**
- * API error handler
- * Handles errors in API requests, especially authentication errors
- */
-import type { ApiErrorHandlerCallback, IApiErrorHandler } from '~/types/api'
+import type {
+  ApiErrorHandlerCallback,
+  IApiErrorHandler,
+} from "@/types/api"
 
 export class ApiErrorHandler implements IApiErrorHandler {
   private onUnauthorized?: ApiErrorHandlerCallback
@@ -19,37 +18,24 @@ export class ApiErrorHandler implements IApiErrorHandler {
     this.onServerError = callbacks?.onServerError
   }
 
-  /**
-   * Handle 401 Unauthorized error
-   */
   async handle401(): Promise<void> {
     if (this.onUnauthorized) {
       await this.onUnauthorized()
     }
   }
 
-  /**
-   * Handle 403 Forbidden error
-   */
   async handle403(): Promise<void> {
     if (this.onForbidden) {
       await this.onForbidden()
     }
   }
 
-  /**
-   * Handle 5xx server errors
-   */
   async handleServerError(): Promise<void> {
     if (this.onServerError) {
       await this.onServerError()
     }
   }
 
-  /**
-   * Handle error by status code
-   * @param status HTTP status code
-   */
   async handleByStatus(status: number): Promise<void> {
     switch (status) {
       case 401:

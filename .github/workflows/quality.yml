@@ -283,6 +283,18 @@ jobs:
             fi
           fi
 
+          # Next.js 项目可分析 lib/config-helpers.ts
+          if [ -f "lib/config-helpers.ts" ]; then
+            lines=$(wc -l < lib/config-helpers.ts)
+            functions=$(grep -c "^export.*function\|^function\|=>" lib/config-helpers.ts || echo "0")
+            echo "### 📊 Metrics for lib/config-helpers.ts" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Lines of Code | $lines |" >> $GITHUB_STEP_SUMMARY
+            echo "| Functions | $functions |" >> $GITHUB_STEP_SUMMARY
+          fi
+
   # ============================================================================
   # 文档检查
   # ============================================================================
@@ -299,28 +311,31 @@ jobs:
           echo "## 📚 Documentation Coverage" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # 检查 JSDoc 覆盖率
-          if [ -f "utils/config-helpers.ts" ]; then
-            total_functions=$(grep -c "^export.*function\|^export const.*=" utils/config-helpers.ts || echo "0")
-            documented_functions=$(grep -B1 "^export.*function\|^export const.*=" utils/config-helpers.ts | grep -c "/\*\*" || echo "0")
+          # 检查 JSDoc 覆盖率 (utils 或 lib)
+          for target in utils/config-helpers.ts lib/config-helpers.ts; do
+            if [ -f "$target" ]; then
+              total_functions=$(grep -c "^export.*function\|^export const.*=" "$target" || echo "0")
+              documented_functions=$(grep -B1 "^export.*function\|^export const.*=" "$target" | grep -c "/\*\*" || echo "0")
 
-            if [ $total_functions -gt 0 ]; then
-              coverage=$((documented_functions * 100 / total_functions))
-              echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
-              echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-              echo "| Total Functions | $total_functions |" >> $GITHUB_STEP_SUMMARY
-              echo "| Documented Functions | $documented_functions |" >> $GITHUB_STEP_SUMMARY
-              echo "| Documentation Coverage | ${coverage}% |" >> $GITHUB_STEP_SUMMARY
+              if [ $total_functions -gt 0 ]; then
+                coverage=$((documented_functions * 100 / total_functions))
+                echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+                echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+                echo "| Total Functions ($target) | $total_functions |" >> $GITHUB_STEP_SUMMARY
+                echo "| Documented Functions | $documented_functions |" >> $GITHUB_STEP_SUMMARY
+                echo "| Documentation Coverage | ${coverage}% |" >> $GITHUB_STEP_SUMMARY
 
-              if [ $coverage -ge 80 ]; then
-                echo "" >> $GITHUB_STEP_SUMMARY
-                echo "✅ Good documentation coverage!" >> $GITHUB_STEP_SUMMARY
-              else
-                echo "" >> $GITHUB_STEP_SUMMARY
-                echo "⚠️ Consider adding more JSDoc comments to improve documentation coverage." >> $GITHUB_STEP_SUMMARY
+                if [ $coverage -ge 80 ]; then
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "✅ Good documentation coverage!" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "⚠️ Consider adding more JSDoc comments to improve documentation coverage." >> $GITHUB_STEP_SUMMARY
+                fi
+                break
               fi
             fi
-          fi
+          done
 
           # 检查 README 文件
           if [ -f "tests/README.md" ]; then

@@ -1,6 +1,10 @@
-import { reactive } from 'vue'
-
-export type TaskEventType = 'enqueued' | 'running' | 'completed' | 'failed' | 'canceled' | 'drained'
+export type TaskEventType =
+  | "enqueued"
+  | "running"
+  | "completed"
+  | "failed"
+  | "canceled"
+  | "drained"
 
 export type TaskEventHandler<TTask> = (task: TTask) => void
 export type AllCompletedEventHandler = () => void
@@ -27,34 +31,38 @@ export interface ManagedTask<TStatus extends string> {
 export interface TaskHandler<TTask, TStatus extends string> {
   lifecycle: TaskLifecycleStatus<TStatus>
   perform: (task: TTask) => Promise<void>
-  shouldRetry?: (task: TTask, error: any) => boolean
-  handleError?: (task: TTask, error: any) => Promise<'retry' | 'handled' | 'fail'> | 'retry' | 'handled' | 'fail'
-  isCanceledError?: (error: any) => boolean
+  shouldRetry?: (task: TTask, error: unknown) => boolean
+  handleError?: (
+    task: TTask,
+    error: unknown
+  ) => Promise<"retry" | "handled" | "fail"> | "retry" | "handled" | "fail"
+  isCanceledError?: (error: unknown) => boolean
   maxRetries?: number
   retryDelay?: number
 }
 
 export interface TaskManagerOptions<TTask extends ManagedTask<TStatus>, TStatus extends string> {
-  handlers: Record<string, TaskHandler<any, any>>
+  handlers: Record<string, TaskHandler<unknown, string>>
   maxConcurrent?: number
   maxRetries?: number
   retryDelay?: number
 }
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
-class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
-  private tasksState = reactive<{ items: any[] }>({ items: [] })
+type Listener = () => void
 
-  private readonly handlers: Record<string, TaskHandler<any, any>>
+export class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
+  private tasks: TTask[] = []
+  private readonly handlers: Record<string, TaskHandler<unknown, string>>
   readonly maxConcurrent: number
   readonly maxRetries: number
   readonly retryDelay: number
-
   private activeCount = 0
   private isStarted = false
-  private eventHandlers: Map<TaskEventType, Set<TaskEventHandler<TTask> | AllCompletedEventHandler>> = new Map()
   private allCompletedEmitted = false
+  private listeners = new Set<Listener>()
+  private snapshotCache: TTask[] | null = null
 
   constructor(options: TaskManagerOptions<TTask, TStatus>) {
     this.handlers = options.handlers
@@ -63,37 +71,21 @@ class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
     this.retryDelay = options.retryDelay ?? 1000
   }
 
-  on(event: TaskEventType, handler: TaskEventHandler<TTask> | AllCompletedEventHandler): void {
-    if (!this.eventHandlers.has(event)) {
-      this.eventHandlers.set(event, new Set())
-    }
-    this.eventHandlers.get(event)!.add(handler)
+  subscribe(listener: Listener): () => void {
+    this.listeners.add(listener)
+    return () => this.listeners.delete(listener)
   }
 
-  off(event: TaskEventType, handler: TaskEventHandler<TTask> | AllCompletedEventHandler): void {
-    const handlers = this.eventHandlers.get(event)
-    handlers?.delete(handler)
-  }
-
-  private emit(event: 'drained'): void
-  private emit(event: Exclude<TaskEventType, 'drained'>, task: TTask): void
-  private emit(event: TaskEventType, task?: TTask): void {
-    const handlers = this.eventHandlers.get(event)
-    if (!handlers) return
-    handlers.forEach(handler => {
-      if (event === 'drained') {
-        ;(handler as AllCompletedEventHandler)()
-      } else if (task) {
-        ;(handler as TaskEventHandler<TTask>)(task)
-      }
-    })
+  private notify() {
+    this.snapshotCache = null
+    this.listeners.forEach((l) => l())
   }
 
   enqueue(tasks: TTask[]) {
     if (!tasks.length) return
     this.allCompletedEmitted = false
-    this.tasksState.items.push(...tasks)
-    tasks.forEach(task => this.emit('enqueued', task as TTask))
+    this.tasks.push(...tasks)
+    this.notify()
     this.start()
   }
 
@@ -102,68 +94,67 @@ class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
     this.processQueue()
   }
 
-  stop() {
-    this.isStarted = false
-  }
-
   cancel() {
-    ;(this.tasksState.items as TTask[]).forEach(task => {
-      const lifecycle = this.getLifecycle(task as TTask)
-      if (this.isActive(task as TTask)) {
-        ;(task as any)._pauseRequested = false
+    this.tasks.forEach((task) => {
+      const lifecycle = this.getLifecycle(task) as TaskLifecycleStatus<TStatus>
+      if (this.isActive(task)) {
+        ;(task as TTask & { _pauseRequested?: boolean })._pauseRequested = false
         task.abortController?.abort()
         task.status = lifecycle.canceled
-        this.emit('canceled', task as TTask)
       }
     })
+    this.notify()
     this.checkAllCompleted()
   }
 
   cancelTask(taskId: string) {
-    const task = (this.tasksState.items as TTask[]).find(t => t.id === taskId)
+    const task = this.tasks.find((t) => t.id === taskId)
     if (!task) return
-    const lifecycle = this.getLifecycle(task)
-    ;(task as any)._pauseRequested = false
+    const lifecycle = this.getLifecycle(task) as TaskLifecycleStatus<TStatus>
+    ;(task as TTask & { _pauseRequested?: boolean })._pauseRequested = false
     task.abortController?.abort()
     task.status = lifecycle.canceled
-    this.emit('canceled', task as TTask)
+    this.notify()
     this.checkAllCompleted()
   }
 
   removeTask(taskId: string) {
-    const index = (this.tasksState.items as TTask[]).findIndex(t => t.id === taskId)
+    const index = this.tasks.findIndex((t) => t.id === taskId)
     if (index === -1) return
-    const task = (this.tasksState.items as TTask[])[index]
-    if (!task) return
-    if (this.isActive(task)) {
+    const task = this.tasks[index]
+    if (task && this.isActive(task)) {
       task.abortController?.abort()
     }
-    this.tasksState.items.splice(index, 1)
+    this.tasks.splice(index, 1)
+    this.notify()
   }
 
   clearTasks() {
     this.cancel()
-    this.tasksState.items.splice(0, this.tasksState.items.length)
+    this.tasks = []
     this.activeCount = 0
     this.isStarted = false
+    this.notify()
   }
 
-  getTasks() {
-    return this.tasksState.items as TTask[]
+  getTasks(): TTask[] {
+    if (this.snapshotCache) return this.snapshotCache
+    this.snapshotCache = [...this.tasks]
+    return this.snapshotCache
   }
 
   private isActive(task: TTask) {
-    const lifecycle = this.getLifecycle(task)
+    const lifecycle = this.getLifecycle(task) as TaskLifecycleStatus<TStatus>
     const activeStatuses = [lifecycle.pending, lifecycle.running]
     if (lifecycle.paused) activeStatuses.push(lifecycle.paused)
     return activeStatuses.includes(task.status)
   }
 
   private checkAllCompleted() {
-    const hasActive = (this.tasksState.items as TTask[]).some(task => this.isActive(task))
-    if (!hasActive && this.tasksState.items.length > 0 && !this.allCompletedEmitted) {
+    const hasActive = this.tasks.some((task) => this.isActive(task))
+    if (!hasActive && this.tasks.length > 0 && !this.allCompletedEmitted) {
       this.allCompletedEmitted = true
-      this.emit('drained')
+      this.notify()
     }
   }
 
@@ -171,16 +162,20 @@ class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
     if (!this.isStarted) return
 
     while (this.activeCount < this.maxConcurrent) {
-      const next = (this.tasksState.items as TTask[]).find(task => {
-        const lifecycle = this.getLifecycle(task as TTask)
-        return task.status === lifecycle.pending
+      const next = this.tasks.find((task) => {
+        const handler = this.handlers[task.kind]
+        return handler && task.status === (handler.lifecycle as TaskLifecycleStatus<TStatus>).pending
       })
       if (!next) break
       this.activeCount++
       this.runTask(next)
     }
 
-    if ((this.tasksState.items as TTask[]).some(task => task.status === this.getLifecycle(task as TTask).pending)) {
+    const hasPending = this.tasks.some((task) => {
+      const lifecycle = this.getLifecycle(task) as TaskLifecycleStatus<TStatus>
+      return task.status === lifecycle.pending
+    })
+    if (hasPending) {
       setTimeout(() => this.processQueue(), 100)
     } else {
       setTimeout(() => this.checkAllCompleted(), 200)
@@ -188,63 +183,55 @@ class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
   }
 
   private async runTask(task: TTask) {
-    const lifecycle = this.getLifecycle(task)
+    const lifecycle = this.getLifecycle(task) as TaskLifecycleStatus<TStatus>
     task.status = lifecycle.running
-    this.emit('running', task as TTask)
-    task.error = undefined
+    this.notify()
 
     try {
-      await this.getHandler(task).perform(task)
+      const handler = this.getHandler(task)
+      await handler.perform(task)
       if (task.status === lifecycle.running) {
         task.status = lifecycle.completed
         task.progress = 100
-        this.emit('completed', task as TTask)
       }
+      this.notify()
       this.checkAllCompleted()
-    } catch (error: any) {
+    } catch (error) {
       const action = await this.handleError(task, error)
-      if (action === 'retry') {
+      if (action === "retry") {
         await this.retryTask(task)
-      } else if (action === 'handled') {
-        // handled upstream
       } else {
         task.status = lifecycle.failed
-        task.error = error?.message || 'Unknown error'
-        this.emit('failed', task as TTask)
-        this.checkAllCompleted()
+        task.error = (error as Error)?.message ?? "Unknown error"
       }
+      this.notify()
+      this.checkAllCompleted()
     } finally {
       this.activeCount--
       if (this.isStarted) setTimeout(() => this.processQueue(), 50)
     }
   }
 
-  private async handleError(task: TTask, error: any): Promise<'retry' | 'handled' | 'fail'> {
+  private async handleError(task: TTask, error: unknown): Promise<"retry" | "handled" | "fail"> {
     const handler = this.getHandler(task)
-
     if (handler.handleError) {
       const result = await handler.handleError(task, error)
-      if (result !== 'fail') return result
+      if (result !== "fail") return result
     }
-
     if (this.isCanceledError(task, error)) {
-      const lifecycle = this.getLifecycle(task)
+      const lifecycle = this.getLifecycle(task) as TaskLifecycleStatus<TStatus>
       task.status = lifecycle.canceled
-      this.emit('canceled', task as TTask)
+      this.notify()
       this.checkAllCompleted()
-      return 'handled'
+      return "handled"
     }
-
-    if (this.shouldRetry(task, error)) {
-      return 'retry'
-    }
-
-    return 'fail'
+    if (this.shouldRetry(task, error)) return "retry"
+    return "fail"
   }
 
-  private shouldRetry(task: TTask, error: any) {
+  private shouldRetry(task: TTask, error: unknown) {
     const handler = this.getHandler(task)
-    const lifecycle = this.getLifecycle(task)
+    const lifecycle = this.getLifecycle(task) as TaskLifecycleStatus<TStatus>
     const maxRetries = handler.maxRetries ?? this.maxRetries
     if (task.status === lifecycle.canceled) return false
     if ((task.retryCount || 0) >= maxRetries) return false
@@ -252,15 +239,15 @@ class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
     return true
   }
 
-  private isCanceledError(task: TTask, error: any) {
+  private isCanceledError(task: TTask, error: unknown) {
     const handler = this.getHandler(task)
     if (handler.isCanceledError) return handler.isCanceledError(error)
-    return error?.name === 'AbortError' || error?.message?.includes('canceled')
+    return (error as Error)?.name === "AbortError" || (error as Error)?.message?.includes("canceled")
   }
 
   private async retryTask(task: TTask) {
     const handler = this.getHandler(task)
-    const lifecycle = this.getLifecycle(task)
+    const lifecycle = this.getLifecycle(task) as TaskLifecycleStatus<TStatus>
     const retryDelay = handler.retryDelay ?? this.retryDelay
     task.retryCount = (task.retryCount || 0) + 1
     task.status = lifecycle.pending
@@ -272,15 +259,11 @@ class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
 
   private getHandler(task: TTask): TaskHandler<TTask, TStatus> {
     const handler = this.handlers[task.kind] as TaskHandler<TTask, TStatus> | undefined
-    if (!handler) {
-      throw new Error(`No task handler registered for kind: ${task.kind}`)
-    }
+    if (!handler) throw new Error(`No task handler registered for kind: ${task.kind}`)
     return handler
   }
 
-  private getLifecycle(task: TTask): TaskLifecycleStatus<TStatus> {
+  private getLifecycle(task: TTask) {
     return this.getHandler(task).lifecycle
   }
 }
-
-export default TaskManager

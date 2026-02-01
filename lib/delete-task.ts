@@ -1,23 +1,14 @@
-import { DeleteObjectCommand, S3Client } from '@aws-sdk/client-s3'
-import type { HttpRequest } from '@smithy/protocol-http'
-import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from './task-manager'
+import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from "./task-manager"
 
-export type DeleteStatus = 'pending' | 'running' | 'completed' | 'failed' | 'canceled'
+export type DeleteStatus = "pending" | "running" | "completed" | "failed" | "canceled"
 
 export interface DeleteTask extends ManagedTask<DeleteStatus> {
-  kind: 'delete'
+  kind: "delete"
   key: string
   bucketName: string
   prefix?: string
-  /**
-   * Optional object version id.
-   * When provided, the delete operation will target the specific version.
-   */
   versionId?: string
-  /**
-   * When true, instructs backend to force delete (e.g., delete all versions)
-   * without enumerating individual object versions.
-   */
   forceDelete?: boolean
   actionLabel: string
   displayName: string
@@ -46,36 +37,42 @@ export interface DeleteTaskHelpers {
 }
 
 const lifecycle: TaskLifecycleStatus<DeleteStatus> = {
-  pending: 'pending',
-  running: 'running',
-  completed: 'completed',
-  failed: 'failed',
-  canceled: 'canceled',
+  pending: "pending",
+  running: "running",
+  completed: "completed",
+  failed: "failed",
+  canceled: "canceled",
 }
 
-export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskConfig = {}): DeleteTaskHelpers => {
+function attachForceDeleteHeader(command: DeleteObjectCommand) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ;(command.middlewareStack.add as any)(
+    (next: (args: unknown) => Promise<unknown>) =>
+      async (args: { request?: { headers?: Record<string, string> } }) => {
+        if (args?.request?.headers) {
+          args.request.headers["X-Rustfs-Force-Delete"] = "true"
+        }
+        return next(args)
+      },
+    { step: "build", name: "forceDeleteMiddleware", tags: ["FORCE_DELETE"] }
+  )
+}
+
+export function createDeleteTaskHelpers(
+  s3Client: S3Client,
+  config: DeleteTaskConfig = {}
+): DeleteTaskHelpers {
   const maxRetries = config.maxRetries ?? 3
   const retryDelay = config.retryDelay ?? 1000
 
-  const attachForceDeleteHeader = (command: DeleteObjectCommand) => {
-    command.middlewareStack.add(
-      next => async args => {
-        const request = args.request as HttpRequest
-        request.headers['X-Rustfs-Force-Delete'] = 'true'
-        return next(args)
-      },
-      { step: 'build', name: 'forceDeleteMiddleware', tags: ['FORCE_DELETE'] }
-    )
-  }
-
-  const perform: TaskHandler<DeleteTask, DeleteStatus>['perform'] = async task => {
+  const perform: TaskHandler<DeleteTask, DeleteStatus>["perform"] = async (task) => {
     const { key, bucketName, prefix, versionId, forceDelete } = task
     const abortController = new AbortController()
     task.abortController = abortController
 
     const command = new DeleteObjectCommand({
       Bucket: bucketName,
-      Key: (prefix || '') + key,
+      Key: (prefix ?? "") + key,
       ...(versionId ? { VersionId: versionId } : {}),
     })
 
@@ -85,19 +82,27 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
     task.progress = 100
   }
 
-  const shouldRetry: TaskHandler<DeleteTask, DeleteStatus>['shouldRetry'] = (task, error) => {
+  const shouldRetry: TaskHandler<DeleteTask, DeleteStatus>["shouldRetry"] = (task, error) => {
     if (task.status === lifecycle.canceled) return false
-    if ((task.retryCount || 0) >= maxRetries) return false
-    const errorMessage = (error?.message || '').toLowerCase()
-    const nonRetryableErrors = ['access denied', 'forbidden', 'invalid credentials', 'bucket not found', 'no such key']
-    return !nonRetryableErrors.some(msg => errorMessage.includes(msg))
+    if ((task.retryCount ?? 0) >= maxRetries) return false
+    const errorMessage = String((error as Error)?.message ?? "").toLowerCase()
+    const nonRetryableErrors = [
+      "access denied",
+      "forbidden",
+      "invalid credentials",
+      "bucket not found",
+      "no such key",
+    ]
+    return !nonRetryableErrors.some((msg) => errorMessage.includes(msg))
   }
 
   const handler: TaskHandler<DeleteTask, DeleteStatus> = {
     lifecycle,
     perform,
     shouldRetry,
-    isCanceledError: error => error?.name === 'AbortError' || error?.message?.includes('canceled'),
+    isCanceledError: (error) =>
+      (error as Error)?.name === "AbortError" ||
+      String((error as Error)?.message ?? "").includes("canceled"),
     maxRetries,
     retryDelay,
   }
@@ -107,27 +112,32 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
     bucketName: string,
     prefix?: string
   ): DeleteTask[] =>
-    items.map(item => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${item.key}-${item.versionId ?? 'latest'}`,
-      kind: 'delete' as const,
+    items.map((item) => ({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}-${item.key}-${item.versionId ?? "latest"}`,
+      kind: "delete" as const,
       key: item.key,
       versionId: item.versionId,
       forceDelete: item.forceDelete,
       status: lifecycle.pending,
       progress: 0,
       bucketName,
-      prefix: prefix ?? '',
-      actionLabel: 'Delete',
+      prefix: prefix ?? "",
+      actionLabel: "Delete",
       displayName: item.key,
-      subInfo: item.versionId ? `Version: ${item.versionId}` : '',
+      subInfo: item.versionId ? `Version: ${item.versionId}` : "",
       error: undefined,
       abortController: undefined,
       retryCount: 0,
     }))
 
-  const createTasks = (keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) =>
+  const createTasks = (
+    keys: string[],
+    bucketName: string,
+    prefix?: string,
+    options?: { forceDelete?: boolean }
+  ) =>
     createTasksFromItems(
-      keys.map(key => ({ key, forceDelete: options?.forceDelete })),
+      keys.map((key) => ({ key, forceDelete: options?.forceDelete })),
       bucketName,
       prefix
     )
@@ -139,16 +149,10 @@ export const createDeleteTaskHelpers = (s3Client: S3Client, config: DeleteTaskCo
     options?: { forceDelete?: boolean }
   ) =>
     createTasksFromItems(
-      items.map(item => ({ ...item, forceDelete: options?.forceDelete })),
+      items.map((item) => ({ ...item, forceDelete: options?.forceDelete })),
       bucketName,
       prefix
     )
 
   return { handler, createTasks, createVersionedTasks }
 }
-
-export type {
-  TaskEventType as DeleteTaskEventType,
-  TaskEventHandler as DeleteTaskEventHandler,
-  AllCompletedEventHandler as DeleteAllCompletedEventHandler,
-} from './task-manager'

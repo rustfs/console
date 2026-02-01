@@ -1,8 +1,8 @@
 export type S3Config = {
   region: string
   endpoint: string
-  accessKeyId: string
-  secretAccessKey: string
+  accessKeyId?: string
+  secretAccessKey?: string
 }
 
 export type ApiConfig = {
@@ -12,6 +12,7 @@ export type ApiConfig = {
 export type SessionConfig = {
   durationSeconds: number
 }
+
 export type Release = {
   version: string
   date: string

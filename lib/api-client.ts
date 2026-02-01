@@ -1,8 +1,8 @@
-import { joinURL } from 'ufo'
-import type { IApiErrorHandler } from '~/types/api'
-import { parseApiError } from '~/utils/error-handler'
-import { logger } from '~/utils/logger'
-import type { AwsClient } from './aws4fetch'
+import { joinURL } from "ufo"
+import type { IApiErrorHandler } from "@/types/api"
+import { parseApiError } from "./error-handler"
+import { logger } from "./logger"
+import type { AwsClient } from "./aws4fetch"
 
 interface ApiClientOptions {
   baseUrl?: string
@@ -13,11 +13,11 @@ interface ApiClientOptions {
 interface RequestOptions {
   method?: string
   headers?: Record<string, string>
-  body?: any
+  body?: unknown
   params?: Record<string, string>
 }
 
-class ApiClient {
+export class ApiClient {
   private $api: AwsClient
   private config?: ApiClientOptions
   private errorHandler?: IApiErrorHandler
@@ -28,17 +28,17 @@ class ApiClient {
     this.errorHandler = options?.errorHandler
   }
 
-  /**
-   * Set error handler
-   */
   setErrorHandler(handler: IApiErrorHandler): void {
     this.errorHandler = handler
   }
 
-  async request(url: string, options: RequestOptions = {}, parseJson: boolean = true) {
+  async request(
+    url: string,
+    options: RequestOptions = {},
+    parseJson: boolean = true
+  ) {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url
     options.headers = { ...this.config?.headers, ...options.headers }
-    // Handle body data format, only serialize plain objects
     if (
       options.body &&
       !(options.body instanceof FormData) &&
@@ -52,18 +52,17 @@ class ApiClient {
 
     if (options.params) {
       const queryString = new URLSearchParams(options.params).toString()
-      url += `?${queryString}` // Append query string to URL
-      delete options.params // Remove params to avoid affecting fetch options
+      url += `?${queryString}`
+      delete options.params
     }
 
-    logger.log('[request] url:', url)
-    logger.log('[request] options:', options)
+    logger.log("[request] url:", url)
+    logger.log("[request] options:", options)
 
-    const response = await this.$api.fetch(url, options)
+    const response = await this.$api.fetch(url, options as RequestInit & { body?: BodyInit | null; aws?: Record<string, unknown> })
 
-    logger.log('[request] response:', response)
+    logger.log("[request] response:", response)
 
-    // Handle auth errors first so we can redirect before throwing
     if (response.status === 401) {
       if (this.errorHandler) {
         await this.errorHandler.handle401()
@@ -82,8 +81,11 @@ class ApiClient {
       throw new Error(errorMsg)
     }
 
-    // 204 or body length is 0
-    if (response.status === 204 || response.headers.get('content-length') === '0' || !response.body) {
+    if (
+      response.status === 204 ||
+      response.headers.get("content-length") === "0" ||
+      !response.body
+    ) {
       return null
     }
 
@@ -94,59 +96,66 @@ class ApiClient {
     }
   }
 
-  async *streamRequest(url: string, options: RequestOptions = {}) {
-    const response = await this.request(url, options, false)
+  async get(url: string, options?: RequestOptions) {
+    return this.request(url, { method: "GET", ...options })
+  }
 
-    if (!response.body) {
-      throw new Error('No response body')
+  async *streamRequest(url: string, options: RequestOptions = {}) {
+    const response = (await this.request(
+      url,
+      { method: "GET", ...options },
+      false
+    )) as Response | null
+
+    if (!response?.body) {
+      throw new Error("No response body")
     }
 
     const reader = response.body.getReader()
-    const decoder = new TextDecoder('utf-8')
+    const decoder = new TextDecoder("utf-8")
+    let buffer = ""
 
     while (true) {
       const { done, value } = await reader.read()
       if (done) break
-      const chunk = decoder.decode(value, { stream: true })
+      buffer += decoder.decode(value, { stream: true })
+      // Support NDJSON: each line is a JSON object
+      const lines = buffer.split("\n")
+      buffer = lines.pop() ?? ""
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        try {
+          const data = JSON.parse(trimmed) as Record<string, unknown>
+          yield data
+        } catch {
+          // skip invalid JSON
+        }
+      }
+    }
+    if (buffer.trim()) {
       try {
-        const data = JSON.parse(chunk)
-        yield data // Use yield to return data
-      } catch (error) {
-        logger.error('Failed to parse chunk:', error)
+        const data = JSON.parse(buffer.trim()) as Record<string, unknown>
+        yield data
+      } catch {
+        // skip trailing incomplete JSON
       }
     }
   }
-  async get(url: string, options?: RequestOptions) {
-    return this.request(url, { method: 'GET', ...options })
-  }
 
-  async post(url: string, body: any, options?: RequestOptions) {
-    return this.request(url, { method: 'POST', body, ...options })
+  async post(url: string, body: unknown, options?: RequestOptions) {
+    return this.request(url, { method: "POST", body, ...options })
   }
 
   async delete(url: string, options?: RequestOptions) {
-    return this.request(url, { method: 'DELETE', ...options })
+    return this.request(url, { method: "DELETE", ...options })
   }
 
-  async put(url: string, body: any, options?: RequestOptions) {
-    return this.request(url, { method: 'PUT', body, ...options })
+  async put(url: string, body: unknown, options?: RequestOptions) {
+    return this.request(url, { method: "PUT", body, ...options })
   }
 
-  async patch(url: string, body: any, options?: RequestOptions) {
-    return this.request(url, { method: 'PATCH', body, ...options })
-  }
-
-  async head(url: string, options?: RequestOptions) {
-    return this.request(url, { method: 'HEAD', ...options })
-  }
-
-  async options(url: string, options?: RequestOptions) {
-    return this.request(url, { method: 'OPTIONS', ...options })
-  }
-
-  async trace(url: string, options?: RequestOptions) {
-    return this.request(url, { method: 'TRACE', ...options })
+  async patch(url: string, body: unknown, options?: RequestOptions) {
+    return this.request(url, { method: "PATCH", body, ...options })
   }
 }
-
-export default ApiClient

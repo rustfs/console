@@ -1,0 +1,88 @@
+# Build Next.js console and produce deploy artifacts
+#
+name: Build
+
+on:
+  push:
+    branches: ['main']
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+
+jobs:
+  build:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detect package manager
+        id: detect-package-manager
+        run: |
+          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
+            echo "manager=pnpm" >> $GITHUB_OUTPUT
+            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
+            exit 0
+          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
+            echo "command=install" >> $GITHUB_OUTPUT
+            exit 0
+          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
+            echo "manager=npm" >> $GITHUB_OUTPUT
+            echo "command=ci" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "Unable to determine package manager"
+            exit 1
+          fi
+      - name: Setup pnpm
+        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: ${{ steps.detect-package-manager.outputs.manager }}
+      - name: Install dependencies
+        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+      - name: Build Next.js
+        run: ${{ steps.detect-package-manager.outputs.manager }} run build
+      - name: Zip files
+        run: |
+          mkdir -p artifacts
+          ls -al ./.next
+          ZIP_SRC=$(realpath .next)
+          cd "$ZIP_SRC"
+          zip -r ../../artifacts/rustfs-console-latest.zip .
+          if [ "${{ github.event_name }}" = "release" ]; then
+            mkdir -p ../../artifacts/${{ github.event.release.tag_name }}
+            zip -r ../../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
+          fi
+      - uses: actions/upload-artifact@v4
+        name: Upload artifacts
+        with:
+          path: ./artifacts/rustfs-console-latest.zip
+      - name: Upload to Bucket for `latest`
+        uses: JohnGuan/oss-upload-action@main
+        with:
+          key-id: ${{ secrets.ALICLOUDOSS_KEY_ID }}
+          key-secret: ${{ secrets.ALICLOUDOSS_KEY_SECRET }}
+          region: oss-cn-beijing
+          bucket: rustfs-artifacts
+          assets: |
+            ./artifacts/**:/artifacts/console/
+      - name: Upload release asset `versioned`
+        if: ${{ github.event_name == 'release' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip

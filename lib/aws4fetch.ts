@@ -114,7 +114,7 @@ export class AwsClient {
    */
   async sign(
     input: string | Request,
-    init: { body: ArrayBuffer | ReadableStream<Uint8Array<ArrayBufferLike>> | null; aws: any }
+    init?: RequestInit & { body?: BodyInit | ArrayBuffer | ReadableStream<Uint8Array<ArrayBufferLike>> | null; aws?: Record<string, unknown> }
   ) {
     if (input instanceof Request) {
       const { method, url, headers, body } = input
@@ -143,7 +143,10 @@ export class AwsClient {
    * @param {?AwsRequestInit} [init]
    * @returns {Promise<Response>}
    */
-  async fetch(input: any, init: any) {
+  async fetch(
+    input: string | Request,
+    init?: RequestInit & { body?: BodyInit | null; aws?: Record<string, unknown> }
+  ) {
     for (let i = 0; i <= this.retries; i++) {
       const fetched = fetch(await this.sign(input, init))
       if (i === this.retries) {
@@ -167,15 +170,15 @@ export class AwsV4Signer {
   accessKeyId: string
   secretAccessKey: string
   sessionToken: string | undefined
-  service: any
-  region: any
-  cache: Map<any, any>
+  service: string
+  region: string
+  cache: Map<string, ArrayBuffer>
   datetime: string
   signQuery: boolean | undefined
   appendSessionToken: boolean
-  signableHeaders: any[]
-  signedHeaders: any
-  canonicalHeaders: any
+  signableHeaders: string[]
+  signedHeaders: string
+  canonicalHeaders: string
   credentialString: string
   encodedPath: string
   encodedSearch: string
@@ -300,7 +303,7 @@ export class AwsV4Signer {
     if (this.service === 's3') {
       try {
         this.encodedPath = decodeURIComponent(this.url.pathname.replace(/\+/g, ' '))
-      } catch (e) {
+      } catch {
         this.encodedPath = this.url.pathname
       }
     } else {

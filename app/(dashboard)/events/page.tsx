@@ -221,6 +221,7 @@ export default function EventsPage() {
         ),
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleRowDelete used in cell, stable ref
     [t]
   )
 

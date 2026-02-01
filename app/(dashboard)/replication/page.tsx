@@ -124,6 +124,7 @@ export default function ReplicationPage() {
         ),
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- confirmDelete used in cell, stable ref
     [t],
   );
 

@@ -94,6 +94,7 @@ export default function BrowserPage() {
 
   useEffect(() => {
     fetchBuckets()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run when isAdmin changes
   }, [isAdmin])
 
   const filteredData = searchTerm

@@ -59,7 +59,7 @@ export class ApiClient {
     logger.log("[request] url:", url)
     logger.log("[request] options:", options)
 
-    const response = await this.$api.fetch(url, options)
+    const response = await this.$api.fetch(url, options as RequestInit & { body?: BodyInit | null; aws?: Record<string, unknown> })
 
     logger.log("[request] response:", response)
 

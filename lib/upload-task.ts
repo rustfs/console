@@ -153,7 +153,7 @@ async function multipartUpload(task: UploadTask, s3Client: S3Client, chunkSize: 
   task.abortController = abortController
 
   let uploadId: string | undefined = task.uploadId
-  let completedParts: { ETag: string; PartNumber: number }[] = task.completedParts || []
+  const completedParts: { ETag: string; PartNumber: number }[] = task.completedParts || []
 
   try {
     if (!uploadId) {

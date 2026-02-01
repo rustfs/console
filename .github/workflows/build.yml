@@ -63,10 +63,10 @@ jobs:
           ls -al ./.next
           ZIP_SRC=$(realpath .next)
           cd "$ZIP_SRC"
-          zip -r ../../artifacts/rustfs-console-latest.zip .
+          zip -r ../artifacts/rustfs-console-latest.zip .
           if [ "${{ github.event_name }}" = "release" ]; then
-            mkdir -p ../../artifacts/${{ github.event.release.tag_name }}
-            zip -r ../../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
+            mkdir -p ../artifacts/${{ github.event.release.tag_name }}
+            zip -r ../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
           fi
       - uses: actions/upload-artifact@v4
         name: Upload artifacts

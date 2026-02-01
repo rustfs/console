@@ -1,8 +1,11 @@
 import { joinURL } from "ufo"
-import { buildRoute } from "./routes"
 
+/**
+ * Builds the bucket/object path for Next.js navigation (Link, router.push).
+ * Returns path WITHOUT basePath - Next.js automatically prepends basePath.
+ */
 export function buildBucketPath(bucketName: string, path?: string | string[]): string {
-  const base = buildRoute("/browser")
+  const base = "/browser"
   const encodedBucket = encodeURIComponent(bucketName)
   if (!path || (Array.isArray(path) ? path.join("") : path) === "") {
     return joinURL(base, encodedBucket)

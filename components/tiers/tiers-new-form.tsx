@@ -16,7 +16,9 @@ import {
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { useTiers } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/ui/message"
+import { buildRoute } from "@/lib/routes"
 import { cn } from "@/lib/utils"
+import logoImage from "@/assets/logo.svg"
 
 interface TiersNewFormProps {
   open: boolean
@@ -158,7 +160,7 @@ export function TiersNewForm({
                 >
                   <div className="flex items-center gap-3 p-4">
                     <Image
-                      src={item.icon}
+                      src={item.value === "rustfs" ? logoImage : buildRoute(item.icon)}
                       alt=""
                       width={40}
                       height={40}
@@ -186,7 +188,7 @@ export function TiersNewForm({
                 <div className="flex items-center gap-3 p-4">
                   {selectedOption && (
                     <Image
-                      src={selectedOption.icon}
+                      src={selectedOption.value === "rustfs" ? logoImage : buildRoute(selectedOption.icon)}
                       alt=""
                       width={40}
                       height={40}

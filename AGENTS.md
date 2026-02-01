@@ -1,21 +1,5 @@
 # Repository Guidelines
 
-## Project Context
-
-This project (`console-new`) is a **migration** from `console-old` (Nuxt + Vue + shadcn-vue) to **Next.js + React + shadcn/ui + Tailwind CSS v4**. The source of truth for behavior and UI is the old project. Migration work must follow the implementation plan stage by stage.
-
-**Key constraints during migration:**
-
-- Page elements and text must not be modified; no free interpretation.
-- shadcn-vue components map 1:1 to shadcn/ui (React).
-- Use `pnpm dlx shadcn@latest add {component}` to add shadcn components.
-- **Never edit** downloaded `components/ui/*` directly (exception: `resizable.tsx` when required by dependency changes).
-- Component and page names use **kebab-case**; mirror the old project’s structure.
-- Use the same authentication storage scheme (`auth.credentials`, `auth.isAdmin`, `auth.permanent`).
-- Do not change colors or base styling in `console-new` unless explicitly required.
-
----
-
 ## Project Structure & Module Organization
 
 - Core application lives under `app/`, with App Router layouts in `app/(auth)/`, `app/(dashboard)/`.
@@ -145,7 +129,7 @@ Before committing any code changes, you MUST run and pass:
 
 ### 1. Planning & Staging
 
-Break complex work into 3–5 stages. Document in `IMPLEMENTATION_PLAN.md`:
+Break complex work into 3–5 stages. Document in `IMPLEMENTATION_PLAN.md` **only when explicitly requested** (see Documentation Restriction):
 
 ```markdown
 ## Stage N: [Name]
@@ -273,6 +257,18 @@ When multiple valid approaches exist, choose based on:
 
 ---
 
+## Documentation Restriction
+
+**Unless explicitly requested**, do not produce any summary-type, plan-type, or similar documentation in the project. This includes but is not limited to:
+
+- `IMPLEMENTATION_PLAN.md`, `SUMMARY.md`, `PLAN.md`, `CHANGELOG.md`
+- Migration summaries, progress reports, or task completion reports
+- Any document created proactively to describe or track work
+
+Create such documents only when the user explicitly asks for them.
+
+---
+
 ## Important Reminders
 
 **NEVER**:
@@ -287,5 +283,5 @@ When multiple valid approaches exist, choose based on:
 
 - Commit working code incrementally.
 - Update plan documentation as you go.
-- Learn from existing implementations (especially `console-old`).
+- Learn from existing implementations if exists (especially `console-old`).
 - Stop after 3 failed attempts and reassess.

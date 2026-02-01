@@ -19,7 +19,17 @@ export function useSystem() {
   }, [api])
 
   const getSystemMetrics = useCallback(async () => {
-    return api.get("/metrics")
+    try {
+      let merged: Record<string, unknown> = {}
+      for await (const data of api.streamRequest("/metrics")) {
+        merged = { ...merged, ...data }
+      }
+      if (Object.keys(merged).length > 0) return merged
+    } catch {
+      // Fallback: try regular GET if streaming fails (e.g. API returns single JSON)
+    }
+    const res = await api.get("/metrics")
+    return (res as Record<string, unknown>) ?? {}
   }, [api])
 
   const getLicense = useCallback(async () => {

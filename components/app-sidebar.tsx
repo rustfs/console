@@ -3,6 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import {
   Collapsible,
   CollapsibleContent,
@@ -12,7 +13,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -32,6 +32,7 @@ import {
 } from "@remixicon/react"
 import { getIconComponent } from "@/lib/icon-map"
 import navs from "@/config/navs"
+import logoImage from "@/assets/logo.svg"
 import type { NavItem } from "@/types/app-config"
 
 const APP_NAME = "RustFS"
@@ -56,6 +57,7 @@ function normalizedTo(item: NavItem) {
 }
 
 export function AppSidebar() {
+  const { t } = useTranslation()
   const pathname = usePathname()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
@@ -109,10 +111,14 @@ export function AppSidebar() {
       return item.children!.some((child) => isRouteActive(child))
     }
     if (!item.to || isExternal(item)) return false
+    // Root path "/" must match exactly; otherwise "/browser" etc. would match via startsWith("/")
+    if (item.to === "/") {
+      return pathname === "/"
+    }
     return pathname.startsWith(item.to)
   }
 
-  const getLabel = (item: NavItem) => item.label
+  const getLabel = (item: NavItem) => t(item.label)
 
   return (
     <Sidebar collapsible="icon">
@@ -123,14 +129,19 @@ export function AppSidebar() {
               <span>{brandInitial}</span>
             </div>
           ) : (
-            <div className="flex min-w-0 flex-col px-3 py-4">
+            <div className="flex min-w-0 items-baseline gap-2 px-3 py-4">
               <Image
-                src="/logo.svg"
+                src={logoImage}
                 alt="RustFS"
                 width={64}
                 height={16}
-                className="h-4 w-auto"
+                className="h-4 w-auto shrink-0"
               />
+              {RELEASE_VERSION ? (
+                <span className="text-[10px] text-muted-foreground">
+                  v{RELEASE_VERSION}
+                </span>
+              ) : null}
             </div>
           )}
         </Link>
@@ -254,12 +265,6 @@ export function AppSidebar() {
           </div>
         </ScrollArea>
       </SidebarContent>
-
-      <SidebarFooter className="mt-auto flex flex-col gap-3 px-2 pb-2">
-        <div className="border-t py-2 text-center text-sm">
-          RUSTFS {RELEASE_VERSION}
-        </div>
-      </SidebarFooter>
 
       <SidebarRail />
     </Sidebar>

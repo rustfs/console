@@ -95,7 +95,7 @@ export function UserGroupEditForm({
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">
-            <TabsList className="w-full justify-start overflow-x-auto">
+            <TabsList className="justify-start overflow-x-auto">
               <TabsTrigger value="users">{t("Members")}</TabsTrigger>
               <TabsTrigger value="policy">{t("Policies")}</TabsTrigger>
             </TabsList>

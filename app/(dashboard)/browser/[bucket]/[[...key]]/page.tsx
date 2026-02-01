@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
@@ -21,7 +21,6 @@ interface PageProps {
 export default function BucketBrowserPage({ params }: PageProps) {
   const { t } = useTranslation()
   const router = useRouter()
-  const pathname = usePathname()
   const message = useMessage()
   const { headBucket } = useBucket()
 
@@ -32,20 +31,23 @@ export default function BucketBrowserPage({ params }: PageProps) {
   const [refreshTrigger, setRefreshTrigger] = React.useState(0)
 
   React.useEffect(() => {
+    let mounted = true
     params.then((p) => {
-      setResolved({
-        bucket: p.bucket,
-        key: p.key ?? [],
-      })
+      if (mounted) {
+        setResolved({ bucket: p.bucket, key: p.key ?? [] })
+      }
     })
+    return () => {
+      mounted = false
+    }
   }, [params])
 
   const bucketName = resolved?.bucket ?? ""
   const keySegments = resolved?.key ?? []
-  const keyPath = keySegments.join("/")
-  const pathnameEndsWithSlash = pathname?.endsWith("/")
-  const isObjectList = pathnameEndsWithSlash || keyPath === ""
-  const prefix = pathnameEndsWithSlash ? keyPath : keyPath ? keyPath + "/" : ""
+  const keyPath = decodeURIComponent(keySegments.join("/"))
+  // 目录路径以 / 结尾，keyPath 可能为 "folder1/"（来自 encodeURIComponent 编码的 URL）
+  const isObjectList = keyPath.endsWith("/") || keyPath === ""
+  const prefix = keyPath.endsWith("/") ? keyPath : keyPath ? keyPath + "/" : ""
 
   React.useEffect(() => {
     if (!bucketName) return
@@ -113,7 +115,7 @@ export default function BucketBrowserPage({ params }: PageProps) {
             onOpenInfo={handleOpenInfo}
             onUploadClick={() => setUploadPickerOpen(true)}
             onRefresh={handleRefresh}
-            key={refreshTrigger}
+            refreshTrigger={refreshTrigger}
           />
         ) : (
           <ObjectView

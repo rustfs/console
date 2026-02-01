@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  RiHomeLine,
   RiBox3Line,
   RiDoorLockLine,
   RiShieldCheckLine,
@@ -21,6 +22,7 @@ import {
 import type { ComponentType } from "react"
 
 const iconMap: Record<string, ComponentType<{ className?: string }>> = {
+  "ri:home-line": RiHomeLine,
   "ri:box-3-line": RiBox3Line,
   "ri:door-lock-line": RiDoorLockLine,
   "ri:shield-check-line": RiShieldCheckLine,

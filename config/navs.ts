@@ -3,6 +3,11 @@ import type { NavItem } from "@/types/app-config"
 // icons: https://icones.js.org/collection/ri
 export default [
   {
+    label: "Home",
+    to: "/",
+    icon: "ri:home-line",
+  },
+  {
     label: "Browser",
     to: "/browser",
     icon: "ri:box-3-line",
@@ -36,42 +41,42 @@ export default [
     icon: "ri:download-2-line",
     isAdminOnly: true,
   },
-  {
-    label: "Performance",
-    to: "/performance",
-    icon: "ri:bar-chart-box-line",
-    isAdminOnly: true,
-  },
+  // {
+  //   label: "Performance",
+  //   to: "/performance",
+  //   icon: "ri:bar-chart-box-line",
+  //   isAdminOnly: true,
+  // },
   {
     label: "divider",
     key: "divider-1",
     type: "divider",
     isAdminOnly: true,
   },
-  {
-    label: "Bucket Events",
-    to: "/events",
-    icon: "ri:broadcast-line",
-    isAdminOnly: true,
-  },
-  {
-    label: "Bucket Replication",
-    to: "/replication",
-    icon: "ri:file-copy-line",
-    isAdminOnly: true,
-  },
-  {
-    label: "Lifecycle",
-    to: "/lifecycle",
-    icon: "ri:exchange-2-line",
-    isAdminOnly: true,
-  },
-  {
-    label: "Site Replication",
-    to: "/site-replication",
-    icon: "ri:upload-cloud-2-line",
-    isAdminOnly: true,
-  },
+  // {
+  //   label: "Bucket Events",
+  //   to: "/events",
+  //   icon: "ri:broadcast-line",
+  //   isAdminOnly: true,
+  // },
+  // {
+  //   label: "Bucket Replication",
+  //   to: "/replication",
+  //   icon: "ri:file-copy-line",
+  //   isAdminOnly: true,
+  // },
+  // {
+  //   label: "Lifecycle",
+  //   to: "/lifecycle",
+  //   icon: "ri:exchange-2-line",
+  //   isAdminOnly: true,
+  // },
+  // {
+  //   label: "Site Replication",
+  //   to: "/site-replication",
+  //   icon: "ri:upload-cloud-2-line",
+  //   isAdminOnly: true,
+  // },
   {
     label: "Tiered Storage",
     to: "/tiers",

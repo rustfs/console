@@ -48,6 +48,8 @@ export async function initI18n() {
       supportedLngs: LOCALE_CODES,
       interpolation: {
         escapeValue: false,
+        prefix: "{",
+        suffix: "}",
       },
       detection: {
         order: ["cookie", "localStorage", "navigator"],

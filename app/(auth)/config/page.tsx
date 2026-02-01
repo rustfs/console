@@ -17,7 +17,8 @@ import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { AuthHerosStatic } from "@/components/auth/heros/static"
 import { useMessage } from "@/lib/ui/message"
-import { getLoginRoute } from "@/lib/routes"
+import { buildRoute, getLoginRoute } from "@/lib/routes"
+import logoImage from "@/assets/logo.svg"
 import { configManager } from "@/lib/config"
 
 export default function ConfigPage() {
@@ -100,7 +101,7 @@ function ConfigPageContent() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 dark:bg-neutral-800 lg:p-20">
       <Image
-        src="/backgrounds/scillate.svg"
+        src={buildRoute("/backgrounds/scillate.svg")}
         alt=""
         fill
         className="absolute inset-0 z-0 opacity-45 object-cover"
@@ -112,7 +113,7 @@ function ConfigPageContent() {
         <div className="flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
             <Image
-              src="/logo.svg"
+              src={logoImage}
               alt="RustFS"
               width={112}
               height={24}

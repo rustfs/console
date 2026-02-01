@@ -3,10 +3,18 @@
 import { useCallback } from "react"
 import {
   DeleteObjectCommand,
+  GetObjectLegalHoldCommand,
+  GetObjectRetentionCommand,
+  GetObjectTaggingCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectVersionsCommand,
   ListObjectsV2Command,
+  ObjectLockRetentionMode,
   PutObjectCommand,
+  PutObjectLegalHoldCommand,
+  PutObjectRetentionCommand,
+  PutObjectTaggingCommand,
 } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
@@ -151,6 +159,128 @@ export function useObject(bucket: string) {
     [headObject, getSignedUrlFn]
   )
 
+  const getObjectTags = useCallback(
+    async (key: string): Promise<Array<{ Key: string; Value: string }>> => {
+      const response = await client.send(
+        new GetObjectTaggingCommand({ Bucket: bucket, Key: key })
+      )
+      return (response.TagSet ?? []).map((tag) => ({
+        Key: tag.Key ?? "",
+        Value: tag.Value ?? "",
+      }))
+    },
+    [client, bucket]
+  )
+
+  const putObjectTags = useCallback(
+    async (key: string, tags: Array<{ Key: string; Value: string }>) => {
+      const sanitizedTags = tags
+        .filter((tag) => tag.Key && tag.Value)
+        .map((tag) => ({ Key: tag.Key, Value: tag.Value }))
+      return client.send(
+        new PutObjectTaggingCommand({
+          Bucket: bucket,
+          Key: key,
+          Tagging: { TagSet: sanitizedTags },
+        })
+      )
+    },
+    [client, bucket]
+  )
+
+  const getObjectRetention = useCallback(
+    async (key: string): Promise<{ Mode: string; RetainUntilDate: string }> => {
+      try {
+        const response = await client.send(
+          new GetObjectRetentionCommand({ Bucket: bucket, Key: key })
+        )
+        const retention = response?.Retention
+        if (!retention || Object.keys(retention).length === 0) {
+          return { Mode: "", RetainUntilDate: "" }
+        }
+        return {
+          Mode: retention.Mode ?? "",
+          RetainUntilDate: retention.RetainUntilDate
+            ? new Date(retention.RetainUntilDate).toISOString()
+            : "",
+        }
+      } catch (err) {
+        const msg = (err as Error)?.message ?? ""
+        if (msg.includes("Deserialization error")) {
+          return { Mode: "", RetainUntilDate: "" }
+        }
+        throw err
+      }
+    },
+    [client, bucket]
+  )
+
+  const putObjectRetention = useCallback(
+    async (
+      key: string,
+      retention: {
+        Mode: "GOVERNANCE" | "COMPLIANCE"
+        RetainUntilDate?: string
+      }
+    ) => {
+      return client.send(
+        new PutObjectRetentionCommand({
+          Bucket: bucket,
+          Key: key,
+          Retention: {
+            Mode:
+              retention.Mode === "COMPLIANCE"
+                ? ObjectLockRetentionMode.COMPLIANCE
+                : ObjectLockRetentionMode.GOVERNANCE,
+            ...(retention.RetainUntilDate
+              ? { RetainUntilDate: new Date(retention.RetainUntilDate) }
+              : {}),
+          },
+        })
+      )
+    },
+    [client, bucket]
+  )
+
+  const setLegalHold = useCallback(
+    async (key: string, enabled: boolean) => {
+      return client.send(
+        new PutObjectLegalHoldCommand({
+          Bucket: bucket,
+          Key: key,
+          LegalHold: { Status: enabled ? "ON" : "OFF" },
+        })
+      )
+    },
+    [client, bucket]
+  )
+
+  const listObjectVersions = useCallback(
+    async (key: string) => {
+      const res = await client.send(
+        new ListObjectVersionsCommand({
+          Bucket: bucket,
+          Prefix: key,
+          Delimiter: "/",
+        })
+      )
+      const Versions = (res.Versions ?? []).filter((v) => v.Key === key)
+      const DeleteMarkers = (res.DeleteMarkers ?? []).filter((m) => m.Key === key)
+      Versions.sort(
+        (a, b) =>
+          new Date(b.LastModified!).getTime() -
+          new Date(a.LastModified!).getTime()
+      )
+      DeleteMarkers.sort(
+        (a, b) =>
+          new Date(b.LastModified!).getTime() -
+          new Date(a.LastModified!).getTime()
+      )
+      return { ...res, Versions, DeleteMarkers }
+    },
+    [client, bucket]
+  )
+
   return {
     headObject,
     putObject,
@@ -159,5 +289,11 @@ export function useObject(bucket: string) {
     listObject,
     mapAllFiles,
     getObjectInfo,
+    getObjectTags,
+    putObjectTags,
+    getObjectRetention,
+    putObjectRetention,
+    setLegalHold,
+    listObjectVersions,
   }
 }

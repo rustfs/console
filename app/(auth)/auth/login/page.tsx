@@ -21,6 +21,7 @@ import { AuthHerosStatic } from "@/components/auth/heros/static"
 import { useAuth } from "@/contexts/auth-context"
 import { useMessage } from "@/lib/ui/message"
 import { buildRoute } from "@/lib/routes"
+import logoImage from "@/assets/logo.svg"
 import { configManager } from "@/lib/config"
 import { useState } from "react"
 
@@ -127,7 +128,7 @@ function LoginForm({
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-100 dark:bg-neutral-800 lg:p-20">
       <Image
-        src="/backgrounds/scillate.svg"
+        src={buildRoute("/backgrounds/scillate.svg")}
         alt=""
         fill
         className="absolute inset-0 z-0 opacity-45 object-cover"
@@ -149,7 +150,7 @@ function LoginForm({
 
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
             <Image
-              src="/logo.svg"
+              src={logoImage}
               alt="RustFS"
               width={112}
               height={24}

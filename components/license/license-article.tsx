@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { buildRoute } from "@/lib/routes"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import {
@@ -15,7 +16,7 @@ export function LicenseArticle() {
   const [licenseContent, setLicenseContent] = useState("")
 
   useEffect(() => {
-    fetch("/LICENSE")
+    fetch(buildRoute("/legal/LICENSE"))
       .then((res) => res.text())
       .then(setLicenseContent)
       .catch(() => setLicenseContent("License text not available."))

@@ -100,6 +100,49 @@ export class ApiClient {
     return this.request(url, { method: "GET", ...options })
   }
 
+  async *streamRequest(url: string, options: RequestOptions = {}) {
+    const response = (await this.request(
+      url,
+      { method: "GET", ...options },
+      false
+    )) as Response | null
+
+    if (!response?.body) {
+      throw new Error("No response body")
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder("utf-8")
+    let buffer = ""
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      // Support NDJSON: each line is a JSON object
+      const lines = buffer.split("\n")
+      buffer = lines.pop() ?? ""
+      for (const line of lines) {
+        const trimmed = line.trim()
+        if (!trimmed) continue
+        try {
+          const data = JSON.parse(trimmed) as Record<string, unknown>
+          yield data
+        } catch {
+          // skip invalid JSON
+        }
+      }
+    }
+    if (buffer.trim()) {
+      try {
+        const data = JSON.parse(buffer.trim()) as Record<string, unknown>
+        yield data
+      } catch {
+        // skip trailing incomplete JSON
+      }
+    }
+  }
+
   async post(url: string, body: unknown, options?: RequestOptions) {
     return this.request(url, { method: "POST", body, ...options })
   }

@@ -37,6 +37,8 @@ import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
 import { formatBytes } from "@/lib/functions"
 import { buildBucketPath } from "@/lib/bucket-path"
+import { TaskStatsButton } from "@/components/object/task-stats-button"
+import { useAddDeleteKeys } from "@/contexts/task-context"
 import type { ColumnDef } from "@tanstack/react-table"
 import dayjs from "dayjs"
 import { saveAs } from "file-saver"
@@ -56,6 +58,7 @@ interface ObjectListProps {
   onUploadClick: () => void
   pageSize?: number
   onRefresh?: () => void
+  refreshTrigger?: number
 }
 
 export function ObjectList({
@@ -65,11 +68,13 @@ export function ObjectList({
   onUploadClick,
   pageSize = 25,
   onRefresh,
+  refreshTrigger = 0,
 }: ObjectListProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const objectApi = useObject(bucket)
   const { getBucketVersioning } = useBucket()
+  const addDeleteKeys = useAddDeleteKeys()
 
   const [searchTerm, setSearchTerm] = React.useState("")
   const [showDeleted, setShowDeleted] = useLocalStorage("object-list-show-deleted", false)
@@ -90,16 +95,18 @@ export function ObjectList({
     [bucket]
   )
 
-  const fetchObjects = React.useCallback(async () => {
-    setLoading(true)
-    try {
-      const response = await objectApi.listObject(
-        bucket,
-        prefix || undefined,
-        pageSize,
-        continuationToken,
-        { includeDeleted: showDeleted }
-      )
+  const fetchObjects = React.useCallback(
+    async (tokenOverride?: string) => {
+      const token = tokenOverride !== undefined ? tokenOverride : continuationToken
+      setLoading(true)
+      try {
+        const response = await objectApi.listObject(
+          bucket,
+          prefix || undefined,
+          pageSize,
+          token,
+          { includeDeleted: showDeleted }
+        )
 
       const r = response as {
         CommonPrefixes?: Array<{ Prefix?: string }>
@@ -127,11 +134,24 @@ export function ObjectList({
     } finally {
       setTimeout(() => setLoading(false), 200)
     }
-  }, [bucket, prefix, pageSize, continuationToken, showDeleted, objectApi.listObject])
+  },
+    [bucket, prefix, pageSize, continuationToken, showDeleted, objectApi.listObject]
+  )
+
+  const prevRefreshTriggerRef = React.useRef(refreshTrigger)
 
   React.useEffect(() => {
-    fetchObjects()
-  }, [bucket, prefix, pageSize, continuationToken, showDeleted])
+    const isRefresh = prevRefreshTriggerRef.current !== refreshTrigger
+    prevRefreshTriggerRef.current = refreshTrigger
+
+    if (isRefresh) {
+      setContinuationToken(undefined)
+      setTokenHistory([])
+      void fetchObjects(undefined)
+    } else {
+      void fetchObjects()
+    }
+  }, [bucket, prefix, pageSize, continuationToken, showDeleted, refreshTrigger, fetchObjects])
 
   React.useEffect(() => {
     const loadBucketVersioningStatus = async () => {
@@ -430,13 +450,11 @@ export function ObjectList({
       if (!targets.length) {
         message.success(t("Delete Success"))
       } else {
-        for (const key of targets) {
-          await objectApi.deleteObject(key)
-        }
-        message.success(t("Delete Success"))
+        addDeleteKeys(targets, bucket, undefined)
+        message.success(t("Delete task created"))
       }
       table.resetRowSelection()
-      fetchObjects()
+      ;(onRefresh ?? fetchObjects)()
     } catch (err) {
       message.error((err as Error)?.message ?? t("Delete Failed"))
     }
@@ -448,13 +466,11 @@ export function ObjectList({
       if (!targets.length) {
         message.success(t("Delete Success"))
       } else {
-        for (const key of targets) {
-          await objectApi.deleteObject(key, undefined, { forceDelete: true })
-        }
-        message.success(t("Delete Success"))
+        addDeleteKeys(targets, bucket, undefined, { forceDelete: true })
+        message.success(t("Delete task created"))
       }
       table.resetRowSelection()
-      fetchObjects()
+      ;(onRefresh ?? fetchObjects)()
     } catch (err) {
       message.error((err as Error)?.message ?? t("Delete Failed"))
     }
@@ -496,6 +512,7 @@ export function ObjectList({
       <PageHeader
         actions={
           <>
+            <TaskStatsButton />
             <Button variant="outline" onClick={onUploadClick}>
               <RiFileAddLine className="size-4" />
               <span>{t("Upload File")}/{t("Folder")}</span>
@@ -572,7 +589,7 @@ export function ObjectList({
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Warning")}</AlertDialogTitle>
             <AlertDialogDescription>
-              <p>{t("Are you sure you want to delete the selected objects?")}</p>
+              {t("Are you sure you want to delete the selected objects?")}
               {bucketVersioningEnabled && (
                 <label className="mt-4 flex items-center gap-2">
                   <Checkbox

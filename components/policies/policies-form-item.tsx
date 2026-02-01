@@ -79,6 +79,19 @@ export function PoliciesFormItem({
     return !newErrors.name && !newErrors.content
   }
 
+  const normalizePolicyForSubmit = (policy: Record<string, unknown>) => {
+    const normalized = JSON.parse(JSON.stringify(policy)) as Record<string, unknown>
+    const statements = normalized.Statement as Array<Record<string, unknown>> | undefined
+    if (Array.isArray(statements)) {
+      for (const stmt of statements) {
+        if (Array.isArray(stmt.Resource) && stmt.Resource.length === 0) {
+          stmt.Resource = ["*"]
+        }
+      }
+    }
+    return normalized
+  }
+
   const submitForm = async () => {
     if (!validate()) {
       message.error(t("Please fill in the correct format"))
@@ -87,14 +100,18 @@ export function PoliciesFormItem({
 
     setSubmitting(true)
     try {
-      const payload = JSON.parse(content)
+      const payload = normalizePolicyForSubmit(
+        JSON.parse(content) as Record<string, unknown>
+      )
       await addPolicy(name.trim(), payload)
       message.success(t("Saved"))
       closeModal()
       onSaved()
     } catch (error) {
       console.error(error)
-      message.error(t("Save Failed"))
+      const msg =
+        error instanceof Error ? error.message : String(error)
+      message.error(msg || t("Save Failed"))
     } finally {
       setSubmitting(false)
     }

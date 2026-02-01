@@ -3,6 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
+import logoImage from "@/assets/logo.svg"
+import { buildRoute } from "@/lib/routes"
 import { RiArrowRightLongFill } from "@remixicon/react"
 import { FlipWords } from "@/components/ui/flip-words"
 
@@ -14,7 +16,7 @@ export function AuthHerosStatic() {
     <div className="relative flex h-full w-full flex-col justify-center gap-8 overflow-hidden border-r bg-gray-50 p-16 dark:border-none dark:bg-black">
       <div className="z-10 flex max-w-7xl flex-col">
         <Image
-          src="/logo.svg"
+          src={logoImage}
           alt="RustFS"
           width={112}
           height={24}
@@ -49,7 +51,7 @@ export function AuthHerosStatic() {
       </Link>
       <div className="absolute inset-0 z-0 h-full">
         <Image
-          src="/backgrounds/ttten.svg"
+          src={buildRoute("/backgrounds/ttten.svg")}
           alt=""
           fill
           className="object-cover opacity-45"

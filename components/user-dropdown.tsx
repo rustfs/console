@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { RiUserLine, RiLockPasswordLine, RiLogoutBoxRLine, RiMore2Line } from "@remixicon/react"
+import { buildRoute } from "@/lib/routes"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -55,7 +56,7 @@ export function UserDropdown() {
             <div className="flex items-center gap-3">
               <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border bg-muted">
                 <Image
-                  src="/img/rustfs.png"
+                  src={buildRoute("/img/rustfs.png")}
                   alt="RustFS"
                   width={32}
                   height={32}

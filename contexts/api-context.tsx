@@ -8,7 +8,7 @@ import {
 } from "react"
 import { ApiClient } from "@/lib/api-client"
 import { AwsClient } from "@/lib/aws4fetch"
-import { ApiErrorHandler } from "@/lib/utils/api-error-handler"
+import { ApiErrorHandler } from "@/lib/api-error-handler"
 import { useAuth } from "@/contexts/auth-context"
 import { configManager } from "@/lib/config"
 import { getLoginRoute } from "@/lib/routes"

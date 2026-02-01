@@ -6,12 +6,12 @@ import { useTranslation } from "react-i18next"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BucketsInfo } from "@/components/buckets/buckets-info"
+import { BucketInfo } from "@/components/buckets/info"
 import { usePermissions } from "@/hooks/use-permissions"
 import { CONSOLE_SCOPES } from "@/lib/console-permissions"
-import { BucketLifecycleTab } from "@/components/buckets/bucket-lifecycle-tab"
-import { BucketReplicationTab } from "@/components/buckets/bucket-replication-tab"
-import { BucketEventsTab } from "@/components/buckets/bucket-events-tab"
+import { BucketLifecycleTab } from "@/components/buckets/lifecycle-tab"
+import { BucketReplicationTab } from "@/components/buckets/replication-tab"
+import { BucketEventsTab } from "@/components/buckets/events-tab"
 
 export default function BucketSettingsPage() {
   const { t } = useTranslation()
@@ -59,7 +59,7 @@ export default function BucketSettingsPage() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4 outline-none">
-          {bucketName ? <BucketsInfo bucketName={bucketName} /> : null}
+          {bucketName ? <BucketInfo bucketName={bucketName} /> : null}
         </TabsContent>
 
         {canViewLifecycle && (

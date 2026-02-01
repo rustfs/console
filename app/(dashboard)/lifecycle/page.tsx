@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Page } from "@/components/page";
 import { PageHeader } from "@/components/page-header";
-import { BucketSelector } from "@/components/bucket-selector";
+import { BucketSelector } from "@/components/buckets/selector";
 import { DataTable } from "@/components/data-table/data-table";
 import { useDataTable } from "@/hooks/use-data-table";
 import { useBucket } from "@/hooks/use-bucket";
-import { LifecycleNewForm } from "@/components/lifecycle/lifecycle-new-form";
-import { useDialog } from "@/lib/ui/dialog";
-import { useMessage } from "@/lib/ui/message";
+import { LifecycleNewForm } from "@/components/lifecycle/new-form";
+import { useDialog } from "@/lib/feedback/dialog";
+import { useMessage } from "@/lib/feedback/message";
 import type { ColumnDef } from "@tanstack/react-table";
 
 interface LifecycleRule {

@@ -15,8 +15,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
-import { AuthHerosStatic } from "@/components/auth/heros/static"
-import { useMessage } from "@/lib/ui/message"
+import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
+import { useMessage } from "@/lib/feedback/message"
 import { buildRoute, getLoginRoute } from "@/lib/routes"
 import logoImage from "@/assets/logo.svg"
 import { configManager } from "@/lib/config"
@@ -103,7 +103,7 @@ function ConfigPageContent() {
       />
       <div className="z-10 mx-auto flex max-h-[85vh] w-full max-w-7xl flex-1 flex-col overflow-hidden rounded-lg shadow-lg dark:border-neutral-700 dark:bg-neutral-800 lg:flex-row">
         <div className="hidden w-1/2 lg:block">
-          <AuthHerosStatic />
+          <AuthHeroStatic />
         </div>
         <div className="flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">

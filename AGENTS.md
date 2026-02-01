@@ -9,6 +9,7 @@
 - i18n locale files live under `i18n/locales/` (structure must match the old project).
 - Static assets belong in `public/` or `assets/`.
 - Tests belong in `tests/` (mirror source structure when tests exist).
+- **UI vs feedback**: `components/ui/` holds presentational, declarative UI primitives (e.g. Button, Dialog). `lib/feedback/` holds global imperative APIs for toast and confirm dialogs (MessageProvider/useMessage, DialogProvider/useDialog). Use `@/lib/feedback/message` and `@/lib/feedback/dialog` for imperative feedback; use `@/components/ui/*` for declarative UI.
 
 ---
 
@@ -70,6 +71,14 @@ Before committing any code changes, you MUST run and pass:
 - Override shadcn primitives **outside** `components/ui/`; never edit files in that directory directly.
 - Render tabular data with the shared `DataTable` + `useDataTable` utilities unless a specific requirement makes them unsuitable.
 - Language pack files must follow the structure used in the old project; do not alter i18n layout or keys arbitrarily.
+
+### Component structure and naming
+
+- **Directories**: Group by **domain/feature**; use plural for domain folders (e.g. `buckets/`, `user/`, `object/`).
+- **File names**: kebab-case; **do not repeat the directory name** in the filename (e.g. under `buckets/` use `info.tsx`, `new-form.tsx`, `selector.tsx` instead of `bucket-info.tsx`, `bucket-new-form.tsx`). The path already provides context.
+- **Component names**: PascalCase, aligned with the domain and purpose (e.g. `BucketInfo`, `UserDropdown`); component names may still include the domain when used in JSX for clarity.
+- **Forms**: Use consistent patterns per domain: `XxxNewForm` / `XxxEditForm` or `XxxForm`; files can be `new-form.tsx`, `edit-form.tsx`, `form.tsx` under the domain folder.
+- **Placement**: Components used only by one domain live in that domain folder; components reused by 3+ different domain pages may stay at root or under `components/shared/` (document if so).
 
 ---
 

@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { useApi } from "@/contexts/api-context"
-import { useMessage } from "@/lib/ui/message"
+import { useMessage } from "@/lib/feedback/message"
 import { exportFile } from "@/lib/export-file"
 
 export function useImportExport() {

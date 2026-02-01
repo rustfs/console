@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { RiFileCopyLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useMessage } from "@/lib/ui/message"
+import { useMessage } from "@/lib/feedback/message"
 import { cn } from "@/lib/utils"
 
 interface CopyInputProps extends Omit<React.ComponentProps<typeof Input>, "value" | "onChange"> {

@@ -16,9 +16,9 @@ import { SearchInput } from "@/components/search-input"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useEventTarget } from "@/hooks/use-event-target"
-import { EventsTargetNewForm } from "@/components/events-target/events-target-new-form"
-import { useDialog } from "@/lib/ui/dialog"
-import { useMessage } from "@/lib/ui/message"
+import { EventsTargetNewForm } from "@/components/events-target/new-form"
+import { useDialog } from "@/lib/feedback/dialog"
+import { useMessage } from "@/lib/feedback/message"
 import type { ColumnDef } from "@tanstack/react-table"
 
 interface RowData {

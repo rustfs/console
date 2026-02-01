@@ -11,10 +11,10 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTablePagination } from "@/components/data-table/data-table-pagination"
 import { useDataTable } from "@/hooks/use-data-table"
-import { PoliciesFormItem, type PolicyItem } from "@/components/policies/policies-form-item"
+import { PolicyForm, type PolicyItem } from "@/components/policies/form"
 import { usePolicies } from "@/hooks/use-policies"
-import { useDialog } from "@/lib/ui/dialog"
-import { useMessage } from "@/lib/ui/message"
+import { useDialog } from "@/lib/feedback/dialog"
+import { useMessage } from "@/lib/feedback/message"
 import type { ColumnDef } from "@tanstack/react-table"
 
 export default function PoliciesPage() {
@@ -168,7 +168,7 @@ export default function PoliciesPage() {
         <DataTablePagination table={table} className="px-2 py-3" />
       </div>
 
-      <PoliciesFormItem
+      <PolicyForm
         show={showPolicyForm}
         onShowChange={handleShowChange}
         policy={currentPolicy}

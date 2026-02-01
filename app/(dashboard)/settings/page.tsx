@@ -18,7 +18,7 @@ import {
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { configManager } from "@/lib/config"
-import { useMessage } from "@/lib/ui/message"
+import { useMessage } from "@/lib/feedback/message"
 
 interface CurrentConfig {
   serverHost: string

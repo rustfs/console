@@ -11,13 +11,13 @@ import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
-import { BucketsNewForm } from "@/components/buckets/buckets-new-form"
+import { BucketNewForm } from "@/components/buckets/new-form"
 import { useBucket } from "@/hooks/use-bucket"
 import { useObject } from "@/hooks/use-object"
 import { useSystem } from "@/hooks/use-system"
 import { useAuth } from "@/contexts/auth-context"
-import { useDialog } from "@/lib/ui/dialog"
-import { useMessage } from "@/lib/ui/message"
+import { useDialog } from "@/lib/feedback/dialog"
+import { useMessage } from "@/lib/feedback/message"
 import { niceBytes } from "@/lib/functions"
 import type { ColumnDef } from "@tanstack/react-table"
 import dayjs from "dayjs"
@@ -243,7 +243,7 @@ export default function BrowserPage() {
         emptyDescription={t("Create a bucket to start storing objects.")}
       />
 
-      <BucketsNewForm show={formVisible} onShowChange={handleFormClosed} />
+      <BucketNewForm show={formVisible} onShowChange={handleFormClosed} />
     </Page>
   )
 }

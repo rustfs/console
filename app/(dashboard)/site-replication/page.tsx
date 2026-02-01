@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Page } from "@/components/page";
 import { PageHeader } from "@/components/page-header";
-import { SiteReplicationNewForm } from "@/components/site-replication/site-replication-new-form";
+import { SiteReplicationNewForm } from "@/components/site-replication/new-form";
 
 export default function SiteReplicationPage() {
   const { t } = useTranslation();

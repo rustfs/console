@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useImportExport } from "@/hooks/use-import-export"
-import { useMessage } from "@/lib/ui/message"
+import { useMessage } from "@/lib/feedback/message"
 
 function formatSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`

@@ -15,7 +15,7 @@ import {
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { useSSE } from "@/hooks/use-sse"
-import { useMessage } from "@/lib/ui/message"
+import { useMessage } from "@/lib/feedback/message"
 
 export default function SSEPage() {
   const { t } = useTranslation()

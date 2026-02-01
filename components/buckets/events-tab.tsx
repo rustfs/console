@@ -1,18 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  RiAddLine,
-  RiRefreshLine,
-  RiDeleteBin7Line,
-} from "@remixicon/react"
+import { RiAddLine, RiRefreshLine, RiDeleteBin7Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Page } from "@/components/page"
-import { PageHeader } from "@/components/page-header"
-import { BucketSelector } from "@/components/buckets/selector"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { EventsNewForm } from "@/components/events/new-form"
@@ -53,22 +45,21 @@ function getDisplayEvents(events: string[]) {
   return [...new Set(events.map((e) => EVENT_DISPLAY_MAP[e] || e))]
 }
 
-export default function EventsPage() {
+interface BucketEventsTabProps {
+  bucketName: string
+}
+
+export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
   const { listBucketNotifications, putBucketNotifications } = useBucket()
 
-  const [bucketName, setBucketName] = useState<string | null>(null)
-  const [data, setData] = useState<NotificationItem[]>([])
-  const [loading, setLoading] = useState(false)
-  const [newFormOpen, setNewFormOpen] = useState(false)
+  const [data, setData] = React.useState<NotificationItem[]>([])
+  const [loading, setLoading] = React.useState(false)
+  const [newFormOpen, setNewFormOpen] = React.useState(false)
 
-  const loadData = useCallback(async () => {
-    if (!bucketName) {
-      setData([])
-      return
-    }
+  const loadData = React.useCallback(async () => {
     setLoading(true)
     try {
       const response = await listBucketNotifications(bucketName)
@@ -86,24 +77,30 @@ export default function EventsPage() {
         type: NotificationItem["type"],
         arnKey: "LambdaFunctionArn" | "QueueArn" | "TopicArn"
       ) => {
-        ;(configs ?? []).forEach((config: { Id?: string; Filter?: { Key?: { FilterRules?: Array<{ Name: string; Value: string }> } }; Events?: string[] }) => {
-          const prefix = config.Filter?.Key?.FilterRules?.find(
-            (r) => r.Name === "Prefix"
-          )?.Value
-          const suffix = config.Filter?.Key?.FilterRules?.find(
-            (r) => r.Name === "Suffix"
-          )?.Value
-          const arn = (config as Record<string, string>)[arnKey]
-          notifications.push({
-            id: config.Id ?? "",
-            type,
-            arn: arn ?? "",
-            events: config.Events ?? [],
-            prefix,
-            suffix,
-            filterRules: config.Filter?.Key?.FilterRules ?? [],
-          })
-        })
+        ;(configs ?? []).forEach(
+          (config: {
+            Id?: string
+            Filter?: { Key?: { FilterRules?: Array<{ Name: string; Value: string }> } }
+            Events?: string[]
+          }) => {
+            const prefix = config.Filter?.Key?.FilterRules?.find(
+              (r) => r.Name === "Prefix"
+            )?.Value
+            const suffix = config.Filter?.Key?.FilterRules?.find(
+              (r) => r.Name === "Suffix"
+            )?.Value
+            const arn = (config as Record<string, string>)[arnKey]
+            notifications.push({
+              id: config.Id ?? "",
+              type,
+              arn: arn ?? "",
+              events: config.Events ?? [],
+              prefix,
+              suffix,
+              filterRules: config.Filter?.Key?.FilterRules ?? [],
+            })
+          }
+        )
       }
 
       const r = response as {
@@ -129,29 +126,24 @@ export default function EventsPage() {
       )
 
       setData(notifications)
-    } catch (error) {
-      console.error(t("Get Notification Config Failed"), error)
+    } catch {
       setData([])
     } finally {
       setLoading(false)
     }
-  }, [bucketName, listBucketNotifications, t])
+  }, [bucketName, listBucketNotifications])
 
-  useEffect(() => {
+  React.useEffect(() => {
     loadData()
   }, [loadData])
 
-  const columns: ColumnDef<NotificationItem>[] = useMemo(
+  const columns: ColumnDef<NotificationItem>[] = React.useMemo(
     () => [
       {
         id: "type",
         header: () => t("Type"),
         cell: ({ row }) => (
-          <Badge
-            className={
-              TYPE_BADGE_CLASSES[row.original.type] ?? ""
-            }
-          >
+          <Badge className={TYPE_BADGE_CLASSES[row.original.type] ?? ""}>
             {row.original.type}
           </Badge>
         ),
@@ -184,17 +176,13 @@ export default function EventsPage() {
       {
         id: "prefix",
         header: () => t("Prefix"),
-        cell: ({ row }) => (
-          <span>{row.original.prefix || "-"}</span>
-        ),
+        cell: ({ row }) => <span>{row.original.prefix || "-"}</span>,
         meta: { maxWidth: "9rem" },
       },
       {
         id: "suffix",
         header: () => t("Suffix"),
-        cell: ({ row }) => (
-          <span>{row.original.suffix || "-"}</span>
-        ),
+        cell: ({ row }) => <span>{row.original.suffix || "-"}</span>,
         meta: { maxWidth: "9rem" },
       },
       {
@@ -221,7 +209,6 @@ export default function EventsPage() {
         ),
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleRowDelete used in cell, stable ref
     [t]
   )
 
@@ -245,7 +232,7 @@ export default function EventsPage() {
       })
     })
 
-    if (!confirmed || !bucketName) return
+    if (!confirmed) return
 
     try {
       setLoading(true)
@@ -261,9 +248,9 @@ export default function EventsPage() {
           : row.type === "SQS"
             ? "QueueConfigurations"
             : "TopicConfigurations"
-      const configs = (currentNotifications as Record<string, Array<{ Id?: string }>>)[
-        configKey
-      ]
+      const configs = (
+        currentNotifications as Record<string, Array<{ Id?: string }>>
+      )[configKey]
       const updated = configs?.filter((c) => c.Id !== row.id) ?? []
 
       const newConfig = {
@@ -279,9 +266,8 @@ export default function EventsPage() {
       message.success(t("Delete Success"))
       loadData()
     } catch (error) {
-      console.error(t("Delete Failed"), error)
       message.error(
-        `${t("Delete Failed")}: ${(error as Error).message || error}`
+        `${t("Delete Failed")}: ${(error as Error).message ?? error}`
       )
     } finally {
       setLoading(false)
@@ -289,39 +275,20 @@ export default function EventsPage() {
   }
 
   return (
-    <Page>
-      <PageHeader
-        actions={
-          <>
-            <BucketSelector
-              value={bucketName}
-              onChange={setBucketName}
-              placeholder={t("Please select bucket")}
-              selectorClass="w-full"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setNewFormOpen(true)}
-              disabled={!bucketName}
-            >
-              <RiAddLine className="size-4" aria-hidden />
-              <span>{t("Add Event Subscription")}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={loadData}
-              disabled={loading}
-            >
-              <RiRefreshLine className="size-4" aria-hidden />
-              <span>{t("Refresh")}</span>
-            </Button>
-          </>
-        }
-      >
-        <h1 className="text-2xl font-bold">{t("Events")}</h1>
-      </PageHeader>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-medium">{t("Events")}</h2>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setNewFormOpen(true)}>
+            <RiAddLine className="size-4" />
+            <span>{t("Add Event Subscription")}</span>
+          </Button>
+          <Button variant="outline" onClick={loadData} disabled={loading}>
+            <RiRefreshLine className="size-4" />
+            <span>{t("Refresh")}</span>
+          </Button>
+        </div>
+      </div>
 
       <DataTable
         table={table}
@@ -330,14 +297,12 @@ export default function EventsPage() {
         emptyDescription={t("Add Event Subscription to get started")}
       />
 
-      {bucketName && (
-        <EventsNewForm
-          open={newFormOpen}
-          onOpenChange={setNewFormOpen}
-          bucketName={bucketName}
-          onSuccess={loadData}
-        />
-      )}
-    </Page>
+      <EventsNewForm
+        open={newFormOpen}
+        onOpenChange={setNewFormOpen}
+        bucketName={bucketName}
+        onSuccess={loadData}
+      />
+    </div>
   )
 }

@@ -10,8 +10,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { useDialogController } from "@/lib/ui/dialog"
-import type { DialogInstance } from "@/lib/ui/dialog"
+import { useDialogController } from "@/lib/feedback/dialog"
+import type { DialogInstance } from "@/lib/feedback/dialog"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 

@@ -17,9 +17,9 @@ import {
 } from "@/components/ui/field"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
-import { AuthHerosStatic } from "@/components/auth/heros/static"
+import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
 import { useAuth } from "@/contexts/auth-context"
-import { useMessage } from "@/lib/ui/message"
+import { useMessage } from "@/lib/feedback/message"
 import { buildRoute } from "@/lib/routes"
 import logoImage from "@/assets/logo.svg"
 import { configManager } from "@/lib/config"
@@ -135,7 +135,7 @@ function LoginForm({
       />
       <div className="z-10 mx-auto flex max-h-[85vh] w-full max-w-7xl flex-1 flex-col overflow-hidden rounded-lg shadow-lg dark:border-neutral-700 dark:bg-neutral-800 lg:flex-row">
         <div className="hidden w-1/2 lg:block">
-          <AuthHerosStatic />
+          <AuthHeroStatic />
         </div>
         <div className="relative flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
           <div className="absolute right-4 top-4 z-10">

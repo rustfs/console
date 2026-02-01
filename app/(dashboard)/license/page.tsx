@@ -14,7 +14,7 @@ import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
-import { LicenseArticle } from "@/components/license/license-article"
+import { LicenseArticle } from "@/components/license/article"
 import type { ColumnDef } from "@tanstack/react-table"
 
 const hasLicense = false

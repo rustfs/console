@@ -6,7 +6,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { LinksGithub } from "@/components/links/github"
 import { LinksX } from "@/components/links/x"
-import { UserDropdown } from "@/components/user-dropdown"
+import { UserDropdown } from "@/components/user/dropdown"
 
 export function AppTopNav() {
   return (

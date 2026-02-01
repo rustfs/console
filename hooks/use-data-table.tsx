@@ -17,7 +17,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 export interface UseDataTableOptions<TData extends RowData> {
   data: TData[]
@@ -102,7 +102,16 @@ export function useDataTable<TData extends RowData>(
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: options.manualPagination ? undefined : getPaginationRowModel(),
+    // Library resets pageIndex during render when data changes, which can trigger setState
+    // before commit (e.g. on route change). We do the reset in useEffect instead.
+    autoResetPageIndex: false,
   })
+
+  // Reset to first page when data changes (after commit). Replaces autoResetPageIndex
+  // so we don't update state during render.
+  useEffect(() => {
+    setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }))
+  }, [options.data])
 
   const selectedRows = table.getSelectedRowModel().rows.map((row) => row.original)
   const selectedRowIds = table.getSelectedRowModel().rows.map((row) => row.id)

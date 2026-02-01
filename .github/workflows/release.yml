@@ -65,8 +65,6 @@ jobs:
       - name: Setup pnpm
         if: steps.detect-package-manager.outputs.manager == 'pnpm'
         uses: pnpm/action-setup@v4
-        with:
-          version: latest
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -151,8 +149,6 @@ jobs:
       - name: Setup pnpm
         if: steps.detect-package-manager.outputs.manager == 'pnpm'
         uses: pnpm/action-setup@v4
-        with:
-          version: latest
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v4
         with:

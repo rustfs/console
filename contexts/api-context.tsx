@@ -1,18 +1,12 @@
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import { ApiClient } from "@/lib/api-client"
 import { AwsClient } from "@/lib/aws4fetch"
 import { ApiErrorHandler } from "@/lib/api-error-handler"
 import { useAuth } from "@/contexts/auth-context"
 import { configManager } from "@/lib/config"
-import { getLoginRoute } from "@/lib/routes"
-import type { SiteConfig } from "@/types/config"
+import { getLoginRoute, buildRoute } from "@/lib/routes"
 
 interface ApiContextValue {
   api: ApiClient | null
@@ -60,7 +54,7 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
           window.location.href = getLoginRoute()
         },
         onForbidden: async () => {
-          window.location.href = "/403"
+          window.location.href = buildRoute("/403")
         },
       })
 

@@ -268,10 +268,11 @@ When multiple valid approaches exist, choose based on:
 
 ## Documentation Restriction
 
-**Unless explicitly requested**, do not produce any summary-type, plan-type, or similar documentation in the project. This includes but is not limited to:
+**Unless explicitly requested**, do not produce any summary-type, plan-type, analysis-type, or similar documentation in the project. This includes but is not limited to:
 
 - `IMPLEMENTATION_PLAN.md`, `SUMMARY.md`, `PLAN.md`, `CHANGELOG.md`
 - Migration summaries, progress reports, or task completion reports
+- **Analysis documents** (e.g. refactor analysis, page/code analysis, architecture analysis, `*_ANALYSIS*.md`)
 - Any document created proactively to describe or track work
 
 Create such documents only when the user explicitly asks for them.

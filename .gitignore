@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+/.nuxt/
+/.output/
+/.vscode/
+
 # production
 /build
 

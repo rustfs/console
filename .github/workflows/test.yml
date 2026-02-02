@@ -69,7 +69,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: lint
-    if: ${{ hashFiles('package.json') != '' }}
 
     strategy:
       matrix:

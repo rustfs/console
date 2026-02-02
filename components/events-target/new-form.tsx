@@ -16,6 +16,7 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/
 import { useEventTarget } from "@/hooks/use-event-target"
 import { useMessage } from "@/lib/feedback/message"
 import { cn } from "@/lib/utils"
+import { buildRoute } from "@/lib/routes"
 
 interface EventsTargetNewFormProps {
   open: boolean
@@ -78,7 +79,7 @@ export function EventsTargetNewForm({
   const [nameError, setNameError] = React.useState("")
   const [submitting, setSubmitting] = React.useState(false)
 
-  const currentConfigOptions = type ? CONFIG_OPTIONS[type] ?? [] : []
+  const currentConfigOptions = type ? (CONFIG_OPTIONS[type] ?? []) : []
   const selectedOption = TYPE_OPTIONS.find((o) => o.value === type)
 
   const resetForm = React.useCallback(() => {
@@ -133,7 +134,7 @@ export function EventsTargetNewForm({
       return false
     }
     const hasConfig = Object.values(config).some(
-      (v) => v !== "" && v !== null && v !== undefined
+      (v) => v !== "" && v !== null && v !== undefined,
     )
     if (!hasConfig) {
       message.error(t("Please fill in at least one configuration item"))
@@ -176,9 +177,7 @@ export function EventsTargetNewForm({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {type
-              ? t("Add {type} Destination", { type })
-              : t("Add Event Destination")}
+            {type ? t("Add {type} Destination", { type }) : t("Add Event Destination")}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
@@ -190,24 +189,20 @@ export function EventsTargetNewForm({
                   type="button"
                   onClick={() => setType(option.value)}
                   className={cn(
-                    "cursor-pointer border border-border/70 text-left transition hover:border-primary"
+                    "cursor-pointer border border-border/70 text-left transition hover:border-primary",
                   )}
                 >
                   <div className="flex items-center gap-3 p-4">
                     <Image
-                      src={option.icon}
+                      src={buildRoute(option.icon)}
                       alt=""
                       width={40}
                       height={40}
                       className="size-10 shrink-0 object-contain"
                     />
                     <div>
-                      <p className="text-base font-semibold">
-                        {t(option.labelKey)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {t(option.descKey)}
-                      </p>
+                      <p className="text-base font-semibold">{t(option.labelKey)}</p>
+                      <p className="text-sm text-muted-foreground">{t(option.descKey)}</p>
                     </div>
                   </div>
                 </button>
@@ -222,7 +217,7 @@ export function EventsTargetNewForm({
               >
                 {selectedOption && (
                   <Image
-                    src={selectedOption.icon}
+                    src={buildRoute(selectedOption.icon)}
                     alt=""
                     width={40}
                     height={40}
@@ -239,9 +234,7 @@ export function EventsTargetNewForm({
 
               <div className="grid gap-4">
                 <Field>
-                  <FieldLabel htmlFor="target-name">
-                    {t("Name")} (A-Z,0-9,_)
-                  </FieldLabel>
+                  <FieldLabel htmlFor="target-name">{t("Name")} (A-Z,0-9,_)</FieldLabel>
                   <FieldContent>
                     <Input
                       id="target-name"
@@ -260,9 +253,7 @@ export function EventsTargetNewForm({
 
                 {currentConfigOptions.map((cfg) => (
                   <Field key={cfg.name}>
-                    <FieldLabel htmlFor={`config-${cfg.name}`}>
-                      {t(cfg.label)}
-                    </FieldLabel>
+                    <FieldLabel htmlFor={`config-${cfg.name}`}>{t(cfg.label)}</FieldLabel>
                     <FieldContent>
                       <Input
                         id={`config-${cfg.name}`}
@@ -291,11 +282,7 @@ export function EventsTargetNewForm({
           <Button variant="outline" onClick={handleCancel}>
             {t("Cancel")}
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!type}
-            aria-disabled={submitting}
-          >
+          <Button onClick={handleSave} disabled={!type} aria-disabled={submitting}>
             {submitting ? t("Saving...") : t("Save")}
           </Button>
         </DialogFooter>

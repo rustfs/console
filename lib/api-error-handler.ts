@@ -1,7 +1,4 @@
-import type {
-  ApiErrorHandlerCallback,
-  IApiErrorHandler,
-} from "@/types/api"
+import type { ApiErrorHandlerCallback, IApiErrorHandler } from "@/types/api"
 
 export class ApiErrorHandler implements IApiErrorHandler {
   private onUnauthorized?: ApiErrorHandlerCallback

@@ -17,7 +17,10 @@ interface S3ContextValue {
   isReady: boolean
 }
 
-const S3Context = createContext<S3ContextValue>({ client: null, isReady: false })
+const S3Context = createContext<S3ContextValue>({
+  client: null,
+  isReady: false,
+})
 
 export function S3Provider({ children }: { children: React.ReactNode }) {
   const { credentials, isAuthenticated, logout } = useAuth()
@@ -54,42 +57,54 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
 
       /* eslint-disable @typescript-eslint/no-explicit-any -- AWS SDK middleware types are complex */
       client.middlewareStack.add(
-        ((next: any) =>
-          async (args: any) => {
-            try {
-              const response = (await next(args)) as S3Response
+        ((next: any) => async (args: any) => {
+          try {
+            const response = (await next(args)) as S3Response
 
-              if (response.response?.body && typeof response.response.body === "string") {
-                const body = response.response.body.trim()
-                if (body.match(/^<\?xml[^>]*\?><[^>]*><\/[^>]*>$/)) {
-                  const tagName = body.match(/<([^>]*)><\/\1>/)?.[1]
-                  if (tagName) {
-                    const propertyName = tagName.replace(/(?:^|_)([a-z])/g, (_, letter: string) =>
-                      letter.toUpperCase()
-                    )
-                    return {
-                      response: response.response,
-                      [propertyName]: null,
-                    }
+            if (response.response?.body && typeof response.response.body === "string") {
+              const body = response.response.body.trim()
+              if (body.match(/^<\?xml[^>]*\?><[^>]*><\/[^>]*>$/)) {
+                const tagName = body.match(/<([^>]*)><\/\1>/)?.[1]
+                if (tagName) {
+                  const propertyName = tagName.replace(/(?:^|_)([a-z])/g, (_, letter: string) => letter.toUpperCase())
+                  return {
+                    response: response.response,
+                    [propertyName]: null,
                   }
                 }
               }
+            }
 
-              return response
-            } catch (error: unknown) {
-              const err = error as { $metadata?: { httpStatusCode?: number }; Code?: string }
-              if (err?.$metadata?.httpStatusCode === 401) {
+            return response
+          } catch (error: unknown) {
+            const err = error as {
+              $metadata?: { httpStatusCode?: number }
+              Code?: string
+              name?: string
+              message?: string
+            }
+            if (err?.$metadata?.httpStatusCode === 401) {
+              logout()
+              window.location.href = getLoginRoute()
+              return { response: { statusCode: 401, headers: {} } }
+            }
+            if (err?.$metadata?.httpStatusCode === 403) {
+              const codeText = (err?.Code || err?.name || "").toLowerCase()
+              const isUnauthorizedAccess = codeText === "unauthorizedaccess"
+              const isInvalidAccessKey = codeText === "invalidaccesskeyid"
+              if (isUnauthorizedAccess || isInvalidAccessKey) {
                 logout()
                 window.location.href = getLoginRoute()
                 return { response: { statusCode: 401, headers: {} } }
               }
-              if (err?.Code) {
-                throw new Error(err.Code)
-              }
-              throw error
             }
-          }) as any,
-        { step: "deserialize", name: "handleXmlResponse" }
+            if (err?.Code) {
+              throw new Error(err.Code)
+            }
+            throw error
+          }
+        }) as any,
+        { step: "deserialize", name: "handleXmlResponse" },
       )
       /* eslint-enable @typescript-eslint/no-explicit-any */
 

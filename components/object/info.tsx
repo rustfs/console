@@ -2,31 +2,13 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import {
-  RiDownloadLine,
-  RiEyeLine,
-  RiPriceTag3Line,
-  RiFileList2Line,
-  RiLockLine,
-  RiCloseLine,
-} from "@remixicon/react"
+import { RiDownloadLine, RiEyeLine, RiPriceTag3Line, RiFileList2Line, RiLockLine, RiCloseLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-} from "@/components/ui/drawer"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@/components/ui/item"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -38,9 +20,11 @@ import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
 import { ObjectVersions } from "@/components/object/versions"
 import { ObjectPreviewModal } from "@/components/object/preview-modal"
-import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3"
+import { GetObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
+import { useAuth } from "@/contexts/auth-context"
+import { configManager } from "@/lib/config"
 
 const ONE_WEEK_SECONDS = 7 * 24 * 60 * 60
 
@@ -52,40 +36,26 @@ interface ObjectInfoProps {
   onRefresh?: () => void
 }
 
-export function ObjectInfo({
-  bucketName,
-  objectKey,
-  open,
-  onOpenChange,
-  onRefresh: _onRefresh,
-}: ObjectInfoProps) {
+export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onRefresh: _onRefresh }: ObjectInfoProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
   const objectApi = useObject(bucketName)
   const client = useS3()
+  const { permanentCredentials } = useAuth()
 
-  const [object, setObject] = React.useState<Record<string, unknown> | null>(
-    null
-  )
-  const [tags, setTags] = React.useState<Array<{ Key: string; Value: string }>>(
-    []
-  )
+  const [object, setObject] = React.useState<Record<string, unknown> | null>(null)
+  const [tags, setTags] = React.useState<Array<{ Key: string; Value: string }>>([])
   const [lockStatus, setLockStatus] = React.useState(false)
   const [retention, setRetention] = React.useState("")
   const [retainUntilDate, setRetainUntilDate] = React.useState("")
-  const [retentionMode, setRetentionMode] = React.useState<
-    "COMPLIANCE" | "GOVERNANCE"
-  >("GOVERNANCE")
+  const [retentionMode, setRetentionMode] = React.useState<"COMPLIANCE" | "GOVERNANCE">("GOVERNANCE")
   const [signedUrl, setSignedUrl] = React.useState("")
   const [showTagView, setShowTagView] = React.useState(false)
   const [showRetentionView, setShowRetentionView] = React.useState(false)
   const [showPreview, setShowPreview] = React.useState(false)
   const [showVersions, setShowVersions] = React.useState(false)
-  const [previewObject, setPreviewObject] = React.useState<Record<
-    string,
-    unknown
-  > | null>(null)
+  const [previewObject, setPreviewObject] = React.useState<Record<string, unknown> | null>(null)
   const [tagFormValue, setTagFormValue] = React.useState({
     Key: "",
     Value: "",
@@ -143,8 +113,7 @@ export function ObjectInfo({
       finalDays = 1
       finalHours = 0
     }
-    const totalSeconds =
-      finalDays * 24 * 60 * 60 + finalHours * 60 * 60 + minutes * 60
+    const totalSeconds = finalDays * 24 * 60 * 60 + finalHours * 60 * 60 + minutes * 60
     if (totalSeconds > ONE_WEEK_SECONDS) {
       setExpirationError(t("Total duration cannot exceed 7 days"))
       return false
@@ -166,10 +135,7 @@ export function ObjectInfo({
     async (key: string) => {
       const info = await objectApi.getObjectInfo(key)
       setObject(info as Record<string, unknown>)
-      setLockStatus(
-        (info as { ObjectLockLegalHoldStatus?: string })?.ObjectLockLegalHoldStatus ===
-          "ON"
-      )
+      setLockStatus((info as { ObjectLockLegalHoldStatus?: string })?.ObjectLockLegalHoldStatus === "ON")
       setExpirationDays(0)
       setExpirationHours(0)
       setExpirationMinutes(0)
@@ -178,7 +144,7 @@ export function ObjectInfo({
       setTotalExpirationSeconds(0)
       setIsExpirationValid(false)
     },
-    [objectApi]
+    [objectApi],
   )
 
   const fetchTags = React.useCallback(
@@ -190,7 +156,7 @@ export function ObjectInfo({
         setTags([])
       }
     },
-    [objectApi]
+    [objectApi],
   )
 
   const fetchRetention = React.useCallback(
@@ -199,15 +165,13 @@ export function ObjectInfo({
         const response = await objectApi.getObjectRetention(key)
         setRetention(response.Mode ?? "")
         setRetainUntilDate(response.RetainUntilDate ?? "")
-        setRetentionMode(
-          response.Mode === "COMPLIANCE" ? "COMPLIANCE" : "GOVERNANCE"
-        )
+        setRetentionMode(response.Mode === "COMPLIANCE" ? "COMPLIANCE" : "GOVERNANCE")
       } catch {
         setRetention("")
         setRetainUntilDate("")
       }
     },
-    [objectApi]
+    [objectApi],
   )
 
   const loadObjectInfoRef = React.useRef(loadObjectInfo)
@@ -223,13 +187,9 @@ export function ObjectInfo({
   React.useEffect(() => {
     if (open && objectKey) {
       const key = objectKey
-      loadObjectInfoRef.current(key)
-        .then(() =>
-          Promise.all([
-            fetchTagsRef.current(key),
-            fetchRetentionRef.current(key),
-          ])
-        )
+      loadObjectInfoRef
+        .current(key)
+        .then(() => Promise.all([fetchTagsRef.current(key), fetchRetentionRef.current(key)]))
         .catch(() => {
           message.error(t("Failed to fetch object info"))
           setObject(null)
@@ -247,9 +207,7 @@ export function ObjectInfo({
       const filename = (object.Key as string).split("/").pop() ?? ""
       const headers: Record<string, string> = {
         "content-type": getContentType(response.headers, filename),
-        filename:
-          response.headers.get("content-disposition")?.split("filename=")[1] ??
-          "",
+        filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
       }
       const blob = await response.blob()
       exportFile({ headers, data: blob }, filename)
@@ -268,17 +226,14 @@ export function ObjectInfo({
     if (!object?.Key) return
     try {
       const key = object.Key as string
-      const version =
-        versionId === "00000000-0000-0000-0000-000000000000"
-          ? undefined
-          : versionId
+      const version = versionId === "00000000-0000-0000-0000-000000000000" ? undefined : versionId
       const [head, signed] = await Promise.all([
         client.send(
           new HeadObjectCommand({
             Bucket: bucketName,
             Key: key,
             VersionId: version,
-          })
+          }),
         ),
         getSignedUrl(
           client,
@@ -287,7 +242,7 @@ export function ObjectInfo({
             Key: key,
             VersionId: version,
           }),
-          { expiresIn: 3600 }
+          { expiresIn: 3600 },
         ),
       ])
       setPreviewObject({
@@ -320,10 +275,28 @@ export function ObjectInfo({
       return
     }
     try {
-      const url = await objectApi.getSignedUrl(
-        object.Key as string,
-        totalExpirationSeconds
-      )
+      let url: string
+      const creds = permanentCredentials
+      if (creds?.AccessKeyId && creds?.SecretAccessKey) {
+        const siteConfig = await configManager.loadConfig()
+        const tempClient = new S3Client({
+          endpoint: String(siteConfig.s3.endpoint),
+          region: String(siteConfig.s3.region || "us-east-1"),
+          forcePathStyle: true,
+          credentials: {
+            accessKeyId: String(creds.AccessKeyId),
+            secretAccessKey: String(creds.SecretAccessKey),
+            sessionToken: typeof creds.SessionToken === "string" ? creds.SessionToken : undefined,
+          },
+        })
+        const command = new GetObjectCommand({
+          Bucket: bucketName,
+          Key: object.Key as string,
+        })
+        url = await getSignedUrl(tempClient, command, { expiresIn: totalExpirationSeconds })
+      } else {
+        url = await objectApi.getSignedUrl(object.Key as string, totalExpirationSeconds)
+      }
       setSignedUrl(url)
       message.success(t("URL generated successfully"))
     } catch (err) {
@@ -400,9 +373,7 @@ export function ObjectInfo({
     }
   }
 
-  const lastModified = object?.LastModified
-    ? new Date(object.LastModified as string | Date).toISOString()
-    : ""
+  const lastModified = object?.LastModified ? new Date(object.LastModified as string | Date).toISOString() : ""
 
   return (
     <>
@@ -431,11 +402,7 @@ export function ObjectInfo({
                 {t("Versions")}
               </Button>
               {lockStatus && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowRetentionView(true)}
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowRetentionView(true)}>
                   <RiLockLine className="size-4" />
                   {t("Retention")}
                 </Button>
@@ -448,30 +415,18 @@ export function ObjectInfo({
               </ItemHeader>
               <ItemContent className="min-w-0 space-y-3 text-sm overflow-hidden">
                 <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">
-                    {t("Object Name")}
-                  </span>
-                  <span
-                    className="max-w-[60%] truncate"
-                    title={String(object?.Key ?? "")}
-                  >
+                  <span className="font-medium text-muted-foreground">{t("Object Name")}</span>
+                  <span className="max-w-[60%] truncate" title={String(object?.Key ?? "")}>
                     {String(object?.Key ?? "")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">
-                    {t("Object Size")}
-                  </span>
+                  <span className="font-medium text-muted-foreground">{t("Object Size")}</span>
                   <span>{String(object?.ContentLength ?? "-")}</span>
                 </div>
                 <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">
-                    {t("Object Type")}
-                  </span>
-                  <span
-                    className="max-w-[60%] truncate"
-                    title={String(object?.ContentType ?? "")}
-                  >
+                  <span className="font-medium text-muted-foreground">{t("Object Type")}</span>
+                  <span className="max-w-[60%] truncate" title={String(object?.ContentType ?? "")}>
                     {String(object?.ContentType ?? "-")}
                   </span>
                 </div>
@@ -480,19 +435,12 @@ export function ObjectInfo({
                   <span>{String(object?.ETag ?? "-")}</span>
                 </div>
                 <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">
-                    {t("Last Modified Time")}
-                  </span>
+                  <span className="font-medium text-muted-foreground">{t("Last Modified Time")}</span>
                   <span>{lastModified || "-"}</span>
                 </div>
                 <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">
-                    {t("Legal Hold")}
-                  </span>
-                  <Switch
-                    checked={lockStatus}
-                    onCheckedChange={toggleLegalHold}
-                  />
+                  <span className="font-medium text-muted-foreground">{t("Legal Hold")}</span>
+                  <Switch checked={lockStatus} onCheckedChange={toggleLegalHold} />
                 </div>
                 <div className="flex flex-col gap-2">
                   <span className="font-medium text-muted-foreground">
@@ -501,17 +449,11 @@ export function ObjectInfo({
                   </span>
                   <div className="flex flex-col gap-1">
                     <span>{retention}</span>
-                    {retainUntilDate && (
-                      <span className="text-xs text-muted-foreground">
-                        {retainUntilDate}
-                      </span>
-                    )}
+                    {retainUntilDate && <span className="text-xs text-muted-foreground">{retainUntilDate}</span>}
                   </div>
                 </div>
                 <div className="border-t pt-3 flex flex-col gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">
-                    {t("Temporary URL Expiration")}
-                  </span>
+                  <span className="font-medium text-muted-foreground">{t("Temporary URL Expiration")}</span>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <div className="flex items-center gap-1.5 shrink-0">
                       <Input
@@ -521,13 +463,9 @@ export function ObjectInfo({
                         placeholder={t("Days")}
                         className="w-14 shrink-0"
                         value={expirationDays || ""}
-                        onChange={(e) =>
-                          setExpirationDays(Number(e.target.value) || 0)
-                        }
+                        onChange={(e) => setExpirationDays(Number(e.target.value) || 0)}
                       />
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        {t("Days")}
-                      </span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">{t("Days")}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <Input
@@ -537,13 +475,9 @@ export function ObjectInfo({
                         placeholder={t("Hours")}
                         className="w-14 shrink-0"
                         value={expirationHours || ""}
-                        onChange={(e) =>
-                          setExpirationHours(Number(e.target.value) || 0)
-                        }
+                        onChange={(e) => setExpirationHours(Number(e.target.value) || 0)}
                       />
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        {t("Hours")}
-                      </span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">{t("Hours")}</span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <Input
@@ -553,13 +487,9 @@ export function ObjectInfo({
                         placeholder={t("Minutes")}
                         className="w-14 shrink-0"
                         value={expirationMinutes || ""}
-                        onChange={(e) =>
-                          setExpirationMinutes(Number(e.target.value) || 0)
-                        }
+                        onChange={(e) => setExpirationMinutes(Number(e.target.value) || 0)}
                       />
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        {t("Minutes")}
-                      </span>
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">{t("Minutes")}</span>
                     </div>
                   </div>
                   <Button
@@ -570,25 +500,15 @@ export function ObjectInfo({
                   >
                     {t("Generate URL")}
                   </Button>
-                  {expirationError && (
-                    <div className="text-xs text-destructive">
-                      {expirationError}
-                    </div>
-                  )}
+                  {expirationError && <div className="text-xs text-destructive">{expirationError}</div>}
                   {totalExpirationSeconds > 0 && (
                     <div className="text-xs text-muted-foreground">
-                      {t("Total Duration")}:{" "}
-                      {formatDuration(totalExpirationSeconds)}
+                      {t("Total Duration")}: {formatDuration(totalExpirationSeconds)}
                     </div>
                   )}
                 </div>
                 <div className="flex items-center gap-2 min-w-0 w-full">
-                  <CopyInput
-                    value={signedUrl}
-                    readonly
-                    copyIcon
-                    className="min-w-0 flex-1"
-                  />
+                  <CopyInput value={signedUrl} readonly copyIcon className="min-w-0 flex-1" />
                 </div>
               </ItemContent>
             </Item>
@@ -604,11 +524,7 @@ export function ObjectInfo({
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
-                <Badge
-                  key={tag.Key}
-                  variant="secondary"
-                  className="gap-1 pr-1"
-                >
+                <Badge key={tag.Key} variant="secondary" className="gap-1 pr-1">
                   {tag.Key}: {tag.Value}
                   <button
                     type="button"
@@ -627,9 +543,7 @@ export function ObjectInfo({
                   <FieldContent>
                     <Input
                       value={tagFormValue.Key}
-                      onChange={(e) =>
-                        setTagFormValue((v) => ({ ...v, Key: e.target.value }))
-                      }
+                      onChange={(e) => setTagFormValue((v) => ({ ...v, Key: e.target.value }))}
                       placeholder={t("Tag Key Placeholder")}
                     />
                   </FieldContent>
@@ -671,9 +585,7 @@ export function ObjectInfo({
               <FieldContent>
                 <RadioGroup
                   value={retentionMode}
-                  onValueChange={(v) =>
-                    setRetentionMode(v as "COMPLIANCE" | "GOVERNANCE")
-                  }
+                  onValueChange={(v) => setRetentionMode(v as "COMPLIANCE" | "GOVERNANCE")}
                   className="grid gap-2 sm:grid-cols-2"
                 >
                   {[
@@ -684,10 +596,7 @@ export function ObjectInfo({
                       key={opt.value}
                       className="flex items-start gap-3 rounded-md border border-border/50 p-3 cursor-pointer"
                     >
-                      <RadioGroupItem
-                        value={opt.value}
-                        className="mt-0.5"
-                      />
+                      <RadioGroupItem value={opt.value} className="mt-0.5" />
                       <span className="text-sm font-medium">{opt.label}</span>
                     </label>
                   ))}
@@ -705,21 +614,13 @@ export function ObjectInfo({
               </FieldContent>
             </Field>
             <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={resetRetention}
-              >
+              <Button type="button" variant="secondary" onClick={resetRetention}>
                 {t("Reset")}
               </Button>
               <Button type="submit" variant="default">
                 {t("Confirm")}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowRetentionView(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => setShowRetentionView(false)}>
                 {t("Cancel")}
               </Button>
             </div>
@@ -727,14 +628,10 @@ export function ObjectInfo({
         </DialogContent>
       </Dialog>
 
-      <ObjectPreviewModal
-        show={showPreview}
-        onShowChange={setShowPreview}
-        object={previewObject ?? object}
-      />
+      <ObjectPreviewModal show={showPreview} onShowChange={setShowPreview} object={previewObject ?? object} />
       <ObjectVersions
         bucketName={bucketName}
-        objectKey={object?.Key as string ?? ""}
+        objectKey={(object?.Key as string) ?? ""}
         visible={showVersions}
         onClose={() => setShowVersions(false)}
         onPreview={handlePreviewVersion}

@@ -4,11 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sidebar,
@@ -26,14 +22,12 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
-import {
-  RiArrowRightSLine,
-  RiExternalLinkLine,
-} from "@remixicon/react"
+import { RiArrowRightSLine, RiExternalLinkLine } from "@remixicon/react"
 import { getIconComponent } from "@/lib/icon-map"
 import navs from "@/config/navs"
 import logoImage from "@/assets/logo.svg"
 import type { NavItem } from "@/types/app-config"
+import { usePermissions } from "@/hooks/use-permissions"
 
 const APP_NAME = "RustFS"
 const RELEASE_VERSION = process.env.NEXT_PUBLIC_VERSION ?? ""
@@ -67,9 +61,7 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed"
   const brandInitial = APP_NAME.charAt(0).toUpperCase() ?? "R"
 
-  // Phase 0: show all nav items (no auth/permission filtering yet)
-  const isAdmin = true
-  const canAccessPath = (_path: string) => true
+  const { isAdmin, canAccessPath } = usePermissions()
 
   const navGroups: NavItem[][] = []
   let current: NavItem[] = []
@@ -134,18 +126,8 @@ export function AppSidebar() {
             </div>
           ) : (
             <div className="flex min-w-0 items-baseline gap-2 px-3 py-4">
-              <Image
-                src={logoImage}
-                alt="RustFS"
-                width={64}
-                height={16}
-                className="h-4 w-auto shrink-0"
-              />
-              {RELEASE_VERSION ? (
-                <span className="text-[10px] text-muted-foreground">
-                  v{RELEASE_VERSION}
-                </span>
-              ) : null}
+              <Image src={logoImage} alt="RustFS" width={64} height={16} className="h-4 w-auto shrink-0" />
+              {RELEASE_VERSION ? <span className="text-[10px] text-muted-foreground">v{RELEASE_VERSION}</span> : null}
             </div>
           )}
         </Link>
@@ -174,9 +156,7 @@ export function AppSidebar() {
                                 className="gap-3"
                               >
                                 <NavIcon name={item.icon} />
-                                <span className="flex-1 truncate">
-                                  {getLabel(item)}
-                                </span>
+                                <span className="flex-1 truncate">{getLabel(item)}</span>
                                 <RiArrowRightSLine className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                               </SidebarMenuButton>
                             </CollapsibleTrigger>
@@ -193,26 +173,15 @@ export function AppSidebar() {
                                           className="flex w-full items-center gap-2"
                                         >
                                           <NavIcon name={child.icon} />
-                                          <span className="truncate">
-                                            {getLabel(child)}
-                                          </span>
+                                          <span className="truncate">{getLabel(child)}</span>
                                           <RiExternalLinkLine className="ml-auto size-3 text-muted-foreground" />
                                         </a>
                                       </SidebarMenuSubButton>
                                     ) : (
-                                      <SidebarMenuSubButton
-                                        asChild
-                                        size="sm"
-                                        isActive={isRouteActive(child)}
-                                      >
-                                        <Link
-                                          href={normalizedTo(child)}
-                                          className="flex w-full items-center gap-2"
-                                        >
+                                      <SidebarMenuSubButton asChild size="sm" isActive={isRouteActive(child)}>
+                                        <Link href={normalizedTo(child)} className="flex w-full items-center gap-2">
                                           <NavIcon name={child.icon} />
-                                          <span className="truncate">
-                                            {getLabel(child)}
-                                          </span>
+                                          <span className="truncate">{getLabel(child)}</span>
                                         </Link>
                                       </SidebarMenuSubButton>
                                     )}
@@ -232,26 +201,15 @@ export function AppSidebar() {
                                   className="flex w-full items-center gap-3"
                                 >
                                   <NavIcon name={item.icon} />
-                                  <span className="flex-1 truncate">
-                                    {getLabel(item)}
-                                  </span>
+                                  <span className="flex-1 truncate">{getLabel(item)}</span>
                                   <RiExternalLinkLine className="size-3.5 text-muted-foreground" />
                                 </a>
                               </SidebarMenuButton>
                             ) : (
-                              <SidebarMenuButton
-                                asChild
-                                isActive={isRouteActive(item)}
-                                tooltip={getLabel(item)}
-                              >
-                                <Link
-                                  href={normalizedTo(item)}
-                                  className="flex w-full items-center gap-3"
-                                >
+                              <SidebarMenuButton asChild isActive={isRouteActive(item)} tooltip={getLabel(item)}>
+                                <Link href={normalizedTo(item)} className="flex w-full items-center gap-3">
                                   <NavIcon name={item.icon} />
-                                  <span className="flex-1 truncate">
-                                    {getLabel(item)}
-                                  </span>
+                                  <span className="flex-1 truncate">{getLabel(item)}</span>
                                 </Link>
                               </SidebarMenuButton>
                             )}
@@ -261,9 +219,7 @@ export function AppSidebar() {
                     ))}
                   </SidebarMenu>
                 </SidebarGroupContent>
-                {groupIndex !== navGroups.length - 1 ? (
-                  <SidebarSeparator className="mx-2" />
-                ) : null}
+                {groupIndex !== navGroups.length - 1 ? <SidebarSeparator className="mx-2" /> : null}
               </SidebarGroup>
             ))}
           </div>

@@ -17,7 +17,7 @@ export default function ForbiddenPage() {
   const router = useRouter()
 
   const handleBack = () => {
-    router.replace("/")
+    router.replace("/browser")
   }
 
   return (

@@ -2,11 +2,11 @@ import type { NavItem } from "@/types/app-config"
 
 // icons: https://icones.js.org/collection/ri
 export default [
-  {
-    label: "Home",
-    to: "/",
-    icon: "ri:home-line",
-  },
+  // {
+  //   label: "Home",
+  //   to: "/",
+  //   icon: "ri:home-line",
+  // },
   {
     label: "Browser",
     to: "/browser",
@@ -41,12 +41,12 @@ export default [
     icon: "ri:download-2-line",
     isAdminOnly: true,
   },
-  // {
-  //   label: "Performance",
-  //   to: "/performance",
-  //   icon: "ri:bar-chart-box-line",
-  //   isAdminOnly: true,
-  // },
+  {
+    label: "Performance",
+    to: "/performance",
+    icon: "ri:bar-chart-box-line",
+    isAdminOnly: true,
+  },
   {
     label: "divider",
     key: "divider-1",

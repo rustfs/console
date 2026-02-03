@@ -38,7 +38,7 @@ function LoginPageContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace("/")
+      router.replace(buildRoute("/browser"))
     }
   }, [isAuthenticated, router])
 
@@ -60,7 +60,7 @@ function LoginPageContent() {
       await login(credentials, currentConfig)
 
       message.success(t("Login Success"))
-      window.location.href = buildRoute("/")
+      window.location.href = buildRoute("/browser")
     } catch {
       message.error(t("Login Failed"))
     }

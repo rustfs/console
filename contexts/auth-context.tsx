@@ -136,7 +136,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated,
       isAdmin: isAdminStore,
     }),
-    [login, logout, logoutAndRedirect, credentials, permanentStore, isAuthenticated, isAdminStore],
+    [
+      login,
+      logout,
+      logoutAndRedirect,
+      setIsAdmin,
+      getIsAdmin,
+      credentials,
+      permanentStore,
+      isAuthenticated,
+      isAdminStore,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

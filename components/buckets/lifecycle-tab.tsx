@@ -68,6 +68,40 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
     loadData()
   }, [loadData])
 
+  const handleRowDelete = React.useCallback(
+    async (row: LifecycleRule) => {
+      const remaining = data.filter((item) => item.ID !== row.ID)
+
+      try {
+        if (remaining.length === 0) {
+          await deleteBucketLifecycle(bucketName)
+        } else {
+          await putBucketLifecycleConfiguration(bucketName, {
+            Rules: remaining,
+          })
+        }
+        message.success(t("Delete Success"))
+        loadData()
+      } catch (error) {
+        message.error((error as Error).message || t("Delete Failed"))
+      }
+    },
+    [data, deleteBucketLifecycle, bucketName, putBucketLifecycleConfiguration, message, t, loadData],
+  )
+
+  const confirmDelete = React.useCallback(
+    (row: LifecycleRule) => {
+      dialog.error({
+        title: t("Warning"),
+        content: t("Are you sure you want to delete this rule?"),
+        positiveText: t("Confirm"),
+        negativeText: t("Cancel"),
+        onPositiveClick: () => handleRowDelete(row),
+      })
+    },
+    [dialog, t, handleRowDelete],
+  )
+
   const columns: ColumnDef<LifecycleRule>[] = React.useMemo(
     () => [
       {
@@ -133,7 +167,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         ),
       },
     ],
-    [t],
+    [t, confirmDelete],
   )
 
   const { table } = useDataTable<LifecycleRule>({
@@ -141,34 +175,6 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
     columns,
     getRowId: (row) => row.ID ?? JSON.stringify(row),
   })
-
-  const confirmDelete = (row: LifecycleRule) => {
-    dialog.error({
-      title: t("Warning"),
-      content: t("Are you sure you want to delete this rule?"),
-      positiveText: t("Confirm"),
-      negativeText: t("Cancel"),
-      onPositiveClick: () => handleRowDelete(row),
-    })
-  }
-
-  const handleRowDelete = async (row: LifecycleRule) => {
-    const remaining = data.filter((item) => item.ID !== row.ID)
-
-    try {
-      if (remaining.length === 0) {
-        await deleteBucketLifecycle(bucketName)
-      } else {
-        await putBucketLifecycleConfiguration(bucketName, {
-          Rules: remaining,
-        })
-      }
-      message.success(t("Delete Success"))
-      loadData()
-    } catch (error) {
-      message.error((error as Error).message || t("Delete Failed"))
-    }
-  }
 
   return (
     <div className="flex flex-col gap-4">

@@ -47,19 +47,22 @@ export function UserGroupSetPoliciesMultiple({
 
   const allVisibleSelected = filteredPolicies.length > 0 && filteredPolicies.every((p) => checked.includes(p.name))
 
-  const isSelected = (name: string) => checked.includes(name)
+  const isSelected = React.useCallback((name: string) => checked.includes(name), [checked])
 
-  const toggleSelection = (name: string, value: boolean) => {
+  const toggleSelection = React.useCallback((name: string, value: boolean) => {
     setChecked((prev) => (value ? (prev.includes(name) ? prev : [...prev, name]) : prev.filter((p) => p !== name)))
-  }
+  }, [])
 
-  const toggleSelectAll = (value: boolean) => {
-    const visibleNames = filteredPolicies.map((p) => p.name)
-    if (!visibleNames.length) return
-    setChecked((prev) =>
-      value ? Array.from(new Set([...prev, ...visibleNames])) : prev.filter((n) => !visibleNames.includes(n)),
-    )
-  }
+  const toggleSelectAll = React.useCallback(
+    (value: boolean) => {
+      const visibleNames = filteredPolicies.map((p) => p.name)
+      if (!visibleNames.length) return
+      setChecked((prev) =>
+        value ? Array.from(new Set([...prev, ...visibleNames])) : prev.filter((n) => !visibleNames.includes(n)),
+      )
+    },
+    [filteredPolicies],
+  )
 
   const columns: ColumnDef<PolicyItem>[] = React.useMemo(
     () => [
@@ -90,7 +93,7 @@ export function UserGroupSetPoliciesMultiple({
         },
       },
     ],
-    [t, allVisibleSelected, checked],
+    [t, allVisibleSelected, checked, isSelected, toggleSelectAll, toggleSelection],
   )
 
   const { table } = useDataTable<PolicyItem>({

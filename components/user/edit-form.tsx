@@ -82,7 +82,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
         .catch(() => {})
         .finally(() => setLoading(false))
     }
-  }, [open, row?.accessKey])
+  }, [open, row, getUser])
 
   const handleStatusChange = async (checked: boolean) => {
     const nextStatus = checked ? "enabled" : "disabled"

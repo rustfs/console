@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,7 +29,7 @@ export default function SettingsPage() {
   const [formData, setFormData] = useState({ serverHost: "" })
   const [loading, setLoading] = useState(false)
 
-  const loadCurrentConfig = async () => {
+  const loadCurrentConfig = useCallback(async () => {
     try {
       const config = await configManager.loadConfig()
       setCurrentConfig({
@@ -44,11 +44,11 @@ export default function SettingsPage() {
     } catch {
       message.error(t("Failed to load current configuration"))
     }
-  }
+  }, [message, t])
 
   useEffect(() => {
     loadCurrentConfig()
-  }, [])
+  }, [loadCurrentConfig])
 
   const currentItems = useMemo(
     () => [

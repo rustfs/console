@@ -75,6 +75,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
             <>
               {isImage && (
                 <div className="flex justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={previewUrl} alt="preview" className="max-h-[60vh]" />
                 </div>
               )}

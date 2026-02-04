@@ -37,7 +37,7 @@ export default function UserGroupsPage() {
   const [editRow, setEditRow] = useState<GroupRow | null>(null)
   const [policiesDialogOpen, setPoliciesDialogOpen] = useState(false)
 
-  const getDataList = async () => {
+  const getDataList = React.useCallback(async () => {
     setLoading(true)
     try {
       const res = (await listGroup()) as string[] | undefined
@@ -50,19 +50,54 @@ export default function UserGroupsPage() {
       message.error(t("Failed to get data"))
     } finally {
       setLoading(false)
-      table.resetRowSelection()
     }
-  }
+  }, [listGroup, message, t])
 
   useEffect(() => {
     getDataList()
-  }, [])
+  }, [getDataList])
 
   const filteredData = React.useMemo(() => {
     if (!searchTerm) return data
     const term = searchTerm.toLowerCase()
     return data.filter((row) => row.name.toLowerCase().includes(term))
   }, [data, searchTerm])
+
+  const openEditItem = React.useCallback((row: GroupRow) => {
+    setEditRow(row)
+    setEditFormOpen(true)
+  }, [])
+
+  const deleteItem = React.useCallback(
+    async (row: GroupRow) => {
+      try {
+        const info = (await getGroup(row.name)) as { members?: string[] }
+        if (info?.members?.length) {
+          message.error(t("Please remove members first"))
+          return
+        }
+        await removeGroup(row.name)
+        message.success(t("Delete Success"))
+        await getDataList()
+      } catch {
+        message.error(t("Delete Failed"))
+      }
+    },
+    [getGroup, removeGroup, message, t, getDataList],
+  )
+
+  const confirmDelete = React.useCallback(
+    (row: GroupRow) => {
+      dialog.error({
+        title: t("Confirm Delete"),
+        content: "",
+        positiveText: t("Delete"),
+        negativeText: t("Cancel"),
+        onPositiveClick: () => deleteItem(row),
+      })
+    },
+    [dialog, t, deleteItem],
+  )
 
   const columns: ColumnDef<GroupRow>[] = React.useMemo(
     () => [
@@ -92,7 +127,7 @@ export default function UserGroupsPage() {
         ),
       },
     ],
-    [t],
+    [t, openEditItem, confirmDelete],
   )
 
   const { table, selectedRowIds } = useDataTable<GroupRow>({
@@ -104,35 +139,9 @@ export default function UserGroupsPage() {
 
   const selectedKeys = Array.from(selectedRowIds)
 
-  const openEditItem = (row: GroupRow) => {
-    setEditRow(row)
-    setEditFormOpen(true)
-  }
-
-  const confirmDelete = (row: GroupRow) => {
-    dialog.error({
-      title: t("Confirm Delete"),
-      content: "",
-      positiveText: t("Delete"),
-      negativeText: t("Cancel"),
-      onPositiveClick: () => deleteItem(row),
-    })
-  }
-
-  const deleteItem = async (row: GroupRow) => {
-    try {
-      const info = (await getGroup(row.name)) as { members?: string[] }
-      if (info?.members?.length) {
-        message.error(t("Please remove members first"))
-        return
-      }
-      await removeGroup(row.name)
-      message.success(t("Delete Success"))
-      await getDataList()
-    } catch {
-      message.error(t("Delete Failed"))
-    }
-  }
+  React.useEffect(() => {
+    table.resetRowSelection()
+  }, [data, table])
 
   return (
     <Page>

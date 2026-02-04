@@ -23,7 +23,7 @@ interface UserGroupEditFormProps {
   onSuccess: () => void
 }
 
-export function UserGroupEditForm({ open, onOpenChange, row, onSuccess: _onSuccess }: UserGroupEditFormProps) {
+export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGroupEditFormProps) {
   const { t } = useTranslation()
   const { getGroup, updateGroupStatus } = useGroups()
 
@@ -58,6 +58,7 @@ export function UserGroupEditForm({ open, onOpenChange, row, onSuccess: _onSucce
     if (status === group.status) return
     await updateGroupStatus(group.name, { ...group, status })
     await getGroupData(group.name)
+    onSuccess()
   }
 
   const handleStatusToggle = async (checked: boolean) => {

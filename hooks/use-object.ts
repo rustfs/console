@@ -3,7 +3,6 @@
 import { useCallback } from "react"
 import {
   DeleteObjectCommand,
-  GetObjectLegalHoldCommand,
   GetObjectRetentionCommand,
   GetObjectTaggingCommand,
   GetObjectCommand,

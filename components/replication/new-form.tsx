@@ -80,7 +80,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
         setEndpoint("http://" + endpoint)
       }
     }
-  }, [tls])
+  }, [tls, endpoint])
 
   const resetForm = useCallback(() => {
     setLevel("1")

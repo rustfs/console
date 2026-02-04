@@ -14,7 +14,7 @@ import { useMessage } from "@/lib/feedback/message"
 export default function SSEPage() {
   const { t } = useTranslation()
   const message = useMessage()
-  const { getKMSStatus, clearCache, getDetailedStatus, startKMS, stopKMS } = useSSE()
+  const { getKMSStatus, clearCache, startKMS, stopKMS } = useSSE()
 
   const [status, setStatus] = useState<{
     status?: string

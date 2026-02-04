@@ -75,7 +75,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   const [retentionUnit, setRetentionUnit] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [versionLoading, setVersionLoading] = React.useState(false)
-  const [objectLockLoading, setObjectLockLoading] = React.useState(false)
+  const [objectLockLoading] = React.useState(false)
 
   const [showPolicyModal, setShowPolicyModal] = React.useState(false)
   const [policyFormPolicy, setPolicyFormPolicy] = React.useState<BucketPolicyType | "custom">("private")

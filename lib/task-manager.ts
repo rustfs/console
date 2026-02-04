@@ -33,7 +33,7 @@ export interface TaskHandler<TTask, TStatus extends string> {
 }
 
 export interface TaskManagerOptions<TTask extends ManagedTask<TStatus>, TStatus extends string> {
-  handlers: Record<string, TaskHandler<unknown, string>>
+  handlers: Record<string, TaskHandler<TTask, TStatus>>
   maxConcurrent?: number
   maxRetries?: number
   retryDelay?: number
@@ -45,7 +45,7 @@ type Listener = () => void
 
 export class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
   private tasks: TTask[] = []
-  private readonly handlers: Record<string, TaskHandler<unknown, string>>
+  private readonly handlers: Record<string, TaskHandler<TTask, TStatus>>
   readonly maxConcurrent: number
   readonly maxRetries: number
   readonly retryDelay: number

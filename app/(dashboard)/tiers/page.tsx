@@ -69,6 +69,33 @@ export default function TiersPage() {
     loadTiers()
   }, [loadTiers])
 
+  const deleteTier = useCallback(
+    async (row: TierRow) => {
+      try {
+        const name = getConfig(row)?.name || ""
+        await removeTiers(name)
+        message.success(t("Delete Success"))
+        loadTiers()
+      } catch (error) {
+        message.error((error as Error).message || t("Delete Failed"))
+      }
+    },
+    [removeTiers, message, t, loadTiers],
+  )
+
+  const confirmDelete = useCallback(
+    (row: TierRow) => {
+      dialog.error({
+        title: t("Warning"),
+        content: t("Are you sure you want to delete this tier?"),
+        positiveText: t("Confirm"),
+        negativeText: t("Cancel"),
+        onPositiveClick: () => deleteTier(row),
+      })
+    },
+    [dialog, t, deleteTier],
+  )
+
   const columns: ColumnDef<TierRow>[] = useMemo(
     () => [
       {
@@ -127,7 +154,7 @@ export default function TiersPage() {
         ),
       },
     ],
-    [t],
+    [t, confirmDelete],
   )
 
   const { table } = useDataTable<TierRow>({
@@ -135,27 +162,6 @@ export default function TiersPage() {
     columns,
     getRowId: (row) => `${row.type}-${getConfig(row)?.name}`,
   })
-
-  const confirmDelete = (row: TierRow) => {
-    dialog.error({
-      title: t("Warning"),
-      content: t("Are you sure you want to delete this tier?"),
-      positiveText: t("Confirm"),
-      negativeText: t("Cancel"),
-      onPositiveClick: () => deleteTier(row),
-    })
-  }
-
-  const deleteTier = async (row: TierRow) => {
-    try {
-      const name = getConfig(row)?.name || ""
-      await removeTiers(name)
-      message.success(t("Delete Success"))
-      loadTiers()
-    } catch (error) {
-      message.error((error as Error).message || t("Delete Failed"))
-    }
-  }
 
   return (
     <Page>

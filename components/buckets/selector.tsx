@@ -26,7 +26,6 @@ export function BucketSelector({
   placeholder = "Please select bucket",
   disabled = false,
   selectorClass,
-  cacheKey = "bucket-selector-buckets",
   layout = "inline",
   label,
   description,

@@ -128,7 +128,7 @@ export function ObjectList({
         setTimeout(() => setLoading(false), 200)
       }
     },
-    [bucket, prefix, pageSize, continuationToken, showDeleted, objectApi.listObject],
+    [bucket, prefix, pageSize, continuationToken, showDeleted, objectApi],
   )
 
   const prevRefreshTriggerRef = React.useRef(refreshTrigger)
@@ -163,10 +163,13 @@ export function ObjectList({
     setTokenHistory([])
   }, [showDeleted])
 
-  const displayKey = (key: string) => {
-    if (!prefix) return key
-    return key.startsWith(prefix) ? key.slice(prefix.length) : key
-  }
+  const displayKey = React.useCallback(
+    (key: string) => {
+      if (!prefix) return key
+      return key.startsWith(prefix) ? key.slice(prefix.length) : key
+    },
+    [prefix],
+  )
 
   const filteredData = React.useMemo(() => {
     const term = searchTerm.toLowerCase()
@@ -177,7 +180,30 @@ export function ObjectList({
       }
       return item.Key !== prefix
     })
-  }, [data, searchTerm, prefix])
+  }, [data, searchTerm, prefix, displayKey])
+
+  const downloadFile = React.useCallback(
+    async (key: string) => {
+      if (!key) return
+      const loadingMsg = message.loading(t("Getting URL"), { duration: 0 })
+      try {
+        const url = await objectApi.getSignedUrl(key)
+        const response = await fetch(url)
+        const filename = key.split("/").pop() ?? ""
+        const headers: Record<string, string> = {
+          "content-type": getContentType(response.headers, filename),
+          filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
+        }
+        const blob = await response.blob()
+        exportFile({ headers, data: blob }, filename)
+      } catch (err) {
+        message.error((err as Error)?.message ?? t("Download Failed"))
+      } finally {
+        loadingMsg.destroy()
+      }
+    },
+    [message, t, objectApi],
+  )
 
   const columns: ColumnDef<ObjectRow>[] = React.useMemo(
     () => [
@@ -250,7 +276,7 @@ export function ObjectList({
         ),
       },
     ],
-    [t, bucket, bucketPath, onOpenInfo],
+    [t, bucket, bucketPath, onOpenInfo, displayKey, downloadFile],
   )
 
   const { table, selectedRowIds } = useDataTable<ObjectRow>({
@@ -289,26 +315,6 @@ export function ObjectList({
     }
 
     return Array.from(new Set(collected))
-  }
-
-  const downloadFile = async (key: string) => {
-    if (!key) return
-    const loadingMsg = message.loading(t("Getting URL"), { duration: 0 })
-    try {
-      const url = await objectApi.getSignedUrl(key)
-      const response = await fetch(url)
-      const filename = key.split("/").pop() ?? ""
-      const headers: Record<string, string> = {
-        "content-type": getContentType(response.headers, filename),
-        filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
-      }
-      const blob = await response.blob()
-      exportFile({ headers, data: blob }, filename)
-    } catch (err) {
-      message.error((err as Error)?.message ?? t("Download Failed"))
-    } finally {
-      loadingMsg.destroy()
-    }
   }
 
   const downloadMultiple = async () => {

@@ -78,6 +78,7 @@ export function useDataTable<TData extends RowData>(options: UseDataTableOptions
     return base
   }, [options.columns, options.enableRowSelection])
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- tanstack table hook is required for table state
   const table = useReactTable({
     data: options.data,
     columns,

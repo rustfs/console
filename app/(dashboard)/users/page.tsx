@@ -57,7 +57,7 @@ export default function UsersPage() {
   const [editFormOpen, setEditFormOpen] = useState(false)
   const [editRow, setEditRow] = useState<UserRow | null>(null)
 
-  const getDataList = async () => {
+  const getDataList = React.useCallback(async () => {
     setLoading(true)
     try {
       const res = (await listUsers()) as Record<string, Record<string, unknown>>
@@ -66,17 +66,16 @@ export default function UsersPage() {
         ...(typeof info === "object" ? info : {}),
       })) as UserRow[]
       setData(users)
-    } catch (error) {
+    } catch {
       message.error(t("Failed to get data"))
     } finally {
       setLoading(false)
-      table.resetRowSelection()
     }
-  }
+  }, [listUsers, message, t])
 
   useEffect(() => {
     getDataList()
-  }, [])
+  }, [getDataList])
 
   const filteredData = React.useMemo(() => {
     if (!searchTerm) return data
@@ -145,6 +144,10 @@ export default function UsersPage() {
 
   const selectedKeys = selectedRowIds
 
+  React.useEffect(() => {
+    table.resetRowSelection()
+  }, [data, table])
+
   const openEditItem = (row: UserRow) => {
     setEditRow(row)
     setEditFormOpen(true)
@@ -166,7 +169,7 @@ export default function UsersPage() {
       message.success(t("Delete Success"))
       table.resetRowSelection()
       await getDataList()
-    } catch (error) {
+    } catch {
       message.error(t("Delete Failed"))
     }
   }
@@ -184,7 +187,7 @@ export default function UsersPage() {
           message.success(t("Delete Success"))
           table.resetRowSelection()
           await getDataList()
-        } catch (error) {
+        } catch {
           message.error(t("Delete Failed"))
         }
       },

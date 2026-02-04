@@ -227,7 +227,7 @@ The project can be deployed to any platform that supports Next.js:
 
 ## 📄 License
 
-See `public/legal/LICENSE` for license information.
+Licensed under the Apache License 2.0. See [LICENSE](LICENSE) for details.
 
 ## 🔗 Resources
 
@@ -244,7 +244,3 @@ See `public/legal/LICENSE` for license information.
 - Prefer using existing project tools and patterns
 - Consider internationalization support when adding new features
 - Ensure all changes pass type checking
-
----
-
-**Note**: This is a private project for internal use only.

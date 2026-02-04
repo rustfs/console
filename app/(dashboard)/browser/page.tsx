@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { BucketNewForm } from "@/components/buckets/new-form"
+import { Spinner } from "@/components/ui/spinner"
 import { useBucket } from "@/hooks/use-bucket"
 import { useObject } from "@/hooks/use-object"
 import { useSystem } from "@/hooks/use-system"
@@ -166,12 +167,19 @@ export default function BrowserPage() {
         header: () => t("Object Count"),
         accessorKey: "Count",
         cell: ({ row }) =>
-          typeof row.original.Count === "number" ? row.original.Count.toLocaleString() : usageLoading ? "..." : "--",
+          typeof row.original.Count === "number" ? (
+            row.original.Count.toLocaleString()
+          ) : usageLoading ? (
+            <Spinner className="size-3 text-muted-foreground" />
+          ) : (
+            "--"
+          ),
       },
       {
         header: () => t("Size"),
         accessorKey: "Size",
-        cell: ({ row }) => row.original.Size ?? (usageLoading ? "..." : "--"),
+        cell: ({ row }) =>
+          row.original.Size ?? (usageLoading ? <Spinner className="size-3 text-muted-foreground" /> : "--"),
       },
     )
   }

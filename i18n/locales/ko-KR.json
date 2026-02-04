@@ -640,6 +640,7 @@
   "Rule ID": "규칙 ID",
   "Running": "실행 중",
   "Running (Unhealthy)": "실행 중 (비정상)",
+  "Running Status": "운영 상태",
   "Rust-based": "Rust 기반",
   "RustFS": "러스트FS",
   "RustFS built-in cold storage": "RustFS 내장 콜드 스토리지",

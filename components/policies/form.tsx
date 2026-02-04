@@ -7,13 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { usePolicies } from "@/hooks/use-policies"
 
@@ -29,12 +23,7 @@ interface PolicyFormProps {
   onSaved: () => void
 }
 
-export function PolicyForm({
-  show,
-  onShowChange,
-  policy,
-  onSaved,
-}: PolicyFormProps) {
+export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { addPolicy } = usePolicies()
@@ -100,17 +89,14 @@ export function PolicyForm({
 
     setSubmitting(true)
     try {
-      const payload = normalizePolicyForSubmit(
-        JSON.parse(content) as Record<string, unknown>
-      )
+      const payload = normalizePolicyForSubmit(JSON.parse(content) as Record<string, unknown>)
       await addPolicy(name.trim(), payload)
       message.success(t("Saved"))
       closeModal()
       onSaved()
     } catch (error) {
       console.error(error)
-      const msg =
-        error instanceof Error ? error.message : String(error)
+      const msg = error instanceof Error ? error.message : String(error)
       message.error(msg || t("Save Failed"))
     } finally {
       setSubmitting(false)
@@ -132,16 +118,9 @@ export function PolicyForm({
           <Field>
             <FieldLabel htmlFor="policy-name">{t("Policy Name")}</FieldLabel>
             <FieldContent>
-              <Input
-                id="policy-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="off"
-              />
+              <Input id="policy-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />
             </FieldContent>
-            {errors.name && (
-              <FieldDescription className="text-destructive">{errors.name}</FieldDescription>
-            )}
+            {errors.name && <FieldDescription className="text-destructive">{errors.name}</FieldDescription>}
           </Field>
 
           <Field>
@@ -156,9 +135,7 @@ export function PolicyForm({
                 />
               </div>
             </FieldContent>
-            {errors.content && (
-              <FieldDescription className="text-destructive">{errors.content}</FieldDescription>
-            )}
+            {errors.content && <FieldDescription className="text-destructive">{errors.content}</FieldDescription>}
           </Field>
         </div>
 

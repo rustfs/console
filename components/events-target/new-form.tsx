@@ -5,13 +5,7 @@ import Image from "next/image"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { useEventTarget } from "@/hooks/use-event-target"
 import { useMessage } from "@/lib/feedback/message"
@@ -24,10 +18,7 @@ interface EventsTargetNewFormProps {
   onSuccess?: () => void
 }
 
-const CONFIG_OPTIONS: Record<
-  string,
-  Array<{ label: string; name: string; type: "text" | "password" | "number" }>
-> = {
+const CONFIG_OPTIONS: Record<string, Array<{ label: string; name: string; type: "text" | "password" | "number" }>> = {
   MQTT: [
     { label: "MQTT_BROKER", name: "broker", type: "text" },
     { label: "MQTT_TOPIC", name: "topic", type: "text" },
@@ -64,11 +55,7 @@ const TYPE_OPTIONS = [
   },
 ] as const
 
-export function EventsTargetNewForm({
-  open,
-  onOpenChange,
-  onSuccess,
-}: EventsTargetNewFormProps) {
+export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTargetNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { updateEventTarget } = useEventTarget()
@@ -133,9 +120,7 @@ export function EventsTargetNewForm({
       message.error(nameError)
       return false
     }
-    const hasConfig = Object.values(config).some(
-      (v) => v !== "" && v !== null && v !== undefined,
-    )
+    const hasConfig = Object.values(config).some((v) => v !== "" && v !== null && v !== undefined)
     if (!hasConfig) {
       message.error(t("Please fill in at least one configuration item"))
       return false
@@ -176,9 +161,7 @@ export function EventsTargetNewForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {type ? t("Add {type} Destination", { type }) : t("Add Event Destination")}
-          </DialogTitle>
+          <DialogTitle>{type ? t("Add {type} Destination", { type }) : t("Add Event Destination")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           {!type ? (
@@ -188,9 +171,7 @@ export function EventsTargetNewForm({
                   key={option.value}
                   type="button"
                   onClick={() => setType(option.value)}
-                  className={cn(
-                    "cursor-pointer border border-border/70 text-left transition hover:border-primary",
-                  )}
+                  className={cn("cursor-pointer border border-border/70 text-left transition hover:border-primary")}
                 >
                   <div className="flex items-center gap-3 p-4">
                     <Image
@@ -225,9 +206,7 @@ export function EventsTargetNewForm({
                   />
                 )}
                 <div className="flex flex-col">
-                  <span className="text-sm text-muted-foreground">
-                    {t("Selected Type")}
-                  </span>
+                  <span className="text-sm text-muted-foreground">{t("Selected Type")}</span>
                   <span className="text-base font-semibold">{type}</span>
                 </div>
               </button>
@@ -244,11 +223,7 @@ export function EventsTargetNewForm({
                       autoComplete="off"
                     />
                   </FieldContent>
-                  {nameError && (
-                    <FieldDescription className="text-destructive">
-                      {nameError}
-                    </FieldDescription>
-                  )}
+                  {nameError && <FieldDescription className="text-destructive">{nameError}</FieldDescription>}
                 </Field>
 
                 {currentConfigOptions.map((cfg) => (
@@ -261,10 +236,7 @@ export function EventsTargetNewForm({
                         onChange={(e) =>
                           setConfig((prev) => ({
                             ...prev,
-                            [cfg.name]:
-                              cfg.type === "number"
-                                ? Number(e.target.value) || 0
-                                : e.target.value,
+                            [cfg.name]: cfg.type === "number" ? Number(e.target.value) || 0 : e.target.value,
                           }))
                         }
                         type={cfg.type === "password" ? "password" : "text"}

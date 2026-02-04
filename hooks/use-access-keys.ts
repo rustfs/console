@@ -12,42 +12,42 @@ export function useAccessKeys() {
       const url = query ? `/list-service-accounts?${query}` : "/list-service-accounts"
       return api.get(url)
     },
-    [api]
+    [api],
   )
 
   const createServiceAccount = useCallback(
     async (data: Record<string, unknown>) => {
       return api.put("/add-service-accounts", data)
     },
-    [api]
+    [api],
   )
 
   const getServiceAccount = useCallback(
     async (name: string) => {
       return api.get(`/info-service-account?accessKey=${encodeURIComponent(name)}`)
     },
-    [api]
+    [api],
   )
 
   const updateServiceAccount = useCallback(
     async (name: string, data: Record<string, unknown>) => {
       return api.post(`/update-service-account?accessKey=${encodeURIComponent(name)}`, data)
     },
-    [api]
+    [api],
   )
 
   const deleteServiceAccount = useCallback(
     async (name: string) => {
       return api.delete(`/delete-service-accounts?accessKey=${encodeURIComponent(name)}`)
     },
-    [api]
+    [api],
   )
 
   const createServiceAccountCreds = useCallback(
     async (data: Record<string, unknown>) => {
       return api.post("/service-account-credentials", data)
     },
-    [api]
+    [api],
   )
 
   return {

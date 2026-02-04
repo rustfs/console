@@ -2,10 +2,7 @@
 
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  RiUploadFill,
-  RiCustomerService2Line,
-} from "@remixicon/react"
+import { RiUploadFill, RiCustomerService2Line } from "@remixicon/react"
 import dayjs from "dayjs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -39,7 +36,7 @@ export function LicenseEnterpriseSection() {
         value: `${t("Enterprise")} (7x24x365)`,
       },
     ],
-    [t]
+    [t],
   )
 
   const serviceInfo = useMemo(
@@ -67,7 +64,7 @@ export function LicenseEnterpriseSection() {
         value: t("One-hour Response"),
       },
     ],
-    [t]
+    [t],
   )
 
   const permissions = useMemo<PermissionItem[]>(
@@ -75,26 +72,26 @@ export function LicenseEnterpriseSection() {
       {
         name: t("Single Machine Multiple Disks"),
         description: t(
-          "Supports managing multiple storage disks on a single server to improve storage resource utilization and simplify management and maintenance"
+          "Supports managing multiple storage disks on a single server to improve storage resource utilization and simplify management and maintenance",
         ),
         status: t("Enabled"),
       },
       {
         name: t("Advanced Monitoring"),
         description: t(
-          "Provides detailed performance monitoring and alerting mechanisms to help administrators understand system status in real-time and ensure system stability and reliability"
+          "Provides detailed performance monitoring and alerting mechanisms to help administrators understand system status in real-time and ensure system stability and reliability",
         ),
         status: t("Enabled"),
       },
       {
         name: t("Metrics"),
         description: t(
-          "Collects and displays key performance indicators (such as CPU, memory, disk I/O, etc.) through visualized charts to help users understand system operation status and performance bottlenecks"
+          "Collects and displays key performance indicators (such as CPU, memory, disk I/O, etc.) through visualized charts to help users understand system operation status and performance bottlenecks",
         ),
         status: t("Enabled"),
       },
     ],
-    [t]
+    [t],
   )
 
   const permissionsColumns: ColumnDef<PermissionItem>[] = useMemo(
@@ -102,28 +99,20 @@ export function LicenseEnterpriseSection() {
       {
         id: "name",
         header: () => t("Name"),
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
       },
       {
         id: "description",
         header: () => t("Description"),
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">
-            {row.original.description}
-          </span>
-        ),
+        cell: ({ row }) => <span className="text-muted-foreground">{row.original.description}</span>,
       },
       {
         id: "status",
         header: () => t("Status"),
-        cell: ({ row }) => (
-          <Badge variant="default">{row.original.status}</Badge>
-        ),
+        cell: ({ row }) => <Badge variant="default">{row.original.status}</Badge>,
       },
     ],
-    [t]
+    [t],
   )
 
   const { table: permissionsTable } = useDataTable<PermissionItem>({
@@ -215,13 +204,13 @@ export function LicenseEnterpriseSection() {
       { label: t("Bitrot"), value: t("Supported") },
       { label: t("Version Control"), value: t("Supported") },
     ],
-    [t]
+    [t],
   )
 
   const contactSupport = () => {
     window.open(
       "https://ww18.53kf.com/webCompany.php?arg=11003151&kf_sign=DA4MDMTc0Ng4MjE1MjEzODAyNDkyMDAyNzMwMDMxNTE%253D&style=2",
-      "_blank"
+      "_blank",
     )
   }
 
@@ -241,20 +230,13 @@ export function LicenseEnterpriseSection() {
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <Badge
-                    variant={hasValidLicense ? "default" : "destructive"}
-                  >
-                    {t("Enterprise License")}
-                  </Badge>
+                  <Badge variant={hasValidLicense ? "default" : "destructive"}>{t("Enterprise License")}</Badge>
                   <span
                     className={
-                      hasValidLicense
-                        ? "text-sm font-medium text-emerald-600"
-                        : "text-sm font-medium text-rose-500"
+                      hasValidLicense ? "text-sm font-medium text-emerald-600" : "text-sm font-medium text-rose-500"
                     }
                   >
-                    {t("Status")}：
-                    {hasValidLicense ? t("Normal") : t("Expired")}
+                    {t("Status")}：{hasValidLicense ? t("Normal") : t("Expired")}
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -268,10 +250,7 @@ export function LicenseEnterpriseSection() {
                   {t("Update License")}
                 </Button>
                 <Button variant="outline" onClick={contactSupport}>
-                  <RiCustomerService2Line
-                    className="mr-2 size-4"
-                    aria-hidden
-                  />
+                  <RiCustomerService2Line className="mr-2 size-4" aria-hidden />
                   {t("Contact Support")}
                 </Button>
               </div>
@@ -282,21 +261,12 @@ export function LicenseEnterpriseSection() {
         <div className="grid gap-6 lg:grid-cols-2">
           <Card className="shadow-none">
             <CardContent className="space-y-4">
-              <p className="text-base font-semibold">
-                {t("License Details")}
-              </p>
+              <p className="text-base font-semibold">{t("License Details")}</p>
               <dl className="grid gap-4 sm:grid-cols-2">
                 {licenseDetails.map((item) => (
-                  <div
-                    key={item.label}
-                    className="space-y-1"
-                  >
-                    <dt className="text-xs font-medium uppercase text-muted-foreground">
-                      {item.label}
-                    </dt>
-                    <dd className="text-sm text-foreground">
-                      {item.value}
-                    </dd>
+                  <div key={item.label} className="space-y-1">
+                    <dt className="text-xs font-medium uppercase text-muted-foreground">{item.label}</dt>
+                    <dd className="text-sm text-foreground">{item.value}</dd>
                   </div>
                 ))}
               </dl>
@@ -305,21 +275,12 @@ export function LicenseEnterpriseSection() {
 
           <Card className="shadow-none">
             <CardContent className="space-y-4">
-              <p className="text-base font-semibold">
-                {t("Customer Service")}
-              </p>
+              <p className="text-base font-semibold">{t("Customer Service")}</p>
               <dl className="grid gap-4 sm:grid-cols-2">
                 {serviceInfo.map((item) => (
-                  <div
-                    key={item.label}
-                    className="space-y-1"
-                  >
-                    <dt className="text-xs font-medium uppercase text-muted-foreground">
-                      {item.label}
-                    </dt>
-                    <dd className="text-sm text-foreground">
-                      {item.value}
-                    </dd>
+                  <div key={item.label} className="space-y-1">
+                    <dt className="text-xs font-medium uppercase text-muted-foreground">{item.label}</dt>
+                    <dd className="text-sm text-foreground">{item.value}</dd>
                   </div>
                 ))}
               </dl>
@@ -329,27 +290,19 @@ export function LicenseEnterpriseSection() {
 
         <Card className="shadow-none">
           <CardContent className="space-y-4">
-            <p className="text-base font-semibold">
-              {t("Feature Permissions")}
-            </p>
+            <p className="text-base font-semibold">{t("Feature Permissions")}</p>
             <DataTable table={permissionsTable} />
           </CardContent>
         </Card>
 
         <Card className="shadow-none">
           <CardContent className="space-y-4">
-            <p className="text-base font-semibold">
-              {t("Technical Parameters")}
-            </p>
+            <p className="text-base font-semibold">{t("Technical Parameters")}</p>
             <dl className="grid gap-4 sm:grid-cols-2">
               {technicalParameters.map((item) => (
                 <div key={item.label} className="space-y-1">
-                  <dt className="text-xs font-medium uppercase text-muted-foreground">
-                    {item.label}
-                  </dt>
-                  <dd className="text-sm text-foreground">
-                    {item.value}
-                  </dd>
+                  <dt className="text-xs font-medium uppercase text-muted-foreground">{item.label}</dt>
+                  <dd className="text-sm text-foreground">{item.value}</dd>
                 </div>
               ))}
             </dl>

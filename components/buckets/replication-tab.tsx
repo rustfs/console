@@ -29,12 +29,8 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
-  const {
-    getBucketReplication,
-    putBucketReplication,
-    deleteBucketReplication,
-    deleteRemoteReplicationTarget,
-  } = useBucket()
+  const { getBucketReplication, putBucketReplication, deleteBucketReplication, deleteRemoteReplicationTarget } =
+    useBucket()
 
   const [data, setData] = React.useState<ReplicationRule[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -56,6 +52,57 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
     loadData()
   }, [loadData])
 
+  const handleRowDelete = React.useCallback(
+    async (rule: ReplicationRule) => {
+      const remaining = data.filter((item) => item !== rule)
+
+      try {
+        if (remaining.length === 0) {
+          await deleteBucketReplication(bucketName)
+          await deleteRemoteReplicationTarget(bucketName, rule.Destination?.Bucket ?? "")
+        } else {
+          const currentConfig = await getBucketReplication(bucketName)
+          const role = currentConfig?.ReplicationConfiguration?.Role
+          if (!role) {
+            throw new Error("Replication configuration Role is missing")
+          }
+          await putBucketReplication(bucketName, {
+            Role: role,
+            Rules: remaining,
+          })
+        }
+        message.success(t("Delete Success"))
+        loadData()
+      } catch (error) {
+        message.error((error as Error).message || t("Delete Failed"))
+      }
+    },
+    [
+      data,
+      deleteBucketReplication,
+      bucketName,
+      deleteRemoteReplicationTarget,
+      getBucketReplication,
+      putBucketReplication,
+      message,
+      t,
+      loadData,
+    ],
+  )
+
+  const confirmDelete = React.useCallback(
+    (rule: ReplicationRule) => {
+      dialog.error({
+        title: t("Warning"),
+        content: t("Are you sure you want to delete this replication rule?"),
+        positiveText: t("Confirm"),
+        negativeText: t("Cancel"),
+        onPositiveClick: () => handleRowDelete(rule),
+      })
+    },
+    [dialog, t, handleRowDelete],
+  )
+
   const columns: ColumnDef<ReplicationRule>[] = React.useMemo(
     () => [
       {
@@ -67,11 +114,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
         accessorKey: "Status",
         header: () => t("Status"),
         cell: ({ row }) => (
-          <Badge
-            variant={
-              row.original.Status === "Enabled" ? "secondary" : "outline"
-            }
-          >
+          <Badge variant={row.original.Status === "Enabled" ? "secondary" : "outline"}>
             {row.original.Status === "Enabled" ? t("Enabled") : t("Disabled")}
           </Badge>
         ),
@@ -97,9 +140,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
       {
         id: "destination-storage",
         header: () => t("Storage Class"),
-        cell: ({ row }) => (
-          <span>{row.original.Destination?.StorageClass || "-"}</span>
-        ),
+        cell: ({ row }) => <span>{row.original.Destination?.StorageClass || "-"}</span>,
       },
       {
         id: "actions",
@@ -107,11 +148,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => confirmDelete(row.original)}
-            >
+            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
               <RiDeleteBin7Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
@@ -119,7 +156,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
         ),
       },
     ],
-    [t]
+    [t, confirmDelete],
   )
 
   const { table } = useDataTable<ReplicationRule>({
@@ -127,44 +164,6 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
     columns,
     getRowId: (row) => row.ID ?? JSON.stringify(row),
   })
-
-  const confirmDelete = (rule: ReplicationRule) => {
-    dialog.error({
-      title: t("Warning"),
-      content: t("Are you sure you want to delete this replication rule?"),
-      positiveText: t("Confirm"),
-      negativeText: t("Cancel"),
-      onPositiveClick: () => handleRowDelete(rule),
-    })
-  }
-
-  const handleRowDelete = async (rule: ReplicationRule) => {
-    const remaining = data.filter((item) => item !== rule)
-
-    try {
-      if (remaining.length === 0) {
-        await deleteBucketReplication(bucketName)
-        await deleteRemoteReplicationTarget(
-          bucketName,
-          rule.Destination?.Bucket ?? ""
-        )
-      } else {
-        const currentConfig = await getBucketReplication(bucketName)
-        const role = currentConfig?.ReplicationConfiguration?.Role
-        if (!role) {
-          throw new Error("Replication configuration Role is missing")
-        }
-        await putBucketReplication(bucketName, {
-          Role: role,
-          Rules: remaining,
-        })
-      }
-      message.success(t("Delete Success"))
-      loadData()
-    } catch (error) {
-      message.error((error as Error).message || t("Delete Failed"))
-    }
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -186,9 +185,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
         table={table}
         isLoading={loading}
         emptyTitle={t("No Data")}
-        emptyDescription={t(
-          "Add replication rules to sync objects across buckets."
-        )}
+        emptyDescription={t("Add replication rules to sync objects across buckets.")}
       />
 
       <ReplicationNewForm

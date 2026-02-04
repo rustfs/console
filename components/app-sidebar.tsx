@@ -9,6 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -28,9 +29,9 @@ import navs from "@/config/navs"
 import logoImage from "@/assets/logo.svg"
 import type { NavItem } from "@/types/app-config"
 import { usePermissions } from "@/hooks/use-permissions"
+import { SidebarVersion } from "@/components/sidebars/version"
 
 const APP_NAME = "RustFS"
-const RELEASE_VERSION = process.env.NEXT_PUBLIC_VERSION ?? ""
 
 function NavIcon({ name }: { name?: string }) {
   const Icon = getIconComponent(name)
@@ -119,7 +120,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link href="/browser" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           {isCollapsed ? (
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-md font-semibold text-primary-foreground">
               <span>{brandInitial}</span>
@@ -127,7 +128,6 @@ export function AppSidebar() {
           ) : (
             <div className="flex min-w-0 items-baseline gap-2 px-3 py-4">
               <Image src={logoImage} alt="RustFS" width={64} height={16} className="h-4 w-auto shrink-0" />
-              {RELEASE_VERSION ? <span className="text-[10px] text-muted-foreground">v{RELEASE_VERSION}</span> : null}
             </div>
           )}
         </Link>
@@ -225,6 +225,10 @@ export function AppSidebar() {
           </div>
         </ScrollArea>
       </SidebarContent>
+
+      <SidebarFooter className="mt-auto px-2 pb-2">
+        <SidebarVersion appName={APP_NAME} />
+      </SidebarFooter>
 
       <SidebarRail />
     </Sidebar>

@@ -2,19 +2,9 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import {
-  RiFileCopyLine,
-  RiEyeLine,
-  RiDownloadCloud2Line,
-  RiDeleteBin5Line,
-} from "@remixicon/react"
+import { RiFileCopyLine, RiEyeLine, RiDownloadCloud2Line, RiDeleteBin5Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
@@ -60,10 +50,6 @@ export function ObjectVersions({
   const [versions, setVersions] = React.useState<VersionRow[]>([])
   const [loading, setLoading] = React.useState(false)
 
-  React.useEffect(() => {
-    if (visible) fetchVersions()
-  }, [visible, bucketName, objectKey])
-
   const fetchVersions = React.useCallback(async () => {
     if (!objectKey) return
     setLoading(true)
@@ -76,65 +62,72 @@ export function ObjectVersions({
     } finally {
       setLoading(false)
     }
-  }, [objectKey, objectApi.listObjectVersions, message, t])
+  }, [objectKey, objectApi, message, t])
 
-  const copyVersionId = async (versionId: string) => {
-    if (!versionId) return
-    try {
-      await navigator.clipboard.writeText(versionId)
-      message.success(t("Copy Success"))
-    } catch {
-      message.error(t("Copy Failed"))
-    }
-  }
+  React.useEffect(() => {
+    if (visible) fetchVersions()
+  }, [visible, fetchVersions])
 
-  const getSignedUrlWithVersion = async (
-    key: string,
-    versionId: string,
-    expiresIn = 3600
-  ) => {
-    const command = new GetObjectCommand({
-      Bucket: bucketName,
-      Key: key,
-      VersionId:
-        versionId === "00000000-0000-0000-0000-000000000000"
-          ? undefined
-          : versionId,
-    })
-    return getSignedUrl(client, command, { expiresIn })
-  }
-
-  const downloadVersion = async (row: VersionRow) => {
-    const versionId = row.VersionId ?? ""
-    try {
-      const url = await getSignedUrlWithVersion(objectKey, versionId)
-      const response = await fetch(url)
-      const filename = objectKey.split("/").pop() ?? ""
-      const headers: Record<string, string> = {
-        "content-type": getContentType(response.headers, filename),
-        filename:
-          response.headers.get("content-disposition")?.split("filename=")[1] ??
-          "",
+  const copyVersionId = React.useCallback(
+    async (versionId: string) => {
+      if (!versionId) return
+      try {
+        await navigator.clipboard.writeText(versionId)
+        message.success(t("Copy Success"))
+      } catch {
+        message.error(t("Copy Failed"))
       }
-      const blob = await response.blob()
-      exportFile({ headers, data: blob }, filename)
-    } catch (err) {
-      message.error((err as Error)?.message ?? t("Download Failed"))
-    }
-  }
+    },
+    [message, t],
+  )
 
-  const deleteVersion = async (row: VersionRow) => {
-    const versionId = row.VersionId
-    if (!versionId) return
-    try {
-      await objectApi.deleteObject(objectKey, versionId)
-      message.success(t("Delete Success"))
-      fetchVersions()
-      onRefreshParent()
-    } catch (err) {
-      message.error((err as Error)?.message ?? t("Delete Failed"))
-    }
-  }
+  const getSignedUrlWithVersion = React.useCallback(
+    async (key: string, versionId: string, expiresIn = 3600) => {
+      const command = new GetObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+        VersionId: versionId === "00000000-0000-0000-0000-000000000000" ? undefined : versionId,
+      })
+      return getSignedUrl(client, command, { expiresIn })
+    },
+    [bucketName, client],
+  )
+
+  const downloadVersion = React.useCallback(
+    async (row: VersionRow) => {
+      const versionId = row.VersionId ?? ""
+      try {
+        const url = await getSignedUrlWithVersion(objectKey, versionId)
+        const response = await fetch(url)
+        const filename = objectKey.split("/").pop() ?? ""
+        const headers: Record<string, string> = {
+          "content-type": getContentType(response.headers, filename),
+          filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
+        }
+        const blob = await response.blob()
+        exportFile({ headers, data: blob }, filename)
+      } catch (err) {
+        message.error((err as Error)?.message ?? t("Download Failed"))
+      }
+    },
+    [getSignedUrlWithVersion, objectKey, message, t],
+  )
+
+  const deleteVersion = React.useCallback(
+    async (row: VersionRow) => {
+      const versionId = row.VersionId
+      if (!versionId) return
+      try {
+        await objectApi.deleteObject(objectKey, versionId)
+        message.success(t("Delete Success"))
+        fetchVersions()
+        onRefreshParent()
+      } catch (err) {
+        message.error((err as Error)?.message ?? t("Delete Failed"))
+      }
+    },
+    [objectApi, objectKey, message, t, fetchVersions, onRefreshParent],
+  )
 
   const columns: ColumnDef<VersionRow>[] = React.useMemo(
     () => [
@@ -163,45 +156,27 @@ export function ObjectVersions({
         id: "lastModified",
         header: () => t("LastModified"),
         cell: ({ row }) =>
-          row.original.LastModified
-            ? dayjs(row.original.LastModified).format("YYYY-MM-DD HH:mm:ss")
-            : "",
+          row.original.LastModified ? dayjs(row.original.LastModified).format("YYYY-MM-DD HH:mm:ss") : "",
       },
       {
         id: "size",
         header: () => t("Size"),
-        cell: ({ row }) =>
-          typeof row.original.Size === "number"
-            ? formatBytes(row.original.Size)
-            : "",
+        cell: ({ row }) => (typeof row.original.Size === "number" ? formatBytes(row.original.Size) : ""),
       },
       {
         id: "actions",
         header: () => t("Action"),
         cell: ({ row }) => (
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPreview(row.original.VersionId ?? "")}
-            >
+            <Button variant="outline" size="sm" onClick={() => onPreview(row.original.VersionId ?? "")}>
               <RiEyeLine className="size-4" />
               {t("Preview")}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => downloadVersion(row.original)}
-            >
+            <Button variant="outline" size="sm" onClick={() => downloadVersion(row.original)}>
               <RiDownloadCloud2Line className="size-4" />
               {t("Download")}
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="text-white"
-              onClick={() => deleteVersion(row.original)}
-            >
+            <Button variant="destructive" size="sm" className="text-white" onClick={() => deleteVersion(row.original)}>
               <RiDeleteBin5Line className="size-4" />
               {t("Delete")}
             </Button>
@@ -209,7 +184,7 @@ export function ObjectVersions({
         ),
       },
     ],
-    [t, onPreview]
+    [t, onPreview, copyVersionId, downloadVersion, deleteVersion],
   )
 
   const { table } = useDataTable<VersionRow>({
@@ -223,11 +198,7 @@ export function ObjectVersions({
         <DialogHeader>
           <DialogTitle>{t("Object Versions")}</DialogTitle>
         </DialogHeader>
-        <DataTable
-          table={table}
-          isLoading={loading}
-          emptyTitle={t("No Versions")}
-        />
+        <DataTable table={table} isLoading={loading} emptyTitle={t("No Versions")} />
       </DialogContent>
     </Dialog>
   )

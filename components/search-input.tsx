@@ -2,12 +2,7 @@
 
 import * as React from "react"
 import { RiSearchLine, RiCloseLine } from "@remixicon/react"
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
 import { cn } from "@/lib/utils"
 
 interface SearchInputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange"> {
@@ -37,19 +32,9 @@ export function SearchInput({
       <InputGroupAddon className="text-muted-foreground">
         <RiSearchLine className="size-4" />
       </InputGroupAddon>
-      <InputGroupInput
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
+      <InputGroupInput value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
       {showClear && (
-        <InputGroupButton
-          variant="ghost"
-          size="icon-xs"
-          type="button"
-          aria-label="Clear"
-          onClick={handleClear}
-        >
+        <InputGroupButton variant="ghost" size="icon-xs" type="button" aria-label="Clear" onClick={handleClear}>
           <RiCloseLine className="size-4" />
         </InputGroupButton>
       )}

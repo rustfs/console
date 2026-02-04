@@ -61,9 +61,7 @@ function createSelectColumn<TData extends RowData>(): ColumnDef<TData> {
   }
 }
 
-export function useDataTable<TData extends RowData>(
-  options: UseDataTableOptions<TData>
-): UseDataTableReturn<TData> {
+export function useDataTable<TData extends RowData>(options: UseDataTableOptions<TData>): UseDataTableReturn<TData> {
   const [sorting, setSorting] = useState<SortingState>(options.initialSorting ?? [])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
@@ -80,6 +78,7 @@ export function useDataTable<TData extends RowData>(
     return base
   }, [options.columns, options.enableRowSelection])
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- tanstack table hook is required for table state
   const table = useReactTable({
     data: options.data,
     columns,

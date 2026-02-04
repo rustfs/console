@@ -6,13 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { useGroups } from "@/hooks/use-groups"
 import { UserSelector } from "@/components/user/selector"
@@ -23,11 +17,7 @@ interface UserGroupNewFormProps {
   onSuccess: () => void
 }
 
-export function UserGroupNewForm({
-  open,
-  onOpenChange,
-  onSuccess,
-}: UserGroupNewFormProps) {
+export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { updateGroupMembers } = useGroups()
@@ -71,10 +61,7 @@ export function UserGroupNewForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-lg"
-        onPointerDownOutside={(e) => e.preventDefault()}
-      >
+      <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t("Add group members")}</DialogTitle>
         </DialogHeader>
@@ -82,11 +69,7 @@ export function UserGroupNewForm({
           <Field>
             <FieldLabel className="text-sm font-medium">{t("Name")}</FieldLabel>
             <FieldContent>
-              <Input
-                value={group}
-                onChange={(e) => setGroup(e.target.value)}
-                autoComplete="off"
-              />
+              <Input value={group} onChange={(e) => setGroup(e.target.value)} autoComplete="off" />
             </FieldContent>
           </Field>
           <UserSelector

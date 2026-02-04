@@ -5,37 +5,21 @@ import { cn } from "@/lib/utils"
 import { RiArrowRightSLine, RiMoreLine } from "@remixicon/react"
 
 function Breadcrumb({ className, ...props }: React.ComponentProps<"nav">) {
-  return (
-    <nav
-      aria-label="breadcrumb"
-      data-slot="breadcrumb"
-      className={cn(className)}
-      {...props}
-    />
-  )
+  return <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn(className)} {...props} />
 }
 
 function BreadcrumbList({ className, ...props }: React.ComponentProps<"ol">) {
   return (
     <ol
       data-slot="breadcrumb-list"
-      className={cn(
-        "text-muted-foreground gap-1.5 text-xs flex flex-wrap items-center break-words",
-        className
-      )}
+      className={cn("text-muted-foreground gap-1.5 text-xs flex flex-wrap items-center break-words", className)}
       {...props}
     />
   )
 }
 
 function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
-  return (
-    <li
-      data-slot="breadcrumb-item"
-      className={cn("gap-1 inline-flex items-center", className)}
-      {...props}
-    />
-  )
+  return <li data-slot="breadcrumb-item" className={cn("gap-1 inline-flex items-center", className)} {...props} />
 }
 
 function BreadcrumbLink({
@@ -48,11 +32,7 @@ function BreadcrumbLink({
   const Comp = asChild ? Slot.Root : "a"
 
   return (
-    <Comp
-      data-slot="breadcrumb-link"
-      className={cn("hover:text-foreground transition-colors", className)}
-      {...props}
-    />
+    <Comp data-slot="breadcrumb-link" className={cn("hover:text-foreground transition-colors", className)} {...props} />
   )
 }
 
@@ -69,11 +49,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
   )
 }
 
-function BreadcrumbSeparator({
-  children,
-  className,
-  ...props
-}: React.ComponentProps<"li">) {
+function BreadcrumbSeparator({ children, className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="breadcrumb-separator"
@@ -82,30 +58,21 @@ function BreadcrumbSeparator({
       className={cn("[&>svg]:size-3.5", className)}
       {...props}
     >
-      {children ?? (
-        <RiArrowRightSLine />
-      )}
+      {children ?? <RiArrowRightSLine />}
     </li>
   )
 }
 
-function BreadcrumbEllipsis({
-  className,
-  ...props
-}: React.ComponentProps<"span">) {
+function BreadcrumbEllipsis({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
       data-slot="breadcrumb-ellipsis"
       role="presentation"
       aria-hidden="true"
-      className={cn(
-        "size-5 [&>svg]:size-4 flex items-center justify-center",
-        className
-      )}
+      className={cn("size-5 [&>svg]:size-4 flex items-center justify-center", className)}
       {...props}
     >
-      <RiMoreLine
-      />
+      <RiMoreLine />
       <span className="sr-only">More</span>
     </span>
   )

@@ -1,17 +1,7 @@
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-} from "react"
-import {
-  hasConsoleScopes,
-  type ConsolePolicy,
-} from "@/lib/console-policy-parser"
+import { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
+import { hasConsoleScopes, type ConsolePolicy } from "@/lib/console-policy-parser"
 import { PAGE_PERMISSIONS } from "@/lib/console-permissions"
 import { useAuth } from "@/contexts/auth-context"
 import { useApiOptional } from "@/contexts/api-context"
@@ -20,6 +10,7 @@ interface PermissionsContextValue {
   userPolicy: ConsolePolicy | null
   userInfo: Record<string, unknown> | null
   isLoading: boolean
+  hasFetchedPolicy: boolean
   fetchUserPolicy: () => Promise<void>
   hasPermission: (action: string | string[], matchAll?: boolean) => boolean
   canAccessPath: (path: string) => boolean
@@ -35,6 +26,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   const [userPolicy, setUserPolicy] = useState<ConsolePolicy | null>(null)
   const [userInfo, setUserInfo] = useState<Record<string, unknown> | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [hasFetchedPolicy, setHasFetchedPolicy] = useState(false)
 
   const fetchUserPolicy = useCallback(async () => {
     if (!api) return
@@ -54,6 +46,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       setUserPolicy(null)
     } finally {
       setIsLoading(false)
+      setHasFetchedPolicy(true)
     }
   }, [api])
 
@@ -65,7 +58,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       const actions = Array.isArray(action) ? action : [action]
       return hasConsoleScopes(userPolicy, actions, matchAll)
     },
-    [isAdmin, userPolicy]
+    [isAdmin, userPolicy],
   )
 
   const canAccessPath = useCallback(
@@ -74,9 +67,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
       let requiredScopes = PAGE_PERMISSIONS[path]
       if (!requiredScopes) {
-        const match = Object.keys(PAGE_PERMISSIONS).find((key) =>
-          path.startsWith(key)
-        )
+        const match = Object.keys(PAGE_PERMISSIONS).find((key) => path.startsWith(key))
         if (match) {
           requiredScopes = PAGE_PERMISSIONS[match]
         }
@@ -86,7 +77,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
       return hasPermission(requiredScopes)
     },
-    [isAdmin, hasPermission]
+    [isAdmin, hasPermission],
   )
 
   useEffect(() => {
@@ -100,27 +91,16 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       userPolicy,
       userInfo,
       isLoading,
+      hasFetchedPolicy,
       fetchUserPolicy,
       hasPermission,
       canAccessPath,
       isAdmin,
     }),
-    [
-      userPolicy,
-      userInfo,
-      isLoading,
-      fetchUserPolicy,
-      hasPermission,
-      canAccessPath,
-      isAdmin,
-    ]
+    [userPolicy, userInfo, isLoading, hasFetchedPolicy, fetchUserPolicy, hasPermission, canAccessPath, isAdmin],
   )
 
-  return (
-    <PermissionsContext.Provider value={value}>
-      {children}
-    </PermissionsContext.Provider>
-  )
+  return <PermissionsContext.Provider value={value}>{children}</PermissionsContext.Provider>
 }
 
 export function usePermissions() {

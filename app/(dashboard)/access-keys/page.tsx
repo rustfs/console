@@ -42,7 +42,10 @@ export default function AccessKeysPage() {
   const [editItemOpen, setEditItemOpen] = useState(false)
   const [editItemRow, setEditItemRow] = useState<RowData | null>(null)
   const [noticeOpen, setNoticeOpen] = useState(false)
-  const [noticeData, setNoticeData] = useState<{ credentials?: { accessKey?: string; secretKey?: string }; url?: string } | null>(null)
+  const [noticeData, setNoticeData] = useState<{
+    credentials?: { accessKey?: string; secretKey?: string }
+    url?: string
+  } | null>(null)
 
   const listUserAccounts = async () => {
     setLoading(true)
@@ -72,16 +75,13 @@ export default function AccessKeysPage() {
     {
       accessorKey: "accessKey",
       header: () => t("Access Key"),
-      cell: ({ row }) => (
-        <span className="font-mono text-sm">{row.original.accessKey}</span>
-      ),
+      cell: ({ row }) => <span className="font-mono text-sm">{row.original.accessKey}</span>,
     },
     {
       accessorKey: "expiration",
       header: () => t("Expiration"),
       cell: ({ row }) =>
-        row.original.expiration &&
-        row.original.expiration !== "9999-01-01T00:00:00Z"
+        row.original.expiration && row.original.expiration !== "9999-01-01T00:00:00Z"
           ? dayjs(row.original.expiration).format("YYYY-MM-DD HH:mm")
           : "-",
     },
@@ -89,14 +89,8 @@ export default function AccessKeysPage() {
       accessorKey: "accountStatus",
       header: () => t("Status"),
       cell: ({ row }) => (
-        <Badge
-          variant={
-            row.original.accountStatus === "on" ? "secondary" : "destructive"
-          }
-        >
-          {row.original.accountStatus === "on"
-            ? t("Available")
-            : t("Disabled")}
+        <Badge variant={row.original.accountStatus === "on" ? "secondary" : "destructive"}>
+          {row.original.accountStatus === "on" ? t("Available") : t("Disabled")}
         </Badge>
       ),
     },
@@ -118,19 +112,11 @@ export default function AccessKeysPage() {
       meta: { width: 200 },
       cell: ({ row }) => (
         <div className="flex justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => openEditItem(row.original)}
-          >
+          <Button variant="outline" size="sm" onClick={() => openEditItem(row.original)}>
             <RiEdit2Line className="size-4" />
             <span>{t("Edit")}</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => confirmDeleteSingle(row.original)}
-          >
+          <Button variant="outline" size="sm" onClick={() => confirmDeleteSingle(row.original)}>
             <RiDeleteBin5Line className="size-4" />
             <span>{t("Delete")}</span>
           </Button>
@@ -222,11 +208,7 @@ export default function AccessKeysPage() {
               className="max-w-xs"
             />
             {selectedKeys.length > 0 && (
-              <Button
-                variant="outline"
-                disabled={!selectedKeys.length}
-                onClick={deleteSelected}
-              >
+              <Button variant="outline" disabled={!selectedKeys.length} onClick={deleteSelected}>
                 <RiDeleteBin5Line className="size-4" />
                 <span>{t("Delete Selected")}</span>
               </Button>
@@ -267,12 +249,7 @@ export default function AccessKeysPage() {
         onSuccess={listUserAccounts}
       />
 
-      <UserNotice
-        open={noticeOpen}
-        onOpenChange={setNoticeOpen}
-        data={noticeData}
-        onClose={handleNoticeClose}
-      />
+      <UserNotice open={noticeOpen} onOpenChange={setNoticeOpen} data={noticeData} onClose={handleNoticeClose} />
     </Page>
   )
 }

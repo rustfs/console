@@ -1,10 +1,4 @@
-export type TaskEventType =
-  | "enqueued"
-  | "running"
-  | "completed"
-  | "failed"
-  | "canceled"
-  | "drained"
+export type TaskEventType = "enqueued" | "running" | "completed" | "failed" | "canceled" | "drained"
 
 export type TaskEventHandler<TTask> = (task: TTask) => void
 export type AllCompletedEventHandler = () => void
@@ -32,17 +26,14 @@ export interface TaskHandler<TTask, TStatus extends string> {
   lifecycle: TaskLifecycleStatus<TStatus>
   perform: (task: TTask) => Promise<void>
   shouldRetry?: (task: TTask, error: unknown) => boolean
-  handleError?: (
-    task: TTask,
-    error: unknown
-  ) => Promise<"retry" | "handled" | "fail"> | "retry" | "handled" | "fail"
+  handleError?: (task: TTask, error: unknown) => Promise<"retry" | "handled" | "fail"> | "retry" | "handled" | "fail"
   isCanceledError?: (error: unknown) => boolean
   maxRetries?: number
   retryDelay?: number
 }
 
 export interface TaskManagerOptions<TTask extends ManagedTask<TStatus>, TStatus extends string> {
-  handlers: Record<string, TaskHandler<unknown, string>>
+  handlers: Record<string, TaskHandler<TTask, TStatus>>
   maxConcurrent?: number
   maxRetries?: number
   retryDelay?: number
@@ -54,7 +45,7 @@ type Listener = () => void
 
 export class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends string> {
   private tasks: TTask[] = []
-  private readonly handlers: Record<string, TaskHandler<unknown, string>>
+  private readonly handlers: Record<string, TaskHandler<TTask, TStatus>>
   readonly maxConcurrent: number
   readonly maxRetries: number
   readonly retryDelay: number

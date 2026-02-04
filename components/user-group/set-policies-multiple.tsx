@@ -4,12 +4,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { SearchInput } from "@/components/search-input"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
@@ -50,27 +45,24 @@ export function UserGroupSetPoliciesMultiple({
     return policies.filter((p) => p.name.toLowerCase().includes(keyword))
   }, [policies, searchTerm])
 
-  const allVisibleSelected =
-    filteredPolicies.length > 0 &&
-    filteredPolicies.every((p) => checked.includes(p.name))
+  const allVisibleSelected = filteredPolicies.length > 0 && filteredPolicies.every((p) => checked.includes(p.name))
 
-  const isSelected = (name: string) => checked.includes(name)
+  const isSelected = React.useCallback((name: string) => checked.includes(name), [checked])
 
-  const toggleSelection = (name: string, value: boolean) => {
-    setChecked((prev) =>
-      value ? (prev.includes(name) ? prev : [...prev, name]) : prev.filter((p) => p !== name)
-    )
-  }
+  const toggleSelection = React.useCallback((name: string, value: boolean) => {
+    setChecked((prev) => (value ? (prev.includes(name) ? prev : [...prev, name]) : prev.filter((p) => p !== name)))
+  }, [])
 
-  const toggleSelectAll = (value: boolean) => {
-    const visibleNames = filteredPolicies.map((p) => p.name)
-    if (!visibleNames.length) return
-    setChecked((prev) =>
-      value
-        ? Array.from(new Set([...prev, ...visibleNames]))
-        : prev.filter((n) => !visibleNames.includes(n))
-    )
-  }
+  const toggleSelectAll = React.useCallback(
+    (value: boolean) => {
+      const visibleNames = filteredPolicies.map((p) => p.name)
+      if (!visibleNames.length) return
+      setChecked((prev) =>
+        value ? Array.from(new Set([...prev, ...visibleNames])) : prev.filter((n) => !visibleNames.includes(n)),
+      )
+    },
+    [filteredPolicies],
+  )
 
   const columns: ColumnDef<PolicyItem>[] = React.useMemo(
     () => [
@@ -78,13 +70,7 @@ export function UserGroupSetPoliciesMultiple({
         id: "select",
         header: () => (
           <Checkbox
-            checked={
-              allVisibleSelected
-                ? true
-                : checked.length > 0 && !allVisibleSelected
-                  ? "indeterminate"
-                  : false
-            }
+            checked={allVisibleSelected ? true : checked.length > 0 && !allVisibleSelected ? "indeterminate" : false}
             onCheckedChange={(v) => toggleSelectAll(v === true)}
           />
         ),
@@ -92,9 +78,7 @@ export function UserGroupSetPoliciesMultiple({
         cell: ({ row }) => (
           <Checkbox
             checked={isSelected(row.original.name)}
-            onCheckedChange={(v) =>
-              toggleSelection(row.original.name, v === true)
-            }
+            onCheckedChange={(v) => toggleSelection(row.original.name, v === true)}
           />
         ),
         meta: { maxWidth: "3rem" },
@@ -102,18 +86,14 @@ export function UserGroupSetPoliciesMultiple({
       {
         id: "name",
         header: () => t("Name"),
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
         filterFn: (row, _columnId, filterValue) => {
           if (!filterValue) return true
-          return row.original.name
-            .toLowerCase()
-            .includes(String(filterValue).toLowerCase())
+          return row.original.name.toLowerCase().includes(String(filterValue).toLowerCase())
         },
       },
     ],
-    [t, allVisibleSelected, checked]
+    [t, allVisibleSelected, checked, isSelected, toggleSelectAll, toggleSelection],
   )
 
   const { table } = useDataTable<PolicyItem>({
@@ -137,7 +117,7 @@ export function UserGroupSetPoliciesMultiple({
             Object.entries(res ?? {}).map(([key, content]) => ({
               name: key,
               content,
-            }))
+            })),
           )
         })
         .catch(() => message.error(t("Failed to get data")))
@@ -154,8 +134,8 @@ export function UserGroupSetPoliciesMultiple({
             policyName: checked,
             userOrGroup: item,
             isGroup: true,
-          })
-        )
+          }),
+        ),
       )
       message.success(t("Edit Success"))
       onOpenChange(false)
@@ -169,10 +149,7 @@ export function UserGroupSetPoliciesMultiple({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-xl"
-        onPointerDownOutside={(e) => e.preventDefault()}
-      >
+      <DialogContent className="sm:max-w-xl" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t("Batch allocation policies")}</DialogTitle>
         </DialogHeader>
@@ -187,11 +164,7 @@ export function UserGroupSetPoliciesMultiple({
                 className="w-full"
               />
             </div>
-            <Button
-              variant="outline"
-              disabled={!checkedKeys.length || submitting}
-              onClick={changePolicies}
-            >
+            <Button variant="outline" disabled={!checkedKeys.length || submitting} onClick={changePolicies}>
               {t("Submit")}
             </Button>
           </div>

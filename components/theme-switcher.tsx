@@ -3,12 +3,7 @@
 import { useTheme } from "next-themes"
 import { RiSunFill, RiMoonFill, RiContrast2Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useTranslation } from "react-i18next"
 
 const themeOptions = [
@@ -38,10 +33,7 @@ export function ThemeSwitcher() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-40" align="start">
         {themeOptions.map(({ labelKey, key, Icon: OptionIcon }) => (
-          <DropdownMenuItem
-            key={key}
-            onSelect={() => setTheme(key)}
-          >
+          <DropdownMenuItem key={key} onSelect={() => setTheme(key)}>
             <OptionIcon className="mr-2 h-4 w-4" />
             {t(labelKey)}
           </DropdownMenuItem>

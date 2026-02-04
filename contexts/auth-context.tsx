@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  type ReactNode,
-} from "react"
+import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react"
 import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@aws-sdk/types"
 import { getStsToken } from "@/lib/sts"
 import type { SiteConfig } from "@/types/config"
@@ -23,7 +17,7 @@ interface Credentials {
 interface AuthContextValue {
   login: (
     credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
-    customConfig?: SiteConfig
+    customConfig?: SiteConfig,
   ) => Promise<unknown>
   logout: () => void
   logoutAndRedirect: () => void
@@ -46,30 +40,27 @@ function isValidCredentials(credentials: Credentials): boolean {
   ) {
     return false
   }
-  const isExpired = (exp: string) =>
-    exp ? new Date(exp) < new Date() : false
+  const isExpired = (exp: string) => (exp ? new Date(exp) < new Date() : false)
   return !isExpired(credentials.Expiration)
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [store, setStore] = useLocalStorage<Credentials>("auth.credentials", {})
-  const [isAdminStore, setIsAdminStore] = useLocalStorage<boolean>(
-    "auth.isAdmin",
-    false
-  )
-  const [permanentStore, setPermanentStore] = useLocalStorage<
-    Credentials | undefined
-  >("auth.permanent", undefined)
+  const [isAdminStore, setIsAdminStore] = useLocalStorage<boolean>("auth.isAdmin", false)
+  const [permanentStore, setPermanentStore] = useLocalStorage<Credentials | undefined>("auth.permanent", undefined)
 
-  const setCredentials = useCallback((credentials: Credentials) => {
-    setStore(credentials)
-  }, [setStore])
+  const setCredentials = useCallback(
+    (credentials: Credentials) => {
+      setStore(credentials)
+    },
+    [setStore],
+  )
 
   const setPermanentCredentials = useCallback(
     (credentials: Credentials) => {
       setPermanentStore(credentials)
     },
-    [setPermanentStore]
+    [setPermanentStore],
   )
 
   const getCredentials = useCallback(() => {
@@ -81,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     (value: boolean) => {
       setIsAdminStore(value)
     },
-    [setIsAdminStore]
+    [setIsAdminStore],
   )
 
   const getIsAdmin = useCallback(() => {
@@ -89,20 +80,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [isAdminStore])
 
   const login = useCallback(
-    async (
-      credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
-      customConfig?: SiteConfig
-    ) => {
+    async (credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider, customConfig?: SiteConfig) => {
       if (!customConfig) {
         const { configManager } = await import("@/lib/config")
         customConfig = await configManager.loadConfig()
       }
 
-      const credentialsResponse = await getStsToken(
-        credentials,
-        "arn:aws:iam::*:role/Admin",
-        customConfig
-      )
+      const credentialsResponse = await getStsToken(credentials, "arn:aws:iam::*:role/Admin", customConfig)
 
       setCredentials({
         ...credentialsResponse,
@@ -112,10 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         Expiration: credentialsResponse.Expiration?.toISOString(),
       })
 
-      if (
-        typeof credentials === "object" &&
-        !("sessionToken" in credentials && credentials.sessionToken)
-      ) {
+      if (typeof credentials === "object" && !("sessionToken" in credentials && credentials.sessionToken)) {
         setPermanentCredentials({
           AccessKeyId: credentials.accessKeyId,
           SecretAccessKey: credentials.secretAccessKey,
@@ -126,11 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return credentialsResponse
     },
-    [
-      setCredentials,
-      setPermanentCredentials,
-      setPermanentStore,
-    ]
+    [setCredentials, setPermanentCredentials, setPermanentStore],
   )
 
   const logout = useCallback(() => {
@@ -163,16 +140,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       logoutAndRedirect,
+      setIsAdmin,
+      getIsAdmin,
       credentials,
       permanentStore,
       isAuthenticated,
       isAdminStore,
-    ]
+    ],
   )
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

@@ -640,6 +640,7 @@
   "Rule ID": "ID de règle",
   "Running": "En cours d'exécution",
   "Running (Unhealthy)": "En cours d'exécution (Malsain)",
+  "Running Status": "État de fonctionnement",
   "Rust-based": "Basé sur Rust",
   "RustFS": "RustFS",
   "RustFS built-in cold storage": "Stockage à froid intégré RustFS",

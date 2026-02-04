@@ -7,26 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { useMessage } from "@/lib/feedback/message"
 import { useUsers } from "@/hooks/use-users"
@@ -66,28 +49,20 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
       setPolicies([])
       setErrors({ accessKey: "", secretKey: "" })
       Promise.all([
-        listGroup().then((res: string[]) =>
-          setGroupsList((res ?? []).map((g) => ({ label: g, value: g })))
-        ),
+        listGroup().then((res: string[]) => setGroupsList((res ?? []).map((g) => ({ label: g, value: g })))),
         listPolicies().then((res: Record<string, unknown>) =>
-          setPoliciesList(
-            Object.keys(res ?? {}).map((p) => ({ label: p, value: p }))
-          )
+          setPoliciesList(Object.keys(res ?? {}).map((p) => ({ label: p, value: p }))),
         ),
       ]).catch(() => {})
     }
   }, [open, listGroup, listPolicies])
 
   const toggleGroup = (value: string) => {
-    setGroups((prev) =>
-      prev.includes(value) ? prev.filter((g) => g !== value) : [...prev, value]
-    )
+    setGroups((prev) => (prev.includes(value) ? prev.filter((g) => g !== value) : [...prev, value]))
   }
 
   const togglePolicy = (value: string) => {
-    setPolicies((prev) =>
-      prev.includes(value) ? prev.filter((p) => p !== value) : [...prev, value]
-    )
+    setPolicies((prev) => (prev.includes(value) ? prev.filter((p) => p !== value) : [...prev, value]))
   }
 
   const closeModal = () => onOpenChange(false)
@@ -138,8 +113,8 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
               members: [accessKey.trim()],
               isRemove: false,
               groupStatus: "enabled",
-            })
-          )
+            }),
+          ),
         )
       }
 
@@ -178,9 +153,7 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
                   autoComplete="new-user-access-key"
                 />
               </FieldContent>
-              {errors.accessKey && (
-                <FieldDescription className="text-destructive">{errors.accessKey}</FieldDescription>
-              )}
+              {errors.accessKey && <FieldDescription className="text-destructive">{errors.accessKey}</FieldDescription>}
             </Field>
 
             <Field>
@@ -195,9 +168,7 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
                   autoComplete="new-user-password"
                 />
               </FieldContent>
-              {errors.secretKey && (
-                <FieldDescription className="text-destructive">{errors.secretKey}</FieldDescription>
-              )}
+              {errors.secretKey && <FieldDescription className="text-destructive">{errors.secretKey}</FieldDescription>}
             </Field>
           </div>
 
@@ -212,9 +183,7 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
                     className="min-h-10 justify-between gap-2"
                     aria-label={t("Groups")}
                   >
-                    <span className="truncate">
-                      {groups.length ? groups.join(", ") : t("Select Group")}
-                    </span>
+                    <span className="truncate">{groups.length ? groups.join(", ") : t("Select Group")}</span>
                     <RiArrowDownSLine className="size-4 text-muted-foreground" />
                   </Button>
                 </PopoverTrigger>
@@ -283,7 +252,10 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
                             onSelect={() => togglePolicy(option.value)}
                           >
                             <RiCheckLine
-                              className={cn("mr-2 size-4", policies.includes(option.value) ? "opacity-100" : "opacity-0")}
+                              className={cn(
+                                "mr-2 size-4",
+                                policies.includes(option.value) ? "opacity-100" : "opacity-0",
+                              )}
                             />
                             <span>{option.label}</span>
                           </CommandItem>

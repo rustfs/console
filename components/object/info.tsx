@@ -36,7 +36,7 @@ interface ObjectInfoProps {
   onRefresh?: () => void
 }
 
-export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onRefresh: _onRefresh }: ObjectInfoProps) {
+export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: ObjectInfoProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()

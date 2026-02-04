@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { BucketNewForm } from "@/components/buckets/new-form"
+import { Spinner } from "@/components/ui/spinner"
 import { useBucket } from "@/hooks/use-bucket"
 import { useObject } from "@/hooks/use-object"
 import { useSystem } from "@/hooks/use-system"
@@ -38,68 +39,107 @@ export default function BrowserPage() {
   const dialog = useDialog()
   const { isAdmin } = useAuth()
   const { listBuckets, deleteBucket } = useBucket()
-  const systemApi = useSystem()
+  const { getDataUsageInfo } = useSystem()
 
   const [formVisible, setFormVisible] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [data, setData] = useState<BucketRow[]>([])
   const [pending, setPending] = useState(true)
+  const [usageLoading, setUsageLoading] = useState(false)
+  const fetchIdRef = useRef(0)
 
-  const fetchBuckets = async () => {
-    setPending(true)
-    try {
-      const response = await listBuckets()
-      let bucketUsage: BucketUsageMap = {}
-
-      if (isAdmin) {
-        try {
-          const usage = (await systemApi.getDataUsageInfo()) as { buckets_usage?: BucketUsageMap }
-          bucketUsage = usage?.buckets_usage ?? {}
-        } catch {
-          // Non-admin or API not available
-        }
+  const loadBucketUsage = useCallback(
+    async (fetchId: number, bucketNames: string[]) => {
+      if (!isAdmin || bucketNames.length === 0) {
+        setUsageLoading(false)
+        return
       }
 
-      const buckets = ((response as { Buckets?: Array<{ Name?: string; CreationDate?: string }> })?.Buckets ?? [])
-        .map((item) => {
-          const name = item?.Name
-          if (!name) return null
+      try {
+        const usage = (await getDataUsageInfo()) as { buckets_usage?: BucketUsageMap }
+        if (fetchId !== fetchIdRef.current) return
+        const bucketUsage = usage?.buckets_usage ?? {}
 
-          const bucketRow: BucketRow = {
-            Name: name,
-            CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : "",
-          }
-
-          if (isAdmin) {
-            const stats = bucketUsage[name]
+        setData((prev) =>
+          prev.map((row) => {
+            const stats = bucketUsage[row.Name]
             const objectsCount = typeof stats?.objects_count === "number" ? stats.objects_count : 0
             const totalSize = typeof stats?.size === "number" ? stats.size : 0
-            bucketRow.Count = objectsCount
-            bucketRow.Size = niceBytes(String(totalSize))
-          }
+            return {
+              ...row,
+              Count: objectsCount,
+              Size: niceBytes(String(totalSize)),
+            }
+          }),
+        )
+      } catch {
+        if (fetchId !== fetchIdRef.current) return
+      } finally {
+        if (fetchId === fetchIdRef.current) {
+          setUsageLoading(false)
+        }
+      }
+    },
+    [getDataUsageInfo, isAdmin],
+  )
 
-          return bucketRow
-        })
-        .filter((bucket): bucket is BucketRow => bucket !== null)
-        .sort((a, b) => a.Name.localeCompare(b.Name))
+  const fetchBuckets = useCallback(
+    async (options?: { force?: boolean }) => {
+      const fetchId = fetchIdRef.current + 1
+      fetchIdRef.current = fetchId
+      setPending(true)
+      try {
+        const response = await listBuckets(options)
+        if (fetchId !== fetchIdRef.current) return
 
-      setData(buckets)
-    } catch (error) {
-      console.error("Failed to fetch buckets:", error)
-      setData([])
-    } finally {
-      setPending(false)
-    }
-  }
+        const buckets = ((response as { Buckets?: Array<{ Name?: string; CreationDate?: string }> })?.Buckets ?? [])
+          .map((item) => {
+            const name = item?.Name
+            if (!name) return null
+
+            const bucketRow: BucketRow = {
+              Name: name,
+              CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : "",
+            }
+
+            return bucketRow
+          })
+          .filter((bucket): bucket is BucketRow => bucket !== null)
+          .sort((a, b) => a.Name.localeCompare(b.Name))
+
+        setData(buckets)
+        setPending(false)
+
+        if (isAdmin) {
+          setUsageLoading(true)
+          void loadBucketUsage(
+            fetchId,
+            buckets.map((bucket) => bucket.Name),
+          )
+        } else {
+          setUsageLoading(false)
+        }
+      } catch (error) {
+        if (fetchId !== fetchIdRef.current) return
+        console.error("Failed to fetch buckets:", error)
+        setData([])
+      } finally {
+        if (fetchId === fetchIdRef.current) {
+          setPending(false)
+        }
+      }
+    },
+    [isAdmin, listBuckets, loadBucketUsage],
+  )
 
   useEffect(() => {
     fetchBuckets()
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run when isAdmin changes
-  }, [isAdmin])
+  }, [fetchBuckets])
 
-  const filteredData = searchTerm
-    ? data.filter((bucket) => bucket.Name.toLowerCase().includes(searchTerm.toLowerCase()))
-    : data
+  const filteredData = useMemo(
+    () => (searchTerm ? data.filter((bucket) => bucket.Name.toLowerCase().includes(searchTerm.toLowerCase())) : data),
+    [data, searchTerm],
+  )
 
   const objectApi = useObject("")
 
@@ -120,8 +160,7 @@ export default function BrowserPage() {
     {
       header: () => t("Creation Date"),
       accessorKey: "CreationDate",
-      cell: ({ row }) =>
-        dayjs(row.original.CreationDate).format("YYYY-MM-DD HH:mm:ss"),
+      cell: ({ row }) => dayjs(row.original.CreationDate).format("YYYY-MM-DD HH:mm:ss"),
     },
   ]
 
@@ -130,12 +169,21 @@ export default function BrowserPage() {
       {
         header: () => t("Object Count"),
         accessorKey: "Count",
-        cell: ({ row }) => row.original.Count?.toLocaleString() ?? "0",
+        cell: ({ row }) =>
+          typeof row.original.Count === "number" ? (
+            row.original.Count.toLocaleString()
+          ) : usageLoading ? (
+            <Spinner className="size-3 text-muted-foreground" />
+          ) : (
+            "--"
+          ),
       },
       {
         header: () => t("Size"),
         accessorKey: "Size",
-      }
+        cell: ({ row }) =>
+          row.original.Size ?? (usageLoading ? <Spinner className="size-3 text-muted-foreground" /> : "--"),
+      },
     )
   }
 
@@ -149,18 +197,12 @@ export default function BrowserPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            router.push(`/buckets/${encodeURIComponent(row.original.Name)}`)
-          }
+          onClick={() => router.push(`/buckets/${encodeURIComponent(row.original.Name)}`)}
         >
           <RiSettings5Line className="size-4" />
           <span>{t("Settings")}</span>
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => confirmDelete(row.original)}
-        >
+        <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
           <RiDeleteBin5Line className="size-4" />
           <span>{t("Delete")}</span>
         </Button>
@@ -177,7 +219,7 @@ export default function BrowserPage() {
 
   const handleFormClosed = (value: boolean) => {
     setFormVisible(value)
-    if (!value) fetchBuckets()
+    if (!value) fetchBuckets({ force: true })
   }
 
   const confirmDelete = (row: BucketRow) => {
@@ -204,9 +246,11 @@ export default function BrowserPage() {
     try {
       await deleteBucket(row.Name)
       message.success(t("Delete Success"))
-      await fetchBuckets()
+      await fetchBuckets({ force: true })
     } catch (error: unknown) {
-      message.error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || t("Delete Failed"))
+      message.error(
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message || t("Delete Failed"),
+      )
     }
   }
 
@@ -226,7 +270,7 @@ export default function BrowserPage() {
               <RiAddLine className="size-4" />
               <span>{t("Create Bucket")}</span>
             </Button>
-            <Button variant="outline" onClick={() => fetchBuckets()}>
+            <Button variant="outline" onClick={() => fetchBuckets({ force: true })}>
               <RiRefreshLine className="size-4" />
               <span>{t("Refresh")}</span>
             </Button>

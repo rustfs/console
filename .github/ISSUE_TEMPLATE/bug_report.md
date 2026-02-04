@@ -1,9 +1,9 @@
 ---
 name: Bug Report
 about: Create a report to help us improve
-title: '[BUG] '
-labels: ['bug', 'needs-triage']
-assignees: ''
+title: "[BUG] "
+labels: ["bug", "needs-triage"]
+assignees: ""
 ---
 
 # Bug Report

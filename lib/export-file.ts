@@ -20,15 +20,11 @@ export function exportFile(res: ExportFileRes, fileName: string) {
   const file = res.data
   const name = decodeURIComponent(res.headers.filename ?? "")
 
-  if (
-    typeof window !== "undefined" &&
-    "navigator" in window &&
-    "msSaveOrOpenBlob" in window.navigator
-  ) {
+  if (typeof window !== "undefined" && "navigator" in window && "msSaveOrOpenBlob" in window.navigator) {
     const blob = new Blob([file], { type: res.headers["content-type"] ?? "application/octet-stream" })
     ;(window.navigator as unknown as { msSaveOrOpenBlob: (blob: Blob, name: string) => void }).msSaveOrOpenBlob(
       blob,
-      fileName || name
+      fileName || name,
     )
   } else {
     const type = res.headers["content-type"] ?? "application/octet-stream"

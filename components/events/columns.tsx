@@ -3,37 +3,25 @@
 import { RiDeleteBin7Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import {
-  TYPE_BADGE_CLASSES,
-  getDisplayEvents,
-  type NotificationItem,
-} from "@/lib/events"
+import { TYPE_BADGE_CLASSES, getDisplayEvents, type NotificationItem } from "@/lib/events"
 import type { ColumnDef } from "@tanstack/react-table"
 import type { TFunction } from "i18next"
 
 export function getEventsColumns(
   t: TFunction,
-  onDelete: (row: NotificationItem) => void
+  onDelete: (row: NotificationItem) => void,
 ): ColumnDef<NotificationItem>[] {
   return [
     {
       id: "type",
       header: () => t("Type"),
-      cell: ({ row }) => (
-        <Badge className={TYPE_BADGE_CLASSES[row.original.type] ?? ""}>
-          {row.original.type}
-        </Badge>
-      ),
+      cell: ({ row }) => <Badge className={TYPE_BADGE_CLASSES[row.original.type] ?? ""}>{row.original.type}</Badge>,
       meta: { maxWidth: "7rem" },
     },
     {
       id: "arn",
       header: () => t("ARN"),
-      cell: ({ row }) => (
-        <span className="line-clamp-2 break-all font-medium">
-          {row.original.arn}
-        </span>
-      ),
+      cell: ({ row }) => <span className="line-clamp-2 break-all font-medium">{row.original.arn}</span>,
       meta: { maxWidth: "180px" },
     },
     {
@@ -53,17 +41,13 @@ export function getEventsColumns(
     {
       id: "prefix",
       header: () => t("Prefix"),
-      cell: ({ row }) => (
-        <span>{row.original.prefix ?? "-"}</span>
-      ),
+      cell: ({ row }) => <span>{row.original.prefix ?? "-"}</span>,
       meta: { maxWidth: "9rem" },
     },
     {
       id: "suffix",
       header: () => t("Suffix"),
-      cell: ({ row }) => (
-        <span>{row.original.suffix ?? "-"}</span>
-      ),
+      cell: ({ row }) => <span>{row.original.suffix ?? "-"}</span>,
       meta: { maxWidth: "9rem" },
     },
     {

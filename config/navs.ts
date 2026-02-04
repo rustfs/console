@@ -42,8 +42,8 @@ export default [
     isAdminOnly: true,
   },
   {
-    label: "Performance",
-    to: "/performance",
+    label: "Running Status",
+    to: "/status",
     icon: "ri:bar-chart-box-line",
     isAdminOnly: true,
   },

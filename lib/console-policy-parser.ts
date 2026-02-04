@@ -13,9 +13,7 @@ export interface ConsolePolicy {
 }
 
 function matchAction(policyActions: string[], requestAction: string): boolean {
-  return policyActions.some((pattern) =>
-    resourceMatch(pattern, requestAction)
-  )
+  return policyActions.some((pattern) => resourceMatch(pattern, requestAction))
 }
 
 const IMPLIED_SCOPES: Record<string, string[]> = {
@@ -61,18 +59,8 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
     "admin:DeleteUser",
     "admin:*",
   ],
-  [CONSOLE_SCOPES.VIEW_USER_GROUPS]: [
-    "admin:ListGroups",
-    "admin:AddUserToGroup",
-    "admin:GetGroup",
-    "admin:*",
-  ],
-  [CONSOLE_SCOPES.VIEW_PERFORMANCE]: [
-    "admin:ServerInfo",
-    "admin:OBDInfo",
-    "admin:ServerTrace",
-    "admin:*",
-  ],
+  [CONSOLE_SCOPES.VIEW_USER_GROUPS]: ["admin:ListGroups", "admin:AddUserToGroup", "admin:GetGroup", "admin:*"],
+  [CONSOLE_SCOPES.VIEW_PERFORMANCE]: ["admin:ServerInfo", "admin:OBDInfo", "admin:ServerTrace", "admin:*"],
   [CONSOLE_SCOPES.VIEW_IMPORT_EXPORT]: ["admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_BUCKET_EVENTS]: [
     "s3:GetBucketNotification",
@@ -86,37 +74,24 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
     "s3:PutReplicationConfiguration",
     "s3:*",
   ],
-  [CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE]: [
-    "s3:GetLifecycleConfiguration",
-    "s3:PutLifecycleConfiguration",
-    "s3:*",
-  ],
+  [CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE]: ["s3:GetLifecycleConfiguration", "s3:PutLifecycleConfiguration", "s3:*"],
   [CONSOLE_SCOPES.VIEW_TIERED_STORAGE]: ["admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_EVENT_DESTINATIONS]: ["admin:ConfigUpdate", "admin:*"],
-  [CONSOLE_SCOPES.VIEW_SSE_SETTINGS]: [
-    "admin:ConfigUpdate",
-    "admin:*",
-    "kms:*",
-  ],
+  [CONSOLE_SCOPES.VIEW_SSE_SETTINGS]: ["admin:ConfigUpdate", "admin:*", "kms:*"],
   [CONSOLE_SCOPES.VIEW_LICENSE]: ["admin:ServerInfo", "admin:*"],
 }
 
-function matchResource(
-  policyResources: string[] | undefined,
-  requestResource: string
-): boolean {
+function matchResource(policyResources: string[] | undefined, requestResource: string): boolean {
   if (!policyResources || policyResources.length === 0) {
     return true
   }
-  return policyResources.some((pattern) =>
-    resourceMatch(pattern, requestResource)
-  )
+  return policyResources.some((pattern) => resourceMatch(pattern, requestResource))
 }
 
 export function hasConsolePermission(
   policy: ConsolePolicy | ConsoleStatement[] | undefined,
   action: string,
-  resource: string = "console"
+  resource: string = "console",
 ): boolean {
   if (!policy) return false
 
@@ -124,10 +99,7 @@ export function hasConsolePermission(
   if (statements.length === 0) return false
 
   const denied = statements.some(
-    (s) =>
-      s.Effect === "Deny" &&
-      matchAction(s.Action, action) &&
-      matchResource(s.Resource, resource)
+    (s) => s.Effect === "Deny" && matchAction(s.Action, action) && matchResource(s.Resource, resource),
   )
 
   if (denied) return false
@@ -141,11 +113,7 @@ export function hasConsolePermission(
     const adminStarMatch = matchAction(s.Action, "admin:*")
 
     const explicitMatch =
-      (actionMatch ||
-        adminMatch ||
-        wildcardMatch ||
-        adminStarMatch) &&
-      matchResource(s.Resource, resource)
+      (actionMatch || adminMatch || wildcardMatch || adminStarMatch) && matchResource(s.Resource, resource)
     if (explicitMatch) return true
 
     const impliedActions = IMPLIED_SCOPES[action]
@@ -164,7 +132,7 @@ export function hasConsolePermission(
 export function hasConsoleScopes(
   policy: ConsolePolicy | ConsoleStatement[] | undefined,
   scopes: string[],
-  matchAll: boolean = true
+  matchAll: boolean = true,
 ): boolean {
   if (!scopes || scopes.length === 0) return true
 

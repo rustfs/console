@@ -45,13 +45,7 @@ const writeOnlyObjectActions = new Set<string>([
   "s3:ListMultipartUploadParts",
   "s3:PutObject",
 ])
-export type BucketPolicyType =
-  | "none"
-  | "readonly"
-  | "readwrite"
-  | "writeonly"
-  | "private"
-  | "public"
+export type BucketPolicyType = "none" | "readonly" | "readwrite" | "writeonly" | "private" | "public"
 
 export interface PolicyResource {
   bucket: string
@@ -73,11 +67,7 @@ function formatResourceArn(resource: PolicyResource): string {
   return resource.object ? `${awsResourcePrefix}${bn}/${resource.object}` : `${awsResourcePrefix}${bn}`
 }
 
-function createAllowStatement(
-  principals: string[],
-  actions: string[],
-  resources: PolicyResource[]
-): PolicyStatement {
+function createAllowStatement(principals: string[], actions: string[], resources: PolicyResource[]): PolicyStatement {
   return {
     Effect: "Allow",
     Principal: { AWS: principals },
@@ -86,11 +76,7 @@ function createAllowStatement(
   }
 }
 
-function createDenyStatement(
-  principals: string[],
-  actions: string[],
-  resources: PolicyResource[]
-): PolicyStatement {
+function createDenyStatement(principals: string[], actions: string[], resources: PolicyResource[]): PolicyStatement {
   return {
     Effect: "Deny",
     Principal: { AWS: principals },
@@ -102,16 +88,8 @@ function createDenyStatement(
 function createPrivatePolicy(bucketName: string, prefix: string): PolicyStatement[] {
   const objectPattern = prefix ? `${prefix}*` : "*"
   return [
-    createAllowStatement(
-      ["arn:aws:iam::*:root"],
-      ["s3:*"],
-      [{ bucket: bucketName, object: objectPattern }]
-    ),
-    createDenyStatement(
-      ["*"],
-      ["s3:*"],
-      [{ bucket: bucketName, object: objectPattern }]
-    ),
+    createAllowStatement(["arn:aws:iam::*:root"], ["s3:*"], [{ bucket: bucketName, object: objectPattern }]),
+    createDenyStatement(["*"], ["s3:*"], [{ bucket: bucketName, object: objectPattern }]),
   ]
 }
 
@@ -120,23 +98,13 @@ function createPublicPolicy(bucketName: string, prefix: string): PolicyStatement
   return [
     createAllowStatement(
       ["*"],
-      [
-        "s3:GetObject",
-        "s3:GetObjectTagging",
-        "s3:ListBucket",
-        "s3:GetBucketLocation",
-      ],
-      [{ bucket: bucketName, object: objectPattern }]
+      ["s3:GetObject", "s3:GetObjectTagging", "s3:ListBucket", "s3:GetBucketLocation"],
+      [{ bucket: bucketName, object: objectPattern }],
     ),
     createAllowStatement(
       ["arn:aws:iam::*:root"],
-      [
-        "s3:PutObject",
-        "s3:DeleteObject",
-        "s3:PutObjectTagging",
-        "s3:DeleteObjectTagging",
-      ],
-      [{ bucket: bucketName, object: objectPattern }]
+      ["s3:PutObject", "s3:DeleteObject", "s3:PutObjectTagging", "s3:DeleteObjectTagging"],
+      [{ bucket: bucketName, object: objectPattern }],
     ),
   ]
 }
@@ -147,7 +115,7 @@ function createPublicPolicy(bucketName: string, prefix: string): PolicyStatement
 export function detectBucketPolicy(
   statements: PolicyStatement[],
   bucketName: string,
-  prefix: string
+  prefix: string,
 ): BucketPolicyType {
   const objectResource = `${awsResourcePrefix}${bucketName}/${prefix}*`
 
@@ -157,8 +125,8 @@ export function detectBucketPolicy(
       s.Principal?.AWS?.includes("*") &&
       s.Resource?.includes(objectResource) &&
       s.Action?.some((a) =>
-        ["s3:GetObject", "s3:GetObjectTagging", "s3:ListBucket", "s3:GetBucketLocation"].includes(a)
-      )
+        ["s3:GetObject", "s3:GetObjectTagging", "s3:ListBucket", "s3:GetBucketLocation"].includes(a),
+      ),
   )
   const hasOwnerWriteAccess = statements.some(
     (s) =>
@@ -166,8 +134,8 @@ export function detectBucketPolicy(
       s.Principal?.AWS?.includes("arn:aws:iam::*:root") &&
       s.Resource?.includes(objectResource) &&
       s.Action?.some((a) =>
-        ["s3:PutObject", "s3:DeleteObject", "s3:PutObjectTagging", "s3:DeleteObjectTagging"].includes(a)
-      )
+        ["s3:PutObject", "s3:DeleteObject", "s3:PutObjectTagging", "s3:DeleteObjectTagging"].includes(a),
+      ),
   )
   if (hasPublicReadAccess && hasOwnerWriteAccess) return "public"
 
@@ -176,14 +144,14 @@ export function detectBucketPolicy(
       s.Effect === "Allow" &&
       s.Principal?.AWS?.includes("arn:aws:iam::*:root") &&
       s.Resource?.includes(objectResource) &&
-      s.Action?.includes("s3:*")
+      s.Action?.includes("s3:*"),
   )
   const hasDenyAllOthers = statements.some(
     (s) =>
       s.Effect === "Deny" &&
       s.Principal?.AWS?.includes("*") &&
       s.Resource?.includes(objectResource) &&
-      s.Action?.includes("s3:*")
+      s.Action?.includes("s3:*"),
   )
   if (hasOwnerFullAccess && hasDenyAllOthers) return "private"
 
@@ -197,13 +165,13 @@ export function setBucketPolicy(
   statements: PolicyStatement[],
   policy: BucketPolicyType,
   bucketName: string,
-  prefix: string
+  prefix: string,
 ): PolicyStatement[] {
   const bucketResource = `${awsResourcePrefix}${bucketName}`
   const objectResource = `${awsResourcePrefix}${bucketName}/${prefix}*`
 
   const filtered = statements.filter(
-    (s) => !s.Resource?.includes(bucketResource) && !s.Resource?.includes(objectResource)
+    (s) => !s.Resource?.includes(bucketResource) && !s.Resource?.includes(objectResource),
   )
 
   let newStatements: PolicyStatement[] = []
@@ -213,39 +181,17 @@ export function setBucketPolicy(
   } else if (policy === "public") {
     newStatements = createPublicPolicy(bucketName, prefix)
   } else {
-    newStatements.push(
-      createAllowStatement(
-        ["*"],
-        Array.from(commonBucketActions),
-        [{ bucket: bucketName }]
-      )
-    )
+    newStatements.push(createAllowStatement(["*"], Array.from(commonBucketActions), [{ bucket: bucketName }]))
     if (policy === "readonly" || policy === "readwrite") {
       newStatements.push(
-        createAllowStatement(
-          ["*"],
-          Array.from(readOnlyBucketActions),
-          [{ bucket: bucketName }]
-        ),
-        createAllowStatement(
-          ["*"],
-          Array.from(readOnlyObjectActions),
-          [{ bucket: bucketName, object: `${prefix}*` }]
-        )
+        createAllowStatement(["*"], Array.from(readOnlyBucketActions), [{ bucket: bucketName }]),
+        createAllowStatement(["*"], Array.from(readOnlyObjectActions), [{ bucket: bucketName, object: `${prefix}*` }]),
       )
     }
     if (policy === "writeonly" || policy === "readwrite") {
       newStatements.push(
-        createAllowStatement(
-          ["*"],
-          Array.from(writeOnlyBucketActions),
-          [{ bucket: bucketName }]
-        ),
-        createAllowStatement(
-          ["*"],
-          Array.from(writeOnlyObjectActions),
-          [{ bucket: bucketName, object: `${prefix}*` }]
-        )
+        createAllowStatement(["*"], Array.from(writeOnlyBucketActions), [{ bucket: bucketName }]),
+        createAllowStatement(["*"], Array.from(writeOnlyObjectActions), [{ bucket: bucketName, object: `${prefix}*` }]),
       )
     }
   }

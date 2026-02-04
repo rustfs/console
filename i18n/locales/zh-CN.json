@@ -640,6 +640,7 @@
   "Rule ID": "规则 ID",
   "Running": "运行中",
   "Running (Unhealthy)": "运行中（不健康）",
+  "Running Status": "运行状态",
   "Rust-based": "基于 Rust 的",
   "RustFS": "RustFS",
   "RustFS built-in cold storage": "RustFS 内置冷存储",

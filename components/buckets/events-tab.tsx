@@ -43,7 +43,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
           Filter?: { Key?: { FilterRules?: Array<{ Name: string; Value: string }> } }
         }>,
         type: NotificationItem["type"],
-        arnKey: "LambdaFunctionArn" | "QueueArn" | "TopicArn"
+        arnKey: "LambdaFunctionArn" | "QueueArn" | "TopicArn",
       ) => {
         ;(configs ?? []).forEach(
           (config: {
@@ -51,12 +51,8 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
             Filter?: { Key?: { FilterRules?: Array<{ Name: string; Value: string }> } }
             Events?: string[]
           }) => {
-            const prefix = config.Filter?.Key?.FilterRules?.find(
-              (r) => r.Name === "Prefix"
-            )?.Value
-            const suffix = config.Filter?.Key?.FilterRules?.find(
-              (r) => r.Name === "Suffix"
-            )?.Value
+            const prefix = config.Filter?.Key?.FilterRules?.find((r) => r.Name === "Prefix")?.Value
+            const suffix = config.Filter?.Key?.FilterRules?.find((r) => r.Name === "Suffix")?.Value
             const arn = (config as Record<string, string>)[arnKey]
             notifications.push({
               id: config.Id ?? "",
@@ -67,7 +63,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
               suffix,
               filterRules: config.Filter?.Key?.FilterRules ?? [],
             })
-          }
+          },
         )
       }
 
@@ -77,21 +73,9 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
         TopicConfigurations?: unknown[]
       }
 
-      addFromConfig(
-        (r?.LambdaFunctionConfigurations ?? []) as never[],
-        "Lambda",
-        "LambdaFunctionArn"
-      )
-      addFromConfig(
-        (r?.QueueConfigurations ?? []) as never[],
-        "SQS",
-        "QueueArn"
-      )
-      addFromConfig(
-        (r?.TopicConfigurations ?? []) as never[],
-        "SNS",
-        "TopicArn"
-      )
+      addFromConfig((r?.LambdaFunctionConfigurations ?? []) as never[], "Lambda", "LambdaFunctionArn")
+      addFromConfig((r?.QueueConfigurations ?? []) as never[], "SQS", "QueueArn")
+      addFromConfig((r?.TopicConfigurations ?? []) as never[], "SNS", "TopicArn")
 
       setData(notifications)
     } catch {
@@ -110,9 +94,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
       const confirmed = await new Promise<boolean>((resolve) => {
         dialog.warning({
           title: t("Confirm Delete"),
-          content: t(
-            "Are you sure you want to delete this notification configuration?"
-          ),
+          content: t("Are you sure you want to delete this notification configuration?"),
           positiveText: t("Delete"),
           negativeText: t("Cancel"),
           onPositiveClick: () => resolve(true),
@@ -125,10 +107,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
       try {
         setLoading(true)
         const currentResponse = await listBucketNotifications(bucketName)
-        const currentNotifications = (currentResponse ?? {}) as unknown as Record<
-          string,
-          unknown[]
-        >
+        const currentNotifications = (currentResponse ?? {}) as unknown as Record<string, unknown[]>
 
         const configKey =
           row.type === "Lambda"
@@ -136,9 +115,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
             : row.type === "SQS"
               ? "QueueConfigurations"
               : "TopicConfigurations"
-        const configs = (
-          currentNotifications as Record<string, Array<{ Id?: string }>>
-        )[configKey]
+        const configs = (currentNotifications as Record<string, Array<{ Id?: string }>>)[configKey]
         const updated = configs?.filter((c) => c.Id !== row.id) ?? []
 
         const newConfig = {
@@ -154,28 +131,15 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
         message.success(t("Delete Success"))
         loadData()
       } catch (error) {
-        message.error(
-          `${t("Delete Failed")}: ${(error as Error).message ?? error}`
-        )
+        message.error(`${t("Delete Failed")}: ${(error as Error).message ?? error}`)
       } finally {
         setLoading(false)
       }
     },
-    [
-      bucketName,
-      dialog,
-      listBucketNotifications,
-      loadData,
-      message,
-      putBucketNotifications,
-      t,
-    ]
+    [bucketName, dialog, listBucketNotifications, loadData, message, putBucketNotifications, t],
   )
 
-  const columns = React.useMemo(
-    () => getEventsColumns(t, handleRowDelete),
-    [t, handleRowDelete]
-  )
+  const columns = React.useMemo(() => getEventsColumns(t, handleRowDelete), [t, handleRowDelete])
 
   const { table } = useDataTable<NotificationItem>({
     data,
@@ -206,12 +170,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
         emptyDescription={t("Add Event Subscription to get started")}
       />
 
-      <EventsNewForm
-        open={newFormOpen}
-        onOpenChange={setNewFormOpen}
-        bucketName={bucketName}
-        onSuccess={loadData}
-      />
+      <EventsNewForm open={newFormOpen} onOpenChange={setNewFormOpen} bucketName={bucketName} onSuccess={loadData} />
     </div>
   )
 }

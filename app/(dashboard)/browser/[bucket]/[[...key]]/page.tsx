@@ -59,10 +59,7 @@ export default function BucketBrowserPage({ params }: PageProps) {
       })
   }, [bucketName, headBucket, message, router, t])
 
-  const bucketPath = React.useCallback(
-    (path?: string | string[]) => buildBucketPath(bucketName, path),
-    [bucketName]
-  )
+  const bucketPath = React.useCallback((path?: string | string[]) => buildBucketPath(bucketName, path), [bucketName])
 
   const handlePathClick = (path: string) => {
     router.push(bucketPath(path))
@@ -99,11 +96,7 @@ export default function BucketBrowserPage({ params }: PageProps) {
           >
             {bucketName}
           </h1>
-          <ObjectPathLinks
-            objectKey={keyPath}
-            bucketName={bucketName}
-            onClick={handlePathClick}
-          />
+          <ObjectPathLinks objectKey={keyPath} bucketName={bucketName} onClick={handlePathClick} />
         </div>
       </PageHeader>
 
@@ -118,10 +111,7 @@ export default function BucketBrowserPage({ params }: PageProps) {
             refreshTrigger={refreshTrigger}
           />
         ) : (
-          <ObjectView
-            bucketName={bucketName}
-            objectKey={keyPath}
-          />
+          <ObjectView bucketName={bucketName} objectKey={keyPath} />
         )}
       </div>
 

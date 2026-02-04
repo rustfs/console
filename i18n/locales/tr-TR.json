@@ -640,6 +640,7 @@
   "Rule ID": "Kural Kimliği",
   "Running": "Koşma",
   "Running (Unhealthy)": "Koşu (Sağlıksız)",
+  "Running Status": "Çalışma durumu",
   "Rust-based": "Rust Tabanlı",
   "RustFS": "RustFS",
   "RustFS built-in cold storage": "RustFS yerleşik soğuk hava deposu",

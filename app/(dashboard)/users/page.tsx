@@ -57,7 +57,7 @@ export default function UsersPage() {
   const [editFormOpen, setEditFormOpen] = useState(false)
   const [editRow, setEditRow] = useState<UserRow | null>(null)
 
-  const getDataList = async () => {
+  const getDataList = React.useCallback(async () => {
     setLoading(true)
     try {
       const res = (await listUsers()) as Record<string, Record<string, unknown>>
@@ -66,17 +66,16 @@ export default function UsersPage() {
         ...(typeof info === "object" ? info : {}),
       })) as UserRow[]
       setData(users)
-    } catch (error) {
+    } catch {
       message.error(t("Failed to get data"))
     } finally {
       setLoading(false)
-      table.resetRowSelection()
     }
-  }
+  }, [listUsers, message, t])
 
   useEffect(() => {
     getDataList()
-  }, [])
+  }, [getDataList])
 
   const filteredData = React.useMemo(() => {
     if (!searchTerm) return data
@@ -99,9 +98,7 @@ export default function UsersPage() {
       accessorKey: "status",
       header: () => t("Status"),
       cell: ({ row }) => (
-        <Badge
-          variant={row.original.status === "enabled" ? "secondary" : "outline"}
-        >
+        <Badge variant={row.original.status === "enabled" ? "secondary" : "outline"}>
           {row.original.status === "enabled" ? t("Enabled") : row.original.status}
         </Badge>
       ),
@@ -124,21 +121,11 @@ export default function UsersPage() {
       meta: { width: 200 },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => openEditItem(row.original)}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={() => openEditItem(row.original)}>
             <RiEdit2Line className="size-4" />
             <span>{t("Edit")}</span>
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => confirmDelete(row.original)}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
             <RiDeleteBin5Line className="size-4" />
             <span>{t("Delete")}</span>
           </Button>
@@ -156,6 +143,10 @@ export default function UsersPage() {
   })
 
   const selectedKeys = selectedRowIds
+
+  React.useEffect(() => {
+    table.resetRowSelection()
+  }, [data, table])
 
   const openEditItem = (row: UserRow) => {
     setEditRow(row)
@@ -178,7 +169,7 @@ export default function UsersPage() {
       message.success(t("Delete Success"))
       table.resetRowSelection()
       await getDataList()
-    } catch (error) {
+    } catch {
       message.error(t("Delete Failed"))
     }
   }
@@ -196,7 +187,7 @@ export default function UsersPage() {
           message.success(t("Delete Success"))
           table.resetRowSelection()
           await getDataList()
-        } catch (error) {
+        } catch {
           message.error(t("Delete Failed"))
         }
       },
@@ -219,21 +210,11 @@ export default function UsersPage() {
               clearable
               className="max-w-xs"
             />
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!selectedKeys.length}
-              onClick={deleteByList}
-            >
+            <Button type="button" variant="outline" disabled={!selectedKeys.length} onClick={deleteByList}>
               <RiDeleteBin5Line className="size-4" />
               {t("Delete Selected")}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!selectedKeys.length}
-              onClick={addToGroup}
-            >
+            <Button type="button" variant="outline" disabled={!selectedKeys.length} onClick={addToGroup}>
               <RiGroup2Fill className="size-4" />
               {t("Add to Group")}
             </Button>
@@ -258,12 +239,7 @@ export default function UsersPage() {
         <DataTablePagination table={table} />
 
         <UserNewForm open={newFormOpen} onOpenChange={setNewFormOpen} onSuccess={getDataList} />
-        <UserEditForm
-          open={editFormOpen}
-          onOpenChange={setEditFormOpen}
-          row={editRow}
-          onSuccess={getDataList}
-        />
+        <UserEditForm open={editFormOpen} onOpenChange={setEditFormOpen} row={editRow} onSuccess={getDataList} />
       </div>
     </Page>
   )

@@ -5,13 +5,7 @@ import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { useSSE } from "@/hooks/use-sse"
@@ -20,13 +14,7 @@ import { useMessage } from "@/lib/feedback/message"
 export default function SSEPage() {
   const { t } = useTranslation()
   const message = useMessage()
-  const {
-    getKMSStatus,
-    clearCache,
-    getDetailedStatus,
-    startKMS,
-    stopKMS,
-  } = useSSE()
+  const { getKMSStatus, clearCache, startKMS, stopKMS } = useSSE()
 
   const [status, setStatus] = useState<{
     status?: string
@@ -136,9 +124,7 @@ export default function SSEPage() {
   const getKmsStatusDescription = () => {
     if (!status) return t("KMS server is not configured")
     if (status.status === "Running") {
-      return status.healthy
-        ? t("KMS server is running and healthy")
-        : t("KMS server is running but unhealthy")
+      return status.healthy ? t("KMS server is running and healthy") : t("KMS server is running but unhealthy")
     }
     if (status.status === "Configured") return t("KMS server is configured but not running")
     return t("KMS server status unknown")
@@ -151,31 +137,23 @@ export default function SSEPage() {
       <PageHeader
         description={
           <p className="text-gray-600 dark:text-gray-400">
-            {t(
-              "Configure server-side encryption for your objects using external key management services."
-            )}
+            {t("Configure server-side encryption for your objects using external key management services.")}
           </p>
         }
       >
-        <h1 className="text-2xl font-bold">
-          {t("Server-Side Encryption (SSE) Configuration")}
-        </h1>
+        <h1 className="text-2xl font-bold">{t("Server-Side Encryption (SSE) Configuration")}</h1>
       </PageHeader>
 
       <div className="space-y-8">
         <Card className="shadow-none">
           <CardHeader className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
-              <CardTitle className="text-base sm:text-lg">
-                {t("KMS Status Overview")}
-              </CardTitle>
+              <CardTitle className="text-base sm:text-lg">{t("KMS Status Overview")}</CardTitle>
               <Badge variant="secondary" className="text-sm uppercase">
                 {loading ? t("Loading...") : getKmsStatusText()}
               </Badge>
             </div>
-            <CardDescription>
-              {getKmsStatusDescription()}
-            </CardDescription>
+            <CardDescription>{getKmsStatusDescription()}</CardDescription>
             {status?.backend_type && (
               <CardDescription>
                 {t("Backend")}: {status.backend_type}
@@ -185,37 +163,20 @@ export default function SSEPage() {
           <CardContent className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <div className="rounded-md border bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">
-                  {t("Backend Type")}
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {status?.backend_type ?? t("Not configured")}
-                </p>
+                <p className="text-xs text-muted-foreground">{t("Backend Type")}</p>
+                <p className="text-sm font-medium text-foreground">{status?.backend_type ?? t("Not configured")}</p>
               </div>
               <div className="rounded-md border bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">
-                  {t("Status")}
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {status?.status ?? t("Not configured")}
-                </p>
+                <p className="text-xs text-muted-foreground">{t("Status")}</p>
+                <p className="text-sm font-medium text-foreground">{status?.status ?? t("Not configured")}</p>
               </div>
               <div className="rounded-md border bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">
-                  {t("Health")}
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {status?.healthy ? t("Healthy") : t("Unhealthy")}
-                </p>
+                <p className="text-xs text-muted-foreground">{t("Health")}</p>
+                <p className="text-sm font-medium text-foreground">{status?.healthy ? t("Healthy") : t("Unhealthy")}</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={refreshingStatus}
-                onClick={handleRefresh}
-              >
+              <Button size="sm" variant="outline" disabled={refreshingStatus} onClick={handleRefresh}>
                 {t("Refresh")}
               </Button>
               <Button
@@ -227,24 +188,13 @@ export default function SSEPage() {
               >
                 {t("Clear Cache")}
               </Button>
-              {hasConfiguration &&
-                (status?.status === "Configured" || status?.status === "Error") && (
-                  <Button
-                    size="sm"
-                    variant="default"
-                    onClick={handleStartKMS}
-                    aria-disabled={startingKMS}
-                  >
-                    {t("Start KMS")}
-                  </Button>
-                )}
+              {hasConfiguration && (status?.status === "Configured" || status?.status === "Error") && (
+                <Button size="sm" variant="default" onClick={handleStartKMS} aria-disabled={startingKMS}>
+                  {t("Start KMS")}
+                </Button>
+              )}
               {hasConfiguration && status?.status === "Running" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleStopKMS}
-                  aria-disabled={stoppingKMS}
-                >
+                <Button size="sm" variant="outline" onClick={handleStopKMS} aria-disabled={stoppingKMS}>
                   {t("Stop KMS")}
                 </Button>
               )}
@@ -255,9 +205,7 @@ export default function SSEPage() {
         <Card className="shadow-none">
           <CardHeader>
             <CardTitle>{t("KMS Configuration")}</CardTitle>
-            <CardDescription>
-              {t("Full KMS configuration form - coming soon")}
-            </CardDescription>
+            <CardDescription>{t("Full KMS configuration form - coming soon")}</CardDescription>
           </CardHeader>
         </Card>
       </div>

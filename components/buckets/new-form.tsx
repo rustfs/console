@@ -7,13 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { useBucket } from "@/hooks/use-bucket"
 import { getBytes } from "@/lib/functions"
@@ -37,12 +31,7 @@ const retentionUnitOptions = [
 export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const {
-    createBucket,
-    putBucketVersioning,
-    putObjectLockConfiguration,
-    putBucketQuota,
-  } = useBucket()
+  const { createBucket, putBucketVersioning, putObjectLockConfiguration, putBucketQuota } = useBucket()
 
   const [objectKey, setObjectKey] = React.useState("")
   const [version, setVersion] = React.useState(false)
@@ -57,15 +46,9 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const [creating, setCreating] = React.useState(false)
 
   const trimmedBucketName = objectKey.trim()
-  const showNameError =
-    trimmedBucketName.length > 0 &&
-    (trimmedBucketName.length < 3 || trimmedBucketName.length > 63)
-  const parsedRetentionPeriod = Math.max(
-    1,
-    Number.parseInt(retentionPeriod, 10) || 1
-  )
-  const isSubmitDisabled =
-    creating || trimmedBucketName.length < 3 || trimmedBucketName.length > 63
+  const showNameError = trimmedBucketName.length > 0 && (trimmedBucketName.length < 3 || trimmedBucketName.length > 63)
+  const parsedRetentionPeriod = Math.max(1, Number.parseInt(retentionPeriod, 10) || 1)
+  const isSubmitDisabled = creating || trimmedBucketName.length < 3 || trimmedBucketName.length > 63
 
   React.useEffect(() => {
     if (objectLock) setVersion(true)
@@ -171,10 +154,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                 value={objectKey}
                 onChange={(e) => setObjectKey(e.target.value)}
                 autoComplete="off"
-                className={cn(
-                  "w-full",
-                  showNameError && "border-destructive focus-visible:ring-destructive"
-                )}
+                className={cn("w-full", showNameError && "border-destructive focus-visible:ring-destructive")}
               />
             </FieldContent>
           </Field>
@@ -218,10 +198,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                       className="grid grid-cols-2 gap-2 sm:grid-cols-4"
                     >
                       {["MiB", "GiB", "TiB", "PiB"].map((unit) => (
-                        <label
-                          key={unit}
-                          className="flex items-start gap-3 rounded-md border border-border/50 p-3"
-                        >
+                        <label key={unit} className="flex items-start gap-3 rounded-md border border-border/50 p-3">
                           <RadioGroupItem value={unit} className="mt-0.5" />
                           <span className="text-sm font-medium">{unit}</span>
                         </label>
@@ -238,10 +215,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
               <Field orientation="responsive" className="items-center">
                 <FieldLabel>{t("Retention")}</FieldLabel>
                 <FieldContent className="flex justify-end">
-                  <Switch
-                    checked={retentionEnabled}
-                    onCheckedChange={setRetentionEnabled}
-                  />
+                  <Switch checked={retentionEnabled} onCheckedChange={setRetentionEnabled} />
                 </FieldContent>
               </Field>
 
@@ -261,9 +235,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                             className="flex items-start gap-3 rounded-md border border-border/50 p-3"
                           >
                             <RadioGroupItem value={option.value} className="mt-0.5" />
-                            <span className="text-sm font-medium">
-                              {t(option.label)}
-                            </span>
+                            <span className="text-sm font-medium">{t(option.label)}</span>
                           </label>
                         ))}
                       </RadioGroup>
@@ -291,9 +263,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                               className="flex items-start gap-3 rounded-md border border-border/50 p-3"
                             >
                               <RadioGroupItem value={option.value} className="mt-0.5" />
-                              <span className="text-sm font-medium">
-                                {t(option.labelKey)}
-                              </span>
+                              <span className="text-sm font-medium">{t(option.labelKey)}</span>
                             </label>
                           ))}
                         </RadioGroup>
@@ -310,11 +280,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
           <Button variant="outline" onClick={closeModal}>
             {t("Cancel")}
           </Button>
-          <Button
-            variant="default"
-            disabled={isSubmitDisabled}
-            onClick={handleCreateBucket}
-          >
+          <Button variant="default" disabled={isSubmitDisabled} onClick={handleCreateBucket}>
             {creating ? (
               <span className="flex items-center gap-2">
                 <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

@@ -147,7 +147,7 @@ export default function PerformancePage() {
     return (
       <Page>
         <PageHeader>
-          <h1 className="text-2xl font-bold">{t("Server Information")}</h1>
+          <h1 className="text-2xl font-bold">{t("Running Status")}</h1>
         </PageHeader>
         <div className="flex items-center justify-center py-24">
           <Spinner className="size-8 text-muted-foreground" />
@@ -167,7 +167,7 @@ export default function PerformancePage() {
             </Button>
           }
         >
-          <h1 className="text-2xl font-bold">{t("Server Information")}</h1>
+          <h1 className="text-2xl font-bold">{t("Running Status")}</h1>
         </PageHeader>
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-sm text-destructive">{error}</p>
@@ -186,7 +186,7 @@ export default function PerformancePage() {
           </Button>
         }
       >
-        <h1 className="text-2xl font-bold">{t("Server Information")}</h1>
+        <h1 className="text-2xl font-bold">{t("Running Status")}</h1>
       </PageHeader>
 
       <div className="space-y-8">

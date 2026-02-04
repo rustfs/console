@@ -4,12 +4,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useGroups } from "@/hooks/use-groups"
 import { UserGroupMembers } from "./members"
 import { UserGroupPolicies } from "./policies"
@@ -28,12 +23,7 @@ interface UserGroupEditFormProps {
   onSuccess: () => void
 }
 
-export function UserGroupEditForm({
-  open,
-  onOpenChange,
-  row,
-  onSuccess: _onSuccess,
-}: UserGroupEditFormProps) {
+export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGroupEditFormProps) {
   const { t } = useTranslation()
   const { getGroup, updateGroupStatus } = useGroups()
 
@@ -50,7 +40,7 @@ export function UserGroupEditForm({
       const data = (await getGroup(name)) as GroupInfo
       setGroup(data)
     },
-    [getGroup]
+    [getGroup],
   )
 
   React.useEffect(() => {
@@ -68,6 +58,7 @@ export function UserGroupEditForm({
     if (status === group.status) return
     await updateGroupStatus(group.name, { ...group, status })
     await getGroupData(group.name)
+    onSuccess()
   }
 
   const handleStatusToggle = async (checked: boolean) => {
@@ -81,20 +72,14 @@ export function UserGroupEditForm({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-lg"
-        onPointerDownOutside={(e) => e.preventDefault()}
-      >
+      <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{group.name || t("Members")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex items-center justify-between rounded-md border px-3 py-2">
             <span className="text-sm text-muted-foreground">{t("Status")}</span>
-            <Switch
-              checked={statusBoolean}
-              onCheckedChange={handleStatusToggle}
-            />
+            <Switch checked={statusBoolean} onCheckedChange={handleStatusToggle} />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">
@@ -104,16 +89,10 @@ export function UserGroupEditForm({
             </TabsList>
 
             <TabsContent value="users" className="mt-0">
-              <UserGroupMembers
-                group={group}
-                onSearch={() => getGroupData(group.name)}
-              />
+              <UserGroupMembers group={group} onSearch={() => getGroupData(group.name)} />
             </TabsContent>
             <TabsContent value="policy" className="mt-0">
-              <UserGroupPolicies
-                group={group}
-                onSearch={() => getGroupData(group.name)}
-              />
+              <UserGroupPolicies group={group} onSearch={() => getGroupData(group.name)} />
             </TabsContent>
           </Tabs>
         </div>

@@ -34,7 +34,7 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
 
   const membersData = React.useMemo<MemberItem[]>(
     () => (group?.members ?? []).map((name) => ({ name })),
-    [group?.members]
+    [group?.members],
   )
 
   const columns: ColumnDef<MemberItem>[] = React.useMemo(
@@ -42,12 +42,10 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
       {
         id: "name",
         header: () => t("Name"),
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
       },
     ],
-    [t]
+    [t],
   )
 
   const { table } = useDataTable<MemberItem>({
@@ -77,9 +75,7 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
   const changeMembers = async () => {
     try {
       const currentMembers = group?.members ?? []
-      const nowRemoveMembers = currentMembers.filter(
-        (item) => !members.includes(item)
-      )
+      const nowRemoveMembers = currentMembers.filter((item) => !members.includes(item))
 
       if (nowRemoveMembers.length) {
         await updateGroupMembers({
@@ -120,12 +116,7 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
                   className="w-full"
                 />
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="inline-flex items-center gap-2"
-                onClick={startEditing}
-              >
+              <Button type="button" variant="outline" className="inline-flex items-center gap-2" onClick={startEditing}>
                 <RiAddLine className="size-4" />
                 {t("Edit User")}
               </Button>
@@ -141,11 +132,7 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
                 />
               </div>
               <div className="flex items-center gap-2 sm:self-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={changeMembers}
-                >
+                <Button type="button" variant="outline" onClick={changeMembers}>
                   {t("Submit")}
                 </Button>
               </div>

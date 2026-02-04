@@ -27,9 +27,7 @@ function setStorageValue<T>(key: string, value: T) {
 }
 
 export function useLocalStorage<T>(key: string, defaultValue: T) {
-  const [value, setValue] = useState<T>(() =>
-    getStorageValue(key, defaultValue)
-  )
+  const [value, setValue] = useState<T>(() => getStorageValue(key, defaultValue))
 
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
@@ -49,15 +47,12 @@ export function useLocalStorage<T>(key: string, defaultValue: T) {
   const setStoredValue = useCallback(
     (newValue: T | ((prev: T) => T)) => {
       setValue((prev) => {
-        const next =
-          typeof newValue === "function"
-            ? (newValue as (prev: T) => T)(prev)
-            : newValue
+        const next = typeof newValue === "function" ? (newValue as (prev: T) => T)(prev) : newValue
         setStorageValue(key, next)
         return next
       })
     },
-    [key]
+    [key],
   )
 
   return [value, setStoredValue] as const

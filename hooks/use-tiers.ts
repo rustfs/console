@@ -33,14 +33,14 @@ export function useTiers() {
     async (data: Record<string, unknown>) => {
       return api.put("/tier?force=false", data)
     },
-    [api]
+    [api],
   )
 
   const updateTiers = useCallback(
     async (name: string, data: Record<string, unknown>) => {
       return api.post(`/tier/${encodeURIComponent(name)}`, data)
     },
-    [api]
+    [api],
   )
 
   const listTiers = useCallback(async () => {
@@ -51,7 +51,7 @@ export function useTiers() {
     async (name: string) => {
       return api.delete(`/tier/${encodeURIComponent(name)}?force=true`, {})
     },
-    [api]
+    [api],
   )
 
   return {

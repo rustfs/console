@@ -16,19 +16,8 @@ import { Button } from "@/components/ui/button"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { UploadZone } from "@/components/upload-zone"
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useImportExport } from "@/hooks/use-import-export"
 import { useMessage } from "@/lib/feedback/message"
@@ -59,7 +48,7 @@ export default function ImportExportPage() {
       { key: "export" as const, label: t("Export") },
       { key: "import" as const, label: t("Import") },
     ],
-    [t]
+    [t],
   )
 
   const exportHighlights = useMemo(
@@ -73,7 +62,7 @@ export default function ImportExportPage() {
       },
       { label: "AK/SK", icon: RiKeyLine, iconClass: "text-orange-500" },
     ],
-    []
+    [],
   )
 
   const MAX_SIZE = 10 * 1024 * 1024
@@ -86,9 +75,7 @@ export default function ImportExportPage() {
   const validateFile = (file: File | null) => {
     if (!file) return false
     if (!file.name.toLowerCase().endsWith(".zip")) {
-      setUploadError(
-        t("Only ZIP files are supported, and file size should not exceed 10MB")
-      )
+      setUploadError(t("Only ZIP files are supported, and file size should not exceed 10MB"))
       return false
     }
     if (file.size > MAX_SIZE) {
@@ -144,11 +131,7 @@ export default function ImportExportPage() {
         >
           <TabsList className="justify-start overflow-x-auto">
             {tabs.map((tab) => (
-              <TabsTrigger
-                key={tab.key}
-                value={tab.key}
-                className="capitalize"
-              >
+              <TabsTrigger key={tab.key} value={tab.key} className="capitalize">
                 {tab.label}
               </TabsTrigger>
             ))}
@@ -159,25 +142,15 @@ export default function ImportExportPage() {
               <CardHeader className="space-y-1">
                 <CardTitle>{t("IAM Configuration Export")}</CardTitle>
                 <CardDescription>
-                  {t(
-                    "Export all IAM configurations including users, groups, policies, and access keys in a ZIP file."
-                  )}
+                  {t("Export all IAM configurations including users, groups, policies, and access keys in a ZIP file.")}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   {exportHighlights.map((item) => (
-                    <div
-                      key={item.label}
-                      className="flex items-center gap-3 rounded-md border bg-muted/40 p-3"
-                    >
-                      <item.icon
-                        className={`size-5 ${item.iconClass}`}
-                        aria-hidden
-                      />
-                      <span className="text-sm font-medium text-foreground">
-                        {t(item.label)}
-                      </span>
+                    <div key={item.label} className="flex items-center gap-3 rounded-md border bg-muted/40 p-3">
+                      <item.icon className={`size-5 ${item.iconClass}`} aria-hidden />
+                      <span className="text-sm font-medium text-foreground">{t(item.label)}</span>
                     </div>
                   ))}
                 </div>
@@ -186,9 +159,7 @@ export default function ImportExportPage() {
                   <RiInformationLine className="size-4" aria-hidden />
                   <AlertTitle>{t("Notice")}</AlertTitle>
                   <AlertDescription>
-                    {t(
-                      "The exported file contains sensitive information. Please keep it secure."
-                    )}
+                    {t("The exported file contains sensitive information. Please keep it secure.")}
                   </AlertDescription>
                 </Alert>
               </CardContent>
@@ -196,16 +167,9 @@ export default function ImportExportPage() {
                 <div className="text-sm text-muted-foreground">
                   {t("Download complete IAM configuration as ZIP file")}
                 </div>
-                <Button
-                  variant="default"
-                  size="lg"
-                  disabled={isLoading}
-                  onClick={handleExportIam}
-                >
+                <Button variant="default" size="lg" disabled={isLoading} onClick={handleExportIam}>
                   <RiDownload2Line className="size-4" aria-hidden />
-                  <span>
-                    {isLoading ? t("Exporting...") : t("Export Now")}
-                  </span>
+                  <span>{isLoading ? t("Exporting...") : t("Export Now")}</span>
                 </Button>
               </CardFooter>
             </Card>
@@ -215,50 +179,26 @@ export default function ImportExportPage() {
             <Card className="shadow-none">
               <CardHeader className="space-y-1">
                 <CardTitle>{t("IAM Configuration Import")}</CardTitle>
-                <CardDescription>
-                  {t(
-                    "Import IAM configurations from a previously exported ZIP file."
-                  )}
-                </CardDescription>
+                <CardDescription>{t("Import IAM configurations from a previously exported ZIP file.")}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <UploadZone
-                    accept=".zip"
-                    disabled={isLoading}
-                    className="border-dashed"
-                    onChange={handleFileSelect}
-                  >
-                    <p className="text-base font-medium">
-                      {t("Click or drag ZIP file to this area to upload")}
-                    </p>
+                  <UploadZone accept=".zip" disabled={isLoading} className="border-dashed" onChange={handleFileSelect}>
+                    <p className="text-base font-medium">{t("Click or drag ZIP file to this area to upload")}</p>
                     <p className="text-sm text-muted-foreground">
-                      {t(
-                        "Only ZIP files are supported, and file size should not exceed 10MB"
-                      )}
+                      {t("Only ZIP files are supported, and file size should not exceed 10MB")}
                     </p>
                   </UploadZone>
-                  {uploadError && (
-                    <p className="text-sm text-destructive">{uploadError}</p>
-                  )}
+                  {uploadError && <p className="text-sm text-destructive">{uploadError}</p>}
 
                   {selectedFile && (
                     <Card className="border-dashed bg-muted/30 shadow-none">
                       <CardContent className="flex items-start justify-between gap-3 py-4">
                         <div>
-                          <p className="text-sm font-medium text-foreground">
-                            {selectedFile.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatSize(selectedFile.size)}
-                          </p>
+                          <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
+                          <p className="text-xs text-muted-foreground">{formatSize(selectedFile.size)}</p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive"
-                          onClick={clearSelectedFile}
-                        >
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={clearSelectedFile}>
                           <RiCloseLine className="size-4" aria-hidden />
                         </Button>
                       </CardContent>
@@ -274,16 +214,9 @@ export default function ImportExportPage() {
                       })
                     : t("Please select a ZIP file to import")}
                 </div>
-                <Button
-                  variant="default"
-                  size="lg"
-                  disabled={isLoading || !selectedFile}
-                  onClick={handleImportIam}
-                >
+                <Button variant="default" size="lg" disabled={isLoading || !selectedFile} onClick={handleImportIam}>
                   <RiUpload2Line className="size-4" aria-hidden />
-                  <span>
-                    {isLoading ? t("Importing...") : t("Import Now")}
-                  </span>
+                  <span>{isLoading ? t("Importing...") : t("Import Now")}</span>
                 </Button>
               </CardFooter>
             </Card>

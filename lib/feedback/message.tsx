@@ -24,11 +24,7 @@ export interface MessageApi {
 const MessageContext = createContext<MessageApi | null>(null)
 
 function createMessageApi(): MessageApi {
-  const show = (
-    type: "success" | "error" | "warning" | "info",
-    content: string,
-    options?: MessageOptions
-  ) => {
+  const show = (type: "success" | "error" | "warning" | "info", content: string, options?: MessageOptions) => {
     const mapped: { duration?: number; description?: string } = {}
     if (options?.duration !== undefined) {
       mapped.duration = options.duration === 0 ? Infinity : options.duration
@@ -51,10 +47,7 @@ function createMessageApi(): MessageApi {
     }
   }
 
-  const loading = (
-    content: string,
-    options?: MessageOptions
-  ): MessageHandle => {
+  const loading = (content: string, options?: MessageOptions): MessageHandle => {
     const mapped: { duration?: number } = {}
     if (options?.duration !== undefined) {
       mapped.duration = options.duration === 0 ? Infinity : options.duration
@@ -79,9 +72,7 @@ const messageApi = createMessageApi()
 
 export function MessageProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(() => messageApi, [])
-  return (
-    <MessageContext.Provider value={value}>{children}</MessageContext.Provider>
-  )
+  return <MessageContext.Provider value={value}>{children}</MessageContext.Provider>
 }
 
 export function useMessage(): MessageApi {

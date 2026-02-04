@@ -4,13 +4,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import type { Table } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 
 interface DataTablePaginationProps<TData> {
@@ -39,18 +33,10 @@ export function DataTablePagination<TData>({
   }
 
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between",
-        className
-      )}
-    >
+    <div className={cn("flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", className)}>
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">{t("Rows per page")}</span>
-        <Select
-          value={String(pagination.pageSize)}
-          onValueChange={handlePageSizeChange}
-        >
+        <Select value={String(pagination.pageSize)} onValueChange={handlePageSizeChange}>
           <SelectTrigger className="w-24">
             <SelectValue />
           </SelectTrigger>
@@ -72,28 +58,13 @@ export function DataTablePagination<TData>({
           })}
         </span>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!canPrevious}
-            onClick={() => table.setPageIndex(0)}
-          >
+          <Button variant="outline" size="sm" disabled={!canPrevious} onClick={() => table.setPageIndex(0)}>
             {t("First")}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!canPrevious}
-            onClick={() => table.previousPage()}
-          >
+          <Button variant="outline" size="sm" disabled={!canPrevious} onClick={() => table.previousPage()}>
             {t("Prev")}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!canNext}
-            onClick={() => table.nextPage()}
-          >
+          <Button variant="outline" size="sm" disabled={!canNext} onClick={() => table.nextPage()}>
             {t("Next")}
           </Button>
           <Button

@@ -5,15 +5,7 @@ import { useTranslation } from "react-i18next"
 import { RiAddLine, RiCloseLine, RiEdit2Line } from "@remixicon/react"
 import { useBucket } from "@/hooks/use-bucket"
 import { useSSE } from "@/hooks/use-sse"
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemGroup,
-  ItemHeader,
-  ItemTitle,
-  ItemActions,
-} from "@/components/ui/item"
+import { Item, ItemContent, ItemDescription, ItemGroup, ItemHeader, ItemTitle, ItemActions } from "@/components/ui/item"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Spinner } from "@/components/ui/spinner"
@@ -21,20 +13,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,8 +47,10 @@ interface QuotaInfo {
 
 function parseEncryptionLabel(
   enc?: {
-    ServerSideEncryptionConfiguration?: { Rules?: Array<{ ApplyServerSideEncryptionByDefault?: { SSEAlgorithm?: string } }> }
-  } | null
+    ServerSideEncryptionConfiguration?: {
+      Rules?: Array<{ ApplyServerSideEncryptionByDefault?: { SSEAlgorithm?: string } }>
+    }
+  } | null,
 ): string {
   if (!enc?.ServerSideEncryptionConfiguration?.Rules?.length) return "-"
   const rule = enc.ServerSideEncryptionConfiguration.Rules[0]
@@ -93,7 +75,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   const [retentionUnit, setRetentionUnit] = React.useState<string | null>(null)
   const [loading, setLoading] = React.useState(true)
   const [versionLoading, setVersionLoading] = React.useState(false)
-  const [objectLockLoading, setObjectLockLoading] = React.useState(false)
+  const [objectLockLoading] = React.useState(false)
 
   const [showPolicyModal, setShowPolicyModal] = React.useState(false)
   const [policyFormPolicy, setPolicyFormPolicy] = React.useState<BucketPolicyType | "custom">("private")
@@ -142,7 +124,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           const detected = detectBucketPolicy(
             (parsed.Statement ?? []) as Parameters<typeof detectBucketPolicy>[0],
             bucketName,
-            ""
+            "",
           )
           setPolicyType(detected === "none" ? "custom" : detected)
         } catch {
@@ -157,7 +139,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
         (tagResp as { TagSet?: Array<{ Key?: string; Value?: string }> })?.TagSet?.map((x) => ({
           Key: x.Key ?? "",
           Value: x.Value ?? "",
-        })) ?? []
+        })) ?? [],
       )
 
       const lockCfg = lockResp as {
@@ -210,16 +192,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
         JSON.parse(policyFormContent)
         await bucketApi.putBucketPolicy(bucketName, policyFormContent)
       } else {
-        const statements = setBucketPolicy(
-          [],
-          policyFormPolicy as BucketPolicyType,
-          bucketName,
-          ""
-        )
-        await bucketApi.putBucketPolicy(
-          bucketName,
-          JSON.stringify({ Version: "2012-10-17", Statement: statements })
-        )
+        const statements = setBucketPolicy([], policyFormPolicy as BucketPolicyType, bucketName, "")
+        await bucketApi.putBucketPolicy(bucketName, JSON.stringify({ Version: "2012-10-17", Statement: statements }))
       }
       message.success(t("Edit Success"))
       setShowPolicyModal(false)
@@ -255,12 +229,13 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     if (showEncryptModal && encryptFormType === "SSE-KMS") {
       getKeyList()
         .then((keys) => {
-          const list = (keys as { keys?: Array<{ key_id?: string; tags?: { name?: string }; description?: string }> })?.keys ?? []
+          const list =
+            (keys as { keys?: Array<{ key_id?: string; tags?: { name?: string }; description?: string }> })?.keys ?? []
           setKmsKeyOptions(
             list.map((k) => ({
               label: k.tags?.name ?? k.description ?? `Key-${(k.key_id ?? "").slice(0, 8)}`,
               value: k.key_id ?? "",
-            }))
+            })),
           )
         })
         .catch(() => setKmsKeyOptions([]))
@@ -452,9 +427,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           ? t("Private")
           : policyType
 
-  const encryptionLabel = parseEncryptionLabel(
-    encryption as Parameters<typeof parseEncryptionLabel>[0]
-  )
+  const encryptionLabel = parseEncryptionLabel(encryption as Parameters<typeof parseEncryptionLabel>[0])
 
   if (loading) {
     return (
@@ -488,9 +461,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           <ItemHeader className="items-start">
             <div className="flex flex-col gap-1">
               <ItemTitle>{t("Encryption")}</ItemTitle>
-              <ItemDescription className="text-xs text-muted-foreground">
-                {encryptionLabel}
-              </ItemDescription>
+              <ItemDescription className="text-xs text-muted-foreground">{encryptionLabel}</ItemDescription>
             </div>
             <ItemActions>
               <Button variant="outline" size="sm" className="shrink-0" onClick={openEncryptModal}>
@@ -520,19 +491,10 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                     key={`${tag.Key}-${index}`}
                     className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs"
                   >
-                    <button
-                      type="button"
-                      className="text-left hover:underline"
-                      onClick={() => openTagModal(index)}
-                    >
+                    <button type="button" className="text-left hover:underline" onClick={() => openTagModal(index)}>
                       {tag.Key}:{tag.Value}
                     </button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0"
-                      onClick={() => setDeleteTagIndex(index)}
-                    >
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setDeleteTagIndex(index)}>
                       <RiCloseLine className="size-3.5" />
                     </Button>
                   </div>
@@ -547,11 +509,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
         {/* Object Lock & Version Control */}
         <Item variant="outline" className="flex-col items-stretch gap-4">
           <ItemHeader>
-            <ItemActions>
-              {objectLockLoading && (
-                <Spinner className="size-3 text-muted-foreground" />
-              )}
-            </ItemActions>
+            <ItemActions>{objectLockLoading && <Spinner className="size-3 text-muted-foreground" />}</ItemActions>
           </ItemHeader>
           <ItemContent className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
@@ -561,9 +519,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium text-foreground">{t("Version Control")}</p>
-                {versionLoading && (
-                  <Spinner className="size-3 text-muted-foreground" />
-                )}
+                {versionLoading && <Spinner className="size-3 text-muted-foreground" />}
               </div>
               <Switch
                 checked={versioning === "Enabled"}
@@ -594,15 +550,12 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <p className="text-xs text-muted-foreground">{t("Quota Size")}</p>
-                  <p className="text-sm text-foreground">
-                    {formatBytes(quotaInfo.quota)}
-                  </p>
+                  <p className="text-sm text-foreground">{formatBytes(quotaInfo.quota)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">{t("Usage")}</p>
                   <p className="text-sm text-foreground">
-                    {formatBytes(quotaInfo.size)} (
-                    {((quotaInfo.size / quotaInfo.quota) * 100).toFixed(1)}%)
+                    {formatBytes(quotaInfo.size)} ({((quotaInfo.size / quotaInfo.quota) * 100).toFixed(1)}%)
                   </p>
                 </div>
               </div>
@@ -629,15 +582,11 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <p className="text-xs text-muted-foreground">{t("Retention Mode")}</p>
-                <p className="text-sm text-foreground">
-                  {retentionMode ? t(retentionMode) : "-"}
-                </p>
+                <p className="text-sm text-foreground">{retentionMode ? t(retentionMode) : "-"}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("Retention Unit")}</p>
-                <p className="text-sm text-foreground">
-                  {retentionUnit ? t(retentionUnit) : "-"}
-                </p>
+                <p className="text-sm text-foreground">{retentionUnit ? t(retentionUnit) : "-"}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">{t("Retention Period")}</p>
@@ -819,7 +768,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                           <label
                             key={u}
                             className={cn(
-                              "flex items-start gap-3 rounded-md border border-border/50 p-3 cursor-pointer"
+                              "flex items-start gap-3 rounded-md border border-border/50 p-3 cursor-pointer",
                             )}
                           >
                             <RadioGroupItem value={u} className="mt-0.5" />

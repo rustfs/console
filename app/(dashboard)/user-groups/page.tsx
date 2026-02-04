@@ -3,12 +3,7 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  RiAddLine,
-  RiDeleteBin5Line,
-  RiEdit2Line,
-  RiGroup2Fill,
-} from "@remixicon/react"
+import { RiAddLine, RiDeleteBin5Line, RiEdit2Line, RiGroup2Fill } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { Page } from "@/components/page"
@@ -42,26 +37,25 @@ export default function UserGroupsPage() {
   const [editRow, setEditRow] = useState<GroupRow | null>(null)
   const [policiesDialogOpen, setPoliciesDialogOpen] = useState(false)
 
-  const getDataList = async () => {
+  const getDataList = React.useCallback(async () => {
     setLoading(true)
     try {
       const res = (await listGroup()) as string[] | undefined
       setData(
         (res ?? []).map((name) => ({
           name,
-        }))
+        })),
       )
     } catch {
       message.error(t("Failed to get data"))
     } finally {
       setLoading(false)
-      table.resetRowSelection()
     }
-  }
+  }, [listGroup, message, t])
 
   useEffect(() => {
     getDataList()
-  }, [])
+  }, [getDataList])
 
   const filteredData = React.useMemo(() => {
     if (!searchTerm) return data
@@ -69,14 +63,48 @@ export default function UserGroupsPage() {
     return data.filter((row) => row.name.toLowerCase().includes(term))
   }, [data, searchTerm])
 
+  const openEditItem = React.useCallback((row: GroupRow) => {
+    setEditRow(row)
+    setEditFormOpen(true)
+  }, [])
+
+  const deleteItem = React.useCallback(
+    async (row: GroupRow) => {
+      try {
+        const info = (await getGroup(row.name)) as { members?: string[] }
+        if (info?.members?.length) {
+          message.error(t("Please remove members first"))
+          return
+        }
+        await removeGroup(row.name)
+        message.success(t("Delete Success"))
+        await getDataList()
+      } catch {
+        message.error(t("Delete Failed"))
+      }
+    },
+    [getGroup, removeGroup, message, t, getDataList],
+  )
+
+  const confirmDelete = React.useCallback(
+    (row: GroupRow) => {
+      dialog.error({
+        title: t("Confirm Delete"),
+        content: "",
+        positiveText: t("Delete"),
+        negativeText: t("Cancel"),
+        onPositiveClick: () => deleteItem(row),
+      })
+    },
+    [dialog, t, deleteItem],
+  )
+
   const columns: ColumnDef<GroupRow>[] = React.useMemo(
     () => [
       {
         accessorKey: "name",
         header: () => t("Name"),
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
         filterFn: "includesString",
       },
       {
@@ -87,21 +115,11 @@ export default function UserGroupsPage() {
         meta: { width: 200 },
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => openEditItem(row.original)}
-            >
+            <Button type="button" size="sm" variant="outline" onClick={() => openEditItem(row.original)}>
               <RiEdit2Line className="size-4" />
               <span>{t("Edit")}</span>
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => confirmDelete(row.original)}
-            >
+            <Button type="button" size="sm" variant="outline" onClick={() => confirmDelete(row.original)}>
               <RiDeleteBin5Line className="size-4" />
               <span>{t("Delete")}</span>
             </Button>
@@ -109,7 +127,7 @@ export default function UserGroupsPage() {
         ),
       },
     ],
-    [t]
+    [t, openEditItem, confirmDelete],
   )
 
   const { table, selectedRowIds } = useDataTable<GroupRow>({
@@ -121,35 +139,9 @@ export default function UserGroupsPage() {
 
   const selectedKeys = Array.from(selectedRowIds)
 
-  const openEditItem = (row: GroupRow) => {
-    setEditRow(row)
-    setEditFormOpen(true)
-  }
-
-  const confirmDelete = (row: GroupRow) => {
-    dialog.error({
-      title: t("Confirm Delete"),
-      content: "",
-      positiveText: t("Delete"),
-      negativeText: t("Cancel"),
-      onPositiveClick: () => deleteItem(row),
-    })
-  }
-
-  const deleteItem = async (row: GroupRow) => {
-    try {
-      const info = (await getGroup(row.name)) as { members?: string[] }
-      if (info?.members?.length) {
-        message.error(t("Please remove members first"))
-        return
-      }
-      await removeGroup(row.name)
-      message.success(t("Delete Success"))
-      await getDataList()
-    } catch {
-      message.error(t("Delete Failed"))
-    }
-  }
+  React.useEffect(() => {
+    table.resetRowSelection()
+  }, [data, table])
 
   return (
     <Page>
@@ -172,11 +164,7 @@ export default function UserGroupsPage() {
               <RiGroup2Fill className="size-4" />
               {t("Assign Policy")}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setNewFormOpen(true)}
-            >
+            <Button type="button" variant="outline" onClick={() => setNewFormOpen(true)}>
               <RiAddLine className="size-4" />
               {t("Add User Group")}
             </Button>
@@ -196,17 +184,8 @@ export default function UserGroupsPage() {
         />
         <DataTablePagination table={table} />
 
-        <UserGroupNewForm
-          open={newFormOpen}
-          onOpenChange={setNewFormOpen}
-          onSuccess={getDataList}
-        />
-        <UserGroupEditForm
-          open={editFormOpen}
-          onOpenChange={setEditFormOpen}
-          row={editRow}
-          onSuccess={getDataList}
-        />
+        <UserGroupNewForm open={newFormOpen} onOpenChange={setNewFormOpen} onSuccess={getDataList} />
+        <UserGroupEditForm open={editFormOpen} onOpenChange={setEditFormOpen} row={editRow} onSuccess={getDataList} />
         <UserGroupSetPoliciesMultiple
           checkedKeys={selectedKeys}
           open={policiesDialogOpen}

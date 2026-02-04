@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { RiAddLine } from "@remixicon/react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Page } from "@/components/page";
-import { PageHeader } from "@/components/page-header";
-import { SiteReplicationNewForm } from "@/components/site-replication/new-form";
+import * as React from "react"
+import { useState } from "react"
+import { useTranslation } from "react-i18next"
+import { RiAddLine } from "@remixicon/react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Page } from "@/components/page"
+import { PageHeader } from "@/components/page-header"
+import { SiteReplicationNewForm } from "@/components/site-replication/new-form"
 
 export default function SiteReplicationPage() {
-  const { t } = useTranslation();
-  const [newFormOpen, setNewFormOpen] = useState(false);
+  const { t } = useTranslation()
+  const [newFormOpen, setNewFormOpen] = useState(false)
 
   return (
     <Page>
@@ -40,10 +40,7 @@ export default function SiteReplicationPage() {
         </Card>
       </div>
 
-      <SiteReplicationNewForm
-        open={newFormOpen}
-        onOpenChange={setNewFormOpen}
-      />
+      <SiteReplicationNewForm open={newFormOpen} onOpenChange={setNewFormOpen} />
     </Page>
-  );
+  )
 }

@@ -115,7 +115,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated, credentials?.AccessKeyId, logout])
+  }, [isAuthenticated, credentials?.AccessKeyId, credentials?.SecretAccessKey, credentials?.SessionToken, logout])
 
   return <S3Context.Provider value={{ client: s3Client, isReady }}>{children}</S3Context.Provider>
 }

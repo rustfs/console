@@ -26,13 +26,13 @@ export interface DeleteTaskHelpers {
     keys: string[],
     bucketName: string,
     prefix?: string,
-    options?: { forceDelete?: boolean }
+    options?: { forceDelete?: boolean },
   ) => DeleteTask[]
   createVersionedTasks: (
     items: { key: string; versionId?: string }[],
     bucketName: string,
     prefix?: string,
-    options?: { forceDelete?: boolean }
+    options?: { forceDelete?: boolean },
   ) => DeleteTask[]
 }
 
@@ -47,21 +47,17 @@ const lifecycle: TaskLifecycleStatus<DeleteStatus> = {
 function attachForceDeleteHeader(command: DeleteObjectCommand) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(command.middlewareStack.add as any)(
-    (next: (args: unknown) => Promise<unknown>) =>
-      async (args: { request?: { headers?: Record<string, string> } }) => {
-        if (args?.request?.headers) {
-          args.request.headers["X-Rustfs-Force-Delete"] = "true"
-        }
-        return next(args)
-      },
-    { step: "build", name: "forceDeleteMiddleware", tags: ["FORCE_DELETE"] }
+    (next: (args: unknown) => Promise<unknown>) => async (args: { request?: { headers?: Record<string, string> } }) => {
+      if (args?.request?.headers) {
+        args.request.headers["X-Rustfs-Force-Delete"] = "true"
+      }
+      return next(args)
+    },
+    { step: "build", name: "forceDeleteMiddleware", tags: ["FORCE_DELETE"] },
   )
 }
 
-export function createDeleteTaskHelpers(
-  s3Client: S3Client,
-  config: DeleteTaskConfig = {}
-): DeleteTaskHelpers {
+export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskConfig = {}): DeleteTaskHelpers {
   const maxRetries = config.maxRetries ?? 3
   const retryDelay = config.retryDelay ?? 1000
 
@@ -86,13 +82,7 @@ export function createDeleteTaskHelpers(
     if (task.status === lifecycle.canceled) return false
     if ((task.retryCount ?? 0) >= maxRetries) return false
     const errorMessage = String((error as Error)?.message ?? "").toLowerCase()
-    const nonRetryableErrors = [
-      "access denied",
-      "forbidden",
-      "invalid credentials",
-      "bucket not found",
-      "no such key",
-    ]
+    const nonRetryableErrors = ["access denied", "forbidden", "invalid credentials", "bucket not found", "no such key"]
     return !nonRetryableErrors.some((msg) => errorMessage.includes(msg))
   }
 
@@ -101,8 +91,7 @@ export function createDeleteTaskHelpers(
     perform,
     shouldRetry,
     isCanceledError: (error) =>
-      (error as Error)?.name === "AbortError" ||
-      String((error as Error)?.message ?? "").includes("canceled"),
+      (error as Error)?.name === "AbortError" || String((error as Error)?.message ?? "").includes("canceled"),
     maxRetries,
     retryDelay,
   }
@@ -110,7 +99,7 @@ export function createDeleteTaskHelpers(
   const createTasksFromItems = (
     items: { key: string; versionId?: string; forceDelete?: boolean }[],
     bucketName: string,
-    prefix?: string
+    prefix?: string,
   ): DeleteTask[] =>
     items.map((item) => ({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}-${item.key}-${item.versionId ?? "latest"}`,
@@ -130,28 +119,23 @@ export function createDeleteTaskHelpers(
       retryCount: 0,
     }))
 
-  const createTasks = (
-    keys: string[],
-    bucketName: string,
-    prefix?: string,
-    options?: { forceDelete?: boolean }
-  ) =>
+  const createTasks = (keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) =>
     createTasksFromItems(
       keys.map((key) => ({ key, forceDelete: options?.forceDelete })),
       bucketName,
-      prefix
+      prefix,
     )
 
   const createVersionedTasks = (
     items: { key: string; versionId?: string }[],
     bucketName: string,
     prefix?: string,
-    options?: { forceDelete?: boolean }
+    options?: { forceDelete?: boolean },
   ) =>
     createTasksFromItems(
       items.map((item) => ({ ...item, forceDelete: options?.forceDelete })),
       bucketName,
-      prefix
+      prefix,
     )
 
   return { handler, createTasks, createVersionedTasks }

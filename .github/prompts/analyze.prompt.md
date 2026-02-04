@@ -20,7 +20,7 @@ Execution steps:
    - SPEC = FEATURE_DIR/spec.md
    - PLAN = FEATURE_DIR/plan.md
    - TASKS = FEATURE_DIR/tasks.md
-   Abort with an error message if any required file is missing (instruct the user to run missing prerequisite command).
+     Abort with an error message if any required file is missing (instruct the user to run missing prerequisite command).
 
 2. Load artifacts:
    - Parse spec.md sections: Overview/Context, Functional Requirements, Non-Functional Requirements, User Stories, Edge Cases (if present).
@@ -36,26 +36,26 @@ Execution steps:
 
 4. Detection passes:
    A. Duplication detection:
-      - Identify near-duplicate requirements. Mark lower-quality phrasing for consolidation.
-   B. Ambiguity detection:
-      - Flag vague adjectives (fast, scalable, secure, intuitive, robust) lacking measurable criteria.
-      - Flag unresolved placeholders (TODO, TKTK, ???, <placeholder>, etc.).
-   C. Underspecification:
-      - Requirements with verbs but missing object or measurable outcome.
-      - User stories missing acceptance criteria alignment.
-      - Tasks referencing files or components not defined in spec/plan.
-   D. Constitution alignment:
-      - Any requirement or plan element conflicting with a MUST principle.
-      - Missing mandated sections or quality gates from constitution.
-   E. Coverage gaps:
-      - Requirements with zero associated tasks.
-      - Tasks with no mapped requirement/story.
-      - Non-functional requirements not reflected in tasks (e.g., performance, security).
-   F. Inconsistency:
-      - Terminology drift (same concept named differently across files).
-      - Data entities referenced in plan but absent in spec (or vice versa).
-      - Task ordering contradictions (e.g., integration tasks before foundational setup tasks without dependency note).
-      - Conflicting requirements (e.g., one requires to use Next.js while other says to use Vue as the framework).
+   - Identify near-duplicate requirements. Mark lower-quality phrasing for consolidation.
+     B. Ambiguity detection:
+   - Flag vague adjectives (fast, scalable, secure, intuitive, robust) lacking measurable criteria.
+   - Flag unresolved placeholders (TODO, TKTK, ???, <placeholder>, etc.).
+     C. Underspecification:
+   - Requirements with verbs but missing object or measurable outcome.
+   - User stories missing acceptance criteria alignment.
+   - Tasks referencing files or components not defined in spec/plan.
+     D. Constitution alignment:
+   - Any requirement or plan element conflicting with a MUST principle.
+   - Missing mandated sections or quality gates from constitution.
+     E. Coverage gaps:
+   - Requirements with zero associated tasks.
+   - Tasks with no mapped requirement/story.
+   - Non-functional requirements not reflected in tasks (e.g., performance, security).
+     F. Inconsistency:
+   - Terminology drift (same concept named differently across files).
+   - Data entities referenced in plan but absent in spec (or vice versa).
+   - Task ordering contradictions (e.g., integration tasks before foundational setup tasks without dependency note).
+   - Conflicting requirements (e.g., one requires to use Next.js while other says to use Vue as the framework).
 
 5. Severity assignment heuristic:
    - CRITICAL: Violates constitution MUST, missing core spec artifact, or requirement with zero coverage that blocks baseline functionality.
@@ -66,9 +66,11 @@ Execution steps:
 6. Produce a Markdown report (no file writes) with sections:
 
    ### Specification Analysis Report
-   | ID | Category | Severity | Location(s) | Summary | Recommendation |
-   |----|----------|----------|-------------|---------|----------------|
-   | A1 | Duplication | HIGH | spec.md:L120-134 | Two similar requirements ... | Merge phrasing; keep clearer version |
+
+   | ID  | Category    | Severity | Location(s)      | Summary                      | Recommendation                       |
+   | --- | ----------- | -------- | ---------------- | ---------------------------- | ------------------------------------ |
+   | A1  | Duplication | HIGH     | spec.md:L120-134 | Two similar requirements ... | Merge phrasing; keep clearer version |
+
    (Add one row per finding; generate stable IDs prefixed by category initial.)
 
    Additional subsections:
@@ -77,12 +79,12 @@ Execution steps:
    - Constitution Alignment Issues (if any)
    - Unmapped Tasks (if any)
    - Metrics:
-     * Total Requirements
-     * Total Tasks
-     * Coverage % (requirements with >=1 task)
-     * Ambiguity Count
-     * Duplication Count
-     * Critical Issues Count
+     - Total Requirements
+     - Total Tasks
+     - Coverage % (requirements with >=1 task)
+     - Ambiguity Count
+     - Duplication Count
+     - Critical Issues Count
 
 7. At end of report, output a concise Next Actions block:
    - If CRITICAL issues exist: Recommend resolving before `/implement`.
@@ -92,6 +94,7 @@ Execution steps:
 8. Ask the user: "Would you like me to suggest concrete remediation edits for the top N issues?" (Do NOT apply them automatically.)
 
 Behavior rules:
+
 - NEVER modify files.
 - NEVER hallucinate missing sections—if absent, report them.
 - KEEP findings deterministic: if rerun without changes, produce consistent IDs and counts.

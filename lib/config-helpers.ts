@@ -1,4 +1,5 @@
 import type { SiteConfig } from "@/types/config"
+import { AwsClient } from "@/lib/aws4fetch"
 import { logger } from "./logger"
 
 type ConfigSource = "browser" | "localStorage" | "server" | "default"
@@ -22,6 +23,8 @@ interface HostInfo {
 }
 
 const STORAGE_KEY = "rustfs-server-host"
+const CREDENTIALS_KEY = "auth.credentials"
+const PERMANENT_CREDENTIALS_KEY = "auth.permanent"
 const DEFAULT_REGION = "us-east-1"
 const API_PATH = "/rustfs/admin/v3"
 const VERSION_PATH = "/rustfs/console/version"
@@ -86,13 +89,76 @@ export const getCurrentBrowserConfig = (): ConfigResult => {
   return { config, source: "browser" }
 }
 
-export const fetchVersionConfigFromServer = async (
-  serverHost: string
-): Promise<VersionConfigResponse | null> => {
+const parseStoredJson = <T>(value: string | null): T | null => {
+  if (!value) return null
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return null
+  }
+}
+
+const isExpired = (expiration?: string) => {
+  if (!expiration) return false
+  return new Date(expiration) < new Date()
+}
+
+const getStoredSigningCredentials = (): {
+  accessKeyId: string
+  secretAccessKey: string
+  sessionToken?: string
+} | null => {
+  if (!isBrowser()) return null
+
+  const stored = parseStoredJson<{
+    AccessKeyId?: string
+    SecretAccessKey?: string
+    SessionToken?: string
+    Expiration?: string
+  }>(localStorage.getItem(CREDENTIALS_KEY))
+
+  if (stored?.AccessKeyId && stored?.SecretAccessKey && stored?.SessionToken && !isExpired(stored.Expiration)) {
+    return {
+      accessKeyId: stored.AccessKeyId,
+      secretAccessKey: stored.SecretAccessKey,
+      sessionToken: stored.SessionToken,
+    }
+  }
+
+  const permanent = parseStoredJson<{
+    AccessKeyId?: string
+    SecretAccessKey?: string
+  }>(localStorage.getItem(PERMANENT_CREDENTIALS_KEY))
+
+  if (permanent?.AccessKeyId && permanent?.SecretAccessKey) {
+    return {
+      accessKeyId: permanent.AccessKeyId,
+      secretAccessKey: permanent.SecretAccessKey,
+    }
+  }
+
+  return null
+}
+
+export const fetchVersionConfigFromServer = async (serverHost: string): Promise<VersionConfigResponse | null> => {
   const configUrl = `${serverHost}${VERSION_PATH}`
 
   try {
-    const response = await fetch(configUrl, {
+    const credentials = getStoredSigningCredentials()
+    if (!credentials) {
+      logger.warn("Skip version config fetch: no signing credentials available")
+      return null
+    }
+
+    const client = new AwsClient({
+      accessKeyId: credentials.accessKeyId,
+      secretAccessKey: credentials.secretAccessKey,
+      sessionToken: credentials.sessionToken,
+      service: "s3",
+      region: DEFAULT_REGION,
+    })
+
+    const response = await client.fetch(configUrl, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT),
@@ -113,7 +179,7 @@ export const fetchVersionConfigFromServer = async (
     return data
   } catch (error) {
     logger.warn(
-      `Error fetching version config from server: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Error fetching version config from server: ${error instanceof Error ? error.message : "Unknown error"}`,
     )
     return null
   }
@@ -125,9 +191,7 @@ export const getServerDefaultConfig = (): ConfigResult => {
   return { config, source: "default" }
 }
 
-export const validateConfig = (
-  config: SiteConfig
-): { valid: boolean; errors: string[] } => {
+export const validateConfig = (config: SiteConfig): { valid: boolean; errors: string[] } => {
   const errors: string[] = []
 
   if (!config.serverHost) {

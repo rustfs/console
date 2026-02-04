@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
-import "./globals.css";
+import type { Metadata } from "next"
+import { Geist, Geist_Mono, Inter } from "next/font/google"
+import "./globals.css"
 import { ThemeProvider } from "@/components/providers/theme-provider"
 import { I18nProvider } from "@/components/providers/i18n-provider"
 import { AuthProvider } from "@/contexts/auth-context"
@@ -10,28 +10,27 @@ import { TaskProvider } from "@/contexts/task-context"
 import { PermissionsProvider } from "@/hooks/use-permissions"
 import { AppUiProvider } from "@/components/providers/app-ui-provider"
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
-});
+})
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
-});
+})
 
 export const metadata: Metadata = {
   title: "RustFS",
-  description:
-    "RustFS is a distributed file system written in Rust.",
-};
+  description: "RustFS is a distributed file system written in Rust.",
+}
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: React.ReactNode
 }>) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
@@ -45,7 +44,7 @@ export default function RootLayout({
                 <S3Provider>
                   <TaskProvider>
                     <PermissionsProvider>
-                    <AppUiProvider>{children}</AppUiProvider>
+                      <AppUiProvider>{children}</AppUiProvider>
                     </PermissionsProvider>
                   </TaskProvider>
                 </S3Provider>
@@ -55,5 +54,5 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }

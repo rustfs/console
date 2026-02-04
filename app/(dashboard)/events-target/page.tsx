@@ -3,11 +3,7 @@
 import * as React from "react"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  RiAddLine,
-  RiRefreshLine,
-  RiDeleteBin5Line,
-} from "@remixicon/react"
+import { RiAddLine, RiRefreshLine, RiDeleteBin5Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Page } from "@/components/page"
@@ -59,9 +55,7 @@ export default function EventsTargetPage() {
     if (!searchTerm) return data
     const term = searchTerm.toLowerCase()
     return data.filter(
-      (row) =>
-        row.account_id?.toLowerCase().includes(term) ||
-        row.service?.toLowerCase().includes(term)
+      (row) => row.account_id?.toLowerCase().includes(term) || row.service?.toLowerCase().includes(term),
     )
   }, [data, searchTerm])
 
@@ -70,31 +64,19 @@ export default function EventsTargetPage() {
       {
         accessorKey: "account_id",
         header: () => t("Event Destinations"),
-        cell: ({ row }) => (
-          <span className="font-mono text-sm">
-            {row.original.account_id}
-          </span>
-        ),
+        cell: ({ row }) => <span className="font-mono text-sm">{row.original.account_id}</span>,
       },
       {
         accessorKey: "service",
         header: () => t("Type"),
-        cell: ({ row }) => (
-          <span>{row.original.service}</span>
-        ),
+        cell: ({ row }) => <span>{row.original.service}</span>,
       },
       {
         accessorKey: "status",
         header: () => t("Status"),
         cell: ({ row }) => (
-          <Badge
-            variant={
-              row.original.status === "enable" ? "secondary" : "outline"
-            }
-          >
-            {row.original.status === "enable"
-              ? t("Enabled")
-              : row.original.status || "-"}
+          <Badge variant={row.original.status === "enable" ? "secondary" : "outline"}>
+            {row.original.status === "enable" ? t("Enabled") : row.original.status || "-"}
           </Badge>
         ),
       },
@@ -106,11 +88,7 @@ export default function EventsTargetPage() {
         meta: { width: 90 },
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => confirmDelete(row.original)}
-            >
+            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
               <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
@@ -119,7 +97,7 @@ export default function EventsTargetPage() {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps -- confirmDelete used in cell, stable ref
-    [t]
+    [t],
   )
 
   const { table } = useDataTable<RowData>({
@@ -163,10 +141,7 @@ export default function EventsTargetPage() {
                 className="w-full"
               />
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setNewFormOpen(true)}
-            >
+            <Button variant="outline" onClick={() => setNewFormOpen(true)}>
               <RiAddLine className="size-4" aria-hidden />
               <span>{t("Add Event Destination")}</span>
             </Button>
@@ -177,25 +152,17 @@ export default function EventsTargetPage() {
           </>
         }
       >
-        <h1 className="text-2xl font-bold">
-          {t("Event Destinations")}
-        </h1>
+        <h1 className="text-2xl font-bold">{t("Event Destinations")}</h1>
       </PageHeader>
 
       <DataTable
         table={table}
         isLoading={loading}
         emptyTitle={t("No Destinations")}
-        emptyDescription={t(
-          "Create an event destination to forward notifications."
-        )}
+        emptyDescription={t("Create an event destination to forward notifications.")}
       />
 
-      <EventsTargetNewForm
-        open={newFormOpen}
-        onOpenChange={setNewFormOpen}
-        onSuccess={loadData}
-      />
+      <EventsTargetNewForm open={newFormOpen} onOpenChange={setNewFormOpen} onSuccess={loadData} />
     </Page>
   )
 }

@@ -2,13 +2,7 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { CopyInput } from "@/components/copy-input"
@@ -46,7 +40,7 @@ export function UserNotice({ open, onOpenChange, data, onClose }: UserNoticeProp
         secretKey,
         api: "s3v4",
         path: "auto",
-      })
+      }),
     )
     closeModal()
   }, [url, accessKey, secretKey, closeModal])
@@ -66,23 +60,13 @@ export function UserNotice({ open, onOpenChange, data, onClose }: UserNoticeProp
           <Field>
             <FieldLabel>{t("Access Key")}</FieldLabel>
             <FieldContent>
-              <CopyInput
-                value={accessKey}
-                readOnly
-                copyIcon
-                className="w-full"
-              />
+              <CopyInput value={accessKey} readOnly copyIcon className="w-full" />
             </FieldContent>
           </Field>
           <Field>
             <FieldLabel>{t("Secret Key")}</FieldLabel>
             <FieldContent>
-              <CopyInput
-                value={secretKey}
-                readOnly
-                copyIcon
-                className="w-full"
-              />
+              <CopyInput value={secretKey} readOnly copyIcon className="w-full" />
             </FieldContent>
           </Field>
         </div>

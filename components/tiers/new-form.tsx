@@ -6,13 +6,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { useTiers } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
@@ -32,17 +26,18 @@ const TYPE_OPTIONS = [
   { labelKey: "AWS S3", value: "s3", icon: "/svg/aws.svg", descKey: "Standard AWS S3 tier" },
   { labelKey: "Aliyun OSS", value: "aliyun", icon: "/svg/aliyun.svg", descKey: "Alibaba Cloud Object Storage Service" },
   { labelKey: "Tencent COS", value: "tencent", icon: "/svg/tenxunyun.svg", descKey: "Tencent Cloud Object Storage" },
-  { labelKey: "Huawei OBS", value: "huaweicloud", icon: "/svg/huaweiyun.svg", descKey: "Huawei Cloud Object Storage Service" },
+  {
+    labelKey: "Huawei OBS",
+    value: "huaweicloud",
+    icon: "/svg/huaweiyun.svg",
+    descKey: "Huawei Cloud Object Storage Service",
+  },
   { labelKey: "Azure Blob", value: "azure", icon: "/svg/azure.svg", descKey: "Microsoft Azure Blob Storage" },
   { labelKey: "Google Cloud Storage", value: "gcs", icon: "/svg/google.svg", descKey: "Google Cloud Storage" },
   { labelKey: "Cloudflare R2", value: "r2", icon: "/svg/cloudflare.svg", descKey: "Cloudflare R2 Storage" },
 ] as const
 
-export function TiersNewForm({
-  open,
-  onOpenChange,
-  onSuccess,
-}: TiersNewFormProps) {
+export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { addTiers } = useTiers()
@@ -154,9 +149,7 @@ export function TiersNewForm({
                   key={item.value}
                   type="button"
                   onClick={() => setType(item.value)}
-                  className={cn(
-                    "cursor-pointer border border-border/70 text-left transition hover:border-primary"
-                  )}
+                  className={cn("cursor-pointer border border-border/70 text-left transition hover:border-primary")}
                 >
                   <div className="flex items-center gap-3 p-4">
                     <Image
@@ -167,12 +160,8 @@ export function TiersNewForm({
                       className="size-10 shrink-0 object-contain"
                     />
                     <div>
-                      <p className="text-base font-semibold">
-                        {t(item.labelKey)}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {t(item.descKey)}
-                      </p>
+                      <p className="text-base font-semibold">{t(item.labelKey)}</p>
+                      <p className="text-sm text-muted-foreground">{t(item.descKey)}</p>
                     </div>
                   </div>
                 </button>
@@ -196,9 +185,7 @@ export function TiersNewForm({
                     />
                   )}
                   <div>
-                    <p className="text-sm text-muted-foreground">
-                      {t("Selected Type")}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t("Selected Type")}</p>
                     <p className="text-base font-semibold">{type}</p>
                   </div>
                 </div>
@@ -215,11 +202,7 @@ export function TiersNewForm({
                       autoComplete="off"
                     />
                   </FieldContent>
-                  {nameError && (
-                    <FieldDescription className="text-destructive">
-                      {nameError}
-                    </FieldDescription>
-                  )}
+                  {nameError && <FieldDescription className="text-destructive">{nameError}</FieldDescription>}
                 </Field>
 
                 <Field>
@@ -325,11 +308,7 @@ export function TiersNewForm({
           <Button variant="outline" onClick={handleCancel}>
             {t("Cancel")}
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={!type}
-            aria-disabled={submitting}
-          >
+          <Button onClick={handleSave} disabled={!type} aria-disabled={submitting}>
             {submitting ? t("Saving...") : t("Save")}
           </Button>
         </DialogFooter>

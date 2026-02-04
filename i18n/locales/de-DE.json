@@ -640,6 +640,7 @@
   "Rule ID": "Regel-ID",
   "Running": "Läuft",
   "Running (Unhealthy)": "Läuft (ungesund)",
+  "Running Status": "Betriebsstatus",
   "Rust-based": "Rust-basiert",
   "RustFS": "RustFS",
   "RustFS built-in cold storage": "RustFS integrierter Kaltlagerung",

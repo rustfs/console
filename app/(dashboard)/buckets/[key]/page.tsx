@@ -64,25 +64,19 @@ export default function BucketSettingsPage() {
 
         {canViewLifecycle && (
           <TabsContent value="lifecycle" className="space-y-4 outline-none">
-            {bucketName ? (
-              <BucketLifecycleTab bucketName={bucketName} />
-            ) : null}
+            {bucketName ? <BucketLifecycleTab bucketName={bucketName} /> : null}
           </TabsContent>
         )}
 
         {canViewReplication && (
           <TabsContent value="replication" className="space-y-4 outline-none">
-            {bucketName ? (
-              <BucketReplicationTab bucketName={bucketName} />
-            ) : null}
+            {bucketName ? <BucketReplicationTab bucketName={bucketName} /> : null}
           </TabsContent>
         )}
 
         {canViewEvents && (
           <TabsContent value="events" className="space-y-4 outline-none">
-            {bucketName ? (
-              <BucketEventsTab bucketName={bucketName} />
-            ) : null}
+            {bucketName ? <BucketEventsTab bucketName={bucketName} /> : null}
           </TabsContent>
         )}
       </Tabs>

@@ -43,11 +43,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
-  const {
-    getBucketLifecycleConfiguration,
-    deleteBucketLifecycle,
-    putBucketLifecycleConfiguration,
-  } = useBucket()
+  const { getBucketLifecycleConfiguration, deleteBucketLifecycle, putBucketLifecycleConfiguration } = useBucket()
 
   const [data, setData] = React.useState<LifecycleRule[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -72,15 +68,46 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
     loadData()
   }, [loadData])
 
+  const handleRowDelete = React.useCallback(
+    async (row: LifecycleRule) => {
+      const remaining = data.filter((item) => item.ID !== row.ID)
+
+      try {
+        if (remaining.length === 0) {
+          await deleteBucketLifecycle(bucketName)
+        } else {
+          await putBucketLifecycleConfiguration(bucketName, {
+            Rules: remaining,
+          })
+        }
+        message.success(t("Delete Success"))
+        loadData()
+      } catch (error) {
+        message.error((error as Error).message || t("Delete Failed"))
+      }
+    },
+    [data, deleteBucketLifecycle, bucketName, putBucketLifecycleConfiguration, message, t, loadData],
+  )
+
+  const confirmDelete = React.useCallback(
+    (row: LifecycleRule) => {
+      dialog.error({
+        title: t("Warning"),
+        content: t("Are you sure you want to delete this rule?"),
+        positiveText: t("Confirm"),
+        negativeText: t("Cancel"),
+        onPositiveClick: () => handleRowDelete(row),
+      })
+    },
+    [dialog, t, handleRowDelete],
+  )
+
   const columns: ColumnDef<LifecycleRule>[] = React.useMemo(
     () => [
       {
         id: "type",
         header: () => t("Type"),
-        accessorFn: (row) =>
-          row.Transitions || row.NoncurrentVersionTransitions
-            ? "Transition"
-            : "Expire",
+        accessorFn: (row) => (row.Transitions || row.NoncurrentVersionTransitions ? "Transition" : "Expire"),
       },
       {
         id: "version",
@@ -93,22 +120,18 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
       {
         id: "deleteMarker",
         header: () => t("Expiration Delete Mark"),
-        accessorFn: (row) =>
-          row.Expiration?.ExpiredObjectDeleteMarker ? t("On") : t("Off"),
+        accessorFn: (row) => (row.Expiration?.ExpiredObjectDeleteMarker ? t("On") : t("Off")),
       },
       {
         id: "tier",
         header: () => t("Tier"),
         accessorFn: (row) =>
-          row.Transitions?.[0]?.StorageClass ||
-          row.NoncurrentVersionTransitions?.[0]?.StorageClass ||
-          "--",
+          row.Transitions?.[0]?.StorageClass || row.NoncurrentVersionTransitions?.[0]?.StorageClass || "--",
       },
       {
         id: "prefix",
         header: () => t("Prefix"),
-        accessorFn: (row) =>
-          row.Filter?.Prefix || row.Filter?.And?.Prefix || "",
+        accessorFn: (row) => row.Filter?.Prefix || row.Filter?.And?.Prefix || "",
       },
       {
         id: "timeCycle",
@@ -125,11 +148,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         header: () => t("Status"),
         accessorFn: (row) => row.Status ?? "-",
         cell: ({ row }) => (
-          <Badge
-            variant={
-              row.original.Status === "Enabled" ? "secondary" : "destructive"
-            }
-          >
+          <Badge variant={row.original.Status === "Enabled" ? "secondary" : "destructive"}>
             {row.original.Status ?? "-"}
           </Badge>
         ),
@@ -140,11 +159,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => confirmDelete(row.original)}
-            >
+            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
               <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
@@ -152,7 +167,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         ),
       },
     ],
-    [t]
+    [t, confirmDelete],
   )
 
   const { table } = useDataTable<LifecycleRule>({
@@ -160,34 +175,6 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
     columns,
     getRowId: (row) => row.ID ?? JSON.stringify(row),
   })
-
-  const confirmDelete = (row: LifecycleRule) => {
-    dialog.error({
-      title: t("Warning"),
-      content: t("Are you sure you want to delete this rule?"),
-      positiveText: t("Confirm"),
-      negativeText: t("Cancel"),
-      onPositiveClick: () => handleRowDelete(row),
-    })
-  }
-
-  const handleRowDelete = async (row: LifecycleRule) => {
-    const remaining = data.filter((item) => item.ID !== row.ID)
-
-    try {
-      if (remaining.length === 0) {
-        await deleteBucketLifecycle(bucketName)
-      } else {
-        await putBucketLifecycleConfiguration(bucketName, {
-          Rules: remaining,
-        })
-      }
-      message.success(t("Delete Success"))
-      loadData()
-    } catch (error) {
-      message.error((error as Error).message || t("Delete Failed"))
-    }
-  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -209,17 +196,10 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         table={table}
         isLoading={loading}
         emptyTitle={t("No Data")}
-        emptyDescription={t(
-          "Create lifecycle rules to automate object transitions and expiration."
-        )}
+        emptyDescription={t("Create lifecycle rules to automate object transitions and expiration.")}
       />
 
-      <LifecycleNewForm
-        open={newFormOpen}
-        onOpenChange={setNewFormOpen}
-        bucketName={bucketName}
-        onSuccess={loadData}
-      />
+      <LifecycleNewForm open={newFormOpen} onOpenChange={setNewFormOpen} bucketName={bucketName} onSuccess={loadData} />
     </div>
   )
 }

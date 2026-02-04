@@ -1,13 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
 import { Spinner } from "@/components/ui/spinner"
 import { useTaskManager, useTasks, useTaskPanelOpen } from "@/contexts/task-context"
 import { RiCheckLine } from "@remixicon/react"
@@ -46,9 +40,7 @@ export function TaskStatsButton() {
           ) : (
             <div className="flex items-center gap-2">
               <RiCheckLine className="size-4 text-emerald-600" />
-              <span>
-                {t("Task Completed", { completed: completed.length, failed: failed.length })}
-              </span>
+              <span>{t("Task Completed", { completed: completed.length, failed: failed.length })}</span>
             </div>
           )}
         </Button>

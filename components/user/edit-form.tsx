@@ -4,12 +4,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useUsers } from "@/hooks/use-users"
 
 interface UserRow {
@@ -71,7 +66,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
       setUser({
         accessKey: row.accessKey,
         memberOf: (row.memberOf as string[]) ?? [],
-        policy: Array.isArray(row.policy) ? row.policy : (row.policyName as string)?.split(",").filter(Boolean) ?? [],
+        policy: Array.isArray(row.policy) ? row.policy : ((row.policyName as string)?.split(",").filter(Boolean) ?? []),
         status: (row.status as string) ?? "enabled",
       })
       setLoading(true)
@@ -87,7 +82,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
         .catch(() => {})
         .finally(() => setLoading(false))
     }
-  }, [open, row?.accessKey])
+  }, [open, row, getUser])
 
   const handleStatusChange = async (checked: boolean) => {
     const nextStatus = checked ? "enabled" : "disabled"
@@ -119,11 +114,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
         <div className="space-y-4 max-h-[80vh] overflow-auto px-2 -mx-2">
           <div className="flex items-center justify-start gap-2 rounded-md border px-3 py-2">
             <span className="text-sm text-muted-foreground">{t("Status")}</span>
-            <Switch
-              checked={statusBoolean}
-              onCheckedChange={handleStatusChange}
-              disabled={loading}
-            />
+            <Switch checked={statusBoolean} onCheckedChange={handleStatusChange} disabled={loading} />
             <Button variant="outline" className="ml-auto" disabled>
               {t("Change Secret Key")} (Coming soon)
             </Button>

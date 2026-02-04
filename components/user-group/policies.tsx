@@ -6,19 +6,8 @@ import { RiAddLine, RiArrowDownSLine, RiCheckLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { SearchInput } from "@/components/search-input"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
@@ -56,22 +45,17 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
       .filter(Boolean)
   }, [policyStr])
 
-  const policiesData = React.useMemo<PolicyItem[]>(
-    () => currentPolicies.map((name) => ({ name })),
-    [currentPolicies]
-  )
+  const policiesData = React.useMemo<PolicyItem[]>(() => currentPolicies.map((name) => ({ name })), [currentPolicies])
 
   const columns: ColumnDef<PolicyItem>[] = React.useMemo(
     () => [
       {
         id: "name",
         header: () => t("Name"),
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
       },
     ],
-    [t]
+    [t],
   )
 
   const { table } = useDataTable<PolicyItem>({
@@ -97,7 +81,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
         setPolicies(
           Object.keys(res ?? {})
             .sort((a, b) => a.localeCompare(b))
-            .map((key) => ({ label: key, value: key }))
+            .map((key) => ({ label: key, value: key })),
         )
       })
       .catch(() => message.error(t("Failed to get data")))
@@ -116,9 +100,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
   }
 
   const togglePolicy = (value: string) => {
-    setSelectedPolicies((prev) =>
-      prev.includes(value) ? prev.filter((p) => p !== value) : [...prev, value]
-    )
+    setSelectedPolicies((prev) => (prev.includes(value) ? prev.filter((p) => p !== value) : [...prev, value]))
   }
 
   const changePolicies = async () => {
@@ -150,11 +132,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
               className="w-full"
             />
           </div>
-          <Button
-            variant="outline"
-            className="inline-flex items-center gap-2"
-            onClick={startEditing}
-          >
+          <Button variant="outline" className="inline-flex items-center gap-2" onClick={startEditing}>
             <RiAddLine className="size-4" />
             {t("Edit Policy")}
           </Button>
@@ -162,14 +140,9 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
       ) : (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <Field className="flex w-full flex-col gap-2">
-            <FieldLabel className="text-sm font-medium">
-              {t("Select user group policies")}
-            </FieldLabel>
+            <FieldLabel className="text-sm font-medium">{t("Select user group policies")}</FieldLabel>
             <FieldContent className="space-y-2">
-              <Popover
-                open={policySelectorOpen}
-                onOpenChange={setPolicySelectorOpen}
-              >
+              <Popover open={policySelectorOpen} onOpenChange={setPolicySelectorOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
@@ -178,9 +151,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
                     aria-label={t("Select user group policies")}
                   >
                     <span className="truncate">
-                      {selectedPolicies.length
-                        ? selectedPolicies.join(", ")
-                        : t("Select user group policies")}
+                      {selectedPolicies.length ? selectedPolicies.join(", ") : t("Select user group policies")}
                     </span>
                     <RiArrowDownSLine className="size-4 text-muted-foreground" />
                   </Button>
@@ -200,9 +171,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
                             <RiCheckLine
                               className={cn(
                                 "mr-2 size-4",
-                                selectedPolicies.includes(option.value)
-                                  ? "opacity-100"
-                                  : "opacity-0"
+                                selectedPolicies.includes(option.value) ? "opacity-100" : "opacity-0",
                               )}
                             />
                             <span>{option.label}</span>

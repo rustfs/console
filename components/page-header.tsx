@@ -14,19 +14,12 @@ export function PageHeader({
   className?: string
 }) {
   return (
-    <div
-      className={cn(
-        "sticky bg-background top-0 z-10 flex flex-col justify-between gap-2 lg:flex-row",
-        className
-      )}
-    >
+    <div className={cn("sticky bg-background top-0 z-10 flex flex-col justify-between gap-2 lg:flex-row", className)}>
       <div className="space-y-2">
         {children}
         {description}
       </div>
-      {actions && (
-        <div className="flex flex-1 flex-wrap items-center justify-end gap-2">{actions}</div>
-      )}
+      {actions && <div className="flex flex-1 flex-wrap items-center justify-end gap-2">{actions}</div>}
     </div>
   )
 }

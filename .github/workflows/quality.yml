@@ -352,14 +352,7 @@ jobs:
   quality-summary:
     name: 📋 Quality Summary
     runs-on: ubuntu-latest
-    needs:
-      [
-        formatting,
-        typescript,
-        dependencies,
-        complexity,
-        documentation,
-      ]
+    needs: [formatting, typescript, dependencies, complexity, documentation]
     if: always()
 
     steps:

@@ -6,12 +6,7 @@ import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
@@ -35,7 +30,7 @@ function ConfigPageContent() {
   const message = useMessage()
 
   const [serverHost, setServerHost] = useState(() =>
-    typeof window !== "undefined" ? localStorage.getItem("rustfs-server-host") ?? "" : ""
+    typeof window !== "undefined" ? (localStorage.getItem("rustfs-server-host") ?? "") : "",
   )
 
   const validateAndSave = async (e: React.FormEvent) => {
@@ -50,9 +45,7 @@ function ConfigPageContent() {
 
         new URL(urlToValidate)
 
-        const urlToSave = serverHost.match(/^https?:\/\//)
-          ? serverHost
-          : urlToValidate
+        const urlToSave = serverHost.match(/^https?:\/\//) ? serverHost : urlToValidate
         localStorage.setItem("rustfs-server-host", urlToSave)
 
         if (!serverHost.match(/^https?:\/\//)) {
@@ -70,11 +63,7 @@ function ConfigPageContent() {
         window.location.href = getLoginRoute()
       }, 200)
     } catch (error) {
-      message.error(
-        t("Invalid server address format") +
-          ": " +
-          (error as Error).message
-      )
+      message.error(t("Invalid server address format") + ": " + (error as Error).message)
     }
   }
 
@@ -107,17 +96,9 @@ function ConfigPageContent() {
         </div>
         <div className="flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <Image
-              src={logoImage}
-              alt="RustFS"
-              width={112}
-              height={24}
-              className="max-w-28"
-            />
+            <Image src={logoImage} alt="RustFS" width={112} height={24} className="max-w-28" />
             <div className="py-6">
-              <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">
-                {t("Server Configuration")}
-              </h1>
+              <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t("Server Configuration")}</h1>
               <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
                 {t("Please configure your RustFS server address")}
               </p>
@@ -127,27 +108,19 @@ function ConfigPageContent() {
               <form onSubmit={validateAndSave} autoComplete="off">
                 <div className="grid gap-y-6">
                   <Field>
-                    <FieldLabel htmlFor="serverHost">
-                      {t("Server Address")}
-                    </FieldLabel>
-                    <FieldDescription>
-                      {t("Leave empty to use current host as default")}
-                    </FieldDescription>
+                    <FieldLabel htmlFor="serverHost">{t("Server Address")}</FieldLabel>
+                    <FieldDescription>{t("Leave empty to use current host as default")}</FieldDescription>
                     <FieldContent>
                       <Input
                         id="serverHost"
                         value={serverHost}
                         onChange={(e) => setServerHost(e.target.value)}
                         type="text"
-                        placeholder={t(
-                          "Please enter server address (e.g., http://localhost:9000)"
-                        )}
+                        placeholder={t("Please enter server address (e.g., http://localhost:9000)")}
                       />
                     </FieldContent>
                     <FieldDescription>
-                      {t(
-                        "Example: http://localhost:9000 or https://your-domain.com"
-                      )}
+                      {t("Example: http://localhost:9000 or https://your-domain.com")}
                     </FieldDescription>
                   </Field>
 
@@ -156,19 +129,11 @@ function ConfigPageContent() {
                       {t("Save Configuration")}
                     </Button>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={resetToCurrentHost}
-                    >
+                    <Button type="button" variant="outline" onClick={resetToCurrentHost}>
                       {t("Reset")}
                     </Button>
 
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={skipConfig}
-                    >
+                    <Button type="button" variant="outline" onClick={skipConfig}>
                       {t("Skip")}
                     </Button>
                   </div>
@@ -179,10 +144,7 @@ function ConfigPageContent() {
             <div className="my-8">
               <p className="text-sm text-gray-600 dark:text-neutral-400">
                 {t("Need help?")}{" "}
-                <Link
-                  href="https://docs.rustfs.com"
-                  className="text-blue-600 hover:underline"
-                >
+                <Link href="https://docs.rustfs.com" className="text-blue-600 hover:underline">
                   {t("View Documentation")}
                 </Link>
               </p>

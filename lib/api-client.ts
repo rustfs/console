@@ -15,7 +15,10 @@ interface RequestOptions {
   headers?: Record<string, string>
   body?: unknown
   params?: Record<string, string>
+  dedupe?: boolean
 }
+
+const inflightGetRequests = new Map<string, Promise<unknown>>()
 
 export class ApiClient {
   private $api: AwsClient
@@ -35,6 +38,8 @@ export class ApiClient {
   async request(url: string, options: RequestOptions = {}, parseJson: boolean = true) {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url
     options.headers = { ...this.config?.headers, ...options.headers }
+    const method = (options.method ?? "GET").toUpperCase()
+    options.method = method
     if (
       options.body &&
       !(options.body instanceof FormData) &&
@@ -52,73 +57,95 @@ export class ApiClient {
       delete options.params
     }
 
-    logger.log("[request] url:", url)
-    logger.log("[request] options:", options)
+    const shouldDedupe = method === "GET" && parseJson && options.dedupe !== false
+    const dedupeKey = shouldDedupe ? `${method}:${url}` : null
 
-    const response = await this.$api.fetch(
-      url,
-      options as RequestInit & { body?: BodyInit | null; aws?: Record<string, unknown> },
-    )
+    const executeRequest = async () => {
+      logger.log("[request] url:", url)
+      logger.log("[request] options:", options)
 
-    logger.log("[request] response:", response)
+      const response = await this.$api.fetch(
+        url,
+        options as RequestInit & { body?: BodyInit | null; aws?: Record<string, unknown> },
+      )
 
-    if (response.status === 401) {
-      if (this.errorHandler) {
-        await this.errorHandler.handle401()
+      logger.log("[request] response:", response)
+
+      if (response.status === 401) {
+        if (this.errorHandler) {
+          await this.errorHandler.handle401()
+        }
+        return
       }
-      return
-    }
-    if (response.status === 403) {
-      try {
-        const cloned = response.clone()
-        let codeText = ""
+      if (response.status === 403) {
         try {
-          const data = (await cloned.json()) as Record<string, unknown>
-          let code: string | undefined = (data?.code as string | undefined) || (data?.Code as string | undefined)
-          if (data && typeof data === "object" && "error" in data) {
-            const errObj = (data as { error?: unknown }).error
-            if (errObj && typeof errObj === "object") {
-              const e = errObj as { code?: unknown }
-              if (typeof e.code === "string") code = code ?? e.code
+          const cloned = response.clone()
+          let codeText = ""
+          try {
+            const data = (await cloned.json()) as Record<string, unknown>
+            let code: string | undefined = (data?.code as string | undefined) || (data?.Code as string | undefined)
+            if (data && typeof data === "object" && "error" in data) {
+              const errObj = (data as { error?: unknown }).error
+              if (errObj && typeof errObj === "object") {
+                const e = errObj as { code?: unknown }
+                if (typeof e.code === "string") code = code ?? e.code
+              }
+            }
+            codeText = typeof code === "string" ? code : ""
+          } catch {
+            codeText = ""
+          }
+
+          const normalizedCode = codeText.toLowerCase()
+          const isUnauthorizedAccess = normalizedCode === "unauthorizedaccess"
+          const isInvalidAccessKey = normalizedCode === "invalidaccesskeyid"
+
+          if (this.errorHandler) {
+            if (isUnauthorizedAccess || isInvalidAccessKey) {
+              await this.errorHandler.handle401()
+            } else {
+              await this.errorHandler.handle403()
             }
           }
-          codeText = typeof code === "string" ? code : ""
         } catch {
-          codeText = ""
-        }
-
-        const normalizedCode = codeText.toLowerCase()
-        const isUnauthorizedAccess = normalizedCode === "unauthorizedaccess"
-        const isInvalidAccessKey = normalizedCode === "invalidaccesskeyid"
-
-        if (this.errorHandler) {
-          if (isUnauthorizedAccess || isInvalidAccessKey) {
-            await this.errorHandler.handle401()
-          } else {
+          if (this.errorHandler) {
             await this.errorHandler.handle403()
           }
         }
-      } catch {
-        if (this.errorHandler) {
-          await this.errorHandler.handle403()
-        }
+        return
       }
-      return
+
+      if (!response.ok) {
+        const errorMsg = await parseApiError(response)
+        throw new Error(errorMsg)
+      }
+
+      if (response.status === 204 || response.headers.get("content-length") === "0" || !response.body) {
+        return null
+      }
+
+      if (parseJson) {
+        return await response.json()
+      } else {
+        return response
+      }
     }
 
-    if (!response.ok) {
-      const errorMsg = await parseApiError(response)
-      throw new Error(errorMsg)
+    if (!dedupeKey) {
+      return executeRequest()
     }
 
-    if (response.status === 204 || response.headers.get("content-length") === "0" || !response.body) {
-      return null
+    const inflight = inflightGetRequests.get(dedupeKey)
+    if (inflight) {
+      return inflight
     }
 
-    if (parseJson) {
-      return await response.json()
-    } else {
-      return response
+    const requestPromise = executeRequest()
+    inflightGetRequests.set(dedupeKey, requestPromise)
+    try {
+      return await requestPromise
+    } finally {
+      inflightGetRequests.delete(dedupeKey)
     }
   }
 

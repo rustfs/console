@@ -72,7 +72,7 @@ export function ObjectList({
 }: ObjectListProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const objectApi = useObject(bucket)
+  const { listObject, getSignedUrl, mapAllFiles } = useObject(bucket)
   const { getBucketVersioning } = useBucket()
   const addDeleteKeys = useAddDeleteKeys()
 
@@ -97,7 +97,7 @@ export function ObjectList({
       const token = tokenOverride !== undefined ? tokenOverride : continuationToken
       setLoading(true)
       try {
-        const response = await objectApi.listObject(bucket, prefix || undefined, pageSize, token, {
+        const response = await listObject(bucket, prefix || undefined, pageSize, token, {
           includeDeleted: showDeleted,
         })
 
@@ -128,7 +128,7 @@ export function ObjectList({
         setTimeout(() => setLoading(false), 200)
       }
     },
-    [bucket, prefix, pageSize, continuationToken, showDeleted, objectApi],
+    [bucket, prefix, pageSize, continuationToken, showDeleted, listObject],
   )
 
   const prevRefreshTriggerRef = React.useRef(refreshTrigger)
@@ -187,7 +187,7 @@ export function ObjectList({
       if (!key) return
       const loadingMsg = message.loading(t("Getting URL"), { duration: 0 })
       try {
-        const url = await objectApi.getSignedUrl(key)
+        const url = await getSignedUrl(key)
         const response = await fetch(url)
         const filename = key.split("/").pop() ?? ""
         const headers: Record<string, string> = {
@@ -202,7 +202,7 @@ export function ObjectList({
         loadingMsg.destroy()
       }
     },
-    [message, t, objectApi],
+    [message, t, getSignedUrl],
   )
 
   const columns: ColumnDef<ObjectRow>[] = React.useMemo(
@@ -305,7 +305,7 @@ export function ObjectList({
       if (row?.type === "prefix") {
         collected.push(row.Key)
         if (!forceDelete) {
-          await objectApi.mapAllFiles(bucket, row.Key, (fileKey) => {
+          await mapAllFiles(bucket, row.Key, (fileKey) => {
             if (fileKey) collected.push(fileKey)
           })
         }
@@ -340,7 +340,7 @@ export function ObjectList({
             relative: computeRelativeKey(item.Key),
           })
         } else if (item.type === "prefix") {
-          await objectApi.mapAllFiles(bucket, item.Key, (fileKey) => {
+          await mapAllFiles(bucket, item.Key, (fileKey) => {
             allFiles.push({
               key: fileKey,
               relative: computeRelativeKey(fileKey),
@@ -378,7 +378,7 @@ export function ObjectList({
     try {
       await Promise.all(
         allFiles.map(async ({ key, relative }) => {
-          const url = await objectApi.getSignedUrl(key)
+          const url = await getSignedUrl(key)
           const response = await fetch(url)
           const blob = await response.blob()
           zip.file(relative || key, blob)

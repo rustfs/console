@@ -6,11 +6,7 @@ import { DashboardAuthGuard } from "@/components/dashboard-auth-guard"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies()
   const sidebarState = cookieStore.get(SIDEBAR_COOKIE_NAME)?.value
   const defaultOpen = sidebarState !== "false"

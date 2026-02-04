@@ -1,14 +1,11 @@
 import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts"
-import type {
-  AwsCredentialIdentity,
-  AwsCredentialIdentityProvider,
-} from "@aws-sdk/types"
+import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@aws-sdk/types"
 import type { SiteConfig } from "@/types/config"
 
 export async function getStsToken(
   credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
   roleArn: string,
-  customConfig: SiteConfig
+  customConfig: SiteConfig,
 ) {
   const stsClient = new STSClient({
     endpoint: customConfig.s3.endpoint,

@@ -29,12 +29,8 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
-  const {
-    getBucketReplication,
-    putBucketReplication,
-    deleteBucketReplication,
-    deleteRemoteReplicationTarget,
-  } = useBucket()
+  const { getBucketReplication, putBucketReplication, deleteBucketReplication, deleteRemoteReplicationTarget } =
+    useBucket()
 
   const [data, setData] = React.useState<ReplicationRule[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -67,11 +63,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
         accessorKey: "Status",
         header: () => t("Status"),
         cell: ({ row }) => (
-          <Badge
-            variant={
-              row.original.Status === "Enabled" ? "secondary" : "outline"
-            }
-          >
+          <Badge variant={row.original.Status === "Enabled" ? "secondary" : "outline"}>
             {row.original.Status === "Enabled" ? t("Enabled") : t("Disabled")}
           </Badge>
         ),
@@ -97,9 +89,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
       {
         id: "destination-storage",
         header: () => t("Storage Class"),
-        cell: ({ row }) => (
-          <span>{row.original.Destination?.StorageClass || "-"}</span>
-        ),
+        cell: ({ row }) => <span>{row.original.Destination?.StorageClass || "-"}</span>,
       },
       {
         id: "actions",
@@ -107,11 +97,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => confirmDelete(row.original)}
-            >
+            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
               <RiDeleteBin7Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
@@ -119,7 +105,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
         ),
       },
     ],
-    [t]
+    [t],
   )
 
   const { table } = useDataTable<ReplicationRule>({
@@ -144,10 +130,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
     try {
       if (remaining.length === 0) {
         await deleteBucketReplication(bucketName)
-        await deleteRemoteReplicationTarget(
-          bucketName,
-          rule.Destination?.Bucket ?? ""
-        )
+        await deleteRemoteReplicationTarget(bucketName, rule.Destination?.Bucket ?? "")
       } else {
         const currentConfig = await getBucketReplication(bucketName)
         const role = currentConfig?.ReplicationConfiguration?.Role
@@ -186,9 +169,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
         table={table}
         isLoading={loading}
         emptyTitle={t("No Data")}
-        emptyDescription={t(
-          "Add replication rules to sync objects across buckets."
-        )}
+        emptyDescription={t("Add replication rules to sync objects across buckets.")}
       />
 
       <ReplicationNewForm

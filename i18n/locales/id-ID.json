@@ -640,6 +640,7 @@
   "Rule ID": "ID Aturan",
   "Running": "Berjalan",
   "Running (Unhealthy)": "Berjalan (Tidak Sehat)",
+  "Running Status": "Status operasi",
   "Rust-based": "Berbasis Rust",
   "RustFS": "KaratFS",
   "RustFS built-in cold storage": "Penyimpanan dingin bawaan RustFS",

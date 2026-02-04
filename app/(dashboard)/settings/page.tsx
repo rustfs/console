@@ -4,17 +4,8 @@ import { useState, useEffect, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert"
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldLabel,
-} from "@/components/ui/field"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { configManager } from "@/lib/config"
@@ -78,7 +69,7 @@ export default function SettingsPage() {
         value: currentConfig.s3.region || t("Not configured"),
       },
     ],
-    [currentConfig, t]
+    [currentConfig, t],
   )
 
   const saveConfig = async (e: React.FormEvent) => {
@@ -96,9 +87,7 @@ export default function SettingsPage() {
       }
 
       new URL(urlToValidate)
-      const urlToSave = /^https?:\/\//.test(formData.serverHost)
-        ? formData.serverHost
-        : urlToValidate
+      const urlToSave = /^https?:\/\//.test(formData.serverHost) ? formData.serverHost : urlToValidate
 
       localStorage.setItem("rustfs-server-host", urlToSave)
 
@@ -136,18 +125,11 @@ export default function SettingsPage() {
 
       <div className="flex flex-col gap-6">
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">
-            {t("Current Configuration")}
-          </h2>
+          <h2 className="text-lg font-semibold">{t("Current Configuration")}</h2>
           <dl className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {currentItems.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-md border p-3"
-              >
-                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  {item.label}
-                </dt>
+              <div key={item.label} className="rounded-md border p-3">
+                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{item.label}</dt>
                 <dd className="mt-1 text-sm">{item.value}</dd>
               </div>
             ))}
@@ -155,40 +137,26 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold">
-            {t("Server Configuration")}
-          </h2>
+          <h2 className="text-lg font-semibold">{t("Server Configuration")}</h2>
           <form className="space-y-4" onSubmit={saveConfig}>
             <Field>
               <FieldLabel>{t("Server Address")}</FieldLabel>
               <FieldContent>
                 <Input
                   value={formData.serverHost}
-                  onChange={(e) =>
-                    setFormData({ serverHost: e.target.value })
-                  }
-                  placeholder={t(
-                    "Please enter server address (e.g., http://localhost:9000)"
-                  )}
+                  onChange={(e) => setFormData({ serverHost: e.target.value })}
+                  placeholder={t("Please enter server address (e.g., http://localhost:9000)")}
                   autoComplete="off"
                 />
               </FieldContent>
-              <FieldDescription>
-                {t(
-                  "Example: http://localhost:9000 or https://your-domain.com"
-                )}
-              </FieldDescription>
+              <FieldDescription>{t("Example: http://localhost:9000 or https://your-domain.com")}</FieldDescription>
             </Field>
 
             <div className="flex flex-wrap items-center gap-2">
               <Button type="submit" variant="default" disabled={loading}>
                 {t("Save Configuration")}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={resetConfig}
-              >
+              <Button type="button" variant="outline" onClick={resetConfig}>
                 {t("Reset to Default")}
               </Button>
             </div>
@@ -199,16 +167,8 @@ export default function SettingsPage() {
             <AlertDescription>
               <ul className="list-inside list-disc space-y-1 text-sm">
                 <li>{t("Configuration is saved locally in your browser")}</li>
-                <li>
-                  {t(
-                    "Page will refresh automatically after saving configuration"
-                  )}
-                </li>
-                <li>
-                  {t(
-                    "Make sure the server address is accessible from your network"
-                  )}
-                </li>
+                <li>{t("Page will refresh automatically after saving configuration")}</li>
+                <li>{t("Make sure the server address is accessible from your network")}</li>
               </ul>
             </AlertDescription>
           </Alert>

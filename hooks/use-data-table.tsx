@@ -61,9 +61,7 @@ function createSelectColumn<TData extends RowData>(): ColumnDef<TData> {
   }
 }
 
-export function useDataTable<TData extends RowData>(
-  options: UseDataTableOptions<TData>
-): UseDataTableReturn<TData> {
+export function useDataTable<TData extends RowData>(options: UseDataTableOptions<TData>): UseDataTableReturn<TData> {
   const [sorting, setSorting] = useState<SortingState>(options.initialSorting ?? [])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})

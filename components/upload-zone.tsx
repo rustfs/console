@@ -59,19 +59,13 @@ export function UploadZone({
         "flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/70 px-6 py-10 text-center transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         hovering && !disabled && "border-primary bg-primary/5",
         disabled && "pointer-events-none opacity-60",
-        className
+        className,
       )}
       onDrop={onDrop}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
     >
-      <input
-        type="file"
-        accept={accept}
-        className="hidden"
-        disabled={disabled}
-        onChange={onInputChange}
-      />
+      <input type="file" accept={accept} className="hidden" disabled={disabled} onChange={onInputChange} />
       <Icon className="h-12 w-12 text-muted-foreground" />
       {children}
     </label>

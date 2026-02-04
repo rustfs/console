@@ -2,19 +2,9 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import {
-  RiFileCopyLine,
-  RiEyeLine,
-  RiDownloadCloud2Line,
-  RiDeleteBin5Line,
-} from "@remixicon/react"
+import { RiFileCopyLine, RiEyeLine, RiDownloadCloud2Line, RiDeleteBin5Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
@@ -88,18 +78,11 @@ export function ObjectVersions({
     }
   }
 
-  const getSignedUrlWithVersion = async (
-    key: string,
-    versionId: string,
-    expiresIn = 3600
-  ) => {
+  const getSignedUrlWithVersion = async (key: string, versionId: string, expiresIn = 3600) => {
     const command = new GetObjectCommand({
       Bucket: bucketName,
       Key: key,
-      VersionId:
-        versionId === "00000000-0000-0000-0000-000000000000"
-          ? undefined
-          : versionId,
+      VersionId: versionId === "00000000-0000-0000-0000-000000000000" ? undefined : versionId,
     })
     return getSignedUrl(client, command, { expiresIn })
   }
@@ -112,9 +95,7 @@ export function ObjectVersions({
       const filename = objectKey.split("/").pop() ?? ""
       const headers: Record<string, string> = {
         "content-type": getContentType(response.headers, filename),
-        filename:
-          response.headers.get("content-disposition")?.split("filename=")[1] ??
-          "",
+        filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
       }
       const blob = await response.blob()
       exportFile({ headers, data: blob }, filename)
@@ -163,45 +144,27 @@ export function ObjectVersions({
         id: "lastModified",
         header: () => t("LastModified"),
         cell: ({ row }) =>
-          row.original.LastModified
-            ? dayjs(row.original.LastModified).format("YYYY-MM-DD HH:mm:ss")
-            : "",
+          row.original.LastModified ? dayjs(row.original.LastModified).format("YYYY-MM-DD HH:mm:ss") : "",
       },
       {
         id: "size",
         header: () => t("Size"),
-        cell: ({ row }) =>
-          typeof row.original.Size === "number"
-            ? formatBytes(row.original.Size)
-            : "",
+        cell: ({ row }) => (typeof row.original.Size === "number" ? formatBytes(row.original.Size) : ""),
       },
       {
         id: "actions",
         header: () => t("Action"),
         cell: ({ row }) => (
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onPreview(row.original.VersionId ?? "")}
-            >
+            <Button variant="outline" size="sm" onClick={() => onPreview(row.original.VersionId ?? "")}>
               <RiEyeLine className="size-4" />
               {t("Preview")}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => downloadVersion(row.original)}
-            >
+            <Button variant="outline" size="sm" onClick={() => downloadVersion(row.original)}>
               <RiDownloadCloud2Line className="size-4" />
               {t("Download")}
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="text-white"
-              onClick={() => deleteVersion(row.original)}
-            >
+            <Button variant="destructive" size="sm" className="text-white" onClick={() => deleteVersion(row.original)}>
               <RiDeleteBin5Line className="size-4" />
               {t("Delete")}
             </Button>
@@ -209,7 +172,7 @@ export function ObjectVersions({
         ),
       },
     ],
-    [t, onPreview]
+    [t, onPreview],
   )
 
   const { table } = useDataTable<VersionRow>({
@@ -223,11 +186,7 @@ export function ObjectVersions({
         <DialogHeader>
           <DialogTitle>{t("Object Versions")}</DialogTitle>
         </DialogHeader>
-        <DataTable
-          table={table}
-          isLoading={loading}
-          emptyTitle={t("No Versions")}
-        />
+        <DataTable table={table} isLoading={loading} emptyTitle={t("No Versions")} />
       </DialogContent>
     </Dialog>
   )

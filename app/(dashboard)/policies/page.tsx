@@ -88,19 +88,11 @@ export default function PoliciesPage() {
       meta: { width: 200 },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleEdit(row.original)}
-          >
+          <Button variant="outline" size="sm" onClick={() => handleEdit(row.original)}>
             <RiEdit2Line className="size-4" />
             <span>{t("Edit")}</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => confirmDelete(row.original)}
-          >
+          <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
             <RiDeleteBin5Line className="size-4" />
             <span>{t("Delete")}</span>
           </Button>
@@ -168,12 +160,7 @@ export default function PoliciesPage() {
         <DataTablePagination table={table} className="px-2 py-3" />
       </div>
 
-      <PolicyForm
-        show={showPolicyForm}
-        onShowChange={handleShowChange}
-        policy={currentPolicy}
-        onSaved={listPolicies}
-      />
+      <PolicyForm show={showPolicyForm} onShowChange={handleShowChange} policy={currentPolicy} onSaved={listPolicies} />
     </Page>
   )
 }

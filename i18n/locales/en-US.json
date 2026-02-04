@@ -621,6 +621,7 @@
   "Rule ID": "Rule ID",
   "Running": "Running",
   "Running (Unhealthy)": "Running (Unhealthy)",
+  "Running Status": "Running Status",
   "Rust-based": "Rust-based",
   "RustFS": "RustFS",
   "RustFS built-in cold storage": "RustFS built-in cold storage",

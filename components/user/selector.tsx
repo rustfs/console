@@ -5,19 +5,8 @@ import { useTranslation } from "react-i18next"
 import { RiArrowDownSLine, RiCheckLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { useMessage } from "@/lib/feedback/message"
 import { useUsers } from "@/hooks/use-users"
 import { cn } from "@/lib/utils"
@@ -53,7 +42,7 @@ export function UserSelector({
             Object.entries(res ?? {}).map(([username]) => ({
               label: username,
               value: username,
-            }))
+            })),
           )
         })
         .catch(() => message.error(t("Failed to get data")))
@@ -64,9 +53,7 @@ export function UserSelector({
   const displayPlaceholder = placeholder ?? t("Select user group members")
 
   const toggleUser = (v: string) => {
-    onChange(
-      value.includes(v) ? value.filter((item) => item !== v) : [...value, v]
-    )
+    onChange(value.includes(v) ? value.filter((item) => item !== v) : [...value, v])
   }
 
   return (
@@ -82,9 +69,7 @@ export function UserSelector({
               disabled={disabled}
               aria-label={displayLabel}
             >
-              <span className="truncate">
-                {value.length ? value.join(", ") : displayPlaceholder}
-              </span>
+              <span className="truncate">{value.length ? value.join(", ") : displayPlaceholder}</span>
               <RiArrowDownSLine className="size-4 text-muted-foreground" />
             </Button>
           </PopoverTrigger>
@@ -95,16 +80,9 @@ export function UserSelector({
                 <CommandEmpty>{t("No Data")}</CommandEmpty>
                 <CommandGroup>
                   {users.map((option) => (
-                    <CommandItem
-                      key={option.value}
-                      value={option.label}
-                      onSelect={() => toggleUser(option.value)}
-                    >
+                    <CommandItem key={option.value} value={option.label} onSelect={() => toggleUser(option.value)}>
                       <RiCheckLine
-                        className={cn(
-                          "mr-2 size-4",
-                          value.includes(option.value) ? "opacity-100" : "opacity-0"
-                        )}
+                        className={cn("mr-2 size-4", value.includes(option.value) ? "opacity-100" : "opacity-0")}
                       />
                       <span>{option.label}</span>
                     </CommandItem>

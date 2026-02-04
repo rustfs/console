@@ -1,10 +1,4 @@
-export type TaskEventType =
-  | "enqueued"
-  | "running"
-  | "completed"
-  | "failed"
-  | "canceled"
-  | "drained"
+export type TaskEventType = "enqueued" | "running" | "completed" | "failed" | "canceled" | "drained"
 
 export type TaskEventHandler<TTask> = (task: TTask) => void
 export type AllCompletedEventHandler = () => void
@@ -32,10 +26,7 @@ export interface TaskHandler<TTask, TStatus extends string> {
   lifecycle: TaskLifecycleStatus<TStatus>
   perform: (task: TTask) => Promise<void>
   shouldRetry?: (task: TTask, error: unknown) => boolean
-  handleError?: (
-    task: TTask,
-    error: unknown
-  ) => Promise<"retry" | "handled" | "fail"> | "retry" | "handled" | "fail"
+  handleError?: (task: TTask, error: unknown) => Promise<"retry" | "handled" | "fail"> | "retry" | "handled" | "fail"
   isCanceledError?: (error: unknown) => boolean
   maxRetries?: number
   retryDelay?: number

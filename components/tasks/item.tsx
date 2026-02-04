@@ -31,9 +31,7 @@ export function TaskItem({ task }: TaskItemProps) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-3 group">
-        <div className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
-          {task.displayName}
-        </div>
+        <div className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">{task.displayName}</div>
         <Button
           variant="ghost"
           size="sm"

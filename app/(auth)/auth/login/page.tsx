@@ -38,7 +38,7 @@ function LoginPageContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(buildRoute("/browser"))
+      router.replace(buildRoute("/"))
     }
   }, [isAuthenticated, router])
 
@@ -52,15 +52,14 @@ function LoginPageContent() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const credentials =
-      method === "accessKeyAndSecretKey" ? accessKeyAndSecretKey : sts
+    const credentials = method === "accessKeyAndSecretKey" ? accessKeyAndSecretKey : sts
 
     try {
       const currentConfig = await configManager.loadConfig()
       await login(credentials, currentConfig)
 
       message.success(t("Login Success"))
-      window.location.href = buildRoute("/browser")
+      window.location.href = buildRoute("/")
     } catch {
       message.error(t("Login Failed"))
     }

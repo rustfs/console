@@ -9,13 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/datetime-picker"
 import { useMessage } from "@/lib/feedback/message"
 import { useAccessKeys } from "@/hooks/use-access-keys"
@@ -35,12 +29,7 @@ interface AccessKeysEditItemProps {
   onSuccess: () => void
 }
 
-export function AccessKeysEditItem({
-  open,
-  onOpenChange,
-  row,
-  onSuccess,
-}: AccessKeysEditItemProps) {
+export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: AccessKeysEditItemProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { getServiceAccount, updateServiceAccount } = useAccessKeys()
@@ -58,20 +47,25 @@ export function AccessKeysEditItem({
   React.useEffect(() => {
     if (open && row?.accessKey) {
       getServiceAccount(row.accessKey)
-        .then((res: { policy?: unknown; expiration?: string; name?: string; description?: string; accountStatus?: string }) => {
-          setAccesskey(row.accessKey)
-          const policyValue =
-            typeof res.policy === "string" ? res.policy : JSON.stringify(res.policy ?? {}, null, 2)
-          setPolicy(policyValue)
-          setExpiry(
-            res.expiration && res.expiration !== "9999-01-01T00:00:00Z"
-              ? dayjs(res.expiration).toISOString()
-              : null
-          )
-          setName(res.name ?? "")
-          setDescription(res.description ?? "")
-          setStatus((res.accountStatus as "on" | "off") ?? "on")
-        })
+        .then(
+          (res: {
+            policy?: unknown
+            expiration?: string
+            name?: string
+            description?: string
+            accountStatus?: string
+          }) => {
+            setAccesskey(row.accessKey)
+            const policyValue = typeof res.policy === "string" ? res.policy : JSON.stringify(res.policy ?? {}, null, 2)
+            setPolicy(policyValue)
+            setExpiry(
+              res.expiration && res.expiration !== "9999-01-01T00:00:00Z" ? dayjs(res.expiration).toISOString() : null,
+            )
+            setName(res.name ?? "")
+            setDescription(res.description ?? "")
+            setStatus((res.accountStatus as "on" | "off") ?? "on")
+          },
+        )
         .catch(() => {
           message.error(t("Failed to get data"))
         })
@@ -149,10 +143,7 @@ export function AccessKeysEditItem({
             <Field orientation="responsive">
               <FieldLabel className="text-sm font-medium">{t("Status")}</FieldLabel>
               <FieldContent className="flex justify-end">
-                <Switch
-                  checked={status === "on"}
-                  onCheckedChange={(checked) => setStatus(checked ? "on" : "off")}
-                />
+                <Switch checked={status === "on"} onCheckedChange={(checked) => setStatus(checked ? "on" : "off")} />
               </FieldContent>
             </Field>
           </div>

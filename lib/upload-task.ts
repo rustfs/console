@@ -32,10 +32,7 @@ export interface UploadTaskConfig {
 
 export interface UploadTaskHelpers {
   handler: TaskHandler<UploadTask, UploadStatus>
-  createTasks: (
-    items: { file: File; key: string }[],
-    bucketName: string
-  ) => UploadTask[]
+  createTasks: (items: { file: File; key: string }[], bucketName: string) => UploadTask[]
 }
 
 const lifecycle: TaskLifecycleStatus<UploadStatus> = {
@@ -47,10 +44,7 @@ const lifecycle: TaskLifecycleStatus<UploadStatus> = {
   paused: "paused",
 }
 
-export function createUploadTaskHelpers(
-  s3Client: S3Client,
-  config: UploadTaskConfig = {}
-): UploadTaskHelpers {
+export function createUploadTaskHelpers(s3Client: S3Client, config: UploadTaskConfig = {}): UploadTaskHelpers {
   const chunkSize = (config.chunkSize ?? 5) * 1024 * 1024
   const maxRetries = config.maxRetries ?? 3
   const retryDelay = config.retryDelay ?? 1000
@@ -142,7 +136,7 @@ async function putObject(task: UploadTask, s3Client: S3Client) {
       Body: file,
       ContentType: file.type || "application/octet-stream",
     }),
-    { abortSignal: abortController.signal }
+    { abortSignal: abortController.signal },
   )
   task.progress = 100
 }
@@ -163,7 +157,7 @@ async function multipartUpload(task: UploadTask, s3Client: S3Client, chunkSize: 
           Key: key,
           ContentType: file.type || "application/octet-stream",
         }),
-        { abortSignal: abortController.signal }
+        { abortSignal: abortController.signal },
       )
       uploadId = createResponse.UploadId
       task.uploadId = uploadId
@@ -189,7 +183,7 @@ async function multipartUpload(task: UploadTask, s3Client: S3Client, chunkSize: 
           PartNumber: partNumber,
           Body: chunk,
         }),
-        { abortSignal: abortController.signal }
+        { abortSignal: abortController.signal },
       )
       if (!ETag) throw new Error(`Failed to upload part ${partNumber}`)
       completedParts.push({ ETag, PartNumber: partNumber })
@@ -204,7 +198,7 @@ async function multipartUpload(task: UploadTask, s3Client: S3Client, chunkSize: 
         UploadId: uploadId,
         MultipartUpload: { Parts: completedParts },
       }),
-      { abortSignal: abortController.signal }
+      { abortSignal: abortController.signal },
     )
     task.uploadId = undefined
     task.completedParts = undefined
@@ -212,9 +206,7 @@ async function multipartUpload(task: UploadTask, s3Client: S3Client, chunkSize: 
     if (!task._pauseRequested && uploadId) {
       try {
         const { AbortMultipartUploadCommand } = await import("@aws-sdk/client-s3")
-        await s3Client.send(
-          new AbortMultipartUploadCommand({ Bucket: bucketName, Key: key, UploadId: uploadId })
-        )
+        await s3Client.send(new AbortMultipartUploadCommand({ Bucket: bucketName, Key: key, UploadId: uploadId }))
       } catch {
         // ignore cleanup errors
       }

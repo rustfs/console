@@ -1,74 +1,53 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { RiAddLine, RiDeleteBinLine } from "@remixicon/react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
-import { useBucket } from "@/hooks/use-bucket";
-import { useMessage } from "@/lib/feedback/message";
-import { getBytes } from "@/lib/functions";
+import * as React from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
+import { useTranslation } from "react-i18next"
+import { RiAddLine, RiDeleteBinLine } from "@remixicon/react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
+import { useBucket } from "@/hooks/use-bucket"
+import { useMessage } from "@/lib/feedback/message"
+import { getBytes } from "@/lib/functions"
 
 interface ReplicationNewFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  bucketName: string | null;
-  onSuccess?: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  bucketName: string | null
+  onSuccess?: () => void
 }
 
 interface Tag {
-  key: string;
-  value: string;
+  key: string
+  value: string
 }
 
-export function ReplicationNewForm({
-  open,
-  onOpenChange,
-  bucketName,
-  onSuccess,
-}: ReplicationNewFormProps) {
-  const { t } = useTranslation();
-  const message = useMessage();
-  const {
-    setRemoteReplicationTarget,
-    putBucketReplication,
-    getBucketReplication,
-  } = useBucket();
+export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }: ReplicationNewFormProps) {
+  const { t } = useTranslation()
+  const message = useMessage()
+  const { setRemoteReplicationTarget, putBucketReplication, getBucketReplication } = useBucket()
 
-  const [level, setLevel] = useState("1");
-  const [endpoint, setEndpoint] = useState("http://");
-  const [tls, setTls] = useState(false);
-  const [accessKey, setAccessKey] = useState("");
-  const [secretKey, setSecretKey] = useState("");
-  const [bucket, setBucket] = useState("");
-  const [region, setRegion] = useState("us-east-1");
-  const [modeType, setModeType] = useState("async");
-  const [timecheck, setTimecheck] = useState("60");
-  const [unit, setUnit] = useState("Gi");
-  const [bandwidth, setBandwidth] = useState(100);
-  const [storageType, setStorageType] = useState("STANDARD");
-  const [prefix, setPrefix] = useState("");
-  const [tags, setTags] = useState<Tag[]>([{ key: "", value: "" }]);
-  const [existingObject, setExistingObject] = useState(true);
-  const [expiredDeleteMark, setExpiredDeleteMark] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [level, setLevel] = useState("1")
+  const [endpoint, setEndpoint] = useState("http://")
+  const [tls, setTls] = useState(false)
+  const [accessKey, setAccessKey] = useState("")
+  const [secretKey, setSecretKey] = useState("")
+  const [bucket, setBucket] = useState("")
+  const [region, setRegion] = useState("us-east-1")
+  const [modeType, setModeType] = useState("async")
+  const [timecheck, setTimecheck] = useState("60")
+  const [unit, setUnit] = useState("Gi")
+  const [bandwidth, setBandwidth] = useState(100)
+  const [storageType, setStorageType] = useState("STANDARD")
+  const [prefix, setPrefix] = useState("")
+  const [tags, setTags] = useState<Tag[]>([{ key: "", value: "" }])
+  const [existingObject, setExistingObject] = useState(true)
+  const [expiredDeleteMark, setExpiredDeleteMark] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
   const modeOptions = useMemo(
     () => [
@@ -76,7 +55,7 @@ export function ReplicationNewForm({
       { label: t("Synchronous"), value: "sync" },
     ],
     [t],
-  );
+  )
 
   const unitOptions = useMemo(
     () => [
@@ -85,91 +64,89 @@ export function ReplicationNewForm({
       { label: "GiB/s", value: "Gi" },
     ],
     [],
-  );
+  )
 
   useEffect(() => {
     if (tls) {
       if (endpoint.startsWith("http://")) {
-        setEndpoint(endpoint.replace("http://", "https://"));
+        setEndpoint(endpoint.replace("http://", "https://"))
       } else if (!endpoint.startsWith("https://")) {
-        setEndpoint("https://" + endpoint);
+        setEndpoint("https://" + endpoint)
       }
     } else {
       if (endpoint.startsWith("https://")) {
-        setEndpoint(endpoint.replace("https://", "http://"));
+        setEndpoint(endpoint.replace("https://", "http://"))
       } else if (!endpoint.startsWith("http://")) {
-        setEndpoint("http://" + endpoint);
+        setEndpoint("http://" + endpoint)
       }
     }
-  }, [tls]);
+  }, [tls])
 
   const resetForm = useCallback(() => {
-    setLevel("1");
-    setEndpoint("http://");
-    setTls(false);
-    setAccessKey("");
-    setSecretKey("");
-    setBucket("");
-    setRegion("us-east-1");
-    setModeType("async");
-    setTimecheck("60");
-    setUnit("Gi");
-    setBandwidth(100);
-    setStorageType("STANDARD");
-    setPrefix("");
-    setTags([{ key: "", value: "" }]);
-    setExistingObject(true);
-    setExpiredDeleteMark(true);
-  }, []);
+    setLevel("1")
+    setEndpoint("http://")
+    setTls(false)
+    setAccessKey("")
+    setSecretKey("")
+    setBucket("")
+    setRegion("us-east-1")
+    setModeType("async")
+    setTimecheck("60")
+    setUnit("Gi")
+    setBandwidth(100)
+    setStorageType("STANDARD")
+    setPrefix("")
+    setTags([{ key: "", value: "" }])
+    setExistingObject(true)
+    setExpiredDeleteMark(true)
+  }, [])
 
   useEffect(() => {
     if (open) {
-      resetForm();
+      resetForm()
     }
-  }, [open, resetForm]);
+  }, [open, resetForm])
 
   const addTag = () => {
-    setTags((prev) => [...prev, { key: "", value: "" }]);
-  };
+    setTags((prev) => [...prev, { key: "", value: "" }])
+  }
 
   const removeTag = (index: number) => {
-    if (tags.length === 1) return;
-    setTags((prev) => prev.filter((_, i) => i !== index));
-  };
+    if (tags.length === 1) return
+    setTags((prev) => prev.filter((_, i) => i !== index))
+  }
 
   const updateTag = (index: number, field: "key" | "value", value: string) => {
-    setTags((prev) =>
-      prev.map((tag, i) => (i === index ? { ...tag, [field]: value } : tag)),
-    );
-  };
+    setTags((prev) => prev.map((tag, i) => (i === index ? { ...tag, [field]: value } : tag)))
+  }
 
   const validate = () => {
     if (!endpoint) {
-      message.error(t("Please enter endpoint"));
-      return false;
+      message.error(t("Please enter endpoint"))
+      return false
     }
     if (!bucket) {
-      message.error(t("Please enter bucket"));
-      return false;
+      message.error(t("Please enter bucket"))
+      return false
     }
     if (!accessKey || !secretKey) {
-      message.error(t("Please provide credentials"));
-      return false;
+      message.error(t("Please provide credentials"))
+      return false
     }
     if (modeType === "async" && Number(timecheck) < 1) {
-      message.error(t("Please enter valid health check interval"));
-      return false;
+      message.error(t("Please enter valid health check interval"))
+      return false
     }
-    return true;
-  };
+    return true
+  }
 
   const handleSave = async () => {
-    if (!validate()) return;
+    if (!validate()) return
     if (!bucketName) {
-      message.error(t("Bucket name is required"));
-      return;
+      message.error(t("Bucket name is required"))
+      return
     }
-    setSubmitting(true);
+    setSubmitting(true)
     try {
       const config: Record<string, unknown> = {
         sourcebucket: bucketName,
@@ -195,29 +172,26 @@ export function ReplicationNewForm({
         latency: { curr: 0, avg: 0, max: 0 },
         edge: false,
         edgeSyncBeforeExpiry: false,
-      };
-
-      if (modeType === "async") {
-        config.bandwidth = Number(getBytes(String(bandwidth), unit, true)) || 0;
       }
 
-      const targetResponse = (await setRemoteReplicationTarget(
-        bucketName,
-        config,
-      )) as string;
+      if (modeType === "async") {
+        config.bandwidth = Number(getBytes(String(bandwidth), unit, true)) || 0
+      }
+
+      const targetResponse = (await setRemoteReplicationTarget(bucketName, config)) as string
       if (!targetResponse) {
-        return;
+        return
       }
 
       let oldConfig: {
-        ReplicationConfiguration?: { Rules?: unknown[] };
-      } | null = null;
+        ReplicationConfiguration?: { Rules?: unknown[] }
+      } | null = null
       try {
         oldConfig = (await getBucketReplication(bucketName)) as {
-          ReplicationConfiguration?: { Rules?: unknown[] };
-        };
+          ReplicationConfiguration?: { Rules?: unknown[] }
+        }
       } catch {
-        oldConfig = null;
+        oldConfig = null
       }
 
       const newRule: Record<string, unknown> = {
@@ -237,60 +211,60 @@ export function ReplicationNewForm({
           Bucket: targetResponse,
           StorageClass: storageType || "STANDARD",
         },
-      };
+      }
 
-      const validTags = tags.filter((tag) => tag.key && tag.value);
-      const filter: Record<string, unknown> = {};
+      const validTags = tags.filter((tag) => tag.key && tag.value)
+      const filter: Record<string, unknown> = {}
 
       if (prefix) {
-        filter.Prefix = prefix;
+        filter.Prefix = prefix
       }
 
       if (validTags.length === 1) {
-        const [singleTag] = validTags;
+        const [singleTag] = validTags
         if (singleTag) {
-          filter.Tag = { Key: singleTag.key, Value: singleTag.value };
+          filter.Tag = { Key: singleTag.key, Value: singleTag.value }
         }
       } else if (validTags.length > 1) {
         filter.And = {
           ...(prefix ? { Prefix: prefix } : {}),
           Tags: validTags.map((tag) => ({ Key: tag.key, Value: tag.value })),
-        };
-        delete filter.Prefix;
+        }
+        delete filter.Prefix
       }
 
       if (Object.keys(filter).length > 0) {
-        newRule.Filter = filter;
+        newRule.Filter = filter
       }
 
-      const existingRules = oldConfig?.ReplicationConfiguration?.Rules ?? [];
+      const existingRules = oldConfig?.ReplicationConfiguration?.Rules ?? []
       const payload = {
         Role: targetResponse,
         Rules: [
-          ...(
-            existingRules as Array<{ Destination?: { Bucket?: string } }>
-          ).filter((rule) => rule.Destination?.Bucket !== targetResponse),
+          ...(existingRules as Array<{ Destination?: { Bucket?: string } }>).filter(
+            (rule) => rule.Destination?.Bucket !== targetResponse,
+          ),
           newRule,
         ],
-      };
+      }
 
-      await putBucketReplication(bucketName, payload);
-      message.success(t("Create Success"));
-      onSuccess?.();
-      onOpenChange(false);
-      resetForm();
+      await putBucketReplication(bucketName, payload)
+      message.success(t("Create Success"))
+      onSuccess?.()
+      onOpenChange(false)
+      resetForm()
     } catch (error) {
-      console.error(error);
-      message.error((error as Error).message || t("Save failed"));
+      console.error(error)
+      message.error((error as Error).message || t("Save failed"))
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   const handleCancel = () => {
-    onOpenChange(false);
-    resetForm();
-  };
+    onOpenChange(false)
+    resetForm()
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -312,12 +286,7 @@ export function ReplicationNewForm({
               <Field>
                 <FieldLabel>{t("Priority")}</FieldLabel>
                 <FieldContent>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={level}
-                    onChange={(e) => setLevel(e.target.value)}
-                  />
+                  <Input type="number" min={1} value={level} onChange={(e) => setLevel(e.target.value)} />
                 </FieldContent>
               </Field>
               <Field>
@@ -415,9 +384,7 @@ export function ReplicationNewForm({
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <FieldLabel className="text-sm font-medium">
-                  {t("Tags")}
-                </FieldLabel>
+                <FieldLabel className="text-sm font-medium">{t("Tags")}</FieldLabel>
                 <Button variant="outline" size="sm" onClick={addTag}>
                   <RiAddLine className="size-4" aria-hidden />
                   {t("Add Tag")}
@@ -432,17 +399,13 @@ export function ReplicationNewForm({
                     >
                       <Input
                         value={tag.key}
-                        onChange={(e) =>
-                          updateTag(index, "key", e.target.value)
-                        }
+                        onChange={(e) => updateTag(index, "key", e.target.value)}
                         placeholder={t("Tag Name")}
                       />
                       <div className="flex items-center gap-2">
                         <Input
                           value={tag.value}
-                          onChange={(e) =>
-                            updateTag(index, "value", e.target.value)
-                          }
+                          onChange={(e) => updateTag(index, "value", e.target.value)}
                           placeholder={t("Tag Value")}
                           className="flex-1"
                         />
@@ -476,42 +439,26 @@ export function ReplicationNewForm({
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">
-                  {t("Replicate Existing Objects")}
-                </p>
+                <p className="text-sm font-medium">{t("Replicate Existing Objects")}</p>
                 <p className="text-xs text-muted-foreground">
-                  {t(
-                    "Include objects that already exist in the source bucket.",
-                  )}
+                  {t("Include objects that already exist in the source bucket.")}
                 </p>
               </div>
-              <Switch
-                checked={existingObject}
-                onCheckedChange={setExistingObject}
-              />
+              <Switch checked={existingObject} onCheckedChange={setExistingObject} />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium">
-                  {t("Replicate Delete Markers")}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t("Sync delete markers to destination bucket.")}
-                </p>
+                <p className="text-sm font-medium">{t("Replicate Delete Markers")}</p>
+                <p className="text-xs text-muted-foreground">{t("Sync delete markers to destination bucket.")}</p>
               </div>
-              <Switch
-                checked={expiredDeleteMark}
-                onCheckedChange={setExpiredDeleteMark}
-              />
+              <Switch checked={expiredDeleteMark} onCheckedChange={setExpiredDeleteMark} />
             </div>
 
             {modeType === "async" && (
               <div className="space-y-3">
                 <Field>
-                  <FieldLabel>
-                    {t("Health Check Interval (seconds)")}
-                  </FieldLabel>
+                  <FieldLabel>{t("Health Check Interval (seconds)")}</FieldLabel>
                   <FieldContent>
                     <Input
                       type="number"
@@ -563,5 +510,5 @@ export function ReplicationNewForm({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

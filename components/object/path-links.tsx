@@ -43,13 +43,7 @@ export function ObjectPathLinks({ objectKey, bucketName, onClick }: ObjectPathLi
     .map((item, index) => ({ value: item, index }))
 
   const displaySegments: Segment[] =
-    segments.length <= 6
-      ? segments
-      : [
-          ...segments.slice(0, 3),
-          { value: "...", index: -1 },
-          ...segments.slice(-3),
-        ]
+    segments.length <= 6 ? segments : [...segments.slice(0, 3), { value: "...", index: -1 }, ...segments.slice(-3)]
 
   const handleClick = (segment: Segment) => {
     if (segment.index === -1) return
@@ -69,11 +63,7 @@ export function ObjectPathLinks({ objectKey, bucketName, onClick }: ObjectPathLi
             <button
               type="button"
               onClick={() => handleClick(segment)}
-              className={
-                segment.index > -1
-                  ? "text-blue-500 hover:underline"
-                  : "cursor-default"
-              }
+              className={segment.index > -1 ? "text-blue-500 hover:underline" : "cursor-default"}
             >
               {segment.value}
             </button>
@@ -81,18 +71,8 @@ export function ObjectPathLinks({ objectKey, bucketName, onClick }: ObjectPathLi
         ))}
       </div>
       {objectKey ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="shrink-0"
-          onClick={copy}
-          title={t("Copy Path")}
-        >
-          {copied ? (
-            <RiCheckLine className="size-4 text-green-600" />
-          ) : (
-            <RiFileCopyLine className="size-4" />
-          )}
+        <Button variant="ghost" size="sm" className="shrink-0" onClick={copy} title={t("Copy Path")}>
+          {copied ? <RiCheckLine className="size-4 text-green-600" /> : <RiFileCopyLine className="size-4" />}
           <span className="sr-only">{t("Copy Path")}</span>
         </Button>
       ) : null}

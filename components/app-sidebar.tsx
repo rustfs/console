@@ -119,7 +119,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link href="/browser" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           {isCollapsed ? (
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-md font-semibold text-primary-foreground">
               <span>{brandInitial}</span>

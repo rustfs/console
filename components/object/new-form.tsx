@@ -5,13 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useObject } from "@/hooks/use-object"
 import { useMessage } from "@/lib/feedback/message"
 interface ObjectNewFormProps {
@@ -62,10 +56,7 @@ export function ObjectNewForm({
 
   return (
     <Dialog open={show} onOpenChange={onShowChange}>
-      <DialogContent
-        className="sm:max-w-md"
-        onPointerDownOutside={(e) => e.preventDefault()}
-      >
+      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <DialogTitle>{t("New Form", { type: displayType })}</DialogTitle>
         </DialogHeader>
@@ -84,11 +75,7 @@ export function ObjectNewForm({
           <Button variant="outline" onClick={() => onShowChange(false)}>
             {t("Close")}
           </Button>
-          <Button
-            variant="default"
-            disabled={!objectKey.trim()}
-            onClick={handlePutObject}
-          >
+          <Button variant="default" disabled={!objectKey.trim()} onClick={handlePutObject}>
             {t("Create")}
           </Button>
         </DialogFooter>

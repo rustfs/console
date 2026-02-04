@@ -16,31 +16,23 @@ function loadRuntimeConfig(): SiteConfig | null {
   try {
     const serverHost =
       process.env.NEXT_PUBLIC_SERVER_HOST ||
-      (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(
-        /\/rustfs\/admin\/v3$/,
-        ""
-      )
+      (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/rustfs\/admin\/v3$/, "")
 
     if (serverHost) {
       return {
         serverHost,
         api: {
-          baseURL:
-            process.env.NEXT_PUBLIC_API_BASE_URL ||
-            `${serverHost}/rustfs/admin/v3`,
+          baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || `${serverHost}/rustfs/admin/v3`,
         },
         s3: {
-          endpoint:
-            process.env.NEXT_PUBLIC_S3_ENDPOINT || serverHost,
+          endpoint: process.env.NEXT_PUBLIC_S3_ENDPOINT || serverHost,
           region: process.env.NEXT_PUBLIC_S3_REGION || "us-east-1",
           accessKeyId: "",
           secretAccessKey: "",
         },
         session: process.env.NEXT_PUBLIC_SESSION_DURATION_SECONDS
           ? {
-              durationSeconds: Number(
-                process.env.NEXT_PUBLIC_SESSION_DURATION_SECONDS
-              ),
+              durationSeconds: Number(process.env.NEXT_PUBLIC_SESSION_DURATION_SECONDS),
             }
           : undefined,
         release:

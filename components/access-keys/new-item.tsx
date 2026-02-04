@@ -8,13 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/datetime-picker"
 import { useMessage } from "@/lib/feedback/message"
 import { useAccessKeys } from "@/hooks/use-access-keys"
@@ -29,12 +23,7 @@ interface AccessKeysNewItemProps {
   onNotice: (data: unknown) => void
 }
 
-export function AccessKeysNewItem({
-  visible,
-  onVisibleChange,
-  onSuccess,
-  onNotice,
-}: AccessKeysNewItemProps) {
+export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotice }: AccessKeysNewItemProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const api = useApi()
@@ -65,11 +54,14 @@ export function AccessKeysNewItem({
       setExpiry(null)
       setImpliedPolicy(true)
       setErrors({ accessKey: "", secretKey: "", name: "" })
-      api.get("/accountinfo").then((userInfo: { Policy?: unknown }) => {
-        setPolicy(JSON.stringify(userInfo?.Policy ?? {}, null, 2))
-      }).catch(() => {
-        setPolicy("{}")
-      })
+      api
+        .get("/accountinfo")
+        .then((userInfo: { Policy?: unknown }) => {
+          setPolicy(JSON.stringify(userInfo?.Policy ?? {}, null, 2))
+        })
+        .catch(() => {
+          setPolicy("{}")
+        })
     }
   }, [visible, api])
 
@@ -140,10 +132,7 @@ export function AccessKeysNewItem({
   return (
     <Dialog open={visible} onOpenChange={closeModal}>
       <DialogContent
-        className={cn(
-          "sm:max-w-xl",
-          !impliedPolicy && "sm:max-w-6xl"
-        )}
+        className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
@@ -154,7 +143,7 @@ export function AccessKeysNewItem({
         <div className="flex flex-col gap-4 lg:flex-row max-h-[80vh] overflow-auto px-2 -mx-2">
           <div
             className={cn(
-              impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0"
+              impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
             )}
           >
             <Field>
@@ -167,9 +156,7 @@ export function AccessKeysNewItem({
                   autoComplete="off"
                 />
               </FieldContent>
-              {errors.accessKey && (
-                <FieldDescription className="text-destructive">{errors.accessKey}</FieldDescription>
-              )}
+              {errors.accessKey && <FieldDescription className="text-destructive">{errors.accessKey}</FieldDescription>}
             </Field>
 
             <Field>
@@ -183,9 +170,7 @@ export function AccessKeysNewItem({
                   autoComplete="off"
                 />
               </FieldContent>
-              {errors.secretKey && (
-                <FieldDescription className="text-destructive">{errors.secretKey}</FieldDescription>
-              )}
+              {errors.secretKey && <FieldDescription className="text-destructive">{errors.secretKey}</FieldDescription>}
             </Field>
 
             <Field>
@@ -206,22 +191,20 @@ export function AccessKeysNewItem({
             <Field>
               <FieldLabel htmlFor="create-name">{t("Name")}</FieldLabel>
               <FieldContent>
-                <Input
-                  id="create-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoComplete="off"
-                />
+                <Input id="create-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />
               </FieldContent>
-              {errors.name && (
-                <FieldDescription className="text-destructive">{errors.name}</FieldDescription>
-              )}
+              {errors.name && <FieldDescription className="text-destructive">{errors.name}</FieldDescription>}
             </Field>
 
             <Field>
               <FieldLabel htmlFor="create-description">{t("Description")}</FieldLabel>
               <FieldContent>
-                <Textarea id="create-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+                <Textarea
+                  id="create-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                />
               </FieldContent>
             </Field>
 

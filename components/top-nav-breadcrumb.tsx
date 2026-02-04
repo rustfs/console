@@ -17,7 +17,7 @@ import navs from "@/config/navs"
 function getLabelByPath(pathSegment: string, t: (k: string) => string): string {
   const path = pathSegment.startsWith("/") ? pathSegment : `/${pathSegment}`
   const nav = navs.find(
-    (n) => n.type !== "divider" && n.to && (n.to === path || n.to.replace(/^\//, "") === pathSegment)
+    (n) => n.type !== "divider" && n.to && (n.to === path || n.to.replace(/^\//, "") === pathSegment),
   )
   return nav?.label ? t(nav.label) : pathSegment
 }
@@ -27,7 +27,7 @@ export function TopNavBreadcrumb() {
   const { t } = useTranslation()
 
   const segments = pathname?.split("/").filter(Boolean) ?? []
-  const isHome = !pathname || pathname === "/" || (segments.length === 1 && segments[0] === "performance")
+  const isHome = !pathname || pathname === "/"
   if (segments.length === 0 && !pathname) return null
 
   const items: { label: string; href?: string }[] = []
@@ -37,9 +37,7 @@ export function TopNavBreadcrumb() {
     items.push({ label: homeNav?.label ? t(homeNav.label) : t("Home") })
   } else if (segments[0] === "browser") {
     items.push({ label: getLabelByPath("browser", t), href: "/browser" })
-    items.push(
-      segments.length === 1 ? { label: t("Buckets") } : { label: t("Buckets"), href: "/browser" }
-    )
+    items.push(segments.length === 1 ? { label: t("Buckets") } : { label: t("Buckets"), href: "/browser" })
     if (segments.length > 1) {
       const bucketName = decodeURIComponent(segments[1])
       const bucketHref = `/browser/${encodeURIComponent(bucketName)}`

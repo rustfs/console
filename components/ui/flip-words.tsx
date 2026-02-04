@@ -41,12 +41,7 @@ export function FlipWords({ words, duration = 3000, className }: FlipWordsProps)
   }
 
   return (
-    <span
-      className={cn(
-        "relative z-10 inline-block text-left text-neutral-900 dark:text-neutral-100",
-        className
-      )}
-    >
+    <span className={cn("relative z-10 inline-block text-left text-neutral-900 dark:text-neutral-100", className)}>
       {splitWords.map((wordObj, wordIndex) => (
         <span
           key={`${wordObj.word}-${wordIndex}`}

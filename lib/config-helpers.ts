@@ -86,9 +86,7 @@ export const getCurrentBrowserConfig = (): ConfigResult => {
   return { config, source: "browser" }
 }
 
-export const fetchVersionConfigFromServer = async (
-  serverHost: string
-): Promise<VersionConfigResponse | null> => {
+export const fetchVersionConfigFromServer = async (serverHost: string): Promise<VersionConfigResponse | null> => {
   const configUrl = `${serverHost}${VERSION_PATH}`
 
   try {
@@ -113,7 +111,7 @@ export const fetchVersionConfigFromServer = async (
     return data
   } catch (error) {
     logger.warn(
-      `Error fetching version config from server: ${error instanceof Error ? error.message : "Unknown error"}`
+      `Error fetching version config from server: ${error instanceof Error ? error.message : "Unknown error"}`,
     )
     return null
   }
@@ -125,9 +123,7 @@ export const getServerDefaultConfig = (): ConfigResult => {
   return { config, source: "default" }
 }
 
-export const validateConfig = (
-  config: SiteConfig
-): { valid: boolean; errors: string[] } => {
+export const validateConfig = (config: SiteConfig): { valid: boolean; errors: string[] } => {
   const errors: string[] = []
 
   if (!config.serverHost) {

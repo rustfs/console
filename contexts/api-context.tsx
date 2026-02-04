@@ -73,11 +73,7 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, credentials?.AccessKeyId, logout])
 
-  return (
-    <ApiContext.Provider value={{ api: apiClient, isReady }}>
-      {children}
-    </ApiContext.Provider>
-  )
+  return <ApiContext.Provider value={{ api: apiClient, isReady }}>{children}</ApiContext.Provider>
 }
 
 export function useApi() {

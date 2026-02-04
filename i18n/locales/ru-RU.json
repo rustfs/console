@@ -640,6 +640,7 @@
   "Rule ID": "ID правила",
   "Running": "Запущен",
   "Running (Unhealthy)": "Запущен (неисправен)",
+  "Running Status": "Состояние работы",
   "Rust-based": "На основе Rust",
   "RustFS": "РустФС",
   "RustFS built-in cold storage": "Встроенное холодное хранилище RustFS",

@@ -15,12 +15,9 @@ export function useUsers() {
     async (data: Record<string, unknown>) => {
       if (!api) return null
       const { accessKey, ...rest } = data
-      return api.put(
-        `/add-user?accessKey=${encodeURIComponent(accessKey as string)}`,
-        rest
-      )
+      return api.put(`/add-user?accessKey=${encodeURIComponent(accessKey as string)}`, rest)
     },
-    [api]
+    [api],
   )
 
   const getUser = useCallback(
@@ -28,7 +25,7 @@ export function useUsers() {
       if (!api) return null
       return api.get(`/user-info?accessKey=${encodeURIComponent(name)}`)
     },
-    [api]
+    [api],
   )
 
   const updateUser = useCallback(
@@ -36,18 +33,15 @@ export function useUsers() {
       if (!api) return null
       return api.put(`/user/${encodeURIComponent(name)}`, data)
     },
-    [api]
+    [api],
   )
 
   const changeUserStatus = useCallback(
     async (name: string, data: { status: string }) => {
       if (!api) return null
-      return api.put(
-        `/set-user-status?accessKey=${encodeURIComponent(name)}&status=${data.status}`,
-        data
-      )
+      return api.put(`/set-user-status?accessKey=${encodeURIComponent(name)}&status=${data.status}`, data)
     },
-    [api]
+    [api],
   )
 
   const deleteUser = useCallback(
@@ -55,7 +49,7 @@ export function useUsers() {
       if (!api) return null
       return api.delete(`/remove-user?accessKey=${encodeURIComponent(name)}`, {})
     },
-    [api]
+    [api],
   )
 
   const updateUserGroups = useCallback(
@@ -63,7 +57,7 @@ export function useUsers() {
       if (!api) return null
       return api.put(`/user/${encodeURIComponent(name)}/groups`, data)
     },
-    [api]
+    [api],
   )
 
   const getUserPolicy = useCallback(async () => {
@@ -76,7 +70,7 @@ export function useUsers() {
       if (!api) return null
       return api.get(`/user/${encodeURIComponent(name)}/policies`)
     },
-    [api]
+    [api],
   )
 
   const setPolicy = useCallback(
@@ -84,7 +78,7 @@ export function useUsers() {
       if (!api) return null
       return api.put("/set-policy", data)
     },
-    [api]
+    [api],
   )
 
   const listAllUserServiceAccounts = useCallback(
@@ -92,29 +86,23 @@ export function useUsers() {
       if (!api) return null
       return api.get(`/user/${encodeURIComponent(name)}/service-accounts`)
     },
-    [api]
+    [api],
   )
 
   const createAUserServiceAccount = useCallback(
     async (name: string, data: Record<string, unknown>) => {
       if (!api) return null
-      return api.post(
-        `/user/${encodeURIComponent(name)}/service-accounts`,
-        data
-      )
+      return api.post(`/user/${encodeURIComponent(name)}/service-accounts`, data)
     },
-    [api]
+    [api],
   )
 
   const createServiceAccountCredentials = useCallback(
     async (name: string, data: Record<string, unknown>) => {
       if (!api) return null
-      return api.post(
-        `/user/${encodeURIComponent(name)}/service-account-credentials`,
-        data
-      )
+      return api.post(`/user/${encodeURIComponent(name)}/service-account-credentials`, data)
     },
-    [api]
+    [api],
   )
 
   const isAdminUser = useCallback(async () => {

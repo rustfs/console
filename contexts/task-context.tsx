@@ -41,12 +41,7 @@ const emptyManager = {
 const TaskContext = React.createContext<{
   taskManager: TaskManager<AnyTask, string>
   addUploadFiles: (items: { file: File; key: string }[], bucketName: string) => void
-  addDeleteKeys: (
-    keys: string[],
-    bucketName: string,
-    prefix?: string,
-    options?: { forceDelete?: boolean }
-  ) => void
+  addDeleteKeys: (keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) => void
   isTaskPanelOpen: boolean
   setTaskPanelOpen: (open: boolean) => void
 }>({
@@ -101,29 +96,24 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       const activeKeys = new Set(
         allTasks
           .filter((t) => ["pending", "running", "failed", "paused"].includes(t.status))
-          .map((t) => `${t.bucketName ?? ""}/${t.key ?? ""}`)
+          .map((t) => `${t.bucketName ?? ""}/${t.key ?? ""}`),
       )
       const newTasks = uploadHelpers
         .createTasks(items, bucketName)
         .filter((t) => !activeKeys.has(`${t.bucketName}/${t.key}`))
       manager.enqueue(newTasks as AnyTask[])
     },
-    [managerState]
+    [managerState],
   )
 
   const addDeleteKeys = React.useCallback(
-    (
-      keys: string[],
-      bucketName: string,
-      prefix?: string,
-      options?: { forceDelete?: boolean }
-    ) => {
+    (keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) => {
       if (!managerState) return
       const { manager, deleteHelpers } = managerState
       const newTasks = deleteHelpers.createTasks(keys, bucketName, prefix, options)
       manager.enqueue(newTasks as AnyTask[])
     },
-    [managerState]
+    [managerState],
   )
 
   const value = React.useMemo(
@@ -134,7 +124,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       isTaskPanelOpen,
       setTaskPanelOpen,
     }),
-    [taskManager, addUploadFiles, addDeleteKeys, isTaskPanelOpen]
+    [taskManager, addUploadFiles, addDeleteKeys, isTaskPanelOpen],
   )
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>
@@ -150,7 +140,7 @@ export function useTasks() {
   const tasks = useSyncExternalStore(
     (cb) => taskManager.subscribe(cb),
     () => taskManager.getTasks(),
-    () => taskManager.getTasks()
+    () => taskManager.getTasks(),
   )
   return tasks as AnyTask[]
 }

@@ -2,13 +2,7 @@
 
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
@@ -102,9 +96,7 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
 
         <div className="space-y-4 py-4">
           <Field>
-            <FieldLabel htmlFor="password-current">
-              {t("Current Password")}
-            </FieldLabel>
+            <FieldLabel htmlFor="password-current">{t("Current Password")}</FieldLabel>
             <FieldContent>
               <Input
                 id="password-current"
@@ -114,11 +106,7 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
                 autoComplete="off"
               />
             </FieldContent>
-            {errors.current && (
-              <FieldDescription className="text-destructive">
-                {errors.current}
-              </FieldDescription>
-            )}
+            {errors.current && <FieldDescription className="text-destructive">{errors.current}</FieldDescription>}
           </Field>
 
           <Field>
@@ -132,17 +120,11 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
                 autoComplete="off"
               />
             </FieldContent>
-            {errors.new && (
-              <FieldDescription className="text-destructive">
-                {errors.new}
-              </FieldDescription>
-            )}
+            {errors.new && <FieldDescription className="text-destructive">{errors.new}</FieldDescription>}
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="password-new-confirm">
-              {t("Confirm New Password")}
-            </FieldLabel>
+            <FieldLabel htmlFor="password-new-confirm">{t("Confirm New Password")}</FieldLabel>
             <FieldContent>
               <Input
                 id="password-new-confirm"
@@ -153,11 +135,7 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
                 disabled={!newSecretKey}
               />
             </FieldContent>
-            {errors.reNew && (
-              <FieldDescription className="text-destructive">
-                {errors.reNew}
-              </FieldDescription>
-            )}
+            {errors.reNew && <FieldDescription className="text-destructive">{errors.reNew}</FieldDescription>}
           </Field>
         </div>
 

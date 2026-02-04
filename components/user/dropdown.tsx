@@ -7,12 +7,7 @@ import { useTranslation } from "react-i18next"
 import { RiUserLine, RiLockPasswordLine, RiLogoutBoxRLine, RiMore2Line } from "@remixicon/react"
 import { buildRoute } from "@/lib/routes"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useUsers } from "@/hooks/use-users"
@@ -63,9 +58,7 @@ export function UserDropdown() {
                 />
               </span>
             </div>
-            {!isCollapsed && (
-              <RiMore2Line className="h-4 w-4 text-muted-foreground" />
-            )}
+            {!isCollapsed && <RiMore2Line className="h-4 w-4 text-muted-foreground" />}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-48" align="end" side="top">
@@ -73,9 +66,7 @@ export function UserDropdown() {
             <div className="flex cursor-default items-center gap-2">
               <RiUserLine className="h-4 w-4" />
               {!isAdmin ? (
-                <span>
-                  {(userInfo as { account_name?: string })?.account_name ?? ""}
-                </span>
+                <span>{(userInfo as { account_name?: string })?.account_name ?? ""}</span>
               ) : (
                 <span>rustfsAdmin</span>
               )}
@@ -94,10 +85,7 @@ export function UserDropdown() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ChangePassword
-        visible={changePasswordVisible}
-        onVisibleChange={setChangePasswordVisible}
-      />
+      <ChangePassword visible={changePasswordVisible} onVisibleChange={setChangePasswordVisible} />
     </>
   )
 }

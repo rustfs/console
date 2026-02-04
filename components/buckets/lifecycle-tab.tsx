@@ -43,11 +43,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
-  const {
-    getBucketLifecycleConfiguration,
-    deleteBucketLifecycle,
-    putBucketLifecycleConfiguration,
-  } = useBucket()
+  const { getBucketLifecycleConfiguration, deleteBucketLifecycle, putBucketLifecycleConfiguration } = useBucket()
 
   const [data, setData] = React.useState<LifecycleRule[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -77,10 +73,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
       {
         id: "type",
         header: () => t("Type"),
-        accessorFn: (row) =>
-          row.Transitions || row.NoncurrentVersionTransitions
-            ? "Transition"
-            : "Expire",
+        accessorFn: (row) => (row.Transitions || row.NoncurrentVersionTransitions ? "Transition" : "Expire"),
       },
       {
         id: "version",
@@ -93,22 +86,18 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
       {
         id: "deleteMarker",
         header: () => t("Expiration Delete Mark"),
-        accessorFn: (row) =>
-          row.Expiration?.ExpiredObjectDeleteMarker ? t("On") : t("Off"),
+        accessorFn: (row) => (row.Expiration?.ExpiredObjectDeleteMarker ? t("On") : t("Off")),
       },
       {
         id: "tier",
         header: () => t("Tier"),
         accessorFn: (row) =>
-          row.Transitions?.[0]?.StorageClass ||
-          row.NoncurrentVersionTransitions?.[0]?.StorageClass ||
-          "--",
+          row.Transitions?.[0]?.StorageClass || row.NoncurrentVersionTransitions?.[0]?.StorageClass || "--",
       },
       {
         id: "prefix",
         header: () => t("Prefix"),
-        accessorFn: (row) =>
-          row.Filter?.Prefix || row.Filter?.And?.Prefix || "",
+        accessorFn: (row) => row.Filter?.Prefix || row.Filter?.And?.Prefix || "",
       },
       {
         id: "timeCycle",
@@ -125,11 +114,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         header: () => t("Status"),
         accessorFn: (row) => row.Status ?? "-",
         cell: ({ row }) => (
-          <Badge
-            variant={
-              row.original.Status === "Enabled" ? "secondary" : "destructive"
-            }
-          >
+          <Badge variant={row.original.Status === "Enabled" ? "secondary" : "destructive"}>
             {row.original.Status ?? "-"}
           </Badge>
         ),
@@ -140,11 +125,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => confirmDelete(row.original)}
-            >
+            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
               <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
@@ -152,7 +133,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         ),
       },
     ],
-    [t]
+    [t],
   )
 
   const { table } = useDataTable<LifecycleRule>({
@@ -209,17 +190,10 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         table={table}
         isLoading={loading}
         emptyTitle={t("No Data")}
-        emptyDescription={t(
-          "Create lifecycle rules to automate object transitions and expiration."
-        )}
+        emptyDescription={t("Create lifecycle rules to automate object transitions and expiration.")}
       />
 
-      <LifecycleNewForm
-        open={newFormOpen}
-        onOpenChange={setNewFormOpen}
-        bucketName={bucketName}
-        onSuccess={loadData}
-      />
+      <LifecycleNewForm open={newFormOpen} onOpenChange={setNewFormOpen} bucketName={bucketName} onSuccess={loadData} />
     </div>
   )
 }

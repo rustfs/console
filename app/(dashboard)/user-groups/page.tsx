@@ -3,12 +3,7 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  RiAddLine,
-  RiDeleteBin5Line,
-  RiEdit2Line,
-  RiGroup2Fill,
-} from "@remixicon/react"
+import { RiAddLine, RiDeleteBin5Line, RiEdit2Line, RiGroup2Fill } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { Page } from "@/components/page"
@@ -49,7 +44,7 @@ export default function UserGroupsPage() {
       setData(
         (res ?? []).map((name) => ({
           name,
-        }))
+        })),
       )
     } catch {
       message.error(t("Failed to get data"))
@@ -74,9 +69,7 @@ export default function UserGroupsPage() {
       {
         accessorKey: "name",
         header: () => t("Name"),
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
         filterFn: "includesString",
       },
       {
@@ -87,21 +80,11 @@ export default function UserGroupsPage() {
         meta: { width: 200 },
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => openEditItem(row.original)}
-            >
+            <Button type="button" size="sm" variant="outline" onClick={() => openEditItem(row.original)}>
               <RiEdit2Line className="size-4" />
               <span>{t("Edit")}</span>
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              onClick={() => confirmDelete(row.original)}
-            >
+            <Button type="button" size="sm" variant="outline" onClick={() => confirmDelete(row.original)}>
               <RiDeleteBin5Line className="size-4" />
               <span>{t("Delete")}</span>
             </Button>
@@ -109,7 +92,7 @@ export default function UserGroupsPage() {
         ),
       },
     ],
-    [t]
+    [t],
   )
 
   const { table, selectedRowIds } = useDataTable<GroupRow>({
@@ -172,11 +155,7 @@ export default function UserGroupsPage() {
               <RiGroup2Fill className="size-4" />
               {t("Assign Policy")}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setNewFormOpen(true)}
-            >
+            <Button type="button" variant="outline" onClick={() => setNewFormOpen(true)}>
               <RiAddLine className="size-4" />
               {t("Add User Group")}
             </Button>
@@ -196,17 +175,8 @@ export default function UserGroupsPage() {
         />
         <DataTablePagination table={table} />
 
-        <UserGroupNewForm
-          open={newFormOpen}
-          onOpenChange={setNewFormOpen}
-          onSuccess={getDataList}
-        />
-        <UserGroupEditForm
-          open={editFormOpen}
-          onOpenChange={setEditFormOpen}
-          row={editRow}
-          onSuccess={getDataList}
-        />
+        <UserGroupNewForm open={newFormOpen} onOpenChange={setNewFormOpen} onSuccess={getDataList} />
+        <UserGroupEditForm open={editFormOpen} onOpenChange={setEditFormOpen} row={editRow} onSuccess={getDataList} />
         <UserGroupSetPoliciesMultiple
           checkedKeys={selectedKeys}
           open={policiesDialogOpen}

@@ -25,7 +25,7 @@ export const PAGE_PERMISSIONS: Record<string, ConsoleScope[]> = {
   "/users": [CONSOLE_SCOPES.VIEW_USERS],
   "/user-groups": [CONSOLE_SCOPES.VIEW_USER_GROUPS],
   "/import-export": [CONSOLE_SCOPES.VIEW_IMPORT_EXPORT],
-  "/performance": [CONSOLE_SCOPES.VIEW_PERFORMANCE],
+  "/status": [CONSOLE_SCOPES.VIEW_PERFORMANCE],
   "/events": [CONSOLE_SCOPES.VIEW_BUCKET_EVENTS],
   "/replication": [CONSOLE_SCOPES.VIEW_BUCKET_REPLICATION],
   "/lifecycle": [CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE],

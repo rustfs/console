@@ -40,8 +40,7 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
       const filename = (object.Key as string).split("/").pop() ?? ""
       const headers: Record<string, string> = {
         "content-type": getContentType(response.headers, filename),
-        filename:
-          response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
+        filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
       }
       const blob = await response.blob()
       exportFile({ headers, data: blob }, filename)
@@ -50,9 +49,7 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
     }
   }
 
-  const lastModified = object?.LastModified
-    ? new Date(object.LastModified as string).toISOString()
-    : ""
+  const lastModified = object?.LastModified ? new Date(object.LastModified as string).toISOString() : ""
 
   return (
     <div className="space-y-4">
@@ -69,35 +66,25 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
         </ItemHeader>
         <ItemContent className="space-y-3 text-sm">
           <div className="flex items-center justify-between">
-            <span className="font-medium text-muted-foreground">
-              {t("Object Name")}
-            </span>
+            <span className="font-medium text-muted-foreground">{t("Object Name")}</span>
             <span className="max-w-[60%] truncate" title={String(object?.Key ?? "")}>
               {String(object?.Key ?? "")}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="font-medium text-muted-foreground">
-              {t("Object Size")}
-            </span>
+            <span className="font-medium text-muted-foreground">{t("Object Size")}</span>
             <span>{String(object?.ContentLength ?? "-")}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="font-medium text-muted-foreground">
-              {t("Object Type")}
-            </span>
-            <span className="max-w-[60%] truncate">
-              {String(object?.ContentType ?? "-")}
-            </span>
+            <span className="font-medium text-muted-foreground">{t("Object Type")}</span>
+            <span className="max-w-[60%] truncate">{String(object?.ContentType ?? "-")}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="font-medium text-muted-foreground">ETag</span>
             <span>{String(object?.ETag ?? "-")}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="font-medium text-muted-foreground">
-              {t("Last Modified Time")}
-            </span>
+            <span className="font-medium text-muted-foreground">{t("Last Modified Time")}</span>
             <span>{lastModified || "-"}</span>
           </div>
         </ItemContent>

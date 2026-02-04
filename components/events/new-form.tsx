@@ -6,19 +6,8 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useBucket } from "@/hooks/use-bucket"
@@ -40,8 +29,7 @@ const EVENT_OPTIONS = [
   { value: "RESTORE", labelKey: "ILM - Object converted" },
   {
     value: "SCANNER",
-    labelKey:
-      "SCANNER - Object has too many versions/prefix has too many subfolders",
+    labelKey: "SCANNER - Object has too many versions/prefix has too many subfolders",
   },
 ] as const
 
@@ -54,12 +42,7 @@ const EVENT_MAPPING: Record<string, string[]> = {
   SCANNER: ["s3:Scanner:ManyVersions", "s3:Scanner:BigPrefix"],
 }
 
-export function EventsNewForm({
-  open,
-  onOpenChange,
-  bucketName,
-  onSuccess,
-}: EventsNewFormProps) {
+export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess }: EventsNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { getEventTargetArnList } = useEventTarget()
@@ -104,11 +87,7 @@ export function EventsNewForm({
   const handleEventChecked = (eventValue: string, checked: boolean | "indeterminate") => {
     const isChecked = checked === true || checked === "indeterminate"
     setEvents((prev) =>
-      isChecked
-        ? prev.includes(eventValue)
-          ? prev
-          : [...prev, eventValue]
-        : prev.filter((e) => e !== eventValue)
+      isChecked ? (prev.includes(eventValue) ? prev : [...prev, eventValue]) : prev.filter((e) => e !== eventValue),
     )
   }
 
@@ -156,28 +135,17 @@ export function EventsNewForm({
             ? {
                 Key: {
                   FilterRules: [
-                    ...(prefix
-                      ? [{ Name: "Prefix" as const, Value: prefix }]
-                      : []),
-                    ...(suffix
-                      ? [{ Name: "Suffix" as const, Value: suffix }]
-                      : []),
+                    ...(prefix ? [{ Name: "Prefix" as const, Value: prefix }] : []),
+                    ...(suffix ? [{ Name: "Suffix" as const, Value: suffix }] : []),
                   ],
                 },
               }
             : undefined,
       }
 
-      const newLambda = arn.includes(":lambda:")
-        ? [{ ...baseConfig, LambdaFunctionArn: arn }]
-        : []
-      const newQueue = arn.includes(":sqs:")
-        ? [{ ...baseConfig, QueueArn: arn }]
-        : []
-      const newTopic =
-        !arn.includes(":lambda:") && !arn.includes(":sqs:")
-          ? [{ ...baseConfig, TopicArn: arn }]
-          : []
+      const newLambda = arn.includes(":lambda:") ? [{ ...baseConfig, LambdaFunctionArn: arn }] : []
+      const newQueue = arn.includes(":sqs:") ? [{ ...baseConfig, QueueArn: arn }] : []
+      const newTopic = !arn.includes(":lambda:") && !arn.includes(":sqs:") ? [{ ...baseConfig, TopicArn: arn }] : []
 
       const merged = {
         ...currentNotifications,
@@ -185,14 +153,8 @@ export function EventsNewForm({
           ...((currentNotifications.LambdaFunctionConfigurations as unknown[]) ?? []),
           ...newLambda,
         ],
-        QueueConfigurations: [
-          ...((currentNotifications.QueueConfigurations as unknown[]) ?? []),
-          ...newQueue,
-        ],
-        TopicConfigurations: [
-          ...((currentNotifications.TopicConfigurations as unknown[]) ?? []),
-          ...newTopic,
-        ],
+        QueueConfigurations: [...((currentNotifications.QueueConfigurations as unknown[]) ?? []), ...newQueue],
+        TopicConfigurations: [...((currentNotifications.TopicConfigurations as unknown[]) ?? []), ...newTopic],
       }
 
       await putBucketNotifications(bucketName, merged)
@@ -230,19 +192,11 @@ export function EventsNewForm({
 
         <div className="space-y-6">
           <Field>
-            <FieldLabel htmlFor="event-resource-name">
-              {t("Amazon Resource Name")}
-            </FieldLabel>
+            <FieldLabel htmlFor="event-resource-name">{t("Amazon Resource Name")}</FieldLabel>
             <FieldContent>
-              <Select
-                value={resourceName}
-                onValueChange={setResourceName}
-                disabled={!arnList.length}
-              >
+              <Select value={resourceName} onValueChange={setResourceName} disabled={!arnList.length}>
                 <SelectTrigger id="event-resource-name">
-                  <SelectValue
-                    placeholder={t("Please select resource name")}
-                  />
+                  <SelectValue placeholder={t("Please select resource name")} />
                 </SelectTrigger>
                 <SelectContent>
                   {arnList.map((item) => (
@@ -253,11 +207,7 @@ export function EventsNewForm({
                 </SelectContent>
               </Select>
             </FieldContent>
-            {resourceNameError && (
-              <FieldDescription className="text-destructive">
-                {resourceNameError}
-              </FieldDescription>
-            )}
+            {resourceNameError && <FieldDescription className="text-destructive">{resourceNameError}</FieldDescription>}
           </Field>
 
           <Field>
@@ -290,15 +240,10 @@ export function EventsNewForm({
               <ScrollArea className="max-h-64 rounded-md border">
                 <div className="flex flex-col gap-2 p-4">
                   {EVENT_OPTIONS.map((event) => (
-                    <label
-                      key={event.value}
-                      className="flex cursor-pointer items-start gap-3"
-                    >
+                    <label key={event.value} className="flex cursor-pointer items-start gap-3">
                       <Checkbox
                         checked={events.includes(event.value)}
-                        onCheckedChange={(v) =>
-                          handleEventChecked(event.value, v)
-                        }
+                        onCheckedChange={(v) => handleEventChecked(event.value, v)}
                         className="mt-1"
                       />
                       <span>{t(event.labelKey)}</span>
@@ -307,11 +252,7 @@ export function EventsNewForm({
                 </div>
               </ScrollArea>
             </FieldContent>
-            {eventsError && (
-              <FieldDescription className="text-destructive">
-                {eventsError}
-              </FieldDescription>
-            )}
+            {eventsError && <FieldDescription className="text-destructive">{eventsError}</FieldDescription>}
           </Field>
         </div>
 

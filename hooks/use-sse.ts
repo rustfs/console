@@ -14,7 +14,7 @@ export function useSSE() {
     async (data: Record<string, unknown>) => {
       return api.post("/kms/configure", data)
     },
-    [api]
+    [api],
   )
 
   const startKMS = useCallback(async () => {
@@ -38,11 +38,7 @@ export function useSSE() {
   }, [api])
 
   const createKey = useCallback(
-    async (data: {
-      KeyUsage?: string
-      Description?: string
-      Tags?: Record<string, string>
-    }) => {
+    async (data: { KeyUsage?: string; Description?: string; Tags?: Record<string, string> }) => {
       const requestData = {
         key_usage: data.KeyUsage || "EncryptDecrypt",
         description: data.Description,
@@ -50,14 +46,14 @@ export function useSSE() {
       }
       return api.post("/kms/keys", requestData)
     },
-    [api]
+    [api],
   )
 
   const getKeyDetails = useCallback(
     async (keyId: string) => {
       return api.get(`/kms/keys/${keyId}`)
     },
-    [api]
+    [api],
   )
 
   const getKeyList = useCallback(
@@ -65,12 +61,10 @@ export function useSSE() {
       const queryParams = new URLSearchParams()
       if (params?.limit) queryParams.append("limit", params.limit.toString())
       if (params?.marker) queryParams.append("marker", params.marker)
-      const url = queryParams.toString()
-        ? `/kms/keys?${queryParams}`
-        : "/kms/keys"
+      const url = queryParams.toString() ? `/kms/keys?${queryParams}` : "/kms/keys"
       return api.get(url)
     },
-    [api]
+    [api],
   )
 
   const deleteKey = useCallback(
@@ -78,7 +72,7 @@ export function useSSE() {
       const url = `/kms/keys/delete?keyId=${encodeURIComponent(keyId)}`
       return api.delete(url)
     },
-    [api]
+    [api],
   )
 
   const forceDeleteKey = useCallback(
@@ -86,7 +80,7 @@ export function useSSE() {
       const url = `/kms/keys/delete?keyId=${encodeURIComponent(keyId)}&force_immediate=true`
       return api.delete(url)
     },
-    [api]
+    [api],
   )
 
   return {

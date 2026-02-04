@@ -17,24 +17,17 @@ export function useEventTarget() {
   }, [api])
 
   const updateEventTarget = useCallback(
-    async (
-      targetType: string,
-      targetName: string,
-      targetData: Record<string, unknown>
-    ) => {
-      return api.put(
-        `/target/${targetType}/${targetName}`,
-        targetData
-      )
+    async (targetType: string, targetName: string, targetData: Record<string, unknown>) => {
+      return api.put(`/target/${targetType}/${targetName}`, targetData)
     },
-    [api]
+    [api],
   )
 
   const deleteEventTarget = useCallback(
     async (targetType: string, targetName: string) => {
       return api.delete(`/target/${targetType}/${targetName}/reset`)
     },
-    [api]
+    [api],
   )
 
   const getEventTargetArnList = useCallback(async () => {

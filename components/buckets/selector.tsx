@@ -3,13 +3,7 @@
 import * as React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
 import { useBucket } from "@/hooks/use-bucket"
 import { cn } from "@/lib/utils"
@@ -56,9 +50,7 @@ export function BucketSelector({
             label: b.Name,
             value: b.Name,
           }))
-          .sort((a: { label: string }, b: { label: string }) =>
-            a.label.localeCompare(b.label)
-          )
+          .sort((a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label))
         if (!cancelled) setBuckets(list)
       } catch {
         if (!cancelled) setBuckets([])
@@ -82,59 +74,34 @@ export function BucketSelector({
   const isLoading = loading
   const displayLabel = label || t("Bucket")
 
-  const containerClasses =
-    layout === "inline"
-      ? "flex items-center gap-3"
-      : "flex flex-col gap-2"
+  const containerClasses = layout === "inline" ? "flex items-center gap-3" : "flex flex-col gap-2"
 
-  const controlWrapperClasses =
-    layout === "inline"
-      ? "flex min-w-[220px] flex-col gap-1"
-      : "flex flex-col gap-1"
+  const controlWrapperClasses = layout === "inline" ? "flex min-w-[220px] flex-col gap-1" : "flex flex-col gap-1"
 
   return (
     <div className={cn(containerClasses)}>
       <div className={controlWrapperClasses}>
-        <Select
-          value={value ?? ""}
-          onValueChange={(v) => onChange(v || null)}
-          disabled={disabled || isLoading}
-        >
-          <SelectTrigger
-            className={cn("min-w-[200px]", selectorClass)}
-          >
+        <Select value={value ?? ""} onValueChange={(v) => onChange(v || null)} disabled={disabled || isLoading}>
+          <SelectTrigger className={cn("min-w-[200px]", selectorClass)}>
             <SelectValue placeholder={t(placeholder)}>
-              {value
-                ? `${displayLabel}: ${buckets.find((b) => b.value === value)?.label ?? value}`
-                : null}
+              {value ? `${displayLabel}: ${buckets.find((b) => b.value === value)?.label ?? value}` : null}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {buckets.length ? (
               buckets.map((opt) => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                >
+                <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </SelectItem>
               ))
             ) : (
-              <div className="px-2 py-3 text-sm text-muted-foreground">
-                {t("No options available")}
-              </div>
+              <div className="px-2 py-3 text-sm text-muted-foreground">{t("No options available")}</div>
             )}
           </SelectContent>
         </Select>
-        {description && (
-          <p className="text-xs text-muted-foreground">
-            {description}
-          </p>
-        )}
+        {description && <p className="text-xs text-muted-foreground">{description}</p>}
       </div>
-      {isLoading && layout === "inline" && (
-        <Spinner className="size-4 text-muted-foreground" />
-      )}
+      {isLoading && layout === "inline" && <Spinner className="size-4 text-muted-foreground" />}
     </div>
   )
 }

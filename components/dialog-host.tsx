@@ -22,7 +22,7 @@ function positiveButtonVariant(dialog: DialogInstance) {
 function handleAction(
   controller: ReturnType<typeof useDialogController>,
   dialog: DialogInstance,
-  action?: DialogInstance["onPositiveClick"] | DialogInstance["onNegativeClick"]
+  action?: DialogInstance["onPositiveClick"] | DialogInstance["onNegativeClick"],
 ) {
   if (!action) {
     controller.close(dialog.id)
@@ -49,17 +49,11 @@ export function DialogHost() {
   return (
     <>
       {dialogs.map((dialog) => (
-        <AlertDialog
-          key={dialog.id}
-          open={dialog.open}
-          onOpenChange={(value) => controller.setOpen(dialog.id, value)}
-        >
+        <AlertDialog key={dialog.id} open={dialog.open} onOpenChange={(value) => controller.setOpen(dialog.id, value)}>
           <AlertDialogContent className="sm:max-w-md">
             <AlertDialogHeader>
               {dialog.title && <AlertDialogTitle>{dialog.title}</AlertDialogTitle>}
-              {dialog.content && (
-                <AlertDialogDescription>{dialog.content}</AlertDialogDescription>
-              )}
+              {dialog.content && <AlertDialogDescription>{dialog.content}</AlertDialogDescription>}
             </AlertDialogHeader>
             <AlertDialogFooter>
               {dialog.negativeText && (
@@ -82,7 +76,7 @@ export function DialogHost() {
                   className={cn(
                     buttonVariants({ variant: positiveButtonVariant(dialog) }),
                     "w-full sm:w-auto",
-                    positiveButtonVariant(dialog) === "destructive" && "text-white"
+                    positiveButtonVariant(dialog) === "destructive" && "text-white",
                   )}
                   onClick={(e) => {
                     e.preventDefault()

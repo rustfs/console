@@ -50,7 +50,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
       setDialogs((prev) => prev.map((d) => (d.id === id ? { ...d, open: false } : d)))
       setTimeout(() => remove(id), REMOVAL_DELAY)
     },
-    [remove]
+    [remove],
   )
 
   const open = useCallback(
@@ -69,7 +69,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
         destroy: () => close(id),
       }
     },
-    [close]
+    [close],
   )
 
   const setOpen = useCallback(
@@ -77,7 +77,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
       if (value) return
       close(id)
     },
-    [close]
+    [close],
   )
 
   const controller: DialogController = {
@@ -87,9 +87,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
     setOpen,
   }
 
-  return (
-    <DialogContext.Provider value={controller}>{children}</DialogContext.Provider>
-  )
+  return <DialogContext.Provider value={controller}>{children}</DialogContext.Provider>
 }
 
 export function useDialogController() {

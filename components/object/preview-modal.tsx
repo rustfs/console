@@ -2,12 +2,7 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 
 const TEXT_MIMES = [
@@ -20,19 +15,7 @@ const TEXT_MIMES = [
   "text/csv",
   "text/markdown",
 ]
-const TEXT_EXTENSIONS = [
-  ".txt",
-  ".json",
-  ".xml",
-  ".js",
-  ".ts",
-  ".css",
-  ".md",
-  ".html",
-  ".csv",
-  ".yml",
-  ".yaml",
-]
+const TEXT_EXTENSIONS = [".txt", ".json", ".xml", ".js", ".ts", ".css", ".md", ".html", ".csv", ".yml", ".yaml"]
 const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
 
 interface ObjectPreviewModalProps {
@@ -46,11 +29,7 @@ interface ObjectPreviewModalProps {
   } | null
 }
 
-export function ObjectPreviewModal({
-  show,
-  onShowChange,
-  object,
-}: ObjectPreviewModalProps) {
+export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreviewModalProps) {
   const { t } = useTranslation()
   const [textContent, setTextContent] = React.useState("")
   const [loading, setLoading] = React.useState(false)
@@ -63,14 +42,11 @@ export function ObjectPreviewModal({
   const isImage = contentType.startsWith("image/")
   const isVideo = contentType.startsWith("video/")
   const isAudio = contentType.startsWith("audio/")
-  const isPdf =
-    contentType === "application/pdf" || objectKey.toLowerCase().endsWith(".pdf")
+  const isPdf = contentType === "application/pdf" || objectKey.toLowerCase().endsWith(".pdf")
   const isText =
     objectSize <= ALLOWED_SIZE &&
     (TEXT_MIMES.some((m) => contentType.startsWith(m)) ||
-      TEXT_EXTENSIONS.some((ext) =>
-        objectKey.toLowerCase().endsWith(ext)
-      ))
+      TEXT_EXTENSIONS.some((ext) => objectKey.toLowerCase().endsWith(ext)))
 
   React.useEffect(() => {
     if (show && isText && previewUrl) {
@@ -99,25 +75,12 @@ export function ObjectPreviewModal({
             <>
               {isImage && (
                 <div className="flex justify-center">
-                  <img
-                    src={previewUrl}
-                    alt="preview"
-                    className="max-h-[60vh]"
-                  />
+                  <img src={previewUrl} alt="preview" className="max-h-[60vh]" />
                 </div>
               )}
-              {isPdf && (
-                <iframe
-                  src={previewUrl}
-                  className="h-[70vh] w-full"
-                  frameBorder={0}
-                  title="PDF preview"
-                />
-              )}
+              {isPdf && <iframe src={previewUrl} className="h-[70vh] w-full" frameBorder={0} title="PDF preview" />}
               {isText && (
-                <pre className="max-h-[70vh] overflow-auto whitespace-pre-wrap break-words">
-                  {textContent}
-                </pre>
+                <pre className="max-h-[70vh] overflow-auto whitespace-pre-wrap break-words">{textContent}</pre>
               )}
               {isVideo && (
                 <video controls className="w-full">
@@ -131,18 +94,13 @@ export function ObjectPreviewModal({
                   {t("Your browser does not support the audio tag")}
                 </audio>
               )}
-              {!isImage &&
-                !isPdf &&
-                !isText &&
-                !isVideo &&
-                !isAudio &&
-                object && (
-                  <div className="flex flex-1 justify-center items-center text-sm text-muted-foreground">
-                    {t("Cannot Preview", {
-                      contentType: contentType || "unknown",
-                    })}
-                  </div>
-                )}
+              {!isImage && !isPdf && !isText && !isVideo && !isAudio && object && (
+                <div className="flex flex-1 justify-center items-center text-sm text-muted-foreground">
+                  {t("Cannot Preview", {
+                    contentType: contentType || "unknown",
+                  })}
+                </div>
+              )}
             </>
           )}
         </div>

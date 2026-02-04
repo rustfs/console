@@ -4,13 +4,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { useTiers } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
@@ -22,12 +16,7 @@ interface TiersChangeKeyProps {
   onSuccess?: () => void
 }
 
-export function TiersChangeKey({
-  open,
-  onOpenChange,
-  tierName,
-  onSuccess,
-}: TiersChangeKeyProps) {
+export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: TiersChangeKeyProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { updateTiers } = useTiers()
@@ -65,9 +54,7 @@ export function TiersChangeKey({
       onSuccess?.()
       closeModal()
     } catch (error) {
-      message.error(
-        (error as Error).message || t("Update Failed")
-      )
+      message.error((error as Error).message || t("Update Failed"))
     } finally {
       setSubmitting(false)
     }

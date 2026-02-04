@@ -22,7 +22,7 @@ export function useImportExport() {
           method: "GET",
           headers: { Accept: "application/zip" },
         },
-        false
+        false,
       )
 
       if (!response || !(response instanceof Response)) {
@@ -45,9 +45,7 @@ export function useImportExport() {
       message.success(t("IAM configuration exported successfully"))
     } catch (error) {
       console.error("IAM export error:", error)
-      message.error(
-        (error as Error).message || t("Failed to export IAM configuration")
-      )
+      message.error((error as Error).message || t("Failed to export IAM configuration"))
     } finally {
       setIsLoading(false)
     }
@@ -65,15 +63,13 @@ export function useImportExport() {
         message.success(t("IAM configuration imported successfully"))
       } catch (error) {
         console.error("IAM import error:", error)
-        message.error(
-          (error as Error).message || t("Failed to import IAM configuration")
-        )
+        message.error((error as Error).message || t("Failed to import IAM configuration"))
         throw error
       } finally {
         setIsLoading(false)
       }
     },
-    [api, message, t]
+    [api, message, t],
   )
 
   return { isLoading, exportIamConfig, importIamConfig }

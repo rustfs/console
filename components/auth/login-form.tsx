@@ -20,9 +20,7 @@ export interface LoginFormProps {
   method: LoginMethod
   setMethod: (m: LoginMethod) => void
   accessKeyAndSecretKey: { accessKeyId: string; secretAccessKey: string }
-  setAccessKeyAndSecretKey: React.Dispatch<
-    React.SetStateAction<{ accessKeyId: string; secretAccessKey: string }>
-  >
+  setAccessKeyAndSecretKey: React.Dispatch<React.SetStateAction<{ accessKeyId: string; secretAccessKey: string }>>
   sts: {
     accessKeyId: string
     secretAccessKey: string
@@ -73,20 +71,10 @@ export function LoginForm({
           </div>
 
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <Image
-              src={logoImage}
-              alt="RustFS"
-              width={112}
-              height={24}
-              className="max-w-28"
-            />
+            <Image src={logoImage} alt="RustFS" width={112} height={24} className="max-w-28" />
 
             <div className="space-y-4">
-              <Tabs
-                value={method}
-                onValueChange={(v) => setMethod(v as LoginMethod)}
-                className="flex flex-col gap-4"
-              >
+              <Tabs value={method} onValueChange={(v) => setMethod(v as LoginMethod)} className="flex flex-col gap-4">
                 <TabsList className="w-full">
                   <TabsTrigger className="w-1/2" value="accessKeyAndSecretKey">
                     {t("Key Login")}
@@ -101,9 +89,7 @@ export function LoginForm({
                     {method === "accessKeyAndSecretKey" ? (
                       <>
                         <Field>
-                          <FieldLabel htmlFor="accessKey">
-                            {t("Account")}
-                          </FieldLabel>
+                          <FieldLabel htmlFor="accessKey">{t("Account")}</FieldLabel>
                           <FieldContent>
                             <Input
                               id="accessKey"
@@ -142,9 +128,7 @@ export function LoginForm({
                     ) : (
                       <>
                         <Field>
-                          <FieldLabel htmlFor="stsAccessKey">
-                            {t("STS Username")}
-                          </FieldLabel>
+                          <FieldLabel htmlFor="stsAccessKey">{t("STS Username")}</FieldLabel>
                           <FieldContent>
                             <Input
                               id="stsAccessKey"
@@ -162,9 +146,7 @@ export function LoginForm({
                           </FieldContent>
                         </Field>
                         <Field>
-                          <FieldLabel htmlFor="stsSecretKey">
-                            {t("STS Key")}
-                          </FieldLabel>
+                          <FieldLabel htmlFor="stsSecretKey">{t("STS Key")}</FieldLabel>
                           <FieldContent>
                             <Input
                               id="stsSecretKey"
@@ -182,9 +164,7 @@ export function LoginForm({
                           </FieldContent>
                         </Field>
                         <Field>
-                          <FieldLabel htmlFor="sessionToken">
-                            {t("STS Session Token")}
-                          </FieldLabel>
+                          <FieldLabel htmlFor="sessionToken">{t("STS Session Token")}</FieldLabel>
                           <FieldContent>
                             <Input
                               id="sessionToken"
@@ -197,20 +177,14 @@ export function LoginForm({
                               }
                               autoComplete="new-password"
                               type="text"
-                              placeholder={t(
-                                "Please enter STS session token"
-                              )}
+                              placeholder={t("Please enter STS session token")}
                             />
                           </FieldContent>
                         </Field>
                       </>
                     )}
 
-                    <Button
-                      type="submit"
-                      variant="default"
-                      className="w-full justify-center"
-                    >
+                    <Button type="submit" variant="default" className="w-full justify-center">
                       {t("Login")}
                     </Button>
                   </div>
@@ -221,10 +195,7 @@ export function LoginForm({
             <div>
               <p className="text-sm text-gray-600 dark:text-neutral-400">
                 {t("Login Problems?")}{" "}
-                <Link
-                  href="https://www.rustfs.com"
-                  className="text-blue-600 hover:underline"
-                >
+                <Link href="https://www.rustfs.com" className="text-blue-600 hover:underline">
                   {t("Get Help")}
                 </Link>
               </p>

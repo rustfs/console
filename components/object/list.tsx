@@ -90,52 +90,45 @@ export function ObjectList({
 
   const prefix = decodeURIComponent(path)
 
-  const bucketPath = React.useCallback(
-    (p?: string | string[]) => buildBucketPath(bucket, p),
-    [bucket]
-  )
+  const bucketPath = React.useCallback((p?: string | string[]) => buildBucketPath(bucket, p), [bucket])
 
   const fetchObjects = React.useCallback(
     async (tokenOverride?: string) => {
       const token = tokenOverride !== undefined ? tokenOverride : continuationToken
       setLoading(true)
       try {
-        const response = await objectApi.listObject(
-          bucket,
-          prefix || undefined,
-          pageSize,
-          token,
-          { includeDeleted: showDeleted }
-        )
+        const response = await objectApi.listObject(bucket, prefix || undefined, pageSize, token, {
+          includeDeleted: showDeleted,
+        })
 
-      const r = response as {
-        CommonPrefixes?: Array<{ Prefix?: string }>
-        Contents?: Array<{ Key?: string; Size?: number; LastModified?: Date }>
-        NextContinuationToken?: string
+        const r = response as {
+          CommonPrefixes?: Array<{ Prefix?: string }>
+          Contents?: Array<{ Key?: string; Size?: number; LastModified?: Date }>
+          NextContinuationToken?: string
+        }
+
+        setNextToken(r.NextContinuationToken)
+
+        const prefixItems: ObjectRow[] = (r.CommonPrefixes ?? []).map((item) => ({
+          Key: item.Prefix ?? "",
+          type: "prefix" as const,
+          Size: 0,
+          LastModified: "",
+        }))
+
+        const objectItems: ObjectRow[] = (r.Contents ?? []).map((item) => ({
+          Key: item.Key ?? "",
+          type: "object" as const,
+          Size: item.Size ?? 0,
+          LastModified: item.LastModified ? item.LastModified.toISOString() : "",
+        }))
+
+        setData([...prefixItems, ...objectItems])
+      } finally {
+        setTimeout(() => setLoading(false), 200)
       }
-
-      setNextToken(r.NextContinuationToken)
-
-      const prefixItems: ObjectRow[] = (r.CommonPrefixes ?? []).map((item) => ({
-        Key: item.Prefix ?? "",
-        type: "prefix" as const,
-        Size: 0,
-        LastModified: "",
-      }))
-
-      const objectItems: ObjectRow[] = (r.Contents ?? []).map((item) => ({
-        Key: item.Key ?? "",
-        type: "object" as const,
-        Size: item.Size ?? 0,
-        LastModified: item.LastModified ? item.LastModified.toISOString() : "",
-      }))
-
-      setData([...prefixItems, ...objectItems])
-    } finally {
-      setTimeout(() => setLoading(false), 200)
-    }
-  },
-    [bucket, prefix, pageSize, continuationToken, showDeleted, objectApi.listObject]
+    },
+    [bucket, prefix, pageSize, continuationToken, showDeleted, objectApi.listObject],
   )
 
   const prevRefreshTriggerRef = React.useRef(refreshTrigger)
@@ -228,22 +221,14 @@ export function ObjectList({
         id: "size",
         header: () => t("Size"),
         accessorFn: (row) => (row.type === "object" ? row.Size : -1),
-        cell: ({ row }) =>
-          row.original.type === "object"
-            ? formatBytes(row.original.Size)
-            : "-",
+        cell: ({ row }) => (row.original.type === "object" ? formatBytes(row.original.Size) : "-"),
       },
       {
         id: "lastModified",
         header: () => t("Last Modified"),
-        accessorFn: (row) =>
-          row.type === "prefix" || !row.LastModified
-            ? ""
-            : new Date(row.LastModified).getTime(),
+        accessorFn: (row) => (row.type === "prefix" || !row.LastModified ? "" : new Date(row.LastModified).getTime()),
         cell: ({ row }) =>
-          row.original.LastModified
-            ? dayjs(row.original.LastModified).format("YYYY-MM-DD HH:mm:ss")
-            : "-",
+          row.original.LastModified ? dayjs(row.original.LastModified).format("YYYY-MM-DD HH:mm:ss") : "-",
       },
       {
         id: "actions",
@@ -252,20 +237,12 @@ export function ObjectList({
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             {row.original.type === "object" ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => downloadFile(row.original.Key)}
-              >
+              <Button variant="outline" size="sm" onClick={() => downloadFile(row.original.Key)}>
                 <RiDownloadCloud2Line className="size-4" />
                 <span>{t("Download")}</span>
               </Button>
             ) : null}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openDeleteDialog([row.original.Key])}
-            >
+            <Button variant="outline" size="sm" onClick={() => openDeleteDialog([row.original.Key])}>
               <RiDeleteBin5Line className="size-4" />
               <span>{t("Delete")}</span>
             </Button>
@@ -273,7 +250,7 @@ export function ObjectList({
         ),
       },
     ],
-    [t, bucket, bucketPath, onOpenInfo]
+    [t, bucket, bucketPath, onOpenInfo],
   )
 
   const { table, selectedRowIds } = useDataTable<ObjectRow>({
@@ -292,10 +269,7 @@ export function ObjectList({
     return base && key.startsWith(base) ? key.slice(base.length) : key
   }
 
-  const collectKeysForDeletion = async (
-    keys: string[],
-    forceDelete = false
-  ): Promise<string[]> => {
+  const collectKeysForDeletion = async (keys: string[], forceDelete = false): Promise<string[]> => {
     const rowMap = new Map(data.map((item) => [item.Key, item]))
     const collected: string[] = []
 
@@ -326,15 +300,12 @@ export function ObjectList({
       const filename = key.split("/").pop() ?? ""
       const headers: Record<string, string> = {
         "content-type": getContentType(response.headers, filename),
-        filename:
-          response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
+        filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
       }
       const blob = await response.blob()
       exportFile({ headers, data: blob }, filename)
     } catch (err) {
-      message.error(
-        (err as Error)?.message ?? t("Download Failed")
-      )
+      message.error((err as Error)?.message ?? t("Download Failed"))
     } finally {
       loadingMsg.destroy()
     }
@@ -390,10 +361,9 @@ export function ObjectList({
 
     const updateProgress = () => {
       if (destroyRef.current) destroyRef.current()
-      const handle = message.loading(
-        `${t("Downloading files")} ${Math.round((finished / allFiles.length) * 100)}%`,
-        { duration: 0 }
-      )
+      const handle = message.loading(`${t("Downloading files")} ${Math.round((finished / allFiles.length) * 100)}%`, {
+        duration: 0,
+      })
       destroyRef.current = handle.destroy
     }
 
@@ -408,7 +378,7 @@ export function ObjectList({
           zip.file(relative || key, blob)
           finished++
           updateProgress()
-        })
+        }),
       )
     } catch (err) {
       if (destroyRef.current) destroyRef.current()
@@ -434,10 +404,7 @@ export function ObjectList({
     setDeleteDialogOpen(false)
     if (!keys.length) return
 
-    if (
-      (bucketVersioningEnabled && deleteAllVersions) ||
-      !bucketVersioningEnabled
-    ) {
+    if ((bucketVersioningEnabled && deleteAllVersions) || !bucketVersioningEnabled) {
       await handleDeleteAllVersions(keys)
     } else {
       await handleDelete(keys)
@@ -515,15 +482,13 @@ export function ObjectList({
             <TaskStatsButton />
             <Button variant="outline" onClick={onUploadClick}>
               <RiFileAddLine className="size-4" />
-              <span>{t("Upload File")}/{t("Folder")}</span>
+              <span>
+                {t("Upload File")}/{t("Folder")}
+              </span>
             </Button>
             {checkedKeys.length > 0 ? (
               <>
-                <Button
-                  variant="outline"
-                  className="text-destructive border-destructive"
-                  onClick={handleBatchDelete}
-                >
+                <Button variant="outline" className="text-destructive border-destructive" onClick={handleBatchDelete}>
                   <RiDeleteBin5Line className="size-4" />
                   <span>{t("Delete Selected")}</span>
                 </Button>
@@ -549,10 +514,7 @@ export function ObjectList({
             className="lg:max-w-sm"
           />
           <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-            <Checkbox
-              checked={showDeleted}
-              onCheckedChange={(v) => setShowDeleted(v === true)}
-            />
+            <Checkbox checked={showDeleted} onCheckedChange={(v) => setShowDeleted(v === true)} />
             <span>{t("Show Deleted Objects")}</span>
           </label>
         </div>
@@ -566,19 +528,11 @@ export function ObjectList({
       />
 
       <div className="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          disabled={tokenHistory.length === 0}
-          onClick={goToPreviousPage}
-        >
+        <Button variant="outline" disabled={tokenHistory.length === 0} onClick={goToPreviousPage}>
           <RiArrowLeftSLine className="mr-2 size-4" />
           <span>{t("Previous Page")}</span>
         </Button>
-        <Button
-          variant="outline"
-          disabled={!nextToken}
-          onClick={goToNextPage}
-        >
+        <Button variant="outline" disabled={!nextToken} onClick={goToNextPage}>
           <span>{t("Next Page")}</span>
           <RiArrowRightSLine className="ml-2 size-4" />
         </Button>
@@ -592,10 +546,7 @@ export function ObjectList({
               {t("Are you sure you want to delete the selected objects?")}
               {bucketVersioningEnabled && (
                 <label className="mt-4 flex items-center gap-2">
-                  <Checkbox
-                    checked={deleteAllVersions}
-                    onCheckedChange={(v) => setDeleteAllVersions(v === true)}
-                  />
+                  <Checkbox checked={deleteAllVersions} onCheckedChange={(v) => setDeleteAllVersions(v === true)} />
                   <span>{t("Delete All Versions")}</span>
                 </label>
               )}
@@ -608,11 +559,7 @@ export function ObjectList({
               </Button>
             </AlertDialogCancel>
             <AlertDialogAction asChild>
-              <Button
-                variant="destructive"
-                className="w-full sm:w-auto text-white"
-                onClick={handleConfirmDelete}
-              >
+              <Button variant="destructive" className="w-full sm:w-auto text-white" onClick={handleConfirmDelete}>
                 {t("Confirm")}
               </Button>
             </AlertDialogAction>

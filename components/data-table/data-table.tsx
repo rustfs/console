@@ -4,14 +4,7 @@ import * as React from "react"
 import { flexRender, type Column, type Table } from "@tanstack/react-table"
 import { RiArrowUpDownLine, RiArrowUpSLine, RiArrowDownSLine } from "@remixicon/react"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  Table as UiTable,
-} from "@/components/ui/table"
+import { TableBody, TableCell, TableHead, TableHeader, TableRow, Table as UiTable } from "@/components/ui/table"
 import { Spinner } from "@/components/ui/spinner"
 import { EmptyState } from "@/components/empty-state"
 import { cn } from "@/lib/utils"
@@ -28,7 +21,9 @@ interface DataTableProps<TData> {
 }
 
 function getColumnStyles<TData>(column: Column<TData, unknown>) {
-  const meta = column.columnDef.meta as { width?: number | string; minWidth?: number | string; maxWidth?: number | string } | undefined
+  const meta = column.columnDef.meta as
+    | { width?: number | string; minWidth?: number | string; maxWidth?: number | string }
+    | undefined
   if (!meta) return undefined
 
   const styles: React.CSSProperties = {}
@@ -77,10 +72,7 @@ export function DataTable<TData>({
     <UiTable className={cn(bodyHeight ? tableClass : "border rounded-md", tableClass)}>
       <TableHeader className={stickyHeader ? "sticky top-0 z-10 bg-muted/40 backdrop-blur" : ""}>
         {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow
-            key={headerGroup.id}
-            className={stickyHeader ? "bg-muted/40 backdrop-blur" : undefined}
-          >
+          <TableRow key={headerGroup.id} className={stickyHeader ? "bg-muted/40 backdrop-blur" : undefined}>
             {headerGroup.headers.map((header) => (
               <TableHead
                 key={header.id}
@@ -156,9 +148,7 @@ export function DataTable<TData>({
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       {bodyHeight ? (
-        <ScrollArea className={cn("rounded-md border", bodyHeight)}>
-          {tableContent}
-        </ScrollArea>
+        <ScrollArea className={cn("rounded-md border", bodyHeight)}>{tableContent}</ScrollArea>
       ) : (
         tableContent
       )}

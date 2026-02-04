@@ -4,7 +4,7 @@ name: Build
 
 on:
   push:
-    branches: ['main']
+    branches: ["main"]
   release:
     types: [published]
   workflow_dispatch:
@@ -15,7 +15,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: 'pages'
+  group: "pages"
   cancel-in-progress: false
 
 jobs:
@@ -51,7 +51,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
       - name: Install dependencies
         run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}

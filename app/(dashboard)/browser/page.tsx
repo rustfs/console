@@ -120,8 +120,7 @@ export default function BrowserPage() {
     {
       header: () => t("Creation Date"),
       accessorKey: "CreationDate",
-      cell: ({ row }) =>
-        dayjs(row.original.CreationDate).format("YYYY-MM-DD HH:mm:ss"),
+      cell: ({ row }) => dayjs(row.original.CreationDate).format("YYYY-MM-DD HH:mm:ss"),
     },
   ]
 
@@ -135,7 +134,7 @@ export default function BrowserPage() {
       {
         header: () => t("Size"),
         accessorKey: "Size",
-      }
+      },
     )
   }
 
@@ -149,18 +148,12 @@ export default function BrowserPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() =>
-            router.push(`/buckets/${encodeURIComponent(row.original.Name)}`)
-          }
+          onClick={() => router.push(`/buckets/${encodeURIComponent(row.original.Name)}`)}
         >
           <RiSettings5Line className="size-4" />
           <span>{t("Settings")}</span>
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => confirmDelete(row.original)}
-        >
+        <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
           <RiDeleteBin5Line className="size-4" />
           <span>{t("Delete")}</span>
         </Button>
@@ -206,7 +199,9 @@ export default function BrowserPage() {
       message.success(t("Delete Success"))
       await fetchBuckets()
     } catch (error: unknown) {
-      message.error((error as { response?: { data?: { message?: string } } })?.response?.data?.message || t("Delete Failed"))
+      message.error(
+        (error as { response?: { data?: { message?: string } } })?.response?.data?.message || t("Delete Failed"),
+      )
     }
   }
 

@@ -2,22 +2,12 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
 import { useAddUploadFiles, useTaskPanelOpen } from "@/contexts/task-context"
 import { formatBytes } from "@/lib/functions"
 import { useMessage } from "@/lib/feedback/message"
-import {
-  RiDeleteBinLine,
-  RiFileAddLine,
-  RiFolderAddLine,
-  RiUploadCloudLine,
-} from "@remixicon/react"
+import { RiDeleteBinLine, RiFileAddLine, RiFolderAddLine, RiUploadCloudLine } from "@remixicon/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
@@ -39,13 +29,10 @@ const ROW_HEIGHT = 40
 const MAX_FILES_LIMIT = 10_000
 const MEMORY_WARNING_THRESHOLD = 5_000
 
-function getFilesFromEntry(
-  entry: FileSystemEntry,
-  path = ""
-): Promise<{ file: File; relativePath: string }[]> {
+function getFilesFromEntry(entry: FileSystemEntry, path = ""): Promise<{ file: File; relativePath: string }[]> {
   return new Promise((resolve, reject) => {
     if (entry.isFile) {
-      ; (entry as FileSystemFileEntry).file((file) => {
+      ;(entry as FileSystemFileEntry).file((file) => {
         resolve([{ file, relativePath: path + file.name }])
       })
     } else if (entry.isDirectory) {
@@ -55,16 +42,14 @@ function getFilesFromEntry(
         dirReader.readEntries(
           async (results) => {
             if (!results.length) {
-              const filesArrays = await Promise.all(
-                entries.map((e) => getFilesFromEntry(e, path + entry.name + "/"))
-              )
+              const filesArrays = await Promise.all(entries.map((e) => getFilesFromEntry(e, path + entry.name + "/")))
               resolve(filesArrays.flat())
             } else {
               entries.push(...results)
               readBatch()
             }
           },
-          (err) => reject(err)
+          (err) => reject(err),
         )
       }
       readBatch()
@@ -81,15 +66,12 @@ type DirHandleLike = {
 async function getFilesFromDirectoryHandle(
   dirHandle: FileSystemDirectoryHandle & DirHandleLike,
   basePath = "",
-  onProgress?: (count: number) => void
+  onProgress?: (count: number) => void,
 ): Promise<{ file: File; relativePath: string }[]> {
   const results: { file: File; relativePath: string }[] = []
   let count = 0
 
-  async function walk(
-    handle: FileSystemDirectoryHandle & DirHandleLike,
-    path: string
-  ) {
+  async function walk(handle: FileSystemDirectoryHandle & DirHandleLike, path: string) {
     for await (const entry of handle.values()) {
       const entryPath = path ? `${path}/${entry.name}` : entry.name
       if (entry.kind === "file") {
@@ -133,15 +115,9 @@ function FileListVirtualized({
       <div className="flex shrink-0 border-b bg-muted text-xs uppercase text-muted-foreground">
         <div className="min-w-0 flex-1 px-3 py-2 font-medium">{t("Name")}</div>
         <div className="w-28 shrink-0 px-3 py-2 font-medium">{t("Size")}</div>
-        <div className="w-24 shrink-0 px-3 py-2 text-right font-medium">
-          {t("Actions")}
-        </div>
+        <div className="w-24 shrink-0 px-3 py-2 text-right font-medium">{t("Actions")}</div>
       </div>
-      <div
-        ref={parentRef}
-        className="min-h-64 min-w-0 flex-1 overflow-auto"
-        style={{ contain: "strict" }}
-      >
+      <div ref={parentRef} className="min-h-64 min-w-0 flex-1 overflow-auto" style={{ contain: "strict" }}>
         <div
           style={{
             height: `${virtualizer.getTotalSize()}px`,
@@ -160,15 +136,10 @@ function FileListVirtualized({
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <div
-                  className="min-w-0 flex-1 truncate px-3 py-2 font-medium"
-                  title={item.relativePath}
-                >
+                <div className="min-w-0 flex-1 truncate px-3 py-2 font-medium" title={item.relativePath}>
                   {item.relativePath}
                 </div>
-                <div className="w-28 shrink-0 px-3 py-2 text-muted-foreground">
-                  {formatBytes(item.file.size)}
-                </div>
+                <div className="w-28 shrink-0 px-3 py-2 text-muted-foreground">{formatBytes(item.file.size)}</div>
                 <div className="w-24 shrink-0 px-3 py-2 text-right">
                   <Button
                     variant="ghost"
@@ -189,10 +160,7 @@ function FileListVirtualized({
   )
 }
 
-function collectFilesFromFileList(
-  files: FileList,
-  basePath = ""
-): FileItem[] {
+function collectFilesFromFileList(files: FileList, basePath = ""): FileItem[] {
   const items: FileItem[] = []
   for (let i = 0; i < files.length; i++) {
     const file = files[i]
@@ -212,13 +180,7 @@ function collectFilesFromFileList(
   return items
 }
 
-export function ObjectUploadPicker({
-  show,
-  onShowChange,
-  bucketName,
-  prefix,
-  onSuccess,
-}: ObjectUploadPickerProps) {
+export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onSuccess }: ObjectUploadPickerProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const addUploadFiles = useAddUploadFiles()
@@ -249,23 +211,19 @@ export function ObjectUploadPicker({
     (incoming: number): boolean => {
       const nextTotal = items.length + incoming
       if (nextTotal > MAX_FILES_LIMIT) {
-        message.error(
-          String(t("File Count Limit Exceeded", { current: nextTotal, max: MAX_FILES_LIMIT }))
-        )
+        message.error(String(t("File Count Limit Exceeded", { current: nextTotal, max: MAX_FILES_LIMIT })))
         return false
       }
       if (nextTotal > MEMORY_WARNING_THRESHOLD) {
         setIsMemoryWarning(true)
         if (!memoryWarningShownRef.current) {
           memoryWarningShownRef.current = true
-          message.warning(
-            String(t("Memory Warning", { count: nextTotal, threshold: MEMORY_WARNING_THRESHOLD }))
-          )
+          message.warning(String(t("Memory Warning", { count: nextTotal, threshold: MEMORY_WARNING_THRESHOLD })))
         }
       }
       return true
     },
-    [items.length, message, t]
+    [items.length, message, t],
   )
 
   const selectFile = () => fileInputRef.current?.click()
@@ -290,11 +248,9 @@ export function ObjectUploadPicker({
           (count) => {
             if (count - lastReported >= 200 || count === 0) {
               lastReported = count
-              setFolderLoadingProgress(
-                count > 0 ? Math.min(99, Math.round((count / 25000) * 100)) : 0
-              )
+              setFolderLoadingProgress(count > 0 ? Math.min(99, Math.round((count / 25000) * 100)) : 0)
             }
-          }
+          },
         )
         if (!ensureCapacity(newItems.length)) return
         setItems((prev) => [...prev, ...newItems])
@@ -359,11 +315,7 @@ export function ObjectUploadPicker({
       if (isAdding || isFolderLoading) return
 
       const dtItems = e.dataTransfer?.items
-      if (
-        dtItems?.length &&
-        dtItems[0] &&
-        typeof (dtItems[0] as DataTransferItem).webkitGetAsEntry === "function"
-      ) {
+      if (dtItems?.length && dtItems[0] && typeof (dtItems[0] as DataTransferItem).webkitGetAsEntry === "function") {
         let allFiles: { file: File; relativePath: string }[] = []
         setIsFolderLoading(true)
         try {
@@ -404,7 +356,7 @@ export function ObjectUploadPicker({
       }))
       setItems((prev) => [...prev, ...newItems])
     },
-    [ensureCapacity, isAdding, isFolderLoading, message, t]
+    [ensureCapacity, isAdding, isFolderLoading, message, t],
   )
 
   const handleDragEnter = (e: React.DragEvent) => {
@@ -445,7 +397,7 @@ export function ObjectUploadPicker({
         const batch = tasks.slice(i, i + batchSize)
         addUploadFiles(
           batch.map((b) => ({ file: b.file, key: b.key })),
-          bucketName
+          bucketName,
         )
         processed += batch.length
         setAddProgress(Math.round((processed / tasks.length) * 100))
@@ -477,13 +429,7 @@ export function ObjectUploadPicker({
           <DialogTitle>{t("Upload File")}</DialogTitle>
         </DialogHeader>
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-hidden">
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={handleFileSelect}
-          />
+          <input ref={fileInputRef} type="file" multiple className="hidden" onChange={handleFileSelect} />
           <input
             ref={folderInputRef}
             type="file"
@@ -505,21 +451,11 @@ export function ObjectUploadPicker({
               </p>
             </div>
             <div className="flex shrink-0 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isAdding || isFolderLoading}
-                onClick={selectFile}
-              >
+              <Button variant="outline" size="sm" disabled={isAdding || isFolderLoading} onClick={selectFile}>
                 <RiFileAddLine className="size-4" />
                 {t("Select File")}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isAdding || isFolderLoading}
-                onClick={selectFolder}
-              >
+              <Button variant="outline" size="sm" disabled={isAdding || isFolderLoading} onClick={selectFolder}>
                 <RiFolderAddLine className="size-4" />
                 {t("Select Folder")}
               </Button>
@@ -542,8 +478,9 @@ export function ObjectUploadPicker({
           )}
 
           <div
-            className={`min-h-0 min-w-0 flex flex-col overflow-hidden rounded-md border transition-colors ${isDragOver ? "border-primary bg-primary/5" : ""
-              }`}
+            className={`min-h-0 min-w-0 flex flex-col overflow-hidden rounded-md border transition-colors ${
+              isDragOver ? "border-primary bg-primary/5" : ""
+            }`}
             onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
@@ -553,8 +490,7 @@ export function ObjectUploadPicker({
               <div className="text-sm text-muted-foreground">
                 {items.length > 0 && (
                   <p>
-                    {t("Total Files")}: {items.length.toLocaleString()} /{" "}
-                    {MAX_FILES_LIMIT.toLocaleString()}
+                    {t("Total Files")}: {items.length.toLocaleString()} / {MAX_FILES_LIMIT.toLocaleString()}
                   </p>
                 )}
               </div>
@@ -572,9 +508,7 @@ export function ObjectUploadPicker({
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-4 p-6 text-center">
                 <RiUploadCloudLine className="size-12 text-muted-foreground" />
-                <p className="text-base font-medium text-muted-foreground">
-                  {t("No Selection")}
-                </p>
+                <p className="text-base font-medium text-muted-foreground">{t("No Selection")}</p>
                 <p className="max-w-[320px] text-xs text-muted-foreground">
                   {t("Chrome and Firefox support drag and drop to this area and selecting multiple files or folders.")}
                   <br />
@@ -584,12 +518,7 @@ export function ObjectUploadPicker({
                 </p>
               </div>
             ) : (
-              <FileListVirtualized
-                items={items}
-                removeItem={removeItem}
-                t={t}
-                formatBytes={formatBytes}
-              />
+              <FileListVirtualized items={items} removeItem={removeItem} t={t} formatBytes={formatBytes} />
             )}
 
             {isFolderLoading && (
@@ -614,11 +543,7 @@ export function ObjectUploadPicker({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button
-              variant="default"
-              disabled={!items.length || isAdding || isFolderLoading}
-              onClick={handleUpload}
-            >
+            <Button variant="default" disabled={!items.length || isAdding || isFolderLoading} onClick={handleUpload}>
               {isAdding ? t("Adding to Upload Queue") : t("Start Upload")}
             </Button>
           </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
@@ -38,27 +38,57 @@ export default function BrowserPage() {
   const dialog = useDialog()
   const { isAdmin } = useAuth()
   const { listBuckets, deleteBucket } = useBucket()
-  const systemApi = useSystem()
+  const { getDataUsageInfo } = useSystem()
 
   const [formVisible, setFormVisible] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [data, setData] = useState<BucketRow[]>([])
   const [pending, setPending] = useState(true)
+  const [usageLoading, setUsageLoading] = useState(false)
+  const fetchIdRef = useRef(0)
 
-  const fetchBuckets = async () => {
+  const loadBucketUsage = useCallback(
+    async (fetchId: number, bucketNames: string[]) => {
+      if (!isAdmin || bucketNames.length === 0) {
+        setUsageLoading(false)
+        return
+      }
+
+      try {
+        const usage = (await getDataUsageInfo()) as { buckets_usage?: BucketUsageMap }
+        if (fetchId !== fetchIdRef.current) return
+        const bucketUsage = usage?.buckets_usage ?? {}
+
+        setData((prev) =>
+          prev.map((row) => {
+            const stats = bucketUsage[row.Name]
+            const objectsCount = typeof stats?.objects_count === "number" ? stats.objects_count : 0
+            const totalSize = typeof stats?.size === "number" ? stats.size : 0
+            return {
+              ...row,
+              Count: objectsCount,
+              Size: niceBytes(String(totalSize)),
+            }
+          }),
+        )
+      } catch {
+        if (fetchId !== fetchIdRef.current) return
+      } finally {
+        if (fetchId === fetchIdRef.current) {
+          setUsageLoading(false)
+        }
+      }
+    },
+    [getDataUsageInfo, isAdmin],
+  )
+
+  const fetchBuckets = useCallback(async () => {
+    const fetchId = fetchIdRef.current + 1
+    fetchIdRef.current = fetchId
     setPending(true)
     try {
       const response = await listBuckets()
-      let bucketUsage: BucketUsageMap = {}
-
-      if (isAdmin) {
-        try {
-          const usage = (await systemApi.getDataUsageInfo()) as { buckets_usage?: BucketUsageMap }
-          bucketUsage = usage?.buckets_usage ?? {}
-        } catch {
-          // Non-admin or API not available
-        }
-      }
+      if (fetchId !== fetchIdRef.current) return
 
       const buckets = ((response as { Buckets?: Array<{ Name?: string; CreationDate?: string }> })?.Buckets ?? [])
         .map((item) => {
@@ -70,36 +100,42 @@ export default function BrowserPage() {
             CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : "",
           }
 
-          if (isAdmin) {
-            const stats = bucketUsage[name]
-            const objectsCount = typeof stats?.objects_count === "number" ? stats.objects_count : 0
-            const totalSize = typeof stats?.size === "number" ? stats.size : 0
-            bucketRow.Count = objectsCount
-            bucketRow.Size = niceBytes(String(totalSize))
-          }
-
           return bucketRow
         })
         .filter((bucket): bucket is BucketRow => bucket !== null)
         .sort((a, b) => a.Name.localeCompare(b.Name))
 
       setData(buckets)
+      setPending(false)
+
+      if (isAdmin) {
+        setUsageLoading(true)
+        void loadBucketUsage(
+          fetchId,
+          buckets.map((bucket) => bucket.Name),
+        )
+      } else {
+        setUsageLoading(false)
+      }
     } catch (error) {
+      if (fetchId !== fetchIdRef.current) return
       console.error("Failed to fetch buckets:", error)
       setData([])
     } finally {
-      setPending(false)
+      if (fetchId === fetchIdRef.current) {
+        setPending(false)
+      }
     }
-  }
+  }, [isAdmin, listBuckets, loadBucketUsage])
 
   useEffect(() => {
     fetchBuckets()
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run when isAdmin changes
-  }, [isAdmin])
+  }, [fetchBuckets])
 
-  const filteredData = searchTerm
-    ? data.filter((bucket) => bucket.Name.toLowerCase().includes(searchTerm.toLowerCase()))
-    : data
+  const filteredData = useMemo(
+    () => (searchTerm ? data.filter((bucket) => bucket.Name.toLowerCase().includes(searchTerm.toLowerCase())) : data),
+    [data, searchTerm],
+  )
 
   const objectApi = useObject("")
 
@@ -129,11 +165,13 @@ export default function BrowserPage() {
       {
         header: () => t("Object Count"),
         accessorKey: "Count",
-        cell: ({ row }) => row.original.Count?.toLocaleString() ?? "0",
+        cell: ({ row }) =>
+          typeof row.original.Count === "number" ? row.original.Count.toLocaleString() : usageLoading ? "..." : "--",
       },
       {
         header: () => t("Size"),
         accessorKey: "Size",
+        cell: ({ row }) => row.original.Size ?? (usageLoading ? "..." : "--"),
       },
     )
   }

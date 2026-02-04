@@ -10,6 +10,7 @@ import { logger } from "./logger"
 
 let configCache: SiteConfig | null = null
 let configCacheTime = 0
+let configPromise: Promise<SiteConfig> | null = null
 const CACHE_DURATION = 60000
 
 function loadRuntimeConfig(): SiteConfig | null {
@@ -59,50 +60,62 @@ export const configManager = {
     if (configCache && now - configCacheTime < CACHE_DURATION) {
       return configCache
     }
+    if (configPromise) {
+      return configPromise
+    }
 
-    let config: SiteConfig
+    configPromise = (async () => {
+      let config: SiteConfig
 
-    const storedResult = getStoredHostConfig()
-    if (storedResult.config) {
-      config = storedResult.config
-    } else {
-      const browserResult = getCurrentBrowserConfig()
-      if (browserResult.config) {
-        config = browserResult.config
+      const storedResult = getStoredHostConfig()
+      if (storedResult.config) {
+        config = storedResult.config
       } else {
-        const runtimeConfig = this.loadRuntimeConfig()
-        if (runtimeConfig) {
-          config = runtimeConfig
+        const browserResult = getCurrentBrowserConfig()
+        if (browserResult.config) {
+          config = browserResult.config
         } else {
-          const defaultResult = getServerDefaultConfig()
-          config = defaultResult.config!
+          const runtimeConfig = this.loadRuntimeConfig()
+          if (runtimeConfig) {
+            config = runtimeConfig
+          } else {
+            const defaultResult = getServerDefaultConfig()
+            config = defaultResult.config!
+          }
         }
       }
-    }
+
+      try {
+        const serverConfig = await fetchVersionConfigFromServer(config.serverHost)
+        if (serverConfig?.version && serverConfig?.date) {
+          config = {
+            ...config,
+            release: {
+              version: serverConfig.version,
+              date: serverConfig.date,
+            },
+          }
+        }
+      } catch (error) {
+        logger.warn("Failed to get release info from server:", error)
+      }
+
+      configCache = config
+      configCacheTime = Date.now()
+      return config
+    })()
 
     try {
-      const serverConfig = await fetchVersionConfigFromServer(config.serverHost)
-      if (serverConfig?.version && serverConfig?.date) {
-        config = {
-          ...config,
-          release: {
-            version: serverConfig.version,
-            date: serverConfig.date,
-          },
-        }
-      }
-    } catch (error) {
-      logger.warn("Failed to get release info from server:", error)
+      return await configPromise
+    } finally {
+      configPromise = null
     }
-
-    configCache = config
-    configCacheTime = now
-    return config
   },
 
   clearCache() {
     configCache = null
     configCacheTime = 0
+    configPromise = null
   },
 
   async hasValidConfig(): Promise<boolean> {

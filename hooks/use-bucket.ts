@@ -15,6 +15,7 @@ import {
   GetObjectRetentionCommand,
   HeadBucketCommand,
   ListBucketsCommand,
+  type ListBucketsCommandOutput,
   PutBucketEncryptionCommand,
   PutBucketLifecycleConfigurationCommand,
   PutBucketPolicyCommand,
@@ -31,21 +32,70 @@ import {
   GetBucketNotificationConfigurationCommand,
   MFADelete,
   BucketVersioningStatus,
+  type S3Client,
 } from "@aws-sdk/client-s3"
 import { useS3 } from "@/contexts/s3-context"
 import { useApi } from "@/contexts/api-context"
+
+const BUCKETS_CACHE_DURATION = 10000
+let listBucketsCache: ListBucketsCommandOutput | null = null
+let listBucketsCacheTime = 0
+let listBucketsPromise: Promise<ListBucketsCommandOutput> | null = null
+let listBucketsClient: S3Client | null = null
+
+const invalidateBucketsCache = () => {
+  listBucketsCache = null
+  listBucketsCacheTime = 0
+}
+
+const ensureBucketsClient = (client: S3Client) => {
+  if (listBucketsClient !== client) {
+    listBucketsClient = client
+    listBucketsCache = null
+    listBucketsCacheTime = 0
+    listBucketsPromise = null
+  }
+}
 
 export function useBucket() {
   const client = useS3()
   const api = useApi()
 
-  const listBuckets = useCallback(async () => {
-    return client.send(new ListBucketsCommand({}))
-  }, [client])
+  const listBuckets = useCallback(
+    async (options?: { force?: boolean }) => {
+      ensureBucketsClient(client)
+
+      if (options?.force) {
+        invalidateBucketsCache()
+      }
+
+      const now = Date.now()
+      if (!options?.force && listBucketsCache && now - listBucketsCacheTime < BUCKETS_CACHE_DURATION) {
+        return listBucketsCache
+      }
+
+      if (listBucketsPromise) {
+        return listBucketsPromise
+      }
+
+      listBucketsPromise = client.send(new ListBucketsCommand({})) as Promise<ListBucketsCommandOutput>
+      try {
+        const result = await listBucketsPromise
+        listBucketsCache = result
+        listBucketsCacheTime = Date.now()
+        return result
+      } finally {
+        listBucketsPromise = null
+      }
+    },
+    [client],
+  )
 
   const createBucket = useCallback(
     async (params: { Bucket: string; ObjectLockEnabledForBucket?: boolean }) => {
-      return client.send(new CreateBucketCommand(params))
+      const result = await client.send(new CreateBucketCommand(params))
+      invalidateBucketsCache()
+      return result
     },
     [client],
   )
@@ -59,7 +109,9 @@ export function useBucket() {
 
   const deleteBucket = useCallback(
     async (bucket: string) => {
-      return client.send(new DeleteBucketCommand({ Bucket: bucket }))
+      const result = await client.send(new DeleteBucketCommand({ Bucket: bucket }))
+      invalidateBucketsCache()
+      return result
     },
     [client],
   )

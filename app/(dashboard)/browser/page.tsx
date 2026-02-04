@@ -83,51 +83,54 @@ export default function BrowserPage() {
     [getDataUsageInfo, isAdmin],
   )
 
-  const fetchBuckets = useCallback(async () => {
-    const fetchId = fetchIdRef.current + 1
-    fetchIdRef.current = fetchId
-    setPending(true)
-    try {
-      const response = await listBuckets()
-      if (fetchId !== fetchIdRef.current) return
+  const fetchBuckets = useCallback(
+    async (options?: { force?: boolean }) => {
+      const fetchId = fetchIdRef.current + 1
+      fetchIdRef.current = fetchId
+      setPending(true)
+      try {
+        const response = await listBuckets(options)
+        if (fetchId !== fetchIdRef.current) return
 
-      const buckets = ((response as { Buckets?: Array<{ Name?: string; CreationDate?: string }> })?.Buckets ?? [])
-        .map((item) => {
-          const name = item?.Name
-          if (!name) return null
+        const buckets = ((response as { Buckets?: Array<{ Name?: string; CreationDate?: string }> })?.Buckets ?? [])
+          .map((item) => {
+            const name = item?.Name
+            if (!name) return null
 
-          const bucketRow: BucketRow = {
-            Name: name,
-            CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : "",
-          }
+            const bucketRow: BucketRow = {
+              Name: name,
+              CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : "",
+            }
 
-          return bucketRow
-        })
-        .filter((bucket): bucket is BucketRow => bucket !== null)
-        .sort((a, b) => a.Name.localeCompare(b.Name))
+            return bucketRow
+          })
+          .filter((bucket): bucket is BucketRow => bucket !== null)
+          .sort((a, b) => a.Name.localeCompare(b.Name))
 
-      setData(buckets)
-      setPending(false)
-
-      if (isAdmin) {
-        setUsageLoading(true)
-        void loadBucketUsage(
-          fetchId,
-          buckets.map((bucket) => bucket.Name),
-        )
-      } else {
-        setUsageLoading(false)
-      }
-    } catch (error) {
-      if (fetchId !== fetchIdRef.current) return
-      console.error("Failed to fetch buckets:", error)
-      setData([])
-    } finally {
-      if (fetchId === fetchIdRef.current) {
+        setData(buckets)
         setPending(false)
+
+        if (isAdmin) {
+          setUsageLoading(true)
+          void loadBucketUsage(
+            fetchId,
+            buckets.map((bucket) => bucket.Name),
+          )
+        } else {
+          setUsageLoading(false)
+        }
+      } catch (error) {
+        if (fetchId !== fetchIdRef.current) return
+        console.error("Failed to fetch buckets:", error)
+        setData([])
+      } finally {
+        if (fetchId === fetchIdRef.current) {
+          setPending(false)
+        }
       }
-    }
-  }, [isAdmin, listBuckets, loadBucketUsage])
+    },
+    [isAdmin, listBuckets, loadBucketUsage],
+  )
 
   useEffect(() => {
     fetchBuckets()
@@ -216,7 +219,7 @@ export default function BrowserPage() {
 
   const handleFormClosed = (value: boolean) => {
     setFormVisible(value)
-    if (!value) fetchBuckets()
+    if (!value) fetchBuckets({ force: true })
   }
 
   const confirmDelete = (row: BucketRow) => {
@@ -243,7 +246,7 @@ export default function BrowserPage() {
     try {
       await deleteBucket(row.Name)
       message.success(t("Delete Success"))
-      await fetchBuckets()
+      await fetchBuckets({ force: true })
     } catch (error: unknown) {
       message.error(
         (error as { response?: { data?: { message?: string } } })?.response?.data?.message || t("Delete Failed"),
@@ -267,7 +270,7 @@ export default function BrowserPage() {
               <RiAddLine className="size-4" />
               <span>{t("Create Bucket")}</span>
             </Button>
-            <Button variant="outline" onClick={() => fetchBuckets()}>
+            <Button variant="outline" onClick={() => fetchBuckets({ force: true })}>
               <RiRefreshLine className="size-4" />
               <span>{t("Refresh")}</span>
             </Button>

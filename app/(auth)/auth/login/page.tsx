@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next"
 import { LoginForm, type LoginMethod } from "@/components/auth/login-form"
 import { useAuth } from "@/contexts/auth-context"
 import { useMessage } from "@/lib/feedback/message"
-import { buildRoute } from "@/lib/routes"
 import { configManager } from "@/lib/config"
 
 export default function LoginPage() {
@@ -38,7 +37,7 @@ function LoginPageContent() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      router.replace(buildRoute("/"))
+      router.replace("/browser")
     }
   }, [isAuthenticated, router])
 
@@ -59,7 +58,7 @@ function LoginPageContent() {
       await login(credentials, currentConfig)
 
       message.success(t("Login Success"))
-      window.location.href = buildRoute("/")
+      router.replace("/browser")
     } catch {
       message.error(t("Login Failed"))
     }

@@ -32,7 +32,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
   const { setRemoteReplicationTarget, putBucketReplication, getBucketReplication } = useBucket()
 
   const [level, setLevel] = useState("1")
-  const [endpoint, setEndpoint] = useState("http://")
+  const [endpoint, setEndpoint] = useState("")
   const [tls, setTls] = useState(false)
   const [accessKey, setAccessKey] = useState("")
   const [secretKey, setSecretKey] = useState("")
@@ -66,25 +66,9 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     [],
   )
 
-  useEffect(() => {
-    if (tls) {
-      if (endpoint.startsWith("http://")) {
-        setEndpoint(endpoint.replace("http://", "https://"))
-      } else if (!endpoint.startsWith("https://")) {
-        setEndpoint("https://" + endpoint)
-      }
-    } else {
-      if (endpoint.startsWith("https://")) {
-        setEndpoint(endpoint.replace("https://", "http://"))
-      } else if (!endpoint.startsWith("http://")) {
-        setEndpoint("http://" + endpoint)
-      }
-    }
-  }, [tls, endpoint])
-
   const resetForm = useCallback(() => {
     setLevel("1")
-    setEndpoint("http://")
+    setEndpoint("")
     setTls(false)
     setAccessKey("")
     setSecretKey("")
@@ -309,11 +293,17 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
               <Field>
                 <FieldLabel>{t("Endpoint")}</FieldLabel>
                 <FieldContent>
-                  <Input
-                    value={endpoint}
-                    onChange={(e) => setEndpoint(e.target.value)}
-                    placeholder={t("Please enter endpoint")}
-                  />
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-10 items-center whitespace-nowrap rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground">
+                      {tls ? "https://" : "http://"}
+                    </div>
+                    <Input
+                      className="flex-1"
+                      value={endpoint}
+                      onChange={(e) => setEndpoint(e.target.value)}
+                      placeholder={t("Please enter endpoint")}
+                    />
+                  </div>
                 </FieldContent>
               </Field>
               <Field>

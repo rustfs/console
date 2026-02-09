@@ -44,7 +44,7 @@ export function ObjectVersions({
 }: ObjectVersionsProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const objectApi = useObject(bucketName)
+  const { listObjectVersions, deleteObject } = useObject(bucketName)
   const client = useS3()
 
   const [versions, setVersions] = React.useState<VersionRow[]>([])
@@ -54,7 +54,7 @@ export function ObjectVersions({
     if (!objectKey) return
     setLoading(true)
     try {
-      const response = await objectApi.listObjectVersions(objectKey)
+      const response = await listObjectVersions(objectKey)
       setVersions((response as { Versions?: VersionRow[] }).Versions ?? [])
     } catch {
       message.error(t("Failed to fetch versions"))
@@ -62,7 +62,7 @@ export function ObjectVersions({
     } finally {
       setLoading(false)
     }
-  }, [objectKey, objectApi, message, t])
+  }, [objectKey, listObjectVersions, message, t])
 
   React.useEffect(() => {
     if (visible) fetchVersions()
@@ -118,15 +118,15 @@ export function ObjectVersions({
       const versionId = row.VersionId
       if (!versionId) return
       try {
-        await objectApi.deleteObject(objectKey, versionId)
+        await deleteObject(objectKey, versionId)
         message.success(t("Delete Success"))
-        fetchVersions()
+        void fetchVersions()
         onRefreshParent()
       } catch (err) {
         message.error((err as Error)?.message ?? t("Delete Failed"))
       }
     },
-    [objectApi, objectKey, message, t, fetchVersions, onRefreshParent],
+    [deleteObject, objectKey, message, t, fetchVersions, onRefreshParent],
   )
 
   const columns: ColumnDef<VersionRow>[] = React.useMemo(

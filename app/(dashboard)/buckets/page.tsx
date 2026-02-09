@@ -1,7 +1,6 @@
 "use client"
 
-import * as React from "react"
-import { useParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
@@ -15,14 +14,10 @@ import { BucketEventsTab } from "@/components/buckets/events-tab"
 
 export default function BucketSettingsPage() {
   const { t } = useTranslation()
-  const params = useParams()
+  const searchParams = useSearchParams()
   const { hasPermission } = usePermissions()
 
-  const bucketName = React.useMemo(() => {
-    const key = params?.key
-    if (typeof key === "string") return decodeURIComponent(key)
-    return key?.[0] ? decodeURIComponent(key[0]) : ""
-  }, [params?.key])
+  const bucketName = searchParams.get("bucket") ?? ""
 
   const canViewLifecycle = hasPermission(CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE)
   const canViewReplication = hasPermission(CONSOLE_SCOPES.VIEW_BUCKET_REPLICATION)

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import {
   Breadcrumb,
@@ -13,6 +13,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import navs from "@/config/navs"
+import { buildBucketPath } from "@/lib/bucket-path"
 
 function getLabelByPath(pathSegment: string, t: (k: string) => string): string {
   const path = pathSegment.startsWith("/") ? pathSegment : `/${pathSegment}`
@@ -24,6 +25,7 @@ function getLabelByPath(pathSegment: string, t: (k: string) => string): string {
 
 export function TopNavBreadcrumb() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { t } = useTranslation()
 
   const segments = pathname?.split("/").filter(Boolean) ?? []
@@ -36,28 +38,26 @@ export function TopNavBreadcrumb() {
     const homeNav = navs.find((n) => n.to === "/")
     items.push({ label: homeNav?.label ? t(homeNav.label) : t("Home") })
   } else if (segments[0] === "browser") {
+    const bucketName = searchParams.get("bucket") ?? ""
+    const objectKey = searchParams.get("key") ?? ""
+    const objectSegments = objectKey.split("/").filter(Boolean)
+
     items.push({ label: getLabelByPath("browser", t), href: "/browser" })
-    items.push(segments.length === 1 ? { label: t("Buckets") } : { label: t("Buckets"), href: "/browser" })
-    if (segments.length > 1) {
-      const bucketName = decodeURIComponent(segments[1])
-      const bucketHref = `/browser/${encodeURIComponent(bucketName)}`
-      const hasPath = segments.length > 2
-      items.push({ label: bucketName, href: hasPath ? bucketHref : undefined })
-      for (let i = 2; i < segments.length; i++) {
-        const seg = decodeURIComponent(segments[i])
-        const pathSoFar = segments
-          .slice(2, i + 1)
-          .map((s) => encodeURIComponent(decodeURIComponent(s)))
-          .join("/")
-        const href = `/browser/${encodeURIComponent(bucketName)}/${pathSoFar}/`
-        items.push({ label: seg, href: i < segments.length - 1 ? href : undefined })
+    items.push(bucketName ? { label: t("Buckets"), href: "/browser" } : { label: t("Buckets") })
+    if (bucketName) {
+      items.push({ label: bucketName, href: objectSegments.length > 0 ? buildBucketPath(bucketName) : undefined })
+      for (let i = 0; i < objectSegments.length; i++) {
+        const seg = objectSegments[i]
+        const pathSoFar = objectSegments.slice(0, i + 1).join("/")
+        const href = i < objectSegments.length - 1 ? buildBucketPath(bucketName, `${pathSoFar}/`) : undefined
+        items.push({ label: seg, href })
       }
     }
-  } else if (segments[0] === "buckets" && segments.length >= 2) {
+  } else if (segments[0] === "buckets") {
+    const bucketName = searchParams.get("bucket") ?? ""
     items.push({ label: getLabelByPath("browser", t), href: "/browser" })
     items.push({ label: t("Buckets"), href: "/browser" })
-    const bucketName = decodeURIComponent(segments[1])
-    items.push({ label: bucketName })
+    items.push({ label: bucketName || t("Bucket") })
   } else {
     const first = segments[0]
     const label = getLabelByPath(first, t)

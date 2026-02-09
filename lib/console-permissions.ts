@@ -20,6 +20,7 @@ export const CONSOLE_SCOPES = {
 
 export const PAGE_PERMISSIONS: Record<string, ConsoleScope[]> = {
   "/browser": [CONSOLE_SCOPES.VIEW_BROWSER],
+  "/buckets": [CONSOLE_SCOPES.VIEW_BROWSER],
   "/access-keys": [CONSOLE_SCOPES.VIEW_ACCESS_KEYS],
   "/policies": [CONSOLE_SCOPES.VIEW_POLICIES],
   "/users": [CONSOLE_SCOPES.VIEW_USERS],

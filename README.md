@@ -5,6 +5,7 @@ A modern, responsive web management console for RustFS distributed file system, 
 ## ✨ Features
 
 ### Core Features
+
 - **File Browser** - Visual file/object management interface with upload, download, delete operations
 - **Access Keys Management** - Create and manage service account access keys
 - **Policy Management** - Configure and manage IAM policies for fine-grained access control
@@ -12,6 +13,7 @@ A modern, responsive web management console for RustFS distributed file system, 
 - **User Groups Management** - Create and manage user groups to simplify permission assignment
 
 ### Advanced Features
+
 - **Import/Export** - Import and export system configurations
 - **Performance Monitoring** - Real-time system status, server information, and performance metrics
 - **Tiered Storage** - Configure and manage tiered storage policies
@@ -22,22 +24,26 @@ A modern, responsive web management console for RustFS distributed file system, 
 ## 🛠️ Tech Stack
 
 ### Core Framework
+
 - **[Next.js 16](https://nextjs.org/)** - React full-stack framework with App Router
 - **[React 19](https://react.dev/)** - UI library
 - **[TypeScript 5](https://www.typescriptlang.org/)** - Type safety
 
 ### UI & Styling
+
 - **[Tailwind CSS v4](https://tailwindcss.com/)** - Utility-first CSS framework
 - **[shadcn/ui](https://ui.shadcn.com/)** - High-quality component library based on Radix UI
 - **[Remix Icon](https://remixicon.com/)** - Icon library
 - **[next-themes](https://github.com/pacocoursey/next-themes)** - Theme switching support
 
 ### Data Management
+
 - **[TanStack Table](https://tanstack.com/table)** - Powerful table component
 - **[TanStack Virtual](https://tanstack.com/virtual)** - Virtual scrolling support
 - **[AWS SDK v3](https://aws.amazon.com/sdk-for-javascript/)** - S3 client integration
 
 ### Other Tools
+
 - **[i18next](https://www.i18next.com/)** - Internationalization support (12 languages)
 - **[Recharts](https://recharts.org/)** - Chart visualization
 - **[Sonner](https://sonner.emilkowal.ski/)** - Toast notifications
@@ -86,6 +92,7 @@ docker run -p 9000:9000 -p 9001:9001 -v ./rustfs-data:/data rustfs/rustfs:1.0.0-
 ```
 
 The service will start on the following ports:
+
 - **9000** - API port
 - **9001** - Console port
 
@@ -126,12 +133,15 @@ pnpm start
 Before committing code, ensure all checks pass:
 
 #### 1. Lockfile Sync Check
+
 ```bash
 pnpm install --frozen-lockfile
 ```
+
 Ensure `pnpm-lock.yaml` is in sync with `package.json`. After modifying `package.json`, you must run `pnpm install` and commit the updated lockfile.
 
 #### 2. TypeScript Type Check
+
 ```bash
 pnpm type-check
 # or
@@ -139,16 +149,19 @@ pnpm build
 ```
 
 #### 3. ESLint Check
+
 ```bash
 pnpm lint
 ```
 
 #### 4. Code Formatting Check
+
 ```bash
 pnpm format:check
 ```
 
 #### 5. Auto-fix Formatting Issues
+
 ```bash
 pnpm lint:fix
 # or
@@ -170,6 +183,7 @@ pnpm format
 ### Testing
 
 When tests are configured:
+
 - Test files should be placed in `tests/` directory, mirroring source structure
 - Use `*.spec.ts` or `*.test.ts` naming
 - Run tests: `pnpm test:run`

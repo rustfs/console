@@ -14,40 +14,24 @@ import { useBucket } from "@/hooks/use-bucket"
 import { useMessage } from "@/lib/feedback/message"
 import { buildBucketPath } from "@/lib/bucket-path"
 
-interface PageProps {
-  params: Promise<{ bucket: string; key?: string[] }>
+interface BrowserContentProps {
+  bucketName: string
+  keyPath?: string
 }
 
-export default function BucketBrowserPage({ params }: PageProps) {
+export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const message = useMessage()
   const { headBucket } = useBucket()
 
-  const [resolved, setResolved] = React.useState<{ bucket: string; key: string[] } | null>(null)
+  const isObjectList = keyPath.endsWith("/") || keyPath === ""
+  const prefix = keyPath.endsWith("/") ? keyPath : keyPath ? `${keyPath}/` : ""
+
   const [infoOpen, setInfoOpen] = React.useState(false)
   const [infoKey, setInfoKey] = React.useState<string | null>(null)
   const [uploadPickerOpen, setUploadPickerOpen] = React.useState(false)
   const [refreshTrigger, setRefreshTrigger] = React.useState(0)
-
-  React.useEffect(() => {
-    let mounted = true
-    params.then((p) => {
-      if (mounted) {
-        setResolved({ bucket: p.bucket, key: p.key ?? [] })
-      }
-    })
-    return () => {
-      mounted = false
-    }
-  }, [params])
-
-  const bucketName = resolved?.bucket ?? ""
-  const keySegments = resolved?.key ?? []
-  const keyPath = decodeURIComponent(keySegments.join("/"))
-  // 目录路径以 / 结尾，keyPath 可能为 "folder1/"（来自 encodeURIComponent 编码的 URL）
-  const isObjectList = keyPath.endsWith("/") || keyPath === ""
-  const prefix = keyPath.endsWith("/") ? keyPath : keyPath ? keyPath + "/" : ""
 
   React.useEffect(() => {
     if (!bucketName) return
@@ -65,17 +49,13 @@ export default function BucketBrowserPage({ params }: PageProps) {
     router.push(bucketPath(path))
   }
 
-  const handleOpenInfo = (bucket: string, key: string) => {
+  const handleOpenInfo = (_bucket: string, key: string) => {
     setInfoKey(key)
     setInfoOpen(true)
   }
 
   const handleRefresh = () => {
     setRefreshTrigger((n) => n + 1)
-  }
-
-  if (!resolved) {
-    return null
   }
 
   return (

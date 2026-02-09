@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import { Spinner } from "@/components/ui/spinner"
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@/components/ui/item"
@@ -61,11 +62,12 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
     Value: "",
   })
   const [expirationDays, setExpirationDays] = React.useState(0)
-  const [expirationHours, setExpirationHours] = React.useState(0)
+  const [expirationHours, setExpirationHours] = React.useState(2)
   const [expirationMinutes, setExpirationMinutes] = React.useState(0)
   const [expirationError, setExpirationError] = React.useState("")
   const [totalExpirationSeconds, setTotalExpirationSeconds] = React.useState(0)
   const [isExpirationValid, setIsExpirationValid] = React.useState(false)
+  const [isGeneratingUrl, setIsGeneratingUrl] = React.useState(false)
 
   const formatDuration = (seconds: number) => {
     if (seconds === 0) return ""
@@ -137,12 +139,13 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
       setObject(info as Record<string, unknown>)
       setLockStatus((info as { ObjectLockLegalHoldStatus?: string })?.ObjectLockLegalHoldStatus === "ON")
       setExpirationDays(0)
-      setExpirationHours(0)
+      setExpirationHours(2)
       setExpirationMinutes(0)
       setSignedUrl("")
       setExpirationError("")
-      setTotalExpirationSeconds(0)
-      setIsExpirationValid(false)
+      setTotalExpirationSeconds(2 * 60 * 60)
+      setIsExpirationValid(true)
+      setIsGeneratingUrl(false)
     },
     [objectApi],
   )
@@ -269,11 +272,12 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
   }
 
   const generateTemporaryUrl = async () => {
-    if (!object?.Key) return
+    if (!object?.Key || isGeneratingUrl) return
     if (!validateExpiration()) {
       message.error(expirationError || t("Please enter a valid expiration time"))
       return
     }
+    setIsGeneratingUrl(true)
     try {
       let url: string
       const creds = permanentCredentials
@@ -301,6 +305,8 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
       message.success(t("URL generated successfully"))
     } catch (err) {
       message.error((err as Error)?.message ?? t("Failed to generate URL"))
+    } finally {
+      setIsGeneratingUrl(false)
     }
   }
 
@@ -378,7 +384,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
   return (
     <>
       <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-        <DrawerContent className="max-h-[95vh] overflow-y-auto overflow-x-hidden">
+        <DrawerContent className="max-h-[95vh] overflow-y-auto overflow-x-hidden data-[vaul-drawer-direction=right]:w-[92vw] data-[vaul-drawer-direction=right]:sm:max-w-2xl">
           <DrawerHeader>
             <DrawerTitle>{t("Object Details")}</DrawerTitle>
             <DrawerDescription />
@@ -416,27 +422,33 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
               <ItemContent className="min-w-0 space-y-3 text-sm overflow-hidden">
                 <div className="flex items-center justify-between gap-3 min-w-0">
                   <span className="font-medium text-muted-foreground">{t("Object Name")}</span>
-                  <span className="max-w-[60%] truncate" title={String(object?.Key ?? "")}>
+                  <span className="max-w-[60%] truncate text-right" title={String(object?.Key ?? "")}>
                     {String(object?.Key ?? "")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3 min-w-0">
                   <span className="font-medium text-muted-foreground">{t("Object Size")}</span>
-                  <span>{String(object?.ContentLength ?? "-")}</span>
+                  <span className="max-w-[60%] truncate text-right" title={String(object?.ContentLength ?? "-")}>
+                    {String(object?.ContentLength ?? "-")}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between gap-3 min-w-0">
                   <span className="font-medium text-muted-foreground">{t("Object Type")}</span>
-                  <span className="max-w-[60%] truncate" title={String(object?.ContentType ?? "")}>
+                  <span className="max-w-[60%] truncate text-right" title={String(object?.ContentType ?? "")}>
                     {String(object?.ContentType ?? "-")}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3 min-w-0">
                   <span className="font-medium text-muted-foreground">ETag</span>
-                  <span>{String(object?.ETag ?? "-")}</span>
+                  <span className="max-w-[60%] truncate text-right" title={String(object?.ETag ?? "-")}>
+                    {String(object?.ETag ?? "-")}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between gap-3 min-w-0">
                   <span className="font-medium text-muted-foreground">{t("Last Modified Time")}</span>
-                  <span>{lastModified || "-"}</span>
+                  <span className="max-w-[60%] truncate text-right" title={lastModified || "-"}>
+                    {lastModified || "-"}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between gap-3 min-w-0">
                   <span className="font-medium text-muted-foreground">{t("Legal Hold")}</span>
@@ -448,8 +460,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
                     {t("Policy")}
                   </span>
                   <div className="flex flex-col gap-1">
-                    <span>{retention}</span>
-                    {retainUntilDate && <span className="text-xs text-muted-foreground">{retainUntilDate}</span>}
+                    <span className="truncate" title={retention}>
+                      {retention}
+                    </span>
+                    {retainUntilDate && (
+                      <span className="text-xs text-muted-foreground truncate" title={retainUntilDate}>
+                        {retainUntilDate}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="border-t pt-3 flex flex-col gap-3 min-w-0">
@@ -462,7 +480,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
                         max={7}
                         placeholder={t("Days")}
                         className="w-14 shrink-0"
-                        value={expirationDays || ""}
+                        value={expirationDays}
                         onChange={(e) => setExpirationDays(Number(e.target.value) || 0)}
                       />
                       <span className="text-sm text-muted-foreground whitespace-nowrap">{t("Days")}</span>
@@ -474,7 +492,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
                         max={expirationDays > 0 ? 23 : 24}
                         placeholder={t("Hours")}
                         className="w-14 shrink-0"
-                        value={expirationHours || ""}
+                        value={expirationHours}
                         onChange={(e) => setExpirationHours(Number(e.target.value) || 0)}
                       />
                       <span className="text-sm text-muted-foreground whitespace-nowrap">{t("Hours")}</span>
@@ -486,20 +504,22 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
                         max={59}
                         placeholder={t("Minutes")}
                         className="w-14 shrink-0"
-                        value={expirationMinutes || ""}
+                        value={expirationMinutes}
                         onChange={(e) => setExpirationMinutes(Number(e.target.value) || 0)}
                       />
                       <span className="text-sm text-muted-foreground whitespace-nowrap">{t("Minutes")}</span>
                     </div>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="shrink-0"
+                      disabled={!object?.Key || !isExpirationValid || isGeneratingUrl}
+                      onClick={generateTemporaryUrl}
+                    >
+                      {isGeneratingUrl ? <Spinner className="size-4" /> : null}
+                      <span>{t("Generate URL")}</span>
+                    </Button>
                   </div>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    disabled={!object?.Key || !isExpirationValid}
-                    onClick={generateTemporaryUrl}
-                  >
-                    {t("Generate URL")}
-                  </Button>
                   {expirationError && <div className="text-xs text-destructive">{expirationError}</div>}
                   {totalExpirationSeconds > 0 && (
                     <div className="text-xs text-muted-foreground">

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { RiAddLine, RiRefreshLine, RiArchiveLine, RiSettings5Line, RiDeleteBin5Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { niceBytes } from "@/lib/functions"
+import { BrowserContent } from "./content"
 import type { ColumnDef } from "@tanstack/react-table"
 import dayjs from "dayjs"
 
@@ -32,7 +33,7 @@ interface BucketRow {
 
 type BucketUsageMap = Record<string, { objects_count?: number; size?: number } | undefined>
 
-export default function BrowserPage() {
+function BrowserBucketsPage() {
   const { t } = useTranslation()
   const router = useRouter()
   const message = useMessage()
@@ -149,7 +150,7 @@ export default function BrowserPage() {
       accessorKey: "Name",
       cell: ({ row }) => (
         <Link
-          href={`/browser/${encodeURIComponent(row.original.Name)}`}
+          href={`/browser?bucket=${encodeURIComponent(row.original.Name)}`}
           className="flex items-center gap-2 text-primary hover:underline"
         >
           <RiArchiveLine className="size-4" />
@@ -197,7 +198,7 @@ export default function BrowserPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => router.push(`/buckets/${encodeURIComponent(row.original.Name)}`)}
+          onClick={() => router.push(`/buckets?bucket=${encodeURIComponent(row.original.Name)}`)}
         >
           <RiSettings5Line className="size-4" />
           <span>{t("Settings")}</span>
@@ -290,4 +291,16 @@ export default function BrowserPage() {
       <BucketNewForm show={formVisible} onShowChange={handleFormClosed} />
     </Page>
   )
+}
+
+export default function BrowserPage() {
+  const searchParams = useSearchParams()
+  const bucketName = searchParams.get("bucket") ?? ""
+  const keyPath = searchParams.get("key") ?? ""
+
+  if (bucketName) {
+    return <BrowserContent bucketName={bucketName} keyPath={keyPath} />
+  }
+
+  return <BrowserBucketsPage />
 }

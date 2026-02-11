@@ -168,10 +168,24 @@ jobs:
           echo "- **Build Time**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
 
+      - name: 📦 Create zip artifacts
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          (
+            cd ./out
+            zip -r ../artifacts/rustfs-console-latest.zip .
+          )
+          mkdir -p artifacts/${{ needs.pre-release-validation.outputs.version }}
+          (
+            cd ./out
+            zip -r ../artifacts/${{ needs.pre-release-validation.outputs.version }}/rustfs-console-${{ needs.pre-release-validation.outputs.version }}.zip .
+          )
+
       - name: 📦 Create release archive
         run: |
           tar -czf release-${{ needs.pre-release-validation.outputs.version }}.tar.gz \
-            .next/ \
+            out/ \
             package.json \
             pnpm-lock.yaml \
             README.md \
@@ -192,11 +206,11 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Build Size Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -d ".next" ]; then
-            total_size=$(du -sh .next | cut -f1)
+          if [ -d "out" ]; then
+            total_size=$(du -sh out | cut -f1)
             echo "- **Total Build Size**: $total_size" >> $GITHUB_STEP_SUMMARY
             echo "- **File Breakdown**:" >> $GITHUB_STEP_SUMMARY
-            find .next -type f \( -name "*.js" -o -name "*.css" -o -name "*.html" \) 2>/dev/null | head -10 | while read file; do
+            find out -type f \( -name "*.js" -o -name "*.css" -o -name "*.html" \) 2>/dev/null | head -10 | while read file; do
               size=$(du -sh "$file" 2>/dev/null | cut -f1)
               echo "  - $(basename "$file"): $size" >> $GITHUB_STEP_SUMMARY
             done

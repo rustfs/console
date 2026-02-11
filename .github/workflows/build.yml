@@ -59,14 +59,13 @@ jobs:
         run: ${{ steps.detect-package-manager.outputs.manager }} run build
       - name: Zip files
         run: |
+          set -euo pipefail
           mkdir -p artifacts
-          ls -al ./.next
-          ZIP_SRC=$(realpath .next)
-          cd "$ZIP_SRC"
-          zip -r ../artifacts/rustfs-console-latest.zip .
+          ls -al ./out
+          zip -r ./artifacts/rustfs-console-latest.zip ./out
           if [ "${{ github.event_name }}" = "release" ]; then
-            mkdir -p ../artifacts/${{ github.event.release.tag_name }}
-            zip -r ../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
+            mkdir -p ./artifacts/${{ github.event.release.tag_name }}
+            zip -r ./artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip ./out
           fi
       - uses: actions/upload-artifact@v4
         name: Upload artifacts

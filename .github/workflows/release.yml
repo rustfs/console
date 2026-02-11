@@ -182,7 +182,8 @@ jobs:
         with:
           name: release-build-${{ needs.pre-release-validation.outputs.version }}
           path: |
-            .next/
+            artifacts/*.zip
+            artifacts/**/*.zip
             release-*.tar.gz
           retention-days: 90
 

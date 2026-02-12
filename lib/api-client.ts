@@ -16,6 +16,11 @@ interface RequestOptions {
   body?: unknown
   params?: Record<string, string>
   dedupe?: boolean
+  /**
+   * If true, 403 errors will throw an error instead of triggering global error handler
+   * This allows components to handle permission errors gracefully
+   */
+  suppress403Redirect?: boolean
 }
 
 const inflightGetRequests = new Map<string, Promise<unknown>>()
@@ -78,6 +83,13 @@ export class ApiClient {
         return
       }
       if (response.status === 403) {
+        // If suppress403Redirect is true, throw error instead of triggering global handler
+        // This allows components to handle permission errors gracefully
+        if (options.suppress403Redirect) {
+          const errorMsg = await parseApiError(response)
+          throw new Error(errorMsg)
+        }
+
         try {
           const cloned = response.clone()
           let codeText = ""

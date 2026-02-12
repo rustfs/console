@@ -15,7 +15,7 @@ export function useSystem() {
   }, [api])
 
   const getDataUsageInfo = useCallback(async () => {
-    return api.get("/datausageinfo")
+    return api.get("/datausageinfo", { suppress403Redirect: true })
   }, [api])
 
   const getSystemMetrics = useCallback(async () => {

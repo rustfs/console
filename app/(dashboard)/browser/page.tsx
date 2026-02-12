@@ -58,8 +58,15 @@ function BrowserBucketsPage() {
       }
 
       try {
-        const usage = (await getDataUsageInfo()) as { buckets_usage?: BucketUsageMap }
+        const usage = (await getDataUsageInfo()) as { buckets_usage?: BucketUsageMap } | undefined
         if (fetchId !== fetchIdRef.current) return
+        
+        // If usage is undefined (e.g., 403 error), don't update the data
+        // This allows the table to show "--" instead of "0" and "0 B"
+        if (!usage) {
+          return
+        }
+        
         const bucketUsage = usage?.buckets_usage ?? {}
 
         setData((prev) =>
@@ -77,6 +84,7 @@ function BrowserBucketsPage() {
         )
       } catch {
         if (fetchId !== fetchIdRef.current) return
+        // On error, don't update the data - keep showing "--"
       } finally {
         if (fetchId === fetchIdRef.current) {
           setUsageLoading(false)

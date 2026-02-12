@@ -51,7 +51,7 @@ function BrowserBucketsPage() {
 
   const loadBucketUsage = useCallback(
     async (fetchId: number, bucketNames: string[]) => {
-      if (!isAdmin || bucketNames.length === 0) {
+      if (bucketNames.length === 0) {
         setUsageLoading(false)
         return
       }
@@ -81,7 +81,7 @@ function BrowserBucketsPage() {
         }
       }
     },
-    [getDataUsageInfo, isAdmin],
+    [getDataUsageInfo],
   )
 
   const fetchBuckets = useCallback(
@@ -111,15 +111,12 @@ function BrowserBucketsPage() {
         setData(buckets)
         setPending(false)
 
-        if (isAdmin) {
-          setUsageLoading(true)
-          void loadBucketUsage(
-            fetchId,
-            buckets.map((bucket) => bucket.Name),
-          )
-        } else {
-          setUsageLoading(false)
-        }
+        setUsageLoading(true)
+        void loadBucketUsage(
+          fetchId,
+          buckets.map((bucket) => bucket.Name),
+        )
+        
       } catch (error) {
         if (fetchId !== fetchIdRef.current) return
         console.error("Failed to fetch buckets:", error)
@@ -130,7 +127,7 @@ function BrowserBucketsPage() {
         }
       }
     },
-    [isAdmin, listBuckets, loadBucketUsage],
+    [listBuckets, loadBucketUsage],
   )
 
   useEffect(() => {
@@ -165,7 +162,6 @@ function BrowserBucketsPage() {
     },
   ]
 
-  if (isAdmin) {
     baseColumns.push(
       {
         header: () => t("Object Count"),
@@ -186,8 +182,7 @@ function BrowserBucketsPage() {
           row.original.Size ?? (usageLoading ? <Spinner className="size-3 text-muted-foreground" /> : "--"),
       },
     )
-  }
-
+  
   baseColumns.push({
     id: "actions",
     header: () => t("Actions"),

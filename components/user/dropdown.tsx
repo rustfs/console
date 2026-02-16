@@ -65,11 +65,7 @@ export function UserDropdown() {
           <DropdownMenuItem asChild>
             <div className="flex cursor-default items-center gap-2">
               <RiUserLine className="h-4 w-4" />
-              {!isAdmin ? (
-                <span>{(userInfo as { account_name?: string })?.account_name ?? ""}</span>
-              ) : (
-                <span>rustfsAdmin</span>
-              )}
+              <span>{(userInfo as { account_name?: string })?.account_name ?? (isAdmin ? "rustfsAdmin" : "")}</span>
             </div>
           </DropdownMenuItem>
           {!isAdmin && (

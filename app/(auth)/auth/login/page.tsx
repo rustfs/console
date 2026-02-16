@@ -8,6 +8,8 @@ import { LoginForm, type LoginMethod } from "@/components/auth/login-form"
 import { useAuth } from "@/contexts/auth-context"
 import { useMessage } from "@/lib/feedback/message"
 import { configManager } from "@/lib/config"
+import { fetchOidcProviders, initiateOidcLogin } from "@/lib/oidc"
+import type { OidcProvider } from "@/types/config"
 
 export default function LoginPage() {
   return (
@@ -34,6 +36,7 @@ function LoginPageContent() {
     secretAccessKey: "",
     sessionToken: "",
   })
+  const [oidcProviders, setOidcProviders] = useState<OidcProvider[]>([])
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -47,6 +50,15 @@ function LoginPageContent() {
       router.replace("/auth/login")
     }
   }, [searchParams, message, t, router])
+
+  // Fetch OIDC providers on mount
+  useEffect(() => {
+    configManager.loadConfig().then((config) => {
+      if (config?.serverHost) {
+        fetchOidcProviders(config.serverHost).then(setOidcProviders)
+      }
+    })
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,6 +76,11 @@ function LoginPageContent() {
     }
   }
 
+  const handleOidcLogin = async (providerId: string) => {
+    const config = await configManager.loadConfig()
+    initiateOidcLogin(config.serverHost, providerId)
+  }
+
   return (
     <LoginForm
       method={method}
@@ -73,6 +90,8 @@ function LoginPageContent() {
       sts={sts}
       setSts={setSts}
       handleLogin={handleLogin}
+      oidcProviders={oidcProviders}
+      onOidcLogin={handleOidcLogin}
     />
   )
 }

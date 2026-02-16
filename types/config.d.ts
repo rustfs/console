@@ -18,10 +18,16 @@ export type Release = {
   date: string
 }
 
+export type OidcProvider = {
+  provider_id: string
+  display_name: string
+}
+
 export interface SiteConfig {
   serverHost: string
   api: ApiConfig
   s3: S3Config
   session?: SessionConfig
   release?: Release
+  oidc?: OidcProvider[]
 }

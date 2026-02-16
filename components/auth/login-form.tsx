@@ -14,6 +14,8 @@ import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
 import { buildRoute } from "@/lib/routes"
 import logoImage from "@/assets/logo.svg"
 
+import type { OidcProvider } from "@/types/config"
+
 export type LoginMethod = "accessKeyAndSecretKey" | "sts"
 
 export interface LoginFormProps {
@@ -34,6 +36,8 @@ export interface LoginFormProps {
     }>
   >
   handleLogin: (e: React.FormEvent) => void
+  oidcProviders?: OidcProvider[]
+  onOidcLogin?: (providerId: string) => void
 }
 
 export function LoginForm({
@@ -44,6 +48,8 @@ export function LoginForm({
   sts,
   setSts,
   handleLogin,
+  oidcProviders,
+  onOidcLogin,
 }: LoginFormProps) {
   const { t } = useTranslation()
 
@@ -191,6 +197,31 @@ export function LoginForm({
                 </form>
               </Tabs>
             </div>
+
+            {oidcProviders && oidcProviders.length > 0 && onOidcLogin && (
+              <div className="space-y-3">
+                <div className="relative flex items-center">
+                  <div className="flex-grow border-t border-gray-200 dark:border-neutral-700" />
+                  <span className="mx-3 flex-shrink text-xs text-gray-500 dark:text-neutral-500">
+                    {t("Or continue with")}
+                  </span>
+                  <div className="flex-grow border-t border-gray-200 dark:border-neutral-700" />
+                </div>
+                <div className="grid gap-2">
+                  {oidcProviders.map((provider) => (
+                    <Button
+                      key={provider.provider_id}
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-center"
+                      onClick={() => onOidcLogin(provider.provider_id)}
+                    >
+                      {t("Login with {name}", { name: provider.display_name })}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div>
               <p className="text-sm text-gray-600 dark:text-neutral-400">

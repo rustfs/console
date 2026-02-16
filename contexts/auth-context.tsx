@@ -19,6 +19,7 @@ interface AuthContextValue {
     credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
     customConfig?: SiteConfig,
   ) => Promise<unknown>
+  loginWithStsCredentials: (credentials: Credentials) => Promise<void>
   logout: () => void
   logoutAndRedirect: () => void
   setIsAdmin: (value: boolean) => void
@@ -110,6 +111,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [setCredentials, setPermanentCredentials, setPermanentStore],
   )
 
+  const loginWithStsCredentials = useCallback(
+    async (creds: Credentials) => {
+      setCredentials({
+        AccessKeyId: creds.AccessKeyId,
+        SecretAccessKey: creds.SecretAccessKey,
+        SessionToken: creds.SessionToken,
+        Expiration: creds.Expiration,
+      })
+      setPermanentStore(undefined)
+    },
+    [setCredentials, setPermanentStore],
+  )
+
   const logout = useCallback(() => {
     setStore({})
     setPermanentStore(undefined)
@@ -127,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       login,
+      loginWithStsCredentials,
       logout,
       logoutAndRedirect,
       setIsAdmin,
@@ -138,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }),
     [
       login,
+      loginWithStsCredentials,
       logout,
       logoutAndRedirect,
       setIsAdmin,

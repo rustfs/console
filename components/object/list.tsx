@@ -12,6 +12,7 @@ import {
   RiFileLine,
   RiArrowLeftSLine,
   RiArrowRightSLine,
+  RiEyeLine,
 } from "@remixicon/react"
 import {
   AlertDialog,
@@ -263,10 +264,24 @@ export function ObjectList({
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             {row.original.type === "object" ? (
+              <>
+                <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                    >
+                      <Link
+                        href={`/browser?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(prefix)}&preview=true&previewKey=${encodeURIComponent(row.original.Key)}`}
+                      >
+                        <RiEyeLine className="size-4" />
+                        <span>{t("Preview")}</span>
+                      </Link>
+                    </Button>
               <Button variant="outline" size="sm" onClick={() => downloadFile(row.original.Key)}>
                 <RiDownloadCloud2Line className="size-4" />
                 <span>{t("Download")}</span>
               </Button>
+              </>
             ) : null}
             <Button variant="outline" size="sm" onClick={() => openDeleteDialog([row.original.Key])}>
               <RiDeleteBin5Line className="size-4" />
@@ -276,7 +291,7 @@ export function ObjectList({
         ),
       },
     ],
-    [t, bucket, bucketPath, onOpenInfo, displayKey, downloadFile],
+    [t, displayKey, bucketPath, onOpenInfo, bucket, prefix, downloadFile],
   )
 
   const { table, selectedRowIds } = useDataTable<ObjectRow>({

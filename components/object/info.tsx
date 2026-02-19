@@ -35,9 +35,19 @@ interface ObjectInfoProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onRefresh?: () => void
+  autoPreview?: boolean
+  onPreviewChange?: (showPreview: boolean) => void
 }
 
-export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: ObjectInfoProps) {
+export function ObjectInfo({
+  bucketName,
+  objectKey,
+  open,
+  onOpenChange,
+  onRefresh,
+  autoPreview = false,
+  onPreviewChange,
+}: ObjectInfoProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
@@ -219,10 +229,25 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
     }
   }
 
+  // Auto-open preview once when autoPreview is true and object data is first loaded
+  const hasAutoPreviewedRef = React.useRef(false)
+  React.useEffect(() => {
+    if (!open) {
+      hasAutoPreviewedRef.current = false
+      return
+    }
+    if (autoPreview && object && !hasAutoPreviewedRef.current) {
+      hasAutoPreviewedRef.current = true
+      setShowPreview(true)
+    }
+  }, [autoPreview, object, open])
+
+  // Open preview dialog
   const openPreview = () => {
     if (!object) return
     setPreviewObject(object)
     setShowPreview(true)
+    onPreviewChange?.(true)
   }
 
   const handlePreviewVersion = async (versionId: string) => {
@@ -648,7 +673,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange }: Object
         </DialogContent>
       </Dialog>
 
-      <ObjectPreviewModal show={showPreview} onShowChange={setShowPreview} object={previewObject ?? object} />
+      <ObjectPreviewModal
+        show={showPreview}
+        onShowChange={(show) => {
+          setShowPreview(show)
+          onPreviewChange?.(show)
+        }}
+        object={previewObject ?? object}
+      />
       <ObjectVersions
         bucketName={bucketName}
         objectKey={(object?.Key as string) ?? ""}

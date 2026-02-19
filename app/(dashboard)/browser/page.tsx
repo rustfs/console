@@ -118,7 +118,7 @@ function BrowserBucketsPage() {
           fetchId,
           buckets.map((bucket) => bucket.Name),
         )
-        
+
       } catch (error) {
         if (fetchId !== fetchIdRef.current) return
         console.error("Failed to fetch buckets:", error)
@@ -296,9 +296,11 @@ export default function BrowserPage() {
   const searchParams = useSearchParams()
   const bucketName = searchParams.get("bucket") ?? ""
   const keyPath = searchParams.get("key") ?? ""
+  const preview = searchParams.get("preview") === "true"
+  const previewKey = searchParams.get("previewKey") ?? ""
 
   if (bucketName) {
-    return <BrowserContent bucketName={bucketName} keyPath={keyPath} />
+    return <BrowserContent bucketName={bucketName} keyPath={keyPath} preview={preview} previewKey={previewKey} />
   }
 
   return <BrowserBucketsPage />

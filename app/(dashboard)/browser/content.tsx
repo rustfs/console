@@ -17,9 +17,11 @@ import { buildBucketPath } from "@/lib/bucket-path"
 interface BrowserContentProps {
   bucketName: string
   keyPath?: string
+  preview?: boolean
+  previewKey?: string
 }
 
-export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps) {
+export function BrowserContent({ bucketName, keyPath = "", preview = false, previewKey = "" }: BrowserContentProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -31,8 +33,18 @@ export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps
 
   const [infoOpen, setInfoOpen] = React.useState(false)
   const [infoKey, setInfoKey] = React.useState<string | null>(null)
+  const [autoPreview, setAutoPreview] = React.useState(false)
   const [uploadPickerOpen, setUploadPickerOpen] = React.useState(false)
   const [refreshTrigger, setRefreshTrigger] = React.useState(0)
+
+  // Handle initial preview params - set infoOpen and trigger auto-preview
+  React.useEffect(() => {
+    if (preview && previewKey) {
+      setInfoKey(previewKey)
+      setInfoOpen(true)
+      setAutoPreview(true)
+    }
+  }, [preview, previewKey])
 
   React.useEffect(() => {
     if (!bucketName) return
@@ -54,6 +66,34 @@ export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps
   const handleOpenInfo = (_bucket: string, key: string) => {
     setInfoKey(key)
     setInfoOpen(true)
+  }
+
+  const updatePreviewParams = (showPreview: boolean, key?: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (showPreview && key) {
+      params.set("preview", "true")
+      params.set("previewKey", key)
+    } else {
+      params.delete("preview")
+      params.delete("previewKey")
+    }
+    router.replace(`/browser?${params.toString()}`)
+  }
+
+  const handleInfoOpenChange = (open: boolean) => {
+    setInfoOpen(open)
+    if (!open) {
+      setAutoPreview(false)
+      updatePreviewParams(false)
+    }
+  }
+
+  const handlePreviewChange = (showPreview: boolean) => {
+    if (showPreview && infoKey) {
+      updatePreviewParams(true, infoKey)
+    } else {
+      updatePreviewParams(false)
+    }
   }
 
   const handleRefresh = () => {
@@ -101,8 +141,10 @@ export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps
         bucketName={bucketName}
         objectKey={infoKey}
         open={infoOpen}
-        onOpenChange={setInfoOpen}
+        onOpenChange={handleInfoOpenChange}
         onRefresh={handleRefresh}
+        autoPreview={autoPreview}
+        onPreviewChange={handlePreviewChange}
       />
 
       <ObjectUploadPicker

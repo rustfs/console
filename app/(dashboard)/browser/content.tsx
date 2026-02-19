@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
@@ -22,6 +22,7 @@ interface BrowserContentProps {
 export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps) {
   const { t } = useTranslation()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const message = useMessage()
   const { headBucket } = useBucket()
 
@@ -39,9 +40,10 @@ export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps
       .then(() => {})
       .catch(() => {
         message.error(t("Bucket not found"))
-        router.push("/browser")
+        const params = new URLSearchParams(searchParams.toString())
+        router.push(`/browser?${params.toString()}`)
       })
-  }, [bucketName, headBucket, message, router, t])
+  }, [bucketName, headBucket, message, router, t, searchParams])
 
   const bucketPath = React.useCallback((path?: string | string[]) => buildBucketPath(bucketName, path), [bucketName])
 

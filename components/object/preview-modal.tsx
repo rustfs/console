@@ -86,7 +86,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
           {loading ? (
             <Spinner className="mx-auto size-8 text-muted-foreground" />
           ) : (
-              <>
+            <>
               {isImage && (
                 <div className="flex justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -96,21 +96,17 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
               {isPdf && <iframe src={previewUrl} className="h-[70vh] w-full" frameBorder={0} title="PDF preview" />}
               {isText && (
                 <pre className="max-h-[70vh] relative overflow-auto whitespace-pre-wrap break-words">
-                    {getFormattedContent()}
-                    <div className="absolute right-0 top-0">
-          {isJson && (
-                    <div className="flex justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsFormatted(!isFormatted)}
-                      >
-                        {isFormatted ? t("Raw") : t("Formatted")}
-                      </Button>
-                    </div>
-                  )}
-        </div>
-                  </pre>
+                  {getFormattedContent()}
+                  <div className="absolute right-0 top-0">
+                    {isJson && (
+                      <div className="flex justify-end">
+                        <Button variant="outline" size="sm" onClick={() => setIsFormatted(!isFormatted)}>
+                          {isFormatted ? t("Raw") : t("Formatted")}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </pre>
               )}
               {isVideo && (
                 <video controls className="w-full">

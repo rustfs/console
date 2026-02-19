@@ -118,7 +118,6 @@ function BrowserBucketsPage() {
           fetchId,
           buckets.map((bucket) => bucket.Name),
         )
-
       } catch (error) {
         if (fetchId !== fetchIdRef.current) return
         console.error("Failed to fetch buckets:", error)

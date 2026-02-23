@@ -39,17 +39,21 @@ export function isSafeRedirectPath(path: string, fallback = "/"): string {
   // Block absolute URLs with protocol (e.g. https://evil.com)
   if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return fallback
 
-  // Block protocol-relative URLs (e.g. //evil.com)
-  if (trimmed.startsWith("//")) return fallback
+  // Block protocol-relative URLs and backslash variants (e.g. //evil.com, \/evil.com, \\evil.com)
+  // Some browsers treat backslashes as forward slashes in URLs
+  if (/^[\\/]{2,}/.test(trimmed)) return fallback
 
-  // Block backslash-based URLs (e.g. \/evil.com, \\evil.com) which some browsers treat as //
-  if (/^[/\\][/\\]/.test(trimmed)) return fallback
+  // Block single leading backslash (e.g. \evil.com) which some browsers interpret as //
+  if (trimmed.startsWith("\\")) return fallback
 
   // Block data: and javascript: URIs (case-insensitive, with optional whitespace)
   if (/^\s*(javascript|data)\s*:/i.test(trimmed)) return fallback
 
   // Ensure it starts with / (relative path)
   if (!trimmed.startsWith("/")) return fallback
+
+  // Block directory traversal sequences (e.g. /../evil.com, /../../etc/passwd)
+  if (/(?:^|\/)\.\.(?:\/|$)/.test(trimmed)) return fallback
 
   return trimmed
 }

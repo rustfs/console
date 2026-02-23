@@ -26,3 +26,30 @@ export function buildRoute(path: string): string {
 export function getLoginRoute(): string {
   return buildRoute("/auth/login")
 }
+
+/**
+ * Validate that a redirect path is safe (relative, no protocol, no external domain).
+ * Returns the path if safe, or the fallback otherwise.
+ */
+export function isSafeRedirectPath(path: string, fallback = "/"): string {
+  if (!path || typeof path !== "string") return fallback
+
+  const trimmed = path.trim()
+
+  // Block absolute URLs with protocol (e.g. https://evil.com)
+  if (/^[a-z][a-z0-9+.-]*:/i.test(trimmed)) return fallback
+
+  // Block protocol-relative URLs (e.g. //evil.com)
+  if (trimmed.startsWith("//")) return fallback
+
+  // Block backslash-based URLs (e.g. \/evil.com, \\evil.com) which some browsers treat as //
+  if (/^[/\\][/\\]/.test(trimmed)) return fallback
+
+  // Block data: and javascript: URIs (case-insensitive, with optional whitespace)
+  if (/^\s*(javascript|data)\s*:/i.test(trimmed)) return fallback
+
+  // Ensure it starts with / (relative path)
+  if (!trimmed.startsWith("/")) return fallback
+
+  return trimmed
+}

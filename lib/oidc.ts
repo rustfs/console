@@ -1,4 +1,5 @@
 import type { OidcProvider } from "@/types/config"
+import { isSafeRedirectPath } from "@/lib/routes"
 
 /**
  * Fetch configured OIDC providers from the server.
@@ -52,6 +53,6 @@ export function parseOidcCallback(hash: string): {
     secretKey,
     sessionToken,
     expiration: params.get("expiration") ?? "",
-    redirect: params.get("redirect") ?? "/",
+    redirect: isSafeRedirectPath(params.get("redirect") ?? "", "/"),
   }
 }

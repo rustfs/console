@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useMessage } from "@/lib/feedback/message"
 import { parseOidcCallback } from "@/lib/oidc"
+import { isSafeRedirectPath } from "@/lib/routes"
 import { useTranslation } from "react-i18next"
 
 export default function OidcCallbackPage() {
@@ -30,7 +31,7 @@ export default function OidcCallbackPage() {
       return
     }
 
-    redirectPath.current = credentials.redirect || "/browser"
+    redirectPath.current = isSafeRedirectPath(credentials.redirect, "/browser")
 
     loginWithStsCredentials({
       AccessKeyId: credentials.accessKey,

@@ -21,12 +21,18 @@ const PermissionsContext = createContext<PermissionsContextValue | null>(null)
 
 export function PermissionsProvider({ children }: { children: React.ReactNode }) {
   const api = useApiOptional()
-  const { isAdmin } = useAuth()
+  const { isAdmin, isAuthenticated, credentials } = useAuth()
 
   const [userPolicy, setUserPolicy] = useState<ConsolePolicy | null>(null)
   const [userInfo, setUserInfo] = useState<Record<string, unknown> | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [hasFetchedPolicy, setHasFetchedPolicy] = useState(false)
+
+  useEffect(() => {
+    setUserInfo(null)
+    setUserPolicy(null)
+    setHasFetchedPolicy(false)
+  }, [credentials?.AccessKeyId, credentials?.SessionToken, isAuthenticated])
 
   const fetchUserPolicy = useCallback(async () => {
     if (!api) return
@@ -81,10 +87,10 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   )
 
   useEffect(() => {
-    if (api && !isAdmin && !userPolicy && !isLoading) {
+    if (api && isAuthenticated && !isAdmin && !hasFetchedPolicy && !isLoading) {
       fetchUserPolicy()
     }
-  }, [api, isAdmin, userPolicy, isLoading, fetchUserPolicy])
+  }, [api, isAuthenticated, isAdmin, hasFetchedPolicy, isLoading, fetchUserPolicy])
 
   const value = useMemo(
     () => ({

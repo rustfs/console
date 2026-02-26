@@ -73,7 +73,7 @@ export class ApiClient {
 
       if (response.status === 401) {
         if (this.errorHandler) {
-          await this.errorHandler.handle401()
+          await this.errorHandler.handle401(url)
         }
         return
       }
@@ -102,14 +102,14 @@ export class ApiClient {
 
           if (this.errorHandler) {
             if (isUnauthorizedAccess || isInvalidAccessKey) {
-              await this.errorHandler.handle401()
+              await this.errorHandler.handle401(url)
             } else {
-              await this.errorHandler.handle403()
+              await this.errorHandler.handle403(url)
             }
           }
         } catch {
           if (this.errorHandler) {
-            await this.errorHandler.handle403()
+            await this.errorHandler.handle403(url)
           }
         }
         return

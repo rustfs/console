@@ -32,7 +32,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function isValidCredentials(credentials: Credentials): boolean {
+function isValidCredentials(credentials: Credentials | undefined): boolean {
   if (
     !credentials?.AccessKeyId ||
     !credentials?.SecretAccessKey ||
@@ -46,8 +46,8 @@ function isValidCredentials(credentials: Credentials): boolean {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [store, setStore] = useLocalStorage<Credentials>("auth.credentials", {})
-  const [isAdminStore, setIsAdminStore] = useLocalStorage<boolean>("auth.isAdmin", false)
+  const [store, setStore] = useLocalStorage<Credentials | undefined>("auth.credentials", undefined)
+  const [isAdminStore, setIsAdminStore] = useLocalStorage<boolean | undefined>("auth.isAdmin", undefined)
   const [permanentStore, setPermanentStore] = useLocalStorage<Credentials | undefined>("auth.permanent", undefined)
 
   const setCredentials = useCallback(
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const getIsAdmin = useCallback(() => {
-    return isAdminStore
+    return !!isAdminStore
   }, [isAdminStore])
 
   const login = useCallback(
@@ -125,9 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const logout = useCallback(() => {
-    setStore({})
+    setStore(undefined)
     setPermanentStore(undefined)
-    setIsAdminStore(false)
+    setIsAdminStore(undefined)
   }, [setStore, setPermanentStore, setIsAdminStore])
 
   const logoutAndRedirect = useCallback(() => {
@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       credentials,
       permanentCredentials: permanentStore,
       isAuthenticated,
-      isAdmin: isAdminStore,
+      isAdmin: !!isAdminStore,
     }),
     [
       login,

@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { S3Client } from "@aws-sdk/client-s3"
 import { useAuth } from "@/contexts/auth-context"
 import { configManager } from "@/lib/config"
@@ -40,6 +41,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
   const { credentials, isAuthenticated, logout } = useAuth()
   const [s3Client, setS3Client] = useState<S3Client | null>(null)
   const [isReady, setIsReady] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     if (!isAuthenticated || !credentials?.AccessKeyId) {
@@ -123,7 +125,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
             }
             if (err?.$metadata?.httpStatusCode === 401) {
               logout()
-              window.location.href = getLoginRoute()
+              router.replace("/auth/login/")
               return { response: { statusCode: 401, headers: {} } }
             }
             if (err?.$metadata?.httpStatusCode === 403) {
@@ -132,7 +134,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
               const isInvalidAccessKey = codeText === "invalidaccesskeyid"
               if (isUnauthorizedAccess || isInvalidAccessKey) {
                 logout()
-                window.location.href = getLoginRoute()
+                router.replace("/auth/login/")
                 return { response: { statusCode: 401, headers: {} } }
               }
             }
@@ -153,7 +155,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated, credentials?.AccessKeyId, credentials?.SecretAccessKey, credentials?.SessionToken, logout])
+  }, [isAuthenticated, credentials?.AccessKeyId, credentials?.SecretAccessKey, credentials?.SessionToken, logout, router])
 
   return <S3Context.Provider value={{ client: s3Client, isReady }}>{children}</S3Context.Provider>
 }

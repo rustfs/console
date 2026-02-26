@@ -19,7 +19,7 @@ export function DashboardAuthGuard({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     if (isReady && !isAuthenticated) {
-      router.replace("/auth/login?unauthorized=true")
+      router.replace("/auth/login/?unauthorized=true")
     }
   }, [isAuthenticated, isReady, router])
 
@@ -34,7 +34,7 @@ export function DashboardAuthGuard({ children }: { children: React.ReactNode }) 
     if (!isReady || !isAuthenticated || isAdmin) return
     if (isLoading || !hasFetchedPolicy) return
     if (!canAccessPath(pathname)) {
-      router.replace("/403")
+      router.replace("/403/")
     }
   }, [isReady, isAuthenticated, isAdmin, isLoading, userPolicy, hasFetchedPolicy, canAccessPath, pathname, router])
 

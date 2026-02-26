@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
 import { ApiClient } from "@/lib/api-client"
 import { AwsClient } from "@/lib/aws4fetch"
 import { ApiErrorHandler } from "@/lib/api-error-handler"
@@ -19,6 +20,8 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
   const { credentials, isAuthenticated, logout } = useAuth()
   const [apiClient, setApiClient] = useState<ApiClient | null>(null)
   const [isReady, setIsReady] = useState(false)
+  const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!isAuthenticated || !credentials?.AccessKeyId) {
@@ -51,10 +54,19 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
       const errorHandler = new ApiErrorHandler({
         onUnauthorized: async () => {
           logout()
-          window.location.href = getLoginRoute()
+          router.replace("/auth/login/")
         },
-        onForbidden: async () => {
-          window.location.href = buildRoute("/403")
+        onForbidden: async (url) => {
+          // If the forbidden error happens on the accountinfo endpoint, it means the session is invalid
+          // or the user has no permissions at all. In this case, we should log out.
+          if (url?.includes("/is-admin") || url?.includes("/accountinfo") || url?.includes("/version")) {
+            logout()
+            router.replace("/auth/login/")
+            return
+          }
+
+          if (pathname === "/403/") return
+          router.replace("/403/")
         },
       })
 
@@ -71,7 +83,7 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated, credentials?.AccessKeyId, credentials?.SecretAccessKey, credentials?.SessionToken, logout])
+  }, [isAuthenticated, credentials?.AccessKeyId, credentials?.SecretAccessKey, credentials?.SessionToken, logout, pathname, router])
 
   return <ApiContext.Provider value={{ api: apiClient, isReady }}>{children}</ApiContext.Provider>
 }

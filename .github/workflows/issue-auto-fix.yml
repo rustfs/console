@@ -47,6 +47,13 @@ jobs:
           ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
           ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
           ANTHROPIC_MODEL: ${{ secrets.ANTHROPIC_MODEL }}
+          ANTHROPIC_DEFAULT_HAIKU_MODEL: claude-haiku-4.5
+          ANTHROPIC_DEFAULT_SONNET_MODEL: claude-sonnet-4.6
+          ANTHROPIC_DEFAULT_OPUS_MODEL: claude-opus-4.6
+          ANTHROPIC_TIMEOUT_MS: 180000
+          ANTHROPIC_MAX_RETRIES: 3
+          ANTHROPIC_RETRY_BASE_MS: 2000
+          ANTHROPIC_MAX_TOKENS: 2048
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
           ISSUE_BODY: ${{ github.event.issue.body }}

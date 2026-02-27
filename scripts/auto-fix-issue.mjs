@@ -69,6 +69,77 @@ function shouldRetry(status) {
   return status === 408 || status === 429 || status >= 500
 }
 
+function tryParseJson(text) {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+function extractLastJsonObject(text) {
+  const cleaned = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+
+  const direct = tryParseJson(cleaned)
+  if (direct && typeof direct === "object") {
+    return direct
+  }
+
+  let start = -1
+  let depth = 0
+  let inString = false
+  let escaping = false
+  const candidates = []
+
+  for (let i = 0; i < cleaned.length; i += 1) {
+    const ch = cleaned[i]
+
+    if (escaping) {
+      escaping = false
+      continue
+    }
+
+    if (ch === "\\") {
+      escaping = true
+      continue
+    }
+
+    if (ch === '"') {
+      inString = !inString
+      continue
+    }
+
+    if (inString) continue
+
+    if (ch === "{") {
+      if (depth === 0) start = i
+      depth += 1
+      continue
+    }
+
+    if (ch === "}") {
+      if (depth === 0) continue
+      depth -= 1
+      if (depth === 0 && start >= 0) {
+        candidates.push(cleaned.slice(start, i + 1))
+        start = -1
+      }
+    }
+  }
+
+  for (let i = candidates.length - 1; i >= 0; i -= 1) {
+    const parsed = tryParseJson(candidates[i])
+    if (parsed && typeof parsed === "object" && typeof parsed.patch === "string") {
+      return parsed
+    }
+  }
+
+  return null
+}
+
 async function requestClaude() {
   const endpoint = `${anthropicBaseUrl.replace(/\/$/, "")}/v1/messages`
 
@@ -154,15 +225,8 @@ if (!outputText) {
   process.exit(1)
 }
 
-const normalized = outputText
-  .trim()
-  .replace(/^```(?:json)?\s*/i, "")
-  .replace(/\s*```$/, "")
-
-let parsed
-try {
-  parsed = JSON.parse(normalized)
-} catch {
+const parsed = extractLastJsonObject(outputText)
+if (!parsed) {
   console.error("Model output is not valid JSON")
   console.error(outputText)
   process.exit(1)

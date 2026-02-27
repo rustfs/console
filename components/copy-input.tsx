@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { RiFileCopyLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { copyToClipboard } from "@/lib/clipboard"
 import { useMessage } from "@/lib/feedback/message"
 import { cn } from "@/lib/utils"
 
@@ -29,8 +30,7 @@ export function CopyInput({
 
   const handleCopy = async () => {
     try {
-      if (!value) throw new Error("No value to copy")
-      await navigator.clipboard.writeText(value)
+      await copyToClipboard(value)
       message.success(t("Copy Success"))
     } catch {
       message.error(t("Copy Failed"))

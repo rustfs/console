@@ -16,7 +16,7 @@ jobs:
   auto-fix:
     if: >-
       github.event.issue.state == 'open' &&
-      github.event.assignee.login == 'cxymds' &&
+      contains(github.event.issue.assignees.*.login, 'cxymds') &&
       contains(github.event.issue.labels.*.name, 'auto-fix')
     runs-on: ubuntu-latest
 

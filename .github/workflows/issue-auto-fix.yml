@@ -1,0 +1,147 @@
+name: Issue Auto Fix
+
+on:
+  issues:
+    types: [assigned, labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: issue-auto-fix-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  auto-fix:
+    if: >-
+      github.event.issue.state == 'open' &&
+      github.event.assignee.login == 'cxymds' &&
+      contains(github.event.issue.labels.*.name, 'auto-fix')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create work branch
+        run: |
+          BRANCH="codex/issue-${{ github.event.issue.number }}-autofix"
+          git checkout -B "$BRANCH"
+
+      - name: Attempt issue fix with Claude
+        id: ai_fix
+        env:
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+          ANTHROPIC_MODEL: ${{ secrets.ANTHROPIC_MODEL }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          REPOSITORY: ${{ github.repository }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: node scripts/auto-fix-issue.mjs
+
+      - name: Apply generated patch
+        run: |
+          if [ ! -s /tmp/issue-autofix.patch ]; then
+            echo "Generated patch is empty"
+            exit 1
+          fi
+          git apply --3way --whitespace=fix /tmp/issue-autofix.patch
+
+      - name: Run TypeScript check
+        run: pnpm tsc --noEmit
+
+      - name: Run lint
+        run: pnpm lint
+
+      - name: Run tests if present
+        run: pnpm run test:run --if-present
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create draft pull request
+        id: create_pr
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: codex/issue-${{ github.event.issue.number }}-autofix
+          commit-message: "fix: auto-resolve issue #${{ github.event.issue.number }}"
+          title: "fix: auto-resolve issue #${{ github.event.issue.number }}"
+          draft: true
+          body: |
+            Auto-generated draft fix for #${{ github.event.issue.number }}.
+
+            Source issue: ${{ github.event.issue.html_url }}
+
+            The workflow attempted an automated fix, then ran:
+            - `pnpm install --frozen-lockfile`
+            - `pnpm tsc --noEmit`
+            - `pnpm lint`
+            - `pnpm run test:run --if-present`
+          labels: |
+            automated
+            issue-fix
+
+      - name: Email PR created
+        if: steps.create_pr.outputs.pull-request-url != ''
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          secure: true
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "[Issue Auto Fix] Draft PR created for #${{ github.event.issue.number }}"
+          to: cxymds@qq.com
+          from: ${{ secrets.SMTP_FROM }}
+          body: |
+            Issue auto-fix created a draft PR.
+
+            Repository: ${{ github.repository }}
+            Issue: #${{ github.event.issue.number }} - ${{ github.event.issue.title }}
+            Issue URL: ${{ github.event.issue.html_url }}
+            PR URL: ${{ steps.create_pr.outputs.pull-request-url }}
+            Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Email failure
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          secure: true
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "[Issue Auto Fix] Failed for #${{ github.event.issue.number }}"
+          to: cxymds@qq.com
+          from: ${{ secrets.SMTP_FROM }}
+          body: |
+            Issue auto-fix failed before draft PR creation.
+
+            Repository: ${{ github.repository }}
+            Issue: #${{ github.event.issue.number }} - ${{ github.event.issue.title }}
+            Issue URL: ${{ github.event.issue.html_url }}
+            Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

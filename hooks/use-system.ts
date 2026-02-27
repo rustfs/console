@@ -15,7 +15,17 @@ export function useSystem() {
   }, [api])
 
   const getDataUsageInfo = useCallback(async () => {
-    return api.get("/datausageinfo")
+    try {
+      return await api.get("/datausageinfo", { suppress403Redirect: true })
+    } catch (error: unknown) {
+      const status =
+        (error as { status?: number })?.status ?? (error as { response?: { status?: number } })?.response?.status
+      if (status === 403) {
+        // Preserve previous behavior: treat 403 as "no data" instead of rejecting.
+        return undefined
+      }
+      throw error
+    }
   }, [api])
 
   const getSystemMetrics = useCallback(async () => {

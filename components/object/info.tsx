@@ -44,7 +44,6 @@ export function ObjectInfo({
   objectKey,
   open,
   onOpenChange,
-  onRefresh,
   autoPreview = false,
   onPreviewChange,
 }: ObjectInfoProps) {

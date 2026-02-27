@@ -13,6 +13,7 @@ import { ObjectUploadPicker } from "@/components/object/upload-picker"
 import { useBucket } from "@/hooks/use-bucket"
 import { useMessage } from "@/lib/feedback/message"
 import { buildBucketPath } from "@/lib/bucket-path"
+import { useTasks } from "@/contexts/task-context"
 
 interface BrowserContentProps {
   bucketName: string
@@ -100,6 +101,37 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
     setRefreshTrigger((n) => n + 1)
   }
 
+  const tasks = useTasks()
+  const debounceTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const prevCompletedIdsRef = React.useRef(new Set<string>())
+
+  React.useEffect(() => {
+    const currentIds = new Set(tasks.map((t) => t.id))
+    for (const id of prevCompletedIdsRef.current) {
+      if (!currentIds.has(id)) prevCompletedIdsRef.current.delete(id)
+    }
+    const completedForBucket = tasks.filter(
+      (t) =>
+        (t.kind === "upload" || t.kind === "delete") &&
+        t.bucketName === bucketName &&
+        t.status === "completed",
+    )
+    const newCompletions = completedForBucket.filter((t) => !prevCompletedIdsRef.current.has(t.id))
+    if (newCompletions.length > 0) {
+      newCompletions.forEach((t) => prevCompletedIdsRef.current.add(t.id))
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = setTimeout(() => {
+        setRefreshTrigger((n) => n + 1)
+      }, 1500)
+    }
+  }, [tasks, bucketName, setRefreshTrigger])
+
+  React.useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    }
+  }, [])
+
   return (
     <Page>
       <PageHeader>
@@ -152,7 +184,6 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
         onShowChange={setUploadPickerOpen}
         bucketName={bucketName}
         prefix={prefix}
-        onSuccess={handleRefresh}
       />
     </Page>
   )

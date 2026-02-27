@@ -16,7 +16,6 @@ import { Spinner } from "@/components/ui/spinner"
 import { useBucket } from "@/hooks/use-bucket"
 import { useObject } from "@/hooks/use-object"
 import { useSystem } from "@/hooks/use-system"
-import { useAuth } from "@/contexts/auth-context"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { niceBytes } from "@/lib/functions"
@@ -39,7 +38,6 @@ function BrowserBucketsPage() {
   const router = useRouter()
   const message = useMessage()
   const dialog = useDialog()
-  const { isAdmin } = useAuth()
   const { listBuckets, deleteBucket } = useBucket()
   const { getDataUsageInfo } = useSystem()
 
@@ -60,9 +58,8 @@ function BrowserBucketsPage() {
       try {
         const usage = (await getDataUsageInfo()) as { buckets_usage?: BucketUsageMap } | undefined
         if (fetchId !== fetchIdRef.current) return
-        
-        // If usage is undefined (e.g., 403 error), don't update the data
-        // This allows the table to show "--" instead of "0" and "0 B"
+
+        // getDataUsageInfo returns undefined on 403; don't update data so table shows "--"
         if (!usage) {
           return
         }

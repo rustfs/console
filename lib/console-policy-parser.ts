@@ -157,14 +157,14 @@ export function hasConsolePermission(
     if (s.NotAction && s.NotAction.length > 0) {
       // Deny if action is NOT in NotAction list
       if (!matchNotAction(s.NotAction, action)) {
-        return shouldCheckResource(s) ? matchResource(s.Resource, resource) : true
+        return shouldCheckResource(s) ? matchResource(s.Resource, resource) : false
       }
       return false
     }
 
     // If Action is present (or empty array), deny applies to matching actions
     if (matchAction(s.Action, action)) {
-      return shouldCheckResource(s) ? matchResource(s.Resource, resource) : true
+      return shouldCheckResource(s) ? matchResource(s.Resource, resource) : false
     }
 
     return false

@@ -15,13 +15,16 @@ export interface ConsolePolicy {
 
 /**
  * Check if an action matches the policy actions
- * @param policyActions - Array of action patterns (empty array means match all)
+ * @param policyActions - Array of action patterns (empty array means match all, undefined means no match)
  * @param requestAction - The action to check
  * @returns true if the action matches
  */
 function matchAction(policyActions: string[] | undefined, requestAction: string): boolean {
-  // Empty array or undefined means match all actions
-  if (!policyActions || policyActions.length === 0) {
+  // Undefined means no match; explicit empty array means match all actions
+  if (policyActions === undefined) {
+    return false
+  }
+  if (policyActions.length === 0) {
     return true
   }
   return policyActions.some((pattern) => resourceMatch(pattern, requestAction))

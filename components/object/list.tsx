@@ -438,7 +438,6 @@ export function ObjectList({
         message.success(t("Delete task created"))
       }
       table.resetRowSelection()
-      ;(onRefresh ?? fetchObjects)()
     } catch (err) {
       message.error((err as Error)?.message ?? t("Delete Failed"))
     }
@@ -454,7 +453,6 @@ export function ObjectList({
         message.success(t("Delete task created"))
       }
       table.resetRowSelection()
-      ;(onRefresh ?? fetchObjects)()
     } catch (err) {
       message.error((err as Error)?.message ?? t("Delete Failed"))
     }

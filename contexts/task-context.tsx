@@ -27,6 +27,7 @@ export type AnyTask = {
   displayName: string
   subInfo: string
   actionLabel: string
+  bucketName?: string
 }
 
 const emptyTasks: AnyTask[] = []

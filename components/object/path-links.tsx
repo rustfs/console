@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
+import { copyToClipboard } from "@/lib/clipboard"
 import { RiFileCopyLine, RiCheckLine } from "@remixicon/react"
 
 interface Segment {
@@ -21,7 +22,7 @@ function useClipboard(value: string, copiedDuring = 3000) {
 
   const copy = React.useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(value)
+      await copyToClipboard(value)
       setCopied(true)
       setTimeout(() => setCopied(false), copiedDuring)
     } catch {

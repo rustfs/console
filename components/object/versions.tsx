@@ -9,6 +9,7 @@ import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
 import { useMessage } from "@/lib/feedback/message"
+import { copyToClipboard } from "@/lib/clipboard"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
 import { formatBytes } from "@/lib/functions"
@@ -72,7 +73,7 @@ export function ObjectVersions({
     async (versionId: string) => {
       if (!versionId) return
       try {
-        await navigator.clipboard.writeText(versionId)
+        await copyToClipboard(versionId)
         message.success(t("Copy Success"))
       } catch {
         message.error(t("Copy Failed"))

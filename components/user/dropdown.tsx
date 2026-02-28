@@ -18,7 +18,7 @@ export function UserDropdown() {
   const { t } = useTranslation()
   const router = useRouter()
   const { logout, isAdmin, setIsAdmin } = useAuth()
-  const { userInfo } = usePermissions()
+  const { userInfo, canChangePassword } = usePermissions()
   const { isAdminUser } = useUsers()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
@@ -68,7 +68,7 @@ export function UserDropdown() {
               <span>{(userInfo as { account_name?: string })?.account_name ?? (isAdmin ? "rustfsAdmin" : "")}</span>
             </div>
           </DropdownMenuItem>
-          {!isAdmin && (
+          {canChangePassword && (
             <DropdownMenuItem onSelect={handleChangePassword}>
               <RiLockPasswordLine className="h-4 w-4" />
               <span>{t("Change Password")}</span>

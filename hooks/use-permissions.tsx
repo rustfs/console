@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
 import { hasConsoleScopes, type ConsolePolicy } from "@/lib/console-policy-parser"
-import { PAGE_PERMISSIONS } from "@/lib/console-permissions"
+import { CONSOLE_SCOPES, PAGE_PERMISSIONS } from "@/lib/console-permissions"
 import { useAuth } from "@/contexts/auth-context"
 import { useApiOptional } from "@/contexts/api-context"
 
@@ -15,6 +15,8 @@ interface PermissionsContextValue {
   hasPermission: (action: string | string[], matchAll?: boolean) => boolean
   canAccessPath: (path: string) => boolean
   isAdmin: boolean
+  /** True when user has consoleAdmin (or is admin). Only these users can change password per RustFS backend. */
+  canChangePassword: boolean
 }
 
 const PermissionsContext = createContext<PermissionsContextValue | null>(null)
@@ -92,6 +94,8 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
     }
   }, [api, isAuthenticated, isAdmin, hasFetchedPolicy, isLoading, fetchUserPolicy])
 
+  const canChangePassword = isAdmin || hasPermission(CONSOLE_SCOPES.CONSOLE_ADMIN)
+
   const value = useMemo(
     () => ({
       userPolicy,
@@ -102,8 +106,9 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       hasPermission,
       canAccessPath,
       isAdmin,
+      canChangePassword,
     }),
-    [userPolicy, userInfo, isLoading, hasFetchedPolicy, fetchUserPolicy, hasPermission, canAccessPath, isAdmin],
+    [userPolicy, userInfo, isLoading, hasFetchedPolicy, fetchUserPolicy, hasPermission, canAccessPath, isAdmin, canChangePassword],
   )
 
   return <PermissionsContext.Provider value={value}>{children}</PermissionsContext.Provider>

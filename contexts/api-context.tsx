@@ -7,7 +7,6 @@ import { AwsClient } from "@/lib/aws4fetch"
 import { ApiErrorHandler } from "@/lib/api-error-handler"
 import { useAuth } from "@/contexts/auth-context"
 import { configManager } from "@/lib/config"
-import { getLoginRoute, buildRoute } from "@/lib/routes"
 
 interface ApiContextValue {
   api: ApiClient | null

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { S3Client } from "@aws-sdk/client-s3"
 import { useAuth } from "@/contexts/auth-context"
 import { configManager } from "@/lib/config"
-import { getLoginRoute } from "@/lib/routes"
 import type { SiteConfig } from "@/types/config"
 
 interface S3Response {

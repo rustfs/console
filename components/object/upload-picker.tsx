@@ -3,6 +3,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { useAddUploadFiles, useTaskPanelOpen } from "@/contexts/task-context"
 import { formatBytes } from "@/lib/functions"
@@ -205,8 +206,15 @@ export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onS
   const [isMemoryWarning, setIsMemoryWarning] = React.useState(false)
   const [isDragOver, setIsDragOver] = React.useState(false)
   const memoryWarningShownRef = React.useRef(false)
+  const [editablePrefix, setEditablePrefix] = React.useState(prefix)
 
-  const effectivePrefix = prefix.replace(/\/$/, "") || ""
+  React.useEffect(() => {
+    if (show) {
+      setEditablePrefix(prefix)
+    }
+  }, [show, prefix])
+
+  const effectivePrefix = editablePrefix.replace(/\/$/, "") || ""
 
   const ensureCapacity = React.useCallback(
     (incoming: number): boolean => {
@@ -443,13 +451,20 @@ export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onS
           />
 
           <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1 space-y-1">
+            <div className="min-w-0 flex-1 space-y-2">
               <p className="truncate text-sm font-medium text-muted-foreground">
                 {t("Target Bucket")}: {bucketName}
               </p>
-              <p className="truncate text-xs text-muted-foreground">
-                {t("Current Prefix")}: {prefix}
-              </p>
+              <div className="flex items-center gap-2">
+                <span className="shrink-0 text-xs text-muted-foreground">{t("Current Prefix")}:</span>
+                <Input
+                  value={editablePrefix}
+                  onChange={(e) => setEditablePrefix(e.target.value)}
+                  className="h-7 py-1 px-2 text-xs"
+                  placeholder={t("Enter prefix...")}
+                  disabled={isAdding || isFolderLoading}
+                />
+              </div>
             </div>
             <div className="flex shrink-0 gap-2">
               <Button variant="outline" size="sm" disabled={isAdding || isFolderLoading} onClick={selectFile}>

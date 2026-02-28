@@ -43,12 +43,14 @@ const TaskContext = React.createContext<{
   taskManager: TaskManager<AnyTask, string>
   addUploadFiles: (items: { file: File; key: string }[], bucketName: string) => void
   addDeleteKeys: (keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) => void
+  addDeleteFolder: (prefix: string, bucketName: string, options?: { forceDelete?: boolean }) => void
   isTaskPanelOpen: boolean
   setTaskPanelOpen: (open: boolean) => void
 }>({
   taskManager: emptyManager,
   addUploadFiles: () => {},
   addDeleteKeys: () => {},
+  addDeleteFolder: () => {},
   isTaskPanelOpen: false,
   setTaskPanelOpen: () => {},
 })
@@ -79,6 +81,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       handlers: {
         upload: uploadHelpers.handler as TaskHandler<unknown, string>,
         delete: deleteHelpers.handler as TaskHandler<unknown, string>,
+        "delete-folder": deleteHelpers.folderHandler as TaskHandler<unknown, string>,
       },
       maxConcurrent: 6,
       maxRetries: 3,
@@ -117,15 +120,26 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     [managerState],
   )
 
+  const addDeleteFolder = React.useCallback(
+    (prefix: string, bucketName: string, options?: { forceDelete?: boolean }) => {
+      if (!managerState) return
+      const { manager, deleteHelpers } = managerState
+      const task = deleteHelpers.createFolderDeleteTask(prefix, bucketName, options)
+      manager.enqueue([task as AnyTask])
+    },
+    [managerState],
+  )
+
   const value = React.useMemo(
     () => ({
       taskManager,
       addUploadFiles,
       addDeleteKeys,
+      addDeleteFolder,
       isTaskPanelOpen,
       setTaskPanelOpen,
     }),
-    [taskManager, addUploadFiles, addDeleteKeys, isTaskPanelOpen],
+    [taskManager, addUploadFiles, addDeleteKeys, addDeleteFolder, isTaskPanelOpen],
   )
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>
@@ -154,6 +168,11 @@ export function useAddUploadFiles() {
 export function useAddDeleteKeys() {
   const { addDeleteKeys } = React.useContext(TaskContext)
   return addDeleteKeys
+}
+
+export function useAddDeleteFolder() {
+  const { addDeleteFolder } = React.useContext(TaskContext)
+  return addDeleteFolder
 }
 
 export function useTaskPanelOpen() {

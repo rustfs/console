@@ -39,7 +39,7 @@ import { getContentType } from "@/lib/mime-types"
 import { formatBytes } from "@/lib/functions"
 import { buildBucketPath } from "@/lib/bucket-path"
 import { TaskStatsButton } from "@/components/tasks/stats-button"
-import { useAddDeleteKeys } from "@/contexts/task-context"
+import { useAddDeleteKeys, useAddDeleteFolder, useTasks } from "@/contexts/task-context"
 import type { ColumnDef } from "@tanstack/react-table"
 import dayjs from "dayjs"
 import { saveAs } from "file-saver"
@@ -76,6 +76,8 @@ export function ObjectList({
   const { listObject, getSignedUrl, mapAllFiles } = useObject(bucket)
   const { getBucketVersioning } = useBucket()
   const addDeleteKeys = useAddDeleteKeys()
+  const addDeleteFolder = useAddDeleteFolder()
+  const tasks = useTasks()
 
   const [searchTerm, setSearchTerm] = React.useState("")
   const [showDeleted, setShowDeleted] = useLocalStorage("object-list-show-deleted", false)
@@ -146,6 +148,25 @@ export function ObjectList({
       void fetchObjects()
     }
   }, [bucket, prefix, pageSize, continuationToken, showDeleted, refreshTrigger, fetchObjects])
+
+  const prevDeleteTaskIdsRef = React.useRef<Set<string>>(new Set())
+
+  React.useEffect(() => {
+    const currentDeleteTasks = tasks.filter((t) => t.kind === "delete" || t.kind === "delete-folder")
+    const completedDeleteTasks = currentDeleteTasks.filter((t) => t.status === "completed")
+
+    const newlyCompleted = completedDeleteTasks.filter((t) => !prevDeleteTaskIdsRef.current.has(t.id))
+
+    if (newlyCompleted.length > 0) {
+      const anyActive = currentDeleteTasks.some((t) => ["pending", "running"].includes(t.status))
+      if (!anyActive) {
+        // No more active delete tasks, refresh the list
+        void fetchObjects()
+      }
+    }
+
+    prevDeleteTaskIdsRef.current = new Set(completedDeleteTasks.map((t) => t.id))
+  }, [tasks, fetchObjects])
 
   React.useEffect(() => {
     const loadBucketVersioningStatus = async () => {
@@ -306,28 +327,6 @@ export function ObjectList({
     return base && key.startsWith(base) ? key.slice(base.length) : key
   }
 
-  const collectKeysForDeletion = async (keys: string[], forceDelete = false): Promise<string[]> => {
-    const rowMap = new Map(data.map((item) => [item.Key, item]))
-    const collected: string[] = []
-
-    for (const key of keys) {
-      if (!key) continue
-      const row = rowMap.get(key)
-      if (row?.type === "prefix") {
-        collected.push(row.Key)
-        if (!forceDelete) {
-          await mapAllFiles(bucket, row.Key, (fileKey) => {
-            if (fileKey) collected.push(fileKey)
-          })
-        }
-      } else {
-        collected.push(key)
-      }
-    }
-
-    return Array.from(new Set(collected))
-  }
-
   const downloadMultiple = async () => {
     if (!checkedKeys.length) {
       message.warning(t("Please select at least one item"))
@@ -430,13 +429,27 @@ export function ObjectList({
 
   const handleDelete = async (keys: string[]) => {
     try {
-      const targets = await collectKeysForDeletion(keys)
-      if (!targets.length) {
-        message.success(t("Delete Success"))
-      } else {
-        addDeleteKeys(targets, bucket, undefined)
-        message.success(t("Delete task created"))
+      const rowMap = new Map(data.map((item) => [item.Key, item]))
+      const objectKeys: string[] = []
+      const folderPrefixes: string[] = []
+
+      for (const key of keys) {
+        const row = rowMap.get(key)
+        if (row?.type === "prefix") {
+          folderPrefixes.push(key)
+        } else {
+          objectKeys.push(key)
+        }
       }
+
+      if (objectKeys.length > 0) {
+        addDeleteKeys(objectKeys, bucket, undefined)
+      }
+      for (const prefix of folderPrefixes) {
+        addDeleteFolder(prefix, bucket)
+      }
+
+      message.success(t("Delete task created"))
       table.resetRowSelection()
     } catch (err) {
       message.error((err as Error)?.message ?? t("Delete Failed"))
@@ -445,13 +458,27 @@ export function ObjectList({
 
   const handleDeleteAllVersions = async (keys: string[]) => {
     try {
-      const targets = await collectKeysForDeletion(keys, true)
-      if (!targets.length) {
-        message.success(t("Delete Success"))
-      } else {
-        addDeleteKeys(targets, bucket, undefined, { forceDelete: true })
-        message.success(t("Delete task created"))
+      const rowMap = new Map(data.map((item) => [item.Key, item]))
+      const objectKeys: string[] = []
+      const folderPrefixes: string[] = []
+
+      for (const key of keys) {
+        const row = rowMap.get(key)
+        if (row?.type === "prefix") {
+          folderPrefixes.push(key)
+        } else {
+          objectKeys.push(key)
+        }
       }
+
+      if (objectKeys.length > 0) {
+        addDeleteKeys(objectKeys, bucket, undefined, { forceDelete: true })
+      }
+      for (const prefix of folderPrefixes) {
+        addDeleteFolder(prefix, bucket, { forceDelete: true })
+      }
+
+      message.success(t("Delete task created"))
       table.resetRowSelection()
     } catch (err) {
       message.error((err as Error)?.message ?? t("Delete Failed"))

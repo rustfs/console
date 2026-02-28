@@ -1,4 +1,4 @@
-import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { DeleteObjectCommand, DeleteObjectsCommand, ListObjectsV2Command, ListObjectVersionsCommand, S3Client } from "@aws-sdk/client-s3"
 import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from "./task-manager"
 
 export type DeleteStatus = "pending" | "running" | "completed" | "failed" | "canceled"
@@ -15,6 +15,18 @@ export interface DeleteTask extends ManagedTask<DeleteStatus> {
   subInfo: string
 }
 
+export interface FolderDeleteTask extends ManagedTask<DeleteStatus> {
+  kind: "delete-folder"
+  bucketName: string
+  prefix: string
+  forceDelete?: boolean
+  actionLabel: string
+  displayName: string
+  subInfo: string
+}
+
+export type AnyDeleteTask = DeleteTask | FolderDeleteTask
+
 export interface DeleteTaskConfig {
   maxRetries?: number
   retryDelay?: number
@@ -22,6 +34,7 @@ export interface DeleteTaskConfig {
 
 export interface DeleteTaskHelpers {
   handler: TaskHandler<DeleteTask, DeleteStatus>
+  folderHandler: TaskHandler<FolderDeleteTask, DeleteStatus>
   createTasks: (
     keys: string[],
     bucketName: string,
@@ -34,6 +47,11 @@ export interface DeleteTaskHelpers {
     prefix?: string,
     options?: { forceDelete?: boolean },
   ) => DeleteTask[]
+  createFolderDeleteTask: (
+    prefix: string,
+    bucketName: string,
+    options?: { forceDelete?: boolean },
+  ) => FolderDeleteTask
 }
 
 const lifecycle: TaskLifecycleStatus<DeleteStatus> = {
@@ -44,7 +62,7 @@ const lifecycle: TaskLifecycleStatus<DeleteStatus> = {
   canceled: "canceled",
 }
 
-function attachForceDeleteHeader(command: DeleteObjectCommand) {
+function attachForceDeleteHeader(command: DeleteObjectCommand | DeleteObjectsCommand) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(command.middlewareStack.add as any)(
     (next: (args: unknown) => Promise<unknown>) => async (args: { request?: { headers?: Record<string, string> } }) => {
@@ -78,7 +96,80 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
     task.progress = 100
   }
 
-  const shouldRetry: TaskHandler<DeleteTask, DeleteStatus>["shouldRetry"] = (task, error) => {
+  const performFolder: TaskHandler<FolderDeleteTask, DeleteStatus>["perform"] = async (task) => {
+    const { bucketName, prefix, forceDelete } = task
+    const abortController = new AbortController()
+    task.abortController = abortController
+
+    if (forceDelete) {
+      let isTruncated = true
+      let keyMarker: string | undefined
+      let versionIdMarker: string | undefined
+
+      while (isTruncated) {
+        const data = await s3Client.send(
+          new ListObjectVersionsCommand({
+            Bucket: bucketName,
+            Prefix: prefix,
+            KeyMarker: keyMarker,
+            VersionIdMarker: versionIdMarker,
+          }),
+          { abortSignal: abortController.signal },
+        )
+
+        const objectsToDelete: { Key: string; VersionId?: string }[] = []
+        data.Versions?.forEach((v) => {
+          if (v.Key) objectsToDelete.push({ Key: v.Key, VersionId: v.VersionId })
+        })
+        data.DeleteMarkers?.forEach((m) => {
+          if (m.Key) objectsToDelete.push({ Key: m.Key, VersionId: m.VersionId })
+        })
+
+        if (objectsToDelete.length > 0) {
+          const command = new DeleteObjectsCommand({
+            Bucket: bucketName,
+            Delete: { Objects: objectsToDelete, Quiet: true },
+          })
+          attachForceDeleteHeader(command)
+          await s3Client.send(command, { abortSignal: abortController.signal })
+        }
+
+        isTruncated = data.IsTruncated ?? false
+        keyMarker = data.NextKeyMarker
+        versionIdMarker = data.NextVersionIdMarker
+      }
+    } else {
+      let isTruncated = true
+      let continuationToken: string | undefined
+
+      while (isTruncated) {
+        const data = await s3Client.send(
+          new ListObjectsV2Command({
+            Bucket: bucketName,
+            Prefix: prefix,
+            ContinuationToken: continuationToken,
+          }),
+          { abortSignal: abortController.signal },
+        )
+
+        const objectsToDelete = (data.Contents ?? []).filter((item) => item.Key).map((item) => ({ Key: item.Key! }))
+
+        if (objectsToDelete.length > 0) {
+          const command = new DeleteObjectsCommand({
+            Bucket: bucketName,
+            Delete: { Objects: objectsToDelete, Quiet: true },
+          })
+          await s3Client.send(command, { abortSignal: abortController.signal })
+        }
+
+        isTruncated = data.IsTruncated ?? false
+        continuationToken = data.NextContinuationToken
+      }
+    }
+    task.progress = 100
+  }
+
+  const shouldRetry = (task: DeleteTask | FolderDeleteTask, error: unknown) => {
     if (task.status === lifecycle.canceled) return false
     if ((task.retryCount ?? 0) >= maxRetries) return false
     const errorMessage = String((error as Error)?.message ?? "").toLowerCase()
@@ -89,6 +180,16 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
   const handler: TaskHandler<DeleteTask, DeleteStatus> = {
     lifecycle,
     perform,
+    shouldRetry,
+    isCanceledError: (error) =>
+      (error as Error)?.name === "AbortError" || String((error as Error)?.message ?? "").includes("canceled"),
+    maxRetries,
+    retryDelay,
+  }
+
+  const folderHandler: TaskHandler<FolderDeleteTask, DeleteStatus> = {
+    lifecycle,
+    perform: performFolder,
     shouldRetry,
     isCanceledError: (error) =>
       (error as Error)?.name === "AbortError" || String((error as Error)?.message ?? "").includes("canceled"),
@@ -138,5 +239,25 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
       prefix,
     )
 
-  return { handler, createTasks, createVersionedTasks }
+  const createFolderDeleteTask = (
+    prefix: string,
+    bucketName: string,
+    options?: { forceDelete?: boolean },
+  ): FolderDeleteTask => ({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}-${prefix}`,
+    kind: "delete-folder" as const,
+    bucketName,
+    prefix,
+    forceDelete: options?.forceDelete,
+    status: lifecycle.pending,
+    progress: 0,
+    actionLabel: "Delete Folder",
+    displayName: prefix,
+    subInfo: options?.forceDelete ? "Deleting all versions" : "Recursive delete",
+    error: undefined,
+    abortController: undefined,
+    retryCount: 0,
+  })
+
+  return { handler, folderHandler, createTasks, createVersionedTasks, createFolderDeleteTask }
 }

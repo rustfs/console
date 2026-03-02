@@ -17,6 +17,11 @@ const TEXT_MIMES = [
   "text/markdown",
 ]
 const TEXT_EXTENSIONS = [".txt", ".json", ".xml", ".js", ".ts", ".css", ".md", ".html", ".csv", ".yml", ".yaml"]
+const DIRECT_IMAGE_MIMES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif"]
+const DIRECT_VIDEO_MIMES = ["video/mp4", "video/webm", "video/ogg"]
+const DIRECT_AUDIO_MIMES = ["audio/mpeg", "audio/mp4", "audio/aac", "audio/wav", "audio/ogg", "audio/webm"]
+const DOWNLOAD_ONLY_MIMES = ["", "application/octet-stream"]
+const DOWNLOAD_ONLY_EXTENSIONS = [".zip", ".7z", ".rar", ".gz", ".tar", ".tgz", ".bz2", ".xz", ".exe", ".dmg", ".iso"]
 const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
 
 interface ObjectPreviewModalProps {
@@ -38,20 +43,29 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
 
   const contentType = object?.ContentType ?? ""
   const previewUrl = object?.SignedUrl ?? ""
+  const hasPreviewUrl = Boolean(previewUrl)
   const objectSize = Number(object?.ContentLength ?? 0)
   const objectKey = object?.Key ?? ""
+  const objectKeyLower = objectKey.toLowerCase()
   const normalizedContentType = contentType.split(";")[0]?.trim().toLowerCase() ?? ""
 
-  const isImage = normalizedContentType.startsWith("image/")
-  const isVideo = normalizedContentType.startsWith("video/")
-  const isAudio = normalizedContentType.startsWith("audio/")
-  const isPdf = normalizedContentType === "application/pdf"
-  const isIframePreview = isImage || isVideo || isAudio || isPdf
-  const isJson = normalizedContentType === "application/json" || objectKey.toLowerCase().endsWith(".json")
+  const isDirectImage = DIRECT_IMAGE_MIMES.includes(normalizedContentType)
+  const isDirectVideo = DIRECT_VIDEO_MIMES.includes(normalizedContentType)
+  const isDirectAudio = DIRECT_AUDIO_MIMES.includes(normalizedContentType)
+  const isDirectMedia = isDirectImage || isDirectVideo || isDirectAudio
+  const isJson = normalizedContentType === "application/json" || objectKeyLower.endsWith(".json")
   const isText =
     objectSize <= ALLOWED_SIZE &&
-    (TEXT_MIMES.some((m) => normalizedContentType === m) ||
-      TEXT_EXTENSIONS.some((ext) => objectKey.toLowerCase().endsWith(ext)))
+    (TEXT_MIMES.some((m) => normalizedContentType === m) || TEXT_EXTENSIONS.some((ext) => objectKeyLower.endsWith(ext)))
+  const isDownloadOnly =
+    !hasPreviewUrl ||
+    DOWNLOAD_ONLY_MIMES.includes(normalizedContentType) ||
+    DOWNLOAD_ONLY_EXTENSIONS.some((ext) => objectKeyLower.endsWith(ext))
+  const canRenderText = isText && hasPreviewUrl
+  const canRenderDirectMedia = isDirectMedia && hasPreviewUrl
+  const isIframePreview = hasPreviewUrl && !isText && !isDirectMedia && !isDownloadOnly
+  const showDownloadOnly = !canRenderText && !canRenderDirectMedia && !isIframePreview && isDownloadOnly
+  const filename = objectKey.split("/").pop() ?? ""
 
   const getFormattedContent = () => {
     if (!isJson || !isFormatted) return textContent
@@ -64,7 +78,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   }
 
   React.useEffect(() => {
-    if (show && isText && previewUrl) {
+    if (show && canRenderText && previewUrl) {
       setLoading(true)
       setIsFormatted(true)
       fetch(previewUrl)
@@ -76,7 +90,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
       setTextContent("")
       setLoading(false)
     }
-  }, [show, isText, previewUrl, t])
+  }, [show, canRenderText, previewUrl, t])
 
   return (
     <Dialog open={show} onOpenChange={onShowChange}>
@@ -89,16 +103,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
             <Spinner className="mx-auto size-8 text-muted-foreground" />
           ) : (
             <>
-              {isIframePreview && (
-                <iframe
-                  src={previewUrl}
-                  className="h-[70vh] w-full"
-                  frameBorder={0}
-                  title="Object preview"
-                  sandbox=""
-                />
-              )}
-              {isText && (
+              {canRenderText && (
                 <pre className="max-h-[70vh] relative overflow-auto whitespace-pre-wrap break-words">
                   {getFormattedContent()}
                   <div className="absolute end-0 top-0">
@@ -112,11 +117,45 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
                   </div>
                 </pre>
               )}
-              {!isIframePreview && !isText && object && (
-                <div className="flex flex-1 justify-center items-center text-sm text-muted-foreground">
+              {canRenderDirectMedia && isDirectImage && (
+                <div className="flex justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={previewUrl} alt="preview" className="max-h-[60vh]" />
+                </div>
+              )}
+              {canRenderDirectMedia && isDirectVideo && (
+                <video controls className="w-full">
+                  <source src={previewUrl} type={contentType} />
+                  {t("Your browser does not support the video tag")}
+                </video>
+              )}
+              {canRenderDirectMedia && isDirectAudio && (
+                <audio controls className="w-full">
+                  <source src={previewUrl} type={contentType} />
+                  {t("Your browser does not support the audio tag")}
+                </audio>
+              )}
+              {isIframePreview && (
+                <iframe
+                  src={previewUrl}
+                  className="h-[70vh] w-full"
+                  frameBorder={0}
+                  title="Sandbox preview"
+                  sandbox=""
+                />
+              )}
+              {showDownloadOnly && object && (
+                <div className="flex flex-1 flex-col items-center justify-center gap-4 text-sm text-muted-foreground">
                   {t("Cannot Preview", {
                     contentType: contentType || "unknown",
                   })}
+                  {previewUrl && (
+                    <Button asChild variant="outline" size="sm">
+                      <a href={previewUrl} download={filename}>
+                        {t("Download")}
+                      </a>
+                    </Button>
+                  )}
                 </div>
               )}
             </>

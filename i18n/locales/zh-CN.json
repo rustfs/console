@@ -770,6 +770,8 @@
   "The two passwords are inconsistent": "两个密码不一致",
   "This action cannot be undone and will bypass the normal deletion process.": "此操作无法撤销，将绕过正常删除过程。",
   "This action cannot be undone.": "此操作无法撤销。",
+  "This link will expire when your session ends or at the specified time.": "此链接将会在您的登录会话结束或达到指定时间后失效。",
+  "This user already exists": "该用户已存在",
   "Thursday": "星期四",
   "Tier": "存储层",
   "Tier Type": "存储层类型",

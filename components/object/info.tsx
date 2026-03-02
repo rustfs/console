@@ -21,11 +21,9 @@ import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
 import { ObjectVersions } from "@/components/object/versions"
 import { ObjectPreviewModal } from "@/components/object/preview-modal"
-import { GetObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3"
+import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
-import { useAuth } from "@/contexts/auth-context"
-import { configManager } from "@/lib/config"
 
 const ONE_WEEK_SECONDS = 7 * 24 * 60 * 60
 
@@ -52,7 +50,6 @@ export function ObjectInfo({
   const dialog = useDialog()
   const objectApi = useObject(bucketName)
   const client = useS3()
-  const { permanentCredentials } = useAuth()
 
   const [object, setObject] = React.useState<Record<string, unknown> | null>(null)
   const [tags, setTags] = React.useState<Array<{ Key: string; Value: string }>>([])
@@ -303,28 +300,7 @@ export function ObjectInfo({
     }
     setIsGeneratingUrl(true)
     try {
-      let url: string
-      const creds = permanentCredentials
-      if (creds?.AccessKeyId && creds?.SecretAccessKey) {
-        const siteConfig = await configManager.loadConfig()
-        const tempClient = new S3Client({
-          endpoint: String(siteConfig.s3.endpoint),
-          region: String(siteConfig.s3.region || "us-east-1"),
-          forcePathStyle: true,
-          credentials: {
-            accessKeyId: String(creds.AccessKeyId),
-            secretAccessKey: String(creds.SecretAccessKey),
-            sessionToken: typeof creds.SessionToken === "string" ? creds.SessionToken : undefined,
-          },
-        })
-        const command = new GetObjectCommand({
-          Bucket: bucketName,
-          Key: object.Key as string,
-        })
-        url = await getSignedUrl(tempClient, command, { expiresIn: totalExpirationSeconds })
-      } else {
-        url = await objectApi.getSignedUrl(object.Key as string, totalExpirationSeconds)
-      }
+      const url = await objectApi.getSignedUrl(object.Key as string, totalExpirationSeconds)
       setSignedUrl(url)
       message.success(t("URL generated successfully"))
     } catch (err) {
@@ -551,8 +527,13 @@ export function ObjectInfo({
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-2 min-w-0 w-full">
+                <div className="flex flex-col gap-2 min-w-0 w-full">
                   <CopyInput value={signedUrl} readonly copyIcon className="min-w-0 flex-1" />
+                  {signedUrl && (
+                    <div className="text-xs text-amber-600 mt-1">
+                      {t("This link will expire when your session ends or at the specified time.")}
+                    </div>
+                  )}
                 </div>
               </ItemContent>
             </Item>

@@ -40,12 +40,13 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const previewUrl = object?.SignedUrl ?? ""
   const objectSize = Number(object?.ContentLength ?? 0)
   const objectKey = object?.Key ?? ""
+  const normalizedContentType = contentType.split(";")[0]?.trim().toLowerCase() ?? ""
 
-  const isImage = contentType.startsWith("image/")
-  const isVideo = contentType.startsWith("video/")
-  const isAudio = contentType.startsWith("audio/")
-  const isPdf = contentType === "application/pdf" || objectKey.toLowerCase().endsWith(".pdf")
-  const isJson = contentType === "application/json" || objectKey.toLowerCase().endsWith(".json")
+  const isImage = normalizedContentType.startsWith("image/")
+  const isVideo = normalizedContentType.startsWith("video/")
+  const isAudio = normalizedContentType.startsWith("audio/")
+  const isPdf = normalizedContentType === "application/pdf"
+  const isJson = normalizedContentType === "application/json" || objectKey.toLowerCase().endsWith(".json")
   const isText =
     objectSize <= ALLOWED_SIZE &&
     (TEXT_MIMES.some((m) => contentType.startsWith(m)) ||
@@ -93,7 +94,9 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
                   <img src={previewUrl} alt="preview" className="max-h-[60vh]" />
                 </div>
               )}
-              {isPdf && <iframe src={previewUrl} className="h-[70vh] w-full" frameBorder={0} title="PDF preview" />}
+              {isPdf && (
+                <iframe src={previewUrl} className="h-[70vh] w-full" frameBorder={0} title="PDF preview" sandbox="" />
+              )}
               {isText && (
                 <pre className="max-h-[70vh] relative overflow-auto whitespace-pre-wrap break-words">
                   {getFormattedContent()}

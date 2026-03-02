@@ -6,22 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 
-const TEXT_MIMES = [
-  "application/json",
-  "application/xml",
-  "application/javascript",
-  "text/plain",
-  "text/html",
-  "text/css",
-  "text/csv",
-  "text/markdown",
-]
-const TEXT_EXTENSIONS = [".txt", ".json", ".xml", ".js", ".ts", ".css", ".md", ".html", ".csv", ".yml", ".yaml"]
-const DIRECT_IMAGE_MIMES = ["image/png", "image/jpeg", "image/gif", "image/webp", "image/avif"]
-const DIRECT_VIDEO_MIMES = ["video/mp4", "video/webm", "video/ogg"]
-const DIRECT_AUDIO_MIMES = ["audio/mpeg", "audio/mp4", "audio/aac", "audio/wav", "audio/ogg", "audio/webm"]
-const DOWNLOAD_ONLY_MIMES = ["", "application/octet-stream"]
-const DOWNLOAD_ONLY_EXTENSIONS = [".zip", ".7z", ".rar", ".gz", ".tar", ".tgz", ".bz2", ".xz", ".exe", ".dmg", ".iso"]
+const SAFE_TEXT_MIMES = ["application/json", "application/xml", "text/plain", "text/xml", "text/csv", "text/markdown"]
+const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".xml", ".csv", ".md", ".yml", ".yaml"]
 const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
 
 interface ObjectPreviewModalProps {
@@ -49,22 +35,14 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const objectKeyLower = objectKey.toLowerCase()
   const normalizedContentType = contentType.split(";")[0]?.trim().toLowerCase() ?? ""
 
-  const isDirectImage = DIRECT_IMAGE_MIMES.includes(normalizedContentType)
-  const isDirectVideo = DIRECT_VIDEO_MIMES.includes(normalizedContentType)
-  const isDirectAudio = DIRECT_AUDIO_MIMES.includes(normalizedContentType)
-  const isDirectMedia = isDirectImage || isDirectVideo || isDirectAudio
   const isJson = normalizedContentType === "application/json" || objectKeyLower.endsWith(".json")
-  const isText =
+  const isSafeText =
     objectSize <= ALLOWED_SIZE &&
-    (TEXT_MIMES.some((m) => normalizedContentType === m) || TEXT_EXTENSIONS.some((ext) => objectKeyLower.endsWith(ext)))
-  const isDownloadOnly =
-    !hasPreviewUrl ||
-    DOWNLOAD_ONLY_MIMES.includes(normalizedContentType) ||
-    DOWNLOAD_ONLY_EXTENSIONS.some((ext) => objectKeyLower.endsWith(ext))
-  const canRenderText = isText && hasPreviewUrl
-  const canRenderDirectMedia = isDirectMedia && hasPreviewUrl
-  const isIframePreview = hasPreviewUrl && !isText && !isDirectMedia && !isDownloadOnly
-  const showDownloadOnly = !canRenderText && !canRenderDirectMedia && !isIframePreview && isDownloadOnly
+    (SAFE_TEXT_MIMES.some((m) => normalizedContentType === m) ||
+      SAFE_TEXT_EXTENSIONS.some((ext) => objectKeyLower.endsWith(ext)))
+  const canRenderText = isSafeText && hasPreviewUrl
+  const isIframePreview = hasPreviewUrl && !canRenderText
+  const showDownloadOnly = !hasPreviewUrl
   const filename = objectKey.split("/").pop() ?? ""
 
   const getFormattedContent = () => {
@@ -116,24 +94,6 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
                     )}
                   </div>
                 </pre>
-              )}
-              {canRenderDirectMedia && isDirectImage && (
-                <div className="flex justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewUrl} alt="preview" className="max-h-[60vh]" />
-                </div>
-              )}
-              {canRenderDirectMedia && isDirectVideo && (
-                <video controls className="w-full">
-                  <source src={previewUrl} type={contentType} />
-                  {t("Your browser does not support the video tag")}
-                </video>
-              )}
-              {canRenderDirectMedia && isDirectAudio && (
-                <audio controls className="w-full">
-                  <source src={previewUrl} type={contentType} />
-                  {t("Your browser does not support the audio tag")}
-                </audio>
               )}
               {isIframePreview && (
                 <iframe

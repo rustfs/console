@@ -46,10 +46,11 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const isVideo = normalizedContentType.startsWith("video/")
   const isAudio = normalizedContentType.startsWith("audio/")
   const isPdf = normalizedContentType === "application/pdf"
+  const isIframePreview = isImage || isVideo || isAudio || isPdf
   const isJson = normalizedContentType === "application/json" || objectKey.toLowerCase().endsWith(".json")
   const isText =
     objectSize <= ALLOWED_SIZE &&
-    (TEXT_MIMES.some((m) => contentType.startsWith(m)) ||
+    (TEXT_MIMES.some((m) => normalizedContentType === m) ||
       TEXT_EXTENSIONS.some((ext) => objectKey.toLowerCase().endsWith(ext)))
 
   const getFormattedContent = () => {
@@ -88,14 +89,14 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
             <Spinner className="mx-auto size-8 text-muted-foreground" />
           ) : (
             <>
-              {isImage && (
-                <div className="flex justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewUrl} alt="preview" className="max-h-[60vh]" />
-                </div>
-              )}
-              {isPdf && (
-                <iframe src={previewUrl} className="h-[70vh] w-full" frameBorder={0} title="PDF preview" sandbox="" />
+              {isIframePreview && (
+                <iframe
+                  src={previewUrl}
+                  className="h-[70vh] w-full"
+                  frameBorder={0}
+                  title="Object preview"
+                  sandbox=""
+                />
               )}
               {isText && (
                 <pre className="max-h-[70vh] relative overflow-auto whitespace-pre-wrap break-words">
@@ -111,19 +112,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
                   </div>
                 </pre>
               )}
-              {isVideo && (
-                <video controls className="w-full">
-                  <source src={previewUrl} type={contentType} />
-                  {t("Your browser does not support the video tag")}
-                </video>
-              )}
-              {isAudio && (
-                <audio controls className="w-full">
-                  <source src={previewUrl} type={contentType} />
-                  {t("Your browser does not support the audio tag")}
-                </audio>
-              )}
-              {!isImage && !isPdf && !isText && !isVideo && !isAudio && object && (
+              {!isIframePreview && !isText && object && (
                 <div className="flex flex-1 justify-center items-center text-sm text-muted-foreground">
                   {t("Cannot Preview", {
                     contentType: contentType || "unknown",

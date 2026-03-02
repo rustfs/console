@@ -6,18 +6,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 
-const TEXT_MIMES = [
-  "application/json",
-  "application/xml",
-  "application/javascript",
-  "text/plain",
-  "text/html",
-  "text/css",
-  "text/csv",
-  "text/markdown",
-]
-const TEXT_EXTENSIONS = [".txt", ".json", ".xml", ".js", ".ts", ".css", ".md", ".html", ".csv", ".yml", ".yaml"]
+const SAFE_TEXT_MIMES = ["application/json", "application/xml", "text/plain", "text/xml", "text/csv", "text/markdown"]
+const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".xml", ".csv", ".md", ".yml", ".yaml"]
 const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
+
+type PreviewMode = "text" | "sandbox" | "download"
 
 interface ObjectPreviewModalProps {
   show: boolean
@@ -30,6 +23,22 @@ interface ObjectPreviewModalProps {
   } | null
 }
 
+function normalizeContentType(contentType: string) {
+  return contentType.split(";")[0]?.trim().toLowerCase() ?? ""
+}
+
+function isSafeTextPreview(contentType: string, objectKey: string, objectSize: number) {
+  if (objectSize > ALLOWED_SIZE) return false
+  if (SAFE_TEXT_MIMES.includes(contentType)) return true
+  const keyLower = objectKey.toLowerCase()
+  return SAFE_TEXT_EXTENSIONS.some((ext) => keyLower.endsWith(ext))
+}
+
+function getPreviewMode(hasPreviewUrl: boolean, canRenderText: boolean): PreviewMode {
+  if (!hasPreviewUrl) return "download"
+  return canRenderText ? "text" : "sandbox"
+}
+
 export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreviewModalProps) {
   const { t } = useTranslation()
   const [textContent, setTextContent] = React.useState("")
@@ -38,18 +47,15 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
 
   const contentType = object?.ContentType ?? ""
   const previewUrl = object?.SignedUrl ?? ""
+  const hasPreviewUrl = Boolean(previewUrl)
   const objectSize = Number(object?.ContentLength ?? 0)
   const objectKey = object?.Key ?? ""
+  const objectKeyLower = objectKey.toLowerCase()
+  const normalizedContentType = normalizeContentType(contentType)
 
-  const isImage = contentType.startsWith("image/")
-  const isVideo = contentType.startsWith("video/")
-  const isAudio = contentType.startsWith("audio/")
-  const isPdf = contentType === "application/pdf" || objectKey.toLowerCase().endsWith(".pdf")
-  const isJson = contentType === "application/json" || objectKey.toLowerCase().endsWith(".json")
-  const isText =
-    objectSize <= ALLOWED_SIZE &&
-    (TEXT_MIMES.some((m) => contentType.startsWith(m)) ||
-      TEXT_EXTENSIONS.some((ext) => objectKey.toLowerCase().endsWith(ext)))
+  const isJson = normalizedContentType === "application/json" || objectKeyLower.endsWith(".json")
+  const canRenderText = hasPreviewUrl && isSafeTextPreview(normalizedContentType, objectKey, objectSize)
+  const previewMode = getPreviewMode(hasPreviewUrl, canRenderText)
 
   const getFormattedContent = () => {
     if (!isJson || !isFormatted) return textContent
@@ -62,7 +68,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   }
 
   React.useEffect(() => {
-    if (show && isText && previewUrl) {
+    if (show && previewMode === "text" && previewUrl) {
       setLoading(true)
       setIsFormatted(true)
       fetch(previewUrl)
@@ -74,7 +80,44 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
       setTextContent("")
       setLoading(false)
     }
-  }, [show, isText, previewUrl, t])
+  }, [show, previewMode, previewUrl, t])
+
+  const renderPreview = () => {
+    if (loading) {
+      return <Spinner className="mx-auto size-8 text-muted-foreground" />
+    }
+
+    switch (previewMode) {
+      case "text":
+        return (
+          <pre className="max-h-[70vh] relative overflow-auto whitespace-pre-wrap break-words">
+            {getFormattedContent()}
+            <div className="absolute end-0 top-0">
+              {isJson && (
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" onClick={() => setIsFormatted(!isFormatted)}>
+                    {isFormatted ? t("Raw") : t("Formatted")}
+                  </Button>
+                </div>
+              )}
+            </div>
+          </pre>
+        )
+      case "sandbox":
+        return (
+          <iframe src={previewUrl} className="h-[70vh] w-full" frameBorder={0} title="Sandbox preview" sandbox="" />
+        )
+      case "download":
+      default:
+        return (
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 text-sm text-muted-foreground">
+            {t("Cannot Preview", {
+              contentType: contentType || "unknown",
+            })}
+          </div>
+        )
+    }
+  }
 
   return (
     <Dialog open={show} onOpenChange={onShowChange}>
@@ -82,54 +125,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
         <DialogHeader>
           <DialogTitle className="flex items-start justify-between me-6">{t("Preview")}</DialogTitle>
         </DialogHeader>
-        <div className="min-h-[300px] rounded-md border p-4 flex flex-col">
-          {loading ? (
-            <Spinner className="mx-auto size-8 text-muted-foreground" />
-          ) : (
-            <>
-              {isImage && (
-                <div className="flex justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={previewUrl} alt="preview" className="max-h-[60vh]" />
-                </div>
-              )}
-              {isPdf && <iframe src={previewUrl} className="h-[70vh] w-full" frameBorder={0} title="PDF preview" />}
-              {isText && (
-                <pre className="max-h-[70vh] relative overflow-auto whitespace-pre-wrap break-words">
-                  {getFormattedContent()}
-                  <div className="absolute end-0 top-0">
-                    {isJson && (
-                      <div className="flex justify-end">
-                        <Button variant="outline" size="sm" onClick={() => setIsFormatted(!isFormatted)}>
-                          {isFormatted ? t("Raw") : t("Formatted")}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </pre>
-              )}
-              {isVideo && (
-                <video controls className="w-full">
-                  <source src={previewUrl} type={contentType} />
-                  {t("Your browser does not support the video tag")}
-                </video>
-              )}
-              {isAudio && (
-                <audio controls className="w-full">
-                  <source src={previewUrl} type={contentType} />
-                  {t("Your browser does not support the audio tag")}
-                </audio>
-              )}
-              {!isImage && !isPdf && !isText && !isVideo && !isAudio && object && (
-                <div className="flex flex-1 justify-center items-center text-sm text-muted-foreground">
-                  {t("Cannot Preview", {
-                    contentType: contentType || "unknown",
-                  })}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+        <div className="min-h-[300px] rounded-md border p-4 flex flex-col">{renderPreview()}</div>
       </DialogContent>
     </Dialog>
   )

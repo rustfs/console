@@ -173,10 +173,22 @@ export class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends str
     }
   }
 
+  private watchProgress(task: TTask, lifecycle: TaskLifecycleStatus<TStatus>) {
+    let lastProgress = task.progress
+    const timer = setInterval(() => {
+      if (task.status !== lifecycle.running) return
+      if (task.progress === lastProgress) return
+      lastProgress = task.progress
+      this.notify()
+    }, 120)
+    return () => clearInterval(timer)
+  }
+
   private async runTask(task: TTask) {
     const lifecycle = this.getLifecycle(task) as TaskLifecycleStatus<TStatus>
     task.status = lifecycle.running
     this.notify()
+    const stopWatchingProgress = this.watchProgress(task, lifecycle)
 
     try {
       const handler = this.getHandler(task)
@@ -198,6 +210,7 @@ export class TaskManager<TTask extends ManagedTask<TStatus>, TStatus extends str
       this.notify()
       this.checkAllCompleted()
     } finally {
+      stopWatchingProgress()
       this.activeCount--
       if (this.isStarted) setTimeout(() => this.processQueue(), 50)
     }

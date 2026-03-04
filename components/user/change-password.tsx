@@ -76,12 +76,12 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
         accessKey: userInfo?.account_name ?? "",
         secretKey: newSecretKey,
         status: "enabled",
-      })
+      }, { suppress403Redirect: true })
       message.success(t("Updated successfully"))
       closeModal()
     } catch (error) {
       console.error(error)
-      message.error(t("Update failed"))
+      message.error((error as Error)?.message || t("Update failed"))
     } finally {
       setSubmitting(false)
     }

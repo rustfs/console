@@ -68,7 +68,7 @@ export function UserDropdown() {
               <span>{(userInfo as { account_name?: string })?.account_name ?? (isAdmin ? "rustfsAdmin" : "")}</span>
             </div>
           </DropdownMenuItem>
-          {canChangePassword && (
+          {!isAdmin && (
             <DropdownMenuItem onSelect={handleChangePassword}>
               <RiLockPasswordLine className="h-4 w-4" />
               <span>{t("Change Password")}</span>

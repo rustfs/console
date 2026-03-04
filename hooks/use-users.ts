@@ -6,16 +6,20 @@ import { useApiOptional } from "@/contexts/api-context"
 export function useUsers() {
   const api = useApiOptional()
 
+  type UserRequestOptions = {
+    suppress403Redirect?: boolean
+  }
+
   const listUsers = useCallback(async () => {
     if (!api) return null
     return api.get("/list-users")
   }, [api])
 
   const createUser = useCallback(
-    async (data: Record<string, unknown>) => {
+    async (data: Record<string, unknown>, options?: UserRequestOptions) => {
       if (!api) return null
       const { accessKey, ...rest } = data
-      return api.put(`/add-user?accessKey=${encodeURIComponent(accessKey as string)}`, rest)
+      return api.put(`/add-user?accessKey=${encodeURIComponent(accessKey as string)}`, rest, options)
     },
     [api],
   )

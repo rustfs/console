@@ -19,6 +19,7 @@ const LOCALE_FILE_MAP: Record<string, string> = {
   ru: "ru-RU",
   tr: "tr-TR",
   id: "id-ID",
+  vi: "vi-VN"
 }
 
 export type Locale = keyof typeof LOCALE_FILE_MAP

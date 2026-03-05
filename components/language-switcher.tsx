@@ -20,6 +20,7 @@ const languageConfig: Record<string, { text: string; icon: typeof RiTranslate2 }
   it: { text: "Italiano", icon: RiTranslate2 },
   ru: { text: "Русский", icon: RiTranslate2 },
   id: { text: "Bahasa Indonesia", icon: RiTranslate2 },
+  vi: { text: "Tiếng Việt", icon: RiTranslate2 },
 }
 
 const options = LOCALE_CODES.map((key) => ({

@@ -74,6 +74,7 @@ export function ObjectInfo({
   const [totalExpirationSeconds, setTotalExpirationSeconds] = React.useState(0)
   const [isExpirationValid, setIsExpirationValid] = React.useState(false)
   const [isGeneratingUrl, setIsGeneratingUrl] = React.useState(false)
+  const previewParamSyncTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const formatDuration = (seconds: number) => {
     if (seconds === 0) return ""
@@ -238,12 +239,35 @@ export function ObjectInfo({
     }
   }, [autoPreview, object, open])
 
+  React.useEffect(() => {
+    return () => {
+      if (previewParamSyncTimerRef.current) {
+        clearTimeout(previewParamSyncTimerRef.current)
+      }
+    }
+  }, [])
+
+  const schedulePreviewParamSync = React.useCallback(
+    (show: boolean) => {
+      if (previewParamSyncTimerRef.current) {
+        clearTimeout(previewParamSyncTimerRef.current)
+        previewParamSyncTimerRef.current = null
+      }
+
+      previewParamSyncTimerRef.current = setTimeout(() => {
+        onPreviewChange?.(show)
+        previewParamSyncTimerRef.current = null
+      }, 140)
+    },
+    [onPreviewChange],
+  )
+
   // Open preview dialog
   const openPreview = () => {
     if (!object) return
     setPreviewObject(object)
     setShowPreview(true)
-    onPreviewChange?.(true)
+    schedulePreviewParamSync(true)
   }
 
   const handlePreviewVersion = async (versionId: string) => {
@@ -276,10 +300,19 @@ export function ObjectInfo({
         VersionId: version,
       })
       setShowPreview(true)
+      schedulePreviewParamSync(true)
     } catch (err) {
       message.error((err as Error)?.message ?? t("Failed to fetch versions"))
     }
   }
+
+  const handlePreviewShowChange = React.useCallback(
+    (show: boolean) => {
+      setShowPreview(show)
+      schedulePreviewParamSync(show)
+    },
+    [schedulePreviewParamSync],
+  )
 
   const toggleLegalHold = async () => {
     if (!object?.Key) return
@@ -655,10 +688,7 @@ export function ObjectInfo({
 
       <ObjectPreviewModal
         show={showPreview}
-        onShowChange={(show) => {
-          setShowPreview(show)
-          onPreviewChange?.(show)
-        }}
+        onShowChange={handlePreviewShowChange}
         object={previewObject ?? object}
       />
       <ObjectVersions

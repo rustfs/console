@@ -70,6 +70,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   }
 
   const updatePreviewParams = (showPreview: boolean, key?: string) => {
+    const currentParams = new URLSearchParams(searchParams.toString())
     const params = new URLSearchParams(searchParams.toString())
     if (showPreview && key) {
       params.set("preview", "true")
@@ -78,7 +79,8 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
       params.delete("preview")
       params.delete("previewKey")
     }
-    router.replace(`/browser?${params.toString()}`)
+    if (params.toString() === currentParams.toString()) return
+    router.replace(`/browser?${params.toString()}`, { scroll: false })
   }
 
   const handleInfoOpenChange = (open: boolean) => {

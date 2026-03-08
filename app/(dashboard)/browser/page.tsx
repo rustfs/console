@@ -237,24 +237,24 @@ function BrowserBucketsPage() {
   }
 
   const deleteItem = async (row: BucketRow) => {
-    const files = await objectApi.listObject(row.Name, undefined, 1)
-    const hasObjects =
-      Boolean((files as { Contents?: Array<{ Key?: string }> })?.Contents?.some((item) => Boolean(item?.Key))) ||
-      Boolean((files as { CommonPrefixes?: unknown[] })?.CommonPrefixes?.length)
-
-    if (hasObjects) {
-      message.error(t("Bucket is not empty"))
-      return
-    }
-
     try {
+      const files = await objectApi.listObject(row.Name, undefined, 1)
+      const hasObjects =
+        Boolean((files as { Contents?: Array<{ Key?: string }> })?.Contents?.some((item) => Boolean(item?.Key))) ||
+        Boolean((files as { CommonPrefixes?: unknown[] })?.CommonPrefixes?.length)
+
+      if (hasObjects) {
+        message.error(t("Bucket is not empty"))
+        return
+      }
+
       await deleteBucket(row.Name)
       message.success(t("Delete Success"))
       await fetchBuckets({ force: true })
     } catch (error: unknown) {
-      message.error(
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message || t("Delete Failed"),
-      )
+      const err = error as { response?: { data?: { message?: string } }; message?: string }
+      const msg = err?.response?.data?.message ?? (error as Error)?.message ?? t("Delete Failed")
+      message.error(msg)
     }
   }
 

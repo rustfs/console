@@ -1,5 +1,6 @@
 import { DeleteObjectCommand, DeleteObjectsCommand, ListObjectsV2Command, ListObjectVersionsCommand, S3Client } from "@aws-sdk/client-s3"
 import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from "./task-manager"
+import { createTaskId } from "./task-id"
 
 export type DeleteStatus = "pending" | "running" | "completed" | "failed" | "canceled"
 
@@ -203,7 +204,7 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
     prefix?: string,
   ): DeleteTask[] =>
     items.map((item) => ({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}-${item.key}-${item.versionId ?? "latest"}`,
+      id: createTaskId(`${item.key}-${item.versionId ?? "latest"}`),
       kind: "delete" as const,
       key: item.key,
       versionId: item.versionId,
@@ -244,7 +245,7 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
     bucketName: string,
     options?: { forceDelete?: boolean },
   ): FolderDeleteTask => ({
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}-${prefix}`,
+    id: createTaskId(prefix),
     kind: "delete-folder" as const,
     bucketName,
     prefix,

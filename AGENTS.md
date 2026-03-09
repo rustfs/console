@@ -15,6 +15,8 @@
 
 ## Build, Test, and Development Commands
 
+- **Node version requirement**: Before running `pnpm` commands (especially checks/tests), run `nvm use v22` in this repository.
+
 - `pnpm dev` – start the Next.js development server with hot reload.
 - `pnpm build` – create a production build.
 - `pnpm start` – run the production bundle locally.

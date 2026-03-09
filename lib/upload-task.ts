@@ -7,6 +7,7 @@ import {
 } from "@aws-sdk/client-s3"
 import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from "./task-manager"
 import { formatBytes } from "./functions"
+import { createTaskId } from "./task-id"
 
 export type UploadStatus = "pending" | "running" | "completed" | "failed" | "canceled" | "paused"
 
@@ -105,7 +106,7 @@ export function createUploadTaskHelpers(s3Client: S3Client, config: UploadTaskCo
         existKeys.add(`${bucketName}/${item.key}`)
         const displayName = item.key.split("/").pop() ?? item.key
         return {
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 11)}-${item.key}`,
+          id: createTaskId(item.key),
           kind: "upload" as const,
           file: item.file,
           key: item.key,

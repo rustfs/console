@@ -33,19 +33,26 @@ function convertToBytes(value: string, unit: string, fromK8s = false): number {
 }
 
 export function makeRandomString(length = 20): string {
-  let initstr = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
-  const arr = initstr.split("")
+  const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+  if (length <= 0) return ""
 
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    const current = arr[i]
-    const swapWith = arr[j]
-    if (current !== undefined && swapWith !== undefined) {
-      arr[i] = swapWith
-      arr[j] = current
+  const cryptoApi = globalThis.crypto
+  if (!cryptoApi?.getRandomValues) {
+    throw new Error("Secure random generator is not available")
+  }
+
+  const result: string[] = []
+  const alphabetLength = alphabet.length
+  const maxByte = 256 - (256 % alphabetLength)
+
+  while (result.length < length) {
+    const bytes = cryptoApi.getRandomValues(new Uint8Array(length))
+    for (const byte of bytes) {
+      if (byte >= maxByte) continue
+      result.push(alphabet[byte % alphabetLength] ?? "")
+      if (result.length === length) break
     }
   }
 
-  initstr = arr.join("")
-  return initstr.slice(0, length)
+  return result.join("")
 }

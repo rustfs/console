@@ -47,8 +47,14 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
 
   React.useEffect(() => {
     if (visible) {
-      setAccessKey(makeRandomString(20))
-      setSecretKey(makeRandomString(40))
+      try {
+        setAccessKey(makeRandomString(20))
+        setSecretKey(makeRandomString(40))
+      } catch {
+        setAccessKey("")
+        setSecretKey("")
+        message.error(t("Failed to generate secure random keys"))
+      }
       setName("")
       setDescription("")
       setExpiry(null)
@@ -63,7 +69,7 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
           setPolicy("{}")
         })
     }
-  }, [visible, api])
+  }, [visible, api, message, t])
 
   const closeModal = () => {
     onVisibleChange(false)

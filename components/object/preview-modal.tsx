@@ -7,13 +7,14 @@ import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react"
+import { PdfViewer } from "@/components/object/pdf-viewer"
 
 const SAFE_TEXT_MIMES = ["application/json", "application/xml", "text/plain", "text/xml", "text/csv", "text/markdown"]
 const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".xml", ".csv", ".md", ".yml", ".yaml"]
 const SAFE_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".tif", ".tiff"]
 const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
 
-type PreviewMode = "text" | "image" | "sandbox" | "download"
+type PreviewMode = "text" | "image" | "pdf" | "sandbox" | "download"
 
 interface ObjectPreviewModalProps {
   show: boolean
@@ -51,6 +52,11 @@ function getPreviewMode(hasPreviewUrl: boolean, canRenderText: boolean, canRende
   return canRenderText ? "text" : "sandbox"
 }
 
+function isPdfPreview(contentType: string, objectKey: string) {
+  const keyLower = objectKey.toLowerCase()
+  return contentType === "application/pdf" || keyLower.endsWith(".pdf")
+}
+
 export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreviewModalProps) {
   const { t } = useTranslation()
   const [textContent, setTextContent] = React.useState("")
@@ -75,7 +81,8 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const isJson = normalizedContentType === "application/json" || objectKeyLower.endsWith(".json")
   const canRenderText = hasPreviewUrl && isSafeTextPreview(normalizedContentType, objectKey, objectSize)
   const canRenderImage = hasPreviewUrl && isImagePreview(normalizedContentType, objectKey)
-  const previewMode = getPreviewMode(hasPreviewUrl, canRenderText, canRenderImage)
+  const canRenderPdf = hasPreviewUrl && isPdfPreview(normalizedContentType, objectKey)
+  const previewMode = canRenderPdf ? "pdf" : getPreviewMode(hasPreviewUrl, canRenderText, canRenderImage)
   const isImageMode = previewMode === "image"
 
   const getFormattedContent = () => {
@@ -276,6 +283,8 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
         return (
           <iframe src={previewUrl} className="h-[70vh] w-full" frameBorder={0} title="Sandbox preview" sandbox="" />
         )
+      case "pdf":
+        return <PdfViewer url={previewUrl} />
       case "download":
       default:
         return (

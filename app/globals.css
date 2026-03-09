@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "react-pdf/dist/Page/AnnotationLayer.css";
+@import "react-pdf/dist/Page/TextLayer.css";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -15,6 +15,7 @@ import { useMessage } from "@/lib/feedback/message"
 import { buildRoute, getLoginRoute } from "@/lib/routes"
 import logoImage from "@/assets/logo.svg"
 import { configManager } from "@/lib/config"
+import { checkServerHealth } from "@/lib/config-helpers"
 
 export default function ConfigPage() {
   return (
@@ -32,9 +33,12 @@ function ConfigPageContent() {
   const [serverHost, setServerHost] = useState(() =>
     typeof window !== "undefined" ? (localStorage.getItem("rustfs-server-host") ?? "") : "",
   )
+  const [isSaving, setIsSaving] = useState(false)
 
   const validateAndSave = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSaving(true)
+
     try {
       if (serverHost) {
         let urlToValidate = serverHost.trim()
@@ -45,7 +49,16 @@ function ConfigPageContent() {
 
         new URL(urlToValidate)
 
-        const urlToSave = serverHost.match(/^https?:\/\//) ? serverHost : urlToValidate
+        const urlToSave = urlToValidate
+
+        const healthResult = await checkServerHealth(urlToSave)
+        if (!healthResult.healthy) {
+          message.error(
+            `${t("Unable to reach RustFS server health endpoint")}: ${healthResult.error ?? t("Request failed")}`,
+          )
+          return
+        }
+
         localStorage.setItem("rustfs-server-host", urlToSave)
 
         if (!serverHost.match(/^https?:\/\//)) {
@@ -64,6 +77,8 @@ function ConfigPageContent() {
       }, 200)
     } catch (error) {
       message.error(t("Invalid server address format") + ": " + (error as Error).message)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -125,15 +140,15 @@ function ConfigPageContent() {
                   </Field>
 
                   <div className="flex gap-3">
-                    <Button type="submit" className="flex-1">
+                    <Button type="submit" className="flex-1" disabled={isSaving}>
                       {t("Save Configuration")}
                     </Button>
 
-                    <Button type="button" variant="outline" onClick={resetToCurrentHost}>
+                    <Button type="button" variant="outline" onClick={resetToCurrentHost} disabled={isSaving}>
                       {t("Reset")}
                     </Button>
 
-                    <Button type="button" variant="outline" onClick={skipConfig}>
+                    <Button type="button" variant="outline" onClick={skipConfig} disabled={isSaving}>
                       {t("Skip")}
                     </Button>
                   </div>

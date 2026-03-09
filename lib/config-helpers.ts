@@ -22,6 +22,13 @@ interface HostInfo {
   serverHost: string
 }
 
+export interface ServerHealthCheckResult {
+  healthy: boolean
+  url?: string
+  status?: number
+  error?: string
+}
+
 const STORAGE_KEY = "rustfs-server-host"
 const CREDENTIALS_KEY = "auth.credentials"
 const PERMANENT_CREDENTIALS_KEY = "auth.permanent"
@@ -29,6 +36,8 @@ const DEFAULT_REGION = "us-east-1"
 const API_PATH = "/rustfs/admin/v3"
 const VERSION_PATH = "/rustfs/console/version"
 const REQUEST_TIMEOUT = 5000
+const HEALTH_REQUEST_TIMEOUT = 5000
+const HEALTH_PATHS = ["/rustfs/console/health", "/health"] as const
 
 const isBrowser = (): boolean => typeof window !== "undefined"
 
@@ -182,6 +191,49 @@ export const fetchVersionConfigFromServer = async (serverHost: string): Promise<
       `Error fetching version config from server: ${error instanceof Error ? error.message : "Unknown error"}`,
     )
     return null
+  }
+}
+
+const requestHealth = async (url: string): Promise<Response> => {
+  const headResponse = await fetch(url, {
+    method: "HEAD",
+    signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT),
+  })
+
+  if (headResponse.status !== 405) return headResponse
+
+  return fetch(url, {
+    method: "GET",
+    signal: AbortSignal.timeout(HEALTH_REQUEST_TIMEOUT),
+  })
+}
+
+export const checkServerHealth = async (serverHost: string): Promise<ServerHealthCheckResult> => {
+  const normalizedHost = serverHost.replace(/\/+$/, "")
+  let lastError = "Unknown health check error"
+
+  for (const path of HEALTH_PATHS) {
+    const healthUrl = `${normalizedHost}${path}`
+
+    try {
+      const response = await requestHealth(healthUrl)
+      if (response.ok) {
+        return {
+          healthy: true,
+          url: healthUrl,
+          status: response.status,
+        }
+      }
+
+      lastError = `${response.status} ${response.statusText || "Health check failed"}`
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : "Health check request failed"
+    }
+  }
+
+  return {
+    healthy: false,
+    error: lastError,
   }
 }
 

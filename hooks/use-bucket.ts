@@ -27,6 +27,7 @@ import {
   DeleteBucketTaggingCommand,
   DeleteBucketEncryptionCommand,
   DeleteBucketLifecycleCommand,
+  DeleteBucketPolicyCommand,
   DeleteBucketReplicationCommand,
   PutBucketNotificationConfigurationCommand,
   GetBucketNotificationConfigurationCommand,
@@ -181,6 +182,13 @@ export function useBucket() {
   const putBucketPolicy = useCallback(
     async (bucket: string, policy: string) => {
       return client.send(new PutBucketPolicyCommand({ Bucket: bucket, Policy: policy }))
+    },
+    [client],
+  )
+
+  const deleteBucketPolicy = useCallback(
+    async (bucket: string) => {
+      return client.send(new DeleteBucketPolicyCommand({ Bucket: bucket }))
     },
     [client],
   )
@@ -357,6 +365,7 @@ export function useBucket() {
     getBucketPolicyStatus,
     getBucketPolicy,
     putBucketPolicy,
+    deleteBucketPolicy,
     getObjectLockConfiguration,
     putObjectLockConfiguration,
     getBucketLifecycleConfiguration,

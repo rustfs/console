@@ -24,6 +24,7 @@ import { ObjectPreviewModal } from "@/components/object/preview-modal"
 import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 const ONE_WEEK_SECONDS = 7 * 24 * 60 * 60
 
@@ -449,60 +450,92 @@ export function ObjectInfo({
             </div>
 
             <Item variant="outline" className="flex-col items-stretch gap-4">
-              <ItemHeader className="items-center">
-                <ItemTitle>{t("Info")}</ItemTitle>
-              </ItemHeader>
-              <ItemContent className="min-w-0 space-y-3 text-sm overflow-hidden">
-                <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">{t("Object Name")}</span>
-                  <span className="max-w-[60%] truncate text-right" title={String(object?.Key ?? "")}>
-                    {String(object?.Key ?? "")}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">{t("Object Size")}</span>
-                  <span className="max-w-[60%] truncate text-right" title={String(object?.ContentLength ?? "-")}>
-                    {String(object?.ContentLength ?? "-")}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">{t("Object Type")}</span>
-                  <span className="max-w-[60%] truncate text-right" title={String(object?.ContentType ?? "")}>
-                    {String(object?.ContentType ?? "-")}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">ETag</span>
-                  <span className="max-w-[60%] truncate text-right" title={String(object?.ETag ?? "-")}>
-                    {String(object?.ETag ?? "-")}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">{t("Last Modified Time")}</span>
-                  <span className="max-w-[60%] truncate text-right" title={lastModified || "-"}>
-                    {lastModified || "-"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3 min-w-0">
-                  <span className="font-medium text-muted-foreground">{t("Legal Hold")}</span>
-                  <Switch checked={lockStatus} onCheckedChange={toggleLegalHold} />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <span className="font-medium text-muted-foreground">
-                    {t("Retention")}
-                    {t("Policy")}
-                  </span>
-                  <div className="flex flex-col gap-1">
-                    <span className="truncate" title={retention}>
-                      {retention}
-                    </span>
-                    {retainUntilDate && (
-                      <span className="text-xs text-muted-foreground truncate" title={retainUntilDate}>
-                        {retainUntilDate}
+              <Tabs defaultValue="info" className="w-full">
+                <TabsList className="inline-flex h-9 mb-2 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+                  <TabsTrigger value="info" className="px-4">
+                    {t("Info")}
+                  </TabsTrigger>
+                  <TabsTrigger value="metadata" className="px-4">
+                    {t("Metadata")}
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="info" className="space-y-4 outline-none">
+                  <ItemContent className="min-w-0 space-y-3 text-sm overflow-hidden">
+                    <div className="flex items-center justify-between gap-3 min-w-0">
+                      <span className="font-medium text-muted-foreground">{t("Object Name")}</span>
+                      <span className="max-w-[60%] truncate text-right" title={String(object?.Key ?? "")}>
+                        {String(object?.Key ?? "")}
                       </span>
-                    )}
-                  </div>
-                </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 min-w-0">
+                      <span className="font-medium text-muted-foreground">{t("Object Size")}</span>
+                      <span className="max-w-[60%] truncate text-right" title={String(object?.ContentLength ?? "-")}>
+                        {String(object?.ContentLength ?? "-")}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 min-w-0">
+                      <span className="font-medium text-muted-foreground">{t("Object Type")}</span>
+                      <span className="max-w-[60%] truncate text-right" title={String(object?.ContentType ?? "")}>
+                        {String(object?.ContentType ?? "-")}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 min-w-0">
+                      <span className="font-medium text-muted-foreground">ETag</span>
+                      <span className="max-w-[60%] truncate text-right" title={String(object?.ETag ?? "-")}>
+                        {String(object?.ETag ?? "-")}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 min-w-0">
+                      <span className="font-medium text-muted-foreground">{t("Last Modified Time")}</span>
+                      <span className="max-w-[60%] truncate text-right" title={lastModified || "-"}>
+                        {lastModified || "-"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 min-w-0">
+                      <span className="font-medium text-muted-foreground">{t("Legal Hold")}</span>
+                      <Switch checked={lockStatus} onCheckedChange={toggleLegalHold} />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <span className="font-medium text-muted-foreground">
+                        {t("Retention")}
+                        {t("Policy")}
+                      </span>
+                      <div className="flex flex-col gap-1">
+                        <span className="truncate" title={retention}>
+                          {retention}
+                        </span>
+                        {retainUntilDate && (
+                          <span className="text-xs text-muted-foreground truncate" title={retainUntilDate}>
+                            {retainUntilDate}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </ItemContent>
+                </TabsContent>
+                <TabsContent value="metadata" className="space-y-4 outline-none">
+                  <ItemContent className="min-w-0 space-y-3 text-sm overflow-hidden">
+                    <div className="flex items-center justify-between gap-3 min-w-0">
+                      <span className="font-medium text-muted-foreground">{t("Content Type")}</span>
+                      <span className="max-w-[60%] truncate text-right" title={String(object?.ContentType ?? "")}>
+                        {String(object?.ContentType ?? "")}
+                      </span>
+                    </div>
+                    {object &&
+                      Object.entries(object?.Metadata ?? {}).map(([key, value]) => (
+                        <React.Fragment key={key}>
+                          <div className="flex items-center justify-between gap-3 min-w-0">
+                            <span className="font-medium text-muted-foreground">{t(key)}</span>
+                            <span className="max-w-[60%] truncate text-right" title={String(key)}>
+                              {String(value)}
+                            </span>
+                          </div>
+                        </React.Fragment>
+                      ))}
+                  </ItemContent>
+                </TabsContent>
+              </Tabs>
+              <ItemContent className="min-w-0 space-y-3 text-sm overflow-hidden">
                 <div className="border-t pt-3 flex flex-col gap-3 min-w-0">
                   <span className="font-medium text-muted-foreground">{t("Temporary URL Expiration")}</span>
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2">

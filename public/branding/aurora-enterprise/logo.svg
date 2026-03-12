@@ -1,0 +1,24 @@
+<svg width="920" height="180" viewBox="0 0 920 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aurora-wordmark" x1="84" y1="40" x2="420" y2="140" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DD3FC" />
+      <stop offset="0.5" stop-color="#38BDF8" />
+      <stop offset="1" stop-color="#0EA5E9" />
+    </linearGradient>
+    <linearGradient id="aurora-mark" x1="10" y1="18" x2="118" y2="150" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D9F99D" />
+      <stop offset="0.5" stop-color="#38BDF8" />
+      <stop offset="1" stop-color="#0F172A" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="10" width="126" height="126" rx="31" fill="#082F49" />
+  <path d="M33 102L66 37L96 102H81L74.4 87H54.2L47 102H33ZM60.3 74.6H68.5L64.4 64.4L60.3 74.6Z" fill="url(#aurora-mark)" />
+  <path d="M166 52H219.9C245.7 52 263.8 67.3 263.8 89.9C263.8 112.6 245.7 128 219.9 128H166V52ZM217.7 109.4C230.1 109.4 238.8 101.8 238.8 89.9C238.8 78.2 230.1 70.6 217.7 70.6H190.6V109.4H217.7Z" fill="url(#aurora-wordmark)" />
+  <path d="M278.8 128V52H337V70.1H303.4V81.6H334.5V98.8H303.4V128H278.8Z" fill="url(#aurora-wordmark)" />
+  <path d="M351.5 128V52H376.1V128H351.5Z" fill="url(#aurora-wordmark)" />
+  <path d="M394.6 128V52H430.9L453.5 97.3L476.1 52H512.4V128H488.8V85.4L469.2 124.2H437.8L418.2 85.4V128H394.6Z" fill="url(#aurora-wordmark)" />
+  <path d="M528.7 128V52H562L603.7 101.7V52H627.9V128H594.6L552.9 78.3V128H528.7Z" fill="url(#aurora-wordmark)" />
+  <path d="M646.5 128V52H708.9V70.1H670.8V80.2H705.2V96.9H670.8V109.9H710.3V128H646.5Z" fill="url(#aurora-wordmark)" />
+  <path d="M723.5 128V52H760.8C786.2 52 801.2 64.2 801.2 84C801.2 97.1 794.1 106.6 782 111.2L804.2 128H774.3L756.7 114.3H748.1V128H723.5ZM748.1 97.3H759.4C770.4 97.3 776.5 92.9 776.5 85C776.5 77.1 770.4 72.7 759.4 72.7H748.1V97.3Z" fill="url(#aurora-wordmark)" />
+  <path d="M816.2 128V52H843.4L869.9 92.7L896.5 52H920L882.4 107.6V128H857.7V107.6L816.2 52Z" fill="url(#aurora-wordmark)" />
+</svg>

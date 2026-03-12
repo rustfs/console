@@ -25,6 +25,10 @@ The existing RustFS assets are already stored in:
 
 - `public/branding/default/`
 
+A sample enterprise brand is also included for preview:
+
+- `public/branding/aurora-enterprise/`
+
 ## Environment Variables
 
 Add or update these variables in your local `.env` file:
@@ -72,6 +76,19 @@ NEXT_PUBLIC_BRAND_LICENSE_KEY=ACME-ENTERPRISE-001
 ```
 
 5. Start the app with `pnpm dev` or rebuild with `pnpm build`.
+
+## Preview The Included Demo Brand
+
+This repository includes a ready-to-use sample brand:
+
+- `public/branding/aurora-enterprise/`
+- `.env.aurora-enterprise.example`
+
+To preview it:
+
+1. Copy `.env.aurora-enterprise.example` into your local env file.
+2. Start the app with `pnpm dev`.
+3. The login and configuration pages will automatically switch to the Aurora Enterprise look.
 
 ## Notes
 

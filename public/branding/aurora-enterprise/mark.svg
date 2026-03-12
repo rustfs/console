@@ -1,0 +1,18 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aurora-bg" x1="64" y1="48" x2="456" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F172A" />
+      <stop offset="0.5" stop-color="#082F49" />
+      <stop offset="1" stop-color="#164E63" />
+    </linearGradient>
+    <linearGradient id="aurora-wave" x1="120" y1="118" x2="378" y2="392" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#BAE6FD" />
+      <stop offset="0.52" stop-color="#38BDF8" />
+      <stop offset="1" stop-color="#22C55E" />
+    </linearGradient>
+  </defs>
+  <rect x="28" y="28" width="456" height="456" rx="116" fill="url(#aurora-bg)" />
+  <path d="M112 322C153.236 263.271 201.927 216.004 258.072 180.198C292.72 158.102 330.029 140.572 370 128V179.549C340.221 189.724 312.357 203.889 286.408 222.044C244.975 251.042 208.839 288.361 178 334H112V322Z" fill="url(#aurora-wave)" />
+  <path d="M160 382C195.086 332.326 237.107 292.332 286.064 262.017C319.166 241.516 354.213 225.238 391 213.288V264.623C365.153 273.843 340.791 286.096 317.914 301.38C287.421 321.754 260.116 348.627 236 382H160Z" fill="white" fill-opacity="0.88" />
+  <path d="M330 318C345.09 318 357.333 330.243 357.333 345.333C357.333 360.424 345.09 372.667 330 372.667C314.91 372.667 302.667 360.424 302.667 345.333C302.667 330.243 314.91 318 330 318Z" fill="#D9F99D" />
+</svg>

@@ -188,7 +188,9 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
 
   const submitPolicy = async () => {
     try {
-      if (policyFormPolicy === "custom") {
+      if (policyFormPolicy === "private") {
+        await bucketApi.deleteBucketPolicy(bucketName)
+      } else if (policyFormPolicy === "custom") {
         JSON.parse(policyFormContent)
         await bucketApi.putBucketPolicy(bucketName, policyFormContent)
       } else {

@@ -51,10 +51,23 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
     if (!bucketName) return
     headBucket(bucketName)
       .then(() => {})
-      .catch(() => {
-        message.error(t("Bucket not found"))
+      .catch((error: unknown) => {
+        const err = error as { $metadata?: { httpStatusCode?: number }; Code?: string; message?: string }
+        const status = err?.$metadata?.httpStatusCode
+        const code = (err?.Code ?? (error as Error)?.message ?? "").toLowerCase()
+        const isAccessDenied =
+          status === 403 ||
+          code === "accessdenied" ||
+          code === "forbidden" ||
+          (typeof code === "string" && (code.includes("access denied") || code.includes("forbidden")))
+        message.error(isAccessDenied ? t("Access Denied") : t("Bucket not found"))
         const params = new URLSearchParams(searchParams.toString())
-        router.push(`/browser?${params.toString()}`)
+        params.delete("bucket")
+        params.delete("prefix")
+        params.delete("preview")
+        params.delete("previewKey")
+        const query = params.toString()
+        router.push(query ? `/browser?${query}` : "/browser")
       })
   }, [bucketName, headBucket, message, router, t, searchParams])
 

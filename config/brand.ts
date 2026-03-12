@@ -14,7 +14,7 @@ export const brand = {
   supportEmail: process.env.NEXT_PUBLIC_BRAND_SUPPORT_EMAIL || "hello@rustfs.com",
   defaultAdminLabel: process.env.NEXT_PUBLIC_BRAND_DEFAULT_ADMIN_LABEL || "rustfsAdmin",
   enterpriseLicenseKey: process.env.NEXT_PUBLIC_BRAND_LICENSE_KEY || "RUSTFS-ENTERPRISE-127-183",
-  authBackgroundPath: process.env.NEXT_PUBLIC_BRAND_AUTH_BACKGROUND || `${brandAssetDir}/auth-background.svg`,
+  authBackgroundPath: process.env.NEXT_PUBLIC_BRAND_AUTH_BACKGROUND || `/branding/default/auth-background.svg`,
   logoPath: `${brandAssetDir}/logo.svg`,
   avatarPath: `${brandAssetDir}/avatar.png`,
 } as const

@@ -427,7 +427,7 @@
   "MQTT_USERNAME": "MQTT 사용자 이름",
   "Main key ID (Transit key name). Use business-related readable ID.": "메인 키 ID (Transit 키 이름). 비즈니스 관련 읽기 가능한 ID를 사용하세요.",
   "Make sure the server address is accessible from your network": "서버 주소가 네트워크에서 액세스 가능한지 확인하세요",
-  "Manage how RustFS connects to your external key management service.": "RustFS가 외부 키 관리 서비스에 연결하는 방법을 관리합니다.",
+  "Manage how RustFS connects to your external key management service.": "{{productName}}가 외부 키 관리 서비스에 연결하는 방법을 관리합니다.",
   "Master Key": "마스터 키",
   "Master Key (CMK)": "마스터 키 (CMK)",
   "Master Keys (CMK)": "마스터 키 (CMK)",
@@ -527,7 +527,7 @@
   "Performance": "성능",
   "Platinum Service": "플래티넘 서비스",
   "Please Enter storage class": "스토리지 클래스(예: STANDARD, IA, GLACIER)를 입력하세요.",
-  "Please configure your RustFS server address": "RustFS 서버 주소를 구성하세요",
+  "Please configure your RustFS server address": "{{productName}} 서버 주소를 구성하세요",
   "Please enter": "입력하세요",
   "Please enter Access Key": "액세스 키를 입력하세요",
   "Please enter STS key": "STS 키를 입력하세요",
@@ -643,8 +643,8 @@
   "Running (Unhealthy)": "실행 중 (비정상)",
   "Running Status": "운영 상태",
   "Rust-based": "Rust 기반",
-  "RustFS": "러스트FS",
-  "RustFS built-in cold storage": "RustFS 내장 콜드 스토리지",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "{{productName}} 내장 콜드 스토리지",
   "RustyVault Encryption": "RustyVault 암호화",
   "S3 Compatibility": "S3 호환성",
   "S3 Compatible": "S3 호환",
@@ -900,5 +900,6 @@
   "submit": "제출하다",
   "success": "성공",
   "username length cannot be less than 8 characters and greater than 16 characters": "사용자 이름 길이는 8자 미만, 16자 초과일 수 없습니다",
-  "waiting": "대기 중"
+  "waiting": "대기 중",
+  "Unable to reach RustFS server health endpoint": "{{productName}} 서버 상태 확인 엔드포인트에 연결할 수 없습니다"
 }

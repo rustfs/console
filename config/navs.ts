@@ -106,10 +106,4 @@ export default [
     to: "/license",
     icon: "ri:copyright-line",
   },
-  {
-    label: "Documentation",
-    to: "https://docs.rustfs.com/",
-    target: "_blank",
-    icon: "ri:file-list-3-line",
-  },
 ] as NavItem[]

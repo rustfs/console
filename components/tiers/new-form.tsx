@@ -12,7 +12,7 @@ import { useTiers } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
 import { buildRoute } from "@/lib/routes"
 import { cn } from "@/lib/utils"
-import logoImage from "@/assets/logo.svg"
+import { brand } from "@/config/brand"
 
 interface TiersNewFormProps {
   open: boolean
@@ -21,7 +21,7 @@ interface TiersNewFormProps {
 }
 
 const TYPE_OPTIONS = [
-  { labelKey: "RustFS", value: "rustfs", icon: "/logo.svg", descKey: "RustFS built-in cold storage" },
+  { label: brand.productName, value: "rustfs", icon: brand.logoPath, descKey: "RustFS built-in cold storage" },
   { labelKey: "Minio", value: "minio", icon: "/svg/minio.svg", descKey: "External MinIO tier" },
   { labelKey: "AWS S3", value: "s3", icon: "/svg/aws.svg", descKey: "Standard AWS S3 tier" },
   { labelKey: "Aliyun OSS", value: "aliyun", icon: "/svg/aliyun.svg", descKey: "Alibaba Cloud Object Storage Service" },
@@ -153,15 +153,15 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                 >
                   <div className="flex items-center gap-3 p-4">
                     <Image
-                      src={item.value === "rustfs" ? logoImage : buildRoute(item.icon)}
+                      src={buildRoute(item.icon)}
                       alt=""
                       width={40}
                       height={40}
                       className="size-10 shrink-0 object-contain"
                     />
                     <div>
-                      <p className="text-base font-semibold">{t(item.labelKey)}</p>
-                      <p className="text-sm text-muted-foreground">{t(item.descKey)}</p>
+                      <p className="text-base font-semibold">{"label" in item ? item.label : t(item.labelKey)}</p>
+                      <p className="text-sm text-muted-foreground">{t(item.descKey, { productName: brand.productName })}</p>
                     </div>
                   </div>
                 </button>
@@ -177,7 +177,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                 <div className="flex items-center gap-3 p-4">
                   {selectedOption && (
                     <Image
-                      src={selectedOption.value === "rustfs" ? logoImage : buildRoute(selectedOption.icon)}
+                      src={buildRoute(selectedOption.icon)}
                       alt=""
                       width={40}
                       height={40}
@@ -186,7 +186,9 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                   )}
                   <div>
                     <p className="text-sm text-muted-foreground">{t("Selected Type")}</p>
-                    <p className="text-base font-semibold">{type}</p>
+                    <p className="text-base font-semibold">
+                      {selectedOption ? ("label" in selectedOption ? selectedOption.label : t(selectedOption.labelKey)) : type}
+                    </p>
                   </div>
                 </div>
               </button>

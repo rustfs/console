@@ -427,7 +427,7 @@
   "MQTT_USERNAME": "MQTT Kullanıcı Adı",
   "Main key ID (Transit key name). Use business-related readable ID.": "Ana anahtar ID (Transit key adı). İş ile ilgili okunabilir ID kullanın.",
   "Make sure the server address is accessible from your network": "Sunucu adresinin ağınızdan erişilebilir olduğundan emin olun",
-  "Manage how RustFS connects to your external key management service.": "RustFS'nin harici anahtar yönetimi hizmetinize nasıl bağlandığını yönetin.",
+  "Manage how RustFS connects to your external key management service.": "{{productName}} ürününün harici anahtar yönetimi hizmetinize nasıl bağlandığını yönetin.",
   "Master Key": "Ana anahtar",
   "Master Key (CMK)": "Ana Anahtar (CMK)",
   "Master Keys (CMK)": "Ana Anahtarlar (CMK)",
@@ -527,7 +527,7 @@
   "Performance": "Performans",
   "Platinum Service": "Platin Hizmet",
   "Please Enter storage class": "Lütfen depolama sınıfını girin (örn. STANDARD, IA, GLACIER)",
-  "Please configure your RustFS server address": "Lütfen RustFS sunucu adresinizi yapılandırın",
+  "Please configure your RustFS server address": "Lütfen {{productName}} sunucu adresinizi yapılandırın",
   "Please enter": "Lütfen girin",
   "Please enter Access Key": "Lütfen Erişim Anahtarını girin",
   "Please enter STS key": "Lütfen STS anahtarını girin",
@@ -643,8 +643,8 @@
   "Running (Unhealthy)": "Koşu (Sağlıksız)",
   "Running Status": "Çalışma durumu",
   "Rust-based": "Rust Tabanlı",
-  "RustFS": "RustFS",
-  "RustFS built-in cold storage": "RustFS yerleşik soğuk hava deposu",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "{{productName}} yerleşik soğuk hava deposu",
   "RustyVault Encryption": "RustyVault Şifreleme",
   "S3 Compatibility": "S3 Uyumluluğu",
   "S3 Compatible": "S3 Uyumlu",
@@ -896,5 +896,6 @@
   "update:show": "güncelleme:göster",
   "update:visible": "güncelleme:görünür",
   "username length cannot be less than 8 characters and greater than 16 characters": "Kullanıcı adı uzunluğu 8 karakterden az 16 karakterden büyük olamaz",
-  "waiting": "Bekliyor"
+  "waiting": "Bekliyor",
+  "Unable to reach RustFS server health endpoint": "{{productName}} sunucu sağlık uç noktasına ulaşılamıyor"
 }

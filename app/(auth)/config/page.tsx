@@ -13,9 +13,9 @@ import { LanguageSwitcher } from "@/components/language-switcher"
 import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
 import { useMessage } from "@/lib/feedback/message"
 import { buildRoute, getLoginRoute } from "@/lib/routes"
-import logoImage from "@/assets/logo.svg"
 import { configManager } from "@/lib/config"
 import { checkServerHealth } from "@/lib/config-helpers"
+import { brand } from "@/config/brand"
 
 export default function ConfigPage() {
   return (
@@ -54,7 +54,7 @@ function ConfigPageContent() {
         const healthResult = await checkServerHealth(urlToSave)
         if (!healthResult.healthy) {
           message.error(
-            `${t("Unable to reach RustFS server health endpoint")}: ${healthResult.error ?? t("Request failed")}`,
+            `${t("Unable to reach RustFS server health endpoint", { productName: brand.productName })}: ${healthResult.error ?? t("Request failed")}`,
           )
           return
         }
@@ -111,11 +111,11 @@ function ConfigPageContent() {
         </div>
         <div className="flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <Image src={logoImage} alt="RustFS" width={112} height={24} className="max-w-28" />
+            <Image src={buildRoute(brand.logoPath)} alt={brand.productName} width={112} height={24} className="max-w-28" />
             <div className="py-6">
               <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t("Server Configuration")}</h1>
               <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-                {t("Please configure your RustFS server address")}
+                {t("Please configure your RustFS server address", { productName: brand.productName })}
               </p>
             </div>
 
@@ -159,7 +159,7 @@ function ConfigPageContent() {
             <div className="my-8">
               <p className="text-sm text-gray-600 dark:text-neutral-400">
                 {t("Need help?")}{" "}
-                <Link href="https://docs.rustfs.com" className="text-blue-600 hover:underline">
+                <Link href={brand.docsUrl} className="text-blue-600 hover:underline">
                   {t("View Documentation")}
                 </Link>
               </p>

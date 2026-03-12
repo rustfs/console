@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import type { ColumnDef } from "@tanstack/react-table"
+import { brand } from "@/config/brand"
 
 const hasValidLicense = false
 const endDate = dayjs().format("YYYY-MM-DD")
@@ -24,7 +25,7 @@ interface PermissionItem {
 export function LicenseEnterpriseSection() {
   const { t } = useTranslation()
 
-  const licenseKey = "RUSTFS-ENTERPRISE-127-183"
+  const licenseKey = brand.enterpriseLicenseKey
 
   const licenseDetails = useMemo(
     () => [
@@ -36,14 +37,14 @@ export function LicenseEnterpriseSection() {
         value: `${t("Enterprise")} (7x24x365)`,
       },
     ],
-    [t],
+    [licenseKey, t],
   )
 
   const serviceInfo = useMemo(
     () => [
       { label: t("Service Hotline"), value: "400-033-5363" },
       { label: t("Version"), value: "v2.3" },
-      { label: t("Service Email"), value: "hello@rustfs.com" },
+      { label: t("Service Email"), value: brand.supportEmail },
       {
         label: t("Enterprise Service Level"),
         value: t("Platinum Service"),

@@ -427,7 +427,7 @@
   "MQTT_USERNAME": "Nome de Usuário MQTT",
   "Main key ID (Transit key name). Use business-related readable ID.": "ID de chave principal (nome da chave Transit). Use um ID legível relacionado ao negócio.",
   "Make sure the server address is accessible from your network": "Certifique-se de que o endereço do servidor está acessível da sua rede",
-  "Manage how RustFS connects to your external key management service.": "Gerencie como o RustFS se conecta ao seu serviço externo de gerenciamento de chaves.",
+  "Manage how RustFS connects to your external key management service.": "Gerencie como {{productName}} se conecta ao seu serviço externo de gerenciamento de chaves.",
   "Master Key": "Chave Mestra",
   "Master Key (CMK)": "Chave Mestra (CMK)",
   "Master Keys (CMK)": "Chaves Mestras (CMK)",
@@ -527,7 +527,7 @@
   "Performance": "Desempenho",
   "Platinum Service": "Serviço Platinum",
   "Please Enter storage class": "Insira a classe de armazenamento (por exemplo, STANDARD, IA, GLACIER)",
-  "Please configure your RustFS server address": "Configure o endereço do servidor RustFS",
+  "Please configure your RustFS server address": "Configure o endereço do servidor {{productName}}",
   "Please enter": "Digite",
   "Please enter Access Key": "Digite a Chave de Acesso",
   "Please enter STS key": "Digite a chave STS",
@@ -643,8 +643,8 @@
   "Running (Unhealthy)": "Em Execução (Não Saudável)",
   "Running Status": "Status de operação",
   "Rust-based": "Baseado em Rust",
-  "RustFS": "RustFS",
-  "RustFS built-in cold storage": "Armazenamento frio integrado RustFS",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "Armazenamento frio integrado {{productName}}",
   "RustyVault Encryption": "Criptografia RustyVault",
   "S3 Compatibility": "Compatibilidade S3",
   "S3 Compatible": "Compatível com S3",
@@ -904,5 +904,6 @@
   "update:show": "update:show",
   "update:visible": "update:visible",
   "username length cannot be less than 8 characters and greater than 16 characters": "O comprimento do nome de usuário não pode ser menor que 8 caracteres e maior que 16 caracteres",
-  "waiting": "Aguardando"
+  "waiting": "Aguardando",
+  "Unable to reach RustFS server health endpoint": "Não foi possível acessar o endpoint de saúde do servidor {{productName}}"
 }

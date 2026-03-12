@@ -427,7 +427,7 @@
   "MQTT_USERNAME": "MQTT-Benutzername",
   "Main key ID (Transit key name). Use business-related readable ID.": "Hauptschlüssel-ID (Transit-Schlüsselname). Verwenden Sie geschäftsbezogene lesbare ID.",
   "Make sure the server address is accessible from your network": "Stellen Sie sicher, dass die Serveradresse von Ihrem Netzwerk aus erreichbar ist",
-  "Manage how RustFS connects to your external key management service.": "Verwalten Sie, wie RustFS mit Ihrem externen Schlüsselverwaltungsdienst verbindet.",
+  "Manage how RustFS connects to your external key management service.": "Verwalten Sie, wie sich {{productName}} mit Ihrem externen Schlüsselverwaltungsdienst verbindet.",
   "Master Key": "Hauptschlüssel",
   "Master Key (CMK)": "Hauptschlüssel (CMK)",
   "Master Keys (CMK)": "Hauptschlüssel (CMK)",
@@ -527,7 +527,7 @@
   "Performance": "Leistung",
   "Platinum Service": "Platin-Service",
   "Please Enter storage class": "Bitte geben Sie die Speicherklasse ein (z. B. STANDARD, IA, GLACIER)",
-  "Please configure your RustFS server address": "Bitte konfigurieren Sie Ihre RustFS-Serveradresse",
+  "Please configure your RustFS server address": "Bitte konfigurieren Sie Ihre {{productName}}-Serveradresse",
   "Please enter": "Bitte eingeben",
   "Please enter Access Key": "Bitte Zugriffsschlüssel eingeben",
   "Please enter STS key": "Bitte STS-Schlüssel eingeben",
@@ -643,8 +643,8 @@
   "Running (Unhealthy)": "Läuft (ungesund)",
   "Running Status": "Betriebsstatus",
   "Rust-based": "Rust-basiert",
-  "RustFS": "RustFS",
-  "RustFS built-in cold storage": "RustFS integrierter Cold Storage",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "Integrierter Cold Storage von {{productName}}",
   "RustyVault Encryption": "RustyVault-Verschlüsselung",
   "S3 Compatibility": "S3-Kompatibilität",
   "S3 Compatible": "S3-kompatibel",
@@ -894,5 +894,6 @@
   "update:show": "update:show",
   "update:visible": "update:visible",
   "username length cannot be less than 8 characters and greater than 16 characters": "Benutzernamenlänge darf nicht weniger als 8 Zeichen und nicht mehr als 16 Zeichen sein",
-  "waiting": "Warten"
+  "waiting": "Warten",
+  "Unable to reach RustFS server health endpoint": "{{productName}}-Health-Endpoint kann nicht erreicht werden"
 }

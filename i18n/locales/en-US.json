@@ -414,7 +414,7 @@
   "MQTT_USERNAME": "MQTT Username",
   "Main key ID (Transit key name). Use business-related readable ID.": "Main key ID (Transit key name). Use business-related readable ID.",
   "Make sure the server address is accessible from your network": "Make sure the server address is accessible from your network",
-  "Manage how RustFS connects to your external key management service.": "Manage how RustFS connects to your external key management service.",
+  "Manage how RustFS connects to your external key management service.": "Manage how {{productName}} connects to your external key management service.",
   "Master Key": "Master Key",
   "Master Key (CMK)": "Master Key (CMK)",
   "Master Keys (CMK)": "Master Keys (CMK)",
@@ -514,7 +514,7 @@
   "Performance": "Performance",
   "Platinum Service": "Platinum Service",
   "Please Enter storage class": "Please Enter storage class(e.g., STANDARD, IA, GLACIER)",
-  "Please configure your RustFS server address": "Please configure your RustFS server address",
+  "Please configure your RustFS server address": "Please configure your {{productName}} server address",
   "Please enter": "Please enter",
   "Please enter Access Key": "Please enter Access Key",
   "Please enter STS key": "Please enter STS key",
@@ -627,8 +627,8 @@
   "Running (Unhealthy)": "Running (Unhealthy)",
   "Running Status": "Running Status",
   "Rust-based": "Rust-based",
-  "RustFS": "RustFS",
-  "RustFS built-in cold storage": "RustFS built-in cold storage",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "{{productName}} built-in cold storage",
   "RustyVault Encryption": "RustyVault Encryption",
   "S3 Compatibility": "S3 Compatibility",
   "S3 Compatible": "S3 Compatible",
@@ -888,5 +888,6 @@
   "Access Denied": "Access Denied",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.",
   "Back to Home": "Back to Home",
-  "Your session has expired. Please log in again.": "Your session has expired. Please log in again."
+  "Your session has expired. Please log in again.": "Your session has expired. Please log in again.",
+  "Unable to reach RustFS server health endpoint": "Unable to reach {{productName}} server health endpoint"
 }

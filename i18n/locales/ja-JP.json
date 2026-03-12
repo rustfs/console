@@ -427,7 +427,7 @@
   "MQTT_USERNAME": "MQTTユーザー名",
   "Main key ID (Transit key name). Use business-related readable ID.": "メインキーID（Transitキー名）。ビジネス関連の読み取り可能なIDを使用します。",
   "Make sure the server address is accessible from your network": "サーバーアドレスがネットワークからアクセス可能であることを確認してください",
-  "Manage how RustFS connects to your external key management service.": "RustFSが外部キー管理サービスに接続する方法を管理します。",
+  "Manage how RustFS connects to your external key management service.": "{{productName}}が外部キー管理サービスに接続する方法を管理します。",
   "Master Key": "マスターキー",
   "Master Key (CMK)": "マスターキー（CMK）",
   "Master Keys (CMK)": "マスターキー（CMK）",
@@ -527,7 +527,7 @@
   "Performance": "パフォーマンス",
   "Platinum Service": "プラチナサービス",
   "Please Enter storage class": "ストレージクラスを入力してください(例: STANDARD、IA、GLACIER)",
-  "Please configure your RustFS server address": "RustFSサーバーアドレスを設定してください",
+  "Please configure your RustFS server address": "{{productName}}サーバーアドレスを設定してください",
   "Please enter": "入力してください",
   "Please enter Access Key": "アクセスキーを入力してください",
   "Please enter STS key": "STSキーを入力してください",
@@ -643,8 +643,8 @@
   "Running (Unhealthy)": "実行中（不健全）",
   "Running Status": "稼働状況",
   "Rust-based": "Rustベース",
-  "RustFS": "RustFS",
-  "RustFS built-in cold storage": "RustFS組み込みコールドストレージ",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "{{productName}}組み込みコールドストレージ",
   "RustyVault Encryption": "RustyVault暗号化",
   "S3 Compatibility": "S3互換性",
   "S3 Compatible": "S3互換",
@@ -900,5 +900,6 @@
   "submit": "提出する",
   "success": "成功",
   "username length cannot be less than 8 characters and greater than 16 characters": "ユーザー名の長さは8文字未満、16文字を超えることはできません",
-  "waiting": "待機中"
+  "waiting": "待機中",
+  "Unable to reach RustFS server health endpoint": "{{productName}}サーバーのヘルスチェックエンドポイントに到達できません"
 }

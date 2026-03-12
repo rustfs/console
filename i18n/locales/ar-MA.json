@@ -412,7 +412,7 @@
   "MQTT_USERNAME": "اسم مستخدم MQTT",
   "Main key ID (Transit key name). Use business-related readable ID.": "معرف المفتاح الرئيسي (اسم مفتاح العبور). استخدم معرفًا مقروءًا متعلقًا بالأعمال.",
   "Make sure the server address is accessible from your network": "تأكد من أن عنوان الخادم يمكن الوصول إليه من شبكتك",
-  "Manage how RustFS connects to your external key management service.": "إدارة كيفية اتصال RustFS بخدمة إدارة المفاتيح الخارجية.",
+  "Manage how RustFS connects to your external key management service.": "إدارة كيفية اتصال {{productName}} بخدمة إدارة المفاتيح الخارجية.",
   "Master Key": "المفتاح الرئيسي",
   "Master Key (CMK)": "المفتاح الرئيسي (CMK)",
   "Master Keys (CMK)": "المفاتيح الرئيسية (CMK)",
@@ -511,7 +511,7 @@
   "Performance": "الأداء",
   "Platinum Service": "خدمة بلاتينية",
   "Please Enter storage class": "الرجاء إدخال فئة التخزين(مثلاً، STANDARD، IA، GLACIER)",
-  "Please configure your RustFS server address": "الرجاء إعداد عنوان خادم RustFS الخاص بك",
+  "Please configure your RustFS server address": "الرجاء إعداد عنوان خادم {{productName}} الخاص بك",
   "Please enter": "الرجاء الإدخال",
   "Please enter Access Key": "الرجاء إدخال مفتاح الوصول",
   "Please enter STS key": "الرجاء إدخال مفتاح STS",
@@ -624,8 +624,8 @@
   "Running (Unhealthy)": "يعمل (غير صحي)",
   "Running Status": "حالة التشغيل",
   "Rust-based": "مبني على Rust",
-  "RustFS": "RustFS",
-  "RustFS built-in cold storage": "تخزين بارد مدمج في RustFS",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "تخزين بارد مدمج في {{productName}}",
   "RustyVault Encryption": "تشفير RustyVault",
   "S3 Compatibility": "توافق S3",
   "S3 Compatible": "متوافق مع S3",
@@ -881,5 +881,6 @@
   "Access Denied": "تم رفض الوصول",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "ليس لديك إذن للوصول إلى هذه الصفحة. قد يكون هذا بسبب عدم كفاية الأذونات أو عدم تسجيل الدخول.",
   "Back to Home": "العودة إلى الرئيسية",
-  "Your session has expired. Please log in again.": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى."
+  "Your session has expired. Please log in again.": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.",
+  "Unable to reach RustFS server health endpoint": "تعذر الوصول إلى نقطة فحص صحة خادم {{productName}}"
 }

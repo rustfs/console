@@ -13,6 +13,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { useUsers } from "@/hooks/use-users"
 import { ChangePassword } from "./change-password"
 import { useSidebar } from "@/components/ui/sidebar"
+import { brand } from "@/config/brand"
 
 export function UserDropdown() {
   const { t } = useTranslation()
@@ -50,8 +51,8 @@ export function UserDropdown() {
             <div className="flex items-center gap-3">
               <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border bg-muted">
                 <Image
-                  src={buildRoute("/img/rustfs.png")}
-                  alt="RustFS"
+                  src={buildRoute(brand.avatarPath)}
+                  alt={brand.productName}
                   width={32}
                   height={32}
                   className="h-8 w-8 rounded-full object-cover"
@@ -65,7 +66,7 @@ export function UserDropdown() {
           <DropdownMenuItem asChild>
             <div className="flex cursor-default items-center gap-2">
               <RiUserLine className="h-4 w-4" />
-              <span>{(userInfo as { account_name?: string })?.account_name ?? (isAdmin ? "rustfsAdmin" : "")}</span>
+              <span>{(userInfo as { account_name?: string })?.account_name ?? (isAdmin ? brand.defaultAdminLabel : "")}</span>
             </div>
           </DropdownMenuItem>
           {!isAdmin && (

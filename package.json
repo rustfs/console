@@ -4,9 +4,13 @@
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.19.0",
   "scripts": {
+    "predev": "node scripts/prepare-brand-assets.mjs",
     "dev": "next dev",
+    "prebuild": "node scripts/prepare-brand-assets.mjs",
     "build": "next build --webpack && node scripts/prepare-static-basepath.mjs",
+    "prestart": "node scripts/prepare-brand-assets.mjs",
     "start": "next start",
+    "brand:prepare": "node scripts/prepare-brand-assets.mjs",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "type-check": "tsc --noEmit",

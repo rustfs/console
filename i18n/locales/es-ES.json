@@ -427,7 +427,7 @@
   "MQTT_USERNAME": "Nombre de Usuario MQTT",
   "Main key ID (Transit key name). Use business-related readable ID.": "ID de clave principal (nombre de clave Transit). Use un ID legible relacionado con el negocio.",
   "Make sure the server address is accessible from your network": "Asegúrese de que la dirección del servidor sea accesible desde su red",
-  "Manage how RustFS connects to your external key management service.": "Gestione cómo RustFS se conecta a su servicio externo de gestión de claves.",
+  "Manage how RustFS connects to your external key management service.": "Gestione cómo {{productName}} se conecta a su servicio externo de gestión de claves.",
   "Master Key": "Clave Maestra",
   "Master Key (CMK)": "Clave Maestra (CMK)",
   "Master Keys (CMK)": "Claves Maestras (CMK)",
@@ -527,7 +527,7 @@
   "Performance": "Rendimiento",
   "Platinum Service": "Servicio Platino",
   "Please Enter storage class": "Ingrese la clase de almacenamiento (por ejemplo, ESTÁNDAR, IA, GLACIAR)",
-  "Please configure your RustFS server address": "Configure la dirección de su servidor RustFS",
+  "Please configure your RustFS server address": "Configure la dirección de su servidor {{productName}}",
   "Please enter": "Ingrese",
   "Please enter Access Key": "Ingrese la Clave de Acceso",
   "Please enter STS key": "Ingrese la clave STS",
@@ -643,8 +643,8 @@
   "Running (Unhealthy)": "En Ejecución (No Saludable)",
   "Running Status": "Estado operativo",
   "Rust-based": "Basado en Rust",
-  "RustFS": "RustFS",
-  "RustFS built-in cold storage": "Almacenamiento frío integrado RustFS",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "Almacenamiento frío integrado {{productName}}",
   "RustyVault Encryption": "Cifrado RustyVault",
   "S3 Compatibility": "Compatibilidad S3",
   "S3 Compatible": "Compatible con S3",
@@ -903,5 +903,6 @@
   "update:show": "update:show",
   "update:visible": "update:visible",
   "username length cannot be less than 8 characters and greater than 16 characters": "La longitud del nombre de usuario no puede ser menor de 8 caracteres y mayor de 16 caracteres",
-  "waiting": "Esperando"
+  "waiting": "Esperando",
+  "Unable to reach RustFS server health endpoint": "No se puede acceder al endpoint de salud del servidor {{productName}}"
 }

@@ -427,7 +427,7 @@
   "MQTT_USERNAME": "Nama Pengguna MQTT",
   "Main key ID (Transit key name). Use business-related readable ID.": "ID kunci utama (Nama kunci transit). Gunakan ID yang mudah dibaca terkait bisnis.",
   "Make sure the server address is accessible from your network": "Pastikan alamat server dapat diakses dari jaringan Anda",
-  "Manage how RustFS connects to your external key management service.": "Kelola cara RustFS terhubung ke layanan manajemen kunci eksternal Anda.",
+  "Manage how RustFS connects to your external key management service.": "Kelola cara {{productName}} terhubung ke layanan manajemen kunci eksternal Anda.",
   "Master Key": "Kunci Utama",
   "Master Key (CMK)": "Kunci Utama (CMK)",
   "Master Keys (CMK)": "Kunci Utama (CMK)",
@@ -527,7 +527,7 @@
   "Performance": "Kinerja",
   "Platinum Service": "Layanan Platinum",
   "Please Enter storage class": "Silakan masukkan kelas penyimpanan (misal: STANDARD, IA, GLACIER)",
-  "Please configure your RustFS server address": "Silakan konfigurasikan alamat server RustFS Anda",
+  "Please configure your RustFS server address": "Silakan konfigurasikan alamat server {{productName}} Anda",
   "Please enter": "Silakan masukkan",
   "Please enter Access Key": "Silakan masukkan Access Key",
   "Please enter STS key": "Silakan masukkan kunci STS",
@@ -643,8 +643,8 @@
   "Running (Unhealthy)": "Berjalan (Tidak Sehat)",
   "Running Status": "Status operasi",
   "Rust-based": "Berbasis Rust",
-  "RustFS": "KaratFS",
-  "RustFS built-in cold storage": "Penyimpanan dingin bawaan RustFS",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "Penyimpanan dingin bawaan {{productName}}",
   "RustyVault Encryption": "Enkripsi RustyVault",
   "S3 Compatibility": "Kompatibilitas S3",
   "S3 Compatible": "Kompatibel dengan S3",
@@ -903,5 +903,6 @@
   "success": "Berhasil",
   "transit": "transit",
   "username length cannot be less than 8 characters and greater than 16 characters": "panjang nama pengguna tidak boleh kurang dari 8 karakter dan lebih dari 16 karakter",
-  "waiting": "Menunggu"
+  "waiting": "Menunggu",
+  "Unable to reach RustFS server health endpoint": "Tidak dapat menjangkau endpoint kesehatan server {{productName}}"
 }

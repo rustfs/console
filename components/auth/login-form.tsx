@@ -12,7 +12,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
 import { buildRoute } from "@/lib/routes"
-import logoImage from "@/assets/logo.svg"
+import { brand } from "@/config/brand"
 
 import type { OidcProvider } from "@/types/config"
 
@@ -77,7 +77,7 @@ export function LoginForm({
           </div>
 
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <Image src={logoImage} alt="RustFS" width={112} height={24} className="max-w-28" />
+            <Image src={buildRoute(brand.logoPath)} alt={brand.productName} width={112} height={24} className="max-w-28" />
 
             <div className="space-y-4">
               <Tabs value={method} onValueChange={(v) => setMethod(v as LoginMethod)} className="flex flex-col gap-4">
@@ -226,7 +226,7 @@ export function LoginForm({
             <div>
               <p className="text-sm text-gray-600 dark:text-neutral-400">
                 {t("Login Problems?")}{" "}
-                <Link href="https://www.rustfs.com" className="text-blue-600 hover:underline">
+                <Link href={brand.websiteUrl} className="text-blue-600 hover:underline">
                   {t("Get Help")}
                 </Link>
               </p>

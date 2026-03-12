@@ -427,7 +427,7 @@
   "MQTT_USERNAME": "MQTT 用户名",
   "Main key ID (Transit key name). Use business-related readable ID.": "主密钥ID（Transit key名）。使用业务相关的可读ID。",
   "Make sure the server address is accessible from your network": "确保服务器地址在您的网络中可访问",
-  "Manage how RustFS connects to your external key management service.": "管理 RustFS 如何连接到您的外部密钥管理服务。",
+  "Manage how RustFS connects to your external key management service.": "管理 {{productName}} 如何连接到您的外部密钥管理服务。",
   "Master Key": "主密钥",
   "Master Key (CMK)": "主密钥 (CMK)",
   "Master Keys (CMK)": "主密钥 (CMK)",
@@ -527,7 +527,7 @@
   "Performance": "性能",
   "Platinum Service": "白金服务",
   "Please Enter storage class": "请输入存储类型",
-  "Please configure your RustFS server address": "请配置您的RustFS服务器地址",
+  "Please configure your RustFS server address": "请配置您的 {{productName}} 服务器地址",
   "Please enter": "请输入",
   "Please enter Access Key": "请输入访问密钥",
   "Please enter STS key": "请输入 STS 密钥",
@@ -643,8 +643,8 @@
   "Running (Unhealthy)": "运行中（不健康）",
   "Running Status": "运行状态",
   "Rust-based": "基于 Rust 的",
-  "RustFS": "RustFS",
-  "RustFS built-in cold storage": "RustFS 内置冷存储",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "{{productName}} 内置冷存储",
   "RustyVault Encryption": "RustyVault 加密",
   "S3 Compatibility": "S3 兼容性",
   "S3 Compatible": "兼容 S3",
@@ -893,5 +893,6 @@
   "submit": "提交",
   "success": "成功",
   "username length cannot be less than 8 characters and greater than 16 characters": "用户名长度不能少于8个字符且不能大于16个字符",
-  "waiting": "等待中"
+  "waiting": "等待中",
+  "Unable to reach RustFS server health endpoint": "无法访问 {{productName}} 服务器健康检查端点"
 }

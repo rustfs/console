@@ -427,7 +427,7 @@
   "MQTT_USERNAME": "Имя пользователя MQTT",
   "Main key ID (Transit key name). Use business-related readable ID.": "ID основного ключа (имя ключа Transit). Используйте читаемый ID, связанный с бизнесом.",
   "Make sure the server address is accessible from your network": "Убедитесь, что адрес сервера доступен из вашей сети",
-  "Manage how RustFS connects to your external key management service.": "Управляйте тем, как RustFS подключается к вашей внешней службе управления ключами.",
+  "Manage how RustFS connects to your external key management service.": "Управляйте тем, как {{productName}} подключается к вашей внешней службе управления ключами.",
   "Master Key": "Мастер-ключ",
   "Master Key (CMK)": "Мастер-ключ (CMK)",
   "Master Keys (CMK)": "Мастер-ключи (CMK)",
@@ -527,7 +527,7 @@
   "Performance": "Производительность",
   "Platinum Service": "Платиновое обслуживание",
   "Please Enter storage class": "Пожалуйста, введите класс хранения (например, СТАНДАРТ, IA, ЛЕДНИК)",
-  "Please configure your RustFS server address": "Настройте адрес сервера RustFS",
+  "Please configure your RustFS server address": "Настройте адрес сервера {{productName}}",
   "Please enter": "Введите",
   "Please enter Access Key": "Введите ключ доступа",
   "Please enter STS key": "Введите ключ STS",
@@ -643,8 +643,8 @@
   "Running (Unhealthy)": "Запущен (неисправен)",
   "Running Status": "Состояние работы",
   "Rust-based": "На основе Rust",
-  "RustFS": "РустФС",
-  "RustFS built-in cold storage": "Встроенное холодное хранилище RustFS",
+  "RustFS": "{{productName}}",
+  "RustFS built-in cold storage": "Встроенное холодное хранилище {{productName}}",
   "RustyVault Encryption": "Шифрование RustyVault",
   "S3 Compatibility": "Совместимость с S3",
   "S3 Compatible": "Совместим с S3",
@@ -905,5 +905,6 @@
   "update:show": "update:show",
   "update:visible": "update:visible",
   "username length cannot be less than 8 characters and greater than 16 characters": "Длина имени пользователя не может быть менее 8 символов и более 16 символов",
-  "waiting": "Ожидание"
+  "waiting": "Ожидание",
+  "Unable to reach RustFS server health endpoint": "Не удалось обратиться к эндпоинту проверки состояния сервера {{productName}}"
 }

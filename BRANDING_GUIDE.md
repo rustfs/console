@@ -12,6 +12,7 @@ Each brand directory should contain:
 
 - `logo.svg`
 - `avatar.png`
+- `auth-background.svg`
 - `favicon.ico`
 - `favicon-16x16.png`
 - `favicon-32x32.png`
@@ -36,6 +37,7 @@ NEXT_PUBLIC_BRAND_TITLE=RustFS
 NEXT_PUBLIC_BRAND_DESCRIPTION=RustFS is a distributed file system written in Rust.
 NEXT_PUBLIC_BRAND_WEBSITE=https://www.rustfs.com
 NEXT_PUBLIC_BRAND_DOCS=https://docs.rustfs.com
+NEXT_PUBLIC_BRAND_AUTH_BACKGROUND=/branding/default/auth-background.svg
 NEXT_PUBLIC_BRAND_SUPPORT_EMAIL=hello@rustfs.com
 NEXT_PUBLIC_BRAND_DEFAULT_ADMIN_LABEL=rustfsAdmin
 NEXT_PUBLIC_BRAND_LICENSE_KEY=RUSTFS-ENTERPRISE-127-183
@@ -45,13 +47,14 @@ NEXT_PUBLIC_BRAND_LICENSE_KEY=RUSTFS-ENTERPRISE-127-183
 
 - `config/brand.ts` reads all branding-related environment variables.
 - UI components use that config for names, links, descriptions, and image paths.
+- Login and configuration pages use `NEXT_PUBLIC_BRAND_AUTH_BACKGROUND` as the enterprise background image.
 - `scripts/prepare-brand-assets.mjs` copies the current brand's favicon and manifest files from `public/branding/<brand-id>/` into `app/` before `dev`, `build`, and `start`.
 
 ## Add a New Brand
 
 1. Create a new directory, for example `public/branding/acme/`.
 2. Copy all files from `public/branding/default/` into the new directory.
-3. Replace the logo, avatar, favicon, and manifest files with the new company's assets.
+3. Replace the logo, avatar, auth background, favicon, and manifest files with the new company's assets.
 4. Update your `.env` file:
 
 ```env
@@ -62,6 +65,7 @@ NEXT_PUBLIC_BRAND_TITLE=Acme Storage Console
 NEXT_PUBLIC_BRAND_DESCRIPTION=Acme enterprise object storage console.
 NEXT_PUBLIC_BRAND_WEBSITE=https://www.acme.com
 NEXT_PUBLIC_BRAND_DOCS=https://docs.acme.com
+NEXT_PUBLIC_BRAND_AUTH_BACKGROUND=/branding/acme/auth-background.svg
 NEXT_PUBLIC_BRAND_SUPPORT_EMAIL=support@acme.com
 NEXT_PUBLIC_BRAND_DEFAULT_ADMIN_LABEL=acmeAdmin
 NEXT_PUBLIC_BRAND_LICENSE_KEY=ACME-ENTERPRISE-001

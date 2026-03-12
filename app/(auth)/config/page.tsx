@@ -2,7 +2,6 @@
 
 import { useState, Suspense } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
@@ -10,9 +9,9 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/
 import { Input } from "@/components/ui/input"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
-import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
+import { AuthShell } from "@/components/auth/shell"
 import { useMessage } from "@/lib/feedback/message"
-import { buildRoute, getLoginRoute } from "@/lib/routes"
+import { getLoginRoute } from "@/lib/routes"
 import { configManager } from "@/lib/config"
 import { checkServerHealth } from "@/lib/config-helpers"
 import { brand } from "@/config/brand"
@@ -98,84 +97,60 @@ function ConfigPageContent() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 dark:bg-neutral-800 lg:p-20">
-      <Image
-        src={buildRoute("/backgrounds/scillate.svg")}
-        alt=""
-        fill
-        className="absolute inset-0 z-0 opacity-45 object-cover"
-      />
-      <div className="z-10 mx-auto flex max-h-[85vh] w-full max-w-7xl flex-1 flex-col overflow-hidden rounded-lg shadow-lg dark:border-neutral-700 dark:bg-neutral-800 lg:flex-row">
-        <div className="hidden w-1/2 lg:block">
-          <AuthHeroStatic />
+    <AuthShell
+      eyebrow={t("Server Configuration")}
+      title={t("Server Configuration")}
+      description={t("Please configure your RustFS server address", { productName: brand.productName })}
+      sideTitle={t("Server Configuration")}
+      sideDescription={t("Please configure your RustFS server address", { productName: brand.productName })}
+      utilitySlot={
+        <>
+          <LanguageSwitcher />
+          <ThemeSwitcher />
+        </>
+      }
+      footerSlot={
+        <div className="flex items-center justify-between gap-3 px-2 text-sm text-slate-600 dark:text-white/65">
+          <span>{t("Need help?")}</span>
+          <Link href={brand.docsUrl} className="font-medium text-blue-600 hover:underline dark:text-blue-300">
+            {t("View Documentation")}
+          </Link>
         </div>
-        <div className="flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
-          <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <Image src={buildRoute(brand.logoPath)} alt={brand.productName} width={112} height={24} className="max-w-28" />
-            <div className="py-6">
-              <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t("Server Configuration")}</h1>
-              <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-                {t("Please configure your RustFS server address", { productName: brand.productName })}
-              </p>
-            </div>
-
-            <div className="mt-5 space-y-4">
-              <form onSubmit={validateAndSave} autoComplete="off">
-                <div className="grid gap-y-6">
-                  <Field>
-                    <FieldLabel htmlFor="serverHost">{t("Server Address")}</FieldLabel>
-                    <FieldDescription>{t("Leave empty to use current host as default")}</FieldDescription>
-                    <FieldContent>
-                      <Input
-                        id="serverHost"
-                        value={serverHost}
-                        onChange={(e) => setServerHost(e.target.value)}
-                        type="text"
-                        placeholder={t("Please enter server address (e.g., http://localhost:9000)")}
-                      />
-                    </FieldContent>
-                    <FieldDescription>
-                      {t("Example: http://localhost:9000 or https://your-domain.com")}
-                    </FieldDescription>
-                  </Field>
-
-                  <div className="flex gap-3">
-                    <Button type="submit" className="flex-1" disabled={isSaving}>
-                      {t("Save Configuration")}
-                    </Button>
-
-                    <Button type="button" variant="outline" onClick={resetToCurrentHost} disabled={isSaving}>
-                      {t("Reset")}
-                    </Button>
-
-                    <Button type="button" variant="outline" onClick={skipConfig} disabled={isSaving}>
-                      {t("Skip")}
-                    </Button>
-                  </div>
-                </div>
-              </form>
-            </div>
-
-            <div className="my-8">
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
-                {t("Need help?")}{" "}
-                <Link href={brand.docsUrl} className="text-blue-600 hover:underline">
-                  {t("View Documentation")}
-                </Link>
-              </p>
-            </div>
-
-            <div className="mx-auto flex w-1/2 items-center justify-around gap-4">
-              <div className="inline-flex">
-                <ThemeSwitcher />
-              </div>
-              <div className="inline-flex">
-                <LanguageSwitcher />
-              </div>
-            </div>
-          </div>
-        </div>
+      }
+    >
+      <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm leading-6 text-slate-600 dark:border-white/10 dark:bg-white/4 dark:text-white/65">
+        {t("Leave empty to use current host as default")}
       </div>
-    </div>
+
+      <form onSubmit={validateAndSave} autoComplete="off" className="space-y-6">
+        <Field>
+          <FieldLabel htmlFor="serverHost">{t("Server Address")}</FieldLabel>
+          <FieldContent>
+            <Input
+              id="serverHost"
+              value={serverHost}
+              onChange={(e) => setServerHost(e.target.value)}
+              type="text"
+              placeholder={t("Please enter server address (e.g., http://localhost:9000)")}
+              className="h-11 rounded-xl"
+            />
+          </FieldContent>
+          <FieldDescription>{t("Example: http://localhost:9000 or https://your-domain.com")}</FieldDescription>
+        </Field>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Button type="submit" className="h-11 rounded-xl sm:col-span-2" disabled={isSaving}>
+            {t("Save Configuration")}
+          </Button>
+
+          <Button type="button" variant="outline" onClick={resetToCurrentHost} disabled={isSaving} className="h-11 rounded-xl">
+            {t("Reset")}
+          </Button>
+          <Button type="button" variant="ghost" onClick={skipConfig} disabled={isSaving} className="h-11 rounded-xl sm:col-span-3">
+            {t("Skip")}
+          </Button>
+        </div>
+      </form>
+    </AuthShell>
   )
 }

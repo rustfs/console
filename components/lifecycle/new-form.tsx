@@ -14,6 +14,7 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/
 import { useBucket } from "@/hooks/use-bucket"
 import { useTiers, type TierRow } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
+import { randomUUID } from "@/lib/functions"
 
 interface LifecycleNewFormProps {
   open: boolean
@@ -175,7 +176,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
       }
 
       const newRule: Record<string, unknown> = {
-        ID: crypto.randomUUID(),
+        ID: randomUUID(),
         Status: "Enabled",
         Filter: buildFilter(),
       }

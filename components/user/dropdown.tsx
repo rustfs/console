@@ -24,7 +24,14 @@ export function UserDropdown() {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const theme = getThemeManifest()
-  const avatar = buildRoute("/img/rustfs.png")
+  const defaultAvatar = buildRoute("/img/rustfs.png")
+  const userAvatar = theme.assets?.userAvatar
+  const avatar =
+    userAvatar != null && userAvatar !== ""
+      ? userAvatar.startsWith("/") && !userAvatar.startsWith("//")
+        ? buildRoute(userAvatar)
+        : userAvatar
+      : defaultAvatar
 
   const [changePasswordVisible, setChangePasswordVisible] = useState(false)
 

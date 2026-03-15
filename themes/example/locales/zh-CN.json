@@ -1,0 +1,11 @@
+{
+  "Login": "登录到 Acme",
+  "View Documentation": "查看 Acme 文档",
+  "Server Configuration": "Acme 服务配置",
+  "Visit website": "访问 Acme 官网",
+  "Acme theme activated": "Acme 主题已启用",
+  "Key-level locale override": "语言包 Key 级覆盖",
+  "Component path override": "同路径组件覆盖",
+  "Asset override": "静态资源覆盖",
+  "Public assets are overridden too": "public 资源也已覆盖"
+}

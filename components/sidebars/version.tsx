@@ -4,13 +4,14 @@ import { useEffect, useState } from "react"
 import { configManager } from "@/lib/config"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/components/ui/sidebar"
+import { getThemeShortName } from "@/lib/theme/manifest"
 
 interface SidebarVersionProps {
   appName?: string
   className?: string
 }
 
-export function SidebarVersion({ appName = "RustFS", className }: SidebarVersionProps) {
+export function SidebarVersion({ appName = getThemeShortName(), className }: SidebarVersionProps) {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const [version, setVersion] = useState<string | null>(null)

@@ -28,6 +28,17 @@
 # misc
 .DS_Store
 *.pem
+.theme-runtime
+
+# themes: keep only default and example in repo
+/themes/*
+!/themes/default/
+!/themes/default/**
+!/themes/example/
+!/themes/example/**
+
+# generated theme locale artifacts
+/public/themes/
 
 # debug
 npm-debug.log*

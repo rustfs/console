@@ -1,4 +1,7 @@
 import type { NavItem } from "@/types/app-config"
+import { getThemeManifest } from "@/lib/theme/manifest"
+
+const theme = getThemeManifest()
 
 // icons: https://icones.js.org/collection/ri
 export default [
@@ -108,7 +111,7 @@ export default [
   },
   {
     label: "Documentation",
-    to: "https://docs.rustfs.com/",
+    to: theme.links.documentation ?? "https://docs.rustfs.com/",
     target: "_blank",
     icon: "ri:file-list-3-line",
   },

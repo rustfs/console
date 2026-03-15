@@ -1,0 +1,11 @@
+{
+  "Login": "Sign in to Acme",
+  "View Documentation": "Open Acme Docs",
+  "Server Configuration": "Acme Server Settings",
+  "Visit website": "Visit Acme site",
+  "Acme theme activated": "Acme theme activated",
+  "Key-level locale override": "Key-level locale override",
+  "Component path override": "Component path override",
+  "Asset override": "Asset override",
+  "Public assets are overridden too": "Public assets are overridden too"
+}

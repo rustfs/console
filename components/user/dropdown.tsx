@@ -13,15 +13,18 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { useUsers } from "@/hooks/use-users"
 import { ChangePassword } from "./change-password"
 import { useSidebar } from "@/components/ui/sidebar"
+import { getThemeManifest } from "@/lib/theme/manifest"
 
 export function UserDropdown() {
   const { t } = useTranslation()
   const router = useRouter()
   const { logout, isAdmin, setIsAdmin } = useAuth()
-  const { userInfo, canChangePassword } = usePermissions()
+  const { userInfo } = usePermissions()
   const { isAdminUser } = useUsers()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
+  const theme = getThemeManifest()
+  const avatar = buildRoute("/img/rustfs.png")
 
   const [changePasswordVisible, setChangePasswordVisible] = useState(false)
 
@@ -50,8 +53,8 @@ export function UserDropdown() {
             <div className="flex items-center gap-3">
               <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border bg-muted">
                 <Image
-                  src={buildRoute("/img/rustfs.png")}
-                  alt="RustFS"
+                  src={avatar}
+                  alt={theme.brand.name}
                   width={32}
                   height={32}
                   className="h-8 w-8 rounded-full object-cover"

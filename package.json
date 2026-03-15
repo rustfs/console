@@ -4,8 +4,8 @@
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.19.0",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build --webpack && node scripts/prepare-static-basepath.mjs",
+    "dev": "node scripts/apply-theme-overrides.mjs && next dev",
+    "build": "node scripts/apply-theme-overrides.mjs && next build --webpack && node scripts/prepare-static-basepath.mjs",
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",

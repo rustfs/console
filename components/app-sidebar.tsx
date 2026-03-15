@@ -31,8 +31,10 @@ import type { NavItem } from "@/types/app-config"
 import { usePermissions } from "@/hooks/use-permissions"
 import { SidebarVersion } from "@/components/sidebars/version"
 import { useDirection } from "@/components/ui/direction"
+import { getThemeManifest } from "@/lib/theme/manifest"
 
-const APP_NAME = "RustFS"
+const theme = getThemeManifest()
+const APP_NAME = theme.brand.name
 
 function NavIcon({ name }: { name?: string }) {
   const Icon = getIconComponent(name)
@@ -133,7 +135,7 @@ export function AppSidebar() {
             </div>
           ) : (
             <div className="flex min-w-0 items-baseline gap-2 px-3 py-4">
-              <Image src={logoImage} alt="RustFS" width={64} height={16} className="h-4 w-auto shrink-0" />
+              <Image src={logoImage} alt={APP_NAME} width={64} height={16} className="h-4 w-auto shrink-0" />
             </div>
           )}
         </Link>

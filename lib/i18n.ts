@@ -3,6 +3,7 @@
 import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
+import { loadThemeLocaleOverride } from "@/lib/theme/locales"
 
 // Map short locale codes (from Nuxt i18n_redirected) to locale file names
 const LOCALE_FILE_MAP: Record<string, string> = {
@@ -19,7 +20,7 @@ const LOCALE_FILE_MAP: Record<string, string> = {
   ru: "ru-RU",
   tr: "tr-TR",
   id: "id-ID",
-  vi: "vi-VN"
+  vi: "vi-VN",
 }
 
 export type Locale = keyof typeof LOCALE_FILE_MAP
@@ -35,8 +36,11 @@ export async function initI18n() {
   const resources: Record<string, { translation: Record<string, string> }> = {}
 
   for (const [code, file] of Object.entries(LOCALE_FILE_MAP)) {
+    const baseLocale = await loadLocale(file)
+    const themeOverride = await loadThemeLocaleOverride(file)
+
     resources[code] = {
-      translation: await loadLocale(file),
+      translation: themeOverride ? { ...baseLocale, ...themeOverride } : baseLocale,
     }
   }
 

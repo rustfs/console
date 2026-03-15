@@ -12,6 +12,7 @@ import { useTiers } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
 import { buildRoute } from "@/lib/routes"
 import { cn } from "@/lib/utils"
+import { getThemeManifest } from "@/lib/theme/manifest"
 import logoImage from "@/assets/logo.svg"
 
 interface TiersNewFormProps {
@@ -41,6 +42,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
   const { t } = useTranslation()
   const message = useMessage()
   const { addTiers } = useTiers()
+  const theme = getThemeManifest()
 
   const [type, setType] = React.useState("")
   const [name, setName] = React.useState("")
@@ -186,7 +188,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                   )}
                   <div>
                     <p className="text-sm text-muted-foreground">{t("Selected Type")}</p>
-                    <p className="text-base font-semibold">{type}</p>
+                    <p className="text-base font-semibold">{type === "rustfs" ? theme.brand.name : type}</p>
                   </div>
                 </div>
               </button>

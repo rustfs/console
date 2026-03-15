@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "default",
+  "name": "Default",
+  "brand": {
+    "name": "RustFS",
+    "shortName": "RustFS",
+    "description": "RustFS is a distributed file system written in Rust."
+  },
+  "assets": {
+    "logo": "/themes/default/assets/logo.svg",
+    "logoCompact": "/themes/default/assets/logo.svg",
+    "userAvatar": "/img/rustfs.png"
+  },
+  "links": {
+    "website": "https://www.rustfs.com",
+    "documentation": "https://docs.rustfs.com/",
+    "github": "https://github.com/rustfs/console",
+    "x": "https://x.com/rustfsofficial"
+  }
+}

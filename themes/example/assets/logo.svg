@@ -1,0 +1,8 @@
+<svg width="260" height="64" viewBox="0 0 260 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="260" height="64" rx="10" fill="#0F766E"/>
+<circle cx="32" cy="32" r="14" fill="#99F6E4"/>
+<path d="M24 32L30 38L40 26" stroke="#115E59" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="58" y="39" fill="#ECFEFF" font-size="22" font-family="Arial, Helvetica, sans-serif" font-weight="700">
+  ACME Console
+</text>
+</svg>

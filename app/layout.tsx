@@ -8,10 +8,13 @@ import { S3Provider } from "@/contexts/s3-context"
 import { TaskProvider } from "@/contexts/task-context"
 import { PermissionsProvider } from "@/hooks/use-permissions"
 import { AppUiProvider } from "@/components/providers/app-ui-provider"
+import { getThemeManifest } from "@/lib/theme/manifest"
+
+const theme = getThemeManifest()
 
 export const metadata: Metadata = {
-  title: "RustFS",
-  description: "RustFS is a distributed file system written in Rust.",
+  title: theme.brand.name,
+  description: theme.brand.description ?? "RustFS is a distributed file system written in Rust.",
 }
 
 export default function RootLayout({

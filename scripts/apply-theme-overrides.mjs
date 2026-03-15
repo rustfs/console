@@ -8,9 +8,19 @@ const root = path.resolve(__dirname, "..")
 const runtimeRoot = path.join(root, ".theme-runtime")
 const backupRoot = path.join(runtimeRoot, "backup")
 const stateFile = path.join(runtimeRoot, "state.json")
+const themesRoot = path.join(root, "themes")
 
-const themeId = process.env.NEXT_PUBLIC_THEME_ID?.trim() || process.env.THEME_ID?.trim() || "default"
-const themeRoot = path.join(root, "themes", themeId)
+const themeIdRaw = process.env.NEXT_PUBLIC_THEME_ID?.trim() || process.env.THEME_ID?.trim() || "default"
+const themeIdPattern = /^[A-Za-z0-9_-]+$/
+if (!themeIdPattern.test(themeIdRaw)) {
+  throw new Error(`[theme] Invalid theme id "${themeIdRaw}". Only [A-Za-z0-9_-] are allowed.`)
+}
+
+const themeId = themeIdRaw
+const themeRoot = path.resolve(themesRoot, themeId)
+if (!themeRoot.startsWith(`${themesRoot}${path.sep}`) && themeRoot !== themesRoot) {
+  throw new Error(`[theme] Invalid theme path: ${themeRoot}`)
+}
 
 if (!fs.existsSync(themeRoot)) {
   throw new Error(`[theme] Theme "${themeId}" not found: ${themeRoot}`)
@@ -92,6 +102,7 @@ function backupBeforeWrite(targetPath) {
   const existed = fs.existsSync(targetPath)
   stateEntries.push({ path: relativePath, existed })
   backedUp.set(relativePath, true)
+  writeState(stateEntries)
 
   if (!existed) return
 
@@ -121,11 +132,39 @@ function copyDirRecursive(src, dest) {
   }
 }
 
+function listLocaleFiles(src, base = src) {
+  if (!fs.existsSync(src)) return []
+
+  const files = []
+  const entries = fs.readdirSync(src, { withFileTypes: true })
+  for (const entry of entries) {
+    if (entry.name === ".gitkeep") continue
+    const full = path.join(src, entry.name)
+    if (entry.isDirectory()) {
+      files.push(...listLocaleFiles(full, base))
+      continue
+    }
+    if (!entry.isFile() || !entry.name.endsWith(".json")) continue
+    files.push(path.relative(base, full))
+  }
+
+  return files
+}
+
 restorePreviousOverrides()
+writeState([])
 
 for (const mapping of mappings) {
   copyDirRecursive(path.join(themeRoot, mapping.from), path.join(root, mapping.to))
 }
+
+const themeLocaleRoot = path.join(themeRoot, "locales")
+const localeFiles = listLocaleFiles(themeLocaleRoot)
+const localeIndex = localeFiles.map((file) => file.replace(/\.json$/, ""))
+const localeIndexTargetPath = path.join(root, "public", "themes", themeId, "locales", "index.json")
+backupBeforeWrite(localeIndexTargetPath)
+ensureParentDir(localeIndexTargetPath)
+fs.writeFileSync(localeIndexTargetPath, `${JSON.stringify(localeIndex, null, 2)}\n`, "utf8")
 
 const themeManifestPath = path.join(themeRoot, "manifest.json")
 const targetManifestPath = path.join(root, "config", "theme-manifest.json")

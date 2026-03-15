@@ -15,6 +15,11 @@ import { ChangePassword } from "./change-password"
 import { useSidebar } from "@/components/ui/sidebar"
 import { getThemeManifest } from "@/lib/theme/manifest"
 
+function resolveAvatarPath(path: string): string {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(path)) return path
+  return buildRoute(path)
+}
+
 export function UserDropdown() {
   const { t } = useTranslation()
   const router = useRouter()
@@ -24,14 +29,7 @@ export function UserDropdown() {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const theme = getThemeManifest()
-  const defaultAvatar = buildRoute("/img/rustfs.png")
-  const userAvatar = theme.assets?.userAvatar
-  const avatar =
-    userAvatar != null && userAvatar !== ""
-      ? userAvatar.startsWith("/") && !userAvatar.startsWith("//")
-        ? buildRoute(userAvatar)
-        : userAvatar
-      : defaultAvatar
+  const avatar = resolveAvatarPath(theme.assets.userAvatar ?? "/img/rustfs.png")
 
   const [changePasswordVisible, setChangePasswordVisible] = useState(false)
 

@@ -17,6 +17,13 @@ function normalizeThemeManifest(input: unknown): ThemeManifest {
     throw new Error("Invalid theme manifest: root must be an object.")
   }
 
+  const schemaVersion = Number(input.schemaVersion)
+  if (!Number.isInteger(schemaVersion) || schemaVersion !== THEME_SCHEMA_VERSION) {
+    throw new Error(
+      `Invalid theme manifest schemaVersion: expected ${THEME_SCHEMA_VERSION}, received ${String(input.schemaVersion)}`,
+    )
+  }
+
   const id = asString(input.id) ?? DEFAULT_THEME_ID
   const name = asString(input.name) ?? id
 
@@ -25,7 +32,7 @@ function normalizeThemeManifest(input: unknown): ThemeManifest {
   const links = isRecord(input.links) ? input.links : {}
 
   return {
-    schemaVersion: THEME_SCHEMA_VERSION,
+    schemaVersion,
     id,
     name,
     brand: {

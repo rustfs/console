@@ -3,11 +3,35 @@
 import { buildRoute } from "@/lib/routes"
 import { getThemeId } from "@/lib/theme/manifest"
 
+let localeIndexPromise: Promise<Set<string>> | null = null
+
+async function getThemeLocaleIndex(themeId: string): Promise<Set<string>> {
+  if (!localeIndexPromise) {
+    localeIndexPromise = (async () => {
+      try {
+        const response = await fetch(buildRoute(`/themes/${themeId}/locales/index.json`))
+        if (!response.ok) return new Set<string>()
+        const data: unknown = await response.json()
+        if (!Array.isArray(data)) return new Set<string>()
+        const normalized = data.filter((item): item is string => typeof item === "string")
+        return new Set(normalized)
+      } catch {
+        return new Set<string>()
+      }
+    })()
+  }
+
+  return localeIndexPromise
+}
+
 export async function loadThemeLocaleOverride(localeFile: string): Promise<Record<string, string> | null> {
   const themeId = getThemeId()
   if (!themeId) return null
 
   try {
+    const localeIndex = await getThemeLocaleIndex(themeId)
+    if (!localeIndex.has(localeFile)) return null
+
     const response = await fetch(buildRoute(`/themes/${themeId}/locales/${localeFile}.json`))
     if (!response.ok) return null
 

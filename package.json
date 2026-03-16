@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "type-check": "tsc --noEmit",
+    "type-check": "node scripts/apply-theme-overrides.mjs && tsc --noEmit",
     "prettier": "prettier",
     "format": "prettier --write .",
     "format:check": "prettier --check ."

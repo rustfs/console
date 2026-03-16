@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
+import { useTheme } from "next-themes"
 import { RiUserLine, RiLockPasswordLine, RiLogoutBoxRLine, RiMore2Line } from "@remixicon/react"
 import { buildRoute } from "@/lib/routes"
 import { Button } from "@/components/ui/button"
@@ -20,18 +21,41 @@ function resolveAvatarPath(path: string): string {
   return buildRoute(path)
 }
 
+function withDarkVariant(path: string): string {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(path)) return path
+
+  const [pathname, suffix = ""] = path.split(/(?=[?#])/)
+  const lastSlashIndex = pathname.lastIndexOf("/")
+  const fileName = lastSlashIndex >= 0 ? pathname.slice(lastSlashIndex + 1) : pathname
+  const dirName = lastSlashIndex >= 0 ? pathname.slice(0, lastSlashIndex + 1) : ""
+  const dotIndex = fileName.lastIndexOf(".")
+  const baseName = dotIndex > 0 ? fileName.slice(0, dotIndex) : fileName
+  const ext = dotIndex > 0 ? fileName.slice(dotIndex) : ""
+
+  if (baseName.endsWith("-dark")) return path
+
+  return `${dirName}${baseName}-dark${ext}${suffix}`
+}
+
 export function UserDropdown() {
   const { t } = useTranslation()
   const router = useRouter()
+  const { resolvedTheme } = useTheme()
   const { logout, isAdmin, setIsAdmin } = useAuth()
   const { userInfo } = usePermissions()
   const { isAdminUser } = useUsers()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const theme = getThemeManifest()
-  const avatar = resolveAvatarPath(theme.assets.userAvatar ?? "/img/rustfs.png")
+  const baseAvatarPath = theme.assets.userAvatar ?? "/img/userAvatar.png"
+  const preferredAvatarPath = resolvedTheme === "dark" ? withDarkVariant(baseAvatarPath) : baseAvatarPath
+  const [avatar, setAvatar] = useState(() => resolveAvatarPath(preferredAvatarPath))
 
   const [changePasswordVisible, setChangePasswordVisible] = useState(false)
+
+  useEffect(() => {
+    setAvatar(resolveAvatarPath(preferredAvatarPath))
+  }, [preferredAvatarPath])
 
   useEffect(() => {
     isAdminUser().then((adminInfo) => {
@@ -63,6 +87,10 @@ export function UserDropdown() {
                   width={32}
                   height={32}
                   className="h-8 w-8 rounded-full object-cover"
+                  onError={() => {
+                    const fallback = resolveAvatarPath(baseAvatarPath)
+                    setAvatar((current) => (current === fallback ? current : fallback))
+                  }}
                 />
               </span>
             </div>

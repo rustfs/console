@@ -36,6 +36,8 @@
 !/themes/default/**
 !/themes/example/
 !/themes/example/**
+!/themes/.active/
+!/themes/.active/**
 
 # generated theme locale artifacts
 /public/themes/

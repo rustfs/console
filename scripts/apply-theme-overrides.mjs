@@ -167,13 +167,12 @@ ensureParentDir(localeIndexTargetPath)
 fs.writeFileSync(localeIndexTargetPath, `${JSON.stringify(localeIndex, null, 2)}\n`, "utf8")
 
 const themeManifestPath = path.join(themeRoot, "manifest.json")
-const targetManifestPath = path.join(root, "config", "theme-manifest.json")
-
-if (fs.existsSync(themeManifestPath)) {
-  backupBeforeWrite(targetManifestPath)
-  ensureParentDir(targetManifestPath)
-  fs.copyFileSync(themeManifestPath, targetManifestPath)
+const activeManifestPath = path.join(root, "themes", ".active", "manifest.json")
+if (!fs.existsSync(themeManifestPath)) {
+  throw new Error(`[theme] Missing manifest.json in theme: ${themeRoot}`)
 }
+ensureParentDir(activeManifestPath)
+fs.copyFileSync(themeManifestPath, activeManifestPath)
 
 writeState(stateEntries)
 

@@ -1,5 +1,5 @@
 import type { ThemeManifest } from "@/types/theme"
-import currentThemeManifestJson from "@/config/theme-manifest.json"
+import activeThemeManifestJson from "@/themes/.active/manifest.json"
 
 const THEME_SCHEMA_VERSION = 1
 const DEFAULT_THEME_ID = "default"
@@ -54,7 +54,7 @@ function normalizeThemeManifest(input: unknown): ThemeManifest {
   }
 }
 
-const activeThemeManifest = normalizeThemeManifest(currentThemeManifestJson)
+const activeThemeManifest = normalizeThemeManifest(activeThemeManifestJson)
 
 export function getThemeManifest(): ThemeManifest {
   return activeThemeManifest

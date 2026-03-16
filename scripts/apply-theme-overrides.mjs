@@ -158,6 +158,14 @@ for (const mapping of mappings) {
   copyDirRecursive(path.join(themeRoot, mapping.from), path.join(root, mapping.to))
 }
 
+const themeLogoPath = path.join(root, "assets", "logo.svg")
+const themeDarkLogoPath = path.join(root, "assets", "logo-dark.svg")
+if (fs.existsSync(themeLogoPath) && !fs.existsSync(themeDarkLogoPath)) {
+  backupBeforeWrite(themeDarkLogoPath)
+  ensureParentDir(themeDarkLogoPath)
+  fs.copyFileSync(themeLogoPath, themeDarkLogoPath)
+}
+
 const themeLocaleRoot = path.join(themeRoot, "locales")
 const localeFiles = listLocaleFiles(themeLocaleRoot)
 const localeIndex = localeFiles.map((file) => file.replace(/\.json$/, ""))

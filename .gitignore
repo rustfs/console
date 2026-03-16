@@ -30,14 +30,10 @@
 *.pem
 .theme-runtime
 
-# themes: keep only default and example in repo
+# themes: keep only default in repo
 /themes/*
 !/themes/default/
 !/themes/default/**
-!/themes/example/
-!/themes/example/**
-!/themes/.active/
-!/themes/.active/**
 
 # generated theme locale artifacts
 /public/themes/

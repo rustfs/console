@@ -1,19 +1,17 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { ThemeImage } from "@/components/theme/image"
 import { useTiers } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
-import { buildRoute } from "@/lib/routes"
 import { cn } from "@/lib/utils"
 import { getThemeManifest } from "@/lib/theme/manifest"
-import logoImage from "@/assets/logo.svg"
 
 interface TiersNewFormProps {
   open: boolean
@@ -58,6 +56,10 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
   const [submitting, setSubmitting] = React.useState(false)
 
   const selectedOption = TYPE_OPTIONS.find((o) => o.value === type)
+
+  const renderTypeIcon = (icon: string) => {
+    return <ThemeImage src={icon} alt="" width={40} height={40} className="size-10 shrink-0 object-contain" />
+  }
 
   const resetForm = React.useCallback(() => {
     setType("")
@@ -154,13 +156,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                   className={cn("cursor-pointer border border-border/70 text-left transition hover:border-primary")}
                 >
                   <div className="flex items-center gap-3 p-4">
-                    <Image
-                      src={item.value === "rustfs" ? logoImage : buildRoute(item.icon)}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="size-10 shrink-0 object-contain"
-                    />
+                    {renderTypeIcon(item.icon)}
                     <div>
                       <p className="text-base font-semibold">{t(item.labelKey)}</p>
                       <p className="text-sm text-muted-foreground">{t(item.descKey)}</p>
@@ -177,15 +173,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                 className="w-full cursor-pointer border text-left transition hover:border-primary"
               >
                 <div className="flex items-center gap-3 p-4">
-                  {selectedOption && (
-                    <Image
-                      src={selectedOption.value === "rustfs" ? logoImage : buildRoute(selectedOption.icon)}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="size-10 shrink-0 object-contain"
-                    />
-                  )}
+                  {selectedOption ? renderTypeIcon(selectedOption.icon) : null}
                   <div>
                     <p className="text-sm text-muted-foreground">{t("Selected Type")}</p>
                     <p className="text-base font-semibold">{type === "rustfs" ? theme.brand.name : type}</p>

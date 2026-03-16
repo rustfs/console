@@ -3,7 +3,8 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
-import logoImage from "@/assets/logo.svg"
+import { ThemeLogo } from "@/components/theme/logo"
+import { getThemeManifest } from "@/lib/theme/manifest"
 import { buildRoute } from "@/lib/routes"
 import { RiArrowRightLongFill } from "@remixicon/react"
 import { FlipWords } from "@/components/ui/flip-words"
@@ -11,11 +12,12 @@ import { FlipWords } from "@/components/ui/flip-words"
 export function AuthHeroStatic() {
   const { t, i18n } = useTranslation()
   const locale = i18n.language?.split("-")[0] ?? "en"
+  const theme = getThemeManifest()
 
   return (
     <div className="relative flex h-full w-full flex-col justify-center gap-8 overflow-hidden border-e bg-gray-50 p-16 dark:border-none dark:bg-black">
       <div className="z-10 flex max-w-7xl flex-col">
-        <Image src={logoImage} alt="RustFS" width={112} height={24} className="max-w-28" />
+        <ThemeLogo width={112} height={24} className="max-w-28" alt={theme.brand.name} />
         <div className="my-6 px-0 text-4xl font-semibold text-primary">
           <span className={locale !== "zh" ? "pe-1" : undefined}>{t("Rust-based")} </span>
           <FlipWords

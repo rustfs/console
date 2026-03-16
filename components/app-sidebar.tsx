@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -26,12 +25,12 @@ import {
 import { RiArrowRightSLine, RiExternalLinkLine } from "@remixicon/react"
 import { getIconComponent } from "@/lib/icon-map"
 import navs from "@/config/navs"
-import logoImage from "@/assets/logo.svg"
 import type { NavItem } from "@/types/app-config"
 import { usePermissions } from "@/hooks/use-permissions"
 import { SidebarVersion } from "@/components/sidebars/version"
 import { useDirection } from "@/components/ui/direction"
 import { getThemeManifest } from "@/lib/theme/manifest"
+import { ThemeLogo } from "@/components/theme/logo"
 
 const theme = getThemeManifest()
 const APP_NAME = theme.brand.name
@@ -135,7 +134,7 @@ export function AppSidebar() {
             </div>
           ) : (
             <div className="flex min-w-0 items-baseline gap-2 px-3 py-4">
-              <Image src={logoImage} alt={APP_NAME} width={64} height={16} className="h-4 w-auto shrink-0" />
+              <ThemeLogo width={64} height={16} className="h-4 w-auto shrink-0" alt={APP_NAME} />
             </div>
           )}
         </Link>

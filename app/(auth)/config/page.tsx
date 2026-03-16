@@ -10,13 +10,13 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/
 import { Input } from "@/components/ui/input"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { ThemeLogo } from "@/components/theme/logo"
 import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
 import { useMessage } from "@/lib/feedback/message"
 import { buildRoute, getLoginRoute } from "@/lib/routes"
 import { configManager } from "@/lib/config"
 import { checkServerHealth } from "@/lib/config-helpers"
 import { getThemeManifest } from "@/lib/theme/manifest"
-import logoImage from "@/assets/logo.svg"
 
 export default function ConfigPage() {
   return (
@@ -114,7 +114,7 @@ function ConfigPageContent() {
         </div>
         <div className="flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <Image src={logoImage} alt={theme.brand.name} width={112} height={24} className="max-w-28" />
+            <ThemeLogo width={112} height={24} className="max-w-28" />
             <div className="py-6">
               <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t("Server Configuration")}</h1>
               <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">

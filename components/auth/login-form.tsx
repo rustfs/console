@@ -10,10 +10,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { ThemeLogo } from "@/components/theme/logo"
 import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
 import { buildRoute } from "@/lib/routes"
 import { getThemeManifest } from "@/lib/theme/manifest"
-import logoImage from "@/assets/logo.svg"
 
 import type { OidcProvider } from "@/types/config"
 
@@ -80,7 +80,7 @@ export function LoginForm({
           </div>
 
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <Image src={logoImage} alt={theme.brand.name} width={112} height={24} className="max-w-28" />
+            <ThemeLogo width={112} height={24} className="max-w-28" />
 
             <div className="space-y-4">
               <Tabs value={method} onValueChange={(v) => setMethod(v as LoginMethod)} className="flex flex-col gap-4">

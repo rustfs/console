@@ -166,15 +166,6 @@ backupBeforeWrite(localeIndexTargetPath)
 ensureParentDir(localeIndexTargetPath)
 fs.writeFileSync(localeIndexTargetPath, `${JSON.stringify(localeIndex, null, 2)}\n`, "utf8")
 
-const themeManifestPath = path.join(themeRoot, "manifest.json")
-const targetManifestPath = path.join(root, "config", "theme-manifest.json")
-
-if (fs.existsSync(themeManifestPath)) {
-  backupBeforeWrite(targetManifestPath)
-  ensureParentDir(targetManifestPath)
-  fs.copyFileSync(themeManifestPath, targetManifestPath)
-}
-
 writeState(stateEntries)
 
 console.log(`[theme] Applied theme "${themeId}" overrides.`)

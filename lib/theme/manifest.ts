@@ -1,8 +1,10 @@
 import type { ThemeManifest } from "@/types/theme"
-import currentThemeManifestJson from "@/config/theme-manifest.json"
+import defaultThemeManifestJson from "@/themes/default/manifest.json"
+import exampleThemeManifestJson from "@/themes/example/manifest.json"
 
 const THEME_SCHEMA_VERSION = 1
 const DEFAULT_THEME_ID = "default"
+const ACTIVE_THEME_ID = process.env.NEXT_PUBLIC_THEME_ID?.trim() || DEFAULT_THEME_ID
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null
@@ -54,7 +56,12 @@ function normalizeThemeManifest(input: unknown): ThemeManifest {
   }
 }
 
-const activeThemeManifest = normalizeThemeManifest(currentThemeManifestJson)
+const themeManifests: Record<string, ThemeManifest> = {
+  default: normalizeThemeManifest(defaultThemeManifestJson),
+  example: normalizeThemeManifest(exampleThemeManifestJson),
+}
+
+const activeThemeManifest = themeManifests[ACTIVE_THEME_ID] ?? themeManifests[DEFAULT_THEME_ID]
 
 export function getThemeManifest(): ThemeManifest {
   return activeThemeManifest

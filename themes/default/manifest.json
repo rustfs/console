@@ -10,7 +10,7 @@
   "assets": {
     "logo": "/themes/default/assets/logo.svg",
     "logoCompact": "/themes/default/assets/logo.svg",
-    "userAvatar": "/img/rustfs.png"
+    "userAvatar": "/img/userAvatar.png"
   },
   "links": {
     "website": "https://www.rustfs.com",

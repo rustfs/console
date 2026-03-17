@@ -197,6 +197,7 @@ export function ObjectInfo({
 
   React.useEffect(() => {
     if (open && objectKey) {
+      setPreviewObject(null)
       const key = objectKey
       loadObjectInfoRef
         .current(key)
@@ -207,6 +208,7 @@ export function ObjectInfo({
         })
     } else {
       setObject(null)
+      setPreviewObject(null)
     }
   }, [open, objectKey, message, t])
 

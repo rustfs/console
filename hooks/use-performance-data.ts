@@ -64,9 +64,11 @@ export function usePerformanceData() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const mountedRef = React.useRef(true)
+  const refetchingRef = React.useRef(false)
 
   const refetch = useCallback(async () => {
-    if (!mountedRef.current) return
+    if (!mountedRef.current || refetchingRef.current) return
+    refetchingRef.current = true
     setLoading(true)
     setError(null)
     try {
@@ -91,6 +93,8 @@ export function usePerformanceData() {
       if (mountedRef.current) setMetricsInfo((metricsRes as MetricsInfo) ?? {})
     } catch {
       if (mountedRef.current) setMetricsInfo({})
+    } finally {
+      refetchingRef.current = false
     }
   }, [systemApi, t])
 

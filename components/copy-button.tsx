@@ -3,28 +3,12 @@
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiFileCopyLine } from "@remixicon/react"
-import { Button, type ButtonProps } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { copyToClipboard } from "@/lib/clipboard"
 import { useMessage } from "@/lib/feedback/message"
 import { cn } from "@/lib/utils"
 
-interface CopyButtonProps extends ButtonProps {
-  /** 要复制的文本内容 */
-  value: string
-  /** 是否只显示图标模式（默认为 false，即显示文字按钮） */
-  iconOnly?: boolean
-  /** 自定义成功提示词 */
-  successMessage?: string
-}
-
-export function CopyButton({
-  value = "",
-  iconOnly = false,
-  successMessage,
-  className,
-  children,
-  ...props
-}: CopyButtonProps) {
+export function CopyButton({ value = "", iconOnly = false }) {
   const { t } = useTranslation()
   const message = useMessage()
 
@@ -36,7 +20,7 @@ export function CopyButton({
 
     try {
       await copyToClipboard(value)
-      message.success(successMessage || t("Copy Success"))
+      message.success(t("Copy Success"))
     } catch {
       message.error(t("Copy Failed"))
     }
@@ -47,10 +31,9 @@ export function CopyButton({
       type="button"
       variant={iconOnly ? "ghost" : "default"}
       size={iconOnly ? "sm" : "default"}
-      className={cn(iconOnly && "shrink-0 outline h-8 w-8 p-0", className)}
+      className={cn(iconOnly && "shrink-0 outline h-8 w-8 p-0")}
       title={t("Copy")}
       onClick={handleCopy}
-      {...props}
     >
       {iconOnly ? (
         <>
@@ -58,7 +41,7 @@ export function CopyButton({
           <span className="sr-only">{t("Copy")}</span>
         </>
       ) : (
-        children || t("Copy")
+        t("Copy")
       )}
     </Button>
   )

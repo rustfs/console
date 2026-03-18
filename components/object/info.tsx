@@ -21,7 +21,6 @@ import { useDialog } from "@/lib/feedback/dialog"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
 import { ObjectVersions } from "@/components/object/versions"
-import { ObjectPreviewModal } from "@/components/object/preview-modal"
 import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
@@ -35,18 +34,10 @@ interface ObjectInfoProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onRefresh?: () => void
-  autoPreview?: boolean
-  onPreviewChange?: (showPreview: boolean) => void
+  onPreview: (params: { key?: string; data?: Record<string, unknown> }) => void
 }
 
-export function ObjectInfo({
-  bucketName,
-  objectKey,
-  open,
-  onOpenChange,
-  autoPreview = false,
-  onPreviewChange,
-}: ObjectInfoProps) {
+export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPreview }: ObjectInfoProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
@@ -62,9 +53,7 @@ export function ObjectInfo({
   const [signedUrl, setSignedUrl] = React.useState("")
   const [showTagView, setShowTagView] = React.useState(false)
   const [showRetentionView, setShowRetentionView] = React.useState(false)
-  const [showPreview, setShowPreview] = React.useState(false)
   const [showVersions, setShowVersions] = React.useState(false)
-  const [previewObject, setPreviewObject] = React.useState<Record<string, unknown> | null>(null)
   const [tagFormValue, setTagFormValue] = React.useState({
     Key: "",
     Value: "",
@@ -198,7 +187,6 @@ export function ObjectInfo({
 
   React.useEffect(() => {
     if (open && objectKey) {
-      setPreviewObject(null)
       const key = objectKey
       loadObjectInfoRef
         .current(key)
@@ -209,7 +197,6 @@ export function ObjectInfo({
         })
     } else {
       setObject(null)
-      setPreviewObject(null)
     }
   }, [open, objectKey, message, t])
 
@@ -230,19 +217,6 @@ export function ObjectInfo({
     }
   }
 
-  // Auto-open preview once when autoPreview is true and object data is first loaded
-  const hasAutoPreviewedRef = React.useRef(false)
-  React.useEffect(() => {
-    if (!open) {
-      hasAutoPreviewedRef.current = false
-      return
-    }
-    if (autoPreview && object && !hasAutoPreviewedRef.current) {
-      hasAutoPreviewedRef.current = true
-      setShowPreview(true)
-    }
-  }, [autoPreview, object, open])
-
   React.useEffect(() => {
     return () => {
       if (previewParamSyncTimerRef.current) {
@@ -250,29 +224,6 @@ export function ObjectInfo({
       }
     }
   }, [])
-
-  const schedulePreviewParamSync = React.useCallback(
-    (show: boolean) => {
-      if (previewParamSyncTimerRef.current) {
-        clearTimeout(previewParamSyncTimerRef.current)
-        previewParamSyncTimerRef.current = null
-      }
-
-      previewParamSyncTimerRef.current = setTimeout(() => {
-        onPreviewChange?.(show)
-        previewParamSyncTimerRef.current = null
-      }, 140)
-    },
-    [onPreviewChange],
-  )
-
-  // Open preview dialog
-  const openPreview = () => {
-    if (!object) return
-    setPreviewObject(object)
-    setShowPreview(true)
-    schedulePreviewParamSync(true)
-  }
 
   const handlePreviewVersion = async (versionId: string) => {
     if (!object?.Key) return
@@ -297,27 +248,12 @@ export function ObjectInfo({
           { expiresIn: 3600 },
         ),
       ])
-      setPreviewObject({
-        ...head,
-        Key: key,
-        SignedUrl: signed,
-        VersionId: version,
-      })
-      setShowPreview(true)
-      schedulePreviewParamSync(true)
+      const data = { ...head, SignedUrl: signed }
+      onPreview({ key, data })
     } catch (err) {
       message.error((err as Error)?.message ?? t("Failed to fetch versions"))
     }
   }
-
-  const handlePreviewShowChange = React.useCallback(
-    (show: boolean) => {
-      setShowPreview(show)
-      schedulePreviewParamSync(show)
-    },
-    [schedulePreviewParamSync],
-  )
-
   const toggleLegalHold = async () => {
     if (!object?.Key) return
     try {
@@ -432,7 +368,7 @@ export function ObjectInfo({
                 <RiDownloadLine className="size-4" />
                 {t("Download")}
               </Button>
-              <Button variant="outline" size="sm" onClick={openPreview}>
+              <Button variant="outline" size="sm" onClick={() => onPreview({ key: String(object?.Key ?? "") })}>
                 <RiEyeLine className="size-4" />
                 {t("Preview")}
               </Button>
@@ -723,7 +659,6 @@ export function ObjectInfo({
         </DialogContent>
       </Dialog>
 
-      <ObjectPreviewModal show={showPreview} onShowChange={handlePreviewShowChange} object={previewObject ?? object} />
       <ObjectVersions
         bucketName={bucketName}
         objectKey={(object?.Key as string) ?? ""}

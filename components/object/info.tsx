@@ -659,7 +659,6 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
         </DialogContent>
       </Dialog>
 
-      <ObjectPreviewModal show={showPreview} onShowChange={handlePreviewShowChange} object={previewObject ?? object} />
       <ObjectVersions
         bucketName={bucketName}
         objectKey={(object?.Key as string) ?? ""}

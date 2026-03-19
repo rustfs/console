@@ -25,6 +25,7 @@ import { ObjectPreviewModal } from "@/components/object/preview-modal"
 import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
+import { CopyButton } from "@/components/copy-button"
 
 const ONE_WEEK_SECONDS = 7 * 24 * 60 * 60
 
@@ -465,9 +466,10 @@ export function ObjectInfo({
                   <ItemContent className="min-w-0 space-y-3 text-sm overflow-hidden">
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">{t("Object Name")}</span>
-                      <span className="max-w-[60%] truncate text-right" title={String(object?.Key ?? "")}>
+                      <span className="flex-1 truncate text-right" title={String(object?.Key ?? "")}>
                         {String(object?.Key ?? "")}
                       </span>
+                      <CopyButton value={String(object?.Key ?? "")} iconOnly />
                     </div>
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">{t("Object Size")}</span>
@@ -721,11 +723,7 @@ export function ObjectInfo({
         </DialogContent>
       </Dialog>
 
-      <ObjectPreviewModal
-        show={showPreview}
-        onShowChange={handlePreviewShowChange}
-        object={previewObject ?? object}
-      />
+      <ObjectPreviewModal show={showPreview} onShowChange={handlePreviewShowChange} object={previewObject ?? object} />
       <ObjectVersions
         bucketName={bucketName}
         objectKey={(object?.Key as string) ?? ""}

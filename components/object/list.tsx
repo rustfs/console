@@ -60,6 +60,7 @@ interface ObjectListProps {
   pageSize?: number
   onRefresh?: () => void
   refreshTrigger?: number
+  onPreview: (params: { key?: string; data?: Record<string, unknown> }) => void
 }
 
 export function ObjectList({
@@ -70,6 +71,7 @@ export function ObjectList({
   pageSize = 25,
   onRefresh,
   refreshTrigger = 0,
+  onPreview,
 }: ObjectListProps) {
   const { t } = useTranslation()
   const message = useMessage()
@@ -286,13 +288,15 @@ export function ObjectList({
           <div className="flex items-center gap-2">
             {row.original.type === "object" ? (
               <>
-                <Button variant="outline" size="sm" asChild>
-                  <Link
-                    href={`/browser?bucket=${encodeURIComponent(bucket)}&key=${encodeURIComponent(prefix)}&preview=true&previewKey=${encodeURIComponent(row.original.Key)}`}
-                  >
-                    <RiEyeLine className="size-4" />
-                    <span>{t("Preview")}</span>
-                  </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onPreview({ key: row.original.Key })
+                  }}
+                >
+                  <RiEyeLine className="size-4" />
+                  <span>{t("Preview")}</span>
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => downloadFile(row.original.Key)}>
                   <RiDownloadCloud2Line className="size-4" />

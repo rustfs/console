@@ -15,12 +15,5 @@ export function ThemeLogo({ alt, onError, ...props }: ThemeLogoProps) {
   const theme = getThemeManifest()
   const src = resolvedTheme === "dark" ? logoDark : logoLight
 
-  return (
-    <Image
-      {...props}
-      src={src}
-      alt={alt ?? theme.brand.name}
-      onError={onError}
-    />
-  )
+  return <Image {...props} src={src} alt={alt ?? theme.brand.name} onError={onError} />
 }

@@ -324,45 +324,49 @@ export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onS
       if (isAdding || isFolderLoading) return
 
       const dtItems = e.dataTransfer?.items
-      if (dtItems?.length && dtItems[0] && typeof (dtItems[0] as DataTransferItem).webkitGetAsEntry === "function") {
-        let allFiles: { file: File; relativePath: string }[] = []
+      const droppedFileItems = e.dataTransfer?.files?.length ? collectFilesFromFileList(e.dataTransfer.files) : []
+      let entryItems: FileItem[] = []
+      const supportsEntryApi = Boolean(
+        dtItems?.length &&
+        Array.from(dtItems).some(
+          (item) =>
+            typeof (item as DataTransferItem & { webkitGetAsEntry?: () => FileSystemEntry | null }).webkitGetAsEntry ===
+            "function",
+        ),
+      )
+      if (supportsEntryApi && dtItems) {
         setIsFolderLoading(true)
         try {
+          const entries: FileSystemEntry[] = []
           for (let i = 0; i < dtItems.length; i++) {
             const item = dtItems[i]
-            if (!item) continue
+            if (!item || item.kind !== "file") continue
             const entry =
               typeof (item as DataTransferItem & { webkitGetAsEntry?: () => FileSystemEntry | null })
                 .webkitGetAsEntry === "function"
                 ? (item as DataTransferItem & { webkitGetAsEntry: () => FileSystemEntry | null }).webkitGetAsEntry()
                 : null
-            if (entry) {
-              const files = await getFilesFromEntry(entry)
-              allFiles = allFiles.concat(files)
-            }
+            if (entry) entries.push(entry)
           }
-          if (!ensureCapacity(allFiles.length)) return
-          const newItems: FileItem[] = allFiles.map(({ file, relativePath }) => ({
+          const filesArrays = await Promise.all(entries.map((entry) => getFilesFromEntry(entry)))
+          const allFiles = filesArrays.flat()
+          entryItems = allFiles.map(({ file, relativePath }) => ({
             relativePath,
             file,
           }))
-          setItems((prev) => [...prev, ...newItems])
         } catch (err) {
           console.error("Failed to read dropped files:", err)
           message.error(t("Folder Processing Error"))
         } finally {
           setIsFolderLoading(false)
         }
-        return
       }
 
-      const droppedFiles = e.dataTransfer?.files ? Array.from(e.dataTransfer.files) : []
-      if (!droppedFiles.length) return
-      if (!ensureCapacity(droppedFiles.length)) return
-      const newItems = droppedFiles.map((file) => ({
-        relativePath: file.name,
-        file,
-      }))
+      // Some browsers only expose part of dragged folders via entry API.
+      // Fall back to FileList when it contains more files.
+      const newItems = droppedFileItems.length > entryItems.length ? droppedFileItems : entryItems
+      if (!newItems.length) return
+      if (!ensureCapacity(newItems.length)) return
       setItems((prev) => [...prev, ...newItems])
     },
     [ensureCapacity, isAdding, isFolderLoading, message, t],

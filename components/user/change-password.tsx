@@ -72,11 +72,14 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
         return
       }
       const userInfo = (await api.get("/accountinfo")) as { account_name?: string }
-      await createUser({
-        accessKey: userInfo?.account_name ?? "",
-        secretKey: newSecretKey,
-        status: "enabled",
-      }, { suppress403Redirect: true })
+      await createUser(
+        {
+          accessKey: userInfo?.account_name ?? "",
+          secretKey: newSecretKey,
+          status: "enabled",
+        },
+        { suppress403Redirect: true },
+      )
       message.success(t("Updated successfully"))
       closeModal()
     } catch (error) {

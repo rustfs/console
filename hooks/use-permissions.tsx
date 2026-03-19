@@ -108,7 +108,17 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       isAdmin,
       canChangePassword,
     }),
-    [userPolicy, userInfo, isLoading, hasFetchedPolicy, fetchUserPolicy, hasPermission, canAccessPath, isAdmin, canChangePassword],
+    [
+      userPolicy,
+      userInfo,
+      isLoading,
+      hasFetchedPolicy,
+      fetchUserPolicy,
+      hasPermission,
+      canAccessPath,
+      isAdmin,
+      canChangePassword,
+    ],
   )
 
   return <PermissionsContext.Provider value={value}>{children}</PermissionsContext.Provider>

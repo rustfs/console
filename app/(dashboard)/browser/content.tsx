@@ -14,6 +14,8 @@ import { useBucket } from "@/hooks/use-bucket"
 import { useMessage } from "@/lib/feedback/message"
 import { buildBucketPath } from "@/lib/bucket-path"
 import { useTasks } from "@/contexts/task-context"
+import { ObjectPreviewModal } from "@/components/object/preview-modal"
+import { useObject } from "@/hooks/use-object"
 
 interface BrowserContentProps {
   bucketName: string
@@ -34,18 +36,11 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
 
   const [infoOpen, setInfoOpen] = React.useState(false)
   const [infoKey, setInfoKey] = React.useState<string | null>(null)
-  const [autoPreview, setAutoPreview] = React.useState(false)
   const [uploadPickerOpen, setUploadPickerOpen] = React.useState(false)
   const [refreshTrigger, setRefreshTrigger] = React.useState(0)
-
-  // Handle initial preview params - set infoOpen and trigger auto-preview
-  React.useEffect(() => {
-    if (preview && previewKey) {
-      setInfoKey(previewKey)
-      setInfoOpen(true)
-      setAutoPreview(true)
-    }
-  }, [preview, previewKey])
+  const [showPreview, setShowPreview] = React.useState(false)
+  const [previewObject, setPreviewObject] = React.useState<Record<string, unknown> | null>(null)
+  const objectApi = useObject(bucketName)
 
   React.useEffect(() => {
     if (!bucketName) return
@@ -82,39 +77,23 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
     setInfoOpen(true)
   }
 
-  const updatePreviewParams = (showPreview: boolean, key?: string) => {
-    const currentParams = new URLSearchParams(searchParams.toString())
-    const params = new URLSearchParams(searchParams.toString())
-    if (showPreview && key) {
-      params.set("preview", "true")
-      params.set("previewKey", key)
-    } else {
-      params.delete("preview")
-      params.delete("previewKey")
-    }
-    if (params.toString() === currentParams.toString()) return
-    router.replace(`/browser?${params.toString()}`, { scroll: false })
-  }
-
   const handleInfoOpenChange = (open: boolean) => {
     setInfoOpen(open)
-    if (!open) {
-      setAutoPreview(false)
-      updatePreviewParams(false)
-    }
-  }
-
-  const handlePreviewChange = (showPreview: boolean) => {
-    if (showPreview && infoKey) {
-      updatePreviewParams(true, infoKey)
-    } else {
-      updatePreviewParams(false)
-    }
   }
 
   const handleRefresh = () => {
     setRefreshTrigger((n) => n + 1)
   }
+
+  const handleOpenPreview = React.useCallback(
+    async ({ key, data }: { key?: string; data?: Record<string, unknown> }) => {
+      if (!key) return
+      const info = data ?? (await objectApi.getObjectInfo(key))
+      setPreviewObject(info as Record<string, unknown>)
+      setShowPreview(true)
+    },
+    [objectApi],
+  )
 
   const tasks = useTasks()
   const debounceTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -175,6 +154,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
             onUploadClick={() => setUploadPickerOpen(true)}
             onRefresh={handleRefresh}
             refreshTrigger={refreshTrigger}
+            onPreview={handleOpenPreview}
           />
         ) : (
           <ObjectView bucketName={bucketName} objectKey={keyPath} />
@@ -187,8 +167,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
         open={infoOpen}
         onOpenChange={handleInfoOpenChange}
         onRefresh={handleRefresh}
-        autoPreview={autoPreview}
-        onPreviewChange={handlePreviewChange}
+        onPreview={handleOpenPreview}
       />
 
       <ObjectUploadPicker
@@ -197,6 +176,8 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
         bucketName={bucketName}
         prefix={prefix}
       />
+
+      <ObjectPreviewModal show={showPreview} onShowChange={(show) => setShowPreview(show)} object={previewObject} />
     </Page>
   )
 }

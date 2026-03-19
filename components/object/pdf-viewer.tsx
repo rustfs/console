@@ -20,7 +20,9 @@ export function PdfViewer({ url }: PdfViewerProps) {
 
   if (!url) {
     return (
-      <div className="flex h-[70vh] items-center justify-center text-sm text-muted-foreground">{t("Preview unavailable")}</div>
+      <div className="flex h-[70vh] items-center justify-center text-sm text-muted-foreground">
+        {t("Preview unavailable")}
+      </div>
     )
   }
 
@@ -48,7 +50,9 @@ export function PdfViewer({ url }: PdfViewerProps) {
             setLoadError(t("Preview unavailable"))
           }}
         >
-          <div className="flex h-full items-center justify-center p-4 text-sm text-muted-foreground">{t("Preview unavailable")}</div>
+          <div className="flex h-full items-center justify-center p-4 text-sm text-muted-foreground">
+            {t("Preview unavailable")}
+          </div>
         </iframe>
       )}
       {loading ? (
@@ -57,7 +61,9 @@ export function PdfViewer({ url }: PdfViewerProps) {
         </div>
       ) : null}
       <noscript>
-        <div className="flex h-full items-center justify-center p-4 text-sm text-muted-foreground">{t("Preview unavailable")}</div>
+        <div className="flex h-full items-center justify-center p-4 text-sm text-muted-foreground">
+          {t("Preview unavailable")}
+        </div>
       </noscript>
     </div>
   )

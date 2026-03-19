@@ -59,7 +59,9 @@ export function UserEditGroups({ value, options, disabled = false, onChange }: U
                 <CommandGroup>
                   {options.map((option) => (
                     <CommandItem key={option.value} value={option.label} onSelect={() => toggleGroup(option.value)}>
-                      <RiCheckLine className={cn("me-2 size-4", value.includes(option.value) ? "opacity-100" : "opacity-0")} />
+                      <RiCheckLine
+                        className={cn("me-2 size-4", value.includes(option.value) ? "opacity-100" : "opacity-0")}
+                      />
                       <span>{option.label}</span>
                     </CommandItem>
                   ))}

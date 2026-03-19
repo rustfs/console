@@ -1,4 +1,10 @@
-import { DeleteObjectCommand, DeleteObjectsCommand, ListObjectsV2Command, ListObjectVersionsCommand, S3Client } from "@aws-sdk/client-s3"
+import {
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+  ListObjectsV2Command,
+  ListObjectVersionsCommand,
+  S3Client,
+} from "@aws-sdk/client-s3"
 import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from "./task-manager"
 import { createTaskId } from "./task-id"
 
@@ -48,11 +54,7 @@ export interface DeleteTaskHelpers {
     prefix?: string,
     options?: { forceDelete?: boolean },
   ) => DeleteTask[]
-  createFolderDeleteTask: (
-    prefix: string,
-    bucketName: string,
-    options?: { forceDelete?: boolean },
-  ) => FolderDeleteTask
+  createFolderDeleteTask: (prefix: string, bucketName: string, options?: { forceDelete?: boolean }) => FolderDeleteTask
 }
 
 const lifecycle: TaskLifecycleStatus<DeleteStatus> = {

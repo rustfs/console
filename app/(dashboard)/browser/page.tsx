@@ -63,7 +63,7 @@ function BrowserBucketsPage() {
         if (!usage) {
           return
         }
-        
+
         const bucketUsage = usage?.buckets_usage ?? {}
 
         setData((prev) =>

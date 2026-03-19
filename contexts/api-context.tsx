@@ -82,7 +82,15 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [isAuthenticated, credentials?.AccessKeyId, credentials?.SecretAccessKey, credentials?.SessionToken, logout, pathname, router])
+  }, [
+    isAuthenticated,
+    credentials?.AccessKeyId,
+    credentials?.SecretAccessKey,
+    credentials?.SessionToken,
+    logout,
+    pathname,
+    router,
+  ])
 
   return <ApiContext.Provider value={{ api: apiClient, isReady }}>{children}</ApiContext.Provider>
 }

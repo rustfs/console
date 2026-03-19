@@ -238,7 +238,10 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
             <div ref={imageViewportRef} className="h-full w-full overflow-auto p-2">
               <div className="flex min-h-full min-w-full items-center justify-center">
                 <div
-                  className={cn("shrink-0 flex items-center justify-center transition-opacity", imageLayoutReady ? "opacity-100" : "opacity-0")}
+                  className={cn(
+                    "shrink-0 flex items-center justify-center transition-opacity",
+                    imageLayoutReady ? "opacity-100" : "opacity-0",
+                  )}
                   style={
                     imageNaturalSize
                       ? {
@@ -252,7 +255,10 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
                     src={previewUrl}
                     alt={objectKey || t("Preview")}
                     referrerPolicy="no-referrer"
-                    className={cn(imageNaturalSize ? "h-full w-full" : "max-h-full max-w-full", "object-contain cursor-zoom-in")}
+                    className={cn(
+                      imageNaturalSize ? "h-full w-full" : "max-h-full max-w-full",
+                      "object-contain cursor-zoom-in",
+                    )}
                     onLoad={(event) => {
                       const nextSize = {
                         width: event.currentTarget.naturalWidth || event.currentTarget.clientWidth,

@@ -126,10 +126,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
       if (!currentIds.has(id)) prevCompletedIdsRef.current.delete(id)
     }
     const completedForBucket = tasks.filter(
-      (t) =>
-        (t.kind === "upload" || t.kind === "delete") &&
-        t.bucketName === bucketName &&
-        t.status === "completed",
+      (t) => (t.kind === "upload" || t.kind === "delete") && t.bucketName === bucketName && t.status === "completed",
     )
     const newCompletions = completedForBucket.filter((t) => !prevCompletedIdsRef.current.has(t.id))
     if (newCompletions.length > 0) {

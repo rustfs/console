@@ -31,6 +31,7 @@ const mappings = [
   { from: "assets", to: "assets" },
   { from: "locales", to: path.join("public", "themes", themeId, "locales") },
   { from: "public", to: "public" },
+  { from: "config", to: "config" },
 ]
 
 function rmDirRecursive(dir) {

@@ -29,6 +29,7 @@ interface BucketRow {
   Count?: number
   Size?: string
   SizeBytes?: number
+  IsPublic?: boolean
 }
 
 type BucketUsageMap = Record<string, { objects_count?: number; size?: number } | undefined>
@@ -38,7 +39,7 @@ function BrowserBucketsPage() {
   const router = useRouter()
   const message = useMessage()
   const dialog = useDialog()
-  const { listBuckets, deleteBucket } = useBucket()
+  const { listBuckets, deleteBucket, getBucketPolicyStatus } = useBucket()
   const { getDataUsageInfo } = useSystem()
 
   const [formVisible, setFormVisible] = useState(false)
@@ -46,6 +47,7 @@ function BrowserBucketsPage() {
   const [data, setData] = useState<BucketRow[]>([])
   const [pending, setPending] = useState(true)
   const [usageLoading, setUsageLoading] = useState(false)
+  const [policyLoading, setPolicyLoading] = useState(false)
   const fetchIdRef = useRef(0)
 
   const loadBucketUsage = useCallback(
@@ -91,6 +93,47 @@ function BrowserBucketsPage() {
     [getDataUsageInfo],
   )
 
+  const loadPolicyStatus = useCallback(
+    async (fetchId: number, bucketNames: string[]) => {
+      if (bucketNames.length === 0) {
+        setPolicyLoading(false)
+        return
+      }
+
+      try {
+        const results = await Promise.all(
+          bucketNames.map(async (name) => {
+            try {
+              const resp = (await getBucketPolicyStatus(name)) as {
+                PolicyStatus?: { IsPublic?: boolean }
+              }
+              return { name, isPublic: resp?.PolicyStatus?.IsPublic === true }
+            } catch {
+              return { name, isPublic: false }
+            }
+          }),
+        )
+        if (fetchId !== fetchIdRef.current) return
+
+        const policyMap = Object.fromEntries(results.map((r) => [r.name, r.isPublic]))
+
+        setData((prev) =>
+          prev.map((row) => ({
+            ...row,
+            IsPublic: policyMap[row.Name] ?? false,
+          })),
+        )
+      } catch {
+        if (fetchId !== fetchIdRef.current) return
+      } finally {
+        if (fetchId === fetchIdRef.current) {
+          setPolicyLoading(false)
+        }
+      }
+    },
+    [getBucketPolicyStatus],
+  )
+
   const fetchBuckets = useCallback(
     async (options?: { force?: boolean }) => {
       const fetchId = fetchIdRef.current + 1
@@ -123,6 +166,12 @@ function BrowserBucketsPage() {
           fetchId,
           buckets.map((bucket) => bucket.Name),
         )
+
+        setPolicyLoading(true)
+        void loadPolicyStatus(
+          fetchId,
+          buckets.map((bucket) => bucket.Name),
+        )
       } catch (error) {
         if (fetchId !== fetchIdRef.current) return
         console.error("Failed to fetch buckets:", error)
@@ -133,7 +182,7 @@ function BrowserBucketsPage() {
         }
       }
     },
-    [listBuckets, loadBucketUsage],
+    [listBuckets, loadBucketUsage, loadPolicyStatus],
   )
 
   useEffect(() => {
@@ -190,6 +239,21 @@ function BrowserBucketsPage() {
         row.original.Size ?? (usageLoading ? <Spinner className="size-3 text-muted-foreground" /> : "--"),
     },
   )
+
+  baseColumns.push({
+    header: () => t("Access Policy"),
+    accessorKey: "IsPublic",
+    cell: ({ row }) => {
+      if (typeof row.original.IsPublic === "boolean") {
+        return row.original.IsPublic ? (
+          <span className="text-red-600 dark:text-red-400">{t("Public")}</span>
+        ) : (
+          <span className="text-muted-foreground">{t("Private")}</span>
+        )
+      }
+      return policyLoading ? <Spinner className="size-3 text-muted-foreground" /> : "--"
+    },
+  })
 
   baseColumns.push({
     id: "actions",

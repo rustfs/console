@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@10.19.0",
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
     "dev": "node scripts/apply-theme-overrides.js && next dev",
     "build": "node scripts/apply-theme-overrides.js && next build && node scripts/prepare-static-basepath.js",

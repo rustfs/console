@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
 import { hasConsoleScopes, type ConsolePolicy } from "@/lib/console-policy-parser"
-import { CONSOLE_SCOPES, PAGE_PERMISSIONS } from "@/lib/console-permissions"
+import { ADMIN_ONLY_PATHS, CONSOLE_SCOPES, PAGE_PERMISSIONS } from "@/lib/console-permissions"
 import { useAuth } from "@/contexts/auth-context"
 import { useApiOptional } from "@/contexts/api-context"
 
@@ -72,6 +72,11 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   const canAccessPath = useCallback(
     (path: string) => {
       if (isAdmin) return true
+
+      const isAdminOnlyPath = ADMIN_ONLY_PATHS.some(
+        (adminPath) => path === adminPath || path.startsWith(`${adminPath}/`),
+      )
+      if (isAdminOnlyPath) return false
 
       let requiredScopes = PAGE_PERMISSIONS[path]
       if (!requiredScopes) {

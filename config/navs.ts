@@ -99,6 +99,12 @@ export default [
     isAdminOnly: true,
   },
   {
+    label: "OIDC Providers",
+    to: "/oidc",
+    icon: "ri:fingerprint-line",
+    isAdminOnly: true,
+  },
+  {
     label: "divider",
     key: "divider-2",
     type: "divider",

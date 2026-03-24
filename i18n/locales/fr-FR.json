@@ -905,5 +905,12 @@
   "update:show": "update:show",
   "update:visible": "update:visible",
   "username length cannot be less than 8 characters and greater than 16 characters": "la longueur du nom d'utilisateur ne peut pas être inférieure à 8 caractères et supérieure à 16 caractères",
-  "waiting": "En attente"
+  "waiting": "En attente",
+  "OIDC Settings": "Paramètres OIDC",
+  "Login with {name}": "Se connecter avec {name}",
+  "Or continue with": "Ou continuer avec",
+  "Completing SSO login...": "Finalisation de la connexion SSO...",
+  "SSO Login Failed": "Échec de la connexion SSO",
+  "SSO Login Success": "Connexion SSO réussie",
+  "SSO login failed: invalid callback": "Échec de la connexion SSO : rappel invalide"
 }

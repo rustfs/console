@@ -394,6 +394,7 @@
   "Last Scan Activity": "上次扫描活动",
   "LastModified": "最后修改时间",
   "Leave empty to use current host as default": "留空表示使用当前主机作为默认值",
+  "Login with {name}": "使用 {name} 登录",
   "Legal Hold": "合法保留",
   "License": "许可证",
   "License Details": "许可证详情",
@@ -489,6 +490,7 @@
   "Not specified": "未指定",
   "Note: AccessKey and SecretKey values are required for each site when adding or editing peer sites": "注意：添加或编辑对等站点时，每个站点的 AccessKey 和 SecretKey 值都是必需的",
   "Notice": "注意：添加或编辑对等站点时，每个站点的 AccessKey 和 SecretKey 值都是必需的",
+  "Or continue with": "或使用以下方式继续",
   "Number of retry attempts, default: 3": "重试次数，默认：3",
   "Object": "对象",
   "Object Count": "对象数量",
@@ -927,6 +929,7 @@
   "No Secret Configured": "未配置密钥",
   "OIDC Provider": "OIDC Provider",
   "OIDC Providers": "OIDC Providers",
+  "OIDC Settings": "OIDC 配置",
   "OIDC configuration validated successfully": "OIDC 配置校验成功",
   "OIDC provider deleted": "OIDC provider 已删除",
   "OIDC provider saved": "OIDC provider 已保存",
@@ -956,5 +959,9 @@
   "Validate": "校验",
   "Validating...": "校验中...",
   "View and manage persisted OIDC providers.": "查看并管理持久化的 OIDC providers。",
-  "You have unsaved OIDC changes. Do you want to discard them?": "你有未保存的 OIDC 更改，是否要放弃？"
+  "You have unsaved OIDC changes. Do you want to discard them?": "你有未保存的 OIDC 更改，是否要放弃？",
+  "Completing SSO login...": "正在完成 SSO 登录...",
+  "SSO Login Failed": "SSO 登录失败",
+  "SSO Login Success": "SSO 登录成功",
+  "SSO login failed: invalid callback": "SSO 登录失败：无效的回调参数"
 }

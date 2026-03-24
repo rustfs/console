@@ -900,5 +900,12 @@
   "submit": "제출하다",
   "success": "성공",
   "username length cannot be less than 8 characters and greater than 16 characters": "사용자 이름 길이는 8자 미만, 16자 초과일 수 없습니다",
-  "waiting": "대기 중"
+  "waiting": "대기 중",
+  "OIDC Settings": "OIDC 설정",
+  "Login with {name}": "{name}로 로그인",
+  "Or continue with": "또는 다음으로 계속",
+  "Completing SSO login...": "SSO 로그인을 완료하는 중...",
+  "SSO Login Failed": "SSO 로그인 실패",
+  "SSO Login Success": "SSO 로그인 성공",
+  "SSO login failed: invalid callback": "SSO 로그인 실패: 잘못된 콜백"
 }

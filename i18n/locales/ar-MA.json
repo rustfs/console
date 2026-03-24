@@ -881,5 +881,12 @@
   "Access Denied": "تم رفض الوصول",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "ليس لديك إذن للوصول إلى هذه الصفحة. قد يكون هذا بسبب عدم كفاية الأذونات أو عدم تسجيل الدخول.",
   "Back to Home": "العودة إلى الرئيسية",
-  "Your session has expired. Please log in again.": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى."
+  "Your session has expired. Please log in again.": "انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.",
+  "OIDC Settings": "إعدادات OIDC",
+  "Login with {name}": "تسجيل الدخول باستخدام {name}",
+  "Or continue with": "أو المتابعة باستخدام",
+  "Completing SSO login...": "جارٍ إكمال تسجيل الدخول عبر SSO...",
+  "SSO Login Failed": "فشل تسجيل الدخول عبر SSO",
+  "SSO Login Success": "تم تسجيل الدخول عبر SSO بنجاح",
+  "SSO login failed: invalid callback": "فشل تسجيل الدخول عبر SSO: عنوان callback غير صالح"
 }

@@ -900,5 +900,12 @@
   "submit": "提出する",
   "success": "成功",
   "username length cannot be less than 8 characters and greater than 16 characters": "ユーザー名の長さは8文字未満、16文字を超えることはできません",
-  "waiting": "待機中"
+  "waiting": "待機中",
+  "OIDC Settings": "OIDC 設定",
+  "Login with {name}": "{name} でログイン",
+  "Or continue with": "または次の方法で続行",
+  "Completing SSO login...": "SSO ログインを完了しています...",
+  "SSO Login Failed": "SSO ログインに失敗しました",
+  "SSO Login Success": "SSO ログインに成功しました",
+  "SSO login failed: invalid callback": "SSO ログインに失敗しました: コールバックが無効です"
 }

@@ -905,5 +905,12 @@
   "update:show": "update:show",
   "update:visible": "update:visible",
   "username length cannot be less than 8 characters and greater than 16 characters": "Длина имени пользователя не может быть менее 8 символов и более 16 символов",
-  "waiting": "Ожидание"
+  "waiting": "Ожидание",
+  "OIDC Settings": "Настройки OIDC",
+  "Login with {name}": "Войти через {name}",
+  "Or continue with": "Или продолжить с",
+  "Completing SSO login...": "Завершение входа через SSO...",
+  "SSO Login Failed": "Ошибка входа через SSO",
+  "SSO Login Success": "Вход через SSO выполнен успешно",
+  "SSO login failed: invalid callback": "Ошибка входа через SSO: недопустимый callback"
 }

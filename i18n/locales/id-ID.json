@@ -903,5 +903,12 @@
   "success": "Berhasil",
   "transit": "transit",
   "username length cannot be less than 8 characters and greater than 16 characters": "panjang nama pengguna tidak boleh kurang dari 8 karakter dan lebih dari 16 karakter",
-  "waiting": "Menunggu"
+  "waiting": "Menunggu",
+  "OIDC Settings": "Pengaturan OIDC",
+  "Login with {name}": "Masuk dengan {name}",
+  "Or continue with": "Atau lanjutkan dengan",
+  "Completing SSO login...": "Menyelesaikan login SSO...",
+  "SSO Login Failed": "Login SSO gagal",
+  "SSO Login Success": "Login SSO berhasil",
+  "SSO login failed: invalid callback": "Login SSO gagal: callback tidak valid"
 }

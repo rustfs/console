@@ -896,5 +896,12 @@
   "update:show": "güncelleme:göster",
   "update:visible": "güncelleme:görünür",
   "username length cannot be less than 8 characters and greater than 16 characters": "Kullanıcı adı uzunluğu 8 karakterden az 16 karakterden büyük olamaz",
-  "waiting": "Bekliyor"
+  "waiting": "Bekliyor",
+  "OIDC Settings": "OIDC Ayarları",
+  "Login with {name}": "{name} ile giriş yap",
+  "Or continue with": "Veya şununla devam et",
+  "Completing SSO login...": "SSO girişi tamamlanıyor...",
+  "SSO Login Failed": "SSO girişi başarısız",
+  "SSO Login Success": "SSO girişi başarılı",
+  "SSO login failed: invalid callback": "SSO girişi başarısız: geçersiz geri çağrı"
 }

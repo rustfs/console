@@ -888,5 +888,6 @@
   "Access Denied": "Truy cập bị từ chối",
   "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.": "Bạn không có quyền truy cập trang này. Nguyên nhân có thể do quyền hạn không đủ hoặc chưa đăng nhập.",
   "Back to Home": "Quay lại trang chủ",
-  "Your session has expired. Please log in again.": "Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại."
+  "Your session has expired. Please log in again.": "Phiên làm việc của bạn đã hết hạn. Vui lòng đăng nhập lại.",
+  "OIDC Settings": "Cài đặt OIDC"
 }

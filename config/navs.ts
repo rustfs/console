@@ -99,7 +99,7 @@ export default [
     isAdminOnly: true,
   },
   {
-    label: "OIDC Providers",
+    label: "OIDC Settings",
     to: "/oidc",
     icon: "ri:fingerprint-line",
     isAdminOnly: true,

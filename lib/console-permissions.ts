@@ -19,8 +19,6 @@ export const CONSOLE_SCOPES = {
   VIEW_LICENSE: "console:License",
 } as const
 
-export const ADMIN_ONLY_PATHS = ["/oidc"] as const
-
 export const PAGE_PERMISSIONS: Record<string, ConsoleScope[]> = {
   "/browser": [CONSOLE_SCOPES.VIEW_BROWSER],
   "/buckets": [CONSOLE_SCOPES.VIEW_BROWSER],

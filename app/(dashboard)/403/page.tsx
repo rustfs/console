@@ -4,13 +4,15 @@ import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
+import { useFirstAccessibleDashboardRoute } from "@/hooks/use-first-accessible-dashboard-route"
 
 export default function ForbiddenPage() {
   const { t } = useTranslation()
   const router = useRouter()
+  const { route } = useFirstAccessibleDashboardRoute()
 
   const handleBack = () => {
-    router.replace("/browser")
+    router.replace(route ?? "/")
   }
 
   return (

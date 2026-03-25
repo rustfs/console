@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
+import { useFirstAccessibleDashboardRoute } from "@/hooks/use-first-accessible-dashboard-route"
 import { useMessage } from "@/lib/feedback/message"
 import { parseOidcCallback } from "@/lib/oidc"
 import { isSafeRedirectPath } from "@/lib/routes"
@@ -11,11 +12,12 @@ import { useTranslation } from "react-i18next"
 export default function OidcCallbackPage() {
   const router = useRouter()
   const { loginWithStsCredentials, isAuthenticated } = useAuth()
+  const { route: firstAccessibleRoute, isReady: hasResolvedFirstRoute } = useFirstAccessibleDashboardRoute()
   const message = useMessage()
   const { t } = useTranslation()
   const processed = useRef(false)
   const [credentialsSet, setCredentialsSet] = useState(false)
-  const redirectPath = useRef("/browser")
+  const redirectPath = useRef("/")
 
   // Step 1: Parse hash and store credentials
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function OidcCallbackPage() {
       return
     }
 
-    redirectPath.current = isSafeRedirectPath(credentials.redirect, "/browser")
+    redirectPath.current = isSafeRedirectPath(credentials.redirect, "/")
 
     loginWithStsCredentials({
       AccessKeyId: credentials.accessKey,
@@ -51,10 +53,17 @@ export default function OidcCallbackPage() {
 
   // Step 2: Wait for auth state to update before navigating
   useEffect(() => {
-    if (credentialsSet && isAuthenticated) {
+    if (!credentialsSet || !isAuthenticated) return
+
+    if (redirectPath.current !== "/") {
       router.replace(redirectPath.current)
+      return
     }
-  }, [credentialsSet, isAuthenticated, router])
+
+    if (hasResolvedFirstRoute && firstAccessibleRoute) {
+      router.replace(firstAccessibleRoute)
+    }
+  }, [credentialsSet, isAuthenticated, hasResolvedFirstRoute, firstAccessibleRoute, router])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-neutral-800">

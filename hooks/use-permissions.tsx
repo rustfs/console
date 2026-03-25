@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
 import { hasConsoleScopes, type ConsolePolicy } from "@/lib/console-policy-parser"
-import { ADMIN_ONLY_PATHS, CONSOLE_SCOPES, PAGE_PERMISSIONS } from "@/lib/console-permissions"
+import { CONSOLE_SCOPES, PAGE_PERMISSIONS } from "@/lib/console-permissions"
 import { useAuth } from "@/contexts/auth-context"
 import { useApiOptional } from "@/contexts/api-context"
 
@@ -10,6 +10,7 @@ interface PermissionsContextValue {
   userPolicy: ConsolePolicy | null
   userInfo: Record<string, unknown> | null
   isLoading: boolean
+  hasResolvedAdmin: boolean
   hasFetchedPolicy: boolean
   fetchUserPolicy: () => Promise<void>
   hasPermission: (action: string | string[], matchAll?: boolean) => boolean
@@ -23,18 +24,37 @@ const PermissionsContext = createContext<PermissionsContextValue | null>(null)
 
 export function PermissionsProvider({ children }: { children: React.ReactNode }) {
   const api = useApiOptional()
-  const { isAdmin, isAuthenticated, credentials } = useAuth()
+  const { isAdmin, isAuthenticated, credentials, setIsAdmin } = useAuth()
 
   const [userPolicy, setUserPolicy] = useState<ConsolePolicy | null>(null)
   const [userInfo, setUserInfo] = useState<Record<string, unknown> | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [hasResolvedAdmin, setHasResolvedAdmin] = useState(false)
   const [hasFetchedPolicy, setHasFetchedPolicy] = useState(false)
 
   useEffect(() => {
     setUserInfo(null)
     setUserPolicy(null)
+    setHasResolvedAdmin(false)
     setHasFetchedPolicy(false)
-  }, [credentials?.AccessKeyId, credentials?.SessionToken, isAuthenticated])
+    if (isAuthenticated) {
+      setIsAdmin(false)
+    }
+  }, [credentials?.AccessKeyId, credentials?.SessionToken, isAuthenticated, setIsAdmin])
+
+  const fetchAdminStatus = useCallback(async () => {
+    if (!api) return
+
+    try {
+      const info = (await api.get("/is-admin")) as { is_admin?: boolean }
+      setIsAdmin(info?.is_admin ?? false)
+    } catch (e) {
+      console.error("Failed to resolve admin status", e)
+      setIsAdmin(false)
+    } finally {
+      setHasResolvedAdmin(true)
+    }
+  }, [api, setIsAdmin])
 
   const fetchUserPolicy = useCallback(async () => {
     if (!api) return
@@ -73,11 +93,6 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
     (path: string) => {
       if (isAdmin) return true
 
-      const isAdminOnlyPath = ADMIN_ONLY_PATHS.some(
-        (adminPath) => path === adminPath || path.startsWith(`${adminPath}/`),
-      )
-      if (isAdminOnlyPath) return false
-
       let requiredScopes = PAGE_PERMISSIONS[path]
       if (!requiredScopes) {
         const match = Object.keys(PAGE_PERMISSIONS).find((key) => path.startsWith(key))
@@ -94,10 +109,16 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   )
 
   useEffect(() => {
-    if (api && isAuthenticated && !isAdmin && !hasFetchedPolicy && !isLoading) {
+    if (api && isAuthenticated && !hasResolvedAdmin) {
+      void fetchAdminStatus()
+    }
+  }, [api, isAuthenticated, hasResolvedAdmin, fetchAdminStatus])
+
+  useEffect(() => {
+    if (api && isAuthenticated && hasResolvedAdmin && !isAdmin && !hasFetchedPolicy && !isLoading) {
       fetchUserPolicy()
     }
-  }, [api, isAuthenticated, isAdmin, hasFetchedPolicy, isLoading, fetchUserPolicy])
+  }, [api, isAuthenticated, hasResolvedAdmin, isAdmin, hasFetchedPolicy, isLoading, fetchUserPolicy])
 
   const canChangePassword = isAdmin || hasPermission(CONSOLE_SCOPES.CONSOLE_ADMIN)
 
@@ -106,6 +127,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       userPolicy,
       userInfo,
       isLoading,
+      hasResolvedAdmin,
       hasFetchedPolicy,
       fetchUserPolicy,
       hasPermission,
@@ -117,6 +139,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       userPolicy,
       userInfo,
       isLoading,
+      hasResolvedAdmin,
       hasFetchedPolicy,
       fetchUserPolicy,
       hasPermission,

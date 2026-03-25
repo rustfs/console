@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useApiReady } from "@/contexts/api-context"
 import { useS3Ready } from "@/contexts/s3-context"
 import { usePermissions } from "@/hooks/use-permissions"
+import { canAccessDashboardRoute } from "@/lib/dashboard-route-meta"
 
 export function DashboardAuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -13,7 +14,7 @@ export function DashboardAuthGuard({ children }: { children: React.ReactNode }) 
   const { isAuthenticated } = useAuth()
   const { isReady: apiReady } = useApiReady()
   const { isReady: s3Ready } = useS3Ready()
-  const { isAdmin, userPolicy, isLoading, hasFetchedPolicy, fetchUserPolicy, canAccessPath } = usePermissions()
+  const { isAdmin, isLoading, hasFetchedPolicy, hasResolvedAdmin, canAccessPath } = usePermissions()
 
   const isReady = apiReady && s3Ready
 
@@ -24,21 +25,28 @@ export function DashboardAuthGuard({ children }: { children: React.ReactNode }) 
   }, [isAuthenticated, isReady, router])
 
   useEffect(() => {
-    if (!isReady || !isAuthenticated || isAdmin) return
-    if (!userPolicy && !isLoading) {
-      void fetchUserPolicy()
-    }
-  }, [isReady, isAuthenticated, isAdmin, userPolicy, isLoading, fetchUserPolicy])
-
-  useEffect(() => {
-    if (!isReady || !isAuthenticated || isAdmin) return
-    if (isLoading || !hasFetchedPolicy) return
-    if (!canAccessPath(pathname)) {
+    if (!isReady || !isAuthenticated || !hasResolvedAdmin) return
+    if (!isAdmin && (isLoading || !hasFetchedPolicy)) return
+    if (!canAccessDashboardRoute(pathname, { isAdmin, canAccessPath })) {
       router.replace("/403/")
     }
-  }, [isReady, isAuthenticated, isAdmin, isLoading, userPolicy, hasFetchedPolicy, canAccessPath, pathname, router])
+  }, [
+    isReady,
+    isAuthenticated,
+    hasResolvedAdmin,
+    isAdmin,
+    isLoading,
+    hasFetchedPolicy,
+    canAccessPath,
+    pathname,
+    router,
+  ])
 
   if (!isReady || !isAuthenticated) {
+    return null
+  }
+
+  if (!hasResolvedAdmin) {
     return null
   }
 
@@ -46,7 +54,7 @@ export function DashboardAuthGuard({ children }: { children: React.ReactNode }) 
     return null
   }
 
-  if (!isAdmin && !canAccessPath(pathname)) {
+  if (!canAccessDashboardRoute(pathname, { isAdmin, canAccessPath })) {
     return null
   }
 

@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
 import { usePermissions } from "@/hooks/use-permissions"
-import { useUsers } from "@/hooks/use-users"
 import { ChangePassword } from "./change-password"
 import { useSidebar } from "@/components/ui/sidebar"
 import { getThemeManifest } from "@/lib/theme/manifest"
@@ -41,9 +40,8 @@ export function UserDropdown() {
   const { t } = useTranslation()
   const router = useRouter()
   const { resolvedTheme } = useTheme()
-  const { logout, isAdmin, setIsAdmin } = useAuth()
+  const { logout, isAdmin } = useAuth()
   const { userInfo } = usePermissions()
-  const { isAdminUser } = useUsers()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const theme = getThemeManifest()
@@ -56,14 +54,6 @@ export function UserDropdown() {
   useEffect(() => {
     setAvatar(resolveAvatarPath(preferredAvatarPath))
   }, [preferredAvatarPath])
-
-  useEffect(() => {
-    isAdminUser().then((adminInfo) => {
-      if (adminInfo) {
-        setIsAdmin(adminInfo.is_admin ?? false)
-      }
-    })
-  }, [isAdminUser, setIsAdmin])
 
   const handleChangePassword = () => {
     setChangePasswordVisible(true)

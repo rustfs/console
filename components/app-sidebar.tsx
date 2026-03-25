@@ -27,6 +27,8 @@ import { getIconComponent } from "@/lib/icon-map"
 import navs from "@/config/navs"
 import type { NavItem } from "@/types/app-config"
 import { usePermissions } from "@/hooks/use-permissions"
+import { useFirstAccessibleDashboardRoute } from "@/hooks/use-first-accessible-dashboard-route"
+import { canAccessDashboardRoute } from "@/lib/dashboard-route-meta"
 import { SidebarVersion } from "@/components/sidebars/version"
 import { useDirection } from "@/components/ui/direction"
 import { getThemeManifest } from "@/lib/theme/manifest"
@@ -65,23 +67,29 @@ export function AppSidebar() {
   const dir = useDirection()
   const brandInitial = APP_NAME.charAt(0).toUpperCase() ?? "R"
 
-  const { isAdmin, canAccessPath } = usePermissions()
+  const { isAdmin, canAccessPath, hasResolvedAdmin, hasFetchedPolicy, isLoading } = usePermissions()
+  const { route: homeRoute } = useFirstAccessibleDashboardRoute()
+  const isPermissionsReady = hasResolvedAdmin && (isAdmin || (!isLoading && hasFetchedPolicy))
 
-  const navGroups: NavItem[][] = []
-  let current: NavItem[] = []
+  if (!isPermissionsReady) {
+    return null
+  }
 
-  for (const nav of navs) {
+  const visibleNavs = navs.flatMap((nav) => {
+    if (nav.type === "divider") {
+      return [nav]
+    }
+
     let visibleChildren: NavItem[] = []
     if (nav.children?.length) {
       visibleChildren = nav.children.filter((child) => {
-        if (child.to && !canAccessPath(child.to)) return false
-        if (child.isAdminOnly && !isAdmin && !child.to) return false
+        if (!child.to || isExternal(child)) return true
+        if (!canAccessDashboardRoute(child.to, { isAdmin, canAccessPath })) return false
         return true
       })
-      if (visibleChildren.length === 0 && !nav.to) continue
+      if (visibleChildren.length === 0 && !nav.to) return []
     } else {
-      if (nav.to && !canAccessPath(nav.to)) continue
-      if (!nav.to && nav.isAdminOnly && !isAdmin) continue
+      if (nav.to && !isExternal(nav) && !canAccessDashboardRoute(nav.to, { isAdmin, canAccessPath })) return []
     }
 
     const navItem = { ...nav }
@@ -91,18 +99,30 @@ export function AppSidebar() {
       delete navItem.children
     }
 
+    return [navItem]
+  })
+
+  const navGroups: NavItem[][] = []
+  let current: NavItem[] = []
+
+  for (let index = 0; index < visibleNavs.length; index++) {
+    const nav = visibleNavs[index]
+    if (!nav) continue
+
     if (nav.type === "divider") {
-      if (current.length) {
+      const hasItemsBefore = current.length > 0
+      const hasItemsAfter = visibleNavs.slice(index + 1).some((item) => item.type !== "divider")
+      if (hasItemsBefore && hasItemsAfter) {
         navGroups.push(current)
         current = []
       }
       continue
     }
 
-    current.push(navItem)
+    current.push(nav)
   }
 
-  if (current.length) {
+  if (current.length > 0) {
     navGroups.push(current)
   }
 
@@ -127,7 +147,7 @@ export function AppSidebar() {
       className="**:data-[sidebar=menu-button]:text-start! **:data-[sidebar=menu-sub-button]:text-start!"
     >
       <SidebarHeader>
-        <Link href="/" className="flex items-center gap-3">
+        <Link href={homeRoute ?? "/"} className="flex items-center gap-3">
           {isCollapsed ? (
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-md font-semibold text-primary-foreground">
               <span>{brandInitial}</span>

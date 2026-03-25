@@ -19,6 +19,7 @@ import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
+import { usePermissions } from "@/hooks/use-permissions"
 import { PerformanceSummaryCards } from "../_components/performance-summary-cards"
 import { PerformanceUsageCard } from "../_components/performance-usage-card"
 import { PerformanceInfrastructureCard } from "../_components/performance-infrastructure-card"
@@ -29,7 +30,9 @@ dayjs.extend(relativeTime)
 
 export default function PerformancePage() {
   const { t } = useTranslation()
+  const { canAccessPath } = usePermissions()
   const { systemInfo, metricsInfo, datausageinfo, storageinfo, loading, error, refetch } = usePerformanceData()
+  const browserHref = canAccessPath("/browser") ? "/browser" : undefined
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat(), [])
 
@@ -58,14 +61,14 @@ export default function PerformancePage() {
         display: numberFormatter.format(systemInfo?.buckets?.count ?? 0),
         icon: RiArchiveLine,
         caption: null as string | null,
-        href: "/browser",
+        href: browserHref,
       },
       {
         label: t("Objects"),
         display: numberFormatter.format(systemInfo?.objects?.count ?? 0),
         icon: RiStackLine,
         caption: null as string | null,
-        href: "/browser",
+        href: browserHref,
       },
       {
         label: t("Total Capacity"),
@@ -77,7 +80,7 @@ export default function PerformancePage() {
         href: undefined as string | undefined,
       },
     ],
-    [systemInfo, datausageinfo, numberFormatter, t],
+    [systemInfo, datausageinfo, numberFormatter, t, browserHref],
   )
 
   const fromLastStartTime = useMemo(() => {

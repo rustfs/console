@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { LoginForm, type LoginMethod } from "@/components/auth/login-form"
 import { useAuth } from "@/contexts/auth-context"
+import { useFirstAccessibleDashboardRoute } from "@/hooks/use-first-accessible-dashboard-route"
 import { useMessage } from "@/lib/feedback/message"
 import { configManager } from "@/lib/config"
 import { fetchOidcProviders, initiateOidcLogin } from "@/lib/oidc"
@@ -24,6 +25,7 @@ function LoginPageContent() {
   const searchParams = useSearchParams()
   const message = useMessage()
   const { login, isAuthenticated } = useAuth()
+  const { route: firstAccessibleRoute, isReady: hasResolvedFirstRoute } = useFirstAccessibleDashboardRoute()
   const { t } = useTranslation()
 
   const [method, setMethod] = useState<LoginMethod>("accessKeyAndSecretKey")
@@ -39,10 +41,9 @@ function LoginPageContent() {
   const [oidcProviders, setOidcProviders] = useState<OidcProvider[]>([])
 
   useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/browser")
-    }
-  }, [isAuthenticated, router])
+    if (!isAuthenticated || !hasResolvedFirstRoute || !firstAccessibleRoute) return
+    router.replace(firstAccessibleRoute)
+  }, [isAuthenticated, hasResolvedFirstRoute, firstAccessibleRoute, router])
 
   useEffect(() => {
     if (searchParams.get("unauthorized") === "true") {
@@ -70,7 +71,6 @@ function LoginPageContent() {
       await login(credentials, currentConfig)
 
       message.success(t("Login Success"))
-      router.replace("/browser")
     } catch {
       message.error(t("Login Failed"))
     }

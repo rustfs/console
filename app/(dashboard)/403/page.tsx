@@ -4,15 +4,25 @@ import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
+import { useAuth } from "@/contexts/auth-context"
 import { useFirstAccessibleDashboardRoute } from "@/hooks/use-first-accessible-dashboard-route"
+import { DASHBOARD_ROUTE_FALLBACK } from "@/lib/dashboard-route-meta"
 
 export default function ForbiddenPage() {
   const { t } = useTranslation()
   const router = useRouter()
+  const { logoutAndRedirect } = useAuth()
   const { route } = useFirstAccessibleDashboardRoute()
+  const fallbackNormalized = DASHBOARD_ROUTE_FALLBACK.replace(/\/+$/, "")
+  const routeNormalized = route?.replace(/\/+$/, "")
+  const hasSafeHomeRoute = Boolean(routeNormalized && routeNormalized !== fallbackNormalized)
 
   const handleBack = () => {
-    router.replace(route ?? "/")
+    if (!hasSafeHomeRoute || !route) {
+      logoutAndRedirect()
+      return
+    }
+    router.replace(route)
   }
 
   return (
@@ -42,7 +52,7 @@ export default function ForbiddenPage() {
             </EmptyDescription>
           </EmptyHeader>
           <Button variant="outline" className="mt-6" onClick={handleBack}>
-            {t("Back to Home")}
+            {hasSafeHomeRoute ? t("Back to Home") : t("Back to Login")}
           </Button>
         </EmptyContent>
       </Empty>

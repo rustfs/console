@@ -34,6 +34,5 @@ export const PAGE_PERMISSIONS: Record<string, ConsoleScope[]> = {
   "/tiers": [CONSOLE_SCOPES.VIEW_TIERED_STORAGE],
   "/events-target": [CONSOLE_SCOPES.VIEW_EVENT_DESTINATIONS],
   "/sse": [CONSOLE_SCOPES.VIEW_SSE_SETTINGS],
-  "/oidc": [CONSOLE_SCOPES.VIEW_OIDC_SETTINGS],
   "/license": [CONSOLE_SCOPES.VIEW_LICENSE],
 }

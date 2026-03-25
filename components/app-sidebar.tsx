@@ -67,8 +67,13 @@ export function AppSidebar() {
   const dir = useDirection()
   const brandInitial = APP_NAME.charAt(0).toUpperCase() ?? "R"
 
-  const { isAdmin, canAccessPath } = usePermissions()
+  const { isAdmin, canAccessPath, hasResolvedAdmin, hasFetchedPolicy, isLoading } = usePermissions()
   const { route: homeRoute } = useFirstAccessibleDashboardRoute()
+  const isPermissionsReady = hasResolvedAdmin && (isAdmin || (!isLoading && hasFetchedPolicy))
+
+  if (!isPermissionsReady) {
+    return null
+  }
 
   const visibleNavs = navs.flatMap((nav) => {
     if (nav.type === "divider") {

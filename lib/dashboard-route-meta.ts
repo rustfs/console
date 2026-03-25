@@ -1,25 +1,27 @@
-import navs from "@/config/navs"
-
 export const ADMIN_ONLY_DASHBOARD_ROUTES = ["/oidc"] as const
 export const DASHBOARD_ROUTE_FALLBACK = "/403/"
 
-function collectNavRoutes(items: typeof navs): string[] {
-  const routes: string[] = []
-
-  for (const item of items) {
-    if (item.children?.length) {
-      routes.push(...collectNavRoutes(item.children))
-    }
-
-    if (!item.to || item.type === "divider") continue
-    if (/^https?:/i.test(item.to)) continue
-    routes.push(item.to)
-  }
-
-  return routes
-}
-
-export const MENU_CONTROLLED_DASHBOARD_ROUTES = Array.from(new Set(collectNavRoutes(navs)))
+/**
+ * Ordered list of dashboard routes controlled by the main menu.
+ * Keep this in sync with the visible dashboard navigation order.
+ *
+ * It intentionally lives here instead of deriving from nav config so auth
+ * pages do not pull theme/nav configuration into their client bundles.
+ */
+export const MENU_CONTROLLED_DASHBOARD_ROUTES: readonly string[] = [
+  "/browser",
+  "/access-keys",
+  "/policies",
+  "/users",
+  "/user-groups",
+  "/import-export",
+  "/status",
+  "/tiers",
+  "/events-target",
+  "/sse",
+  "/oidc",
+  "/license",
+]
 
 function matchesRoutePrefix(pathname: string, routePath: string): boolean {
   return pathname === routePath || pathname.startsWith(`${routePath}/`)

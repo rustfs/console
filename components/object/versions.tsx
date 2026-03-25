@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useMessage } from "@/lib/feedback/message"
 import { copyToClipboard } from "@/lib/clipboard"
 import { exportFile } from "@/lib/export-file"
@@ -46,6 +47,7 @@ export function ObjectVersions({
   const { t } = useTranslation()
   const message = useMessage()
   const { listObjectVersions, deleteObject } = useObject(bucketName)
+  const { canCapability } = usePermissions()
   const client = useS3()
 
   const [versions, setVersions] = React.useState<VersionRow[]>([])
@@ -167,25 +169,43 @@ export function ObjectVersions({
       {
         id: "actions",
         header: () => t("Action"),
-        cell: ({ row }) => (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onPreview(row.original.VersionId ?? "")}>
-              <RiEyeLine className="size-4" />
-              {t("Preview")}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => downloadVersion(row.original)}>
-              <RiDownloadCloud2Line className="size-4" />
-              {t("Download")}
-            </Button>
-            <Button variant="destructive" size="sm" className="text-white" onClick={() => deleteVersion(row.original)}>
-              <RiDeleteBin5Line className="size-4" />
-              {t("Delete")}
-            </Button>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const objectContext = {
+            bucket: bucketName,
+            objectKey,
+          }
+
+          return (
+            <div className="flex gap-2">
+              {canCapability("objects.version.view", objectContext) ? (
+                <Button variant="outline" size="sm" onClick={() => onPreview(row.original.VersionId ?? "")}>
+                  <RiEyeLine className="size-4" />
+                  {t("Preview")}
+                </Button>
+              ) : null}
+              {canCapability("objects.download", objectContext) ? (
+                <Button variant="outline" size="sm" onClick={() => downloadVersion(row.original)}>
+                  <RiDownloadCloud2Line className="size-4" />
+                  {t("Download")}
+                </Button>
+              ) : null}
+              {canCapability("objects.delete", objectContext) ? (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="text-white"
+                  onClick={() => deleteVersion(row.original)}
+                >
+                  <RiDeleteBin5Line className="size-4" />
+                  {t("Delete")}
+                </Button>
+              ) : null}
+            </div>
+          )
+        },
       },
     ],
-    [t, onPreview, copyVersionId, downloadVersion, deleteVersion],
+    [t, onPreview, copyVersionId, downloadVersion, deleteVersion, canCapability, bucketName, objectKey],
   )
 
   const { table } = useDataTable<VersionRow>({

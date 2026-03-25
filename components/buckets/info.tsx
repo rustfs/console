@@ -4,6 +4,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiAddLine, RiCloseLine, RiEdit2Line } from "@remixicon/react"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useSSE } from "@/hooks/use-sse"
 import { Item, ItemContent, ItemDescription, ItemGroup, ItemHeader, ItemTitle, ItemActions } from "@/components/ui/item"
 import { Button } from "@/components/ui/button"
@@ -61,7 +62,17 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const bucketApi = useBucket()
+  const { canCapability } = usePermissions()
   const { getKeyList } = useSSE()
+  const bucketContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
+  const canPutBucketPolicy = canCapability("bucket.policy.put", bucketContext)
+  const canDeleteBucketPolicy = canCapability("bucket.policy.delete", bucketContext)
+  const canEditBucketPolicy = canPutBucketPolicy || canDeleteBucketPolicy
+  const canEditEncryption = canCapability("bucket.encryption.edit", bucketContext)
+  const canEditTags = canCapability("bucket.tag.edit", bucketContext)
+  const canEditVersioning = canCapability("bucket.versioning.edit", bucketContext)
+  const canEditQuota = canCapability("bucket.quota.edit", bucketContext)
+  const canEditObjectLock = canCapability("bucket.objectLock.edit", bucketContext)
 
   const [policy, setPolicy] = React.useState<string | null>(null)
   const [policyType, setPolicyType] = React.useState<BucketPolicyType | "custom">("private")
@@ -181,6 +192,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }, [fetchData])
 
   const openPolicyModal = () => {
+    if (!canEditBucketPolicy) return
     setPolicyFormPolicy(policyType)
     setPolicyFormContent(policy ?? "{}")
     setShowPolicyModal(true)
@@ -188,6 +200,15 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
 
   const submitPolicy = async () => {
     try {
+      if (policyFormPolicy === "private" && !canDeleteBucketPolicy) {
+        message.error(t("Edit Failed"))
+        return
+      }
+      if (policyFormPolicy !== "private" && !canPutBucketPolicy) {
+        message.error(t("Edit Failed"))
+        return
+      }
+
       if (policyFormPolicy === "private") {
         await bucketApi.deleteBucketPolicy(bucketName)
       } else if (policyFormPolicy === "custom") {
@@ -206,6 +227,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }
 
   const openEncryptModal = async () => {
+    if (!canEditEncryption) return
     const enc = encryption as {
       ServerSideEncryptionConfiguration?: {
         Rules?: Array<{
@@ -281,6 +303,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }
 
   const openTagModal = (index = -1) => {
+    if (!canEditTags) return
     setEditingTagIndex(index)
     if (index >= 0 && tags[index]) {
       setTagFormKey(tags[index].Key)
@@ -293,6 +316,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }
 
   const submitTag = async () => {
+    if (!canEditTags) return
     if (!tagFormKey.trim() || !tagFormValue.trim()) {
       message.error(t("Please fill in complete tag information"))
       return
@@ -314,6 +338,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }
 
   const confirmDeleteTag = async () => {
+    if (!canEditTags) return
     if (deleteTagIndex === null) return
     const next = tags.filter((_, i) => i !== deleteTagIndex)
     try {
@@ -331,6 +356,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }
 
   const handleVersionToggle = async (enabled: boolean) => {
+    if (!canEditVersioning) return
     setVersionLoading(true)
     const prev = versioning
     try {
@@ -346,6 +372,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }
 
   const openQuotaModal = () => {
+    if (!canEditQuota) return
     if (quotaInfo?.quota && quotaInfo.quota > 0) {
       const bytes = quotaInfo.quota
       const units = ["B", "KiB", "MiB", "GiB", "TiB", "PiB"]
@@ -365,6 +392,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }
 
   const submitQuota = async () => {
+    if (!canEditQuota) return
     try {
       if (!quotaFormEnabled) {
         await bucketApi.deleteBucketQuota(bucketName)
@@ -383,6 +411,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }
 
   const openRetentionModal = () => {
+    if (!canEditObjectLock) return
     if (!objectLock) {
       message.error(t("Object lock is not enabled, cannot set retention"))
       return
@@ -394,6 +423,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   }
 
   const submitRetention = async () => {
+    if (!canEditObjectLock) return
     const mode = retentionFormMode
     const unit = retentionFormUnit
     const period = retentionPeriodInput ? Math.max(1, Number.parseInt(retentionPeriodInput, 10) || 1) : null
@@ -447,10 +477,12 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           <ItemHeader className="items-center">
             <ItemTitle>{t("Access Policy")}</ItemTitle>
             <ItemActions>
-              <Button variant="outline" size="sm" className="shrink-0" onClick={openPolicyModal}>
-                <RiEdit2Line className="me-2 size-4" />
-                {t("Edit")}
-              </Button>
+              {canEditBucketPolicy ? (
+                <Button variant="outline" size="sm" className="shrink-0" onClick={openPolicyModal}>
+                  <RiEdit2Line className="me-2 size-4" />
+                  {t("Edit")}
+                </Button>
+              ) : null}
             </ItemActions>
           </ItemHeader>
           <ItemContent>
@@ -466,10 +498,12 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               <ItemDescription className="text-xs text-muted-foreground">{encryptionLabel}</ItemDescription>
             </div>
             <ItemActions>
-              <Button variant="outline" size="sm" className="shrink-0" onClick={openEncryptModal}>
-                <RiEdit2Line className="me-2 size-4" />
-                {t("Edit")}
-              </Button>
+              {canEditEncryption ? (
+                <Button variant="outline" size="sm" className="shrink-0" onClick={openEncryptModal}>
+                  <RiEdit2Line className="me-2 size-4" />
+                  {t("Edit")}
+                </Button>
+              ) : null}
             </ItemActions>
           </ItemHeader>
         </Item>
@@ -479,10 +513,12 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           <ItemHeader className="items-center">
             <ItemTitle>{t("Tag")}</ItemTitle>
             <ItemActions>
-              <Button variant="outline" size="sm" className="shrink-0" onClick={() => openTagModal()}>
-                <RiAddLine className="me-2 size-4" />
-                {t("Add")}
-              </Button>
+              {canEditTags ? (
+                <Button variant="outline" size="sm" className="shrink-0" onClick={() => openTagModal()}>
+                  <RiAddLine className="me-2 size-4" />
+                  {t("Add")}
+                </Button>
+              ) : null}
             </ItemActions>
           </ItemHeader>
           <ItemContent>
@@ -493,10 +529,21 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                     key={`${tag.Key}-${index}`}
                     className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs"
                   >
-                    <button type="button" className="text-left hover:underline" onClick={() => openTagModal(index)}>
+                    <button
+                      type="button"
+                      className="text-left hover:underline disabled:no-underline"
+                      onClick={() => openTagModal(index)}
+                      disabled={!canEditTags}
+                    >
                       {tag.Key}:{tag.Value}
                     </button>
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setDeleteTagIndex(index)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => setDeleteTagIndex(index)}
+                      disabled={!canEditTags}
+                    >
                       <RiCloseLine className="size-3.5" />
                     </Button>
                   </div>
@@ -525,7 +572,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               </div>
               <Switch
                 checked={versioning === "Enabled"}
-                disabled={(objectLock ?? false) || versionLoading}
+                disabled={!canEditVersioning || (objectLock ?? false) || versionLoading}
                 onCheckedChange={handleVersionToggle}
               />
             </div>
@@ -542,9 +589,11 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               </ItemDescription>
             </div>
             <ItemActions>
-              <Button variant="outline" size="sm" className="shrink-0" onClick={openQuotaModal}>
-                {t("Edit")}
-              </Button>
+              {canEditQuota ? (
+                <Button variant="outline" size="sm" className="shrink-0" onClick={openQuotaModal}>
+                  {t("Edit")}
+                </Button>
+              ) : null}
             </ItemActions>
           </ItemHeader>
           {quotaInfo?.quota ? (
@@ -575,9 +624,11 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               </ItemDescription>
             </div>
             <ItemActions>
-              <Button variant="outline" size="sm" className="shrink-0" onClick={openRetentionModal}>
-                {t("Edit")}
-              </Button>
+              {canEditObjectLock ? (
+                <Button variant="outline" size="sm" className="shrink-0" onClick={openRetentionModal}>
+                  {t("Edit")}
+                </Button>
+              ) : null}
             </ItemActions>
           </ItemHeader>
           <ItemContent>

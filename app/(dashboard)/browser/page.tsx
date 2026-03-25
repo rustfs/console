@@ -16,6 +16,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { useBucket } from "@/hooks/use-bucket"
 import { useObject } from "@/hooks/use-object"
 import { useSystem } from "@/hooks/use-system"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { niceBytes } from "@/lib/functions"
@@ -39,6 +40,7 @@ function BrowserBucketsPage() {
   const router = useRouter()
   const message = useMessage()
   const dialog = useDialog()
+  const { canCapability } = usePermissions()
   const { listBuckets, deleteBucket, getBucketPolicyStatus } = useBucket()
   const { getDataUsageInfo } = useSystem()
 
@@ -49,6 +51,8 @@ function BrowserBucketsPage() {
   const [usageLoading, setUsageLoading] = useState(false)
   const [policyLoading, setPolicyLoading] = useState(false)
   const fetchIdRef = useRef(0)
+
+  const canCreateBucket = canCapability("bucket.create")
 
   const loadBucketUsage = useCallback(
     async (fetchId: number, bucketNames: string[]) => {
@@ -270,10 +274,12 @@ function BrowserBucketsPage() {
           <RiSettings5Line className="size-4" />
           <span>{t("Settings")}</span>
         </Button>
-        <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
-          <RiDeleteBin5Line className="size-4" />
-          <span>{t("Delete")}</span>
-        </Button>
+        {canCapability("bucket.delete", { bucket: row.original.Name }) ? (
+          <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
+            <RiDeleteBin5Line className="size-4" />
+            <span>{t("Delete")}</span>
+          </Button>
+        ) : null}
       </div>
     ),
   })
@@ -334,10 +340,12 @@ function BrowserBucketsPage() {
               clearable
               className="max-w-sm"
             />
-            <Button variant="outline" onClick={() => setFormVisible(true)}>
-              <RiAddLine className="size-4" />
-              <span>{t("Create Bucket")}</span>
-            </Button>
+            {canCreateBucket ? (
+              <Button variant="outline" onClick={() => setFormVisible(true)}>
+                <RiAddLine className="size-4" />
+                <span>{t("Create Bucket")}</span>
+              </Button>
+            ) : null}
             <Button variant="outline" onClick={() => fetchBuckets({ force: true })}>
               <RiRefreshLine className="size-4" />
               <span>{t("Refresh")}</span>

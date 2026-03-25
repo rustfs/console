@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { useUsers } from "@/hooks/use-users"
+import { usePermissions } from "@/hooks/use-permissions"
 import { usePolicies } from "@/hooks/use-policies"
 import { useGroups } from "@/hooks/use-groups"
 import { useMessage } from "@/lib/feedback/message"
@@ -42,8 +43,12 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   const { t } = useTranslation()
   const message = useMessage()
   const { getUser, changeUserStatus, createUser } = useUsers()
+  const { canCapability } = usePermissions()
   const { listPolicies, setUserOrGroupPolicy } = usePolicies()
   const { listGroup, updateGroupMembers } = useGroups()
+  const canEditAccount = canCapability("users.edit")
+  const canAssignGroups = canCapability("users.assignGroups")
+  const canEditPolicies = canCapability("users.policy.edit")
 
   const [user, setUser] = React.useState<{
     accessKey: string
@@ -66,6 +71,13 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   const [submitting, setSubmitting] = React.useState(false)
 
   const statusBoolean = user.status === "enabled"
+  const availableTabs = React.useMemo(() => {
+    const tabs: string[] = []
+    if (canEditAccount) tabs.push("account")
+    if (canAssignGroups) tabs.push("groups")
+    if (canEditPolicies) tabs.push("policy")
+    return tabs
+  }, [canAssignGroups, canEditAccount, canEditPolicies])
 
   React.useEffect(() => {
     if (!open || !row?.accessKey) return
@@ -84,7 +96,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
     setOriginalMemberOf(initialMemberOf)
     setSecretKey("")
     setErrors({ secretKey: "" })
-    setActiveTab("account")
+    setActiveTab(availableTabs[0] ?? "account")
     setLoading(true)
 
     Promise.all([getUser(row.accessKey), listGroup(), listPolicies()])
@@ -111,7 +123,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
         message.error(t("Failed to get data"))
       })
       .finally(() => setLoading(false))
-  }, [open, row, getUser, listGroup, listPolicies, message, t])
+  }, [availableTabs, open, row, getUser, listGroup, listPolicies, message, t])
 
   const validate = () => {
     const newErrors = { secretKey: "" }
@@ -123,6 +135,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   }
 
   const handleStatusChange = async (checked: boolean) => {
+    if (!canEditAccount) return
     const nextStatus = checked ? "enabled" : "disabled"
     if (!user.accessKey) return
 
@@ -146,7 +159,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
 
     setSubmitting(true)
     try {
-      if (secretKey) {
+      if (canEditAccount && secretKey) {
         await createUser(
           {
             accessKey: user.accessKey,
@@ -157,14 +170,16 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
         )
       }
 
-      await setUserOrGroupPolicy({
-        policyName: user.policy,
-        userOrGroup: user.accessKey,
-        isGroup: false,
-      })
+      if (canEditPolicies) {
+        await setUserOrGroupPolicy({
+          policyName: user.policy,
+          userOrGroup: user.accessKey,
+          isGroup: false,
+        })
+      }
 
-      const removedGroups = originalMemberOf.filter((group) => !user.memberOf.includes(group))
-      const addedGroups = user.memberOf.filter((group) => !originalMemberOf.includes(group))
+      const removedGroups = canAssignGroups ? originalMemberOf.filter((group) => !user.memberOf.includes(group)) : []
+      const addedGroups = canAssignGroups ? user.memberOf.filter((group) => !originalMemberOf.includes(group)) : []
 
       if (removedGroups.length) {
         await Promise.all(
@@ -219,41 +234,51 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
         <div className="space-y-4 max-h-[80vh] overflow-auto px-2 -mx-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">
             <TabsList className="justify-start overflow-x-auto">
-              <TabsTrigger value="account">{t("Account")}</TabsTrigger>
-              <TabsTrigger value="groups">{t("Groups")}</TabsTrigger>
-              <TabsTrigger value="policy">{t("Policies")}</TabsTrigger>
+              {canEditAccount ? <TabsTrigger value="account">{t("Account")}</TabsTrigger> : null}
+              {canAssignGroups ? <TabsTrigger value="groups">{t("Groups")}</TabsTrigger> : null}
+              {canEditPolicies ? <TabsTrigger value="policy">{t("Policies")}</TabsTrigger> : null}
             </TabsList>
 
-            <TabsContent value="account" className="mt-0 space-y-4">
-              <div className="flex items-center justify-start gap-2 rounded-md border px-3 py-2">
-                <span className="text-sm text-muted-foreground">{t("Status")}</span>
-                <Switch checked={statusBoolean} onCheckedChange={handleStatusChange} disabled={loading || submitting} />
-              </div>
-              <UserEditSecretKey
-                value={secretKey}
-                error={errors.secretKey}
-                disabled={loading || submitting}
-                onChange={setSecretKey}
-              />
-            </TabsContent>
+            {canEditAccount ? (
+              <TabsContent value="account" className="mt-0 space-y-4">
+                <div className="flex items-center justify-start gap-2 rounded-md border px-3 py-2">
+                  <span className="text-sm text-muted-foreground">{t("Status")}</span>
+                  <Switch
+                    checked={statusBoolean}
+                    onCheckedChange={handleStatusChange}
+                    disabled={loading || submitting}
+                  />
+                </div>
+                <UserEditSecretKey
+                  value={secretKey}
+                  error={errors.secretKey}
+                  disabled={loading || submitting}
+                  onChange={setSecretKey}
+                />
+              </TabsContent>
+            ) : null}
 
-            <TabsContent value="groups" className="mt-0">
-              <UserEditGroups
-                value={user.memberOf}
-                options={groupsList}
-                disabled={loading || submitting}
-                onChange={(memberOf) => setUser((prev) => ({ ...prev, memberOf }))}
-              />
-            </TabsContent>
+            {canAssignGroups ? (
+              <TabsContent value="groups" className="mt-0">
+                <UserEditGroups
+                  value={user.memberOf}
+                  options={groupsList}
+                  disabled={loading || submitting}
+                  onChange={(memberOf) => setUser((prev) => ({ ...prev, memberOf }))}
+                />
+              </TabsContent>
+            ) : null}
 
-            <TabsContent value="policy" className="mt-0">
-              <UserEditPolicies
-                value={user.policy}
-                options={policiesList}
-                disabled={loading || submitting}
-                onChange={(policy) => setUser((prev) => ({ ...prev, policy }))}
-              />
-            </TabsContent>
+            {canEditPolicies ? (
+              <TabsContent value="policy" className="mt-0">
+                <UserEditPolicies
+                  value={user.policy}
+                  options={policiesList}
+                  disabled={loading || submitting}
+                  onChange={(policy) => setUser((prev) => ({ ...prev, policy }))}
+                />
+              </TabsContent>
+            ) : null}
           </Tabs>
         </div>
 
@@ -261,7 +286,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
           <Button variant="outline" onClick={closeModal} disabled={submitting}>
             {t("Cancel")}
           </Button>
-          <Button onClick={submitForm} disabled={loading || submitting}>
+          <Button onClick={submitForm} disabled={loading || submitting || availableTabs.length === 0}>
             {submitting ? <Spinner className="size-4" /> : null}
             <span>{t("Submit")}</span>
           </Button>

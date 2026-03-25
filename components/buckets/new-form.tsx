@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions } from "@/hooks/use-permissions"
 import { getBytes } from "@/lib/functions"
 import { cn } from "@/lib/utils"
 
@@ -32,6 +33,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { createBucket, putBucketVersioning, putObjectLockConfiguration, putBucketQuota } = useBucket()
+  const { canCapability } = usePermissions()
 
   const [objectKey, setObjectKey] = React.useState("")
   const [version, setVersion] = React.useState(false)
@@ -49,6 +51,11 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const showNameError = trimmedBucketName.length > 0 && (trimmedBucketName.length < 3 || trimmedBucketName.length > 63)
   const parsedRetentionPeriod = Math.max(1, Number.parseInt(retentionPeriod, 10) || 1)
   const isSubmitDisabled = creating || trimmedBucketName.length < 3 || trimmedBucketName.length > 63
+  const canCreateBucket = canCapability("bucket.create")
+  const bucketContext = trimmedBucketName ? { bucket: trimmedBucketName } : {}
+  const canEditVersioning = canCapability("bucket.versioning.edit", bucketContext)
+  const canEditObjectLock = canCapability("bucket.objectLock.edit", bucketContext)
+  const canEditQuota = canCapability("bucket.quota.edit", bucketContext)
 
   React.useEffect(() => {
     if (objectLock) setVersion(true)
@@ -77,7 +84,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   }
 
   const handleCreateBucket = async () => {
-    if (isSubmitDisabled) return
+    if (!canCreateBucket || isSubmitDisabled) return
 
     const bucketName = trimmedBucketName
     setCreating(true)
@@ -85,11 +92,11 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
     try {
       await createBucket({
         Bucket: bucketName,
-        ObjectLockEnabledForBucket: objectLock,
+        ObjectLockEnabledForBucket: canEditObjectLock && objectLock,
       })
 
       const applyRetention = async () => {
-        if (objectLock && retentionEnabled) {
+        if (canEditObjectLock && objectLock && retentionEnabled) {
           await putObjectLockConfiguration(bucketName, {
             ObjectLockEnabled: "Enabled",
             Rule: {
@@ -103,11 +110,11 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
         }
       }
 
-      if (version) {
+      if (canEditVersioning && version) {
         await putBucketVersioning(bucketName, "Enabled")
       }
 
-      if (quotaEnabled) {
+      if (canEditQuota && quotaEnabled) {
         try {
           await putBucketQuota(bucketName, {
             quota: Number.parseInt(getBytes(quotaSize, quotaUnit), 10),
@@ -162,21 +169,21 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
           <Field orientation="responsive" className="items-center">
             <FieldLabel>{t("Version")}</FieldLabel>
             <FieldContent className="flex justify-end">
-              <Switch checked={version} onCheckedChange={setVersion} />
+              <Switch checked={version} onCheckedChange={setVersion} disabled={!canEditVersioning} />
             </FieldContent>
           </Field>
 
           <Field orientation="responsive" className="items-center">
             <FieldLabel>{t("Object Lock")}</FieldLabel>
             <FieldContent className="flex justify-end">
-              <Switch checked={objectLock} onCheckedChange={setObjectLock} />
+              <Switch checked={objectLock} onCheckedChange={setObjectLock} disabled={!canEditObjectLock} />
             </FieldContent>
           </Field>
 
           <Field orientation="responsive" className="items-center">
             <FieldLabel>{t("Bucket Quota")}</FieldLabel>
             <FieldContent className="flex justify-end">
-              <Switch checked={quotaEnabled} onCheckedChange={setQuotaEnabled} />
+              <Switch checked={quotaEnabled} onCheckedChange={setQuotaEnabled} disabled={!canEditQuota} />
             </FieldContent>
           </Field>
 
@@ -280,7 +287,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
           <Button variant="outline" onClick={closeModal}>
             {t("Cancel")}
           </Button>
-          <Button variant="default" disabled={isSubmitDisabled} onClick={handleCreateBucket}>
+          <Button variant="default" disabled={!canCreateBucket || isSubmitDisabled} onClick={handleCreateBucket}>
             {creating ? (
               <span className="flex items-center gap-2">
                 <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

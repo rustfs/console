@@ -6,6 +6,7 @@ export interface ConsoleStatement {
   Action?: string[]
   NotAction?: string[]
   Resource?: string[]
+  NotResource?: string[]
 }
 
 export interface ConsolePolicy {
@@ -15,19 +16,38 @@ export interface ConsolePolicy {
 
 /**
  * Check if an action matches the policy actions
- * @param policyActions - Array of action patterns (empty array means match all, undefined means no match)
+ * RustFS policy parser treats bare "*" as S3 wildcard only, not a cross-service wildcard.
+ * Some action names in the console still need to understand a few backend aliases.
  * @param requestAction - The action to check
  * @returns true if the action matches
  */
+const ACTION_ALIASES: Record<string, string> = {
+  "*": "s3:*",
+  "s3:GetLifecycleConfiguration": "s3:GetBucketLifecycle",
+  "s3:GetBucketLifecycleConfiguration": "s3:GetBucketLifecycle",
+  "s3:PutLifecycleConfiguration": "s3:PutBucketLifecycle",
+  "s3:PutBucketLifecycleConfiguration": "s3:PutBucketLifecycle",
+  "s3:DeleteBucketLifecycle": "s3:PutBucketLifecycle",
+  "s3:DeleteBucketTagging": "s3:PutBucketTagging",
+  "s3:DeleteBucketReplication": "s3:PutReplicationConfiguration",
+}
+
+function normalizeAction(action: string): string {
+  return ACTION_ALIASES[action] ?? action
+}
+
+function isAdminAction(action: string): boolean {
+  return normalizeAction(action).startsWith("admin:")
+}
+
 function matchAction(policyActions: string[] | undefined, requestAction: string): boolean {
-  // Undefined means no match; explicit empty array means match all actions
-  if (policyActions === undefined) {
+  // Undefined or empty means no match.
+  if (!policyActions || policyActions.length === 0) {
     return false
   }
-  if (policyActions.length === 0) {
-    return true
-  }
-  return policyActions.some((pattern) => resourceMatch(pattern, requestAction))
+
+  const normalizedRequestAction = normalizeAction(requestAction)
+  return policyActions.some((pattern) => resourceMatch(normalizeAction(pattern), normalizedRequestAction))
 }
 
 /**
@@ -40,7 +60,9 @@ function matchNotAction(notActions: string[] | undefined, requestAction: string)
   if (!notActions || notActions.length === 0) {
     return false
   }
-  return notActions.some((pattern) => resourceMatch(pattern, requestAction))
+
+  const normalizedRequestAction = normalizeAction(requestAction)
+  return notActions.some((pattern) => resourceMatch(normalizeAction(pattern), normalizedRequestAction))
 }
 
 const IMPLIED_SCOPES: Record<string, string[]> = {
@@ -51,13 +73,11 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
     "s3:GetObject",
     "s3:PutObject",
     "s3:DeleteObject",
-    "s3:ListObjects",
     "s3:GetObjectTagging",
     "s3:PutObjectTagging",
     "s3:DeleteObjectTagging",
     "s3:GetBucketTagging",
     "s3:PutBucketTagging",
-    "s3:DeleteBucketTagging",
     "s3:GetBucketPolicy",
     "s3:PutBucketPolicy",
     "s3:DeleteBucketPolicy",
@@ -101,18 +121,71 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
     "s3:PutReplicationConfiguration",
     "s3:*",
   ],
-  [CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE]: ["s3:GetLifecycleConfiguration", "s3:PutLifecycleConfiguration", "s3:*"],
+  [CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE]: ["s3:GetBucketLifecycle", "s3:PutBucketLifecycle", "s3:*"],
   [CONSOLE_SCOPES.VIEW_TIERED_STORAGE]: ["admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_EVENT_DESTINATIONS]: ["admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_SSE_SETTINGS]: ["admin:ConfigUpdate", "admin:*", "kms:*"],
   [CONSOLE_SCOPES.VIEW_LICENSE]: ["admin:ServerInfo", "admin:*"],
 }
 
-function matchResource(policyResources: string[] | undefined, requestResource: string): boolean {
-  if (!policyResources || policyResources.length === 0) {
+function isConsoleResource(resource: string): boolean {
+  return resource === "console" || resource === "*" || resource.includes("console")
+}
+
+function shouldIgnoreConsoleResourceCheck(statement: ConsoleStatement, action: string): boolean {
+  if (!isConsoleScope(action)) {
+    return false
+  }
+
+  const statementResources = [...(statement.Resource ?? []), ...(statement.NotResource ?? [])]
+  return statementResources.length > 0 && !statementResources.some(isConsoleResource)
+}
+
+function matchStatementResource(statement: ConsoleStatement, requestResource: string, action: string): boolean {
+  if (isAdminAction(action)) {
     return true
   }
-  return policyResources.some((pattern) => resourceMatch(pattern, requestResource))
+
+  if (shouldIgnoreConsoleResourceCheck(statement, action)) {
+    return true
+  }
+
+  const resourceMatched =
+    !statement.Resource || statement.Resource.length === 0
+      ? true
+      : statement.Resource.some((pattern) => resourceMatch(pattern, requestResource))
+
+  if (!resourceMatched) {
+    return false
+  }
+
+  const notResourceMatched =
+    !!statement.NotResource &&
+    statement.NotResource.length > 0 &&
+    statement.NotResource.some((pattern) => resourceMatch(pattern, requestResource))
+
+  return !notResourceMatched
+}
+
+function matchesRequestedAction(policyActions: string[] | undefined, action: string): boolean {
+  if (matchAction(policyActions, action)) {
+    return true
+  }
+
+  if (!isConsoleScope(action)) {
+    return false
+  }
+
+  if (
+    matchAction(policyActions, CONSOLE_SCOPES.CONSOLE_ADMIN) ||
+    matchAction(policyActions, "console:*") ||
+    matchAction(policyActions, "admin:*")
+  ) {
+    return true
+  }
+
+  const impliedActions = IMPLIED_SCOPES[action]
+  return !!impliedActions && impliedActions.some((implied) => matchAction(policyActions, implied))
 }
 
 /**
@@ -132,23 +205,6 @@ export function hasConsolePermission(
   const statements = Array.isArray(policy) ? policy : policy.Statement || []
   if (statements.length === 0) return false
 
-  // For console scopes, we should ignore Resource restrictions if Resource doesn't match "console"
-  // This allows policies with S3 resources to still grant console permissions
-  const isConsoleAction = isConsoleScope(action)
-  const shouldCheckResource = (s: ConsoleStatement): boolean => {
-    // If action is a console scope and Resource is specified but doesn't match "console",
-    // we should still allow if Action matches (console scopes are management permissions)
-    if (isConsoleAction && s.Resource && s.Resource.length > 0) {
-      // Check if Resource contains console-related resources
-      const hasConsoleResource = s.Resource.some((r) => r === "console" || r === "*" || r.includes("console"))
-      // If Resource doesn't contain console resources, skip resource check for console actions
-      if (!hasConsoleResource) {
-        return false
-      }
-    }
-    return true
-  }
-
   // Check Deny statements first
   const denied = statements.some((s) => {
     if (s.Effect !== "Deny") return false
@@ -157,14 +213,14 @@ export function hasConsolePermission(
     if (s.NotAction && s.NotAction.length > 0) {
       // Deny if action is NOT in NotAction list
       if (!matchNotAction(s.NotAction, action)) {
-        return shouldCheckResource(s) ? matchResource(s.Resource, resource) : false
+        return matchStatementResource(s, resource, action)
       }
       return false
     }
 
     // If Action is present (or empty array), deny applies to matching actions
-    if (matchAction(s.Action, action)) {
-      return shouldCheckResource(s) ? matchResource(s.Resource, resource) : false
+    if (matchesRequestedAction(s.Action, action)) {
+      return matchStatementResource(s, resource, action)
     }
 
     return false
@@ -181,17 +237,8 @@ export function hasConsolePermission(
       // If Action is also present, first check if action matches Action
       if (s.Action && s.Action.length > 0) {
         // Both Action and NotAction present: action must match Action AND not be in NotAction
-        const actionMatches = matchAction(s.Action, action)
-        const adminMatch = matchAction(s.Action, CONSOLE_SCOPES.CONSOLE_ADMIN)
-        const wildcardMatch = matchAction(s.Action, "console:*")
-        const adminStarMatch = matchAction(s.Action, "admin:*")
-
-        if (!(actionMatches || adminMatch || wildcardMatch || adminStarMatch)) {
-          // Check implied actions
-          const impliedActions = IMPLIED_SCOPES[action]
-          if (!impliedActions || !impliedActions.some((implied) => matchAction(s.Action, implied))) {
-            return false // Action doesn't match Action list
-          }
+        if (!matchesRequestedAction(s.Action, action)) {
+          return false // Action doesn't match Action list
         }
 
         // Action matches Action list, now check NotAction exclusion
@@ -205,29 +252,12 @@ export function hasConsolePermission(
         }
       }
       // Action is allowed (matches Action if present, and not in NotAction), check resource
-      return shouldCheckResource(s) ? matchResource(s.Resource, resource) : true
+      return matchStatementResource(s, resource, action)
     }
 
     // Only Action is present (or empty array), allow applies to matching actions
-    const actionMatch = matchAction(s.Action, action)
-    const adminMatch = matchAction(s.Action, CONSOLE_SCOPES.CONSOLE_ADMIN)
-    const wildcardMatch = matchAction(s.Action, "console:*")
-    const adminStarMatch = matchAction(s.Action, "admin:*")
-
-    const explicitMatch =
-      actionMatch || adminMatch || wildcardMatch || adminStarMatch
-        ? shouldCheckResource(s)
-          ? matchResource(s.Resource, resource)
-          : true
-        : false
+    const explicitMatch = matchesRequestedAction(s.Action, action) ? matchStatementResource(s, resource, action) : false
     if (explicitMatch) return true
-
-    const impliedActions = IMPLIED_SCOPES[action]
-    if (impliedActions) {
-      if (impliedActions.some((implied) => matchAction(s.Action, implied))) {
-        return shouldCheckResource(s) ? matchResource(s.Resource, resource) : true
-      }
-    }
 
     return false
   })

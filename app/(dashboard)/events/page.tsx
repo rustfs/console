@@ -145,7 +145,7 @@ export default function EventsPage() {
     [bucketName, dialog, listBucketNotifications, loadData, message, putBucketNotifications, t],
   )
 
-  const columns = useMemo(() => getEventsColumns(t, handleRowDelete), [t, handleRowDelete])
+  const columns = useMemo(() => getEventsColumns(t, handleRowDelete, true), [t, handleRowDelete])
 
   const { table } = useDataTable<NotificationItem>({
     data,

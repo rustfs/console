@@ -25,7 +25,7 @@ interface BrowserContentProps {
   previewKey?: string
 }
 
-export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps) {
+export function BrowserContent({ bucketName, keyPath = "", preview = false, previewKey = "" }: BrowserContentProps) {
   const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -98,6 +98,25 @@ export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps
     [objectApi],
   )
 
+  const clearPreviewQueryParams = React.useCallback(() => {
+    if (!searchParams.has("preview") && !searchParams.has("previewKey")) return
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("preview")
+    params.delete("previewKey")
+    const query = params.toString()
+    router.replace(query ? `/browser?${query}` : "/browser")
+  }, [router, searchParams])
+
+  React.useEffect(() => {
+    if (!preview || !previewKey) return
+
+    handleOpenPreview({ key: previewKey }).catch((error) => {
+      message.error((error as Error)?.message ?? t("Failed to fetch object info"))
+      clearPreviewQueryParams()
+    })
+  }, [preview, previewKey, handleOpenPreview, message, t, clearPreviewQueryParams])
+
   const tasks = useTasks()
   const debounceTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevCompletedIdsRef = React.useRef(new Set<string>())
@@ -125,6 +144,18 @@ export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     }
   }, [])
+
+  const handlePreviewModalChange = React.useCallback(
+    (show: boolean) => {
+      setShowPreview(show)
+
+      if (!show) {
+        setPreviewObject(null)
+        clearPreviewQueryParams()
+      }
+    },
+    [clearPreviewQueryParams],
+  )
 
   return (
     <Page>
@@ -182,7 +213,7 @@ export function BrowserContent({ bucketName, keyPath = "" }: BrowserContentProps
         canUpload={canUploadObjects}
       />
 
-      <ObjectPreviewModal show={showPreview} onShowChange={(show) => setShowPreview(show)} object={previewObject} />
+      <ObjectPreviewModal show={showPreview} onShowChange={handlePreviewModalChange} object={previewObject} />
     </Page>
   )
 }

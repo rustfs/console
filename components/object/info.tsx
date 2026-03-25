@@ -67,7 +67,6 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   const [totalExpirationSeconds, setTotalExpirationSeconds] = React.useState(0)
   const [isExpirationValid, setIsExpirationValid] = React.useState(false)
   const [isGeneratingUrl, setIsGeneratingUrl] = React.useState(false)
-  const previewParamSyncTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const resolvedObjectKey = React.useMemo(() => String(object?.Key ?? objectKey ?? ""), [object?.Key, objectKey])
   const objectPermissionContext = React.useMemo(
     () => ({
@@ -234,15 +233,6 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
       message.error((err as Error)?.message ?? t("Download Failed"))
     }
   }
-
-  React.useEffect(() => {
-    const timer = previewParamSyncTimerRef.current
-    return () => {
-      if (timer) {
-        clearTimeout(timer)
-      }
-    }
-  }, [])
 
   const handlePreviewVersion = async (versionId: string) => {
     if (!object?.Key) return

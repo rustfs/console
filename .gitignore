@@ -21,6 +21,7 @@
 /.output/
 /.vscode/
 .cursor/
+/.claude/
 
 # production
 /build

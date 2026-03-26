@@ -62,8 +62,19 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
       setErrors({ accessKey: "", secretKey: "", name: "" })
       api
         .get("/accountinfo")
-        .then((userInfo: { Policy?: unknown }) => {
-          setPolicy(JSON.stringify(userInfo?.Policy ?? {}, null, 2))
+        .then((userInfo: any) => {
+          const rawPolicy = userInfo?.policy ?? userInfo?.Policy ?? {}
+
+          if (typeof rawPolicy === "string") {
+            try {
+              const parsed = JSON.parse(rawPolicy)
+              setPolicy(JSON.stringify(parsed, null, 2))
+            } catch {
+              setPolicy(rawPolicy)
+            }
+          } else {
+            setPolicy(JSON.stringify(rawPolicy ?? {}, null, 2))
+          }
         })
         .catch(() => {
           setPolicy("{}")

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nvm use:*)",
+      "Bash(pnpm -C .. ls)",
+      "Bash(pnpm lint:*)"
+    ]
+  }
+}

@@ -12,6 +12,7 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { EventsNewForm } from "@/components/events/new-form"
 import { getEventsColumns } from "@/components/events/columns"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import type { NotificationItem } from "@/lib/events"
@@ -21,11 +22,14 @@ export default function EventsPage() {
   const message = useMessage()
   const dialog = useDialog()
   const { listBucketNotifications, putBucketNotifications } = useBucket()
+  const { canCapability } = usePermissions()
 
   const [bucketName, setBucketName] = useState<string | null>(null)
   const [data, setData] = useState<NotificationItem[]>([])
   const [loading, setLoading] = useState(false)
   const [newFormOpen, setNewFormOpen] = useState(false)
+
+  const canEditEvents = bucketName ? canCapability("bucket.events.edit", { bucket: bucketName }) : false
 
   const loadData = useCallback(async () => {
     if (!bucketName) {
@@ -145,7 +149,7 @@ export default function EventsPage() {
     [bucketName, dialog, listBucketNotifications, loadData, message, putBucketNotifications, t],
   )
 
-  const columns = useMemo(() => getEventsColumns(t, handleRowDelete, true), [t, handleRowDelete])
+  const columns = useMemo(() => getEventsColumns(t, handleRowDelete, canEditEvents), [t, handleRowDelete, canEditEvents])
 
   const { table } = useDataTable<NotificationItem>({
     data,

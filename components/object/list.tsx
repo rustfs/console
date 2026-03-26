@@ -33,6 +33,7 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
 import { useBucket } from "@/hooks/use-bucket"
 import { useLocalStorage } from "@/hooks/use-local-storage"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useMessage } from "@/lib/feedback/message"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
@@ -57,6 +58,7 @@ interface ObjectListProps {
   path: string
   onOpenInfo: (bucket: string, key: string) => void
   onUploadClick: () => void
+  canUpload?: boolean
   pageSize?: number
   onRefresh?: () => void
   refreshTrigger?: number
@@ -68,6 +70,7 @@ export function ObjectList({
   path,
   onOpenInfo,
   onUploadClick,
+  canUpload = false,
   pageSize = 25,
   onRefresh,
   refreshTrigger = 0,
@@ -77,6 +80,7 @@ export function ObjectList({
   const message = useMessage()
   const { listObject, getSignedUrl, mapAllFiles } = useObject(bucket)
   const { getBucketVersioning } = useBucket()
+  const { canCapability } = usePermissions()
   const addDeleteKeys = useAddDeleteKeys()
   const addDeleteFolder = useAddDeleteFolder()
   const tasks = useTasks()
@@ -94,6 +98,8 @@ export function ObjectList({
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
 
   const prefix = decodeURIComponent(path)
+  const canBulkDelete = canCapability("objects.bulkDelete", { bucket, prefix })
+  const canBulkDownload = canCapability("objects.download", { bucket, prefix })
 
   const bucketPath = React.useCallback((p?: string | string[]) => buildBucketPath(bucket, p), [bucket])
 
@@ -288,31 +294,37 @@ export function ObjectList({
           <div className="flex items-center gap-2">
             {row.original.type === "object" ? (
               <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    onPreview({ key: row.original.Key })
-                  }}
-                >
-                  <RiEyeLine className="size-4" />
-                  <span>{t("Preview")}</span>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => downloadFile(row.original.Key)}>
-                  <RiDownloadCloud2Line className="size-4" />
-                  <span>{t("Download")}</span>
-                </Button>
+                {canCapability("objects.preview", { bucket, objectKey: row.original.Key }) ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onPreview({ key: row.original.Key })
+                    }}
+                  >
+                    <RiEyeLine className="size-4" />
+                    <span>{t("Preview")}</span>
+                  </Button>
+                ) : null}
+                {canCapability("objects.download", { bucket, objectKey: row.original.Key }) ? (
+                  <Button variant="outline" size="sm" onClick={() => downloadFile(row.original.Key)}>
+                    <RiDownloadCloud2Line className="size-4" />
+                    <span>{t("Download")}</span>
+                  </Button>
+                ) : null}
               </>
             ) : null}
-            <Button variant="outline" size="sm" onClick={() => openDeleteDialog([row.original.Key])}>
-              <RiDeleteBin5Line className="size-4" />
-              <span>{t("Delete")}</span>
-            </Button>
+            {canCapability("objects.delete", { bucket, objectKey: row.original.Key }) ? (
+              <Button variant="outline" size="sm" onClick={() => openDeleteDialog([row.original.Key])}>
+                <RiDeleteBin5Line className="size-4" />
+                <span>{t("Delete")}</span>
+              </Button>
+            ) : null}
           </div>
         ),
       },
     ],
-    [t, displayKey, bucketPath, onOpenInfo, bucket, prefix, downloadFile],
+    [t, displayKey, bucketPath, onOpenInfo, bucket, downloadFile, canCapability, onPreview],
   )
 
   const { table, selectedRowIds } = useDataTable<ObjectRow>({
@@ -526,22 +538,28 @@ export function ObjectList({
         actions={
           <>
             <TaskStatsButton />
-            <Button variant="outline" onClick={onUploadClick}>
-              <RiFileAddLine className="size-4" />
-              <span>
-                {t("Upload File")}/{t("Folder")}
-              </span>
-            </Button>
+            {canUpload ? (
+              <Button variant="outline" onClick={onUploadClick}>
+                <RiFileAddLine className="size-4" />
+                <span>
+                  {t("Upload File")}/{t("Folder")}
+                </span>
+              </Button>
+            ) : null}
             {checkedKeys.length > 0 ? (
               <>
-                <Button variant="outline" className="text-destructive border-destructive" onClick={handleBatchDelete}>
-                  <RiDeleteBin5Line className="size-4" />
-                  <span>{t("Delete Selected")}</span>
-                </Button>
-                <Button variant="outline" onClick={downloadMultiple}>
-                  <RiDownloadCloud2Line className="size-4" />
-                  <span>{t("Download")}</span>
-                </Button>
+                {canBulkDelete ? (
+                  <Button variant="outline" className="text-destructive border-destructive" onClick={handleBatchDelete}>
+                    <RiDeleteBin5Line className="size-4" />
+                    <span>{t("Delete Selected")}</span>
+                  </Button>
+                ) : null}
+                {canBulkDownload ? (
+                  <Button variant="outline" onClick={downloadMultiple}>
+                    <RiDownloadCloud2Line className="size-4" />
+                    <span>{t("Download")}</span>
+                  </Button>
+                ) : null}
               </>
             ) : null}
             <Button variant="outline" onClick={() => (onRefresh ?? fetchObjects)()}>

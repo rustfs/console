@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions } from "@/hooks/use-permissions"
 import { LifecycleNewForm } from "@/components/lifecycle/new-form"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
@@ -43,7 +44,10 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
+  const { canCapability } = usePermissions()
   const { getBucketLifecycleConfiguration, deleteBucketLifecycle, putBucketLifecycleConfiguration } = useBucket()
+  const lifecycleContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
+  const canEditLifecycle = canCapability("bucket.lifecycle.edit", lifecycleContext)
 
   const [data, setData] = React.useState<LifecycleRule[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -70,6 +74,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
 
   const handleRowDelete = React.useCallback(
     async (row: LifecycleRule) => {
+      if (!canEditLifecycle) return
       const remaining = data.filter((item) => item.ID !== row.ID)
 
       try {
@@ -86,7 +91,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         message.error((error as Error).message || t("Delete Failed"))
       }
     },
-    [data, deleteBucketLifecycle, bucketName, putBucketLifecycleConfiguration, message, t, loadData],
+    [canEditLifecycle, data, deleteBucketLifecycle, bucketName, putBucketLifecycleConfiguration, message, t, loadData],
   )
 
   const confirmDelete = React.useCallback(
@@ -159,15 +164,17 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
-              <RiDeleteBin5Line className="size-4" aria-hidden />
-              <span>{t("Delete")}</span>
-            </Button>
+            {canEditLifecycle ? (
+              <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
+                <RiDeleteBin5Line className="size-4" aria-hidden />
+                <span>{t("Delete")}</span>
+              </Button>
+            ) : null}
           </div>
         ),
       },
     ],
-    [t, confirmDelete],
+    [canEditLifecycle, t, confirmDelete],
   )
 
   const { table } = useDataTable<LifecycleRule>({
@@ -181,10 +188,12 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">{t("Lifecycle")}</h2>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setNewFormOpen(true)}>
-            <RiAddLine className="size-4" />
-            <span>{t("Add Lifecycle Rule")}</span>
-          </Button>
+          {canEditLifecycle ? (
+            <Button variant="outline" onClick={() => setNewFormOpen(true)}>
+              <RiAddLine className="size-4" />
+              <span>{t("Add Lifecycle Rule")}</span>
+            </Button>
+          ) : null}
           <Button variant="outline" onClick={loadData}>
             <RiRefreshLine className="size-4" />
             <span>{t("Refresh")}</span>

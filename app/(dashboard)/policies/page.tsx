@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTablePagination } from "@/components/data-table/data-table-pagination"
 import { useDataTable } from "@/hooks/use-data-table"
+import { usePermissions } from "@/hooks/use-permissions"
 import { PolicyForm, type PolicyItem } from "@/components/policies/form"
 import { usePolicies } from "@/hooks/use-policies"
 import { useDialog } from "@/lib/feedback/dialog"
@@ -22,6 +23,10 @@ export default function PoliciesPage() {
   const message = useMessage()
   const dialog = useDialog()
   const { listPolicies: fetchPolicies, removePolicy } = usePolicies()
+  const { canCapability } = usePermissions()
+  const canCreatePolicy = canCapability("policies.create")
+  const canEditPolicy = canCapability("policies.edit")
+  const canDeletePolicy = canCapability("policies.delete")
 
   const [data, setData] = useState<PolicyItem[]>([])
   const [loading, setLoading] = useState(false)
@@ -88,14 +93,18 @@ export default function PoliciesPage() {
       meta: { width: 200 },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleEdit(row.original)}>
-            <RiEdit2Line className="size-4" />
-            <span>{t("Edit")}</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
-            <RiDeleteBin5Line className="size-4" />
-            <span>{t("Delete")}</span>
-          </Button>
+          {canEditPolicy ? (
+            <Button variant="outline" size="sm" onClick={() => handleEdit(row.original)}>
+              <RiEdit2Line className="size-4" />
+              <span>{t("Edit")}</span>
+            </Button>
+          ) : null}
+          {canDeletePolicy ? (
+            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
+              <RiDeleteBin5Line className="size-4" />
+              <span>{t("Delete")}</span>
+            </Button>
+          ) : null}
         </div>
       ),
     },
@@ -140,10 +149,12 @@ export default function PoliciesPage() {
               clearable
               className="max-w-sm"
             />
-            <Button variant="outline" onClick={handleNew}>
-              <RiAddLine className="size-4" />
-              <span>{t("New Policy")}</span>
-            </Button>
+            {canCreatePolicy ? (
+              <Button variant="outline" onClick={handleNew}>
+                <RiAddLine className="size-4" />
+                <span>{t("New Policy")}</span>
+              </Button>
+            ) : null}
           </>
         }
       >

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions } from "@/hooks/use-permissions"
 import { ReplicationNewForm } from "@/components/replication/new-form"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
@@ -29,8 +30,11 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
+  const { canCapability } = usePermissions()
   const { getBucketReplication, putBucketReplication, deleteBucketReplication, deleteRemoteReplicationTarget } =
     useBucket()
+  const replicationContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
+  const canEditReplication = canCapability("bucket.replication.edit", replicationContext)
 
   const [data, setData] = React.useState<ReplicationRule[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -54,6 +58,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
 
   const handleRowDelete = React.useCallback(
     async (rule: ReplicationRule) => {
+      if (!canEditReplication) return
       const remaining = data.filter((item) => item !== rule)
 
       try {
@@ -78,6 +83,7 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
       }
     },
     [
+      canEditReplication,
       data,
       deleteBucketReplication,
       bucketName,
@@ -148,15 +154,17 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
-              <RiDeleteBin7Line className="size-4" aria-hidden />
-              <span>{t("Delete")}</span>
-            </Button>
+            {canEditReplication ? (
+              <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
+                <RiDeleteBin7Line className="size-4" aria-hidden />
+                <span>{t("Delete")}</span>
+              </Button>
+            ) : null}
           </div>
         ),
       },
     ],
-    [t, confirmDelete],
+    [canEditReplication, t, confirmDelete],
   )
 
   const { table } = useDataTable<ReplicationRule>({
@@ -170,10 +178,12 @@ export function BucketReplicationTab({ bucketName }: BucketReplicationTabProps) 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">{t("Bucket Replication")}</h2>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setNewFormOpen(true)}>
-            <RiAddLine className="size-4" />
-            <span>{t("Add Replication Rule")}</span>
-          </Button>
+          {canEditReplication ? (
+            <Button variant="outline" onClick={() => setNewFormOpen(true)}>
+              <RiAddLine className="size-4" />
+              <span>{t("Add Replication Rule")}</span>
+            </Button>
+          ) : null}
           <Button variant="outline" onClick={loadData}>
             <RiRefreshLine className="size-4" />
             <span>{t("Refresh")}</span>

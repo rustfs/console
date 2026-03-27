@@ -117,7 +117,7 @@ function formatTimestamp(value?: string | null) {
 
 function getKeyDisplayName(key: KmsKeyInfo | KmsKeyMetadata | null) {
   if (!key) return "-"
-  return key.tags?.name || key.key_id
+  return key.tags?.name ?? key.description ?? key.key_id
 }
 
 function getStateBadgeVariant(value?: string | null) {
@@ -753,7 +753,7 @@ export default function SSEPage() {
                         placeholder={t("Enter the default SSE key ID")}
                       />
                     </FieldContent>
-                    <FieldDescription>{t("This key is used as the platform default for SSE-KMS.")}</FieldDescription>
+                    <FieldDescription>{t("This key is used as the platform default for SSE-KMS and SSE-S3.")}</FieldDescription>
                   </Field>
                 </FieldGroup>
 

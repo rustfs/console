@@ -1,6 +1,7 @@
 import { joinURL } from "ufo"
 
-const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "/rustfs/console"
+const defaultBasePath = process.env.NODE_ENV === "development" ? "" : "/rustfs/console"
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? defaultBasePath
 
 function getBaseURL(): string {
   if (typeof window !== "undefined") {

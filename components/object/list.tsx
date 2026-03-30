@@ -511,20 +511,15 @@ export function ObjectList({
 
   const goToNextPage = () => {
     if (!nextToken) return
-    if (continuationToken) {
-      setTokenHistory((h) => [...h, continuationToken])
-    }
+    setTokenHistory((h) => [...h, continuationToken as string])
     setContinuationToken(nextToken)
   }
 
   const goToPreviousPage = () => {
-    const prev = tokenHistory[tokenHistory.length - 1]
-    if (prev !== undefined) {
-      setTokenHistory((h) => h.slice(0, -1))
-      setContinuationToken(prev)
-    } else {
-      setContinuationToken(undefined)
-    }
+    if (tokenHistory.length === 0) return
+    const prevToken = tokenHistory[tokenHistory.length - 1]
+    setContinuationToken(prevToken)
+    setTokenHistory((h) => h.slice(0, -1))
   }
 
   React.useEffect(() => {

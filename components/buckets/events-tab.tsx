@@ -9,6 +9,7 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { EventsNewForm } from "@/components/events/new-form"
 import { getEventsColumns } from "@/components/events/columns"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import type { NotificationItem } from "@/lib/events"
@@ -21,7 +22,10 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
+  const { canCapability } = usePermissions()
   const { listBucketNotifications, putBucketNotifications } = useBucket()
+  const eventsContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
+  const canEditEvents = canCapability("bucket.events.edit", eventsContext)
 
   const [data, setData] = React.useState<NotificationItem[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -91,6 +95,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
 
   const handleRowDelete = React.useCallback(
     async (row: NotificationItem) => {
+      if (!canEditEvents) return
       const confirmed = await new Promise<boolean>((resolve) => {
         dialog.warning({
           title: t("Confirm Delete"),
@@ -136,10 +141,13 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
         setLoading(false)
       }
     },
-    [bucketName, dialog, listBucketNotifications, loadData, message, putBucketNotifications, t],
+    [bucketName, canEditEvents, dialog, listBucketNotifications, loadData, message, putBucketNotifications, t],
   )
 
-  const columns = React.useMemo(() => getEventsColumns(t, handleRowDelete), [t, handleRowDelete])
+  const columns = React.useMemo(
+    () => getEventsColumns(t, handleRowDelete, canEditEvents),
+    [canEditEvents, t, handleRowDelete],
+  )
 
   const { table } = useDataTable<NotificationItem>({
     data,
@@ -152,10 +160,12 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">{t("Events")}</h2>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setNewFormOpen(true)}>
-            <RiAddLine className="size-4" />
-            <span>{t("Add Event Subscription")}</span>
-          </Button>
+          {canEditEvents ? (
+            <Button variant="outline" onClick={() => setNewFormOpen(true)}>
+              <RiAddLine className="size-4" />
+              <span>{t("Add Event Subscription")}</span>
+            </Button>
+          ) : null}
           <Button variant="outline" onClick={loadData} disabled={loading}>
             <RiRefreshLine className="size-4" />
             <span>{t("Refresh")}</span>

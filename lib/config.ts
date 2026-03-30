@@ -67,17 +67,17 @@ export const configManager = {
     configPromise = (async () => {
       let config: SiteConfig
 
-      const storedResult = getStoredHostConfig()
-      if (storedResult.config) {
-        config = storedResult.config
+      const runtimeConfig = this.loadRuntimeConfig()
+      if (runtimeConfig) {
+        config = runtimeConfig
       } else {
-        const browserResult = getCurrentBrowserConfig()
-        if (browserResult.config) {
-          config = browserResult.config
+        const storedResult = getStoredHostConfig()
+        if (storedResult.config) {
+          config = storedResult.config
         } else {
-          const runtimeConfig = this.loadRuntimeConfig()
-          if (runtimeConfig) {
-            config = runtimeConfig
+          const browserResult = getCurrentBrowserConfig()
+          if (browserResult.config) {
+            config = browserResult.config
           } else {
             const defaultResult = getServerDefaultConfig()
             config = defaultResult.config!

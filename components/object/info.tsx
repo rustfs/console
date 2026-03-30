@@ -16,6 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CopyInput } from "@/components/copy-input"
 import { useObject } from "@/hooks/use-object"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useMessage } from "@/lib/feedback/message"
 import { useDialog } from "@/lib/feedback/dialog"
 import { exportFile } from "@/lib/export-file"
@@ -42,6 +43,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   const message = useMessage()
   const dialog = useDialog()
   const objectApi = useObject(bucketName)
+  const { canCapability } = usePermissions()
   const client = useS3()
 
   const [object, setObject] = React.useState<Record<string, unknown> | null>(null)
@@ -65,7 +67,22 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   const [totalExpirationSeconds, setTotalExpirationSeconds] = React.useState(0)
   const [isExpirationValid, setIsExpirationValid] = React.useState(false)
   const [isGeneratingUrl, setIsGeneratingUrl] = React.useState(false)
-  const previewParamSyncTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const resolvedObjectKey = React.useMemo(() => String(object?.Key ?? objectKey ?? ""), [object?.Key, objectKey])
+  const objectPermissionContext = React.useMemo(
+    () => ({
+      bucket: bucketName,
+      objectKey: resolvedObjectKey || undefined,
+    }),
+    [bucketName, resolvedObjectKey],
+  )
+  const canDownloadObject = canCapability("objects.download", objectPermissionContext)
+  const canPreviewObject = canCapability("objects.preview", objectPermissionContext)
+  const canViewObjectTags = canCapability("objects.tag.view", objectPermissionContext)
+  const canEditObjectTags = canCapability("objects.tag.edit", objectPermissionContext)
+  const canViewVersions = canCapability("objects.version.view", objectPermissionContext)
+  const canEditLegalHold = canCapability("objects.legalHold.edit", objectPermissionContext)
+  const canEditRetention = canCapability("objects.retention.edit", objectPermissionContext)
+  const canShareObject = canCapability("objects.share", objectPermissionContext)
 
   const formatDuration = (seconds: number) => {
     if (seconds === 0) return ""
@@ -201,7 +218,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }, [open, objectKey, message, t])
 
   const download = async () => {
-    if (!object?.Key) return
+    if (!canDownloadObject || !object?.Key) return
     try {
       const url = await objectApi.getSignedUrl(object.Key as string)
       const response = await fetch(url)
@@ -216,14 +233,6 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
       message.error((err as Error)?.message ?? t("Download Failed"))
     }
   }
-
-  React.useEffect(() => {
-    return () => {
-      if (previewParamSyncTimerRef.current) {
-        clearTimeout(previewParamSyncTimerRef.current)
-      }
-    }
-  }, [])
 
   const handlePreviewVersion = async (versionId: string) => {
     if (!object?.Key) return
@@ -255,7 +264,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     }
   }
   const toggleLegalHold = async () => {
-    if (!object?.Key) return
+    if (!canEditLegalHold || !object?.Key) return
     try {
       await objectApi.setLegalHold(object.Key as string, !lockStatus)
       setLockStatus(!lockStatus)
@@ -266,7 +275,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }
 
   const generateTemporaryUrl = async () => {
-    if (!object?.Key || isGeneratingUrl) return
+    if (!canShareObject || !object?.Key || isGeneratingUrl) return
     if (!validateExpiration()) {
       message.error(expirationError || t("Please enter a valid expiration time"))
       return
@@ -285,7 +294,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
 
   const submitTagForm = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!object?.Key) return
+    if (!canEditObjectTags || !object?.Key) return
     if (!tagFormValue.Key || !tagFormValue.Value) {
       message.error(t("Please fill in the correct format"))
       return
@@ -312,7 +321,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }
 
   const removeTag = async (tagKey: string) => {
-    if (!object?.Key) return
+    if (!canEditObjectTags || !object?.Key) return
     try {
       const nextTags = tags.filter((tag) => tag.Key !== tagKey)
       await objectApi.putObjectTags(object.Key as string, nextTags)
@@ -325,7 +334,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
 
   const submitRetention = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!object?.Key) return
+    if (!canEditRetention || !object?.Key) return
     try {
       await objectApi.putObjectRetention(object.Key as string, {
         Mode: retentionMode,
@@ -340,7 +349,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }
 
   const resetRetention = async () => {
-    if (!object?.Key) return
+    if (!canEditRetention || !object?.Key) return
     try {
       await objectApi.putObjectRetention(object.Key as string, {
         Mode: "GOVERNANCE",
@@ -364,28 +373,36 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
           </DrawerHeader>
           <div className="min-w-0 space-y-4 p-4 overflow-hidden">
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="outline" size="sm" onClick={download}>
-                <RiDownloadLine className="size-4" />
-                {t("Download")}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => onPreview({ key: String(object?.Key ?? "") })}>
-                <RiEyeLine className="size-4" />
-                {t("Preview")}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowTagView(true)}>
-                <RiPriceTag3Line className="size-4" />
-                {t("Set Tags")}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowVersions(true)}>
-                <RiFileList2Line className="size-4" />
-                {t("Versions")}
-              </Button>
-              {lockStatus && (
+              {canDownloadObject ? (
+                <Button variant="outline" size="sm" onClick={download}>
+                  <RiDownloadLine className="size-4" />
+                  {t("Download")}
+                </Button>
+              ) : null}
+              {canPreviewObject ? (
+                <Button variant="outline" size="sm" onClick={() => onPreview({ key: String(object?.Key ?? "") })}>
+                  <RiEyeLine className="size-4" />
+                  {t("Preview")}
+                </Button>
+              ) : null}
+              {canViewObjectTags || canEditObjectTags ? (
+                <Button variant="outline" size="sm" onClick={() => setShowTagView(true)}>
+                  <RiPriceTag3Line className="size-4" />
+                  {t("Set Tags")}
+                </Button>
+              ) : null}
+              {canViewVersions ? (
+                <Button variant="outline" size="sm" onClick={() => setShowVersions(true)}>
+                  <RiFileList2Line className="size-4" />
+                  {t("Versions")}
+                </Button>
+              ) : null}
+              {lockStatus && canEditRetention ? (
                 <Button variant="outline" size="sm" onClick={() => setShowRetentionView(true)}>
                   <RiLockLine className="size-4" />
                   {t("Retention")}
                 </Button>
-              )}
+              ) : null}
             </div>
 
             <Item variant="outline" className="flex-col items-stretch gap-4">
@@ -433,7 +450,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                     </div>
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">{t("Legal Hold")}</span>
-                      <Switch checked={lockStatus} onCheckedChange={toggleLegalHold} />
+                      <Switch checked={lockStatus} onCheckedChange={toggleLegalHold} disabled={!canEditLegalHold} />
                     </div>
                     <div className="flex flex-col gap-2">
                       <span className="font-medium text-muted-foreground">
@@ -519,7 +536,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                       variant="default"
                       size="sm"
                       className="shrink-0"
-                      disabled={!object?.Key || !isExpirationValid || isGeneratingUrl}
+                      disabled={!canShareObject || !object?.Key || !isExpirationValid || isGeneratingUrl}
                       onClick={generateTemporaryUrl}
                     >
                       {isGeneratingUrl ? <Spinner className="size-4" /> : null}
@@ -557,13 +574,15 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
               {tags.map((tag) => (
                 <Badge key={tag.Key} variant="secondary" className="gap-1 pr-1">
                   {tag.Key}: {tag.Value}
-                  <button
-                    type="button"
-                    className="hover:text-destructive transition-colors"
-                    onClick={() => confirmDeleteTag(tag.Key)}
-                  >
-                    <RiCloseLine className="size-3" />
-                  </button>
+                  {canEditObjectTags ? (
+                    <button
+                      type="button"
+                      className="hover:text-destructive transition-colors"
+                      onClick={() => confirmDeleteTag(tag.Key)}
+                    >
+                      <RiCloseLine className="size-3" />
+                    </button>
+                  ) : null}
                 </Badge>
               ))}
             </div>
@@ -576,6 +595,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                       value={tagFormValue.Key}
                       onChange={(e) => setTagFormValue((v) => ({ ...v, Key: e.target.value }))}
                       placeholder={t("Tag Key Placeholder")}
+                      disabled={!canEditObjectTags}
                     />
                   </FieldContent>
                 </Field>
@@ -591,12 +611,13 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                         }))
                       }
                       placeholder={t("Tag Value Placeholder")}
+                      disabled={!canEditObjectTags}
                     />
                   </FieldContent>
                 </Field>
               </div>
               <div className="flex justify-end">
-                <Button type="submit" variant="default">
+                <Button type="submit" variant="default" disabled={!canEditObjectTags}>
                   {t("Add")}
                 </Button>
               </div>
@@ -645,10 +666,10 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
               </FieldContent>
             </Field>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="secondary" onClick={resetRetention}>
+              <Button type="button" variant="secondary" onClick={resetRetention} disabled={!canEditRetention}>
                 {t("Reset")}
               </Button>
-              <Button type="submit" variant="default">
+              <Button type="submit" variant="default" disabled={!canEditRetention}>
                 {t("Confirm")}
               </Button>
               <Button type="button" variant="outline" onClick={() => setShowRetentionView(false)}>

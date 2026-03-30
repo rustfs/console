@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTablePagination } from "@/components/data-table/data-table-pagination"
 import { useDataTable } from "@/hooks/use-data-table"
+import { usePermissions } from "@/hooks/use-permissions"
 import { AccessKeysNewItem } from "@/components/access-keys/new-item"
 import { AccessKeysEditItem } from "@/components/access-keys/edit-item"
 import { UserNotice } from "@/components/user/notice"
@@ -34,6 +35,7 @@ export default function AccessKeysPage() {
   const dialog = useDialog()
   const message = useMessage()
   const { listUserServiceAccounts, deleteServiceAccount } = useAccessKeys()
+  const { canCapability } = usePermissions()
 
   const [data, setData] = useState<RowData[]>([])
   const [loading, setLoading] = useState(false)
@@ -46,6 +48,11 @@ export default function AccessKeysPage() {
     credentials?: { accessKey?: string; secretKey?: string }
     url?: string
   } | null>(null)
+
+  const canCreateAccessKey = canCapability("accessKeys.create")
+  const canEditAccessKey = canCapability("accessKeys.edit")
+  const canDeleteAccessKey = canCapability("accessKeys.delete")
+  const canBulkDeleteAccessKeys = canCapability("accessKeys.bulkDelete")
 
   const listUserAccounts = async () => {
     setLoading(true)
@@ -112,14 +119,18 @@ export default function AccessKeysPage() {
       meta: { width: 200 },
       cell: ({ row }) => (
         <div className="flex justify-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => openEditItem(row.original)}>
-            <RiEdit2Line className="size-4" />
-            <span>{t("Edit")}</span>
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => confirmDeleteSingle(row.original)}>
-            <RiDeleteBin5Line className="size-4" />
-            <span>{t("Delete")}</span>
-          </Button>
+          {canEditAccessKey ? (
+            <Button variant="outline" size="sm" onClick={() => openEditItem(row.original)}>
+              <RiEdit2Line className="size-4" />
+              <span>{t("Edit")}</span>
+            </Button>
+          ) : null}
+          {canDeleteAccessKey ? (
+            <Button variant="outline" size="sm" onClick={() => confirmDeleteSingle(row.original)}>
+              <RiDeleteBin5Line className="size-4" />
+              <span>{t("Delete")}</span>
+            </Button>
+          ) : null}
         </div>
       ),
     },
@@ -207,16 +218,18 @@ export default function AccessKeysPage() {
               clearable
               className="max-w-xs"
             />
-            {selectedKeys.length > 0 && (
+            {selectedKeys.length > 0 && canBulkDeleteAccessKeys && (
               <Button variant="outline" disabled={!selectedKeys.length} onClick={deleteSelected}>
                 <RiDeleteBin5Line className="size-4" />
                 <span>{t("Delete Selected")}</span>
               </Button>
             )}
-            <Button variant="outline" onClick={() => setNewItemVisible(true)}>
-              <RiAddLine className="size-4" />
-              <span>{t("Add Access Key")}</span>
-            </Button>
+            {canCreateAccessKey ? (
+              <Button variant="outline" onClick={() => setNewItemVisible(true)}>
+                <RiAddLine className="size-4" />
+                <span>{t("Add Access Key")}</span>
+              </Button>
+            ) : null}
           </>
         }
       >

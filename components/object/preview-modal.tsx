@@ -9,8 +9,18 @@ import { cn } from "@/lib/utils"
 import { RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react"
 import { PdfViewer } from "@/components/object/pdf-viewer"
 
-const SAFE_TEXT_MIMES = ["application/json", "application/xml", "text/plain", "text/xml", "text/csv", "text/markdown"]
-const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".xml", ".csv", ".md", ".yml", ".yaml"]
+const SAFE_TEXT_MIMES = [
+  "application/json",
+  "application/jsonl",
+  "application/ndjson",
+  "application/x-ndjson",
+  "application/xml",
+  "text/plain",
+  "text/xml",
+  "text/csv",
+  "text/markdown",
+]
+const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".jsonl", ".ndjson", ".xml", ".csv", ".md", ".yml", ".yaml"]
 const SAFE_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".tif", ".tiff"]
 const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
 

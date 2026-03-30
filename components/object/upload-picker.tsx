@@ -23,6 +23,7 @@ interface ObjectUploadPickerProps {
   onShowChange: (show: boolean) => void
   bucketName: string
   prefix: string
+  canUpload?: boolean
   onSuccess?: () => void
 }
 
@@ -182,7 +183,14 @@ function collectFilesFromFileList(files: FileList, basePath = ""): FileItem[] {
   return items
 }
 
-export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onSuccess }: ObjectUploadPickerProps) {
+export function ObjectUploadPicker({
+  show,
+  onShowChange,
+  bucketName,
+  prefix,
+  canUpload = false,
+  onSuccess,
+}: ObjectUploadPickerProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const addUploadFiles = useAddUploadFiles()
@@ -213,6 +221,12 @@ export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onS
       setEditablePrefix(prefix)
     }
   }, [show, prefix])
+
+  React.useEffect(() => {
+    if (show && !canUpload) {
+      onShowChange(false)
+    }
+  }, [canUpload, onShowChange, show])
 
   const effectivePrefix = editablePrefix.replace(/\/$/, "") || ""
 
@@ -396,7 +410,7 @@ export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onS
   }
 
   const handleUpload = async () => {
-    if (!items.length) return
+    if (!canUpload || !items.length) return
     setIsAdding(true)
     setAddProgress(0)
     try {
@@ -466,16 +480,26 @@ export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onS
                   onChange={(e) => setEditablePrefix(e.target.value)}
                   className="h-7 py-1 px-2 text-xs"
                   placeholder={t("Enter prefix...")}
-                  disabled={isAdding || isFolderLoading}
+                  disabled={!canUpload || isAdding || isFolderLoading}
                 />
               </div>
             </div>
             <div className="flex shrink-0 gap-2">
-              <Button variant="outline" size="sm" disabled={isAdding || isFolderLoading} onClick={selectFile}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!canUpload || isAdding || isFolderLoading}
+                onClick={selectFile}
+              >
                 <RiFileAddLine className="size-4" />
                 {t("Select File")}
               </Button>
-              <Button variant="outline" size="sm" disabled={isAdding || isFolderLoading} onClick={selectFolder}>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!canUpload || isAdding || isFolderLoading}
+                onClick={selectFolder}
+              >
                 <RiFolderAddLine className="size-4" />
                 {t("Select Folder")}
               </Button>
@@ -517,7 +541,7 @@ export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onS
               <Button
                 variant="outline"
                 size="sm"
-                disabled={!items.length || isAdding || isFolderLoading}
+                disabled={!canUpload || !items.length || isAdding || isFolderLoading}
                 onClick={clearAllFiles}
               >
                 <RiDeleteBinLine className="size-4" />
@@ -563,7 +587,11 @@ export function ObjectUploadPicker({ show, onShowChange, bucketName, prefix, onS
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="default" disabled={!items.length || isAdding || isFolderLoading} onClick={handleUpload}>
+            <Button
+              variant="default"
+              disabled={!canUpload || !items.length || isAdding || isFolderLoading}
+              onClick={handleUpload}
+            >
               {isAdding ? t("Adding to Upload Queue") : t("Start Upload")}
             </Button>
           </div>

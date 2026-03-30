@@ -10,6 +10,7 @@ import type { TFunction } from "i18next"
 export function getEventsColumns(
   t: TFunction,
   onDelete: (row: NotificationItem) => void,
+  canDelete: boolean,
 ): ColumnDef<NotificationItem>[] {
   return [
     {
@@ -57,19 +58,21 @@ export function getEventsColumns(
       meta: { maxWidth: "6rem" },
       cell: ({ row }) => (
         <div className="flex justify-center">
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            className="gap-2"
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete(row.original)
-            }}
-          >
-            <RiDeleteBin7Line className="size-4" aria-hidden />
-            <span>{t("Delete")}</span>
-          </Button>
+          {canDelete ? (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(row.original)
+              }}
+            >
+              <RiDeleteBin7Line className="size-4" aria-hidden />
+              <span>{t("Delete")}</span>
+            </Button>
+          ) : null}
         </div>
       ),
     },

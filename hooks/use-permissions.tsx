@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
 import { hasConsoleScopes, type ConsolePolicy } from "@/lib/console-policy-parser"
+import { hasConsoleCapability, type ConsoleCapability } from "@/lib/permission-capabilities"
+import type { PermissionResourceContext } from "@/lib/permission-resources"
 import { CONSOLE_SCOPES, PAGE_PERMISSIONS } from "@/lib/console-permissions"
 import { useAuth } from "@/contexts/auth-context"
 import { useApiOptional } from "@/contexts/api-context"
@@ -10,9 +12,11 @@ interface PermissionsContextValue {
   userPolicy: ConsolePolicy | null
   userInfo: Record<string, unknown> | null
   isLoading: boolean
+  hasResolvedAdmin: boolean
   hasFetchedPolicy: boolean
   fetchUserPolicy: () => Promise<void>
   hasPermission: (action: string | string[], matchAll?: boolean) => boolean
+  canCapability: (capability: ConsoleCapability, context?: PermissionResourceContext) => boolean
   canAccessPath: (path: string) => boolean
   isAdmin: boolean
   /** True when user has consoleAdmin (or is admin). Only these users can change password per RustFS backend. */
@@ -23,18 +27,37 @@ const PermissionsContext = createContext<PermissionsContextValue | null>(null)
 
 export function PermissionsProvider({ children }: { children: React.ReactNode }) {
   const api = useApiOptional()
-  const { isAdmin, isAuthenticated, credentials } = useAuth()
+  const { isAdmin, isAuthenticated, credentials, setIsAdmin } = useAuth()
 
   const [userPolicy, setUserPolicy] = useState<ConsolePolicy | null>(null)
   const [userInfo, setUserInfo] = useState<Record<string, unknown> | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [hasResolvedAdmin, setHasResolvedAdmin] = useState(false)
   const [hasFetchedPolicy, setHasFetchedPolicy] = useState(false)
 
   useEffect(() => {
     setUserInfo(null)
     setUserPolicy(null)
+    setHasResolvedAdmin(false)
     setHasFetchedPolicy(false)
-  }, [credentials?.AccessKeyId, credentials?.SessionToken, isAuthenticated])
+    if (isAuthenticated) {
+      setIsAdmin(false)
+    }
+  }, [credentials?.AccessKeyId, credentials?.SessionToken, isAuthenticated, setIsAdmin])
+
+  const fetchAdminStatus = useCallback(async () => {
+    if (!api) return
+
+    try {
+      const info = (await api.get("/is-admin")) as { is_admin?: boolean }
+      setIsAdmin(info?.is_admin ?? false)
+    } catch (e) {
+      console.error("Failed to resolve admin status", e)
+      setIsAdmin(false)
+    } finally {
+      setHasResolvedAdmin(true)
+    }
+  }, [api, setIsAdmin])
 
   const fetchUserPolicy = useCallback(async () => {
     if (!api) return
@@ -69,6 +92,14 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
     [isAdmin, userPolicy],
   )
 
+  const canCapability = useCallback(
+    (capability: ConsoleCapability, context: PermissionResourceContext = {}) => {
+      if (isAdmin) return true
+      return hasConsoleCapability(userPolicy, capability, context)
+    },
+    [isAdmin, userPolicy],
+  )
+
   const canAccessPath = useCallback(
     (path: string) => {
       if (isAdmin) return true
@@ -89,10 +120,16 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   )
 
   useEffect(() => {
-    if (api && isAuthenticated && !isAdmin && !hasFetchedPolicy && !isLoading) {
+    if (api && isAuthenticated && !hasResolvedAdmin) {
+      void fetchAdminStatus()
+    }
+  }, [api, isAuthenticated, hasResolvedAdmin, fetchAdminStatus])
+
+  useEffect(() => {
+    if (api && isAuthenticated && hasResolvedAdmin && !isAdmin && !hasFetchedPolicy && !isLoading) {
       fetchUserPolicy()
     }
-  }, [api, isAuthenticated, isAdmin, hasFetchedPolicy, isLoading, fetchUserPolicy])
+  }, [api, isAuthenticated, hasResolvedAdmin, isAdmin, hasFetchedPolicy, isLoading, fetchUserPolicy])
 
   const canChangePassword = isAdmin || hasPermission(CONSOLE_SCOPES.CONSOLE_ADMIN)
 
@@ -101,9 +138,11 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       userPolicy,
       userInfo,
       isLoading,
+      hasResolvedAdmin,
       hasFetchedPolicy,
       fetchUserPolicy,
       hasPermission,
+      canCapability,
       canAccessPath,
       isAdmin,
       canChangePassword,
@@ -112,9 +151,11 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       userPolicy,
       userInfo,
       isLoading,
+      hasResolvedAdmin,
       hasFetchedPolicy,
       fetchUserPolicy,
       hasPermission,
+      canCapability,
       canAccessPath,
       isAdmin,
       canChangePassword,

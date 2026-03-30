@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { DataTablePagination } from "@/components/data-table/data-table-pagination"
 import { useDataTable } from "@/hooks/use-data-table"
+import { usePermissions } from "@/hooks/use-permissions"
 import { UserNewForm } from "@/components/user/new-form"
 import { UserEditForm } from "@/components/user/edit-form"
 import { useUsers } from "@/hooks/use-users"
@@ -49,6 +50,14 @@ export default function UsersPage() {
   const message = useMessage()
   const dialog = useDialog()
   const { listUsers, deleteUser } = useUsers()
+  const { canCapability } = usePermissions()
+
+  const canCreateUser = canCapability("users.create")
+  const canEditUser =
+    canCapability("users.edit") || canCapability("users.assignGroups") || canCapability("users.policy.edit")
+  const canDeleteUser = canCapability("users.delete")
+  const canBulkDeleteUsers = canCapability("users.bulkDelete")
+  const canAssignGroups = canCapability("users.assignGroups")
 
   const [data, setData] = useState<UserRow[]>([])
   const [loading, setLoading] = useState(false)
@@ -121,14 +130,18 @@ export default function UsersPage() {
       meta: { width: 200 },
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => openEditItem(row.original)}>
-            <RiEdit2Line className="size-4" />
-            <span>{t("Edit")}</span>
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
-            <RiDeleteBin5Line className="size-4" />
-            <span>{t("Delete")}</span>
-          </Button>
+          {canEditUser ? (
+            <Button type="button" variant="outline" size="sm" onClick={() => openEditItem(row.original)}>
+              <RiEdit2Line className="size-4" />
+              <span>{t("Edit")}</span>
+            </Button>
+          ) : null}
+          {canDeleteUser ? (
+            <Button type="button" variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
+              <RiDeleteBin5Line className="size-4" />
+              <span>{t("Delete")}</span>
+            </Button>
+          ) : null}
         </div>
       ),
     },
@@ -210,18 +223,30 @@ export default function UsersPage() {
               clearable
               className="max-w-xs"
             />
-            <Button type="button" variant="outline" disabled={!selectedKeys.length} onClick={deleteByList}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canBulkDeleteUsers || !selectedKeys.length}
+              onClick={deleteByList}
+            >
               <RiDeleteBin5Line className="size-4" />
               {t("Delete Selected")}
             </Button>
-            <Button type="button" variant="outline" disabled={!selectedKeys.length} onClick={addToGroup}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canAssignGroups || !selectedKeys.length}
+              onClick={addToGroup}
+            >
               <RiGroup2Fill className="size-4" />
               {t("Add to Group")}
             </Button>
-            <Button type="button" variant="outline" onClick={() => setNewFormOpen(true)}>
-              <RiAddLine className="size-4" />
-              {t("Add User")}
-            </Button>
+            {canCreateUser ? (
+              <Button type="button" variant="outline" onClick={() => setNewFormOpen(true)}>
+                <RiAddLine className="size-4" />
+                {t("Add User")}
+              </Button>
+            ) : null}
           </>
         }
       >

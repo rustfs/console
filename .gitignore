@@ -22,6 +22,9 @@
 /.vscode/
 .cursor/
 
+# claude ai workspace
+/.claude/
+
 # production
 /build
 

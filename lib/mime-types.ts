@@ -51,6 +51,8 @@ export function getMimeTypeFromFilename(filename: string): string {
     css: "text/css",
     js: "application/javascript",
     json: "application/json",
+    jsonl: "application/x-ndjson",
+    ndjson: "application/x-ndjson",
     xml: "application/xml",
     wasm: "application/wasm",
     ttf: "font/ttf",

@@ -16,6 +16,7 @@ import { buildBucketPath } from "@/lib/bucket-path"
 import { useTasks } from "@/contexts/task-context"
 import { ObjectPreviewModal } from "@/components/object/preview-modal"
 import { useObject } from "@/hooks/use-object"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface BrowserContentProps {
   bucketName: string
@@ -29,6 +30,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   const router = useRouter()
   const searchParams = useSearchParams()
   const message = useMessage()
+  const { canCapability } = usePermissions()
   const { headBucket } = useBucket()
 
   const isObjectList = keyPath.endsWith("/") || keyPath === ""
@@ -41,6 +43,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   const [showPreview, setShowPreview] = React.useState(false)
   const [previewObject, setPreviewObject] = React.useState<Record<string, unknown> | null>(null)
   const objectApi = useObject(bucketName)
+  const canUploadObjects = canCapability("objects.upload", { bucket: bucketName, prefix })
 
   React.useEffect(() => {
     if (!bucketName) return
@@ -95,6 +98,25 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
     [objectApi],
   )
 
+  const clearPreviewQueryParams = React.useCallback(() => {
+    if (!searchParams.has("preview") && !searchParams.has("previewKey")) return
+
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete("preview")
+    params.delete("previewKey")
+    const query = params.toString()
+    router.replace(query ? `/browser?${query}` : "/browser")
+  }, [router, searchParams])
+
+  React.useEffect(() => {
+    if (!preview || !previewKey) return
+
+    handleOpenPreview({ key: previewKey }).catch((error) => {
+      message.error((error as Error)?.message ?? t("Failed to fetch object info"))
+      clearPreviewQueryParams()
+    })
+  }, [preview, previewKey, handleOpenPreview, message, t, clearPreviewQueryParams])
+
   const tasks = useTasks()
   const debounceTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const prevCompletedIdsRef = React.useRef(new Set<string>())
@@ -122,6 +144,18 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     }
   }, [])
+
+  const handlePreviewModalChange = React.useCallback(
+    (show: boolean) => {
+      setShowPreview(show)
+
+      if (!show) {
+        setPreviewObject(null)
+        clearPreviewQueryParams()
+      }
+    },
+    [clearPreviewQueryParams],
+  )
 
   return (
     <Page>
@@ -152,6 +186,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
             path={prefix}
             onOpenInfo={handleOpenInfo}
             onUploadClick={() => setUploadPickerOpen(true)}
+            canUpload={canUploadObjects}
             onRefresh={handleRefresh}
             refreshTrigger={refreshTrigger}
             onPreview={handleOpenPreview}
@@ -175,9 +210,10 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
         onShowChange={setUploadPickerOpen}
         bucketName={bucketName}
         prefix={prefix}
+        canUpload={canUploadObjects}
       />
 
-      <ObjectPreviewModal show={showPreview} onShowChange={(show) => setShowPreview(show)} object={previewObject} />
+      <ObjectPreviewModal show={showPreview} onShowChange={handlePreviewModalChange} object={previewObject} />
     </Page>
   )
 }

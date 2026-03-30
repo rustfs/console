@@ -15,6 +15,7 @@ export const CONSOLE_SCOPES = {
   VIEW_TIERED_STORAGE: "console:TieredStorage",
   VIEW_EVENT_DESTINATIONS: "console:EventDestinations",
   VIEW_SSE_SETTINGS: "console:SSESettings",
+  VIEW_OIDC_SETTINGS: "console:OIDCSettings",
   VIEW_LICENSE: "console:License",
 } as const
 

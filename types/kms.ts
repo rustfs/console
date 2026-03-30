@@ -1,9 +1,10 @@
 export type KmsServiceStatus = "NotConfigured" | "Configured" | "Running" | { Error: string }
 
-export type KmsBackendType = "Local" | "Vault"
+export type KmsBackendType = "Local" | "Vault" | "VaultTransit"
 
 export interface KmsCacheSummary {
   enabled?: boolean
+  max_keys?: number | null
   max_cached_keys?: number | null
   cache_ttl_seconds?: number | null
   ttl_seconds?: number | null
@@ -12,18 +13,22 @@ export interface KmsCacheSummary {
 export interface KmsBackendSummary {
   key_dir?: string | null
   file_permissions?: number | null
+  has_master_key?: boolean | null
   address?: string | null
+  auth_method_type?: string | null
+  has_stored_credentials?: boolean | null
   namespace?: string | null
   mount_path?: string | null
   kv_mount?: string | null
   key_path_prefix?: string | null
   skip_tls_verify?: boolean | null
-  timeout_seconds?: number | null
-  retry_attempts?: number | null
 }
 
 export interface KmsConfigSummary {
+  backend_type?: KmsBackendType | null
   default_key_id?: string | null
+  timeout_seconds?: number | null
+  retry_attempts?: number | null
   enable_cache?: boolean | null
   max_cached_keys?: number | null
   cache_ttl_seconds?: number | null
@@ -49,7 +54,7 @@ export interface KmsStartRequest {
 }
 
 export interface KmsLocalConfigPayload {
-  backend_type: "local"
+  backend_type: "Local"
   key_dir: string
   file_permissions?: number
   default_key_id?: string
@@ -67,7 +72,7 @@ export interface KmsVaultTokenAuthMethod {
 }
 
 export interface KmsVaultConfigPayload {
-  backend_type: "vault"
+  backend_type: "Vault"
   address: string
   auth_method: KmsVaultTokenAuthMethod
   namespace?: string | null
@@ -83,7 +88,22 @@ export interface KmsVaultConfigPayload {
   cache_ttl_seconds?: number
 }
 
-export type KmsConfigPayload = KmsLocalConfigPayload | KmsVaultConfigPayload
+export interface KmsVaultTransitConfigPayload {
+  backend_type: "VaultTransit"
+  address: string
+  auth_method: KmsVaultTokenAuthMethod
+  namespace?: string | null
+  mount_path: string
+  skip_tls_verify?: boolean
+  default_key_id?: string
+  timeout_seconds?: number
+  retry_attempts?: number
+  enable_cache?: boolean
+  max_cached_keys?: number
+  cache_ttl_seconds?: number
+}
+
+export type KmsConfigPayload = KmsLocalConfigPayload | KmsVaultConfigPayload | KmsVaultTransitConfigPayload
 
 export interface KmsKeyInfo {
   key_id: string

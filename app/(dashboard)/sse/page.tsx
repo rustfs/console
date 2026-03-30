@@ -55,7 +55,7 @@ const KEY_LIST_LIMIT = 20
 const DEFAULT_PENDING_DELETE_DAYS = 7
 
 type ConfigFormState = {
-  backendType: "local" | "vault"
+  backendType: "local" | "vault" | "vault-transit"
   keyDir: string
   filePermissions: string
   defaultKeyId: string
@@ -142,23 +142,35 @@ function isAbsolutePath(value: string) {
   return /^(?:[A-Za-z]:[\\/]|\\\\|\/)/.test(value.trim())
 }
 
+function normalizeBackendType(value?: string | null): ConfigFormState["backendType"] {
+  switch (value) {
+    case "Vault":
+      return "vault"
+    case "VaultTransit":
+      return "vault-transit"
+    default:
+      return "local"
+  }
+}
+
 function buildFormStateFromStatus(status: KmsServiceStatusResponse | null): ConfigFormState {
   if (!status) return INITIAL_FORM_STATE
 
   const summary = status.config_summary
   const backendSummary = summary?.backend_summary
   const cacheSummary = summary?.cache_summary
+  const backendType = normalizeBackendType(status.backend_type ?? summary?.backend_type)
 
   return {
-    backendType: status.backend_type === "Vault" ? "vault" : "local",
+    backendType,
     keyDir: backendSummary?.key_dir ?? "",
     filePermissions: String(backendSummary?.file_permissions ?? 384),
     defaultKeyId: summary?.default_key_id ?? "",
-    timeoutSeconds: String(backendSummary?.timeout_seconds ?? 30),
-    retryAttempts: String(backendSummary?.retry_attempts ?? 3),
+    timeoutSeconds: String(summary?.timeout_seconds ?? 30),
+    retryAttempts: String(summary?.retry_attempts ?? 3),
     enableCache: summary?.enable_cache ?? cacheSummary?.enabled ?? true,
-    maxCachedKeys: String(summary?.max_cached_keys ?? cacheSummary?.max_cached_keys ?? 1000),
-    cacheTtlSeconds: String(summary?.cache_ttl_seconds ?? cacheSummary?.cache_ttl_seconds ?? cacheSummary?.ttl_seconds ?? 3600),
+    maxCachedKeys: String(summary?.max_cached_keys ?? cacheSummary?.max_keys ?? 1000),
+    cacheTtlSeconds: String(summary?.cache_ttl_seconds ?? cacheSummary?.ttl_seconds ?? 3600),
     address: backendSummary?.address ?? "",
     vaultToken: "",
     namespace: backendSummary?.namespace ?? "",
@@ -218,6 +230,7 @@ export default function SSEPage() {
   const statusKind = React.useMemo(() => getStatusKind(status), [status])
   const isRunning = statusKind === "Running"
   const hasConfiguration = statusKind !== "NotConfigured"
+  const hasStoredVaultCredentials = status?.config_summary?.backend_summary?.has_stored_credentials === true
   const statusBadgeValue =
     statusKind === "Error" ? "Error" : typeof status?.status === "string" ? status.status : statusKind
 
@@ -230,7 +243,7 @@ export default function SSEPage() {
         if (syncForm) {
           setFormState((current) => {
             const next = buildFormStateFromStatus(res)
-            if (current.vaultToken && next.backendType === "vault") {
+            if (current.vaultToken && next.backendType !== "local") {
               next.vaultToken = current.vaultToken
             }
             return next
@@ -345,7 +358,7 @@ export default function SSEPage() {
 
         return {
           payload: {
-            backend_type: "local",
+            backend_type: "Local",
             key_dir: formState.keyDir.trim(),
             file_permissions: parseOptionalInteger(formState.filePermissions) ?? 384,
             default_key_id: defaultKeyId || undefined,
@@ -361,7 +374,7 @@ export default function SSEPage() {
       if (!formState.address.trim()) {
         return { error: t("Please enter Vault server address") }
       }
-      if (!formState.vaultToken.trim()) {
+      if (!formState.vaultToken.trim() && !hasStoredVaultCredentials) {
         return { error: t("Please enter Vault token") }
       }
       if (!formState.mountPath.trim()) {
@@ -370,7 +383,7 @@ export default function SSEPage() {
 
       return {
         payload: {
-          backend_type: "vault",
+          backend_type: formState.backendType === "vault" ? "Vault" : "VaultTransit",
           address: formState.address.trim(),
           auth_method: {
             Token: {
@@ -379,8 +392,12 @@ export default function SSEPage() {
           },
           namespace: formState.namespace.trim() || null,
           mount_path: formState.mountPath.trim(),
-          kv_mount: formState.kvMount.trim() || null,
-          key_path_prefix: formState.keyPathPrefix.trim() || null,
+          ...(formState.backendType === "vault"
+            ? {
+                kv_mount: formState.kvMount.trim() || null,
+                key_path_prefix: formState.keyPathPrefix.trim() || null,
+              }
+            : {}),
           skip_tls_verify: formState.skipTlsVerify,
           default_key_id: defaultKeyId || undefined,
           timeout_seconds: timeoutSeconds ?? 30,
@@ -391,7 +408,7 @@ export default function SSEPage() {
         },
       }
     },
-    [formState, t],
+    [formState, hasStoredVaultCredentials, t],
   )
 
   const submitConfiguration = React.useCallback(
@@ -737,7 +754,8 @@ export default function SSEPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="local">{t("Local filesystem")}</SelectItem>
-                          <SelectItem value="vault">{t("HashiCorp Vault Transit Engine")}</SelectItem>
+                          <SelectItem value="vault">{t("HashiCorp Vault KV2")}</SelectItem>
+                          <SelectItem value="vault-transit">{t("HashiCorp Vault Transit Engine")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </FieldContent>
@@ -811,11 +829,19 @@ export default function SSEPage() {
                             type="password"
                             value={formState.vaultToken}
                             onChange={(event) => updateFormState("vaultToken", event.target.value)}
-                            placeholder={t("Enter your Vault authentication token")}
+                            placeholder={
+                              hasStoredVaultCredentials
+                                ? t("Stored token is hidden. Enter a new token only to replace it.")
+                                : t("Enter your Vault authentication token")
+                            }
                             autoComplete="off"
                           />
                         </FieldContent>
-                        <FieldDescription>{t("Required: Vault authentication token")}</FieldDescription>
+                        <FieldDescription>
+                          {hasStoredVaultCredentials
+                            ? t("Leave blank to keep the stored Vault token.")
+                            : t("Required: Vault authentication token")}
+                        </FieldDescription>
                       </Field>
                     </FieldGroup>
 
@@ -842,27 +868,31 @@ export default function SSEPage() {
                         </FieldContent>
                       </Field>
 
-                      <Field>
-                        <FieldLabel>{t("KV Mount")}</FieldLabel>
-                        <FieldContent>
-                          <Input
-                            value={formState.kvMount}
-                            onChange={(event) => updateFormState("kvMount", event.target.value)}
-                            placeholder="secret"
-                          />
-                        </FieldContent>
-                      </Field>
+                      {formState.backendType === "vault" && (
+                        <>
+                          <Field>
+                            <FieldLabel>{t("KV Mount")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                value={formState.kvMount}
+                                onChange={(event) => updateFormState("kvMount", event.target.value)}
+                                placeholder="secret"
+                              />
+                            </FieldContent>
+                          </Field>
 
-                      <Field>
-                        <FieldLabel>{t("Key Path Prefix")}</FieldLabel>
-                        <FieldContent>
-                          <Input
-                            value={formState.keyPathPrefix}
-                            onChange={(event) => updateFormState("keyPathPrefix", event.target.value)}
-                            placeholder="rustfs/kms/keys"
-                          />
-                        </FieldContent>
-                      </Field>
+                          <Field>
+                            <FieldLabel>{t("Key Path Prefix")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                value={formState.keyPathPrefix}
+                                onChange={(event) => updateFormState("keyPathPrefix", event.target.value)}
+                                placeholder="rustfs/kms/keys"
+                              />
+                            </FieldContent>
+                          </Field>
+                        </>
+                      )}
                     </FieldGroup>
 
                     <div className="flex items-center gap-3 rounded-md border p-3">

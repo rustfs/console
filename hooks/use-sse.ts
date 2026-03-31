@@ -36,9 +36,12 @@ export function useSSE() {
     [api],
   )
 
-  const startKMS = useCallback(async (data: KmsStartRequest = {}): Promise<KmsMutationResponse> => {
-    return (await api.post("/kms/start", data)) as KmsMutationResponse
-  }, [api])
+  const startKMS = useCallback(
+    async (data: KmsStartRequest = {}): Promise<KmsMutationResponse> => {
+      return (await api.post("/kms/start", data)) as KmsMutationResponse
+    },
+    [api],
+  )
 
   const stopKMS = useCallback(async (): Promise<KmsMutationResponse> => {
     return (await api.post("/kms/stop", {})) as KmsMutationResponse

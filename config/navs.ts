@@ -65,11 +65,11 @@ export default [
   //   to: "/lifecycle",
   //   icon: "ri:exchange-2-line",
   // },
-  // {
-  //   label: "Site Replication",
-  //   to: "/site-replication",
-  //   icon: "ri:upload-cloud-2-line",
-  // },
+  {
+    label: "Site Replication",
+    to: "/site-replication",
+    icon: "ri:upload-cloud-2-line",
+  },
   {
     label: "Tiered Storage",
     to: "/tiers",

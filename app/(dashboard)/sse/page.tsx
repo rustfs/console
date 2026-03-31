@@ -16,13 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer"
+import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,12 +67,10 @@ type ConfigFormState = {
   skipTlsVerify: boolean
 }
 
-type KeyActionState =
-  | {
-      type: "scheduleDelete" | "forceDelete" | "cancelDeletion"
-      key: KmsKeyInfo
-    }
-  | null
+type KeyActionState = {
+  type: "scheduleDelete" | "forceDelete" | "cancelDeletion"
+  key: KmsKeyInfo
+} | null
 
 const INITIAL_FORM_STATE: ConfigFormState = {
   backendType: "local",
@@ -158,7 +150,9 @@ function buildFormStateFromStatus(status: KmsServiceStatusResponse | null): Conf
     retryAttempts: String(backendSummary?.retry_attempts ?? 3),
     enableCache: summary?.enable_cache ?? cacheSummary?.enabled ?? true,
     maxCachedKeys: String(summary?.max_cached_keys ?? cacheSummary?.max_cached_keys ?? 1000),
-    cacheTtlSeconds: String(summary?.cache_ttl_seconds ?? cacheSummary?.cache_ttl_seconds ?? cacheSummary?.ttl_seconds ?? 3600),
+    cacheTtlSeconds: String(
+      summary?.cache_ttl_seconds ?? cacheSummary?.cache_ttl_seconds ?? cacheSummary?.ttl_seconds ?? 3600,
+    ),
     address: backendSummary?.address ?? "",
     vaultToken: "",
     namespace: backendSummary?.namespace ?? "",
@@ -352,8 +346,8 @@ export default function SSEPage() {
             timeout_seconds: timeoutSeconds ?? 30,
             retry_attempts: retryAttempts ?? 3,
             enable_cache: formState.enableCache,
-            max_cached_keys: formState.enableCache ? maxCachedKeys ?? 1000 : undefined,
-            cache_ttl_seconds: formState.enableCache ? cacheTtlSeconds ?? 3600 : undefined,
+            max_cached_keys: formState.enableCache ? (maxCachedKeys ?? 1000) : undefined,
+            cache_ttl_seconds: formState.enableCache ? (cacheTtlSeconds ?? 3600) : undefined,
           },
         }
       }
@@ -386,8 +380,8 @@ export default function SSEPage() {
           timeout_seconds: timeoutSeconds ?? 30,
           retry_attempts: retryAttempts ?? 3,
           enable_cache: formState.enableCache,
-          max_cached_keys: formState.enableCache ? maxCachedKeys ?? 1000 : undefined,
-          cache_ttl_seconds: formState.enableCache ? cacheTtlSeconds ?? 3600 : undefined,
+          max_cached_keys: formState.enableCache ? (maxCachedKeys ?? 1000) : undefined,
+          cache_ttl_seconds: formState.enableCache ? (cacheTtlSeconds ?? 3600) : undefined,
         },
       }
     },
@@ -406,8 +400,7 @@ export default function SSEPage() {
 
       setSubmittingConfig(true)
       try {
-        const response =
-          statusKind === "NotConfigured" ? await configureKMS(payload) : await reconfigureKMS(payload)
+        const response = statusKind === "NotConfigured" ? await configureKMS(payload) : await reconfigureKMS(payload)
 
         if (response.success) {
           if (source === "manual") {
@@ -530,7 +523,9 @@ export default function SSEPage() {
       if (createKeySetAsDefault && createdKeyId) {
         const updated = await submitConfiguration(createdKeyId, "defaultKey")
         if (!updated) {
-          message.warning(t("Key created but could not update the default SSE key. Save the configuration form and try again."))
+          message.warning(
+            t("Key created but could not update the default SSE key. Save the configuration form and try again."),
+          )
         }
       }
 
@@ -638,7 +633,9 @@ export default function SSEPage() {
                 </div>
                 <div className="rounded-md border bg-muted/40 p-3">
                   <p className="text-xs text-muted-foreground">{t("Status")}</p>
-                  <p className="text-sm font-medium text-foreground">{loadingStatus ? t("Loading...") : getKmsStatusText()}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {loadingStatus ? t("Loading...") : getKmsStatusText()}
+                  </p>
                 </div>
                 <div className="rounded-md border bg-muted/40 p-3">
                   <p className="text-xs text-muted-foreground">{t("Health")}</p>
@@ -730,7 +727,9 @@ export default function SSEPage() {
                     <FieldContent>
                       <Select
                         value={formState.backendType}
-                        onValueChange={(value) => updateFormState("backendType", value as ConfigFormState["backendType"])}
+                        onValueChange={(value) =>
+                          updateFormState("backendType", value as ConfigFormState["backendType"])
+                        }
                       >
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder={t("Select backend type")} />
@@ -753,7 +752,9 @@ export default function SSEPage() {
                         placeholder={t("Enter the default SSE key ID")}
                       />
                     </FieldContent>
-                    <FieldDescription>{t("This key is used as the platform default for SSE-KMS and SSE-S3.")}</FieldDescription>
+                    <FieldDescription>
+                      {t("This key is used as the platform default for SSE-KMS and SSE-S3.")}
+                    </FieldDescription>
                   </Field>
                 </FieldGroup>
 
@@ -789,7 +790,9 @@ export default function SSEPage() {
                   <div className="space-y-4">
                     <Alert>
                       <AlertTitle>{t("Vault token authentication only")}</AlertTitle>
-                      <AlertDescription>{t("Vault AppRole is not supported in the first version of this console.")}</AlertDescription>
+                      <AlertDescription>
+                        {t("Vault AppRole is not supported in the first version of this console.")}
+                      </AlertDescription>
                     </Alert>
 
                     <FieldGroup className="grid gap-4 lg:grid-cols-2">
@@ -969,10 +972,17 @@ export default function SSEPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="space-y-1">
                     <CardTitle>{t("KMS Keys Management")}</CardTitle>
-                    <CardDescription>{t("Create, rotate, and inspect the keys managed by your KMS backend.")}</CardDescription>
+                    <CardDescription>
+                      {t("Create, rotate, and inspect the keys managed by your KMS backend.")}
+                    </CardDescription>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <Button size="sm" variant="outline" disabled={loadingKeys} onClick={() => void loadKeys(currentMarker)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={loadingKeys}
+                      onClick={() => void loadKeys(currentMarker)}
+                    >
                       {loadingKeys ? <Spinner className="size-4" /> : <RiRefreshLine className="size-4" />}
                       {t("Refresh")}
                     </Button>
@@ -986,7 +996,9 @@ export default function SSEPage() {
               <CardContent className="space-y-4">
                 <Alert>
                   <AlertTitle>{t("Two-stage key deletion")}</AlertTitle>
-                  <AlertDescription>{t("Keys in PendingDeletion can still be restored or deleted immediately.")}</AlertDescription>
+                  <AlertDescription>
+                    {t("Keys in PendingDeletion can still be restored or deleted immediately.")}
+                  </AlertDescription>
                 </Alert>
 
                 {loadingKeys ? (
@@ -1038,12 +1050,16 @@ export default function SSEPage() {
                                       {t("View Details")}
                                     </DropdownMenuItem>
                                     {!isPendingDeletion && (
-                                      <DropdownMenuItem onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}>
+                                      <DropdownMenuItem
+                                        onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}
+                                      >
                                         {t("Schedule Deletion")}
                                       </DropdownMenuItem>
                                     )}
                                     {isPendingDeletion && (
-                                      <DropdownMenuItem onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}>
+                                      <DropdownMenuItem
+                                        onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}
+                                      >
                                         {t("Cancel Deletion")}
                                       </DropdownMenuItem>
                                     )}
@@ -1118,7 +1134,9 @@ export default function SSEPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t("Create New Key")}</DialogTitle>
-            <DialogDescription>{t("Create a new KMS key and optionally make it the default SSE key.")}</DialogDescription>
+            <DialogDescription>
+              {t("Create a new KMS key and optionally make it the default SSE key.")}
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">

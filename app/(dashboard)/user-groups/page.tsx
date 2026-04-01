@@ -79,8 +79,10 @@ export default function UserGroupsPage() {
         await removeGroup(row.name)
         message.success(t("Delete Success"))
         await getDataList()
-      } catch {
-        message.error(t("Delete Failed"))
+      } catch (error) {
+        console.error(error)
+        const msg = (error as Error)?.message || t("Delete Failed")
+        message.error(msg)
       }
     },
     [getGroup, removeGroup, message, t, getDataList],

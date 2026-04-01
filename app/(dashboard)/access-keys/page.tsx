@@ -167,7 +167,8 @@ export default function AccessKeysPage() {
       await listUserAccounts()
     } catch (error) {
       console.error(error)
-      message.error(t("Delete Failed"))
+      const msg = (error as Error)?.message || t("Delete Failed")
+      message.error(msg)
     }
   }
 
@@ -190,7 +191,8 @@ export default function AccessKeysPage() {
           await listUserAccounts()
         } catch (error) {
           console.error(error)
-          message.error(t("Delete Failed"))
+          const msg = (error as Error)?.message || t("Delete Failed")
+          message.error(msg)
         }
       },
     })

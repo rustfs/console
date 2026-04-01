@@ -21,6 +21,11 @@ interface RowData {
   account_id: string
   service: string
   status: string
+  source?: string
+}
+
+function isConfigSource(source: string | undefined) {
+  return source === "config"
 }
 
 export default function EventsTargetPage() {
@@ -55,9 +60,42 @@ export default function EventsTargetPage() {
     if (!searchTerm) return data
     const term = searchTerm.toLowerCase()
     return data.filter(
-      (row) => row.account_id?.toLowerCase().includes(term) || row.service?.toLowerCase().includes(term),
+      (row) =>
+        row.account_id?.toLowerCase().includes(term) ||
+        row.service?.toLowerCase().includes(term) ||
+        row.source?.toLowerCase().includes(term),
     )
   }, [data, searchTerm])
+
+  const deleteItem = useCallback(
+    async (row: RowData) => {
+      try {
+        await deleteEventTarget(`notify_${row.service}`, row.account_id)
+        message.success(t("Delete Success"))
+        loadData()
+      } catch (error) {
+        console.error(error)
+        const msg = (error as Error)?.message || t("Delete Failed")
+        message.error(msg)
+      }
+    },
+    [deleteEventTarget, loadData, message, t],
+  )
+
+  const confirmDelete = useCallback(
+    (row: RowData) => {
+      if (!isConfigSource(row.source)) return
+
+      dialog.error({
+        title: t("Warning"),
+        content: t("Are you sure you want to delete this destination?"),
+        positiveText: t("Confirm"),
+        negativeText: t("Cancel"),
+        onPositiveClick: () => deleteItem(row),
+      })
+    },
+    [deleteItem, dialog, t],
+  )
 
   const columns: ColumnDef<RowData>[] = useMemo(
     () => [
@@ -81,23 +119,36 @@ export default function EventsTargetPage() {
         ),
       },
       {
+        accessorKey: "source",
+        header: () => t("Source"),
+        cell: ({ row }) => {
+          const source = row.original.source
+
+          if (!source) return <span>-</span>
+
+          return <Badge variant={isConfigSource(source) ? "secondary" : "outline"}>{source}</Badge>
+        },
+      },
+      {
         id: "actions",
         header: () => t("Actions"),
         enableSorting: false,
         enableHiding: false,
         meta: { width: 90 },
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
-              <RiDeleteBin5Line className="size-4" aria-hidden />
-              <span>{t("Delete")}</span>
-            </Button>
-          </div>
-        ),
+        cell: ({ row }) =>
+          isConfigSource(row.original.source) ? (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
+                <RiDeleteBin5Line className="size-4" aria-hidden />
+                <span>{t("Delete")}</span>
+              </Button>
+            </div>
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          ),
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- confirmDelete used in cell, stable ref
-    [t],
+    [confirmDelete, t],
   )
 
   const { table } = useDataTable<RowData>({
@@ -105,28 +156,6 @@ export default function EventsTargetPage() {
     columns,
     getRowId: (row) => `${row.service}-${row.account_id}`,
   })
-
-  const confirmDelete = (row: RowData) => {
-    dialog.error({
-      title: t("Warning"),
-      content: t("Are you sure you want to delete this destination?"),
-      positiveText: t("Confirm"),
-      negativeText: t("Cancel"),
-      onPositiveClick: () => deleteItem(row),
-    })
-  }
-
-  const deleteItem = async (row: RowData) => {
-    try {
-      await deleteEventTarget(`notify_${row.service}`, row.account_id)
-      message.success(t("Delete Success"))
-      loadData()
-    } catch (error) {
-      console.error(error)
-      const msg = (error as Error)?.message || t("Delete Failed")
-      message.error(msg)
-    }
-  }
 
   return (
     <Page>

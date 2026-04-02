@@ -71,7 +71,7 @@ export function LoginForm({
         <div className="relative flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
           <div className="absolute end-4 top-4 z-10">
             <Link
-              href={buildRoute("/config")}
+              href="/config"
               className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-800 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
               title={t("Server Configuration")}
             >

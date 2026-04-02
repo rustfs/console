@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { Spinner } from "@/components/ui/spinner"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -29,6 +29,7 @@ import {
 import { useMessage } from "@/lib/feedback/message"
 import { formatBytes, getBytes } from "@/lib/functions"
 import { detectBucketPolicy, setBucketPolicy, type BucketPolicyType } from "@/lib/bucket-policy"
+import { stringifyBucketCorsConfig, validateBucketCorsJson, type BucketCorsConfiguration } from "@/lib/bucket-cors"
 import { cn } from "@/lib/utils"
 
 interface BucketInfoProps {
@@ -69,6 +70,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   const canDeleteBucketPolicy = canCapability("bucket.policy.delete", bucketContext)
   const canEditBucketPolicy = canPutBucketPolicy || canDeleteBucketPolicy
   const canEditEncryption = canCapability("bucket.encryption.edit", bucketContext)
+  const canEditCors = canCapability("bucket.cors.edit", bucketContext)
   const canEditTags = canCapability("bucket.tag.edit", bucketContext)
   const canEditVersioning = canCapability("bucket.versioning.edit", bucketContext)
   const canEditQuota = canCapability("bucket.quota.edit", bucketContext)
@@ -77,6 +79,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   const [policy, setPolicy] = React.useState<string | null>(null)
   const [policyType, setPolicyType] = React.useState<BucketPolicyType | "custom">("private")
   const [encryption, setEncryption] = React.useState<Record<string, unknown> | null>(null)
+  const [corsConfig, setCorsConfig] = React.useState<BucketCorsConfiguration | null>(null)
   const [tags, setTags] = React.useState<Tag[]>([])
   const [objectLock, setObjectLock] = React.useState<boolean | null>(null)
   const [versioning, setVersioning] = React.useState<string | null>(null)
@@ -97,6 +100,10 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   const [encryptFormKmsKeyId, setEncryptFormKmsKeyId] = React.useState("")
   const [kmsKeyOptions, setKmsKeyOptions] = React.useState<{ label: string; value: string }[]>([])
 
+  const [showCorsModal, setShowCorsModal] = React.useState(false)
+  const [corsFormEnabled, setCorsFormEnabled] = React.useState(false)
+  const [corsFormContent, setCorsFormContent] = React.useState(stringifyBucketCorsConfig())
+
   const [showTagModal, setShowTagModal] = React.useState(false)
   const [tagFormKey, setTagFormKey] = React.useState("")
   const [tagFormValue, setTagFormValue] = React.useState("")
@@ -113,13 +120,19 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   const [retentionPeriodInput, setRetentionPeriodInput] = React.useState("")
   const [deleteTagIndex, setDeleteTagIndex] = React.useState<number | null>(null)
 
+  const corsValidation = React.useMemo(
+    () => (corsFormEnabled ? validateBucketCorsJson(corsFormContent) : { config: null, error: null }),
+    [corsFormContent, corsFormEnabled],
+  )
+
   const fetchData = React.useCallback(async () => {
     if (!bucketName) return
     setLoading(true)
     try {
-      const [p, e, tagResp, lockResp, verResp, quotaResp] = await Promise.all([
+      const [p, e, corsResp, tagResp, lockResp, verResp, quotaResp] = await Promise.all([
         bucketApi.getBucketPolicy(bucketName).catch(() => null),
         bucketApi.getBucketEncryption(bucketName).catch(() => null),
+        bucketApi.getBucketCors(bucketName).catch(() => null),
         bucketApi.getBucketTagging(bucketName).catch(() => null),
         bucketApi.getObjectLockConfiguration(bucketName).catch(() => null),
         bucketApi.getBucketVersioning(bucketName).catch(() => null),
@@ -146,6 +159,11 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
       }
 
       setEncryption(e as unknown as Record<string, unknown>)
+      setCorsConfig(
+        ((corsResp as BucketCorsConfiguration | null)?.CORSRules?.length ?? 0) > 0
+          ? (corsResp as BucketCorsConfiguration)
+          : null,
+      )
       setTags(
         (tagResp as { TagSet?: Array<{ Key?: string; Value?: string }> })?.TagSet?.map((x) => ({
           Key: x.Key ?? "",
@@ -296,6 +314,38 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
       }
       message.success(t("Edit Success"))
       setShowEncryptModal(false)
+      await fetchData()
+    } catch (err) {
+      message.error(`${t("Edit Failed")}: ${(err as Error).message}`)
+    }
+  }
+
+  const openCorsModal = () => {
+    if (!canEditCors) return
+    setCorsFormEnabled(Boolean(corsConfig?.CORSRules?.length))
+    setCorsFormContent(stringifyBucketCorsConfig(corsConfig))
+    setShowCorsModal(true)
+  }
+
+  const submitCors = async () => {
+    if (!canEditCors) return
+
+    try {
+      if (!corsFormEnabled) {
+        if (corsConfig?.CORSRules?.length) {
+          await bucketApi.deleteBucketCors(bucketName)
+        }
+      } else {
+        if (corsValidation.error || !corsValidation.config) {
+          message.error(corsValidation.error ?? t("Invalid CORS configuration"))
+          return
+        }
+
+        await bucketApi.putBucketCors(bucketName, corsValidation.config)
+      }
+
+      message.success(t("Edit Success"))
+      setShowCorsModal(false)
       await fetchData()
     } catch (err) {
       message.error(`${t("Edit Failed")}: ${(err as Error).message}`)
@@ -460,6 +510,9 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           : policyType
 
   const encryptionLabel = parseEncryptionLabel(encryption as Parameters<typeof parseEncryptionLabel>[0])
+  const corsRules = corsConfig?.CORSRules ?? []
+  const corsMethods = Array.from(new Set(corsRules.flatMap((rule) => rule.AllowedMethods ?? [])))
+  const corsOrigins = Array.from(new Set(corsRules.flatMap((rule) => rule.AllowedOrigins ?? [])))
 
   if (loading) {
     return (
@@ -506,6 +559,46 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               ) : null}
             </ItemActions>
           </ItemHeader>
+        </Item>
+
+        {/* CORS */}
+        <Item variant="outline" className="flex-col items-stretch gap-4">
+          <ItemHeader className="items-start">
+            <div className="flex flex-col gap-1">
+              <ItemTitle>{t("Bucket CORS")}</ItemTitle>
+              <ItemDescription className="text-xs text-muted-foreground">
+                {corsRules.length > 0 ? t("Configured") : t("Not Enabled")}
+              </ItemDescription>
+            </div>
+            <ItemActions>
+              {canEditCors ? (
+                <Button variant="outline" size="sm" className="shrink-0" onClick={openCorsModal}>
+                  <RiEdit2Line className="me-2 size-4" />
+                  {t("Edit")}
+                </Button>
+              ) : null}
+            </ItemActions>
+          </ItemHeader>
+          <ItemContent>
+            {corsRules.length > 0 ? (
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("CORS Rules")}</p>
+                  <p className="text-sm text-foreground">{corsRules.length}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{t("Allowed Methods")}</p>
+                  <p className="text-sm text-foreground">{corsMethods.join(", ") || "-"}</p>
+                </div>
+                <div className="sm:col-span-2">
+                  <p className="text-xs text-muted-foreground">{t("Allowed Origins")}</p>
+                  <p className="break-all text-sm text-foreground">{corsOrigins.join(", ") || "-"}</p>
+                </div>
+              </div>
+            ) : (
+              <ItemDescription className="text-sm">{t("No Data")}</ItemDescription>
+            )}
+          </ItemContent>
         </Item>
 
         {/* Tag */}
@@ -746,6 +839,57 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               {t("Cancel")}
             </Button>
             <Button onClick={submitEncrypt}>{t("Confirm")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* CORS Modal */}
+      <Dialog open={showCorsModal} onOpenChange={setShowCorsModal}>
+        <DialogContent className="sm:max-w-2xl" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>{t("Set Bucket CORS")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Field className="flex items-center justify-between">
+              <FieldLabel>{t("Bucket CORS")}</FieldLabel>
+              <FieldContent className="flex justify-end">
+                <Switch checked={corsFormEnabled} onCheckedChange={setCorsFormEnabled} />
+              </FieldContent>
+            </Field>
+            {corsFormEnabled ? (
+              <Field>
+                <FieldLabel>{t("CORS Configuration")}</FieldLabel>
+                <FieldContent>
+                  <div className="max-h-[60vh] overflow-y-auto rounded-md border p-2">
+                    <Textarea
+                      value={corsFormContent}
+                      onChange={(e) => setCorsFormContent(e.target.value)}
+                      className="min-h-[260px] font-mono text-xs"
+                    />
+                  </div>
+                </FieldContent>
+                <FieldDescription>
+                  {t('CORS JSON must be an array of rules or an object with a "CORSRules" array.')}
+                </FieldDescription>
+                {corsValidation.error ? (
+                  <FieldDescription className="text-destructive">{corsValidation.error}</FieldDescription>
+                ) : (
+                  <FieldDescription>{t("CORS JSON validation passed")}</FieldDescription>
+                )}
+              </Field>
+            ) : (
+              <FieldDescription>
+                {t("Disable Bucket CORS to remove the current cross-origin configuration.")}
+              </FieldDescription>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCorsModal(false)}>
+              {t("Cancel")}
+            </Button>
+            <Button onClick={submitCors} disabled={corsFormEnabled && Boolean(corsValidation.error)}>
+              {t("Confirm")}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

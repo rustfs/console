@@ -14,6 +14,7 @@ export type ConsoleCapability =
   | "bucket.policy.delete"
   | "bucket.policy.edit"
   | "bucket.encryption.edit"
+  | "bucket.cors.edit"
   | "bucket.tag.edit"
   | "bucket.versioning.edit"
   | "bucket.objectLock.edit"
@@ -63,6 +64,7 @@ const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]
   "bucket.policy.delete": [{ actions: ["s3:DeleteBucketPolicy"], resource: "bucket" }],
   "bucket.policy.edit": [{ actions: ["s3:PutBucketPolicy", "s3:DeleteBucketPolicy"], mode: "any", resource: "bucket" }],
   "bucket.encryption.edit": [{ actions: ["s3:PutBucketEncryption"], resource: "bucket" }],
+  "bucket.cors.edit": [{ actions: ["s3:PutBucketCORS"], resource: "bucket" }],
   "bucket.tag.edit": [{ actions: ["s3:PutBucketTagging"], resource: "bucket" }],
   "bucket.versioning.edit": [{ actions: ["s3:PutBucketVersioning"], resource: "bucket" }],
   "bucket.objectLock.edit": [{ actions: ["s3:PutBucketObjectLockConfiguration"], resource: "bucket" }],

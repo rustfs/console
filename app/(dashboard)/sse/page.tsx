@@ -55,7 +55,7 @@ const KEY_LIST_LIMIT = 20
 const DEFAULT_PENDING_DELETE_DAYS = 7
 
 type ConfigFormState = {
-  backendType: "local" | "vault" | "vault-transit"
+  backendType: "local" | "vault-kv2" | "vault-transit"
   keyDir: string
   filePermissions: string
   defaultKeyId: string
@@ -145,7 +145,8 @@ function isAbsolutePath(value: string) {
 function normalizeBackendType(value?: string | null): ConfigFormState["backendType"] {
   switch (value) {
     case "Vault":
-      return "vault"
+    case "VaultKV2":
+      return "vault-kv2"
     case "VaultTransit":
       return "vault-transit"
     default:
@@ -383,7 +384,7 @@ export default function SSEPage() {
 
       return {
         payload: {
-          backend_type: formState.backendType === "vault" ? "Vault" : "VaultTransit",
+          backend_type: formState.backendType === "vault-kv2" ? "VaultKV2" : "VaultTransit",
           address: formState.address.trim(),
           auth_method: {
             Token: {
@@ -392,7 +393,7 @@ export default function SSEPage() {
           },
           namespace: formState.namespace.trim() || null,
           mount_path: formState.mountPath.trim(),
-          ...(formState.backendType === "vault"
+          ...(formState.backendType === "vault-kv2"
             ? {
                 kv_mount: formState.kvMount.trim() || null,
                 key_path_prefix: formState.keyPathPrefix.trim() || null,
@@ -754,7 +755,7 @@ export default function SSEPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="local">{t("Local filesystem")}</SelectItem>
-                          <SelectItem value="vault">{t("HashiCorp Vault KV2")}</SelectItem>
+                          <SelectItem value="vault-kv2">{t("HashiCorp Vault KV2")}</SelectItem>
                           <SelectItem value="vault-transit">{t("HashiCorp Vault Transit Engine")}</SelectItem>
                         </SelectContent>
                       </Select>
@@ -868,7 +869,7 @@ export default function SSEPage() {
                         </FieldContent>
                       </Field>
 
-                      {formState.backendType === "vault" && (
+                      {formState.backendType === "vault-kv2" && (
                         <>
                           <Field>
                             <FieldLabel>{t("KV Mount")}</FieldLabel>

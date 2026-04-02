@@ -1,6 +1,6 @@
 export type KmsServiceStatus = "NotConfigured" | "Configured" | "Running" | { Error: string }
 
-export type KmsBackendType = "Local" | "Vault" | "VaultTransit"
+export type KmsBackendType = "Local" | "Vault" | "VaultKV2" | "VaultTransit"
 
 export interface KmsCacheSummary {
   enabled?: boolean
@@ -88,6 +88,23 @@ export interface KmsVaultConfigPayload {
   cache_ttl_seconds?: number
 }
 
+export interface KmsVaultKV2ConfigPayload {
+  backend_type: "VaultKV2"
+  address: string
+  auth_method: KmsVaultTokenAuthMethod
+  namespace?: string | null
+  mount_path: string
+  kv_mount?: string | null
+  key_path_prefix?: string | null
+  skip_tls_verify?: boolean
+  default_key_id?: string
+  timeout_seconds?: number
+  retry_attempts?: number
+  enable_cache?: boolean
+  max_cached_keys?: number
+  cache_ttl_seconds?: number
+}
+
 export interface KmsVaultTransitConfigPayload {
   backend_type: "VaultTransit"
   address: string
@@ -103,7 +120,11 @@ export interface KmsVaultTransitConfigPayload {
   cache_ttl_seconds?: number
 }
 
-export type KmsConfigPayload = KmsLocalConfigPayload | KmsVaultConfigPayload | KmsVaultTransitConfigPayload
+export type KmsConfigPayload =
+  | KmsLocalConfigPayload
+  | KmsVaultConfigPayload
+  | KmsVaultKV2ConfigPayload
+  | KmsVaultTransitConfigPayload
 
 export interface KmsKeyInfo {
   key_id: string

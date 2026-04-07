@@ -235,9 +235,9 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }
 
   const handlePreviewVersion = async (versionId: string) => {
-    if (!object?.Key) return
+    if (!resolvedObjectKey) return
     try {
-      const key = object.Key as string
+      const key = resolvedObjectKey
       const version = versionId === "00000000-0000-0000-0000-000000000000" ? undefined : versionId
       const [head, signed] = await Promise.all([
         client.send(
@@ -682,7 +682,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
 
       <ObjectVersions
         bucketName={bucketName}
-        objectKey={(object?.Key as string) ?? ""}
+        objectKey={resolvedObjectKey}
         visible={showVersions}
         onClose={() => setShowVersions(false)}
         onPreview={handlePreviewVersion}

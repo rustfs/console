@@ -275,7 +275,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             (keys as { keys?: Array<{ key_id?: string; tags?: { name?: string }; description?: string }> })?.keys ?? []
           setKmsKeyOptions(
             list.map((k) => ({
-              label: k.tags?.name ?? k.description ?? `Key-${(k.key_id ?? "").slice(0, 8)}`,
+              label: k.tags?.name ?? k.description ?? `Key-${(k.key_id ?? "").slice(0, 24)}`,
               value: k.key_id ?? "",
             })),
           )

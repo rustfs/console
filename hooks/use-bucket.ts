@@ -4,7 +4,9 @@ import { useCallback } from "react"
 import {
   CreateBucketCommand,
   DeleteBucketCommand,
+  DeleteBucketCorsCommand,
   GetBucketEncryptionCommand,
+  GetBucketCorsCommand,
   GetBucketLifecycleConfigurationCommand,
   GetBucketPolicyCommand,
   GetBucketPolicyStatusCommand,
@@ -16,6 +18,7 @@ import {
   HeadBucketCommand,
   ListBucketsCommand,
   type ListBucketsCommandOutput,
+  PutBucketCorsCommand,
   PutBucketEncryptionCommand,
   PutBucketLifecycleConfigurationCommand,
   PutBucketPolicyCommand,
@@ -284,6 +287,32 @@ export function useBucket() {
     [client],
   )
 
+  const getBucketCors = useCallback(
+    async (bucket: string) => {
+      return client.send(new GetBucketCorsCommand({ Bucket: bucket }))
+    },
+    [client],
+  )
+
+  const putBucketCors = useCallback(
+    async (bucket: string, corsConfiguration: unknown) => {
+      return client.send(
+        new PutBucketCorsCommand({
+          Bucket: bucket,
+          CORSConfiguration: corsConfiguration as never,
+        }),
+      )
+    },
+    [client],
+  )
+
+  const deleteBucketCors = useCallback(
+    async (bucket: string) => {
+      return client.send(new DeleteBucketCorsCommand({ Bucket: bucket }))
+    },
+    [client],
+  )
+
   const getBucketReplication = useCallback(
     async (bucket: string) => {
       return client.send(new GetBucketReplicationCommand({ Bucket: bucket }))
@@ -376,6 +405,9 @@ export function useBucket() {
     getBucketEncryption,
     putBucketEncryption,
     deleteBucketEncryption,
+    getBucketCors,
+    putBucketCors,
+    deleteBucketCors,
     getBucketReplication,
     putBucketReplication,
     deleteBucketReplication,

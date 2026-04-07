@@ -182,8 +182,10 @@ export default function UsersPage() {
       message.success(t("Delete Success"))
       table.resetRowSelection()
       await getDataList()
-    } catch {
-      message.error(t("Delete Failed"))
+    } catch (error) {
+      console.error(error)
+      const msg = (error as Error)?.message || t("Delete Failed")
+      message.error(msg)
     }
   }
 
@@ -200,8 +202,10 @@ export default function UsersPage() {
           message.success(t("Delete Success"))
           table.resetRowSelection()
           await getDataList()
-        } catch {
-          message.error(t("Delete Failed"))
+        } catch (error) {
+          console.error(error)
+          const msg = (error as Error)?.message || t("Delete Failed")
+          message.error(msg)
         }
       },
     })

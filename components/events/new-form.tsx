@@ -164,7 +164,8 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess }: Eve
       resetForm()
     } catch (error) {
       console.error("Failed to create bucket notification:", error)
-      message.error(t("Create Failed"))
+      const msg = (error as Error)?.message || t("Create Failed")
+      message.error(msg)
     }
   }
 

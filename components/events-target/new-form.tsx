@@ -146,7 +146,8 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
       resetForm()
     } catch (error) {
       console.error(error)
-      message.error(t("Failed to create event target"))
+      const msg = (error as Error)?.message || t("Failed to create event target")
+      message.error(msg)
     } finally {
       setSubmitting(false)
     }

@@ -39,6 +39,12 @@ import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
 import { formatBytes } from "@/lib/functions"
 import { buildBucketPath } from "@/lib/bucket-path"
+import {
+  resolveBucketVersioningState,
+  shouldForceDeleteObjects,
+  shouldShowDeleteAllVersions,
+  type BucketVersioningState,
+} from "@/lib/object-delete"
 import { TaskStatsButton } from "@/components/tasks/stats-button"
 import { useAddDeleteKeys, useAddDeleteFolder, useTasks } from "@/contexts/task-context"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -92,7 +98,7 @@ export function ObjectList({
   const [continuationToken, setContinuationToken] = React.useState<string | undefined>()
   const [tokenHistory, setTokenHistory] = React.useState<string[]>([])
   const [nextToken, setNextToken] = React.useState<string | undefined>()
-  const [bucketVersioningEnabled, setBucketVersioningEnabled] = React.useState(false)
+  const [bucketVersioningState, setBucketVersioningState] = React.useState<BucketVersioningState>("unknown")
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [deleteDialogKeys, setDeleteDialogKeys] = React.useState<string[]>([])
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
@@ -177,15 +183,28 @@ export function ObjectList({
   }, [tasks, fetchObjects])
 
   React.useEffect(() => {
+    let cancelled = false
+
     const loadBucketVersioningStatus = async () => {
+      setBucketVersioningState("unknown")
+
       try {
         const resp = await getBucketVersioning(bucket)
-        setBucketVersioningEnabled((resp as { Status?: string })?.Status === "Enabled")
+        if (!cancelled) {
+          setBucketVersioningState(resolveBucketVersioningState((resp as { Status?: string })?.Status))
+        }
       } catch {
-        setBucketVersioningEnabled(false)
+        if (!cancelled) {
+          setBucketVersioningState("disabled")
+        }
       }
     }
-    loadBucketVersioningStatus()
+
+    void loadBucketVersioningStatus()
+
+    return () => {
+      cancelled = true
+    }
   }, [bucket, getBucketVersioning])
 
   React.useEffect(() => {
@@ -436,7 +455,7 @@ export function ObjectList({
     setDeleteDialogOpen(false)
     if (!keys.length) return
 
-    if ((bucketVersioningEnabled && deleteAllVersions) || !bucketVersioningEnabled) {
+    if (shouldForceDeleteObjects(bucketVersioningState, deleteAllVersions)) {
       await handleDeleteAllVersions(keys)
     } else {
       await handleDelete(keys)
@@ -603,7 +622,7 @@ export function ObjectList({
             <AlertDialogTitle>{t("Warning")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("Are you sure you want to delete the selected objects?")}
-              {bucketVersioningEnabled && (
+              {shouldShowDeleteAllVersions(bucketVersioningState) && (
                 <label className="mt-4 flex items-center gap-2">
                   <Checkbox checked={deleteAllVersions} onCheckedChange={(v) => setDeleteAllVersions(v === true)} />
                   <span>{t("Delete All Versions")}</span>

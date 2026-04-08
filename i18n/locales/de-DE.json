@@ -561,6 +561,7 @@
   "Please enter tag value": "Bitte Tag-Wert eingeben",
   "Please enter user group name": "Bitte Benutzergruppenname eingeben",
   "Please enter username": "Bitte Benutzernamen eingeben",
+  "username length cannot be less than 3 characters and greater than 128 characters": "Der Benutzername muss zwischen 3 und 128 Zeichen lang sein",
   "Please enter valid days": "Bitte gültige Tage eingeben",
   "Please enter valid health check interval": "Bitte gültiges Gesundheitsprüfungsintervall eingeben",
   "Please fill in at least one configuration item": "Bitte mindestens ein Konfigurationselement ausfüllen",

@@ -561,6 +561,7 @@
   "Please enter tag value": "Silakan masukkan nilai tag",
   "Please enter user group name": "Silakan masukkan nama grup pengguna",
   "Please enter username": "Silakan masukkan nama pengguna",
+  "username length cannot be less than 3 characters and greater than 128 characters": "Panjang nama pengguna harus antara 3 dan 128 karakter",
   "Please enter valid days": "Silakan masukkan hari yang valid",
   "Please enter valid health check interval": "Silakan masukkan interval pemeriksaan kesehatan yang valid",
   "Please fill in at least one configuration item": "Silakan isi setidaknya satu item konfigurasi",

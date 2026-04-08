@@ -561,6 +561,7 @@
   "Please enter tag value": "태그 값을 입력하세요",
   "Please enter user group name": "사용자 그룹 이름을 입력하세요",
   "Please enter username": "사용자 이름을 입력하세요",
+  "username length cannot be less than 3 characters and greater than 128 characters": "사용자 이름은 3자 이상 128자 이하여야 합니다",
   "Please enter valid days": "유효한 일수를 입력하세요",
   "Please enter valid health check interval": "유효한 상태 확인 간격을 입력하세요",
   "Please fill in at least one configuration item": "최소한 하나의 구성 항목을 입력하세요",

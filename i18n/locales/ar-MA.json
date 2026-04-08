@@ -544,6 +544,7 @@
   "Please enter tag value": "الرجاء إدخال قيمة الوسم",
   "Please enter user group name": "الرجاء إدخال اسم مجموعة المستخدمين",
   "Please enter username": "الرجاء إدخال اسم المستخدم",
+  "username length cannot be less than 3 characters and greater than 128 characters": "يجب أن يكون طول اسم المستخدم بين 3 و128 حرفًا",
   "Please enter valid days": "الرجاء إدخال أيام صالحة",
   "Please enter valid health check interval": "الرجاء إدخال فترة فحص صحة صالحة",
   "Please fill in at least one configuration item": "الرجاء ملء عنصر إعداد واحد على الأقل",

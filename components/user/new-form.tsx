@@ -23,6 +23,11 @@ interface UserNewFormProps {
   onSuccess: () => void
 }
 
+const USERNAME_MIN_LENGTH = 3
+const USERNAME_MAX_LENGTH = 128
+const PASSWORD_MIN_LENGTH = 8
+const PASSWORD_MAX_LENGTH = 40
+
 export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
@@ -71,12 +76,12 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
     const newErrors = { accessKey: "", secretKey: "" }
     if (!accessKey.trim()) {
       newErrors.accessKey = t("Please enter username")
-    } else if (!/^.{3,20}$/.test(accessKey.trim())) {
-      newErrors.accessKey = t("username length cannot be less than 3 characters and greater than 20 characters")
+    } else if (accessKey.trim().length < USERNAME_MIN_LENGTH || accessKey.trim().length > USERNAME_MAX_LENGTH) {
+      newErrors.accessKey = t("username length cannot be less than 3 characters and greater than 128 characters")
     }
     if (!secretKey.trim()) {
       newErrors.secretKey = t("Please enter password")
-    } else if (!/^.{8,40}$/.test(secretKey)) {
+    } else if (secretKey.length < PASSWORD_MIN_LENGTH || secretKey.length > PASSWORD_MAX_LENGTH) {
       newErrors.secretKey = t("password length cannot be less than 8 characters and greater than 40 characters")
     }
     setErrors(newErrors)
@@ -148,7 +153,8 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
                 <Input
                   value={accessKey}
                   onChange={(e) => setAccessKey(e.target.value)}
-                  minLength={4}
+                  minLength={USERNAME_MIN_LENGTH}
+                  maxLength={USERNAME_MAX_LENGTH}
                   name="new-user-access-key"
                   autoComplete="new-user-access-key"
                 />
@@ -163,7 +169,8 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
                   value={secretKey}
                   onChange={(e) => setSecretKey(e.target.value)}
                   type="password"
-                  minLength={8}
+                  minLength={PASSWORD_MIN_LENGTH}
+                  maxLength={PASSWORD_MAX_LENGTH}
                   name="new-user-password"
                   autoComplete="new-user-password"
                 />

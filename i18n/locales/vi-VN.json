@@ -547,6 +547,7 @@
   "Please enter tag value": "Vui lòng nhập giá trị thẻ",
   "Please enter user group name": "Vui lòng nhập tên nhóm người dùng",
   "Please enter username": "Vui lòng nhập tên người dùng",
+  "username length cannot be less than 3 characters and greater than 128 characters": "Độ dài tên người dùng phải từ 3 đến 128 ký tự",
   "Please enter valid days": "Vui lòng nhập số ngày hợp lệ",
   "Please enter valid health check interval": "Vui lòng nhập khoảng thời gian kiểm tra sức khỏe hợp lệ",
   "Please fill in at least one configuration item": "Vui lòng điền ít nhất một mục cấu hình",

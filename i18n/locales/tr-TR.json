@@ -561,6 +561,7 @@
   "Please enter tag value": "Lütfen etiket değeri girin",
   "Please enter user group name": "Lütfen kullanıcı grubu adını girin",
   "Please enter username": "Lütfen kullanıcı adını girin",
+  "username length cannot be less than 3 characters and greater than 128 characters": "Kullanıcı adı uzunluğu 3 ile 128 karakter arasında olmalıdır",
   "Please enter valid days": "Lütfen geçerli gün sayısı girin",
   "Please enter valid health check interval": "Lütfen geçerli bir durum kontrolü aralığı girin",
   "Please fill in at least one configuration item": "Lütfen en az bir yapılandırma öğesi doldurun",

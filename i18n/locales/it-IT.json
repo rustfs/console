@@ -561,6 +561,7 @@
   "Please enter tag value": "Inserisci valore tag",
   "Please enter user group name": "Inserisci nome gruppo utenti",
   "Please enter username": "Inserisci nome utente",
+  "username length cannot be less than 3 characters and greater than 128 characters": "La lunghezza del nome utente deve essere compresa tra 3 e 128 caratteri",
   "Please enter valid days": "Inserisci giorni validi",
   "Please enter valid health check interval": "Inserisci intervallo controllo salute valido",
   "Please fill in at least one configuration item": "Compila almeno un elemento di configurazione",

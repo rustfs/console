@@ -561,6 +561,7 @@
   "Please enter tag value": "タグ値を入力してください",
   "Please enter user group name": "ユーザーグループ名を入力してください",
   "Please enter username": "ユーザー名を入力してください",
+  "username length cannot be less than 3 characters and greater than 128 characters": "ユーザー名は3文字以上128文字以下で入力してください",
   "Please enter valid days": "有効な日数を入力してください",
   "Please enter valid health check interval": "有効なヘルスチェック間隔を入力してください",
   "Please fill in at least one configuration item": "少なくとも1つの設定項目を入力してください",

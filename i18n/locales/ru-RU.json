@@ -561,6 +561,7 @@
   "Please enter tag value": "Введите значение тега",
   "Please enter user group name": "Введите имя группы пользователей",
   "Please enter username": "Введите имя пользователя",
+  "username length cannot be less than 3 characters and greater than 128 characters": "Длина имени пользователя должна быть от 3 до 128 символов",
   "Please enter valid days": "Введите действительные дни",
   "Please enter valid health check interval": "Введите действительный интервал проверки работоспособности",
   "Please fill in at least one configuration item": "Заполните хотя бы один элемент конфигурации",

@@ -576,6 +576,7 @@
   "Please enter tag value": "请输入标签值",
   "Please enter user group name": "请输入用户组名称",
   "Please enter username": "请输入用户名",
+  "username length cannot be less than 3 characters and greater than 128 characters": "用户名长度不能少于 3 个字符且不能超过 128 个字符",
   "Please enter valid days": "请输入天数",
   "Please enter valid health check interval": "请输入有效的健康检查间隔",
   "Please fill in at least one configuration item": "请至少填写一个配置项",

@@ -560,6 +560,7 @@
   "Please enter tag value": "Please enter tag value",
   "Please enter user group name": "Please enter user group name",
   "Please enter username": "Please enter username",
+  "username length cannot be less than 3 characters and greater than 128 characters": "Username length must be between 3 and 128 characters",
   "Please enter valid days": "Please enter valid days",
   "Please enter valid health check interval": "Please enter valid health check interval",
   "Please fill in at least one configuration item": "Please fill in at least one configuration item",

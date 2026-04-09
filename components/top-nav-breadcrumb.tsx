@@ -103,7 +103,7 @@ export function TopNavBreadcrumb() {
                     href={item.href}
                     onClick={(e) => {
                       e.preventDefault()
-                      router.push(item.href!)
+                      if (item.href) router.push(item.href)
                     }}
                   >
                     {item.label}

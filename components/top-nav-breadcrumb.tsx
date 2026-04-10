@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import {
   Breadcrumb,
@@ -26,6 +26,7 @@ function getLabelByPath(pathSegment: string, t: (k: string) => string): string {
 export function TopNavBreadcrumb() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const router = useRouter()
   const { t } = useTranslation()
 
   const segments = pathname?.split("/").filter(Boolean) ?? []
@@ -98,7 +99,15 @@ export function TopNavBreadcrumb() {
             <BreadcrumbItem>
               {item.href ? (
                 <BreadcrumbLink asChild>
-                  <Link href={item.href}>{item.label}</Link>
+                  <Link
+                    href={item.href}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      if (item.href) router.push(item.href)
+                    }}
+                  >
+                    {item.label}
+                  </Link>
                 </BreadcrumbLink>
               ) : (
                 <BreadcrumbPage>{item.label}</BreadcrumbPage>

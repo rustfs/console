@@ -1074,6 +1074,8 @@
   "Failed to save OIDC provider": "OIDC sağlayıcısı kaydedilemedi",
   "Failed to validate OIDC configuration": "OIDC yapılandırması doğrulanamadı",
   "Groups Claim": "Gruplar Claim",
+  "Roles Claim": "Roles Claim",
+  "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.": "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.",
   "Issuer": "Yayıncı",
   "Leave empty to keep current secret": "Geçerli sırrı korumak için boş bırakın",
   "Loading...": "Yükleniyor...",

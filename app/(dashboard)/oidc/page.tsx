@@ -39,6 +39,7 @@ function providerToFormValues(provider: OidcConfigProvider): OidcProviderFormVal
     claim_prefix: provider.claim_prefix,
     role_policy: provider.role_policy,
     groups_claim: provider.groups_claim,
+    roles_claim: provider.roles_claim ?? "",
     email_claim: provider.email_claim,
     username_claim: provider.username_claim,
   }
@@ -130,6 +131,7 @@ function buildSavePayload(values: OidcProviderFormValues): SaveOidcConfigPayload
     claim_prefix: trimOrEmpty(values.claim_prefix),
     role_policy: trimOrEmpty(values.role_policy),
     groups_claim: trimOrEmpty(values.groups_claim),
+    roles_claim: trimOrEmpty(values.roles_claim),
     email_claim: trimOrEmpty(values.email_claim),
     username_claim: trimOrEmpty(values.username_claim),
   }

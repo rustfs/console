@@ -937,6 +937,8 @@
   "Failed to save OIDC provider": "保存 OIDC provider 失败",
   "Failed to validate OIDC configuration": "OIDC 配置校验失败",
   "Groups Claim": "分组声明",
+  "Roles Claim": "角色声明",
+  "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.": "可选。角色值的独立声明名（例如 roles）。留空则仅使用分组声明。",
   "Issuer": "签发者",
   "Leave empty to keep current secret": "留空表示保留当前密钥",
   "Loading...": "加载中...",

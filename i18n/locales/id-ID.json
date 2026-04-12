@@ -1081,6 +1081,8 @@
   "Failed to save OIDC provider": "Gagal menyimpan penyedia OIDC",
   "Failed to validate OIDC configuration": "Gagal memvalidasi konfigurasi OIDC",
   "Groups Claim": "Claim Grup",
+  "Roles Claim": "Roles Claim",
+  "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.": "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.",
   "Issuer": "Penerbit",
   "Leave empty to keep current secret": "Biarkan kosong untuk mempertahankan secret saat ini",
   "Loading...": "Memuat...",

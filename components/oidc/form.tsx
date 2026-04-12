@@ -341,6 +341,22 @@ export function OidcForm({
         </Field>
 
         <Field>
+          <FieldLabel htmlFor="roles_claim">{t("Roles Claim")}</FieldLabel>
+          <FieldContent>
+            <Input
+              id="roles_claim"
+              value={values.roles_claim}
+              onChange={(event) => onChange("roles_claim", event.target.value)}
+              placeholder="roles"
+              disabled={isReadOnly}
+            />
+          </FieldContent>
+          <FieldDescription>
+            {t("Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.")}
+          </FieldDescription>
+        </Field>
+
+        <Field>
           <FieldLabel htmlFor="email_claim">{t("Email Claim")}</FieldLabel>
           <FieldContent>
             <Input

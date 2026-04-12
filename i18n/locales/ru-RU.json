@@ -1083,6 +1083,8 @@
   "Failed to save OIDC provider": "Не удалось сохранить OIDC-провайдера",
   "Failed to validate OIDC configuration": "Не удалось проверить конфигурацию OIDC",
   "Groups Claim": "Claim групп",
+  "Roles Claim": "Roles Claim",
+  "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.": "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.",
   "Issuer": "Издатель",
   "Leave empty to keep current secret": "Оставьте пустым, чтобы сохранить текущий секрет",
   "Loading...": "Загрузка...",

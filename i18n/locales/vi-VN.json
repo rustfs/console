@@ -1059,6 +1059,8 @@
   "Failed to save OIDC provider": "Lưu nhà cung cấp OIDC thất bại",
   "Failed to validate OIDC configuration": "Xác thực cấu hình OIDC thất bại",
   "Groups Claim": "Claim nhóm",
+  "Roles Claim": "Roles Claim",
+  "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.": "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.",
   "Issuer": "Nhà phát hành",
   "Leave empty to keep current secret": "Để trống để giữ secret hiện tại",
   "Loading...": "Đang tải...",

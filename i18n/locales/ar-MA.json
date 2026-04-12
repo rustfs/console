@@ -1059,6 +1059,8 @@
   "Failed to save OIDC provider": "فشل حفظ موفر OIDC",
   "Failed to validate OIDC configuration": "فشل التحقق من إعدادات OIDC",
   "Groups Claim": "مطالبة المجموعات",
+  "Roles Claim": "Roles Claim",
+  "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.": "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.",
   "Issuer": "الجهة المصدّرة",
   "Leave empty to keep current secret": "اتركه فارغًا للاحتفاظ بالسر الحالي",
   "Loading...": "جارٍ التحميل...",

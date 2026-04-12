@@ -16,6 +16,8 @@ export interface OidcConfigProvider {
   claim_prefix: string
   role_policy: string
   groups_claim: string
+  /** Secondary claim for role values (e.g. Entra `roles`). Omitted by older servers. */
+  roles_claim?: string
   email_claim: string
   username_claim: string
 }
@@ -38,6 +40,7 @@ export interface SaveOidcConfigPayload {
   claim_prefix: string
   role_policy: string
   groups_claim: string
+  roles_claim: string
   email_claim: string
   username_claim: string
 }
@@ -86,6 +89,7 @@ export interface OidcProviderFormValues {
   claim_prefix: string
   role_policy: string
   groups_claim: string
+  roles_claim: string
   email_claim: string
   username_claim: string
 }
@@ -106,6 +110,7 @@ export const DEFAULT_OIDC_FORM_VALUES: OidcProviderFormValues = {
   claim_prefix: "",
   role_policy: "",
   groups_claim: "groups",
+  roles_claim: "",
   email_claim: "email",
   username_claim: "preferred_username",
 }

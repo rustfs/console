@@ -1082,6 +1082,8 @@
   "Failed to save OIDC provider": "Impossibile salvare il provider OIDC",
   "Failed to validate OIDC configuration": "Impossibile validare la configurazione OIDC",
   "Groups Claim": "Claim gruppi",
+  "Roles Claim": "Roles Claim",
+  "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.": "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.",
   "Issuer": "Issuer",
   "Leave empty to keep current secret": "Lascia vuoto per mantenere il segreto corrente",
   "Loading...": "Caricamento...",

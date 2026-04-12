@@ -1078,6 +1078,8 @@
   "Failed to save OIDC provider": "OIDC 공급자 저장에 실패했습니다",
   "Failed to validate OIDC configuration": "OIDC 구성 검증에 실패했습니다",
   "Groups Claim": "그룹 클레임",
+  "Roles Claim": "Roles Claim",
+  "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.": "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.",
   "Issuer": "발급자",
   "Leave empty to keep current secret": "현재 시크릿을 유지하려면 비워 두세요",
   "Loading...": "불러오는 중...",

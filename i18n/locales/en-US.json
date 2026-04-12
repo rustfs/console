@@ -930,6 +930,8 @@
   "Failed to save OIDC provider": "Failed to save OIDC provider",
   "Failed to validate OIDC configuration": "Failed to validate OIDC configuration",
   "Groups Claim": "Groups Claim",
+  "Roles Claim": "Roles Claim",
+  "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.": "Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.",
   "Issuer": "Issuer",
   "Leave empty to keep current secret": "Leave empty to keep current secret",
   "Loading...": "Loading...",

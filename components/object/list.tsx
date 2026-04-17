@@ -40,6 +40,11 @@ import { getContentType } from "@/lib/mime-types"
 import { formatBytes } from "@/lib/functions"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
+  createObjectListScope,
+  shouldApplyObjectListResponse,
+  shouldResetObjectListPagination,
+} from "@/lib/object-list-state"
+import {
   resolveBucketVersioningState,
   shouldForceDeleteObjects,
   shouldShowDeleteAllVersions,
@@ -104,14 +109,34 @@ export function ObjectList({
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
 
   const prefix = decodeURIComponent(path)
+  const listScope = React.useMemo(
+    () =>
+      createObjectListScope({
+        bucket,
+        prefix,
+        pageSize,
+        showDeleted,
+      }),
+    [bucket, prefix, pageSize, showDeleted],
+  )
   const canBulkDelete = canCapability("objects.bulkDelete", { bucket, prefix })
   const canBulkDownload = canCapability("objects.download", { bucket, prefix })
 
   const bucketPath = React.useCallback((p?: string | string[]) => buildBucketPath(bucket, p), [bucket])
+  const requestIdRef = React.useRef(0)
+  const activeScopeRef = React.useRef(listScope)
+  const previousScopeRef = React.useRef(listScope)
+
+  React.useEffect(() => {
+    activeScopeRef.current = listScope
+  }, [listScope])
 
   const fetchObjects = React.useCallback(
-    async (tokenOverride?: string) => {
-      const token = tokenOverride !== undefined ? tokenOverride : continuationToken
+    async (options?: { token?: string; resetPagination?: boolean }) => {
+      const token = options?.resetPagination ? undefined : (options?.token ?? continuationToken)
+      const requestId = requestIdRef.current + 1
+      requestIdRef.current = requestId
+      const requestScope = activeScopeRef.current
       setLoading(true)
       try {
         const response = await listObject(bucket, prefix || undefined, pageSize, token, {
@@ -122,6 +147,17 @@ export function ObjectList({
           CommonPrefixes?: Array<{ Prefix?: string }>
           Contents?: Array<{ Key?: string; Size?: number; LastModified?: Date }>
           NextContinuationToken?: string
+        }
+
+        if (
+          !shouldApplyObjectListResponse({
+            requestId,
+            activeRequestId: requestIdRef.current,
+            requestScope,
+            activeScope: activeScopeRef.current,
+          })
+        ) {
+          return
         }
 
         setNextToken(r.NextContinuationToken)
@@ -142,7 +178,18 @@ export function ObjectList({
 
         setData([...prefixItems, ...objectItems])
       } finally {
-        setTimeout(() => setLoading(false), 200)
+        window.setTimeout(() => {
+          if (
+            shouldApplyObjectListResponse({
+              requestId,
+              activeRequestId: requestIdRef.current,
+              requestScope,
+              activeScope: activeScopeRef.current,
+            })
+          ) {
+            setLoading(false)
+          }
+        }, 200)
       }
     },
     [bucket, prefix, pageSize, continuationToken, showDeleted, listObject],
@@ -151,17 +198,19 @@ export function ObjectList({
   const prevRefreshTriggerRef = React.useRef(refreshTrigger)
 
   React.useEffect(() => {
+    const shouldResetPagination = shouldResetObjectListPagination(previousScopeRef.current, listScope)
+    previousScopeRef.current = listScope
     const isRefresh = prevRefreshTriggerRef.current !== refreshTrigger
     prevRefreshTriggerRef.current = refreshTrigger
 
-    if (isRefresh) {
+    if (isRefresh || shouldResetPagination) {
       setContinuationToken(undefined)
       setTokenHistory([])
-      void fetchObjects(undefined)
+      void fetchObjects({ resetPagination: true })
     } else {
       void fetchObjects()
     }
-  }, [bucket, prefix, pageSize, continuationToken, showDeleted, refreshTrigger, fetchObjects])
+  }, [listScope, bucket, prefix, pageSize, continuationToken, showDeleted, refreshTrigger, fetchObjects])
 
   const prevDeleteTaskIdsRef = React.useRef<Set<string>>(new Set())
 
@@ -175,7 +224,7 @@ export function ObjectList({
       const anyActive = currentDeleteTasks.some((t) => ["pending", "running"].includes(t.status))
       if (!anyActive) {
         // No more active delete tasks, refresh the list
-        void fetchObjects()
+        void fetchObjects({ resetPagination: true })
       }
     }
 
@@ -576,7 +625,7 @@ export function ObjectList({
                 ) : null}
               </>
             ) : null}
-            <Button variant="outline" onClick={() => (onRefresh ?? fetchObjects)()}>
+            <Button variant="outline" onClick={() => (onRefresh ? onRefresh() : void fetchObjects({ resetPagination: true }))}>
               <RiRefreshLine className="size-4" />
               <span>{t("Refresh")}</span>
             </Button>

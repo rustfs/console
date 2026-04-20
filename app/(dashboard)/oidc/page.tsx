@@ -33,6 +33,7 @@ function providerToFormValues(provider: OidcConfigProvider): OidcProviderFormVal
     client_id: provider.client_id,
     client_secret: "",
     scopes: provider.scopes.join(","),
+    other_audiences: provider.other_audiences.join(","),
     redirect_uri: provider.redirect_uri,
     redirect_uri_dynamic: provider.redirect_uri_dynamic,
     claim_name: provider.claim_name,
@@ -49,8 +50,8 @@ function trimOrEmpty(value: string) {
   return value.trim()
 }
 
-function parseScopes(scopes: string) {
-  return scopes
+function parseList(values: string) {
+  return values
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean)
@@ -79,7 +80,7 @@ function validateForm(
   const clientId = trimOrEmpty(values.client_id)
   const clientSecret = trimOrEmpty(values.client_secret)
   const redirectUri = trimOrEmpty(values.redirect_uri)
-  const scopes = parseScopes(values.scopes)
+  const scopes = parseList(values.scopes)
 
   if (options.requireProviderId) {
     if (!providerId) {
@@ -124,7 +125,8 @@ function buildSavePayload(values: OidcProviderFormValues): SaveOidcConfigPayload
     display_name: trimOrEmpty(values.display_name),
     config_url: trimOrEmpty(values.config_url),
     client_id: trimOrEmpty(values.client_id),
-    scopes: parseScopes(values.scopes),
+    scopes: parseList(values.scopes),
+    other_audiences: parseList(values.other_audiences),
     redirect_uri: trimOrEmpty(values.redirect_uri),
     redirect_uri_dynamic: values.redirect_uri_dynamic,
     claim_name: trimOrEmpty(values.claim_name),
@@ -150,7 +152,8 @@ function buildValidatePayload(values: OidcProviderFormValues): ValidateOidcConfi
     config_url: trimOrEmpty(values.config_url),
     client_id: trimOrEmpty(values.client_id),
     client_secret: trimOrEmpty(values.client_secret),
-    scopes: parseScopes(values.scopes),
+    scopes: parseList(values.scopes),
+    other_audiences: parseList(values.other_audiences),
     redirect_uri: trimOrEmpty(values.redirect_uri),
     redirect_uri_dynamic: values.redirect_uri_dynamic,
   }

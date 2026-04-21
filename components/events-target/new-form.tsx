@@ -18,17 +18,26 @@ interface EventsTargetNewFormProps {
   onSuccess?: () => void
 }
 
-const CONFIG_OPTIONS: Record<string, Array<{ label: string; name: string; type: "text" | "password" | "number" }>> = {
+type EventTargetType = "MQTT" | "Webhook" | "NATS" | "Pulsar"
+type ConfigField = { label: string; name: string; type: "text" | "password" | "number" }
+
+const CONFIG_OPTIONS: Record<EventTargetType, ConfigField[]> = {
   MQTT: [
     { label: "MQTT_BROKER", name: "broker", type: "text" },
     { label: "MQTT_TOPIC", name: "topic", type: "text" },
+    { label: "MQTT_QOS", name: "qos", type: "number" },
     { label: "MQTT_USERNAME", name: "username", type: "text" },
     { label: "MQTT_PASSWORD", name: "password", type: "password" },
-    { label: "MQTT_QOS", name: "qos", type: "number" },
     { label: "MQTT_RECONNECT_INTERVAL", name: "reconnect_interval", type: "number" },
     { label: "MQTT_KEEP_ALIVE_INTERVAL", name: "keep_alive_interval", type: "number" },
     { label: "MQTT_QUEUE_DIR", name: "queue_dir", type: "text" },
     { label: "MQTT_QUEUE_LIMIT", name: "queue_limit", type: "number" },
+    { label: "MQTT_TLS_POLICY", name: "tls_policy", type: "text" },
+    { label: "MQTT_TLS_CA", name: "tls_ca", type: "text" },
+    { label: "MQTT_TLS_CLIENT_CERT", name: "tls_client_cert", type: "text" },
+    { label: "MQTT_TLS_CLIENT_KEY", name: "tls_client_key", type: "text" },
+    { label: "MQTT_TLS_TRUST_LEAF_AS_CA", name: "tls_trust_leaf_as_ca", type: "text" },
+    { label: "MQTT_WS_PATH_ALLOWLIST", name: "ws_path_allowlist", type: "text" },
     { label: "COMMENT_KEY", name: "comment", type: "text" },
   ],
   Webhook: [
@@ -36,11 +45,43 @@ const CONFIG_OPTIONS: Record<string, Array<{ label: string; name: string; type: 
     { label: "WEBHOOK_AUTH_TOKEN", name: "auth_token", type: "text" },
     { label: "WEBHOOK_QUEUE_LIMIT", name: "queue_limit", type: "number" },
     { label: "WEBHOOK_QUEUE_DIR", name: "queue_dir", type: "text" },
+    { label: "WEBHOOK_CLIENT_CERT", name: "client_cert", type: "text" },
+    { label: "WEBHOOK_CLIENT_KEY", name: "client_key", type: "text" },
+    { label: "WEBHOOK_CLIENT_CA", name: "client_ca", type: "text" },
+    { label: "WEBHOOK_SKIP_TLS_VERIFY", name: "skip_tls_verify", type: "text" },
+    { label: "COMMENT_KEY", name: "comment", type: "text" },
+  ],
+  NATS: [
+    { label: "NATS_ADDRESS", name: "address", type: "text" },
+    { label: "NATS_SUBJECT", name: "subject", type: "text" },
+    { label: "NATS_USERNAME", name: "username", type: "text" },
+    { label: "NATS_PASSWORD", name: "password", type: "password" },
+    { label: "NATS_TOKEN", name: "token", type: "text" },
+    { label: "NATS_CREDENTIALS_FILE", name: "credentials_file", type: "text" },
+    { label: "NATS_TLS_CA", name: "tls_ca", type: "text" },
+    { label: "NATS_TLS_CLIENT_CERT", name: "tls_client_cert", type: "text" },
+    { label: "NATS_TLS_CLIENT_KEY", name: "tls_client_key", type: "text" },
+    { label: "NATS_TLS_REQUIRED", name: "tls_required", type: "text" },
+    { label: "NATS_QUEUE_DIR", name: "queue_dir", type: "text" },
+    { label: "NATS_QUEUE_LIMIT", name: "queue_limit", type: "number" },
+    { label: "COMMENT_KEY", name: "comment", type: "text" },
+  ],
+  Pulsar: [
+    { label: "PULSAR_BROKER", name: "broker", type: "text" },
+    { label: "PULSAR_TOPIC", name: "topic", type: "text" },
+    { label: "PULSAR_AUTH_TOKEN", name: "auth_token", type: "text" },
+    { label: "PULSAR_USERNAME", name: "username", type: "text" },
+    { label: "PULSAR_PASSWORD", name: "password", type: "password" },
+    { label: "PULSAR_TLS_CA", name: "tls_ca", type: "text" },
+    { label: "PULSAR_TLS_ALLOW_INSECURE", name: "tls_allow_insecure", type: "text" },
+    { label: "PULSAR_TLS_HOSTNAME_VERIFICATION", name: "tls_hostname_verification", type: "text" },
+    { label: "PULSAR_QUEUE_DIR", name: "queue_dir", type: "text" },
+    { label: "PULSAR_QUEUE_LIMIT", name: "queue_limit", type: "number" },
     { label: "COMMENT_KEY", name: "comment", type: "text" },
   ],
 }
 
-const TYPE_OPTIONS = [
+const TYPE_OPTIONS: Array<{ labelKey: string; value: EventTargetType; icon: string; descKey: string }> = [
   {
     labelKey: "MQTT",
     value: "MQTT",
@@ -53,14 +94,33 @@ const TYPE_OPTIONS = [
     icon: "/svg/webhooks.svg",
     descKey: "Trigger custom HTTP endpoints",
   },
-] as const
+  {
+    labelKey: "NATS",
+    value: "NATS",
+    icon: "/svg/nats.svg",
+    descKey: "Send events via NATS",
+  },
+  {
+    labelKey: "Pulsar",
+    value: "Pulsar",
+    icon: "/svg/pulsar.svg",
+    descKey: "Send events via Pulsar",
+  },
+]
+
+const TARGET_TYPE_MAPPING: Record<EventTargetType, string> = {
+  MQTT: "notify_mqtt",
+  Webhook: "notify_webhook",
+  NATS: "notify_nats",
+  Pulsar: "notify_pulsar",
+}
 
 export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTargetNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { updateEventTarget } = useEventTarget()
 
-  const [type, setType] = React.useState("")
+  const [type, setType] = React.useState<EventTargetType | "">("")
   const [name, setName] = React.useState("")
   const [config, setConfig] = React.useState<Record<string, string | number>>({})
   const [nameError, setNameError] = React.useState("")
@@ -133,7 +193,8 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
 
     setSubmitting(true)
     try {
-      const targetType = type === "MQTT" ? "notify_mqtt" : "notify_webhook"
+      if (!type) return
+      const targetType = TARGET_TYPE_MAPPING[type]
       const keyValues = Object.entries(config).map(([key, value]) => ({
         key,
         value: String(value ?? ""),
@@ -160,7 +221,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{type ? t("Add {type} Destination", { type }) : t("Add Event Destination")}</DialogTitle>
         </DialogHeader>

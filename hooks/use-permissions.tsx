@@ -126,10 +126,10 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   }, [api, isAuthenticated, hasResolvedAdmin, fetchAdminStatus])
 
   useEffect(() => {
-    if (api && isAuthenticated && hasResolvedAdmin && !isAdmin && !hasFetchedPolicy && !isLoading) {
+    if (api && isAuthenticated && hasResolvedAdmin && !hasFetchedPolicy && !isLoading) {
       fetchUserPolicy()
     }
-  }, [api, isAuthenticated, hasResolvedAdmin, isAdmin, hasFetchedPolicy, isLoading, fetchUserPolicy])
+  }, [api, isAuthenticated, hasResolvedAdmin, hasFetchedPolicy, isLoading, fetchUserPolicy])
 
   const canChangePassword = isAdmin || hasPermission(CONSOLE_SCOPES.CONSOLE_ADMIN)
 

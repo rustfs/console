@@ -244,6 +244,21 @@ export function OidcForm({
           <FieldError>{errors.scopes}</FieldError>
         </Field>
 
+        <Field className="md:col-span-2">
+          <FieldLabel htmlFor="other_audiences">{t("Other Audiences")}</FieldLabel>
+          <FieldContent>
+            <Input
+              id="other_audiences"
+              value={values.other_audiences}
+              onChange={(event) => onChange("other_audiences", event.target.value)}
+              placeholder=""
+              disabled={isReadOnly}
+            />
+          </FieldContent>
+          <FieldDescription>{t("Comma-separated audience IDs.")}</FieldDescription>
+          <FieldError>{errors.other_audiences}</FieldError>
+        </Field>
+
         <Field orientation="responsive" className="items-start gap-3 rounded-md border p-3">
           <FieldLabel htmlFor="redirect_uri_dynamic">{t("Use Dynamic Redirect URI")}</FieldLabel>
           <FieldContent className="gap-2">

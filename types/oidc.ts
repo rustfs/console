@@ -10,6 +10,7 @@ export interface OidcConfigProvider {
   client_id: string
   client_secret_configured: boolean
   scopes: string[]
+  other_audiences: string[]
   redirect_uri: string
   redirect_uri_dynamic: boolean
   claim_name: string
@@ -34,6 +35,7 @@ export interface SaveOidcConfigPayload {
   client_id: string
   client_secret?: string
   scopes: string[]
+  other_audiences: string[]
   redirect_uri: string
   redirect_uri_dynamic: boolean
   claim_name: string
@@ -63,6 +65,7 @@ export interface ValidateOidcConfigPayload {
   client_id: string
   client_secret: string
   scopes: string[]
+  other_audiences: string[]
   redirect_uri: string
   redirect_uri_dynamic: boolean
 }
@@ -83,6 +86,7 @@ export interface OidcProviderFormValues {
   client_id: string
   client_secret: string
   scopes: string
+  other_audiences: string
   redirect_uri: string
   redirect_uri_dynamic: boolean
   claim_name: string
@@ -104,6 +108,7 @@ export const DEFAULT_OIDC_FORM_VALUES: OidcProviderFormValues = {
   client_id: "",
   client_secret: "",
   scopes: "openid,profile,email",
+  other_audiences: "",
   redirect_uri: "",
   redirect_uri_dynamic: false,
   claim_name: "groups",

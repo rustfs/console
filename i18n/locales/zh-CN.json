@@ -97,6 +97,8 @@
   "Bucket Quota": "存储桶配额",
   "Bucket Quota Exceeded": "存储桶配额已超出",
   "Bucket Quota Insufficient": "存储桶配额不足",
+  "Bucket names must be 3-63 characters long": "存储桶名称长度必须为 3-63 个字符",
+  "Bucket names must not contain uppercase letters": "存储桶名称不能包含大写字母",
   "Set Bucket CORS": "设置存储桶跨域配置",
   "Bucket Replication": "存储桶复制",
   "Bucket Setting": "存储桶设置",

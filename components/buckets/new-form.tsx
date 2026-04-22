@@ -4,13 +4,14 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { useBucket } from "@/hooks/use-bucket"
 import { usePermissions } from "@/hooks/use-permissions"
+import { getOptionalBucketNameError } from "@/lib/bucket-name"
 import { getBytes } from "@/lib/functions"
 import { cn } from "@/lib/utils"
 
@@ -48,9 +49,9 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const [creating, setCreating] = React.useState(false)
 
   const trimmedBucketName = objectKey.trim()
-  const showNameError = trimmedBucketName.length > 0 && (trimmedBucketName.length < 3 || trimmedBucketName.length > 63)
+  const nameError = getOptionalBucketNameError(objectKey)
   const parsedRetentionPeriod = Math.max(1, Number.parseInt(retentionPeriod, 10) || 1)
-  const isSubmitDisabled = creating || trimmedBucketName.length < 3 || trimmedBucketName.length > 63
+  const isSubmitDisabled = creating || !trimmedBucketName || !!nameError
   const canCreateBucket = canCapability("bucket.create")
   const bucketContext = trimmedBucketName ? { bucket: trimmedBucketName } : {}
   const canEditVersioning = canCapability("bucket.versioning.edit", bucketContext)
@@ -85,6 +86,10 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
 
   const handleCreateBucket = async () => {
     if (!canCreateBucket || isSubmitDisabled) return
+    if (nameError) {
+      message.error(t(nameError))
+      return
+    }
 
     const bucketName = trimmedBucketName
     setCreating(true)
@@ -161,9 +166,10 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                 value={objectKey}
                 onChange={(e) => setObjectKey(e.target.value)}
                 autoComplete="off"
-                className={cn("w-full", showNameError && "border-destructive focus-visible:ring-destructive")}
+                className={cn("w-full", nameError && "border-destructive focus-visible:ring-destructive")}
               />
             </FieldContent>
+            {nameError && <FieldDescription className="text-destructive">{t(nameError)}</FieldDescription>}
           </Field>
 
           <Field orientation="responsive" className="items-center">

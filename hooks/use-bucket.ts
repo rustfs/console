@@ -40,6 +40,7 @@ import {
 } from "@aws-sdk/client-s3"
 import { useS3 } from "@/contexts/s3-context"
 import { useApi } from "@/contexts/api-context"
+import { getBucketNameError } from "@/lib/bucket-name"
 
 const BUCKETS_CACHE_DURATION = 10000
 let listBucketsCache: ListBucketsCommandOutput | null = null
@@ -97,7 +98,17 @@ export function useBucket() {
 
   const createBucket = useCallback(
     async (params: { Bucket: string; ObjectLockEnabledForBucket?: boolean }) => {
-      const result = await client.send(new CreateBucketCommand(params))
+      const nameError = getBucketNameError(params.Bucket)
+      if (nameError) {
+        throw new Error(nameError)
+      }
+
+      const result = await client.send(
+        new CreateBucketCommand({
+          ...params,
+          Bucket: params.Bucket.trim(),
+        }),
+      )
       invalidateBucketsCache()
       return result
     },

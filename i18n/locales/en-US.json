@@ -92,6 +92,8 @@
   "Bucket Policy": "Bucket Policy",
   "Bucket Quota": "Bucket Quota",
   "Bucket Quota Exceeded": "Bucket Quota Exceeded",
+  "Bucket names must be 3-63 characters long": "Bucket names must be 3-63 characters long",
+  "Bucket names must not contain uppercase letters": "Bucket names must not contain uppercase letters",
   "Quota Size": "Quota Size",
   "Bucket Quota Insufficient": "Bucket Quota Insufficient",
   "Quota Warning Content": "The total size of the selected files is {total}, which exceeds the remaining bucket quota {remaining}. Do you want to continue?",

@@ -35,12 +35,15 @@ export default function OidcCallbackPage() {
 
     redirectPath.current = isSafeRedirectPath(credentials.redirect, "/")
 
-    loginWithStsCredentials({
-      AccessKeyId: credentials.accessKey,
-      SecretAccessKey: credentials.secretKey,
-      SessionToken: credentials.sessionToken,
-      Expiration: credentials.expiration,
-    })
+    loginWithStsCredentials(
+      {
+        AccessKeyId: credentials.accessKey,
+        SecretAccessKey: credentials.secretKey,
+        SessionToken: credentials.sessionToken,
+        Expiration: credentials.expiration,
+      },
+      credentials.logoutToken ? { logoutToken: credentials.logoutToken } : undefined,
+    )
       .then(() => {
         message.success(t("SSO Login Success"))
         setCredentialsSet(true)

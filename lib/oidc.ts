@@ -1,6 +1,10 @@
 import type { OidcProvider } from "@/types/config"
 import { isSafeRedirectPath } from "@/lib/routes"
 
+export interface OidcLogoutSession {
+  logoutToken: string
+}
+
 /**
  * Fetch configured OIDC providers from the server.
  */
@@ -27,8 +31,18 @@ export function initiateOidcLogin(serverHost: string, providerId: string, redire
 }
 
 /**
+ * Build the backend logout endpoint URL. The backend decides whether to perform
+ * RP-initiated logout with the IdP or fall back to the console login page.
+ */
+export function buildOidcLogoutUrl(serverHost: string, logoutToken: string): string {
+  const base = serverHost.replace(/\/$/, "")
+  return `${base}/rustfs/admin/v3/oidc/logout?logout_token=${encodeURIComponent(logoutToken)}`
+}
+
+/**
  * Parse STS credentials from the URL hash fragment (set by OIDC callback).
- * Expected format: #accessKey=...&secretKey=...&sessionToken=...&expiration=...&redirect=/path
+ * Expected format:
+ * #accessKey=...&secretKey=...&sessionToken=...&expiration=...&redirect=/path&logoutToken=...
  */
 export function parseOidcCallback(hash: string): {
   accessKey: string
@@ -36,6 +50,7 @@ export function parseOidcCallback(hash: string): {
   sessionToken: string
   expiration: string
   redirect: string
+  logoutToken?: string
 } | null {
   // Strip leading # from hash
   const cleaned = hash.replace(/^#\/?/, "")
@@ -45,6 +60,7 @@ export function parseOidcCallback(hash: string): {
   const accessKey = params.get("accessKey")
   const secretKey = params.get("secretKey")
   const sessionToken = params.get("sessionToken")
+  const logoutToken = params.get("logoutToken") ?? undefined
 
   if (!accessKey || !secretKey || !sessionToken) return null
 
@@ -54,5 +70,6 @@ export function parseOidcCallback(hash: string): {
     sessionToken,
     expiration: params.get("expiration") ?? "",
     redirect: isSafeRedirectPath(params.get("redirect") ?? "", "/"),
+    logoutToken: logoutToken || undefined,
   }
 }

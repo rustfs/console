@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useTheme } from "next-themes"
 import { RiUserLine, RiLockPasswordLine, RiLogoutBoxRLine, RiMore2Line } from "@remixicon/react"
-import { buildRoute } from "@/lib/routes"
+import { buildRoute, getLoginRoute } from "@/lib/routes"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
@@ -40,7 +40,7 @@ export function UserDropdown() {
   const { t } = useTranslation()
   const router = useRouter()
   const { resolvedTheme } = useTheme()
-  const { logout, isAdmin } = useAuth()
+  const { logoutWithOidcRedirect, isAdmin } = useAuth()
   const { userInfo } = usePermissions()
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
@@ -60,8 +60,10 @@ export function UserDropdown() {
   }
 
   const handleLogout = async () => {
-    await logout()
-    router.push("/auth/login")
+    const redirected = await logoutWithOidcRedirect()
+    if (!redirected) {
+      router.push(getLoginRoute())
+    }
   }
 
   return (

@@ -6,6 +6,7 @@ import { getStsToken } from "@/lib/sts"
 import type { SiteConfig } from "@/types/config"
 import { getLoginRoute } from "@/lib/routes"
 import { useLocalStorage } from "@/hooks/use-local-storage"
+import { buildOidcLogoutUrl, type OidcLogoutSession } from "@/lib/oidc"
 
 interface Credentials {
   AccessKeyId?: string
@@ -19,9 +20,10 @@ interface AuthContextValue {
     credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
     customConfig?: SiteConfig,
   ) => Promise<unknown>
-  loginWithStsCredentials: (credentials: Credentials) => Promise<void>
+  loginWithStsCredentials: (credentials: Credentials, oidcSession?: OidcLogoutSession) => Promise<void>
   logout: () => void
   logoutAndRedirect: () => void
+  logoutWithOidcRedirect: () => Promise<boolean>
   setIsAdmin: (value: boolean) => void
   getIsAdmin: () => boolean
   credentials: Credentials | undefined
@@ -44,9 +46,17 @@ function isValidCredentials(credentials: Credentials | undefined): boolean {
   return !isExpired(credentials.Expiration)
 }
 
+function isValidOidcLogoutSession(session: OidcLogoutSession | undefined): session is OidcLogoutSession {
+  return typeof session?.logoutToken === "string" && session.logoutToken.trim().length > 0
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [store, setStore] = useLocalStorage<Credentials | undefined>("auth.credentials", undefined)
   const [isAdminStore, setIsAdminStore] = useLocalStorage<boolean | undefined>("auth.isAdmin", undefined)
+  const [oidcSessionStore, setOidcSessionStore] = useLocalStorage<OidcLogoutSession | undefined>(
+    "auth.oidcSession",
+    undefined,
+  )
 
   const setCredentials = useCallback(
     (credentials: Credentials) => {
@@ -65,6 +75,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsAdminStore(value)
     },
     [setIsAdminStore],
+  )
+
+  const setOidcSession = useCallback(
+    (session: OidcLogoutSession | undefined) => {
+      setOidcSessionStore(isValidOidcLogoutSession(session) ? session : undefined)
+    },
+    [setOidcSessionStore],
   )
 
   const getIsAdmin = useCallback(() => {
@@ -87,33 +104,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         SessionToken: credentialsResponse.SessionToken,
         Expiration: credentialsResponse.Expiration?.toISOString(),
       })
+      setOidcSession(undefined)
 
       return credentialsResponse
     },
-    [setCredentials],
+    [setCredentials, setOidcSession],
   )
 
   const loginWithStsCredentials = useCallback(
-    async (creds: Credentials) => {
+    async (creds: Credentials, oidcSession?: OidcLogoutSession) => {
       setCredentials({
         AccessKeyId: creds.AccessKeyId,
         SecretAccessKey: creds.SecretAccessKey,
         SessionToken: creds.SessionToken,
         Expiration: creds.Expiration,
       })
+      setOidcSession(oidcSession)
     },
-    [setCredentials],
+    [setCredentials, setOidcSession],
   )
 
   const logout = useCallback(() => {
     setStore(undefined)
     setIsAdminStore(undefined)
-  }, [setStore, setIsAdminStore])
+    setOidcSessionStore(undefined)
+  }, [setStore, setIsAdminStore, setOidcSessionStore])
 
   const logoutAndRedirect = useCallback(() => {
     logout()
     window.location.href = getLoginRoute()
   }, [logout])
+
+  const logoutWithOidcRedirect = useCallback(async () => {
+    const oidcSession = isValidOidcLogoutSession(oidcSessionStore) ? oidcSessionStore : undefined
+    logout()
+
+    if (!oidcSession) return false
+
+    try {
+      const { configManager } = await import("@/lib/config")
+      const config = await configManager.loadConfig()
+      window.location.href = buildOidcLogoutUrl(config.serverHost, oidcSession.logoutToken)
+      return true
+    } catch {
+      return false
+    }
+  }, [oidcSessionStore, logout])
 
   const credentials = getCredentials()
   const isAuthenticated = isValidCredentials(store)
@@ -124,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithStsCredentials,
       logout,
       logoutAndRedirect,
+      logoutWithOidcRedirect,
       setIsAdmin,
       getIsAdmin,
       credentials,
@@ -135,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loginWithStsCredentials,
       logout,
       logoutAndRedirect,
+      logoutWithOidcRedirect,
       setIsAdmin,
       getIsAdmin,
       credentials,

@@ -18,9 +18,10 @@ interface UserNoticeProps {
   onOpenChange: (open: boolean) => void
   data?: CredentialsData | null
   onClose?: () => void
+  title?: string
 }
 
-export function UserNotice({ open, onOpenChange, data, onClose }: UserNoticeProps) {
+export function UserNotice({ open, onOpenChange, data, onClose, title }: UserNoticeProps) {
   const { t } = useTranslation()
   const accessKey = data?.credentials?.accessKey ?? ""
   const secretKey = data?.credentials?.secretKey ?? ""
@@ -53,7 +54,7 @@ export function UserNotice({ open, onOpenChange, data, onClose }: UserNoticeProp
         onInteractOutside={(e) => e.preventDefault()}
       >
         <DialogHeader>
-          <DialogTitle>{t("New user has been created")}</DialogTitle>
+          <DialogTitle>{title ?? t("New user has been created")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">

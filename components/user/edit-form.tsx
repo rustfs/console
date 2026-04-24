@@ -12,9 +12,11 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { usePolicies } from "@/hooks/use-policies"
 import { useGroups } from "@/hooks/use-groups"
 import { useMessage } from "@/lib/feedback/message"
+import { getAvailableUserEditTabs } from "@/lib/user-edit-tabs"
 import { UserEditSecretKey } from "./edit/secret-key"
 import { UserEditGroups } from "./edit/groups"
 import { UserEditPolicies } from "./edit/policies"
+import { UserEditAccessKeys } from "./edit/access-keys"
 
 interface UserRow {
   accessKey: string
@@ -49,6 +51,8 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   const canEditAccount = canCapability("users.edit")
   const canAssignGroups = canCapability("users.assignGroups")
   const canEditPolicies = canCapability("users.policy.edit")
+  const canManageAccessKeys =
+    canCapability("accessKeys.create") || canCapability("accessKeys.edit") || canCapability("accessKeys.delete")
 
   const [user, setUser] = React.useState<{
     accessKey: string
@@ -72,12 +76,13 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
 
   const statusBoolean = user.status === "enabled"
   const availableTabs = React.useMemo(() => {
-    const tabs: string[] = []
-    if (canEditAccount) tabs.push("account")
-    if (canAssignGroups) tabs.push("groups")
-    if (canEditPolicies) tabs.push("policy")
-    return tabs
-  }, [canAssignGroups, canEditAccount, canEditPolicies])
+    return getAvailableUserEditTabs({
+      canEditAccount,
+      canAssignGroups,
+      canEditPolicies,
+      canManageAccessKeys,
+    })
+  }, [canAssignGroups, canEditAccount, canEditPolicies, canManageAccessKeys])
 
   React.useEffect(() => {
     if (!open || !row?.accessKey) return
@@ -223,7 +228,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   return (
     <Dialog open={open} onOpenChange={closeModal}>
       <DialogContent
-        className="sm:max-w-lg"
+        className="sm:max-w-5xl"
         onPointerDownOutside={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
@@ -237,6 +242,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
               {canEditAccount ? <TabsTrigger value="account">{t("Account")}</TabsTrigger> : null}
               {canAssignGroups ? <TabsTrigger value="groups">{t("Groups")}</TabsTrigger> : null}
               {canEditPolicies ? <TabsTrigger value="policy">{t("Policies")}</TabsTrigger> : null}
+              {canManageAccessKeys ? <TabsTrigger value="access-keys">{t("Access Keys")}</TabsTrigger> : null}
             </TabsList>
 
             {canEditAccount ? (
@@ -277,6 +283,12 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
                   disabled={loading || submitting}
                   onChange={(policy) => setUser((prev) => ({ ...prev, policy }))}
                 />
+              </TabsContent>
+            ) : null}
+
+            {canManageAccessKeys ? (
+              <TabsContent value="access-keys" className="mt-0">
+                <UserEditAccessKeys userName={user.accessKey} />
               </TabsContent>
             ) : null}
           </Tabs>

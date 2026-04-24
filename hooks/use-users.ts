@@ -2,6 +2,10 @@
 
 import { useCallback } from "react"
 import { useApiOptional } from "@/contexts/api-context"
+import {
+  buildCreateUserServiceAccountRequest,
+  buildListUserServiceAccountsRequest,
+} from "@/lib/user-service-account-api"
 
 export function useUsers() {
   const api = useApiOptional()
@@ -88,7 +92,8 @@ export function useUsers() {
   const listAllUserServiceAccounts = useCallback(
     async (name: string) => {
       if (!api) return null
-      return api.get(`/user/${encodeURIComponent(name)}/service-accounts`)
+      const request = buildListUserServiceAccountsRequest(name)
+      return api.get(request.url, { params: request.params })
     },
     [api],
   )
@@ -96,7 +101,8 @@ export function useUsers() {
   const createAUserServiceAccount = useCallback(
     async (name: string, data: Record<string, unknown>) => {
       if (!api) return null
-      return api.post(`/user/${encodeURIComponent(name)}/service-accounts`, data)
+      const request = buildCreateUserServiceAccountRequest(name, data)
+      return api.put(request.url, request.body)
     },
     [api],
   )

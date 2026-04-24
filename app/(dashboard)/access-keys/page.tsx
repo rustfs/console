@@ -264,7 +264,13 @@ export default function AccessKeysPage() {
         onSuccess={listUserAccounts}
       />
 
-      <UserNotice open={noticeOpen} onOpenChange={setNoticeOpen} data={noticeData} onClose={handleNoticeClose} />
+      <UserNotice
+        open={noticeOpen}
+        onOpenChange={setNoticeOpen}
+        data={noticeData}
+        onClose={handleNoticeClose}
+        title={t("New access key has been created")}
+      />
     </Page>
   )
 }

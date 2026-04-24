@@ -1,6 +1,7 @@
 "use client"
 
 import { Checkbox } from "@/components/ui/checkbox"
+import { resolveDataTablePagination } from "@/lib/data-table-pagination"
 import type {
   ColumnDef,
   ColumnFiltersState,
@@ -23,6 +24,7 @@ export interface UseDataTableOptions<TData extends RowData> {
   data: TData[]
   columns: ColumnDef<TData, unknown>[]
   pageSize?: number
+  disablePagination?: boolean
   manualPagination?: boolean
   manualSorting?: boolean
   getRowId?: TableOptions<TData>["getRowId"]
@@ -62,12 +64,23 @@ function createSelectColumn<TData extends RowData>(): ColumnDef<TData> {
 }
 
 export function useDataTable<TData extends RowData>(options: UseDataTableOptions<TData>): UseDataTableReturn<TData> {
+  const paginationConfig = useMemo(
+    () =>
+      resolveDataTablePagination({
+        disablePagination: options.disablePagination,
+        manualPagination: options.manualPagination,
+        pageSize: options.pageSize,
+        dataLength: options.data.length,
+      }),
+    [options.data.length, options.disablePagination, options.manualPagination, options.pageSize],
+  )
+
   const [sorting, setSorting] = useState<SortingState>(options.initialSorting ?? [])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: options.pageSize ?? 10,
+    pageSize: paginationConfig.pageSize,
   })
 
   const columns = useMemo(() => {
@@ -91,7 +104,7 @@ export function useDataTable<TData extends RowData>(options: UseDataTableOptions
     enableSorting: !options.manualSorting,
     enableRowSelection: options.enableRowSelection ?? false,
     manualSorting: options.manualSorting ?? false,
-    manualPagination: options.manualPagination ?? false,
+    manualPagination: paginationConfig.manualPagination,
     getRowId: options.getRowId,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -100,7 +113,7 @@ export function useDataTable<TData extends RowData>(options: UseDataTableOptions
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: options.manualPagination ? undefined : getPaginationRowModel(),
+    getPaginationRowModel: paginationConfig.manualPagination ? undefined : getPaginationRowModel(),
     // Library resets pageIndex during render when data changes, which can trigger setState
     // before commit (e.g. on route change). We do the reset in useEffect instead.
     autoResetPageIndex: false,
@@ -111,6 +124,12 @@ export function useDataTable<TData extends RowData>(options: UseDataTableOptions
   useEffect(() => {
     setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }))
   }, [options.data])
+
+  useEffect(() => {
+    setPagination((prev) =>
+      prev.pageSize === paginationConfig.pageSize ? prev : { ...prev, pageSize: paginationConfig.pageSize },
+    )
+  }, [paginationConfig.pageSize])
 
   const selectedRows = table.getSelectedRowModel().rows.map((row) => row.original)
   const selectedRowIds = table.getSelectedRowModel().rows.map((row) => row.id)

@@ -91,6 +91,11 @@ export default [
     icon: "ri:fingerprint-line",
   },
   {
+    label: "Settings",
+    to: "/settings",
+    icon: "ri:settings-line",
+  },
+  {
     label: "divider",
     key: "divider-2",
     type: "divider",

@@ -12,6 +12,7 @@ interface ProviderListProps {
   providers: OidcConfigProvider[]
   loading?: boolean
   selectedProviderId: string | null
+  canAddProvider?: boolean
   onAddProvider: () => void
   onSelectProvider: (providerId: string) => void
 }
@@ -24,6 +25,7 @@ export function ProviderList({
   providers,
   loading = false,
   selectedProviderId,
+  canAddProvider = true,
   onAddProvider,
   onSelectProvider,
 }: ProviderListProps) {
@@ -36,10 +38,12 @@ export function ProviderList({
           <h2 className="text-sm font-semibold">{t("OIDC Providers")}</h2>
           <p className="text-xs text-muted-foreground">{t("View and manage persisted OIDC providers.")}</p>
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={onAddProvider}>
-          <RiAddLine className="size-4" />
-          {t("Add Provider")}
-        </Button>
+        {canAddProvider ? (
+          <Button type="button" variant="outline" size="sm" onClick={onAddProvider}>
+            <RiAddLine className="size-4" />
+            {t("Add Provider")}
+          </Button>
+        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col">

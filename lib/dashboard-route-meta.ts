@@ -1,4 +1,5 @@
-export const ADMIN_ONLY_DASHBOARD_ROUTES = ["/oidc"] as const
+// These routes require the backend admin identity, not a console policy scope.
+export const ADMIN_ONLY_DASHBOARD_ROUTES = [] as const
 export const DASHBOARD_ROUTE_FALLBACK = "/403/"
 
 /**
@@ -20,6 +21,7 @@ export const MENU_CONTROLLED_DASHBOARD_ROUTES: readonly string[] = [
   "/events-target",
   "/sse",
   "/oidc",
+  "/settings",
   "/license",
 ]
 

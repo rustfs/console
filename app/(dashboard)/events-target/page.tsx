@@ -4,6 +4,7 @@ import * as React from "react"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { RiAddLine, RiRefreshLine, RiDeleteBin5Line } from "@remixicon/react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Page } from "@/components/page"
@@ -12,7 +13,9 @@ import { SearchInput } from "@/components/search-input"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useEventTarget } from "@/hooks/use-event-target"
+import { useModuleSwitches } from "@/hooks/use-module-switches"
 import { EventsTargetNewForm } from "@/components/events-target/new-form"
+import { canManageEventDestinations } from "@/lib/event-destinations-access"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -33,24 +36,40 @@ export default function EventsTargetPage() {
   const message = useMessage()
   const dialog = useDialog()
   const { getEventsTargetList, deleteEventTarget } = useEventTarget()
+  const { getModuleSwitches } = useModuleSwitches()
 
   const [data, setData] = useState<RowData[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [newFormOpen, setNewFormOpen] = useState(false)
+  const [notifyEnabled, setNotifyEnabled] = useState<boolean | undefined>(undefined)
+
+  const canManageDestinations = canManageEventDestinations(notifyEnabled)
 
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const response = await getEventsTargetList()
-      const list = (response?.notification_endpoints ?? []) as RowData[]
+      const [response, switches] = await Promise.allSettled([
+        getEventsTargetList(),
+        getModuleSwitches({ suppress403Redirect: true }),
+      ])
+
+      if (switches.status === "fulfilled" && switches.value) {
+        setNotifyEnabled(switches.value.notify_enabled)
+      }
+
+      if (response.status === "rejected") {
+        throw response.reason
+      }
+
+      const list = (response.value?.notification_endpoints ?? []) as RowData[]
       setData(list)
     } catch {
       setData([])
     } finally {
       setLoading(false)
     }
-  }, [getEventsTargetList])
+  }, [getEventsTargetList, getModuleSwitches])
 
   useEffect(() => {
     loadData()
@@ -69,6 +88,11 @@ export default function EventsTargetPage() {
 
   const deleteItem = useCallback(
     async (row: RowData) => {
+      if (!canManageDestinations) {
+        message.warning(t("Notify is disabled. Enable notify before managing event destinations."))
+        return
+      }
+
       try {
         await deleteEventTarget(`notify_${row.service}`, row.account_id)
         message.success(t("Delete Success"))
@@ -79,11 +103,12 @@ export default function EventsTargetPage() {
         message.error(msg)
       }
     },
-    [deleteEventTarget, loadData, message, t],
+    [canManageDestinations, deleteEventTarget, loadData, message, t],
   )
 
   const confirmDelete = useCallback(
     (row: RowData) => {
+      if (!canManageDestinations) return
       if (!isConfigSource(row.source)) return
 
       dialog.error({
@@ -94,7 +119,7 @@ export default function EventsTargetPage() {
         onPositiveClick: () => deleteItem(row),
       })
     },
-    [deleteItem, dialog, t],
+    [canManageDestinations, deleteItem, dialog, t],
   )
 
   const columns: ColumnDef<RowData>[] = useMemo(
@@ -138,7 +163,12 @@ export default function EventsTargetPage() {
         cell: ({ row }) =>
           isConfigSource(row.original.source) ? (
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => confirmDelete(row.original)}
+                disabled={!canManageDestinations}
+              >
                 <RiDeleteBin5Line className="size-4" aria-hidden />
                 <span>{t("Delete")}</span>
               </Button>
@@ -148,7 +178,7 @@ export default function EventsTargetPage() {
           ),
       },
     ],
-    [confirmDelete, t],
+    [canManageDestinations, confirmDelete, t],
   )
 
   const { table } = useDataTable<RowData>({
@@ -171,7 +201,7 @@ export default function EventsTargetPage() {
                 className="w-full"
               />
             </div>
-            <Button variant="outline" onClick={() => setNewFormOpen(true)}>
+            <Button variant="outline" onClick={() => setNewFormOpen(true)} disabled={!canManageDestinations}>
               <RiAddLine className="size-4" aria-hidden />
               <span>{t("Add Event Destination")}</span>
             </Button>
@@ -184,6 +214,13 @@ export default function EventsTargetPage() {
       >
         <h1 className="text-2xl font-bold">{t("Event Destinations")}</h1>
       </PageHeader>
+
+      {!canManageDestinations ? (
+        <Alert>
+          <AlertTitle>{t("Notify is disabled")}</AlertTitle>
+          <AlertDescription>{t("Enable notify in Settings before managing event destinations.")}</AlertDescription>
+        </Alert>
+      ) : null}
 
       <DataTable
         table={table}

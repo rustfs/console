@@ -133,6 +133,8 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
   [CONSOLE_SCOPES.VIEW_TIERED_STORAGE]: ["admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_EVENT_DESTINATIONS]: ["admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_SSE_SETTINGS]: ["admin:ConfigUpdate", "admin:*", "kms:*"],
+  [CONSOLE_SCOPES.VIEW_OIDC_SETTINGS]: ["admin:ServerInfo", "admin:ConfigUpdate", "admin:*"],
+  [CONSOLE_SCOPES.VIEW_SETTINGS]: ["admin:ServerInfo", "admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_LICENSE]: ["admin:ServerInfo", "admin:*"],
 }
 

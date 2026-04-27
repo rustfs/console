@@ -22,6 +22,7 @@ interface OidcFormProps {
   isReadOnly: boolean
   secretConfigured: boolean
   restartRequired: boolean
+  readOnlyDescription?: string
   isSaving: boolean
   isValidating: boolean
   validateResult: ValidateOidcConfigResponse | null
@@ -44,6 +45,7 @@ export function OidcForm({
   isReadOnly,
   secretConfigured,
   restartRequired,
+  readOnlyDescription,
   isSaving,
   isValidating,
   validateResult,
@@ -74,13 +76,13 @@ export function OidcForm({
           </div>
           <p className="text-sm text-muted-foreground">
             {isReadOnly
-              ? t("Environment-managed providers are read-only")
+              ? (readOnlyDescription ?? t("Environment-managed providers are read-only"))
               : t("Changes will take effect after RustFS restarts")}
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {isCreateMode ? (
+          {isCreateMode && !isReadOnly ? (
             <Button type="button" variant="outline" onClick={onValidate} disabled={isValidating || isSaving}>
               {isValidating ? t("Validating...") : t("Validate")}
             </Button>
@@ -143,7 +145,7 @@ export function OidcForm({
               value={values.provider_id}
               onChange={(event) => onChange("provider_id", event.target.value)}
               placeholder={t("Provider ID")}
-              disabled={!isCreateMode}
+              disabled={!isCreateMode || isReadOnly}
             />
           </FieldContent>
           <FieldDescription>{t("Only letters, numbers, underscores, and hyphens are allowed.")}</FieldDescription>

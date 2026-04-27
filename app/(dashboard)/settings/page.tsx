@@ -1,177 +1,219 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { RiRefreshLine, RiSave3Line } from "@remixicon/react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { Spinner } from "@/components/ui/spinner"
+import { Switch } from "@/components/ui/switch"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
-import { configManager } from "@/lib/config"
+import { useModuleSwitches } from "@/hooks/use-module-switches"
+import { usePermissions } from "@/hooks/use-permissions"
+import {
+  getModuleSwitchEnvKey,
+  isEnvManagedSource,
+  isModuleSwitchEnvConflictError,
+  type ModuleSwitchName,
+  type ModuleSwitchPayload,
+  type ModuleSwitchSnapshot,
+  type ModuleSwitchSource,
+} from "@/lib/module-switches"
+import { CONSOLE_SCOPES } from "@/lib/console-permissions"
 import { useMessage } from "@/lib/feedback/message"
 
-interface CurrentConfig {
-  serverHost: string
-  api: { baseURL: string }
-  s3: { endpoint: string; region: string }
+function getSourceLabel(source: ModuleSwitchSource, t: (key: string) => string) {
+  if (source === "env") return t("ENV")
+  if (source === "console") return t("Console")
+  return t("Default")
 }
 
 export default function SettingsPage() {
   const { t } = useTranslation()
   const message = useMessage()
+  const { getModuleSwitches, saveModuleSwitches } = useModuleSwitches()
+  const { isAdmin, hasPermission } = usePermissions()
+  const canUpdateModuleSwitches = isAdmin || hasPermission(["admin:ConfigUpdate", CONSOLE_SCOPES.CONSOLE_ADMIN], false)
 
-  const [currentConfig, setCurrentConfig] = useState<CurrentConfig>({
-    serverHost: "",
-    api: { baseURL: "" },
-    s3: { endpoint: "", region: "" },
+  const [snapshot, setSnapshot] = useState<ModuleSwitchSnapshot | null>(null)
+  const [formValues, setFormValues] = useState<ModuleSwitchPayload>({
+    notify_enabled: false,
+    audit_enabled: false,
   })
-  const [formData, setFormData] = useState({ serverHost: "" })
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
-  const loadCurrentConfig = useCallback(async () => {
-    try {
-      const config = await configManager.loadConfig()
-      setCurrentConfig({
-        serverHost: config.serverHost,
-        api: { baseURL: config.api.baseURL },
-        s3: {
-          endpoint: config.s3.endpoint ?? "",
-          region: config.s3.region ?? "",
-        },
-      })
-      setFormData({ serverHost: config.serverHost })
-    } catch {
-      message.error(t("Failed to load current configuration"))
-    }
-  }, [message, t])
+  const applySnapshot = useCallback((nextSnapshot: ModuleSwitchSnapshot) => {
+    setSnapshot(nextSnapshot)
+    setFormValues({
+      notify_enabled: nextSnapshot.notify_enabled,
+      audit_enabled: nextSnapshot.audit_enabled,
+    })
+  }, [])
 
-  useEffect(() => {
-    loadCurrentConfig()
-  }, [loadCurrentConfig])
-
-  const currentItems = useMemo(
-    () => [
-      {
-        label: t("Server Host"),
-        value: currentConfig.serverHost || t("Not configured"),
-      },
-      {
-        label: t("API Base URL"),
-        value: currentConfig.api.baseURL || t("Not configured"),
-      },
-      {
-        label: t("S3 Endpoint"),
-        value: currentConfig.s3.endpoint || t("Not configured"),
-      },
-      {
-        label: t("S3 Region"),
-        value: currentConfig.s3.region || t("Not configured"),
-      },
-    ],
-    [currentConfig, t],
-  )
-
-  const saveConfig = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.serverHost) {
-      message.error(t("Please enter server address"))
-      return
-    }
-
+  const loadSwitches = useCallback(async () => {
     setLoading(true)
     try {
-      let urlToValidate = formData.serverHost.trim()
-      if (!/^https?:\/\//.test(urlToValidate)) {
-        urlToValidate = "https://" + urlToValidate
-      }
-
-      new URL(urlToValidate)
-      const urlToSave = /^https?:\/\//.test(formData.serverHost) ? formData.serverHost : urlToValidate
-
-      localStorage.setItem("rustfs-server-host", urlToSave)
-
-      if (!/^https?:\/\//.test(formData.serverHost)) {
-        setFormData({ serverHost: urlToValidate })
-      }
-
-      configManager.clearCache()
-      message.success(t("Configuration saved successfully"))
-
-      setTimeout(() => {
-        window.location.reload()
-      }, 200)
-    } catch {
-      message.error(t("Invalid server address format"))
+      applySnapshot(await getModuleSwitches())
+    } catch (error) {
+      message.error((error as Error).message || t("Failed to load module switches"))
     } finally {
       setLoading(false)
     }
+  }, [applySnapshot, getModuleSwitches, message, t])
+
+  useEffect(() => {
+    void loadSwitches()
+  }, [loadSwitches])
+
+  const hasEnvManagedSwitch = snapshot
+    ? isEnvManagedSource(snapshot.notify_source) || isEnvManagedSource(snapshot.audit_source)
+    : false
+
+  const isDirty = useMemo(() => {
+    if (!snapshot) return false
+    return formValues.notify_enabled !== snapshot.notify_enabled || formValues.audit_enabled !== snapshot.audit_enabled
+  }, [formValues, snapshot])
+
+  const updateSwitch = (moduleName: ModuleSwitchName, checked: boolean) => {
+    if (!canUpdateModuleSwitches) return
+
+    setFormValues((current) => ({
+      ...current,
+      [`${moduleName}_enabled`]: checked,
+    }))
   }
 
-  const resetConfig = () => {
-    localStorage.removeItem("rustfs-server-host")
-    configManager.clearCache()
-    message.success(t("Configuration reset successfully"))
-    setTimeout(() => {
-      window.location.reload()
-    }, 200)
+  const handleSave = async () => {
+    if (!snapshot) return
+    if (!canUpdateModuleSwitches) {
+      message.warning(t("You do not have permission to update module switches."))
+      return
+    }
+
+    setSaving(true)
+    try {
+      applySnapshot(await saveModuleSwitches(formValues))
+      message.success(t("Module switches saved"))
+    } catch (error) {
+      const description = (error as Error).message || t("Save Failed")
+      if (isModuleSwitchEnvConflictError(error)) {
+        message.error(t("Module switch is managed by environment variables"), { description })
+      } else {
+        message.error(description)
+      }
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const switchItems = useMemo(
+    () =>
+      snapshot
+        ? [
+            {
+              name: "notify" as const,
+              label: t("Notify"),
+              checked: formValues.notify_enabled,
+              source: snapshot.notify_source,
+            },
+            {
+              name: "audit" as const,
+              label: t("Audit"),
+              checked: formValues.audit_enabled,
+              source: snapshot.audit_source,
+            },
+          ]
+        : [],
+    [formValues, snapshot, t],
+  )
+
+  if (loading && !snapshot) {
+    return (
+      <Page>
+        <PageHeader>
+          <h1 className="text-2xl font-bold">{t("Settings")}</h1>
+        </PageHeader>
+        <div className="flex items-center justify-center py-24">
+          <Spinner className="size-8 text-muted-foreground" />
+        </div>
+      </Page>
+    )
   }
 
   return (
     <Page>
-      <PageHeader>
+      <PageHeader
+        actions={
+          <>
+            <Button type="button" variant="outline" onClick={loadSwitches} disabled={loading || saving}>
+              <RiRefreshLine className="me-2 size-4" aria-hidden />
+              {t("Sync")}
+            </Button>
+            {canUpdateModuleSwitches ? (
+              <Button type="button" onClick={handleSave} disabled={!snapshot || !isDirty || loading || saving}>
+                {saving ? <Spinner className="me-2 size-4" /> : <RiSave3Line className="me-2 size-4" aria-hidden />}
+                {t("Save")}
+              </Button>
+            ) : null}
+          </>
+        }
+      >
         <h1 className="text-2xl font-bold">{t("Settings")}</h1>
       </PageHeader>
 
-      <div className="flex flex-col gap-6">
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">{t("Current Configuration")}</h2>
-          <dl className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {currentItems.map((item) => (
-              <div key={item.label} className="rounded-md border p-3">
-                <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{item.label}</dt>
-                <dd className="mt-1 text-sm">{item.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold">{t("Server Configuration")}</h2>
-          <form className="space-y-4" onSubmit={saveConfig}>
-            <Field>
-              <FieldLabel>{t("Server Address")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  value={formData.serverHost}
-                  onChange={(e) => setFormData({ serverHost: e.target.value })}
-                  placeholder={t("Please enter server address (e.g., http://localhost:9000)")}
-                  autoComplete="off"
-                />
-              </FieldContent>
-              <FieldDescription>{t("Example: http://localhost:9000 or https://your-domain.com")}</FieldDescription>
-            </Field>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <Button type="submit" variant="default" disabled={loading}>
-                {t("Save Configuration")}
-              </Button>
-              <Button type="button" variant="outline" onClick={resetConfig}>
-                {t("Reset to Default")}
-              </Button>
-            </div>
-          </form>
-
+      <div className="space-y-4">
+        {hasEnvManagedSwitch ? (
           <Alert>
-            <AlertTitle>{t("Configuration Information")}</AlertTitle>
+            <AlertTitle>{t("Environment variables are controlling some switches")}</AlertTitle>
             <AlertDescription>
-              <ul className="list-inside list-disc space-y-1 text-sm">
-                <li>{t("Configuration is saved locally in your browser")}</li>
-                <li>{t("Page will refresh automatically after saving configuration")}</li>
-                <li>{t("Make sure the server address is accessible from your network")}</li>
-              </ul>
+              {t("Update the deployment environment first before changing ENV-managed module switches.")}
             </AlertDescription>
           </Alert>
+        ) : null}
+
+        {!canUpdateModuleSwitches ? (
+          <Alert>
+            <AlertTitle>{t("Read-only settings")}</AlertTitle>
+            <AlertDescription>{t("You do not have permission to update module switches.")}</AlertDescription>
+          </Alert>
+        ) : null}
+
+        <div className="divide-y rounded-none border">
+          {switchItems.map((item) => {
+            const isEnvManaged = isEnvManagedSource(item.source)
+            return (
+              <Field key={item.name} className="grid gap-3 p-4 md:grid-cols-[1fr_auto] md:items-center">
+                <div className="space-y-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <FieldLabel htmlFor={`${item.name}-module-switch`} className="text-sm font-medium">
+                      {item.label}
+                    </FieldLabel>
+                    <Badge variant={item.checked ? "default" : "secondary"}>
+                      {item.checked ? t("Enabled") : t("Disabled")}
+                    </Badge>
+                    <Badge variant={isEnvManaged ? "destructive" : "outline"}>{getSourceLabel(item.source, t)}</Badge>
+                  </div>
+                  {isEnvManaged ? (
+                    <FieldDescription>
+                      {t("Controlled by {envKey}", { envKey: getModuleSwitchEnvKey(item.name) })}
+                    </FieldDescription>
+                  ) : null}
+                </div>
+                <FieldContent className="md:justify-self-end">
+                  <Switch
+                    id={`${item.name}-module-switch`}
+                    checked={item.checked}
+                    onCheckedChange={(checked) => updateSwitch(item.name, checked)}
+                    disabled={!canUpdateModuleSwitches || isEnvManaged || loading || saving}
+                  />
+                </FieldContent>
+              </Field>
+            )
+          })}
         </div>
       </div>
     </Page>

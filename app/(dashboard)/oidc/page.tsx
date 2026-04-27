@@ -8,6 +8,8 @@ import { PageHeader } from "@/components/page-header"
 import { ProviderList } from "@/components/oidc/provider-list"
 import { OidcForm } from "@/components/oidc/form"
 import { useOidcConfig } from "@/hooks/use-oidc-config"
+import { usePermissions } from "@/hooks/use-permissions"
+import { CONSOLE_SCOPES } from "@/lib/console-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import type {
@@ -164,6 +166,8 @@ export default function OidcPage() {
   const message = useMessage()
   const dialog = useDialog()
   const { getOidcConfig, saveOidcConfig, deleteOidcConfig, validateOidcConfig } = useOidcConfig()
+  const { isAdmin, hasPermission } = usePermissions()
+  const canUpdateOidcProviders = isAdmin || hasPermission(["admin:ConfigUpdate", CONSOLE_SCOPES.CONSOLE_ADMIN], false)
 
   const [providers, setProviders] = useState<OidcConfigProvider[]>([])
   const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null)
@@ -182,7 +186,8 @@ export default function OidcPage() {
     [providers, selectedProviderId],
   )
   const isCreateMode = selectedProvider === null
-  const isReadOnly = selectedProvider?.editable === false || selectedProvider?.source === "env"
+  const isProviderReadOnly = selectedProvider?.editable === false || selectedProvider?.source === "env"
+  const isReadOnly = !canUpdateOidcProviders || isProviderReadOnly
   const isDirty = JSON.stringify(formValues) !== JSON.stringify(baselineValues)
 
   const applySelection = useCallback((providerId: string | null, nextProviders: OidcConfigProvider[]) => {
@@ -262,6 +267,8 @@ export default function OidcPage() {
 
   const requestSelection = useCallback(
     (providerId: string | null) => {
+      if (providerId === null && !canUpdateOidcProviders) return
+
       const isSameSelection =
         (providerId === null && selectedProviderIdRef.current === null) || providerId === selectedProviderIdRef.current
       if (isSameSelection) return
@@ -273,7 +280,7 @@ export default function OidcPage() {
       }
       select()
     },
-    [applySelection, confirmDiscardChanges, isDirty, providers],
+    [applySelection, canUpdateOidcProviders, confirmDiscardChanges, isDirty, providers],
   )
 
   const handleFieldChange = useCallback(
@@ -291,7 +298,11 @@ export default function OidcPage() {
   )
 
   const handleSave = useCallback(async () => {
-    if (isReadOnly) return
+    if (!canUpdateOidcProviders) {
+      message.warning(t("You do not have permission to update OIDC providers."))
+      return
+    }
+    if (isProviderReadOnly) return
 
     const errors = validateForm(
       formValues,
@@ -323,10 +334,15 @@ export default function OidcPage() {
     } finally {
       setSaving(false)
     }
-  }, [formValues, isCreateMode, isReadOnly, loadProviders, message, saveOidcConfig, t])
+  }, [canUpdateOidcProviders, formValues, isCreateMode, isProviderReadOnly, loadProviders, message, saveOidcConfig, t])
 
   const handleValidate = useCallback(async () => {
-    if (!isCreateMode || isReadOnly) return
+    if (!isCreateMode) return
+    if (!canUpdateOidcProviders) {
+      message.warning(t("You do not have permission to update OIDC providers."))
+      return
+    }
+    if (isProviderReadOnly) return
 
     const errors = validateForm(
       formValues,
@@ -359,10 +375,15 @@ export default function OidcPage() {
     } finally {
       setValidating(false)
     }
-  }, [formValues, isCreateMode, isReadOnly, message, t, validateOidcConfig])
+  }, [canUpdateOidcProviders, formValues, isCreateMode, isProviderReadOnly, message, t, validateOidcConfig])
 
   const performDelete = useCallback(async () => {
-    if (!selectedProvider || isReadOnly) return
+    if (!selectedProvider) return
+    if (!canUpdateOidcProviders) {
+      message.warning(t("You do not have permission to update OIDC providers."))
+      return
+    }
+    if (isProviderReadOnly) return
 
     setSaving(true)
     try {
@@ -377,10 +398,15 @@ export default function OidcPage() {
     } finally {
       setSaving(false)
     }
-  }, [deleteOidcConfig, isReadOnly, loadProviders, message, selectedProvider, t])
+  }, [canUpdateOidcProviders, deleteOidcConfig, isProviderReadOnly, loadProviders, message, selectedProvider, t])
 
   const handleDelete = useCallback(() => {
-    if (!selectedProvider || isReadOnly) return
+    if (!selectedProvider) return
+    if (!canUpdateOidcProviders) {
+      message.warning(t("You do not have permission to update OIDC providers."))
+      return
+    }
+    if (isProviderReadOnly) return
 
     dialog.error({
       title: t("Delete"),
@@ -389,7 +415,7 @@ export default function OidcPage() {
       negativeText: t("Cancel"),
       onPositiveClick: performDelete,
     })
-  }, [dialog, isReadOnly, performDelete, selectedProvider, t])
+  }, [canUpdateOidcProviders, dialog, isProviderReadOnly, message, performDelete, selectedProvider, t])
 
   return (
     <Page>
@@ -406,11 +432,19 @@ export default function OidcPage() {
           </AlertDescription>
         </Alert>
 
+        {!canUpdateOidcProviders ? (
+          <Alert>
+            <AlertTitle>{t("Read-only OIDC settings")}</AlertTitle>
+            <AlertDescription>{t("You do not have permission to update OIDC providers.")}</AlertDescription>
+          </Alert>
+        ) : null}
+
         <div className="grid gap-4 xl:grid-cols-[22rem_minmax(0,1fr)]">
           <ProviderList
             providers={providers}
             loading={loading}
             selectedProviderId={selectedProviderId}
+            canAddProvider={canUpdateOidcProviders}
             onAddProvider={() => requestSelection(null)}
             onSelectProvider={(providerId) => requestSelection(providerId)}
           />
@@ -423,6 +457,9 @@ export default function OidcPage() {
             isReadOnly={isReadOnly}
             secretConfigured={selectedProvider?.client_secret_configured ?? false}
             restartRequired={restartRequired}
+            readOnlyDescription={
+              !canUpdateOidcProviders ? t("You do not have permission to update OIDC providers.") : undefined
+            }
             isSaving={saving}
             isValidating={validating}
             validateResult={validateResult}

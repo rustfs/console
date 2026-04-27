@@ -17,6 +17,7 @@ export const CONSOLE_SCOPES = {
   VIEW_EVENT_DESTINATIONS: "console:EventDestinations",
   VIEW_SSE_SETTINGS: "console:SSESettings",
   VIEW_OIDC_SETTINGS: "console:OIDCSettings",
+  VIEW_SETTINGS: "console:Settings",
   VIEW_LICENSE: "console:License",
 } as const
 
@@ -36,5 +37,7 @@ export const PAGE_PERMISSIONS: Record<string, ConsoleScope[]> = {
   "/tiers": [CONSOLE_SCOPES.VIEW_TIERED_STORAGE],
   "/events-target": [CONSOLE_SCOPES.VIEW_EVENT_DESTINATIONS],
   "/sse": [CONSOLE_SCOPES.VIEW_SSE_SETTINGS],
+  "/oidc": [CONSOLE_SCOPES.VIEW_OIDC_SETTINGS],
+  "/settings": [CONSOLE_SCOPES.VIEW_SETTINGS],
   "/license": [CONSOLE_SCOPES.VIEW_LICENSE],
 }

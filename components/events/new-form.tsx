@@ -19,6 +19,7 @@ interface EventsNewFormProps {
   onOpenChange: (open: boolean) => void
   bucketName: string
   onSuccess?: () => void
+  disabled?: boolean
 }
 
 const EVENT_OPTIONS = [
@@ -42,7 +43,7 @@ const EVENT_MAPPING: Record<string, string[]> = {
   SCANNER: ["s3:Scanner:ManyVersions", "s3:Scanner:BigPrefix"],
 }
 
-export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess }: EventsNewFormProps) {
+export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disabled = false }: EventsNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { getEventTargetArnList } = useEventTarget()
@@ -100,6 +101,11 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess }: Eve
   }
 
   const handleSubmit = async () => {
+    if (disabled) {
+      message.warning(t("Notify is disabled. Enable notify before managing bucket event subscriptions."))
+      return
+    }
+
     if (!validate()) return
 
     try {
@@ -195,7 +201,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess }: Eve
           <Field>
             <FieldLabel htmlFor="event-resource-name">{t("Amazon Resource Name")}</FieldLabel>
             <FieldContent>
-              <Select value={resourceName} onValueChange={setResourceName} disabled={!arnList.length}>
+              <Select value={resourceName} onValueChange={setResourceName} disabled={disabled || !arnList.length}>
                 <SelectTrigger id="event-resource-name">
                   <SelectValue placeholder={t("Please select resource name")} />
                 </SelectTrigger>
@@ -218,6 +224,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess }: Eve
                 id="event-prefix"
                 value={prefix}
                 onChange={(e) => setPrefix(e.target.value)}
+                disabled={disabled}
                 placeholder={t("Please enter prefix")}
               />
             </FieldContent>
@@ -230,6 +237,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess }: Eve
                 id="event-suffix"
                 value={suffix}
                 onChange={(e) => setSuffix(e.target.value)}
+                disabled={disabled}
                 placeholder={t("Please enter suffix")}
               />
             </FieldContent>
@@ -245,6 +253,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess }: Eve
                       <Checkbox
                         checked={events.includes(event.value)}
                         onCheckedChange={(v) => handleEventChecked(event.value, v)}
+                        disabled={disabled}
                         className="mt-1"
                       />
                       <span>{t(event.labelKey)}</span>
@@ -261,7 +270,9 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess }: Eve
           <Button variant="outline" onClick={handleCancel}>
             {t("Cancel")}
           </Button>
-          <Button onClick={handleSubmit}>{t("Save")}</Button>
+          <Button onClick={handleSubmit} disabled={disabled}>
+            {t("Save")}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -3,13 +3,16 @@
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiAddLine, RiRefreshLine } from "@remixicon/react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { EventsNewForm } from "@/components/events/new-form"
 import { getEventsColumns } from "@/components/events/columns"
 import { useBucket } from "@/hooks/use-bucket"
+import { useModuleSwitches } from "@/hooks/use-module-switches"
 import { usePermissions } from "@/hooks/use-permissions"
+import { canManageNotifyBackedFeature } from "@/lib/notify-module-access"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import type { NotificationItem } from "@/lib/events"
@@ -24,17 +27,34 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
   const dialog = useDialog()
   const { canCapability } = usePermissions()
   const { listBucketNotifications, putBucketNotifications } = useBucket()
+  const { getModuleSwitches } = useModuleSwitches()
   const eventsContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
   const canEditEvents = canCapability("bucket.events.edit", eventsContext)
 
   const [data, setData] = React.useState<NotificationItem[]>([])
   const [loading, setLoading] = React.useState(false)
   const [newFormOpen, setNewFormOpen] = React.useState(false)
+  const [notifyEnabled, setNotifyEnabled] = React.useState<boolean | undefined>(undefined)
+
+  const canManageBucketEvents = canEditEvents && canManageNotifyBackedFeature(notifyEnabled)
 
   const loadData = React.useCallback(async () => {
     setLoading(true)
     try {
-      const response = await listBucketNotifications(bucketName)
+      const [response, switches] = await Promise.allSettled([
+        listBucketNotifications(bucketName),
+        getModuleSwitches({ suppress403Redirect: true }),
+      ])
+
+      if (switches.status === "fulfilled" && switches.value) {
+        setNotifyEnabled(switches.value.notify_enabled)
+      }
+
+      if (response.status === "rejected") {
+        throw response.reason
+      }
+
+      const responseValue = response.value
       const notifications: NotificationItem[] = []
 
       const addFromConfig = (
@@ -71,7 +91,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
         )
       }
 
-      const r = response as {
+      const r = responseValue as {
         LambdaFunctionConfigurations?: unknown[]
         QueueConfigurations?: unknown[]
         TopicConfigurations?: unknown[]
@@ -87,7 +107,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
     } finally {
       setLoading(false)
     }
-  }, [bucketName, listBucketNotifications])
+  }, [bucketName, getModuleSwitches, listBucketNotifications])
 
   React.useEffect(() => {
     loadData()
@@ -96,6 +116,11 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
   const handleRowDelete = React.useCallback(
     async (row: NotificationItem) => {
       if (!canEditEvents) return
+      if (!canManageBucketEvents) {
+        message.warning(t("Notify is disabled. Enable notify before managing bucket event subscriptions."))
+        return
+      }
+
       const confirmed = await new Promise<boolean>((resolve) => {
         dialog.warning({
           title: t("Confirm Delete"),
@@ -141,12 +166,22 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
         setLoading(false)
       }
     },
-    [bucketName, canEditEvents, dialog, listBucketNotifications, loadData, message, putBucketNotifications, t],
+    [
+      bucketName,
+      canEditEvents,
+      canManageBucketEvents,
+      dialog,
+      listBucketNotifications,
+      loadData,
+      message,
+      putBucketNotifications,
+      t,
+    ],
   )
 
   const columns = React.useMemo(
-    () => getEventsColumns(t, handleRowDelete, canEditEvents),
-    [canEditEvents, t, handleRowDelete],
+    () => getEventsColumns(t, handleRowDelete, canManageBucketEvents),
+    [canManageBucketEvents, t, handleRowDelete],
   )
 
   const { table } = useDataTable<NotificationItem>({
@@ -161,7 +196,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
         <h2 className="text-lg font-medium">{t("Events")}</h2>
         <div className="flex gap-2">
           {canEditEvents ? (
-            <Button variant="outline" onClick={() => setNewFormOpen(true)}>
+            <Button variant="outline" onClick={() => setNewFormOpen(true)} disabled={!canManageBucketEvents}>
               <RiAddLine className="size-4" />
               <span>{t("Add Event Subscription")}</span>
             </Button>
@@ -173,6 +208,15 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
         </div>
       </div>
 
+      {canEditEvents && !canManageBucketEvents ? (
+        <Alert>
+          <AlertTitle>{t("Notify is disabled")}</AlertTitle>
+          <AlertDescription>
+            {t("Enable notify in Settings before managing bucket event subscriptions.")}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <DataTable
         table={table}
         isLoading={loading}
@@ -180,7 +224,13 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
         emptyDescription={t("Add Event Subscription to get started")}
       />
 
-      <EventsNewForm open={newFormOpen} onOpenChange={setNewFormOpen} bucketName={bucketName} onSuccess={loadData} />
+      <EventsNewForm
+        open={newFormOpen}
+        onOpenChange={setNewFormOpen}
+        bucketName={bucketName}
+        onSuccess={loadData}
+        disabled={!canManageBucketEvents}
+      />
     </div>
   )
 }

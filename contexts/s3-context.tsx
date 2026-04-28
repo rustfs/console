@@ -5,11 +5,45 @@ import { useRouter } from "next/navigation"
 import { S3Client } from "@aws-sdk/client-s3"
 import { useAuth } from "@/contexts/auth-context"
 import { configManager } from "@/lib/config"
+import { getServiceErrorMessage, getXmlErrorMessage } from "@/lib/error-handler"
 import type { SiteConfig } from "@/types/config"
 
 interface S3Response {
   response?: { body?: string }
   [key: string]: unknown
+}
+
+type StreamCollector = (streamBody: unknown) => Promise<Uint8Array>
+
+const readResponseBodyText = async (
+  body: unknown,
+  streamCollector: StreamCollector | undefined,
+): Promise<string | null> => {
+  if (typeof body === "string") {
+    return body
+  }
+
+  if (body instanceof Uint8Array) {
+    return new TextDecoder("utf-8").decode(body)
+  }
+
+  if (!body || !streamCollector) {
+    return null
+  }
+
+  const bytes = await streamCollector(body)
+  return new TextDecoder("utf-8").decode(bytes)
+}
+
+const createS3ServiceError = (message: string, statusCode: number) => {
+  const error = new Error(message) as Error & {
+    Code?: string
+    $metadata?: { httpStatusCode?: number }
+  }
+  error.name = message
+  error.Code = message
+  error.$metadata = { httpStatusCode: statusCode }
+  return error
 }
 
 function patchReplicationBody(
@@ -95,6 +129,31 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
         }) as any,
         { step: "serialize", name: "injectDeleteReplication", priority: "low" },
       )
+      client.middlewareStack.addRelativeTo(
+        ((next: any) => async (args: any) => {
+          const result = await next(args)
+          const response = result?.response
+          const statusCode = response?.statusCode
+
+          if (typeof statusCode === "number" && statusCode >= 300) {
+            const streamCollector = client.config.streamCollector as StreamCollector | undefined
+            const bodyText = await readResponseBodyText(response.body, streamCollector)
+            const errorMessage = bodyText ? (getXmlErrorMessage(bodyText) ?? bodyText.trim()) : null
+
+            if (errorMessage) {
+              throw createS3ServiceError(errorMessage, statusCode)
+            }
+          }
+
+          return result
+        }) as any,
+        {
+          name: "normalizeXmlErrorResponse",
+          relation: "after",
+          toMiddleware: "deserializerMiddleware",
+          override: true,
+        },
+      )
       client.middlewareStack.add(
         ((next: any) => async (args: any) => {
           try {
@@ -137,8 +196,10 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
                 return { response: { statusCode: 401, headers: {} } }
               }
             }
-            if (err?.Code) {
-              throw new Error(err.Code)
+
+            const serviceErrorMessage = getServiceErrorMessage(error)
+            if (serviceErrorMessage) {
+              throw new Error(serviceErrorMessage)
             }
             throw error
           }

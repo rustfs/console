@@ -19,6 +19,7 @@ export const MENU_CONTROLLED_DASHBOARD_ROUTES: readonly string[] = [
   "/status",
   "/tiers",
   "/events-target",
+  "/audit-target",
   "/sse",
   "/oidc",
   "/settings",

@@ -81,6 +81,11 @@ export default [
     icon: "ri:bookmark-3-line",
   },
   {
+    label: "Audit Targets",
+    to: "/audit-target",
+    icon: "ri:file-shield-2-line",
+  },
+  {
     label: "SSE Settings",
     to: "/sse",
     icon: "ri:secure-payment-line",

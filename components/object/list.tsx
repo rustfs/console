@@ -625,7 +625,10 @@ export function ObjectList({
                 ) : null}
               </>
             ) : null}
-            <Button variant="outline" onClick={() => (onRefresh ? onRefresh() : void fetchObjects({ resetPagination: true }))}>
+            <Button
+              variant="outline"
+              onClick={() => (onRefresh ? onRefresh() : void fetchObjects({ resetPagination: true }))}
+            >
               <RiRefreshLine className="size-4" />
               <span>{t("Refresh")}</span>
             </Button>

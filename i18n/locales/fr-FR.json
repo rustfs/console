@@ -723,6 +723,7 @@
   "Select user group members": "Sélectionner les membres du groupe d'utilisateurs",
   "Select user group policies": "Sélectionner les politiques du groupe d'utilisateurs",
   "Selected Type": "Type sélectionné",
+  "Send events via Kafka": "Envoyer des événements via Kafka",
   "Send events via MQTT broker": "Envoyer des événements via un courtier MQTT",
   "Send events via NATS": "Envoyer des événements via NATS",
   "Send events via Pulsar": "Envoyer des événements via Pulsar",

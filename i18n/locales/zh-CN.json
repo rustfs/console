@@ -757,6 +757,7 @@
   "Select user group members": "选择用户组成员",
   "Select user group policies": "选择用户组策略",
   "Selected Type": "所选类型",
+  "Send events via Kafka": "通过 Kafka 发送事件",
   "Send events via MQTT broker": "通过 MQTT 代理发送事件",
   "Send events via NATS": "通过 NATS 发送事件",
   "Send events via Pulsar": "通过 Pulsar 发送事件",

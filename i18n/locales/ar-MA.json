@@ -704,6 +704,7 @@
   "Select user group members": "تحديد أعضاء مجموعة المستخدمين",
   "Select user group policies": "تحديد سياسات مجموعة المستخدمين",
   "Selected Type": "النوع المحدد",
+  "Send events via Kafka": "إرسال الأحداث عبر Kafka",
   "Send events via MQTT broker": "إرسال الأحداث عبر وسيط MQTT",
   "Send events via NATS": "إرسال الأحداث عبر NATS",
   "Send events via Pulsar": "إرسال الأحداث عبر Pulsar",

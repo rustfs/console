@@ -723,6 +723,7 @@
   "Select user group members": "사용자 그룹 멤버 선택",
   "Select user group policies": "사용자 그룹 정책 선택",
   "Selected Type": "선택된 유형",
+  "Send events via Kafka": "Kafka를 통해 이벤트 전송",
   "Send events via MQTT broker": "MQTT 브로커를 통해 이벤트 전송",
   "Send events via NATS": "NATS를 통해 이벤트 전송",
   "Send events via Pulsar": "Pulsar를 통해 이벤트 전송",

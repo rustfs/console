@@ -723,6 +723,7 @@
   "Select user group members": "Выбрать участников группы пользователей",
   "Select user group policies": "Выбрать политики группы пользователей",
   "Selected Type": "Выбранный тип",
+  "Send events via Kafka": "Отправлять события через Kafka",
   "Send events via MQTT broker": "Отправлять события через брокер MQTT",
   "Send events via NATS": "Отправлять события через NATS",
   "Send events via Pulsar": "Отправлять события через Pulsar",

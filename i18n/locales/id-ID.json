@@ -723,6 +723,7 @@
   "Select user group members": "Pilih anggota grup pengguna",
   "Select user group policies": "Pilih kebijakan grup pengguna",
   "Selected Type": "Tipe Terpilih",
+  "Send events via Kafka": "Kirim event melalui Kafka",
   "Send events via MQTT broker": "Kirim event melalui broker MQTT",
   "Send events via NATS": "Kirim event melalui NATS",
   "Send events via Pulsar": "Kirim event melalui Pulsar",

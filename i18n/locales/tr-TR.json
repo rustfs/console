@@ -723,6 +723,7 @@
   "Select user group members": "Kullanıcı grubu üyelerini seçin",
   "Select user group policies": "Kullanıcı grubu politikalarını seçin",
   "Selected Type": "Seçilen Tür",
+  "Send events via Kafka": "Olayları Kafka aracılığıyla gönder",
   "Send events via MQTT broker": "Olayları MQTT komisyoncusu aracılığıyla gönder",
   "Send events via NATS": "Olayları NATS aracılığıyla gönder",
   "Send events via Pulsar": "Olayları Pulsar aracılığıyla gönder",

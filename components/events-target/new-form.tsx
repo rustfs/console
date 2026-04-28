@@ -8,6 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { useEventTarget } from "@/hooks/use-event-target"
+import {
+  EVENT_TARGET_CONFIG_OPTIONS,
+  EVENT_TARGET_TYPE_MAPPING,
+  EVENT_TARGET_TYPE_OPTIONS,
+  type EventTargetType,
+} from "@/lib/events-target-config"
 import { useMessage } from "@/lib/feedback/message"
 import { cn } from "@/lib/utils"
 import { buildRoute } from "@/lib/routes"
@@ -16,103 +22,6 @@ interface EventsTargetNewFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
-}
-
-type EventTargetType = "MQTT" | "Webhook" | "NATS" | "Pulsar"
-type ConfigField = { label: string; name: string; type: "text" | "password" | "number" }
-
-const CONFIG_OPTIONS: Record<EventTargetType, ConfigField[]> = {
-  MQTT: [
-    { label: "MQTT_BROKER", name: "broker", type: "text" },
-    { label: "MQTT_TOPIC", name: "topic", type: "text" },
-    { label: "MQTT_QOS", name: "qos", type: "number" },
-    { label: "MQTT_USERNAME", name: "username", type: "text" },
-    { label: "MQTT_PASSWORD", name: "password", type: "password" },
-    { label: "MQTT_RECONNECT_INTERVAL", name: "reconnect_interval", type: "number" },
-    { label: "MQTT_KEEP_ALIVE_INTERVAL", name: "keep_alive_interval", type: "number" },
-    { label: "MQTT_QUEUE_DIR", name: "queue_dir", type: "text" },
-    { label: "MQTT_QUEUE_LIMIT", name: "queue_limit", type: "number" },
-    { label: "MQTT_TLS_POLICY", name: "tls_policy", type: "text" },
-    { label: "MQTT_TLS_CA", name: "tls_ca", type: "text" },
-    { label: "MQTT_TLS_CLIENT_CERT", name: "tls_client_cert", type: "text" },
-    { label: "MQTT_TLS_CLIENT_KEY", name: "tls_client_key", type: "text" },
-    { label: "MQTT_TLS_TRUST_LEAF_AS_CA", name: "tls_trust_leaf_as_ca", type: "text" },
-    { label: "MQTT_WS_PATH_ALLOWLIST", name: "ws_path_allowlist", type: "text" },
-    { label: "COMMENT_KEY", name: "comment", type: "text" },
-  ],
-  Webhook: [
-    { label: "WEBHOOK_ENDPOINT", name: "endpoint", type: "text" },
-    { label: "WEBHOOK_AUTH_TOKEN", name: "auth_token", type: "text" },
-    { label: "WEBHOOK_QUEUE_LIMIT", name: "queue_limit", type: "number" },
-    { label: "WEBHOOK_QUEUE_DIR", name: "queue_dir", type: "text" },
-    { label: "WEBHOOK_CLIENT_CERT", name: "client_cert", type: "text" },
-    { label: "WEBHOOK_CLIENT_KEY", name: "client_key", type: "text" },
-    { label: "WEBHOOK_CLIENT_CA", name: "client_ca", type: "text" },
-    { label: "WEBHOOK_SKIP_TLS_VERIFY", name: "skip_tls_verify", type: "text" },
-    { label: "COMMENT_KEY", name: "comment", type: "text" },
-  ],
-  NATS: [
-    { label: "NATS_ADDRESS", name: "address", type: "text" },
-    { label: "NATS_SUBJECT", name: "subject", type: "text" },
-    { label: "NATS_USERNAME", name: "username", type: "text" },
-    { label: "NATS_PASSWORD", name: "password", type: "password" },
-    { label: "NATS_TOKEN", name: "token", type: "text" },
-    { label: "NATS_CREDENTIALS_FILE", name: "credentials_file", type: "text" },
-    { label: "NATS_TLS_CA", name: "tls_ca", type: "text" },
-    { label: "NATS_TLS_CLIENT_CERT", name: "tls_client_cert", type: "text" },
-    { label: "NATS_TLS_CLIENT_KEY", name: "tls_client_key", type: "text" },
-    { label: "NATS_TLS_REQUIRED", name: "tls_required", type: "text" },
-    { label: "NATS_QUEUE_DIR", name: "queue_dir", type: "text" },
-    { label: "NATS_QUEUE_LIMIT", name: "queue_limit", type: "number" },
-    { label: "COMMENT_KEY", name: "comment", type: "text" },
-  ],
-  Pulsar: [
-    { label: "PULSAR_BROKER", name: "broker", type: "text" },
-    { label: "PULSAR_TOPIC", name: "topic", type: "text" },
-    { label: "PULSAR_AUTH_TOKEN", name: "auth_token", type: "text" },
-    { label: "PULSAR_USERNAME", name: "username", type: "text" },
-    { label: "PULSAR_PASSWORD", name: "password", type: "password" },
-    { label: "PULSAR_TLS_CA", name: "tls_ca", type: "text" },
-    { label: "PULSAR_TLS_ALLOW_INSECURE", name: "tls_allow_insecure", type: "text" },
-    { label: "PULSAR_TLS_HOSTNAME_VERIFICATION", name: "tls_hostname_verification", type: "text" },
-    { label: "PULSAR_QUEUE_DIR", name: "queue_dir", type: "text" },
-    { label: "PULSAR_QUEUE_LIMIT", name: "queue_limit", type: "number" },
-    { label: "COMMENT_KEY", name: "comment", type: "text" },
-  ],
-}
-
-const TYPE_OPTIONS: Array<{ labelKey: string; value: EventTargetType; icon: string; descKey: string }> = [
-  {
-    labelKey: "MQTT",
-    value: "MQTT",
-    icon: "/svg/mqtt.svg",
-    descKey: "Send events via MQTT broker",
-  },
-  {
-    labelKey: "Webhook",
-    value: "Webhook",
-    icon: "/svg/webhooks.svg",
-    descKey: "Trigger custom HTTP endpoints",
-  },
-  {
-    labelKey: "NATS",
-    value: "NATS",
-    icon: "/svg/nats.svg",
-    descKey: "Send events via NATS",
-  },
-  {
-    labelKey: "Pulsar",
-    value: "Pulsar",
-    icon: "/svg/pulsar.svg",
-    descKey: "Send events via Pulsar",
-  },
-]
-
-const TARGET_TYPE_MAPPING: Record<EventTargetType, string> = {
-  MQTT: "notify_mqtt",
-  Webhook: "notify_webhook",
-  NATS: "notify_nats",
-  Pulsar: "notify_pulsar",
 }
 
 export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTargetNewFormProps) {
@@ -126,8 +35,8 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
   const [nameError, setNameError] = React.useState("")
   const [submitting, setSubmitting] = React.useState(false)
 
-  const currentConfigOptions = type ? (CONFIG_OPTIONS[type] ?? []) : []
-  const selectedOption = TYPE_OPTIONS.find((o) => o.value === type)
+  const currentConfigOptions = type ? (EVENT_TARGET_CONFIG_OPTIONS[type] ?? []) : []
+  const selectedOption = EVENT_TARGET_TYPE_OPTIONS.find((o) => o.value === type)
 
   const resetForm = React.useCallback(() => {
     setType("")
@@ -143,9 +52,9 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
   }, [open, resetForm])
 
   React.useEffect(() => {
-    if (type && CONFIG_OPTIONS[type]) {
+    if (type && EVENT_TARGET_CONFIG_OPTIONS[type]) {
       const nextConfig: Record<string, string | number> = {}
-      CONFIG_OPTIONS[type].forEach((item) => {
+      EVENT_TARGET_CONFIG_OPTIONS[type].forEach((item) => {
         nextConfig[item.name] = ""
       })
       setConfig(nextConfig)
@@ -194,7 +103,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
     setSubmitting(true)
     try {
       if (!type) return
-      const targetType = TARGET_TYPE_MAPPING[type]
+      const targetType = EVENT_TARGET_TYPE_MAPPING[type]
       const keyValues = Object.entries(config).map(([key, value]) => ({
         key,
         value: String(value ?? ""),
@@ -228,7 +137,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
         <div className="space-y-6">
           {!type ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {TYPE_OPTIONS.map((option) => (
+              {EVENT_TARGET_TYPE_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   type="button"

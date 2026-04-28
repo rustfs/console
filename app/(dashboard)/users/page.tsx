@@ -16,6 +16,7 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { usePermissions } from "@/hooks/use-permissions"
 import { UserNewForm } from "@/components/user/new-form"
 import { UserEditForm } from "@/components/user/edit-form"
+import { UserAddToGroupForm } from "@/components/user/add-to-group-form"
 import { useUsers } from "@/hooks/use-users"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
@@ -64,6 +65,7 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [newFormOpen, setNewFormOpen] = useState(false)
   const [editFormOpen, setEditFormOpen] = useState(false)
+  const [addToGroupOpen, setAddToGroupOpen] = useState(false)
   const [editRow, setEditRow] = useState<UserRow | null>(null)
 
   const getDataList = React.useCallback(async () => {
@@ -212,7 +214,7 @@ export default function UsersPage() {
   }
 
   const addToGroup = () => {
-    message.error(t("Add to Group") + " - " + t("Coming soon"))
+    setAddToGroupOpen(true)
   }
 
   return (
@@ -269,6 +271,15 @@ export default function UsersPage() {
 
         <UserNewForm open={newFormOpen} onOpenChange={setNewFormOpen} onSuccess={getDataList} />
         <UserEditForm open={editFormOpen} onOpenChange={setEditFormOpen} row={editRow} onSuccess={getDataList} />
+        <UserAddToGroupForm
+          open={addToGroupOpen}
+          onOpenChange={setAddToGroupOpen}
+          selectedUsers={selectedKeys}
+          onSuccess={() => {
+            table.resetRowSelection()
+            getDataList()
+          }}
+        />
       </div>
     </Page>
   )

@@ -1,14 +1,14 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { initI18n, RTL_LOCALES } from "@/lib/i18n"
+import { DEFAULT_LOCALE, initI18n, isRtlLocale, normalizeLocale } from "@/lib/i18n"
 import { DirectionProvider } from "@/components/ui/direction"
 import i18n from "i18next"
 
 type Dir = "ltr" | "rtl"
 
 function getDir(lang: string): Dir {
-  return RTL_LOCALES.has(lang.split("-")[0]) ? "rtl" : "ltr"
+  return isRtlLocale(lang) ? "rtl" : "ltr"
 }
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
@@ -17,7 +17,9 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const mountedRef = useRef(true)
 
   const applyDir = (lang: string) => {
+    const locale = normalizeLocale(lang)
     const d = getDir(lang)
+    document.documentElement.lang = locale
     document.documentElement.dir = d
     setDir(d)
   }
@@ -27,12 +29,15 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     initI18n()
       .then(() => {
         if (mountedRef.current) {
-          applyDir(i18n.language ?? "en")
+          applyDir(i18n.resolvedLanguage ?? i18n.language ?? DEFAULT_LOCALE)
           setReady(true)
         }
       })
       .catch(() => {
-        if (mountedRef.current) setReady(true)
+        if (mountedRef.current) {
+          applyDir(DEFAULT_LOCALE)
+          setReady(true)
+        }
       })
 
     const handler = (lng: string) => applyDir(lng)

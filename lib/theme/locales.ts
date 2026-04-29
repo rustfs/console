@@ -3,9 +3,10 @@
 import { buildRoute } from "@/lib/routes"
 import { getThemeId } from "@/lib/theme/manifest"
 
-let localeIndexPromise: Promise<Set<string>> | null = null
+const localeIndexPromises = new Map<string, Promise<Set<string>>>()
 
 async function getThemeLocaleIndex(themeId: string): Promise<Set<string>> {
+  let localeIndexPromise = localeIndexPromises.get(themeId)
   if (!localeIndexPromise) {
     localeIndexPromise = (async () => {
       try {
@@ -19,6 +20,7 @@ async function getThemeLocaleIndex(themeId: string): Promise<Set<string>> {
         return new Set<string>()
       }
     })()
+    localeIndexPromises.set(themeId, localeIndexPromise)
   }
 
   return localeIndexPromise

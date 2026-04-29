@@ -4,65 +4,84 @@ import i18n from "i18next"
 import { initReactI18next } from "react-i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
 import { loadThemeLocaleOverride } from "@/lib/theme/locales"
-
-// Map short locale codes (from Nuxt i18n_redirected) to locale file names
-const LOCALE_FILE_MAP: Record<string, string> = {
-  en: "en-US",
-  ar: "ar-MA",
-  zh: "zh-CN",
-  ja: "ja-JP",
-  ko: "ko-KR",
-  de: "de-DE",
-  fr: "fr-FR",
-  es: "es-ES",
-  pt: "pt-BR",
-  it: "it-IT",
-  ru: "ru-RU",
-  tr: "tr-TR",
-  id: "id-ID",
-  vi: "vi-VN",
-}
-
-export type Locale = keyof typeof LOCALE_FILE_MAP
-export const LOCALE_CODES: Locale[] = Object.keys(LOCALE_FILE_MAP) as Locale[]
-export const RTL_LOCALES = new Set(["ar"])
+import { DEFAULT_LOCALE, LOCALE_CODES, LOCALE_FILE_MAP, normalizeLocale } from "@/lib/i18n-config"
 
 const loadLocale = async (file: string) => {
   const mod = await import(`@/i18n/locales/${file}.json`)
   return mod.default
 }
 
-export async function initI18n() {
-  const resources: Record<string, { translation: Record<string, string> }> = {}
+let initPromise: Promise<typeof i18n> | null = null
 
-  for (const [code, file] of Object.entries(LOCALE_FILE_MAP)) {
-    const baseLocale = await loadLocale(file)
-    const themeOverride = await loadThemeLocaleOverride(file)
+function createLanguageDetector() {
+  const detector = new LanguageDetector()
 
-    resources[code] = {
-      translation: themeOverride ? { ...baseLocale, ...themeOverride } : baseLocale,
-    }
-  }
+  detector.addDetector({
+    name: "legacyStorage",
+    lookup() {
+      if (typeof window === "undefined") return undefined
 
-  await i18n
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-      resources,
-      fallbackLng: "en",
-      supportedLngs: LOCALE_CODES,
-      interpolation: {
-        escapeValue: false,
-        prefix: "{",
-        suffix: "}",
-      },
-      detection: {
-        order: ["cookie", "localStorage", "navigator"],
-        lookupCookie: "i18n_redirected",
-        lookupLocalStorage: "i18n_redirected",
-        caches: ["cookie", "localStorage"],
-      },
-    })
+      return window.localStorage.getItem("i18n_redirected") ?? window.localStorage.getItem("lang") ?? undefined
+    },
+    cacheUserLanguage(lng) {
+      if (typeof window === "undefined") return
 
-  return i18n
+      const locale = normalizeLocale(lng)
+      window.localStorage.setItem("i18n_redirected", locale)
+      window.localStorage.setItem("lang", locale)
+    },
+  })
+
+  return detector
 }
+
+export async function initI18n() {
+  if (i18n.isInitialized) return i18n
+  if (initPromise) return initPromise
+
+  initPromise = (async () => {
+    const resources: Record<string, { translation: Record<string, string> }> = {}
+
+    for (const [code, file] of Object.entries(LOCALE_FILE_MAP)) {
+      const baseLocale = await loadLocale(file)
+      const themeOverride = await loadThemeLocaleOverride(file)
+
+      resources[code] = {
+        translation: themeOverride ? { ...baseLocale, ...themeOverride } : baseLocale,
+      }
+    }
+
+    const languageDetector = createLanguageDetector()
+
+    await i18n
+      .use(languageDetector)
+      .use(initReactI18next)
+      .init({
+        resources,
+        fallbackLng: DEFAULT_LOCALE,
+        supportedLngs: LOCALE_CODES,
+        nonExplicitSupportedLngs: true,
+        load: "languageOnly",
+        interpolation: {
+          escapeValue: false,
+          prefix: "{",
+          suffix: "}",
+        },
+        returnNull: false,
+        detection: {
+          order: ["querystring", "legacyStorage", "cookie", "localStorage", "navigator", "htmlTag"],
+          lookupQuerystring: "lang",
+          lookupCookie: "i18n_redirected",
+          lookupLocalStorage: "i18n_redirected",
+          caches: ["cookie", "localStorage"],
+          convertDetectedLanguage: normalizeLocale,
+        },
+      })
+
+    return i18n
+  })()
+
+  return initPromise
+}
+
+export { DEFAULT_LOCALE, LOCALE_CODES, RTL_LOCALES, isRtlLocale, normalizeLocale, type Locale } from "@/lib/i18n-config"

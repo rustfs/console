@@ -4,7 +4,6 @@
   "license": "Apache-2.0",
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@10.28.2",
   "scripts": {
     "dev": "node scripts/apply-theme-overrides.js && next dev",
     "build": "node scripts/apply-theme-overrides.js && next build && node scripts/prepare-static-basepath.js",
@@ -66,5 +65,17 @@
     "prettier": "^3.8.1",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=22.0.0",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": ">=11.0.0",
+      "onFail": "download"
+    }
   }
 }

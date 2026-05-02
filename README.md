@@ -75,8 +75,8 @@ console/
 
 ### Prerequisites
 
-- **Node.js** >= 20
-- **pnpm** >= 10.19.0 (recommended to use the version specified in the project)
+- **Node.js** >= 22
+- **pnpm** >= 11.0.0 (recommended to use the version specified in the project)
 - **Docker** - For running RustFS service
 
 ### Start RustFS Service

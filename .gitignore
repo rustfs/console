@@ -32,6 +32,7 @@
 .DS_Store
 *.pem
 .theme-runtime
+mise.local.toml
 
 # themes: keep only default in repo
 /themes/*

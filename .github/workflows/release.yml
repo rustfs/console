@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -40,7 +40,7 @@ jobs:
         run: |
           if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
             echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
+            echo "command=ci" >> $GITHUB_OUTPUT
             exit 0
           elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
             echo "manager=yarn" >> $GITHUB_OUTPUT
@@ -56,9 +56,9 @@ jobs:
           fi
       - name: Setup pnpm
         if: steps.detect-package-manager.outputs.manager == 'pnpm'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
       - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: ${{ steps.detect-package-manager.outputs.manager }}
@@ -117,14 +117,14 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Detect package manager
         id: detect-package-manager
         run: |
           if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
             echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
+            echo "command=ci" >> $GITHUB_OUTPUT
             exit 0
           elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
             echo "manager=yarn" >> $GITHUB_OUTPUT
@@ -140,9 +140,9 @@ jobs:
           fi
       - name: Setup pnpm
         if: steps.detect-package-manager.outputs.manager == 'pnpm'
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
       - name: 📦 Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: ${{ steps.detect-package-manager.outputs.manager }}
@@ -209,7 +209,7 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 

@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { useAddUploadFiles, useTaskPanelOpen } from "@/contexts/task-context"
 import { formatBytes } from "@/lib/functions"
 import { useMessage } from "@/lib/feedback/message"
+import { buildUploadObjectKey, normalizeUploadPrefix } from "@/lib/object-upload"
 import { RiDeleteBinLine, RiFileAddLine, RiFolderAddLine, RiUploadCloudLine } from "@remixicon/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import * as React from "react"
@@ -228,7 +229,7 @@ export function ObjectUploadPicker({
     }
   }, [canUpload, onShowChange, show])
 
-  const effectivePrefix = editablePrefix.replace(/\/$/, "") || ""
+  const effectivePrefix = normalizeUploadPrefix(editablePrefix)
 
   const ensureCapacity = React.useCallback(
     (incoming: number): boolean => {
@@ -416,7 +417,7 @@ export function ObjectUploadPicker({
     try {
       const tasks = items.map(({ relativePath, file }) => ({
         file,
-        key: effectivePrefix ? `${effectivePrefix}/${relativePath}` : relativePath,
+        key: buildUploadObjectKey(effectivePrefix, relativePath),
       }))
       const batchSize = 50
       let processed = 0

@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { S3Client } from "@aws-sdk/client-s3"
 import { useAuth } from "@/contexts/auth-context"
+import { addApiPrefixMiddleware } from "@/lib/api-prefix-middleware"
 import { configManager } from "@/lib/config"
 import { getServiceErrorMessage, getXmlErrorMessage } from "@/lib/error-handler"
 import type { SiteConfig } from "@/types/config"
@@ -103,6 +104,8 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
           sessionToken: credentials?.SessionToken || "",
         },
       })
+
+      addApiPrefixMiddleware(client)
 
       /* eslint-disable @typescript-eslint/no-explicit-any -- AWS SDK middleware types are complex */
       client.middlewareStack.add(

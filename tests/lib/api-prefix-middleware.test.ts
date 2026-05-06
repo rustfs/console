@@ -52,13 +52,16 @@ test("addApiPrefixMiddleware: registers a finalizeRequest-after-auth middleware 
   })
 })
 
+type RequestArgs = { request: { path: string } }
+type Handler = (args: RequestArgs) => Promise<unknown>
+type Middleware = (next: Handler) => Handler
+
 test("addApiPrefixMiddleware: prepends the prefix to request.path", async () => {
   await withEnv("/rustfs/api", async () => {
     const { client, calls } = makeFakeClient()
     addApiPrefixMiddleware(client)
-    // biome-ignore lint/suspicious/noExplicitAny: AWS SDK middleware shape
-    const mw = calls[0].mw as (next: any) => (args: any) => Promise<unknown>
-    const handler = mw(async (args: unknown) => args)
+    const mw = calls[0].mw as Middleware
+    const handler = mw(async (args) => args)
     const args = { request: { path: "/foo/bar" } }
     await handler(args)
     assert.equal(args.request.path, "/rustfs/api/foo/bar")
@@ -69,9 +72,8 @@ test("addApiPrefixMiddleware: normalizes a root path '/' to keep a single slash"
   await withEnv("/rustfs/api", async () => {
     const { client, calls } = makeFakeClient()
     addApiPrefixMiddleware(client)
-    // biome-ignore lint/suspicious/noExplicitAny: AWS SDK middleware shape
-    const mw = calls[0].mw as (next: any) => (args: any) => Promise<unknown>
-    const handler = mw(async (args: unknown) => args)
+    const mw = calls[0].mw as Middleware
+    const handler = mw(async (args) => args)
     const args = { request: { path: "/" } }
     await handler(args)
     assert.equal(args.request.path, "/rustfs/api/")
@@ -82,9 +84,8 @@ test("addApiPrefixMiddleware: idempotent (does not double-apply the prefix)", as
   await withEnv("/rustfs/api", async () => {
     const { client, calls } = makeFakeClient()
     addApiPrefixMiddleware(client)
-    // biome-ignore lint/suspicious/noExplicitAny: AWS SDK middleware shape
-    const mw = calls[0].mw as (next: any) => (args: any) => Promise<unknown>
-    const handler = mw(async (args: unknown) => args)
+    const mw = calls[0].mw as Middleware
+    const handler = mw(async (args) => args)
     const args = { request: { path: "/rustfs/api/foo" } }
     await handler(args)
     assert.equal(args.request.path, "/rustfs/api/foo")

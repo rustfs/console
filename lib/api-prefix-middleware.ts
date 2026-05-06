@@ -11,29 +11,33 @@
 
 const getApiPrefix = (): string => (process.env.NEXT_PUBLIC_API_PREFIX || "").replace(/\/$/, "")
 
+// AWS SDK middleware types are generic over per-client Input/Output unions, so
+// a structurally-typed wrapper that's compatible with both S3Client and STSClient
+// requires `any` here. Narrowing inside the middleware body keeps it safe.
 interface MiddlewareClient {
   middlewareStack: {
     addRelativeTo: (
-      // biome-ignore lint/suspicious/noExplicitAny: AWS SDK middleware types
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mw: any,
       opts: { name: string; relation: "before" | "after"; toMiddleware: string; override?: boolean },
     ) => void
   }
 }
 
+type FinalizeArgs = { request?: { path?: string } & Record<string, unknown> }
+
 export function addApiPrefixMiddleware(client: MiddlewareClient): void {
   const apiPrefix = getApiPrefix()
   if (!apiPrefix) return
 
   client.middlewareStack.addRelativeTo(
-    // biome-ignore lint/suspicious/noExplicitAny: AWS SDK middleware types are complex
-    ((next: any) => async (args: any) => {
+    (next: (args: FinalizeArgs) => Promise<unknown>) => async (args: FinalizeArgs) => {
       const request = args?.request
       if (request && typeof request.path === "string" && !request.path.startsWith(apiPrefix)) {
         request.path = apiPrefix + (request.path === "/" ? "/" : request.path)
       }
       return next(args)
-    }),
+    },
     {
       name: "addRustfsApiPrefix",
       relation: "after",

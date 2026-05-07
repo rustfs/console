@@ -46,6 +46,16 @@ export default [
     icon: "ri:bar-chart-box-line",
   },
   {
+    label: "Rebalance",
+    to: "/rebalance",
+    icon: "ri:refresh-line",
+  },
+  {
+    label: "Pool Decommission",
+    to: "/pool-decommission",
+    icon: "ri:delete-bin-5-line",
+  },
+  {
     label: "divider",
     key: "divider-1",
     type: "divider",

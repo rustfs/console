@@ -108,6 +108,8 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
   ],
   [CONSOLE_SCOPES.VIEW_USER_GROUPS]: ["admin:ListGroups", "admin:AddUserToGroup", "admin:GetGroup", "admin:*"],
   [CONSOLE_SCOPES.VIEW_PERFORMANCE]: ["admin:ServerInfo", "admin:OBDInfo", "admin:ServerTrace", "admin:*"],
+  [CONSOLE_SCOPES.VIEW_REBALANCE]: ["admin:Rebalance", "admin:ServerInfo", "admin:*"],
+  [CONSOLE_SCOPES.VIEW_POOL_DECOMMISSION]: ["admin:Decommission", "admin:ServerInfo", "admin:*"],
   [CONSOLE_SCOPES.VIEW_IMPORT_EXPORT]: ["admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_SITE_REPLICATION]: [
     "admin:SiteReplicationInfo",

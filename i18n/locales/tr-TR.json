@@ -1120,7 +1120,7 @@
   "This action cannot be undone and will bypass the normal deletion process.": "Bu işlem geri alınamaz ve normal silme işlemini atlayacaktır.",
   "This action cannot be undone.": "Bu işlem geri alınamaz.",
   "This action retires the selected pool and should be used only after verifying rebalance has completed.": "Bu işlem seçilen pool’u devreden çıkarır ve yalnızca yeniden dengeleme tamamlandıktan sonra kullanılmalıdır.",
-  "This key is used as the platform default for SSE-KMS and SSE-S3.": "Bu anahtar, SSE-KMS ve SSE-S3 için platform varsayılanı olarak kullanılır.",
+  "This key is used as the platform default SSE key for SSE-KMS and SSE-S3.": "Bu anahtar, SSE-KMS ve SSE-S3 için platformun varsayılan SSE anahtarı olarak kullanılır.",
   "This key is used as the platform default for SSE-KMS.": "Bu anahtar platformun SSE-KMS varsayılanıdır.",
   "This link will expire when your session ends or at the specified time.": "Bu bağlantı oturumunuz sona erdiğinde veya belirtilen saatte süresi dolacaktır.",
   "This permanently deletes the key immediately and cannot be undone.": "Anahtarı hemen kalıcı olarak siler ve geri alınamaz.",

@@ -1120,7 +1120,7 @@
   "This action cannot be undone and will bypass the normal deletion process.": "Hành động này không thể hoàn tác và sẽ bỏ qua quy trình xóa thông thường.",
   "This action cannot be undone.": "Hành động này không thể hoàn tác.",
   "This action retires the selected pool and should be used only after verifying rebalance has completed.": "Hành động này ngừng sử dụng pool đã chọn và chỉ nên dùng sau khi xác nhận cân bằng lại đã hoàn tất.",
-  "This key is used as the platform default for SSE-KMS and SSE-S3.": "Khóa này được dùng làm khóa mặc định của nền tảng cho SSE-KMS và SSE-S3.",
+  "This key is used as the platform default SSE key for SSE-KMS and SSE-S3.": "Khóa này được dùng làm khóa SSE mặc định của nền tảng cho SSE-KMS và SSE-S3.",
   "This key is used as the platform default for SSE-KMS.": "Khóa này là mặc định nền tảng cho SSE-KMS.",
   "This link will expire when your session ends or at the specified time.": "Liên kết này sẽ hết hạn khi phiên làm việc của bạn kết thúc hoặc vào thời gian đã định.",
   "This permanently deletes the key immediately and cannot be undone.": "Xóa khóa vĩnh viễn ngay lập tức và không thể hoàn tác.",

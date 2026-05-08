@@ -1120,7 +1120,7 @@
   "This action cannot be undone and will bypass the normal deletion process.": "لا يمكن التراجع عن هذا الإجراء وسيتجاوز عملية الحذف العادية.",
   "This action cannot be undone.": "لا يمكن التراجع عن هذا الإجراء.",
   "This action retires the selected pool and should be used only after verifying rebalance has completed.": "يقوم هذا الإجراء بإخراج التجمع المحدد من الخدمة، ويجب استخدامه فقط بعد التأكد من اكتمال إعادة التوازن.",
-  "This key is used as the platform default for SSE-KMS and SSE-S3.": "يُستخدم هذا المفتاح كافتراضي للمنصة لكل من SSE-KMS وSSE-S3.",
+  "This key is used as the platform default SSE key for SSE-KMS and SSE-S3.": "يُستخدم هذا المفتاح كمفتاح SSE الافتراضي للمنصة لكل من SSE-KMS وSSE-S3.",
   "This key is used as the platform default for SSE-KMS.": "يُستخدم هذا المفتاح كافتراضي للمنصة لـ SSE-KMS.",
   "This link will expire when your session ends or at the specified time.": "ستنتهي صلاحية هذا الرابط عند انتهاء جلستك أو في الوقت المحدد.",
   "This permanently deletes the key immediately and cannot be undone.": "يحذف المفتاح نهائيًا فورًا ولا يمكن التراجع.",

@@ -1120,7 +1120,7 @@
   "This action cannot be undone and will bypass the normal deletion process.": "Esta ação não pode ser desfeita e contornará o processo normal de exclusão.",
   "This action cannot be undone.": "Esta ação não pode ser desfeita.",
   "This action retires the selected pool and should be used only after verifying rebalance has completed.": "Esta ação aposenta o pool selecionado e só deve ser usada após verificar que o rebalanceamento foi concluído.",
-  "This key is used as the platform default for SSE-KMS and SSE-S3.": "Esta chave é usada como padrão da plataforma para SSE-KMS e SSE-S3.",
+  "This key is used as the platform default SSE key for SSE-KMS and SSE-S3.": "Esta chave é usada como a chave SSE padrão da plataforma para SSE-KMS e SSE-S3.",
   "This key is used as the platform default for SSE-KMS.": "Esta chave é usada como padrão da plataforma para SSE-KMS.",
   "This link will expire when your session ends or at the specified time.": "Este link expirará quando sua sessão terminar ou no horário especificado.",
   "This permanently deletes the key immediately and cannot be undone.": "Exclui a chave permanentemente de imediato e não pode ser desfeito.",

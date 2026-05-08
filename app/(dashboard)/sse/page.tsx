@@ -770,7 +770,7 @@ export default function SSEPage() {
                       />
                     </FieldContent>
                     <FieldDescription>
-                      {t("This key is used as the platform default for SSE-KMS and SSE-S3.")}
+                      {t("This key is used as the platform default SSE key for SSE-KMS and SSE-S3.")}
                     </FieldDescription>
                   </Field>
                 </FieldGroup>

@@ -1120,7 +1120,7 @@
   "This action cannot be undone and will bypass the normal deletion process.": "この操作は元に戻せず、通常の削除プロセスをバイパスします。",
   "This action cannot be undone.": "この操作は元に戻せません。",
   "This action retires the selected pool and should be used only after verifying rebalance has completed.": "この操作は選択したプールを廃止します。リバランス完了を確認した後でのみ実行してください。",
-  "This key is used as the platform default for SSE-KMS and SSE-S3.": "このキーは、プラットフォームの SSE-KMS および SSE-S3 のデフォルトキーとして使用されます。",
+  "This key is used as the platform default SSE key for SSE-KMS and SSE-S3.": "このキーは、SSE-KMS および SSE-S3 用のプラットフォーム既定の SSE キーとして使用されます。",
   "This key is used as the platform default for SSE-KMS.": "このキーはプラットフォームの SSE-KMS デフォルトとして使用されます。",
   "This link will expire when your session ends or at the specified time.": "このリンクはセッション終了時、または指定した時刻に期限切れになります。",
   "This permanently deletes the key immediately and cannot be undone.": "キーをすぐに完全削除します。元に戻せません。",

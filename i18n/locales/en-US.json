@@ -1120,7 +1120,7 @@
   "This action cannot be undone and will bypass the normal deletion process.": "This action cannot be undone and will bypass the normal deletion process.",
   "This action cannot be undone.": "This action cannot be undone.",
   "This action retires the selected pool and should be used only after verifying rebalance has completed.": "This action retires the selected pool and should be used only after verifying rebalance has completed.",
-  "This key is used as the platform default for SSE-KMS and SSE-S3.": "This key is used as the platform default for SSE-KMS and SSE-S3.",
+  "This key is used as the platform default SSE key for SSE-KMS and SSE-S3.": "This key is used as the platform default SSE key for SSE-KMS and SSE-S3.",
   "This key is used as the platform default for SSE-KMS.": "This key is used as the platform default for SSE-KMS.",
   "This link will expire when your session ends or at the specified time.": "This link will expire when your session ends or at the specified time.",
   "This permanently deletes the key immediately and cannot be undone.": "This permanently deletes the key immediately and cannot be undone.",

@@ -1120,7 +1120,7 @@
   "This action cannot be undone and will bypass the normal deletion process.": "此操作无法撤销，将绕过正常删除过程。",
   "This action cannot be undone.": "此操作无法撤销。",
   "This action retires the selected pool and should be used only after verifying rebalance has completed.": "此操作会退役所选存储池，仅应在确认再平衡已完成后执行。",
-  "This key is used as the platform default for SSE-KMS and SSE-S3.": "此密钥将作为平台的 SSE-KMS 和 SSE-S3 默认密钥。",
+  "This key is used as the platform default SSE key for SSE-KMS and SSE-S3.": "此密钥将作为平台默认 SSE 密钥，用于 SSE-KMS 和 SSE-S3。",
   "This key is used as the platform default for SSE-KMS.": "该密钥将作为平台默认的 SSE-KMS 密钥。",
   "This link will expire when your session ends or at the specified time.": "此链接将会在您的登录会话结束或达到指定时间后失效。",
   "This permanently deletes the key immediately and cannot be undone.": "这会立即永久删除该密钥，且无法撤销。",

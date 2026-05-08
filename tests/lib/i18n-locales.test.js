@@ -86,3 +86,17 @@ test("translated locale values preserve interpolation placeholders", () => {
     }
   }
 })
+
+test("default SSE key description is translated for every locale", () => {
+  const key = "This key is used as the platform default SSE key for SSE-KMS and SSE-S3."
+  const enUS = readLocale("en-US.json")
+  const localeFiles = fs
+    .readdirSync(localeDir)
+    .filter((file) => file.endsWith(".json") && file !== "en-US.json")
+    .sort()
+
+  for (const file of localeFiles) {
+    assert.ok(readLocale(file)[key], file)
+    assert.notEqual(readLocale(file)[key], enUS[key], file)
+  }
+})

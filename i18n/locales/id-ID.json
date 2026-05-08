@@ -1120,7 +1120,7 @@
   "This action cannot be undone and will bypass the normal deletion process.": "Tindakan ini tidak dapat dibatalkan dan akan melewati proses penghapusan normal.",
   "This action cannot be undone.": "Tindakan ini tidak dapat dibatalkan.",
   "This action retires the selected pool and should be used only after verifying rebalance has completed.": "Tindakan ini memensiunkan pool yang dipilih dan hanya boleh digunakan setelah penyeimbangan ulang selesai.",
-  "This key is used as the platform default for SSE-KMS and SSE-S3.": "Kunci ini digunakan sebagai default platform untuk SSE-KMS dan SSE-S3.",
+  "This key is used as the platform default SSE key for SSE-KMS and SSE-S3.": "Kunci ini digunakan sebagai kunci SSE default platform untuk SSE-KMS dan SSE-S3.",
   "This key is used as the platform default for SSE-KMS.": "Kunci ini digunakan sebagai default platform untuk SSE-KMS.",
   "This link will expire when your session ends or at the specified time.": "Tautan ini akan kedaluwarsa saat sesi Anda berakhir atau pada waktu yang ditentukan.",
   "This permanently deletes the key immediately and cannot be undone.": "Menghapus kunci secara permanen segera dan tidak dapat dibatalkan.",

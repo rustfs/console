@@ -39,6 +39,8 @@ const REQUEST_TIMEOUT = 5000
 const HEALTH_REQUEST_TIMEOUT = 5000
 const HEALTH_PATHS = ["/rustfs/console/health", "/health"] as const
 
+const getApiPrefix = (): string => (process.env.NEXT_PUBLIC_API_PREFIX || "").replace(/\/$/, "")
+
 const isBrowser = (): boolean => typeof window !== "undefined"
 
 const getCurrentHostInfo = (): HostInfo | null => {
@@ -52,10 +54,11 @@ const getCurrentHostInfo = (): HostInfo | null => {
 }
 
 export const createDefaultConfig = (serverHost: string): SiteConfig => {
+  const apiPrefix = getApiPrefix()
   return {
     serverHost,
     api: {
-      baseURL: `${serverHost}${API_PATH}`,
+      baseURL: `${serverHost}${apiPrefix}${API_PATH}`,
     },
     s3: {
       endpoint: serverHost,

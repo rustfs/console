@@ -37,11 +37,13 @@ export function LanguageSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost">
-          <CurrentIcon className="h-4 w-4 shrink-0" />
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="ghost">
+            <CurrentIcon className="h-4 w-4 shrink-0" />
+          </Button>
+        }
+      />
       <DropdownMenuContent className="w-40" align="start">
         {options.map(({ label, key }) => (
           <DropdownMenuItem key={key} onSelect={() => i18n.changeLanguage(key)}>

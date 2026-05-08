@@ -104,12 +104,8 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
   }
 
   return (
-    <Dialog open={show} onOpenChange={closeModal}>
-      <DialogContent
-        className="sm:max-w-lg"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+    <Dialog open={show} onOpenChange={closeModal} disablePointerDismissal>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Policy Original")}</DialogTitle>
         </DialogHeader>

@@ -143,19 +143,21 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
             <FieldLabel className="text-sm font-medium">{t("Select user group policies")}</FieldLabel>
             <FieldContent className="space-y-2">
               <Popover open={policySelectorOpen} onOpenChange={setPolicySelectorOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="min-h-10 justify-between gap-2"
-                    aria-label={t("Select user group policies")}
-                  >
-                    <span className="truncate">
-                      {selectedPolicies.length ? selectedPolicies.join(", ") : t("Select user group policies")}
-                    </span>
-                    <RiArrowDownSLine className="size-4 text-muted-foreground" />
-                  </Button>
-                </PopoverTrigger>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-10 justify-between gap-2"
+                      aria-label={t("Select user group policies")}
+                    >
+                      <span className="truncate">
+                        {selectedPolicies.length ? selectedPolicies.join(", ") : t("Select user group policies")}
+                      </span>
+                      <RiArrowDownSLine className="size-4 text-muted-foreground" />
+                    </Button>
+                  }
+                />
                 <PopoverContent className="w-72 p-0" align="start">
                   <Command>
                     <CommandInput placeholder={t("Search Policy")} />

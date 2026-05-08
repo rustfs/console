@@ -200,12 +200,8 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
   }
 
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
-      <DialogContent
-        className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}
-        onPointerDownOutside={(event) => event.preventDefault()}
-        onInteractOutside={(event) => event.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
+      <DialogContent className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
         <DialogHeader>
           <DialogTitle>{t("Create Key")}</DialogTitle>
         </DialogHeader>
@@ -433,12 +429,8 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
   }
 
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
-      <DialogContent
-        className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}
-        onPointerDownOutside={(event) => event.preventDefault()}
-        onInteractOutside={(event) => event.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
+      <DialogContent className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
         <DialogHeader>
           <DialogTitle>{t("Edit Key")}</DialogTitle>
         </DialogHeader>

@@ -110,26 +110,28 @@ export function DateTimePicker({
   return (
     <Popover>
       <div className="relative w-full">
-        <PopoverTrigger asChild>
-          <Button
-            id={id}
-            type="button"
-            variant="outline"
-            disabled={disabled}
-            className={cn(
-              "h-8 w-full justify-start px-2.5 text-left font-normal",
-              displayValue && "pe-8",
-              !displayValue && "text-muted-foreground",
-              className,
-            )}
-            {...props}
-          >
-            <span className="flex min-w-0 items-center gap-2">
-              <RiCalendarLine className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-              <span className="truncate">{displayValue || placeholder || t("Please select expiry date")}</span>
-            </span>
-          </Button>
-        </PopoverTrigger>
+        <PopoverTrigger
+          render={
+            <Button
+              id={id}
+              type="button"
+              variant="outline"
+              disabled={disabled}
+              className={cn(
+                "h-8 w-full justify-start px-2.5 text-left font-normal",
+                displayValue && "pe-8",
+                !displayValue && "text-muted-foreground",
+                className,
+              )}
+              {...props}
+            >
+              <span className="flex min-w-0 items-center gap-2">
+                <RiCalendarLine className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="truncate">{displayValue || placeholder || t("Please select expiry date")}</span>
+              </span>
+            </Button>
+          }
+        />
         {displayValue && !disabled ? (
           <Button
             type="button"

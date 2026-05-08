@@ -181,13 +181,18 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-2xl"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen, details) => {
+        if (!nextOpen && details.reason === "escape-key") {
+          return
+        }
+
+        onOpenChange(nextOpen)
+      }}
+      disablePointerDismissal
+    >
+      <DialogContent className="max-w-2xl">
         <DialogHeader className="text-left">
           <DialogTitle>
             {t("Subscribe to event notification")}
@@ -201,7 +206,11 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
           <Field>
             <FieldLabel htmlFor="event-resource-name">{t("Amazon Resource Name")}</FieldLabel>
             <FieldContent>
-              <Select value={resourceName} onValueChange={setResourceName} disabled={disabled || !arnList.length}>
+              <Select
+                value={resourceName}
+                onValueChange={(value) => setResourceName(value ?? "")}
+                disabled={disabled || !arnList.length}
+              >
                 <SelectTrigger id="event-resource-name">
                   <SelectValue placeholder={t("Please select resource name")} />
                 </SelectTrigger>

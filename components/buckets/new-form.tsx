@@ -146,13 +146,8 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   }
 
   return (
-    <Dialog open={show} onOpenChange={(open) => !open && closeModal()}>
-      <DialogContent
-        className="sm:max-w-2xl"
-        showCloseButton={false}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+    <Dialog open={show} onOpenChange={(open) => !open && closeModal()} disablePointerDismissal>
+      <DialogContent className="sm:max-w-2xl" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{t("Create Bucket")}</DialogTitle>
         </DialogHeader>

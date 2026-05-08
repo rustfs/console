@@ -60,8 +60,8 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Add group members")}</DialogTitle>
         </DialogHeader>

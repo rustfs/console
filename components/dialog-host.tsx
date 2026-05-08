@@ -46,18 +46,48 @@ export function DialogHost() {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 {dialog.negativeText && (
-                  <AlertDialogCancel asChild>
+                  <AlertDialogCancel
+                    render={
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        className={cn(buttonVariants({ variant: "outline" }), "w-full sm:w-auto text-foreground")}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          void runDialogAction({
+                            dialogId: dialog.id,
+                            pendingIds: pendingDialogIdsRef.current,
+                            setPendingIds: setPendingDialogIds,
+                            action: dialog.onNegativeClick,
+                            close: () => controller.close(dialog.id),
+                            onError: (error) => {
+                              console.error(error)
+                            },
+                          })
+                        }}
+                      >
+                        {dialog.negativeText}
+                      </button>
+                    }
+                  />
+                )}
+                <AlertDialogAction
+                  render={
                     <button
                       type="button"
                       disabled={isPending}
-                      className={cn(buttonVariants({ variant: "outline" }), "w-full sm:w-auto text-foreground")}
+                      className={cn(
+                        buttonVariants({ variant: positiveButtonVariant(dialog) }),
+                        "w-full sm:w-auto",
+                        positiveButtonVariant(dialog) === "destructive" && "text-white",
+                      )}
                       onClick={(e) => {
                         e.preventDefault()
                         void runDialogAction({
                           dialogId: dialog.id,
                           pendingIds: pendingDialogIdsRef.current,
                           setPendingIds: setPendingDialogIds,
-                          action: dialog.onNegativeClick,
+                          action: dialog.onPositiveClick,
                           close: () => controller.close(dialog.id),
                           onError: (error) => {
                             console.error(error)
@@ -65,37 +95,11 @@ export function DialogHost() {
                         })
                       }}
                     >
-                      {dialog.negativeText}
+                      {isPending ? <RiLoaderLine className="size-4 animate-spin" aria-hidden="true" /> : null}
+                      <span>{dialog.positiveText || "Confirm"}</span>
                     </button>
-                  </AlertDialogCancel>
-                )}
-                <AlertDialogAction asChild>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    className={cn(
-                      buttonVariants({ variant: positiveButtonVariant(dialog) }),
-                      "w-full sm:w-auto",
-                      positiveButtonVariant(dialog) === "destructive" && "text-white",
-                    )}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      void runDialogAction({
-                        dialogId: dialog.id,
-                        pendingIds: pendingDialogIdsRef.current,
-                        setPendingIds: setPendingDialogIds,
-                        action: dialog.onPositiveClick,
-                        close: () => controller.close(dialog.id),
-                        onError: (error) => {
-                          console.error(error)
-                        },
-                      })
-                    }}
-                  >
-                    {isPending ? <RiLoaderLine className="size-4 animate-spin" aria-hidden="true" /> : null}
-                    <span>{dialog.positiveText || "Confirm"}</span>
-                  </button>
-                </AlertDialogAction>
+                  }
+                />
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

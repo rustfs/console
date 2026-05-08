@@ -71,8 +71,8 @@ export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGr
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{group.name || t("Members")}</DialogTitle>
         </DialogHeader>

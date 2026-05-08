@@ -802,7 +802,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             <Field>
               <FieldLabel>{t("Encryption Type")}</FieldLabel>
               <FieldContent>
-                <Select value={encryptFormType} onValueChange={setEncryptFormType}>
+                <Select value={encryptFormType} onValueChange={(value) => setEncryptFormType(value ?? "")}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder={t("Please select encryption type")} />
                   </SelectTrigger>
@@ -818,7 +818,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               <Field>
                 <FieldLabel>KMS Key ID</FieldLabel>
                 <FieldContent>
-                  <Select value={encryptFormKmsKeyId} onValueChange={setEncryptFormKmsKeyId}>
+                  <Select value={encryptFormKmsKeyId} onValueChange={(value) => setEncryptFormKmsKeyId(value ?? "")}>
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder={t("Please select KMS key")} />
                     </SelectTrigger>

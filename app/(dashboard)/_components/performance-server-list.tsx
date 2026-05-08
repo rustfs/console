@@ -35,7 +35,7 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
         </span>
       </CardHeader>
       <CardContent>
-        <Accordion type="single" collapsible className="space-y-2">
+        <Accordion className="space-y-2">
           {servers.map((server, index) => (
             <AccordionItem key={server.endpoint ?? index} value={String(index)}>
               <AccordionTrigger>

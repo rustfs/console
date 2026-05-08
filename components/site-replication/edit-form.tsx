@@ -91,13 +91,18 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-xl"
-        onPointerDownOutside={(event) => saving && event.preventDefault()}
-        onInteractOutside={(event) => saving && event.preventDefault()}
-        onEscapeKeyDown={(event) => saving && event.preventDefault()}
-      >
+    <Dialog
+      open={open}
+      disablePointerDismissal={saving}
+      onOpenChange={(nextOpen, details) => {
+        if (saving && !nextOpen && details.reason === "escape-key") {
+          return
+        }
+
+        onOpenChange(nextOpen)
+      }}
+    >
+      <DialogContent className="max-w-xl">
         <DialogHeader className="space-y-2 text-left">
           <DialogTitle>{t("Edit Site")}</DialogTitle>
           <DialogDescription>

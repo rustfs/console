@@ -36,7 +36,7 @@ export function DataTablePagination<TData>({
     <div className={cn("flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", className)}>
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">{t("Rows per page")}</span>
-        <Select value={String(pagination.pageSize)} onValueChange={handlePageSizeChange}>
+        <Select value={String(pagination.pageSize)} onValueChange={(value) => handlePageSizeChange(value ?? "")}>
           <SelectTrigger className="w-24">
             <SelectValue />
           </SelectTrigger>

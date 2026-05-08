@@ -26,11 +26,13 @@ export function ThemeSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost">
-          <Icon className="h-4 w-4 shrink-0" />
-        </Button>
-      </DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="ghost">
+            <Icon className="h-4 w-4 shrink-0" />
+          </Button>
+        }
+      />
       <DropdownMenuContent className="w-40" align="start">
         {themeOptions.map(({ labelKey, key, Icon: OptionIcon }) => (
           <DropdownMenuItem key={key} onSelect={() => setTheme(key)}>

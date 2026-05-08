@@ -1,6 +1,5 @@
 "use client"
 
-import * as React from "react"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { RiAddLine, RiDeleteBinLine } from "@remixicon/react"
@@ -224,13 +223,18 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="sm:max-w-lg"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen, details) => {
+        if (!nextOpen && details.reason === "escape-key") {
+          return
+        }
+
+        onOpenChange(nextOpen)
+      }}
+      disablePointerDismissal
+    >
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
             {t("Add Lifecycle Rule")} ({t("Bucket")}: {bucketName || ""})
@@ -254,7 +258,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                   <Field>
                     <FieldLabel>{t("Object Version")}</FieldLabel>
                     <FieldContent>
-                      <Select value={versionType} onValueChange={setVersionType}>
+                      <Select value={versionType} onValueChange={(value) => setVersionType(value ?? "")}>
                         <SelectTrigger className="w-full">
                           <SelectValue />
                         </SelectTrigger>
@@ -373,7 +377,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                   <Field>
                     <FieldLabel>{t("Object Version")}</FieldLabel>
                     <FieldContent>
-                      <Select value={versionType} onValueChange={setVersionType}>
+                      <Select value={versionType} onValueChange={(value) => setVersionType(value ?? "")}>
                         <SelectTrigger className="w-full">
                           <SelectValue />
                         </SelectTrigger>
@@ -409,7 +413,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                 <Field>
                   <FieldLabel>{t("Storage Type")}</FieldLabel>
                   <FieldContent>
-                    <Select value={storageType} onValueChange={setStorageType}>
+                    <Select value={storageType} onValueChange={(value) => setStorageType(value ?? "")}>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder={t("Please select storage type")} />
                       </SelectTrigger>

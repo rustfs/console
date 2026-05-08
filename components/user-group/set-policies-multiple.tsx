@@ -70,7 +70,8 @@ export function UserGroupSetPoliciesMultiple({
         id: "select",
         header: () => (
           <Checkbox
-            checked={allVisibleSelected ? true : checked.length > 0 && !allVisibleSelected ? "indeterminate" : false}
+            checked={allVisibleSelected}
+            indeterminate={!allVisibleSelected && checked.length > 0}
             onCheckedChange={(v) => toggleSelectAll(v === true)}
           />
         ),
@@ -148,8 +149,8 @@ export function UserGroupSetPoliciesMultiple({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{t("Batch allocation policies")}</DialogTitle>
         </DialogHeader>

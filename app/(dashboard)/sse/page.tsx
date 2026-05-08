@@ -700,11 +700,13 @@ export default function SSEPage() {
 
                 {hasConfiguration && (
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button size="sm" variant="outline">
-                        {t("Advanced Actions")}
-                      </Button>
-                    </DropdownMenuTrigger>
+                    <DropdownMenuTrigger
+                      render={
+                        <Button size="sm" variant="outline">
+                          {t("Advanced Actions")}
+                        </Button>
+                      }
+                    />
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem disabled={!isRunning || clearingCache} onClick={handleClearCache}>
                         {clearingCache ? t("Clearing cache...") : t("Clear Cache")}
@@ -1069,11 +1071,13 @@ export default function SSEPage() {
                             <TableCell>
                               <div className="flex justify-end">
                                 <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button size="sm" variant="outline">
-                                      {t("Actions")}
-                                    </Button>
-                                  </DropdownMenuTrigger>
+                                  <DropdownMenuTrigger
+                                    render={
+                                      <Button size="sm" variant="outline">
+                                        {t("Actions")}
+                                      </Button>
+                                    }
+                                  />
                                   <DropdownMenuContent align="end">
                                     <DropdownMenuItem onClick={() => setSelectedKeyId(key.key_id)}>
                                       {t("View Details")}

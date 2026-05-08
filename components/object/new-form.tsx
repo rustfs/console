@@ -55,8 +55,8 @@ export function ObjectNewForm({
   }
 
   return (
-    <Dialog open={show} onOpenChange={onShowChange}>
-      <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={show} onOpenChange={onShowChange} disablePointerDismissal>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t("New Form", { type: displayType })}</DialogTitle>
         </DialogHeader>

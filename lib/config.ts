@@ -13,17 +13,21 @@ let configCacheTime = 0
 let configPromise: Promise<SiteConfig> | null = null
 const CACHE_DURATION = 60000
 
+const getApiPrefix = (): string => (process.env.NEXT_PUBLIC_API_PREFIX || "").replace(/\/$/, "")
+
 function loadRuntimeConfig(): SiteConfig | null {
   try {
     const serverHost =
       process.env.NEXT_PUBLIC_SERVER_HOST ||
       (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").replace(/\/rustfs\/admin\/v3$/, "")
 
+    const apiPrefix = getApiPrefix()
+
     if (serverHost) {
       return {
         serverHost,
         api: {
-          baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || `${serverHost}/rustfs/admin/v3`,
+          baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || `${serverHost}${apiPrefix}/rustfs/admin/v3`,
         },
         s3: {
           endpoint: process.env.NEXT_PUBLIC_S3_ENDPOINT || serverHost,

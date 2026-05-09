@@ -1307,5 +1307,12 @@
   "username length cannot be less than 8 characters and greater than 16 characters": "用户名长度不能少于8个字符且不能大于16个字符",
   "waiting": "等待中",
   "Completed Status": "已完成",
-  "Active Pool": "当前存储池"
+  "Active Pool": "当前存储池",
+  "Bytes Failed": "失败字节数",
+  "Complete": "完成",
+  "Current Size": "当前大小",
+  "ID": "ID",
+  "Objects Failed": "失败对象数",
+  "Start Size": "开始大小",
+  "Start Time": "开始时间"
 }

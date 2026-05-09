@@ -1307,5 +1307,12 @@
   "username length cannot be less than 8 characters and greater than 16 characters": "لا يمكن أن يكون طول اسم المستخدم أقل من 8 أحرف وأكثر من 16 حرفًا",
   "waiting": "في الانتظار",
   "Completed Status": "مكتمل",
-  "Active Pool": "التجمع النشط"
+  "Active Pool": "التجمع النشط",
+  "Bytes Failed": "Bytes Failed",
+  "Complete": "Complete",
+  "Current Size": "Current Size",
+  "ID": "ID",
+  "Objects Failed": "Objects Failed",
+  "Start Size": "Start Size",
+  "Start Time": "Start Time"
 }

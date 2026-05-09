@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { niceBytes } from "@/lib/functions"
 import type { PoolsOverview } from "@/lib/pool-operations"
 
@@ -14,6 +15,24 @@ function Stat({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-medium">{value}</p>
     </div>
   )
+}
+
+function formatBytesValue(value?: number) {
+  return value === undefined ? "--" : niceBytes(String(value))
+}
+
+function formatNumberValue(value?: number) {
+  return value === undefined ? "--" : value.toLocaleString()
+}
+
+function formatPercentValue(value?: number) {
+  return value === undefined ? "--" : `${value.toFixed(2)}%`
+}
+
+function formatDateTime(value?: string) {
+  if (!value) return "--"
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
 }
 
 export function PoolsOverviewCard({ overview, operationLabel }: { overview: PoolsOverview; operationLabel: string }) {
@@ -45,6 +64,66 @@ export function PoolsOverviewCard({ overview, operationLabel }: { overview: Pool
           value={overview.totalUsedCapacity ? niceBytes(String(overview.totalUsedCapacity)) : "--"}
         />
         <Stat label={t("Usage")} value={`${usedPercent}%`} />
+        <div className="md:col-span-4">
+          <Table className="min-w-[1120px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t("ID")}</TableHead>
+                <TableHead>{t("Pool")}</TableHead>
+                <TableHead>{t("Status")}</TableHead>
+                <TableHead>{t("Total Capacity")}</TableHead>
+                <TableHead>{t("Current Size")}</TableHead>
+                <TableHead>{t("Used Capacity")}</TableHead>
+                <TableHead>{t("Available")}</TableHead>
+                <TableHead>{t("Usage")}</TableHead>
+                <TableHead>{t("Updated At")}</TableHead>
+                <TableHead>{t("Start Time")}</TableHead>
+                <TableHead>{t("Start Size")}</TableHead>
+                <TableHead>{t("Complete")}</TableHead>
+                <TableHead>{t("Failed Status")}</TableHead>
+                <TableHead>{t("Canceled")}</TableHead>
+                <TableHead>{t("Objects")}</TableHead>
+                <TableHead>{t("Objects Failed")}</TableHead>
+                <TableHead>{t("Bytes Moved")}</TableHead>
+                <TableHead>{t("Bytes Failed")}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {overview.pools.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={18} className="text-center text-muted-foreground">
+                    {t("No Data")}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                overview.pools.map((pool) => (
+                  <TableRow key={pool.id}>
+                    <TableCell>{pool.id}</TableCell>
+                    <TableCell className="max-w-[360px] truncate" title={pool.name}>
+                      {pool.name}
+                    </TableCell>
+                    <TableCell>{pool.status || "--"}</TableCell>
+                    <TableCell>{formatBytesValue(pool.total)}</TableCell>
+                    <TableCell>{formatBytesValue(pool.currentSize)}</TableCell>
+                    <TableCell>{formatBytesValue(pool.used)}</TableCell>
+                    <TableCell>{formatBytesValue(pool.available)}</TableCell>
+                    <TableCell>{formatPercentValue(pool.usagePercent)}</TableCell>
+                    <TableCell>{formatDateTime(pool.lastUpdate)}</TableCell>
+                    <TableCell>{formatDateTime(pool.decommission.startTime)}</TableCell>
+                    <TableCell>{formatBytesValue(pool.decommission.startSize)}</TableCell>
+                    <TableCell>{pool.decommission.complete ? t("Yes") : t("No")}</TableCell>
+                    <TableCell>{pool.decommission.failed ? t("Yes") : t("No")}</TableCell>
+                    <TableCell>{pool.decommission.canceled ? t("Yes") : t("No")}</TableCell>
+                    <TableCell>{formatNumberValue(pool.decommission.objects)}</TableCell>
+                    <TableCell>{formatNumberValue(pool.decommission.objectsFailed)}</TableCell>
+                    <TableCell>{formatBytesValue(pool.decommission.bytes)}</TableCell>
+                    <TableCell>{formatBytesValue(pool.decommission.bytesFailed)}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   )

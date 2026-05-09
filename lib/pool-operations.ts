@@ -29,14 +29,32 @@ export interface PoolUsageProgress {
   elapsed: number
 }
 
+export interface PoolDecommissionSummary {
+  startTime?: string
+  startSize: number
+  totalSize: number
+  currentSize: number
+  complete: boolean
+  failed: boolean
+  canceled: boolean
+  objects: number
+  objectsFailed: number
+  bytes: number
+  bytesFailed: number
+}
+
 export interface PoolSummary {
   id: string
   name: string
   total: number
   used: number
   available: number
+  currentSize: number
+  usagePercent: number
+  lastUpdate?: string
   status: string
   progress: PoolUsageProgress
+  decommission: PoolDecommissionSummary
 }
 
 export interface PoolsOverview {
@@ -120,6 +138,25 @@ function normalizeProgress(value: unknown): PoolUsageProgress {
   }
 }
 
+function normalizeDecommissionSummary(value: unknown): PoolDecommissionSummary {
+  const record = asRecord(value)
+  return {
+    startTime: asString(record.startTime || record.StartTime) || undefined,
+    startSize: asNumber(record.startSize || record.StartSize),
+    totalSize: asNumber(record.totalSize || record.TotalSize),
+    currentSize: asNumber(record.currentSize || record.CurrentSize),
+    complete: asBoolean(record.complete || record.Complete),
+    failed: asBoolean(record.failed || record.Failed),
+    canceled: asBoolean(record.canceled || record.Canceled),
+    objects: asNumber(record.objectsDecommissioned || record.ObjectsDecommissioned || record.objects || record.Objects),
+    objectsFailed: asNumber(
+      record.objectsDecommissionedFailed || record.ObjectsDecommissionedFailed || record.objectsFailed,
+    ),
+    bytes: asNumber(record.bytesDecommissioned || record.BytesDecommissioned || record.bytes || record.Bytes),
+    bytesFailed: asNumber(record.bytesDecommissionedFailed || record.BytesDecommissionedFailed || record.bytesFailed),
+  }
+}
+
 function hasProgress(progress: PoolUsageProgress): boolean {
   return Boolean(progress.bytes || progress.objects || progress.versions || progress.eta || progress.elapsed)
 }
@@ -150,26 +187,22 @@ function pickStatus(record: JsonRecord): string {
 function normalizePool(value: unknown, index: number): PoolSummary {
   const record = asRecord(value)
   const decommissionInfo = asRecord(record.decommissionInfo || record.DecommissionInfo)
+  const decommission = normalizeDecommissionSummary(decommissionInfo)
   const total = asNumber(
-    record.total ||
-      record.capacity ||
-      record.totalSize ||
-      record.Total ||
-      record.TotalSize ||
-      decommissionInfo.totalSize ||
-      decommissionInfo.TotalSize,
+    record.total || record.capacity || record.totalSize || record.Total || record.TotalSize || decommission.totalSize,
   )
-  const used = asNumber(
-    record.used ||
-      record.usedCapacity ||
-      record.Used ||
-      record.UsedCapacity ||
-      decommissionInfo.currentSize ||
-      decommissionInfo.CurrentSize,
-  )
+  const explicitUsed = asNumber(record.usedSize || record.UsedSize || record.usedCapacity || record.UsedCapacity)
+  const rawUsed = asNumber(record.used || record.Used)
+  const used =
+    explicitUsed || (rawUsed > 0 && rawUsed <= 1 && total > 0 ? total * rawUsed : rawUsed) || decommission.currentSize
+  const currentSize = asNumber(record.currentSize || record.CurrentSize || decommission.currentSize)
   const available =
     asNumber(record.available || record.availableCapacity || record.Available || record.AvailableCapacity) ||
     Math.max(total - used, 0)
+  const rawUsagePercent = asNumber(record.used || record.Used || record.usagePercent || record.UsagePercent)
+  const usagePercent = clampPercent(
+    rawUsagePercent > 0 && rawUsagePercent <= 1 ? rawUsagePercent * 100 : rawUsagePercent,
+  )
   const progress = normalizeProgress(record.progress || record.Progress)
   const rawId =
     record.id ?? record.poolId ?? record.pool ?? record.index ?? record.ID ?? record.PoolID ?? record.poolIndex
@@ -180,8 +213,12 @@ function normalizePool(value: unknown, index: number): PoolSummary {
     total,
     used,
     available,
+    currentSize,
+    usagePercent: usagePercent || (total > 0 ? clampPercent((used / total) * 100) : 0),
+    lastUpdate: asString(record.lastUpdate || record.LastUpdate || record.updatedAt || record.UpdatedAt) || undefined,
     status: pickStatus(record),
     progress,
+    decommission,
   }
 }
 

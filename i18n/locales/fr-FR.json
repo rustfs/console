@@ -1307,5 +1307,12 @@
   "username length cannot be less than 8 characters and greater than 16 characters": "la longueur du nom d'utilisateur ne peut pas être inférieure à 8 caractères et supérieure à 16 caractères",
   "waiting": "En attente",
   "Completed Status": "Terminé",
-  "Active Pool": "Pool actif"
+  "Active Pool": "Pool actif",
+  "Bytes Failed": "Bytes Failed",
+  "Complete": "Complete",
+  "Current Size": "Current Size",
+  "ID": "ID",
+  "Objects Failed": "Objects Failed",
+  "Start Size": "Start Size",
+  "Start Time": "Start Time"
 }

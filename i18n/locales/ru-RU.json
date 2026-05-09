@@ -1307,5 +1307,12 @@
   "username length cannot be less than 8 characters and greater than 16 characters": "Длина имени пользователя не может быть менее 8 символов и более 16 символов",
   "waiting": "Ожидание",
   "Completed Status": "Завершено",
-  "Active Pool": "Активный пул"
+  "Active Pool": "Активный пул",
+  "Bytes Failed": "Bytes Failed",
+  "Complete": "Complete",
+  "Current Size": "Current Size",
+  "ID": "ID",
+  "Objects Failed": "Objects Failed",
+  "Start Size": "Start Size",
+  "Start Time": "Start Time"
 }

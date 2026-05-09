@@ -69,6 +69,47 @@ test("normalizePoolsOverview reads pool list decommissionInfo capacities", () =>
   assert.equal(overview.pools[0]?.used, 55435714560)
 })
 
+test("normalizePoolsOverview preserves detailed pool list fields", () => {
+  const overview = normalizePoolsOverview([
+    {
+      id: 0,
+      cmdline: "http://rustfs-node{1...32}:9000/data/rustfs{1...4}/mnmd",
+      lastUpdate: "2026-05-09T04:29:55.213860104Z",
+      totalSize: 5147518304256,
+      currentSize: 5014093479936,
+      usedSize: 133424824320,
+      used: 0.02592022338408851,
+      status: "active",
+      decommissionInfo: {
+        startTime: null,
+        startSize: 0,
+        totalSize: 5147518304256,
+        currentSize: 5014093479936,
+        complete: false,
+        failed: false,
+        canceled: false,
+        objectsDecommissioned: 3,
+        objectsDecommissionedFailed: 1,
+        bytesDecommissioned: 2048,
+        bytesDecommissionedFailed: 512,
+      },
+    },
+  ])
+
+  const pool = overview.pools[0]
+
+  assert.equal(overview.totalUsedCapacity, 133424824320)
+  assert.equal(pool?.used, 133424824320)
+  assert.equal(pool?.currentSize, 5014093479936)
+  assert.equal(pool?.usagePercent, 2.592022338408851)
+  assert.equal(pool?.lastUpdate, "2026-05-09T04:29:55.213860104Z")
+  assert.equal(pool?.decommission.complete, false)
+  assert.equal(pool?.decommission.objects, 3)
+  assert.equal(pool?.decommission.objectsFailed, 1)
+  assert.equal(pool?.decommission.bytes, 2048)
+  assert.equal(pool?.decommission.bytesFailed, 512)
+})
+
 test("normalizeRebalanceStatus reads progress and pool details", () => {
   const status = normalizeRebalanceStatus({
     id: "reb-1",

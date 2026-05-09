@@ -1307,5 +1307,12 @@
   "username length cannot be less than 8 characters and greater than 16 characters": "ユーザー名の長さは8文字未満、16文字を超えることはできません",
   "waiting": "待機中",
   "Completed Status": "完了しました",
-  "Active Pool": "アクティブなプール"
+  "Active Pool": "アクティブなプール",
+  "Bytes Failed": "Bytes Failed",
+  "Complete": "Complete",
+  "Current Size": "Current Size",
+  "ID": "ID",
+  "Objects Failed": "Objects Failed",
+  "Start Size": "Start Size",
+  "Start Time": "Start Time"
 }

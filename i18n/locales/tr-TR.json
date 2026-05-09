@@ -1305,5 +1305,7 @@
   "update:visible": "güncelleme:görünür",
   "username length cannot be less than 3 characters and greater than 128 characters": "Kullanıcı adı uzunluğu 3 ile 128 karakter arasında olmalıdır",
   "username length cannot be less than 8 characters and greater than 16 characters": "Kullanıcı adı uzunluğu 8 karakterden az 16 karakterden büyük olamaz",
-  "waiting": "Bekliyor"
+  "waiting": "Bekliyor",
+  "Completed Status": "Tamamlandı",
+  "Active Pool": "Etkin pool"
 }

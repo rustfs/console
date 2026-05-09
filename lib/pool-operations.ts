@@ -120,6 +120,23 @@ function normalizeProgress(value: unknown): PoolUsageProgress {
   }
 }
 
+function hasProgress(progress: PoolUsageProgress): boolean {
+  return Boolean(progress.bytes || progress.objects || progress.versions || progress.eta || progress.elapsed)
+}
+
+function aggregatePoolProgress(pools: PoolSummary[]): PoolUsageProgress {
+  return pools.reduce(
+    (totals, pool) => ({
+      bytes: totals.bytes + pool.progress.bytes,
+      objects: totals.objects + pool.progress.objects,
+      versions: totals.versions + pool.progress.versions,
+      eta: Math.max(totals.eta, pool.progress.eta),
+      elapsed: Math.max(totals.elapsed, pool.progress.elapsed),
+    }),
+    { bytes: 0, objects: 0, versions: 0, eta: 0, elapsed: 0 },
+  )
+}
+
 function pickStatus(record: JsonRecord): string {
   return (
     asString(record.status) ||
@@ -132,8 +149,24 @@ function pickStatus(record: JsonRecord): string {
 
 function normalizePool(value: unknown, index: number): PoolSummary {
   const record = asRecord(value)
-  const total = asNumber(record.total || record.capacity || record.totalSize || record.Total || record.TotalSize)
-  const used = asNumber(record.used || record.usedCapacity || record.Used || record.UsedCapacity)
+  const decommissionInfo = asRecord(record.decommissionInfo || record.DecommissionInfo)
+  const total = asNumber(
+    record.total ||
+      record.capacity ||
+      record.totalSize ||
+      record.Total ||
+      record.TotalSize ||
+      decommissionInfo.totalSize ||
+      decommissionInfo.TotalSize,
+  )
+  const used = asNumber(
+    record.used ||
+      record.usedCapacity ||
+      record.Used ||
+      record.UsedCapacity ||
+      decommissionInfo.currentSize ||
+      decommissionInfo.CurrentSize,
+  )
   const available =
     asNumber(record.available || record.availableCapacity || record.Available || record.AvailableCapacity) ||
     Math.max(total - used, 0)
@@ -143,7 +176,7 @@ function normalizePool(value: unknown, index: number): PoolSummary {
 
   return {
     id: String(rawId ?? index),
-    name: asString(record.name) || `Pool ${String(rawId ?? index)}`,
+    name: asString(record.name) || asString(record.cmdline) || `Pool ${String(rawId ?? index)}`,
     total,
     used,
     available,
@@ -185,16 +218,20 @@ export function normalizeRebalanceStatus(value: unknown): RebalanceStatus {
       ? asArray(record.Pools)
       : []
   const pools = poolsSource.map((pool, index) => normalizePool(pool, index))
-  const totals = normalizeProgress(record.progress || record.Progress || record.totals || record.Totals)
+  const explicitTotals = normalizeProgress(record.progress || record.Progress || record.totals || record.Totals)
+  const totals = hasProgress(explicitTotals) ? explicitTotals : aggregatePoolProgress(pools)
+  const status = pickStatus(record) || deriveStatusFromPools(pools)
   const rawProgress =
     asNumber(record.progressPercent || record.ProgressPercent || record.percent || record.Percent) ||
     (totals.bytes > 0 && pools.length > 0
       ? (pools.reduce((sum, pool) => sum + pool.progress.bytes, 0) / totals.bytes) * 100
-      : 0)
+      : ["completed", "complete", "success", "finished"].includes(normalizeState(status))
+        ? 100
+        : 0)
 
   return {
     id: asString(record.id) || asString(record.ID),
-    status: pickStatus(record),
+    status,
     startedAt: asString(record.startedAt || record.StartedAt) || undefined,
     updatedAt: asString(record.updatedAt || record.UpdatedAt) || undefined,
     stoppedAt: asString(record.stoppedAt || record.StoppedAt) || undefined,
@@ -232,6 +269,29 @@ export function normalizeDecommissionInfo(value: unknown, fallbackPoolId = ""): 
 
 function normalizeState(value: string): string {
   return value.trim().toLowerCase()
+}
+
+function deriveStatusFromPools(pools: PoolSummary[]): string {
+  if (pools.length === 0) return ""
+
+  const states = pools.map((pool) => normalizeState(pool.status))
+  if (states.some((state) => ["failed", "error"].includes(state))) return "failed"
+  if (states.some((state) => ["stopping", "stop_requested", "stop-requested"].includes(state))) return "stopping"
+  if (
+    states.some((state) =>
+      ["running", "in_progress", "in-progress", "progressing", "starting", "started"].includes(state),
+    )
+  ) {
+    return "running"
+  }
+  if (
+    states.every((state) =>
+      ["completed", "complete", "success", "finished", "none", "not_started", "not-started"].includes(state),
+    )
+  ) {
+    return "completed"
+  }
+  return ""
 }
 
 export function deriveRebalanceDisplayState(

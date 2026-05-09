@@ -1305,5 +1305,7 @@
   "update:visible": "update:visible",
   "username length cannot be less than 3 characters and greater than 128 characters": "사용자 이름은 3자 이상 128자 이하여야 합니다",
   "username length cannot be less than 8 characters and greater than 16 characters": "사용자 이름 길이는 8자 미만, 16자 초과일 수 없습니다",
-  "waiting": "대기 중"
+  "waiting": "대기 중",
+  "Completed Status": "완료",
+  "Active Pool": "활성 풀"
 }

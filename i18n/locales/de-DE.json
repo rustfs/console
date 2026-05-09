@@ -1305,5 +1305,7 @@
   "update:visible": "update:visible",
   "username length cannot be less than 3 characters and greater than 128 characters": "Der Benutzername muss zwischen 3 und 128 Zeichen lang sein",
   "username length cannot be less than 8 characters and greater than 16 characters": "Benutzernamenlänge darf nicht weniger als 8 Zeichen und nicht mehr als 16 Zeichen sein",
-  "waiting": "Warten"
+  "waiting": "Warten",
+  "Completed Status": "Abgeschlossen",
+  "Active Pool": "Aktiver Pool"
 }

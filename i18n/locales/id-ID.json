@@ -1305,5 +1305,7 @@
   "update:visible": "update:visible",
   "username length cannot be less than 3 characters and greater than 128 characters": "Panjang nama pengguna harus antara 3 dan 128 karakter",
   "username length cannot be less than 8 characters and greater than 16 characters": "panjang nama pengguna tidak boleh kurang dari 8 karakter dan lebih dari 16 karakter",
-  "waiting": "Menunggu"
+  "waiting": "Menunggu",
+  "Completed Status": "Selesai",
+  "Active Pool": "Pool aktif"
 }

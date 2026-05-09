@@ -25,28 +25,22 @@ function withEnv<T>(vars: Record<string, string | undefined>, fn: () => T): T {
 
 test("config: backward-compat — empty prefix yields the original URLs", () => {
   configManager.clearCache()
-  withEnv(
-    { [PREFIX_ENV]: "", [HOST_ENV]: "https://app.example.com" },
-    () => {
-      const cfg = configManager.loadRuntimeConfig()
-      assert.ok(cfg)
-      assert.equal(cfg.s3.endpoint, "https://app.example.com")
-      assert.equal(cfg.api.baseURL, "https://app.example.com/rustfs/admin/v3")
-    },
-  )
+  withEnv({ [PREFIX_ENV]: "", [HOST_ENV]: "https://app.example.com" }, () => {
+    const cfg = configManager.loadRuntimeConfig()
+    assert.ok(cfg)
+    assert.equal(cfg.s3.endpoint, "https://app.example.com")
+    assert.equal(cfg.api.baseURL, "https://app.example.com/rustfs/admin/v3")
+  })
 })
 
 test("config: loadRuntimeConfig adds the prefix to api.baseURL only (s3.endpoint stays clean)", () => {
   configManager.clearCache()
-  withEnv(
-    { [PREFIX_ENV]: "/rustfs/api", [HOST_ENV]: "https://app.example.com" },
-    () => {
-      const cfg = configManager.loadRuntimeConfig()
-      assert.ok(cfg)
-      assert.equal(cfg.api.baseURL, "https://app.example.com/rustfs/api/rustfs/admin/v3")
-      assert.equal(cfg.s3.endpoint, "https://app.example.com")
-    },
-  )
+  withEnv({ [PREFIX_ENV]: "/rustfs/api", [HOST_ENV]: "https://app.example.com" }, () => {
+    const cfg = configManager.loadRuntimeConfig()
+    assert.ok(cfg)
+    assert.equal(cfg.api.baseURL, "https://app.example.com/rustfs/api/rustfs/admin/v3")
+    assert.equal(cfg.s3.endpoint, "https://app.example.com")
+  })
 })
 
 test("config: createDefaultConfig adds the prefix to api.baseURL only (browser-fallback path)", () => {

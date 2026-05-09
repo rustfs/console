@@ -1305,5 +1305,7 @@
   "update:visible": "update:visible",
   "username length cannot be less than 3 characters and greater than 128 characters": "用户名长度不能少于 3 个字符且不能超过 128 个字符",
   "username length cannot be less than 8 characters and greater than 16 characters": "用户名长度不能少于8个字符且不能大于16个字符",
-  "waiting": "等待中"
+  "waiting": "等待中",
+  "Completed Status": "已完成",
+  "Active Pool": "当前存储池"
 }

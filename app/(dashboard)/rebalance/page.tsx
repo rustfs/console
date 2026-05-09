@@ -23,7 +23,7 @@ import { niceBytes } from "@/lib/functions"
 const POLL_MS = 5000
 
 function formatDuration(seconds?: number) {
-  if (!seconds) return "--"
+  if (seconds === undefined) return "--"
   if (seconds < 60) return `${seconds}s`
   const minutes = Math.floor(seconds / 60)
   const remainSeconds = seconds % 60
@@ -34,6 +34,14 @@ function formatDuration(seconds?: number) {
 
 function shouldPoll(state: RebalanceDisplayState) {
   return ["starting", "running", "stopping"].includes(state)
+}
+
+function formatBytesValue(value?: number) {
+  return value === undefined ? "--" : niceBytes(String(value))
+}
+
+function formatNumberValue(value?: number) {
+  return value === undefined ? "--" : String(value)
 }
 
 export default function RebalancePage() {
@@ -146,15 +154,28 @@ export default function RebalancePage() {
       case "stopping":
         return t("Stopping")
       case "completed":
-        return t("Completed")
+        return t("Completed Status")
       case "failed":
-        return t("Failed")
+        return t("Failed Status")
       case "stopped":
         return t("Stopped")
       default:
         return t("Unknown")
     }
   }, [displayState, t])
+
+  const pools = useMemo(() => {
+    const statusPools = new Map((status?.pools ?? []).map((pool) => [pool.id, pool]))
+    return overview.pools.map((pool) => {
+      const statusPool = statusPools.get(pool.id)
+      if (!statusPool) return pool
+      return {
+        ...pool,
+        status: statusPool.status || pool.status,
+        progress: statusPool.progress,
+      }
+    })
+  }, [overview.pools, status?.pools])
 
   return (
     <Page>
@@ -230,9 +251,7 @@ export default function RebalancePage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("Bytes Moved")}</p>
-                    <p className="text-sm font-medium">
-                      {status?.totals?.bytes ? niceBytes(String(status.totals.bytes)) : "--"}
-                    </p>
+                    <p className="text-sm font-medium">{formatBytesValue(status?.totals?.bytes)}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("Elapsed")}</p>
@@ -258,21 +277,21 @@ export default function RebalancePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {overview.pools.length === 0 ? (
+                    {pools.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-muted-foreground">
                           {t("No Data")}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      overview.pools.map((pool) => (
+                      pools.map((pool) => (
                         <TableRow key={pool.id}>
                           <TableCell>{pool.name}</TableCell>
                           <TableCell>{pool.status || "--"}</TableCell>
-                          <TableCell>{pool.used ? niceBytes(String(pool.used)) : "--"}</TableCell>
-                          <TableCell>{pool.progress.bytes ? niceBytes(String(pool.progress.bytes)) : "--"}</TableCell>
-                          <TableCell>{pool.progress.objects || "--"}</TableCell>
-                          <TableCell>{pool.progress.versions || "--"}</TableCell>
+                          <TableCell>{formatBytesValue(pool.used)}</TableCell>
+                          <TableCell>{formatBytesValue(pool.progress.bytes)}</TableCell>
+                          <TableCell>{formatNumberValue(pool.progress.objects)}</TableCell>
+                          <TableCell>{formatNumberValue(pool.progress.versions)}</TableCell>
                         </TableRow>
                       ))
                     )}

@@ -1305,5 +1305,7 @@
   "update:visible": "update:visible",
   "username length cannot be less than 3 characters and greater than 128 characters": "Длина имени пользователя должна быть от 3 до 128 символов",
   "username length cannot be less than 8 characters and greater than 16 characters": "Длина имени пользователя не может быть менее 8 символов и более 16 символов",
-  "waiting": "Ожидание"
+  "waiting": "Ожидание",
+  "Completed Status": "Завершено",
+  "Active Pool": "Активный пул"
 }

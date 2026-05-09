@@ -12,15 +12,18 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { usePoolOperations } from "@/hooks/use-pool-operations"
-import type {
-  DecommissionDisplayState,
-  DecommissionInfo,
-  PoolsOverview,
-  PoolSummary,
-  RebalanceDisplayState,
+import {
+  deriveDecommissionDisplayState,
+  deriveRebalanceDisplayState,
+  type DecommissionDisplayState,
+  type DecommissionInfo,
+  type PoolSupportState,
+  type PoolSummary,
+  type PoolsOverview,
+  type RebalanceDisplayState,
 } from "@/lib/pool-operations"
 import { useMessage } from "@/lib/feedback/message"
 import { niceBytes } from "@/lib/functions"
@@ -31,15 +34,60 @@ function shouldPoll(state: DecommissionDisplayState) {
   return ["running", "canceling"].includes(state)
 }
 
+function formatBytesValue(value?: number) {
+  return value === undefined ? "--" : niceBytes(String(value))
+}
+
+function getPoolDisplayState(
+  status: DecommissionInfo | null,
+  supportState: PoolSupportState,
+  rebalanceState: RebalanceDisplayState,
+  isConfirming = false,
+) {
+  return deriveDecommissionDisplayState(status, supportState, rebalanceState, isConfirming)
+}
+
+function formatPoolStatusLabel(state: DecommissionDisplayState, t: (key: string) => string) {
+  switch (state) {
+    case "unsupported":
+      return t("Unsupported")
+    case "blocked-by-rebalance":
+      return t("Blocked")
+    case "ready":
+      return t("Ready")
+    case "confirming":
+      return t("Needs Confirmation")
+    case "running":
+      return t("Running")
+    case "canceling":
+      return t("Canceling")
+    case "completed":
+      return t("Completed Status")
+    case "failed":
+      return t("Failed Status")
+    case "canceled":
+      return t("Canceled")
+    default:
+      return t("Unknown")
+  }
+}
+
+function getPoolStatusBadgeVariant(state: DecommissionDisplayState) {
+  if (state === "failed") return "destructive"
+  if (state === "completed") return "default"
+  return "secondary"
+}
+
 export default function PoolDecommissionPage() {
   const { t } = useTranslation()
   const message = useMessage()
-  const { getDecommissionViewModel, startDecommission, cancelDecommission } = usePoolOperations()
+  const { getPoolsOverview, getRebalanceStatus, getDecommissionStatus, startDecommission, cancelDecommission } =
+    usePoolOperations()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [selectedPoolId, setSelectedPoolId] = useState("")
-  const [confirming, setConfirming] = useState(false)
+  const [activePoolId, setActivePoolId] = useState("")
+  const [confirmingPoolId, setConfirmingPoolId] = useState("")
   const [overview, setOverview] = useState<PoolsOverview>({
     pools: [] as PoolSummary[],
     totalCapacity: 0,
@@ -48,8 +96,7 @@ export default function PoolDecommissionPage() {
     poolCount: 0,
     supportState: "unsupported" as const,
   })
-  const [status, setStatus] = useState<DecommissionInfo | null>(null)
-  const [displayState, setDisplayState] = useState<DecommissionDisplayState>("ready")
+  const [statuses, setStatuses] = useState<Record<string, DecommissionInfo | null>>({})
   const [rebalanceState, setRebalanceState] = useState<RebalanceDisplayState>("idle")
   const pollRef = useRef<number | null>(null)
 
@@ -61,17 +108,24 @@ export default function PoolDecommissionPage() {
   }
 
   const loadData = useCallback(
-    async (showSpinner = true, nextPoolId = selectedPoolId, nextConfirming = confirming) => {
+    async (showSpinner = true) => {
       if (showSpinner) setLoading(true)
       setError(null)
       try {
-        const view = await getDecommissionViewModel(nextPoolId || undefined, nextConfirming)
-        setOverview(view.overview)
-        setStatus(view.status)
-        setRebalanceState(view.rebalanceState)
-        setDisplayState(view.displayState)
-        if (!nextPoolId && view.overview.pools[0]?.id) {
-          setSelectedPoolId(view.overview.pools[0].id)
+        const [nextOverview, rebalanceStatus] = await Promise.all([
+          getPoolsOverview(),
+          getRebalanceStatus().catch(() => null),
+        ])
+        const nextRebalanceState = deriveRebalanceDisplayState(rebalanceStatus, nextOverview.supportState)
+        const statusEntries = await Promise.all(
+          nextOverview.pools.map(async (pool) => [pool.id, await getDecommissionStatus(pool.id).catch(() => null)]),
+        )
+
+        setOverview(nextOverview)
+        setStatuses(Object.fromEntries(statusEntries) as Record<string, DecommissionInfo | null>)
+        setRebalanceState(nextRebalanceState)
+        if (!activePoolId && nextOverview.pools[0]?.id) {
+          setActivePoolId(nextOverview.pools[0].id)
         }
       } catch (loadError) {
         setError((loadError as Error).message || t("Load Failed"))
@@ -79,7 +133,7 @@ export default function PoolDecommissionPage() {
         if (showSpinner) setLoading(false)
       }
     },
-    [confirming, getDecommissionViewModel, selectedPoolId, t],
+    [activePoolId, getDecommissionStatus, getPoolsOverview, getRebalanceStatus, t],
   )
 
   useEffect(() => {
@@ -89,32 +143,38 @@ export default function PoolDecommissionPage() {
 
   useEffect(() => {
     clearPoll()
-    if (!shouldPoll(displayState)) return
+    if (
+      !Object.values(statuses).some((status) =>
+        shouldPoll(getPoolDisplayState(status, overview.supportState, rebalanceState)),
+      )
+    ) {
+      return
+    }
     pollRef.current = window.setTimeout(() => {
       void loadData(false)
     }, POLL_MS)
     return clearPoll
-  }, [displayState, loadData])
+  }, [loadData, overview.supportState, rebalanceState, statuses])
 
-  useEffect(() => {
-    void loadData(false, selectedPoolId, confirming)
-  }, [confirming, loadData, selectedPoolId])
+  const activeStatus = statuses[activePoolId] ?? null
+  const activeDisplayState = getPoolDisplayState(
+    activeStatus,
+    overview.supportState,
+    rebalanceState,
+    confirmingPoolId === activePoolId,
+  )
+  const canCancelActive = activePoolId
+    ? getPoolDisplayState(activeStatus, overview.supportState, rebalanceState) === "running"
+    : false
 
-  const selectedPool = overview.pools.find((pool) => pool.id === selectedPoolId) ?? null
-  const isBlocked = ["unsupported", "blocked-by-rebalance"].includes(displayState)
-  const canRequestStart =
-    !isBlocked && !!selectedPoolId && ["ready", "failed", "canceled", "completed"].includes(displayState)
-  const canConfirm = confirming && !!selectedPoolId && !isBlocked && !submitting
-  const canCancel = ["running"].includes(displayState)
-
-  const handleStart = async () => {
-    if (!selectedPoolId) return
+  const handleStart = async (poolId: string) => {
     setSubmitting(true)
     try {
-      await startDecommission(selectedPoolId)
-      setConfirming(false)
+      await startDecommission(poolId)
+      setConfirmingPoolId("")
+      setActivePoolId(poolId)
       message.success(t("Pool decommission started"))
-      await loadData(false, selectedPoolId, false)
+      await loadData(false)
     } catch (startError) {
       message.error((startError as Error).message || t("Failed to start decommission"))
     } finally {
@@ -122,13 +182,14 @@ export default function PoolDecommissionPage() {
     }
   }
 
-  const handleCancel = async () => {
-    if (!selectedPoolId) return
+  const handleCancel = async (poolId = activePoolId) => {
+    if (!poolId) return
     setSubmitting(true)
     try {
-      await cancelDecommission(selectedPoolId)
+      await cancelDecommission(poolId)
+      setActivePoolId(poolId)
       message.success(t("Pool decommission cancel requested"))
-      await loadData(false, selectedPoolId, false)
+      await loadData(false)
     } catch (cancelError) {
       message.error((cancelError as Error).message || t("Failed to cancel decommission"))
     } finally {
@@ -137,7 +198,7 @@ export default function PoolDecommissionPage() {
   }
 
   const statusLabel = useMemo(() => {
-    switch (displayState) {
+    switch (activeDisplayState) {
       case "unsupported":
         return t("Unsupported")
       case "blocked-by-rebalance":
@@ -151,15 +212,33 @@ export default function PoolDecommissionPage() {
       case "canceling":
         return t("Canceling")
       case "completed":
-        return t("Completed")
+        return t("Completed Status")
       case "failed":
-        return t("Failed")
+        return t("Failed Status")
       case "canceled":
         return t("Canceled")
       default:
         return t("Unknown")
     }
-  }, [displayState, t])
+  }, [activeDisplayState, t])
+
+  const poolRows = useMemo(
+    () =>
+      overview.pools.map((pool) => {
+        const rowStatus = statuses[pool.id] ?? null
+        return {
+          pool,
+          status: rowStatus,
+          displayState: getPoolDisplayState(
+            rowStatus,
+            overview.supportState,
+            rebalanceState,
+            confirmingPoolId === pool.id,
+          ),
+        }
+      }),
+    [confirmingPoolId, overview.pools, overview.supportState, rebalanceState, statuses],
+  )
 
   return (
     <Page>
@@ -170,7 +249,7 @@ export default function PoolDecommissionPage() {
               <RiRefreshLine className="me-2 size-4" />
               {t("Sync")}
             </Button>
-            <Button variant="outline" onClick={handleCancel} disabled={!canCancel || submitting}>
+            <Button variant="outline" onClick={() => void handleCancel()} disabled={!canCancelActive || submitting}>
               {t("Cancel")}
             </Button>
           </>
@@ -182,14 +261,14 @@ export default function PoolDecommissionPage() {
       <div className="space-y-6">
         <PoolsOverviewCard overview={overview} operationLabel={t("Pool Decommission")} />
 
-        {displayState === "unsupported" ? (
+        {overview.supportState === "unsupported" ? (
           <Alert>
             <AlertTitle>{t("Single pool decommission is not supported")}</AlertTitle>
             <AlertDescription>{t("Decommission requires more than one pool in the cluster.")}</AlertDescription>
           </Alert>
         ) : null}
 
-        {displayState === "blocked-by-rebalance" ? (
+        {["starting", "running", "stopping", "failed", "stopped", "unknown"].includes(rebalanceState) ? (
           <Alert>
             <RiAlertLine className="size-4" />
             <AlertTitle>{t("Rebalance must complete before decommission")}</AlertTitle>
@@ -214,7 +293,11 @@ export default function PoolDecommissionPage() {
             </div>
             <Badge
               variant={
-                displayState === "failed" ? "destructive" : displayState === "completed" ? "default" : "secondary"
+                activeDisplayState === "failed"
+                  ? "destructive"
+                  : activeDisplayState === "completed"
+                    ? "default"
+                    : "secondary"
               }
             >
               {statusLabel}
@@ -227,98 +310,154 @@ export default function PoolDecommissionPage() {
               </div>
             ) : (
               <>
-                <div className="grid gap-4 md:grid-cols-[280px_1fr]">
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">{t("Target Pool")}</p>
-                    <Select
-                      value={selectedPoolId}
-                      onValueChange={(value) => {
-                        setSelectedPoolId(value)
-                        setConfirming(false)
-                      }}
-                      disabled={submitting || ["running", "canceling"].includes(displayState)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("Select a pool")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {overview.pools.map((pool) => (
-                          <SelectItem key={pool.id} value={pool.id}>
-                            {pool.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                <div className="grid gap-4 md:grid-cols-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("Rebalance Status")}</p>
+                    <p className="text-sm font-medium">{rebalanceState}</p>
                   </div>
-
-                  <div className="grid gap-4 md:grid-cols-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t("Rebalance Status")}</p>
-                      <p className="text-sm font-medium">{rebalanceState}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t("Progress")}</p>
-                      <p className="text-sm font-medium">{Math.round(status?.progressPercent ?? 0)}%</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t("Objects")}</p>
-                      <p className="text-sm font-medium">{status?.objects ?? "--"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{t("Bytes Moved")}</p>
-                      <p className="text-sm font-medium">{status?.bytes ? niceBytes(String(status.bytes)) : "--"}</p>
-                    </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("Active Pool")}</p>
+                    <p className="truncate text-sm font-medium">
+                      {overview.pools.find((pool) => pool.id === activePoolId)?.name ?? "--"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("Progress")}</p>
+                    <p className="text-sm font-medium">{Math.round(activeStatus?.progressPercent ?? 0)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("Bytes Moved")}</p>
+                    <p className="text-sm font-medium">{formatBytesValue(activeStatus?.bytes)}</p>
                   </div>
                 </div>
 
-                {selectedPool ? (
-                  <div className="rounded-none border p-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-medium">{selectedPool.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {t("Used Capacity")}: {selectedPool.used ? niceBytes(String(selectedPool.used)) : "--"}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          disabled={!canRequestStart || submitting}
-                          onClick={() => setConfirming(true)}
-                        >
-                          {t("Start Decommission")}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>{t("Pool")}</TableHead>
+                      <TableHead>{t("Status")}</TableHead>
+                      <TableHead>{t("Used Capacity")}</TableHead>
+                      <TableHead>{t("Progress")}</TableHead>
+                      <TableHead>{t("Objects")}</TableHead>
+                      <TableHead>{t("Bytes Moved")}</TableHead>
+                      <TableHead className="text-right">{t("Actions")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {poolRows.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-muted-foreground">
+                          {t("No Data")}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      poolRows.map(({ pool, status: rowStatus, displayState: rowState }) => {
+                        const canRequestStart =
+                          !submitting && ["ready", "failed", "canceled", "completed"].includes(rowState)
+                        const canConfirm = !submitting && rowState === "confirming"
+                        const canCancel = !submitting && rowState === "running"
 
-                {confirming ? (
+                        return (
+                          <TableRow
+                            key={pool.id}
+                            data-state={pool.id === activePoolId ? "selected" : undefined}
+                            onClick={() => setActivePoolId(pool.id)}
+                          >
+                            <TableCell className="max-w-[320px] truncate">{pool.name}</TableCell>
+                            <TableCell>
+                              <Badge variant={getPoolStatusBadgeVariant(rowState)}>
+                                {formatPoolStatusLabel(rowState, t)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{formatBytesValue(pool.used)}</TableCell>
+                            <TableCell className="min-w-32">
+                              <div className="flex items-center gap-2">
+                                <Progress value={rowStatus?.progressPercent ?? 0} className="h-2 w-20" />
+                                <span className="text-xs text-muted-foreground">
+                                  {Math.round(rowStatus?.progressPercent ?? 0)}%
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell>{rowStatus?.objects ?? "--"}</TableCell>
+                            <TableCell>{formatBytesValue(rowStatus?.bytes)}</TableCell>
+                            <TableCell>
+                              <div className="flex justify-end gap-2">
+                                {rowState === "confirming" ? (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      onClick={(event) => {
+                                        event.stopPropagation()
+                                        void handleStart(pool.id)
+                                      }}
+                                      disabled={!canConfirm}
+                                    >
+                                      {submitting && activePoolId === pool.id ? (
+                                        <Spinner className="me-2 size-4" />
+                                      ) : null}
+                                      {t("Confirm")}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={(event) => {
+                                        event.stopPropagation()
+                                        setConfirmingPoolId("")
+                                      }}
+                                      disabled={submitting}
+                                    >
+                                      {t("Cancel")}
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={!canRequestStart}
+                                      onClick={(event) => {
+                                        event.stopPropagation()
+                                        setActivePoolId(pool.id)
+                                        setConfirmingPoolId(pool.id)
+                                      }}
+                                    >
+                                      {t("Start Decommission")}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      disabled={!canCancel}
+                                      onClick={(event) => {
+                                        event.stopPropagation()
+                                        void handleCancel(pool.id)
+                                      }}
+                                    >
+                                      {t("Cancel")}
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+
+                {confirmingPoolId ? (
                   <Alert>
                     <AlertTitle>{t("Review before decommission")}</AlertTitle>
-                    <AlertDescription className="space-y-3">
-                      <p>
-                        {t(
-                          "This action retires the selected pool and should be used only after verifying rebalance has completed.",
-                        )}
-                      </p>
-                      <p>
-                        {t("Selected Pool")}: {selectedPool?.name ?? "--"}
-                      </p>
-                      <div className="flex gap-2">
-                        <Button onClick={handleStart} disabled={!canConfirm}>
-                          {submitting ? <Spinner className="me-2 size-4" /> : null}
-                          {t("Confirm")}
-                        </Button>
-                        <Button variant="outline" onClick={() => setConfirming(false)} disabled={submitting}>
-                          {t("Cancel")}
-                        </Button>
-                      </div>
+                    <AlertDescription>
+                      {t(
+                        "This action retires the selected pool and should be used only after verifying rebalance has completed.",
+                      )}{" "}
+                      {t("Selected Pool")}: {overview.pools.find((pool) => pool.id === confirmingPoolId)?.name ?? "--"}
                     </AlertDescription>
                   </Alert>
                 ) : null}
 
-                <Progress value={status?.progressPercent ?? 0} className="h-2" />
+                <Progress value={activeStatus?.progressPercent ?? 0} className="h-2" />
               </>
             )}
           </CardContent>

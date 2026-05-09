@@ -22,6 +22,53 @@ test("normalizePoolsOverview computes support and capacities", () => {
   assert.equal(overview.supportState, "supported")
 })
 
+test("normalizePoolsOverview reads pool list decommissionInfo capacities", () => {
+  const overview = normalizePoolsOverview([
+    {
+      id: 0,
+      cmdline: "http://172.30.0.{11...14}:9000/data/disk{1...2}",
+      lastUpdate: "2026-05-09T01:06:58.577822385Z",
+      decommissionInfo: {
+        startTime: null,
+        startSize: 0,
+        totalSize: 980428783616,
+        currentSize: 55435714560,
+        complete: false,
+        failed: false,
+        canceled: false,
+        objectsDecommissioned: 0,
+        objectsDecommissionedFailed: 0,
+        bytesDecommissioned: 0,
+        bytesDecommissionedFailed: 0,
+      },
+    },
+    {
+      id: 1,
+      cmdline: "http://172.30.0.{15...18}:9000/data/disk{1...2}",
+      lastUpdate: "2026-05-09T01:06:58.577822801Z",
+      decommissionInfo: {
+        startTime: null,
+        startSize: 0,
+        totalSize: 980428783616,
+        currentSize: 55434608640,
+        complete: false,
+        failed: false,
+        canceled: false,
+        objectsDecommissioned: 0,
+        objectsDecommissionedFailed: 0,
+        bytesDecommissioned: 0,
+        bytesDecommissionedFailed: 0,
+      },
+    },
+  ])
+
+  assert.equal(overview.poolCount, 2)
+  assert.equal(overview.totalCapacity, 1960857567232)
+  assert.equal(overview.totalUsedCapacity, 110870323200)
+  assert.equal(overview.pools[0]?.name, "http://172.30.0.{11...14}:9000/data/disk{1...2}")
+  assert.equal(overview.pools[0]?.used, 55435714560)
+})
+
 test("normalizeRebalanceStatus reads progress and pool details", () => {
   const status = normalizeRebalanceStatus({
     id: "reb-1",
@@ -33,6 +80,80 @@ test("normalizeRebalanceStatus reads progress and pool details", () => {
   assert.equal(status.id, "reb-1")
   assert.equal(status.progressPercent, 40)
   assert.equal(status.pools[0]?.progress.bytes, 400)
+})
+
+test("normalizeRebalanceStatus derives status from pool-only response", () => {
+  const status = normalizeRebalanceStatus({
+    id: "3be0831f-4315-4adb-9904-3bb0609b3bfc",
+    pools: [
+      {
+        id: 0,
+        status: "Completed",
+        used: 0.9357573544019193,
+        lastError: null,
+        progress: {
+          objects: 0,
+          versions: 0,
+          bytes: 0,
+          remainingBuckets: 0,
+          bucket: "",
+          object: "",
+          elapsed: 0,
+          eta: 0,
+        },
+      },
+      {
+        id: 1,
+        status: "None",
+        used: 0.9357573544019193,
+        lastError: null,
+        progress: null,
+      },
+    ],
+    stoppedAt: null,
+  })
+
+  assert.equal(status.status, "completed")
+  assert.equal(status.progressPercent, 100)
+  assert.equal(status.pools[0]?.status, "Completed")
+  assert.equal(status.pools[1]?.status, "None")
+  assert.equal(deriveRebalanceDisplayState(status, "supported"), "completed")
+})
+
+test("normalizeRebalanceStatus aggregates pool progress when totals are missing", () => {
+  const status = normalizeRebalanceStatus({
+    id: "reb-2",
+    pools: [
+      {
+        id: 0,
+        status: "Running",
+        progress: {
+          objects: 4,
+          versions: 2,
+          bytes: 128,
+          elapsed: 10,
+          eta: 40,
+        },
+      },
+      {
+        id: 1,
+        status: "Running",
+        progress: {
+          objects: 6,
+          versions: 3,
+          bytes: 256,
+          elapsed: 15,
+          eta: 20,
+        },
+      },
+    ],
+  })
+
+  assert.equal(status.totals.bytes, 384)
+  assert.equal(status.totals.objects, 10)
+  assert.equal(status.totals.versions, 5)
+  assert.equal(status.totals.elapsed, 15)
+  assert.equal(status.totals.eta, 40)
 })
 
 test("normalizeDecommissionInfo reads nested response", () => {

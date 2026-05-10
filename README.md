@@ -192,7 +192,6 @@ When tests are configured:
 
 The project supports multiple languages. Currently supported languages:
 
-- العربية (AR-MA)
 - 中文（简体）(Chinese Simplified)
 - English (US)
 - Deutsch (DE)
@@ -205,6 +204,7 @@ The project supports multiple languages. Currently supported languages:
 - Português (BR)
 - Русский (RU)
 - Türkçe (TR)
+- العربية (AR-MA)
 
 Language files are located in the `i18n/locales/` directory.
 

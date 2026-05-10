@@ -9,7 +9,7 @@ export function LinksX() {
   if (!x) return null
 
   return (
-    <Button variant="link" asChild>
+    <Button variant="link">
       <a href={x} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
         <RiTwitterXLine className="size-4" />
       </a>

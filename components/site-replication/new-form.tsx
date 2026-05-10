@@ -174,13 +174,20 @@ export function SiteReplicationNewForm({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      disablePointerDismissal={saving}
+      onOpenChange={(nextOpen, details) => {
+        if (saving && !nextOpen && details.reason === "escape-key") {
+          return
+        }
+
+        onOpenChange(nextOpen)
+      }}
+    >
       <DialogContent
         className="max-w-6xl gap-0 border-0 bg-transparent p-0 ring-0 shadow-none sm:max-w-6xl"
         showCloseButton={false}
-        onPointerDownOutside={(event) => saving && event.preventDefault()}
-        onInteractOutside={(event) => saving && event.preventDefault()}
-        onEscapeKeyDown={(event) => saving && event.preventDefault()}
       >
         <div className="grid overflow-hidden border bg-background lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.35fr)]">
           <section className="relative overflow-hidden border-b bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.26),_transparent_45%),linear-gradient(160deg,_rgba(255,247,237,0.92),_rgba(255,255,255,1)_65%)] px-6 py-6 lg:border-r lg:border-b-0">

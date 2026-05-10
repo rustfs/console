@@ -98,17 +98,19 @@ export function TopNavBreadcrumb() {
             {i > 0 && <BreadcrumbSeparator />}
             <BreadcrumbItem>
               {item.href ? (
-                <BreadcrumbLink asChild>
-                  <Link
-                    href={item.href}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      if (item.href) router.push(item.href)
-                    }}
-                  >
-                    {item.label}
-                  </Link>
-                </BreadcrumbLink>
+                <BreadcrumbLink
+                  render={
+                    <Link
+                      href={item.href}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        if (item.href) router.push(item.href)
+                      }}
+                    >
+                      {item.label}
+                    </Link>
+                  }
+                />
               ) : (
                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
               )}

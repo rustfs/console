@@ -100,12 +100,8 @@ export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: Acces
   }
 
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
-      <DialogContent
-        className="sm:max-w-6xl"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
+      <DialogContent className="sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle>{t("Edit Key")}</DialogTitle>
         </DialogHeader>

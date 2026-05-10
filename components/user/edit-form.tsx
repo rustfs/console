@@ -226,12 +226,8 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   const closeModal = () => onOpenChange(false)
 
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
-      <DialogContent
-        className="sm:max-w-5xl"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
+      <DialogContent className="sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>{user.accessKey || row?.accessKey || t("Account")}</DialogTitle>
         </DialogHeader>

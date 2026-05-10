@@ -66,8 +66,8 @@ export function UserAddToGroupForm({ open, onOpenChange, selectedUsers, onSucces
   }
 
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
-      <DialogContent className="sm:max-w-lg" onPointerDownOutside={(e) => e.preventDefault()}>
+    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Add to Group")}</DialogTitle>
         </DialogHeader>

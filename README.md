@@ -32,7 +32,7 @@ A modern, responsive web management console for RustFS distributed file system, 
 ### UI & Styling
 
 - **[Tailwind CSS v4](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[shadcn/ui](https://ui.shadcn.com/)** - High-quality component library based on Radix UI
+- **[shadcn/ui](https://ui.shadcn.com/)** - High-quality component library based on Base UI
 - **[Remix Icon](https://remixicon.com/)** - Icon library
 - **[next-themes](https://github.com/pacocoursey/next-themes)** - Theme switching support
 

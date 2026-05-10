@@ -354,12 +354,14 @@ export default function SiteReplicationPage() {
 
           return (
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button type="button" variant="ghost" size="icon-sm" disabled={isBusy}>
-                  <RiMore2Line className="size-4" aria-hidden />
-                  <span className="sr-only">{t("Actions")}</span>
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <Button type="button" variant="ghost" size="icon-sm" disabled={isBusy}>
+                    <RiMore2Line className="size-4" aria-hidden />
+                    <span className="sr-only">{t("Actions")}</span>
+                  </Button>
+                }
+              />
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>{peer.name || t("Peer site")}</DropdownMenuLabel>
                 {canManageSites ? (

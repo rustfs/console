@@ -135,12 +135,8 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
   }
 
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
-      <DialogContent
-        className="sm:max-w-lg"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Create User")}</DialogTitle>
         </DialogHeader>
@@ -183,17 +179,19 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
             <FieldLabel>{t("Groups")}</FieldLabel>
             <FieldContent>
               <Popover open={groupOpen} onOpenChange={setGroupOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="min-h-10 justify-between gap-2"
-                    aria-label={t("Groups")}
-                  >
-                    <span className="truncate">{groups.length ? groups.join(", ") : t("Select Group")}</span>
-                    <RiArrowDownSLine className="size-4 text-muted-foreground" />
-                  </Button>
-                </PopoverTrigger>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-10 justify-between gap-2"
+                      aria-label={t("Groups")}
+                    >
+                      <span className="truncate">{groups.length ? groups.join(", ") : t("Select Group")}</span>
+                      <RiArrowDownSLine className="size-4 text-muted-foreground" />
+                    </Button>
+                  }
+                />
                 <PopoverContent className="w-72 p-0" align="start">
                   <Command>
                     <CommandInput placeholder={t("Search Group")} />
@@ -233,19 +231,21 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
             <FieldLabel>{t("Policy")}</FieldLabel>
             <FieldContent>
               <Popover open={policyOpen} onOpenChange={setPolicyOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="min-h-10 justify-between gap-2"
-                    aria-label={t("Policy")}
-                  >
-                    <span className="truncate">
-                      {policies.length ? policies.join(", ") : t("Select user group policies")}
-                    </span>
-                    <RiArrowDownSLine className="size-4 text-muted-foreground" />
-                  </Button>
-                </PopoverTrigger>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="min-h-10 justify-between gap-2"
+                      aria-label={t("Policy")}
+                    >
+                      <span className="truncate">
+                        {policies.length ? policies.join(", ") : t("Select user group policies")}
+                      </span>
+                      <RiArrowDownSLine className="size-4 text-muted-foreground" />
+                    </Button>
+                  }
+                />
                 <PopoverContent className="w-72 p-0" align="start">
                   <Command>
                     <CommandInput placeholder={t("Search Policy")} />

@@ -448,11 +448,8 @@ export function ObjectUploadPicker({
   }
 
   return (
-    <Dialog open={show} onOpenChange={onShowChange}>
-      <DialogContent
-        className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
-        onPointerDownOutside={(e) => e.preventDefault()}
-      >
+    <Dialog open={show} onOpenChange={onShowChange} disablePointerDismissal>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>{t("Upload File")}</DialogTitle>
         </DialogHeader>

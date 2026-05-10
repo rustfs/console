@@ -24,7 +24,7 @@ export function TaskStatsButton() {
 
   return (
     <Drawer open={isTaskPanelOpen} onOpenChange={setTaskPanelOpen} direction="right">
-      <DrawerTrigger asChild>
+      <DrawerTrigger>
         <Button variant="outline">
           {processing.length > 0 ? (
             <div className="flex items-center gap-2">

@@ -39,18 +39,20 @@ export function UserEditGroups({ value, options, disabled = false, onChange }: U
       <FieldLabel>{t("Groups")}</FieldLabel>
       <FieldContent>
         <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              className="min-h-10 w-full justify-between gap-2"
-              aria-label={t("Groups")}
-              disabled={disabled}
-            >
-              <span className="truncate">{value.length ? value.join(", ") : t("Select Group")}</span>
-              <RiArrowDownSLine className="size-4 text-muted-foreground" />
-            </Button>
-          </PopoverTrigger>
+          <PopoverTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                className="min-h-10 w-full justify-between gap-2"
+                aria-label={t("Groups")}
+                disabled={disabled}
+              >
+                <span className="truncate">{value.length ? value.join(", ") : t("Select Group")}</span>
+                <RiArrowDownSLine className="size-4 text-muted-foreground" />
+              </Button>
+            }
+          />
           <PopoverContent className="w-72 p-0" align="start">
             <Command>
               <CommandInput placeholder={t("Search Group")} />

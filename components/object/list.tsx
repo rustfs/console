@@ -683,16 +683,20 @@ export function ObjectList({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel asChild>
-              <Button variant="outline" className="w-full sm:w-auto text-foreground">
-                {t("Cancel")}
-              </Button>
-            </AlertDialogCancel>
-            <AlertDialogAction asChild>
-              <Button variant="destructive" className="w-full sm:w-auto text-white" onClick={handleConfirmDelete}>
-                {t("Confirm")}
-              </Button>
-            </AlertDialogAction>
+            <AlertDialogCancel
+              render={
+                <Button variant="outline" className="w-full sm:w-auto text-foreground">
+                  {t("Cancel")}
+                </Button>
+              }
+            />
+            <AlertDialogAction
+              render={
+                <Button variant="destructive" className="w-full sm:w-auto text-white" onClick={handleConfirmDelete}>
+                  {t("Confirm")}
+                </Button>
+              }
+            />
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

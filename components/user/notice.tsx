@@ -47,12 +47,8 @@ export function UserNotice({ open, onOpenChange, data, onClose, title }: UserNot
   }, [url, accessKey, secretKey, closeModal])
 
   return (
-    <Dialog open={open} onOpenChange={closeModal}>
-      <DialogContent
-        className="sm:max-w-md"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title ?? t("New user has been created")}</DialogTitle>
         </DialogHeader>

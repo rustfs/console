@@ -53,5 +53,5 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     return <div className="min-h-screen bg-background" />
   }
 
-  return <DirectionProvider dir={dir}>{children}</DirectionProvider>
+  return <DirectionProvider direction={dir}>{children}</DirectionProvider>
 }

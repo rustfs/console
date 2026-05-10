@@ -147,12 +147,8 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
   }
 
   return (
-    <Dialog open={visible} onOpenChange={closeModal}>
-      <DialogContent
-        className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-      >
+    <Dialog open={visible} onOpenChange={closeModal} disablePointerDismissal>
+      <DialogContent className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
         <DialogHeader>
           <DialogTitle>{t("Create Key")}</DialogTitle>
         </DialogHeader>

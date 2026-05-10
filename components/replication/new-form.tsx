@@ -256,13 +256,18 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="flex max-h-[90vh] flex-col gap-4 sm:max-w-2xl"
-        onPointerDownOutside={(e) => e.preventDefault()}
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen, details) => {
+        if (!nextOpen && details.reason === "escape-key") {
+          return
+        }
+
+        onOpenChange(nextOpen)
+      }}
+      disablePointerDismissal
+    >
+      <DialogContent className="flex max-h-[90vh] flex-col gap-4 sm:max-w-2xl">
         <DialogHeader className="shrink-0">
           <DialogTitle>
             {t("Add Replication Rule")} ({t("Bucket")}: {bucketName || ""})
@@ -281,7 +286,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
               <Field>
                 <FieldLabel>{t("Mode")}</FieldLabel>
                 <FieldContent>
-                  <Select value={modeType} onValueChange={setModeType}>
+                  <Select value={modeType} onValueChange={(value) => setModeType(value ?? "")}>
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
@@ -483,7 +488,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                         onChange={(e) => setBandwidth(Number(e.target.value))}
                         className="w-32"
                       />
-                      <Select value={unit} onValueChange={setUnit}>
+                      <Select value={unit} onValueChange={(value) => setUnit(value ?? "")}>
                         <SelectTrigger className="w-28">
                           <SelectValue />
                         </SelectTrigger>

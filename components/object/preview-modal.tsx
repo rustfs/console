@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react"
 import { PdfViewer } from "@/components/object/pdf-viewer"
+import Image from "next/image"
 
 const SAFE_TEXT_MIMES = [
   "application/json",
@@ -261,7 +262,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
                       : { width: "100%", height: "100%" }
                   }
                 >
-                  <img
+                  <Image
                     src={previewUrl}
                     alt={objectKey || t("Preview")}
                     referrerPolicy="no-referrer"

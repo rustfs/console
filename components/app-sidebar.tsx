@@ -170,79 +170,95 @@ export function AppSidebar() {
                     {group.map((item) => (
                       <Collapsible
                         key={item.label}
-                        asChild
                         defaultOpen={hasChildren(item) && isRouteActive(item)}
                         className="group/collapsible"
-                      >
-                        {hasChildren(item) ? (
-                          <SidebarMenuItem>
-                            <CollapsibleTrigger asChild>
-                              <SidebarMenuButton
-                                isActive={isRouteActive(item)}
-                                tooltip={getLabel(item)}
-                                className="gap-3"
-                              >
-                                <NavIcon name={item.icon} />
-                                <span className="flex-1 truncate">{getLabel(item)}</span>
-                                <RiArrowRightSLine className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                              </SidebarMenuButton>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <SidebarMenuSub className="border-l-0 border-s rtl:-translate-x-px">
-                                {item.children!.map((child) => (
-                                  <SidebarMenuSubItem key={child.label}>
-                                    {isExternal(child) ? (
-                                      <SidebarMenuSubButton asChild size="sm">
-                                        <a
-                                          href={normalizedTo(child)}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="flex w-full items-center gap-2"
-                                        >
-                                          <NavIcon name={child.icon} />
-                                          <span className="truncate">{getLabel(child)}</span>
-                                          <RiExternalLinkLine className="ms-auto size-3 text-muted-foreground" />
-                                        </a>
-                                      </SidebarMenuSubButton>
-                                    ) : (
-                                      <SidebarMenuSubButton asChild size="sm" isActive={isRouteActive(child)}>
-                                        <Link href={normalizedTo(child)} className="flex w-full items-center gap-2">
-                                          <NavIcon name={child.icon} />
-                                          <span className="truncate">{getLabel(child)}</span>
-                                        </Link>
-                                      </SidebarMenuSubButton>
-                                    )}
-                                  </SidebarMenuSubItem>
-                                ))}
-                              </SidebarMenuSub>
-                            </CollapsibleContent>
-                          </SidebarMenuItem>
-                        ) : (
-                          <SidebarMenuItem>
-                            {isExternal(item) ? (
-                              <SidebarMenuButton asChild tooltip={getLabel(item)}>
-                                <a
-                                  href={normalizedTo(item)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex w-full items-center gap-3"
-                                >
-                                  <NavIcon name={item.icon} />
-                                  <span className="flex-1 truncate">{getLabel(item)}</span>
-                                  <RiExternalLinkLine className="size-3.5 text-muted-foreground" />
-                                </a>
-                              </SidebarMenuButton>
-                            ) : (
-                              <SidebarMenuButton asChild isActive={isRouteActive(item)} tooltip={getLabel(item)}>
-                                <Link href={normalizedTo(item)} className="flex w-full items-center gap-3">
-                                  <NavIcon name={item.icon} />
-                                  <span className="flex-1 truncate">{getLabel(item)}</span>
-                                </Link>
-                              </SidebarMenuButton>
-                            )}
-                          </SidebarMenuItem>
-                        )}
-                      </Collapsible>
+                        render={
+                          hasChildren(item) ? (
+                            <SidebarMenuItem>
+                              <CollapsibleTrigger
+                                render={
+                                  <SidebarMenuButton
+                                    isActive={isRouteActive(item)}
+                                    tooltip={getLabel(item)}
+                                    className="gap-3"
+                                  >
+                                    <NavIcon name={item.icon} />
+                                    <span className="flex-1 truncate">{getLabel(item)}</span>
+                                    <RiArrowRightSLine className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                  </SidebarMenuButton>
+                                }
+                              />
+                              <CollapsibleContent>
+                                <SidebarMenuSub className="border-l-0 border-s rtl:-translate-x-px">
+                                  {item.children!.map((child) => (
+                                    <SidebarMenuSubItem key={child.label}>
+                                      {isExternal(child) ? (
+                                        <SidebarMenuSubButton
+                                          size="sm"
+                                          render={
+                                            <a
+                                              href={normalizedTo(child)}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="flex w-full items-center gap-2"
+                                            >
+                                              <NavIcon name={child.icon} />
+                                              <span className="truncate">{getLabel(child)}</span>
+                                              <RiExternalLinkLine className="ms-auto size-3 text-muted-foreground" />
+                                            </a>
+                                          }
+                                        />
+                                      ) : (
+                                        <SidebarMenuSubButton
+                                          size="sm"
+                                          isActive={isRouteActive(child)}
+                                          render={
+                                            <Link href={normalizedTo(child)} className="flex w-full items-center gap-2">
+                                              <NavIcon name={child.icon} />
+                                              <span className="truncate">{getLabel(child)}</span>
+                                            </Link>
+                                          }
+                                        />
+                                      )}
+                                    </SidebarMenuSubItem>
+                                  ))}
+                                </SidebarMenuSub>
+                              </CollapsibleContent>
+                            </SidebarMenuItem>
+                          ) : (
+                            <SidebarMenuItem>
+                              {isExternal(item) ? (
+                                <SidebarMenuButton
+                                  tooltip={getLabel(item)}
+                                  render={
+                                    <a
+                                      href={normalizedTo(item)}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex w-full items-center gap-3"
+                                    >
+                                      <NavIcon name={item.icon} />
+                                      <span className="flex-1 truncate">{getLabel(item)}</span>
+                                      <RiExternalLinkLine className="size-3.5 text-muted-foreground" />
+                                    </a>
+                                  }
+                                />
+                              ) : (
+                                <SidebarMenuButton
+                                  isActive={isRouteActive(item)}
+                                  tooltip={getLabel(item)}
+                                  render={
+                                    <Link href={normalizedTo(item)} className="flex w-full items-center gap-3">
+                                      <NavIcon name={item.icon} />
+                                      <span className="flex-1 truncate">{getLabel(item)}</span>
+                                    </Link>
+                                  }
+                                />
+                              )}
+                            </SidebarMenuItem>
+                          )
+                        }
+                      />
                     ))}
                   </SidebarMenu>
                 </SidebarGroupContent>

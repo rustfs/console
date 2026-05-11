@@ -87,6 +87,7 @@ export default function PoolDecommissionPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activePoolId, setActivePoolId] = useState("")
+  const [selectedPoolId, setSelectedPoolId] = useState("")
   const [confirmingPoolId, setConfirmingPoolId] = useState("")
   const [overview, setOverview] = useState<PoolsOverview>({
     pools: [] as PoolSummary[],
@@ -127,13 +128,16 @@ export default function PoolDecommissionPage() {
         if (!activePoolId && nextOverview.pools[0]?.id) {
           setActivePoolId(nextOverview.pools[0].id)
         }
+        if (!selectedPoolId && nextOverview.pools[0]?.id) {
+          setSelectedPoolId(nextOverview.pools[0].id)
+        }
       } catch (loadError) {
         setError((loadError as Error).message || t("Load Failed"))
       } finally {
         if (showSpinner) setLoading(false)
       }
     },
-    [activePoolId, getDecommissionStatus, getPoolsOverview, getRebalanceStatus, t],
+    [activePoolId, getDecommissionStatus, getPoolsOverview, getRebalanceStatus, selectedPoolId, t],
   )
 
   useEffect(() => {
@@ -166,6 +170,7 @@ export default function PoolDecommissionPage() {
   const canCancelActive = activePoolId
     ? getPoolDisplayState(activeStatus, overview.supportState, rebalanceState) === "running"
     : false
+  const selectedPoolName = overview.pools.find((pool) => pool.id === selectedPoolId)?.name ?? "--"
 
   const handleStart = async (poolId: string) => {
     setSubmitting(true)
@@ -312,14 +317,14 @@ export default function PoolDecommissionPage() {
               <>
                 <div className="grid gap-4 md:grid-cols-4">
                   <div>
-                    <p className="text-xs text-muted-foreground">{t("Rebalance Status")}</p>
-                    <p className="text-sm font-medium">{rebalanceState}</p>
-                  </div>
-                  <div>
                     <p className="text-xs text-muted-foreground">{t("Active Pool")}</p>
                     <p className="truncate text-sm font-medium">
                       {overview.pools.find((pool) => pool.id === activePoolId)?.name ?? "--"}
                     </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">{t("Selected Pool")}</p>
+                    <p className="truncate text-sm font-medium">{selectedPoolName}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("Progress")}</p>
@@ -352,16 +357,16 @@ export default function PoolDecommissionPage() {
                       </TableRow>
                     ) : (
                       poolRows.map(({ pool, status: rowStatus, displayState: rowState }) => {
-                        const canRequestStart =
-                          !submitting && ["ready", "failed", "canceled", "completed"].includes(rowState)
+                        const hasDecommissionStarted = Boolean(rowStatus)
+                        const canRequestStart = !submitting && rowState === "ready"
                         const canConfirm = !submitting && rowState === "confirming"
                         const canCancel = !submitting && rowState === "running"
 
                         return (
                           <TableRow
                             key={pool.id}
-                            data-state={pool.id === activePoolId ? "selected" : undefined}
-                            onClick={() => setActivePoolId(pool.id)}
+                            data-state={pool.id === selectedPoolId ? "selected" : undefined}
+                            onClick={() => setSelectedPoolId(pool.id)}
                           >
                             <TableCell className="max-w-[320px] truncate">{pool.name}</TableCell>
                             <TableCell>
@@ -371,15 +376,19 @@ export default function PoolDecommissionPage() {
                             </TableCell>
                             <TableCell>{formatBytesValue(pool.used)}</TableCell>
                             <TableCell className="min-w-32">
-                              <div className="flex items-center gap-2">
-                                <Progress value={rowStatus?.progressPercent ?? 0} className="h-2 w-20" />
-                                <span className="text-xs text-muted-foreground">
-                                  {Math.round(rowStatus?.progressPercent ?? 0)}%
-                                </span>
-                              </div>
+                              {hasDecommissionStarted ? (
+                                <div className="flex items-center gap-2">
+                                  <Progress value={rowStatus?.progressPercent ?? 0} className="h-2 w-20" />
+                                  <span className="text-xs text-muted-foreground">
+                                    {Math.round(rowStatus?.progressPercent ?? 0)}%
+                                  </span>
+                                </div>
+                              ) : (
+                                "--"
+                              )}
                             </TableCell>
-                            <TableCell>{rowStatus?.objects ?? "--"}</TableCell>
-                            <TableCell>{formatBytesValue(rowStatus?.bytes)}</TableCell>
+                            <TableCell>{hasDecommissionStarted ? (rowStatus?.objects ?? "--") : "--"}</TableCell>
+                            <TableCell>{hasDecommissionStarted ? formatBytesValue(rowStatus?.bytes) : "--"}</TableCell>
                             <TableCell>
                               <div className="flex justify-end gap-2">
                                 {rowState === "confirming" ? (
@@ -414,10 +423,11 @@ export default function PoolDecommissionPage() {
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      disabled={!canRequestStart}
+                                      disabled={!canRequestStart || hasDecommissionStarted}
                                       onClick={(event) => {
                                         event.stopPropagation()
                                         setActivePoolId(pool.id)
+                                        setSelectedPoolId(pool.id)
                                         setConfirmingPoolId(pool.id)
                                       }}
                                     >

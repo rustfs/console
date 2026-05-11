@@ -11,3 +11,15 @@ test("pool decommission page renders pool selection as a table instead of a sele
   assert.match(source, /<Table\b/)
   assert.match(source, /poolRows\.map/)
 })
+
+test("pool decommission page keeps status panel independent from list clicks and hides idle progress", () => {
+  const source = fs.readFileSync("app/(dashboard)/pool-decommission/page.tsx", "utf8")
+
+  assert.doesNotMatch(source, /{t\("Rebalance Status"\)}/)
+  assert.match(source, /onClick=\{\(\) => setSelectedPoolId\(pool\.id\)\}/)
+  assert.doesNotMatch(source, /onClick=\{\(\) => setActivePoolId\(pool\.id\)\}/)
+  assert.match(source, /const hasDecommissionStarted = Boolean\(rowStatus\)/)
+  assert.match(source, /hasDecommissionStarted \?/)
+  assert.match(source, /rowState === "ready"/)
+  assert.doesNotMatch(source, /\["ready", "failed", "canceled", "completed"\]\.includes\(rowState\)/)
+})

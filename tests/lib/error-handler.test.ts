@@ -42,3 +42,14 @@ test("getXmlErrorMessage extracts an error code when the XML has no message", as
 
   assert.equal(getXmlErrorMessage(xml), "InvalidBucketName")
 })
+
+test("getXmlErrorMessage prefers detailed XML messages over generic error codes", async () => {
+  const { getXmlErrorMessage } = await loadErrorHandler()
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8"?><Error><Code>AccessDenied</Code><Message>Object is under COMPLIANCE retention and cannot be deleted until 2026-05-13T00:00:00Z</Message></Error>'
+
+  assert.equal(
+    getXmlErrorMessage(xml),
+    "Object is under COMPLIANCE retention and cannot be deleted until 2026-05-13T00:00:00Z",
+  )
+})

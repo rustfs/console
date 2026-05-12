@@ -31,17 +31,22 @@ export const getXmlErrorMessage = (xml: string): string | null => {
     return null
   }
 
+  const message = getXmlTagText(trimmed, "Message")
+  if (isSpecificErrorText(message)) {
+    return message
+  }
+
   const code = getXmlTagText(trimmed, "Code")
   if (isSpecificErrorText(code)) {
     return code
   }
 
-  const message = getXmlTagText(trimmed, "Message") ?? getXmlTagText(trimmed, "Error")
-  if (isSpecificErrorText(message)) {
-    return message
+  const error = getXmlTagText(trimmed, "Error")
+  if (isSpecificErrorText(error)) {
+    return error
   }
 
-  return code ?? message
+  return message ?? code ?? error
 }
 
 export const getServiceErrorMessage = (error: unknown): string | null => {

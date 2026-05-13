@@ -38,9 +38,10 @@ interface LifecycleRule {
 
 interface BucketLifecycleTabProps {
   bucketName: string
+  hideTitle?: boolean
 }
 
-export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
+export function BucketLifecycleTab({ bucketName, hideTitle = false }: BucketLifecycleTabProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
@@ -186,7 +187,7 @@ export function BucketLifecycleTab({ bucketName }: BucketLifecycleTabProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">{t("Lifecycle")}</h2>
+        {hideTitle ? null : <h2 className="text-lg font-medium">{t("Lifecycle")}</h2>}
         <div className="flex gap-2">
           {canEditLifecycle ? (
             <Button variant="outline" onClick={() => setNewFormOpen(true)}>

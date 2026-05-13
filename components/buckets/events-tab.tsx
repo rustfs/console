@@ -19,9 +19,10 @@ import type { NotificationItem } from "@/lib/events"
 
 interface BucketEventsTabProps {
   bucketName: string
+  hideTitle?: boolean
 }
 
-export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
+export function BucketEventsTab({ bucketName, hideTitle = false }: BucketEventsTabProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
@@ -193,7 +194,7 @@ export function BucketEventsTab({ bucketName }: BucketEventsTabProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium">{t("Events")}</h2>
+        {hideTitle ? null : <h2 className="text-lg font-medium">{t("Events")}</h2>}
         <div className="flex gap-2">
           {canEditEvents ? (
             <Button variant="outline" onClick={() => setNewFormOpen(true)} disabled={!canManageBucketEvents}>

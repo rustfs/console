@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SearchInput } from "@/components/search-input"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
@@ -44,6 +45,11 @@ import {
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
 } from "@/lib/object-list-state"
+import {
+  OBJECT_LIST_DEFAULT_PAGE_SIZE,
+  OBJECT_LIST_PAGE_SIZE_OPTIONS,
+  normalizeObjectListPageSize,
+} from "@/lib/object-list-pagination"
 import {
   resolveBucketVersioningState,
   shouldForceDeleteObjects,
@@ -82,7 +88,7 @@ export function ObjectList({
   onOpenInfo,
   onUploadClick,
   canUpload = false,
-  pageSize = 25,
+  pageSize = OBJECT_LIST_DEFAULT_PAGE_SIZE,
   onRefresh,
   refreshTrigger = 0,
   onPreview,
@@ -98,6 +104,10 @@ export function ObjectList({
 
   const [searchTerm, setSearchTerm] = React.useState("")
   const [showDeleted, setShowDeleted] = useLocalStorage("object-list-show-deleted", false)
+  const [storedPageSize, setStoredPageSize] = useLocalStorage(
+    "object-list-page-size",
+    normalizeObjectListPageSize(pageSize),
+  )
   const [loading, setLoading] = React.useState(false)
   const [data, setData] = React.useState<ObjectRow[]>([])
   const [continuationToken, setContinuationToken] = React.useState<string | undefined>()
@@ -109,15 +119,16 @@ export function ObjectList({
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
 
   const prefix = decodeURIComponent(path)
+  const resolvedPageSize = normalizeObjectListPageSize(storedPageSize)
   const listScope = React.useMemo(
     () =>
       createObjectListScope({
         bucket,
         prefix,
-        pageSize,
+        pageSize: resolvedPageSize,
         showDeleted,
       }),
-    [bucket, prefix, pageSize, showDeleted],
+    [bucket, prefix, resolvedPageSize, showDeleted],
   )
   const canBulkDelete = canCapability("objects.bulkDelete", { bucket, prefix })
   const canBulkDownload = canCapability("objects.download", { bucket, prefix })
@@ -139,7 +150,7 @@ export function ObjectList({
       const requestScope = activeScopeRef.current
       setLoading(true)
       try {
-        const response = await listObject(bucket, prefix || undefined, pageSize, token, {
+        const response = await listObject(bucket, prefix || undefined, resolvedPageSize, token, {
           includeDeleted: showDeleted,
         })
 
@@ -192,7 +203,7 @@ export function ObjectList({
         }, 200)
       }
     },
-    [bucket, prefix, pageSize, continuationToken, showDeleted, listObject],
+    [bucket, prefix, resolvedPageSize, continuationToken, showDeleted, listObject],
   )
 
   const prevRefreshTriggerRef = React.useRef(refreshTrigger)
@@ -210,7 +221,7 @@ export function ObjectList({
     } else {
       void fetchObjects()
     }
-  }, [listScope, bucket, prefix, pageSize, continuationToken, showDeleted, refreshTrigger, fetchObjects])
+  }, [listScope, bucket, prefix, resolvedPageSize, continuationToken, showDeleted, refreshTrigger, fetchObjects])
 
   const prevDeleteTaskIdsRef = React.useRef<Set<string>>(new Set())
 
@@ -590,6 +601,14 @@ export function ObjectList({
     setTokenHistory((h) => h.slice(0, -1))
   }
 
+  const handlePageSizeChange = (value: string) => {
+    const parsed = Number.parseInt(value, 10)
+    const nextPageSize = normalizeObjectListPageSize(Number.isNaN(parsed) ? undefined : parsed)
+    setStoredPageSize(nextPageSize)
+    setContinuationToken(undefined)
+    setTokenHistory([])
+  }
+
   React.useEffect(() => {
     const col = table.getColumn("object")
     if (col) col.setFilterValue(searchTerm || undefined)
@@ -639,7 +658,7 @@ export function ObjectList({
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder={t("Filter From This Page")}
+            placeholder={t("Filter current page")}
             clearable
             className="lg:max-w-sm"
           />
@@ -657,15 +676,41 @@ export function ObjectList({
         emptyDescription={t("Upload files or create folders to populate this bucket.")}
       />
 
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" disabled={tokenHistory.length === 0} onClick={goToPreviousPage}>
-          <RiArrowLeftSLine className="me-2 size-4 rtl:-scale-x-100" />
-          <span>{t("Previous Page")}</span>
-        </Button>
-        <Button variant="outline" disabled={!nextToken} onClick={goToNextPage}>
-          <span>{t("Next Page")}</span>
-          <RiArrowRightSLine className="ms-2 size-4 rtl:-scale-x-100" />
-        </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+          <span>
+            {t("Loaded {count} of up to {pageSize} keys on this page", {
+              count: data.length,
+              pageSize: resolvedPageSize,
+            })}
+          </span>
+          <span>{t("Filtering and sorting apply to the current page")}</span>
+          <div className="flex items-center gap-2">
+            <span>{t("Rows per page")}</span>
+            <Select value={String(resolvedPageSize)} onValueChange={(value) => handlePageSizeChange(value ?? "")}>
+              <SelectTrigger className="h-9 w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {OBJECT_LIST_PAGE_SIZE_OPTIONS.map((option) => (
+                  <SelectItem key={option} value={String(option)}>
+                    {String(option)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" disabled={tokenHistory.length === 0} onClick={goToPreviousPage}>
+            <RiArrowLeftSLine className="me-2 size-4 rtl:-scale-x-100" />
+            <span>{t("Previous Page")}</span>
+          </Button>
+          <Button variant="outline" disabled={!nextToken} onClick={goToNextPage}>
+            <span>{t("Next Page")}</span>
+            <RiArrowRightSLine className="ms-2 size-4 rtl:-scale-x-100" />
+          </Button>
+        </div>
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

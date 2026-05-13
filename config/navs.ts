@@ -60,21 +60,21 @@ export default [
     key: "divider-1",
     type: "divider",
   },
-  // {
-  //   label: "Bucket Events",
-  //   to: "/events",
-  //   icon: "ri:broadcast-line",
-  // },
-  // {
-  //   label: "Bucket Replication",
-  //   to: "/replication",
-  //   icon: "ri:file-copy-line",
-  // },
-  // {
-  //   label: "Lifecycle",
-  //   to: "/lifecycle",
-  //   icon: "ri:exchange-2-line",
-  // },
+  {
+    label: "Bucket Events",
+    to: "/events",
+    icon: "ri:broadcast-line",
+  },
+  {
+    label: "Bucket Replication",
+    to: "/replication",
+    icon: "ri:file-copy-line",
+  },
+  {
+    label: "Lifecycle",
+    to: "/lifecycle",
+    icon: "ri:exchange-2-line",
+  },
   {
     label: "Site Replication",
     to: "/site-replication",

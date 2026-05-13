@@ -101,12 +101,12 @@ export function UserDropdown() {
             }
           />
           {!isAdmin && (
-            <DropdownMenuItem onSelect={handleChangePassword}>
+            <DropdownMenuItem onClick={handleChangePassword}>
               <RiLockPasswordLine className="h-4 w-4" />
               <span>{t("Change Password")}</span>
             </DropdownMenuItem>
           )}
-          <DropdownMenuItem onSelect={handleLogout}>
+          <DropdownMenuItem onClick={handleLogout}>
             <RiLogoutBoxRLine className="h-4 w-4" />
             <span>{t("Logout")}</span>
           </DropdownMenuItem>

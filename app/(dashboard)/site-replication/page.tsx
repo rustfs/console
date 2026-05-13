@@ -365,26 +365,26 @@ export default function SiteReplicationPage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>{peer.name || t("Peer site")}</DropdownMenuLabel>
                 {canManageSites ? (
-                  <DropdownMenuItem onSelect={() => setEditingPeer(peer)}>
+                  <DropdownMenuItem onClick={() => setEditingPeer(peer)}>
                     <RiArrowLeftRightLine className="size-4" aria-hidden />
                     {t("Edit Site")}
                   </DropdownMenuItem>
                 ) : null}
                 {canResyncSites ? (
-                  <DropdownMenuItem onSelect={() => void handleResync(peer, "start")}>
+                  <DropdownMenuItem onClick={() => void handleResync(peer, "start")}>
                     <RiRestartLine className="size-4" aria-hidden />
                     {t("Start Resync")}
                   </DropdownMenuItem>
                 ) : null}
                 {canResyncSites ? (
-                  <DropdownMenuItem onSelect={() => void handleResync(peer, "cancel")}>
+                  <DropdownMenuItem onClick={() => void handleResync(peer, "cancel")}>
                     <RiRefreshLine className="size-4" aria-hidden />
                     {t("Cancel Resync")}
                   </DropdownMenuItem>
                 ) : null}
                 {canRemoveSites ? <DropdownMenuSeparator /> : null}
                 {canRemoveSites ? (
-                  <DropdownMenuItem variant="destructive" onSelect={() => confirmRemoveSite(peer)}>
+                  <DropdownMenuItem variant="destructive" onClick={() => confirmRemoveSite(peer)}>
                     <RiDeleteBin5Line className="size-4" aria-hidden />
                     {t("Remove Site")}
                   </DropdownMenuItem>

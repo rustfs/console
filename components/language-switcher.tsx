@@ -46,7 +46,7 @@ export function LanguageSwitcher() {
       />
       <DropdownMenuContent className="w-40" align="start">
         {options.map(({ label, key }) => (
-          <DropdownMenuItem key={key} onSelect={() => i18n.changeLanguage(key)}>
+          <DropdownMenuItem key={key} onClick={() => i18n.changeLanguage(key)}>
             {label}
           </DropdownMenuItem>
         ))}

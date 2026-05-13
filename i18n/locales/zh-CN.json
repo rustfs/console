@@ -1035,6 +1035,7 @@
   "Set the time cycle for the rule": "设置规则的时间周期",
   "Setting prefix": "设置前缀",
   "Settings": "设置",
+  "System Setting": "系统设置",
   "Show Deleted Objects": "显示已删除的对象",
   "Showing up to {count} keys per page": "每页最多显示 {count} 个密钥",
   "Single Machine Multiple Disks": "单机多盘",

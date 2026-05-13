@@ -1035,6 +1035,7 @@
   "Set the time cycle for the rule": "ルールの時間サイクルを設定",
   "Setting prefix": "設定プレフィックス",
   "Settings": "設定",
+  "System Setting": "システム設定",
   "Show Deleted Objects": "削除されたオブジェクトを表示",
   "Showing up to {count} keys per page": "1 ページあたり最大 {count} 件のキー",
   "Single Machine Multiple Disks": "単一マシン複数ディスク",

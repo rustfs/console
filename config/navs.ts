@@ -106,7 +106,7 @@ export default [
     icon: "ri:fingerprint-line",
   },
   {
-    label: "Settings",
+    label: "System Setting",
     to: "/settings",
     icon: "ri:settings-line",
   },

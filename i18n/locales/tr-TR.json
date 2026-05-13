@@ -1035,6 +1035,7 @@
   "Set the time cycle for the rule": "Kural için zaman döngüsünü ayarlayın",
   "Setting prefix": "Ayar ön eki",
   "Settings": "Ayarlar",
+  "System Setting": "Sistem Ayarı",
   "Show Deleted Objects": "Silinen Nesneleri Göster",
   "Showing up to {count} keys per page": "Sayfa başına en fazla {count} anahtar",
   "Single Machine Multiple Disks": "Tek Makine Çoklu Disk",

@@ -1035,6 +1035,7 @@
   "Set the time cycle for the rule": "Définir le cycle temporel pour la règle",
   "Setting prefix": "Paramètres de préfixe",
   "Settings": "Paramètres",
+  "System Setting": "Paramètre système",
   "Show Deleted Objects": "Afficher les objets supprimés",
   "Showing up to {count} keys per page": "Jusqu’à {count} clés par page",
   "Single Machine Multiple Disks": "Machine unique, plusieurs disques",

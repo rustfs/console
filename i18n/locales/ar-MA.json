@@ -1035,6 +1035,7 @@
   "Set the time cycle for the rule": "تعيين دورة الوقت للقاعدة",
   "Setting prefix": "تعيين البادئة",
   "Settings": "الإعدادات",
+  "System Setting": "إعدادات النظام",
   "Show Deleted Objects": "إظهار الكائنات المحذوفة",
   "Showing up to {count} keys per page": "عرض ما يصل إلى {count} مفتاحًا لكل صفحة",
   "Single Machine Multiple Disks": "جهاز واحد متعدد الأقراص",

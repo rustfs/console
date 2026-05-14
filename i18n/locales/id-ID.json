@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "Retention RetainUntilDate",
   "Retention Save Failed": "Gagal Menyimpan Retensi",
   "Retention Unit": "Unit Retensi",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "Percobaan Ulang",
   "Review before decommission": "Tinjau sebelum pensiun",
   "Role ID": "Role ID",

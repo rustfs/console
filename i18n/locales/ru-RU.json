@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "Удержание до даты",
   "Retention Save Failed": "Ошибка сохранения удержания",
   "Retention Unit": "Единица удержания",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "Попытки повтора",
   "Review before decommission": "Проверка перед выводом из эксплуатации",
   "Role ID": "ID роли",

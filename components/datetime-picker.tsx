@@ -58,6 +58,7 @@ interface DateTimePickerProps extends Omit<React.ComponentProps<typeof Button>, 
   placeholder?: string
   min?: string
   max?: string
+  portalContainer?: React.ComponentProps<typeof PopoverContent>["portalContainer"]
 }
 
 export function DateTimePicker({
@@ -66,6 +67,7 @@ export function DateTimePicker({
   placeholder,
   min,
   max,
+  portalContainer,
   className,
   disabled,
   id,
@@ -145,9 +147,10 @@ export function DateTimePicker({
           </Button>
         ) : null}
       </div>
-      <PopoverContent align="start" className="w-auto p-0" lang={htmlLocale}>
+      <PopoverContent align="start" className="w-auto p-0" lang={htmlLocale} portalContainer={portalContainer}>
         <Calendar
           mode="single"
+          required
           selected={selectedDate}
           onSelect={updateDate}
           disabled={disabledDays}
@@ -158,7 +161,10 @@ export function DateTimePicker({
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <RiTimeLine className="size-4 text-muted-foreground" aria-hidden />
             <Input
+              type="number"
               inputMode="numeric"
+              min={0}
+              max={23}
               value={hoursValue}
               onChange={updateHours}
               aria-label={t("Hours")}
@@ -167,7 +173,10 @@ export function DateTimePicker({
             />
             <span className="text-muted-foreground">:</span>
             <Input
+              type="number"
               inputMode="numeric"
+              min={0}
+              max={59}
               value={minutesValue}
               onChange={updateMinutes}
               aria-label={t("Minutes")}

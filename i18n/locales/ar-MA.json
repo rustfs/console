@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "تاريخ الاحتجاز حتى",
   "Retention Save Failed": "فشل حفظ الاحتجاز",
   "Retention Unit": "وحدة الاحتجاز",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "محاولات إعادة المحاولة",
   "Review before decommission": "مراجعة قبل الإخراج من الخدمة",
   "Role ID": "معرف الدور",

@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "보관 유지 날짜",
   "Retention Save Failed": "보관 저장 실패",
   "Retention Unit": "보관 단위",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "재시도 횟수",
   "Review before decommission": "폐기 전 검토",
   "Role ID": "역할 ID",

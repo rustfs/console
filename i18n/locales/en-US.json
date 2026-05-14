@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "Retention RetainUntilDate",
   "Retention Save Failed": "Retention Save Failed",
   "Retention Unit": "Retention Unit",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "Retry Attempts",
   "Review before decommission": "Review before decommission",
   "Role ID": "Role ID",

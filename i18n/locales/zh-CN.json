@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "保留至日期",
   "Retention Save Failed": "保留保存失败",
   "Retention Unit": "保留单位",
+  "The retain until date must be in the future": "保留截止时间必须是未来时间",
   "Retry Attempts": "重试次数",
   "Review before decommission": "退役前确认",
   "Role ID": "角色 ID",

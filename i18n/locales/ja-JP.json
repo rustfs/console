@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "保持期限日",
   "Retention Save Failed": "保持の保存に失敗しました",
   "Retention Unit": "保持単位",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "再試行回数",
   "Review before decommission": "廃止前の確認",
   "Role ID": "ロールID",

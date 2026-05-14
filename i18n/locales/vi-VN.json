@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "Lưu giữ cho đến ngày",
   "Retention Save Failed": "Lưu thiết lập lưu giữ thất bại",
   "Retention Unit": "Đơn vị lưu giữ",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "Số lần thử lại",
   "Review before decommission": "Xem lại trước khi ngừng sử dụng",
   "Role ID": "Mã vai trò",

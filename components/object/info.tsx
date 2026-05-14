@@ -15,12 +15,21 @@ import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CopyInput } from "@/components/copy-input"
+import { DateTimePicker } from "@/components/datetime-picker"
 import { useObject } from "@/hooks/use-object"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useMessage } from "@/lib/feedback/message"
 import { useDialog } from "@/lib/feedback/dialog"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
+import {
+  getDefaultObjectRetentionDate,
+  getMinimumObjectRetentionDate,
+  isObjectLegalHoldEnabled,
+  isObjectRetentionDateInFuture,
+  shouldShowObjectRetentionAction,
+  toObjectRetentionRequestValue,
+} from "@/lib/object-lock.js"
 import { ObjectVersions } from "@/components/object/versions"
 import { GetObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
@@ -52,6 +61,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   const [retention, setRetention] = React.useState("")
   const [retainUntilDate, setRetainUntilDate] = React.useState("")
   const [retentionMode, setRetentionMode] = React.useState<"COMPLIANCE" | "GOVERNANCE">("GOVERNANCE")
+  const [minRetentionDate, setMinRetentionDate] = React.useState(() => getMinimumObjectRetentionDate())
   const [signedUrl, setSignedUrl] = React.useState("")
   const [showTagView, setShowTagView] = React.useState(false)
   const [showRetentionView, setShowRetentionView] = React.useState(false)
@@ -67,6 +77,8 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   const [totalExpirationSeconds, setTotalExpirationSeconds] = React.useState(0)
   const [isExpirationValid, setIsExpirationValid] = React.useState(false)
   const [isGeneratingUrl, setIsGeneratingUrl] = React.useState(false)
+  const [isUpdatingRetention, setIsUpdatingRetention] = React.useState(false)
+  const retentionDialogContentRef = React.useRef<HTMLDivElement>(null)
   const resolvedObjectKey = React.useMemo(() => String(object?.Key ?? objectKey ?? ""), [object?.Key, objectKey])
   const objectPermissionContext = React.useMemo(
     () => ({
@@ -83,6 +95,10 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   const canEditLegalHold = canCapability("objects.legalHold.edit", objectPermissionContext)
   const canEditRetention = canCapability("objects.retention.edit", objectPermissionContext)
   const canShareObject = canCapability("objects.share", objectPermissionContext)
+  const showRetentionAction = shouldShowObjectRetentionAction({
+    canEditRetention,
+    legalHoldEnabled: lockStatus,
+  })
 
   const formatDuration = (seconds: number) => {
     if (seconds === 0) return ""
@@ -152,7 +168,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     async (key: string) => {
       const info = await objectApi.getObjectInfo(key)
       setObject(info as Record<string, unknown>)
-      setLockStatus((info as { ObjectLockLegalHoldStatus?: string })?.ObjectLockLegalHoldStatus === "ON")
+      setLockStatus(isObjectLegalHoldEnabled(info))
       setExpirationDays(0)
       setExpirationHours(2)
       setExpirationMinutes(0)
@@ -192,22 +208,40 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     [objectApi],
   )
 
+  const fetchLegalHold = React.useCallback(
+    async (key: string) => {
+      try {
+        const response = await objectApi.getObjectLegalHold(key)
+        if (response.Status) {
+          setLockStatus(isObjectLegalHoldEnabled(response))
+        }
+      } catch {
+        // Keep the HeadObject fallback state when a server does not support the dedicated legal hold API.
+      }
+    },
+    [objectApi],
+  )
+
   const loadObjectInfoRef = React.useRef(loadObjectInfo)
   const fetchTagsRef = React.useRef(fetchTags)
   const fetchRetentionRef = React.useRef(fetchRetention)
+  const fetchLegalHoldRef = React.useRef(fetchLegalHold)
 
   React.useEffect(() => {
     loadObjectInfoRef.current = loadObjectInfo
     fetchTagsRef.current = fetchTags
     fetchRetentionRef.current = fetchRetention
-  }, [loadObjectInfo, fetchTags, fetchRetention])
+    fetchLegalHoldRef.current = fetchLegalHold
+  }, [loadObjectInfo, fetchTags, fetchRetention, fetchLegalHold])
 
   React.useEffect(() => {
     if (open && objectKey) {
       const key = objectKey
       loadObjectInfoRef
         .current(key)
-        .then(() => Promise.all([fetchTagsRef.current(key), fetchRetentionRef.current(key)]))
+        .then(() =>
+          Promise.all([fetchTagsRef.current(key), fetchRetentionRef.current(key), fetchLegalHoldRef.current(key)]),
+        )
         .catch(() => {
           message.error(t("Failed to fetch object info"))
           setObject(null)
@@ -292,8 +326,8 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     }
   }
 
-  const submitTagForm = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const submitTagForm = async (e?: React.FormEvent | React.MouseEvent<HTMLButtonElement>) => {
+    e?.preventDefault()
     if (!canEditObjectTags || !object?.Key) return
     if (!tagFormValue.Key || !tagFormValue.Value) {
       message.error(t("Please fill in the correct format"))
@@ -332,32 +366,59 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     }
   }
 
-  const submitRetention = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!canEditRetention || !object?.Key) return
+  const submitRetention = async () => {
+    if (isUpdatingRetention) return
+    if (!resolvedObjectKey) {
+      message.error(t("Failed to fetch object info"))
+      return
+    }
+    if (!canEditRetention) {
+      message.error(t("Update Failed"))
+      return
+    }
+    if (!isObjectRetentionDateInFuture(retainUntilDate)) {
+      message.error(t("The retain until date must be in the future"))
+      return
+    }
+
+    setIsUpdatingRetention(true)
     try {
-      await objectApi.putObjectRetention(object.Key as string, {
+      await objectApi.putObjectRetention(resolvedObjectKey, {
         Mode: retentionMode,
-        RetainUntilDate: retainUntilDate || undefined,
+        RetainUntilDate: toObjectRetentionRequestValue(retainUntilDate),
       })
       message.success(t("Update Success"))
       setShowRetentionView(false)
-      fetchRetention(object.Key as string)
+      fetchRetention(resolvedObjectKey)
     } catch (err) {
       message.error((err as Error)?.message ?? t("Update Failed"))
+    } finally {
+      setIsUpdatingRetention(false)
     }
   }
 
   const resetRetention = async () => {
-    if (!canEditRetention || !object?.Key) return
+    if (isUpdatingRetention) return
+    if (!resolvedObjectKey) {
+      message.error(t("Failed to fetch object info"))
+      return
+    }
+    if (!canEditRetention) {
+      message.error(t("Update Failed"))
+      return
+    }
+
+    setIsUpdatingRetention(true)
     try {
-      await objectApi.putObjectRetention(object.Key as string, {
+      await objectApi.putObjectRetention(resolvedObjectKey, {
         Mode: "GOVERNANCE",
       })
       message.success(t("Update Success"))
-      fetchRetention(object.Key as string)
+      fetchRetention(resolvedObjectKey)
     } catch (err) {
       message.error((err as Error)?.message ?? t("Update Failed"))
+    } finally {
+      setIsUpdatingRetention(false)
     }
   }
 
@@ -365,7 +426,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
 
   return (
     <>
-      <Drawer open={open} onOpenChange={onOpenChange} direction="right">
+      <Drawer open={open} onOpenChange={(nextOpen) => !showRetentionView && onOpenChange(nextOpen)} direction="right">
         <DrawerContent className="max-h-[95vh] overflow-y-auto overflow-x-hidden data-[vaul-drawer-direction=right]:w-[92vw] data-[vaul-drawer-direction=right]:sm:max-w-2xl">
           <DrawerHeader>
             <DrawerTitle>{t("Object Details")}</DrawerTitle>
@@ -397,8 +458,18 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                   {t("Versions")}
                 </Button>
               ) : null}
-              {lockStatus && canEditRetention ? (
-                <Button variant="outline" size="sm" onClick={() => setShowRetentionView(true)}>
+              {showRetentionAction ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setMinRetentionDate(getMinimumObjectRetentionDate())
+                    if (!retainUntilDate || !isObjectRetentionDateInFuture(retainUntilDate)) {
+                      setRetainUntilDate(getDefaultObjectRetentionDate())
+                    }
+                    setShowRetentionView(true)
+                  }}
+                >
                   <RiLockLine className="size-4" />
                   {t("Retention")}
                 </Button>
@@ -617,7 +688,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                 </Field>
               </div>
               <div className="flex justify-end">
-                <Button type="submit" variant="default" disabled={!canEditObjectTags}>
+                <Button type="button" variant="default" onClick={submitTagForm} disabled={!canEditObjectTags}>
                   {t("Add")}
                 </Button>
               </div>
@@ -628,55 +699,76 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
 
       <Dialog open={showRetentionView} onOpenChange={setShowRetentionView}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t("Retention")}</DialogTitle>
-          </DialogHeader>
-          <form className="flex flex-col gap-3" onSubmit={submitRetention}>
-            <Field>
-              <FieldLabel>{t("Retention Mode")}</FieldLabel>
-              <FieldContent>
-                <RadioGroup
-                  value={retentionMode}
-                  onValueChange={(v) => setRetentionMode(v as "COMPLIANCE" | "GOVERNANCE")}
-                  className="grid gap-2 sm:grid-cols-2"
+          <div ref={retentionDialogContentRef} className="contents">
+            <DialogHeader>
+              <DialogTitle>{t("Retention")}</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col gap-3">
+              <Field>
+                <FieldLabel>{t("Retention Mode")}</FieldLabel>
+                <FieldContent>
+                  <RadioGroup
+                    value={retentionMode}
+                    onValueChange={(v) => setRetentionMode(v as "COMPLIANCE" | "GOVERNANCE")}
+                    className="grid gap-2 sm:grid-cols-2"
+                  >
+                    {[
+                      { label: t("COMPLIANCE"), value: "COMPLIANCE" },
+                      { label: t("GOVERNANCE"), value: "GOVERNANCE" },
+                    ].map((opt) => (
+                      <label
+                        key={opt.value}
+                        className="flex items-start gap-3 rounded-md border border-border/50 p-3 cursor-pointer"
+                      >
+                        <RadioGroupItem value={opt.value} className="mt-0.5" />
+                        <span className="text-sm font-medium">{opt.label}</span>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>{t("Retention RetainUntilDate")}</FieldLabel>
+                <FieldContent>
+                  <DateTimePicker
+                    value={retainUntilDate}
+                    onChange={(value) => setRetainUntilDate(value ?? "")}
+                    placeholder={t("Retention RetainUntilDate")}
+                    min={minRetentionDate}
+                    disabled={!canEditRetention || isUpdatingRetention}
+                    portalContainer={retentionDialogContentRef}
+                  />
+                </FieldContent>
+              </Field>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={resetRetention}
+                  disabled={!canEditRetention || isUpdatingRetention}
                 >
-                  {[
-                    { label: t("COMPLIANCE"), value: "COMPLIANCE" },
-                    { label: t("GOVERNANCE"), value: "GOVERNANCE" },
-                  ].map((opt) => (
-                    <label
-                      key={opt.value}
-                      className="flex items-start gap-3 rounded-md border border-border/50 p-3 cursor-pointer"
-                    >
-                      <RadioGroupItem value={opt.value} className="mt-0.5" />
-                      <span className="text-sm font-medium">{opt.label}</span>
-                    </label>
-                  ))}
-                </RadioGroup>
-              </FieldContent>
-            </Field>
-            <Field>
-              <FieldLabel>{t("Retention RetainUntilDate")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  type="datetime-local"
-                  value={retainUntilDate}
-                  onChange={(e) => setRetainUntilDate(e.target.value)}
-                />
-              </FieldContent>
-            </Field>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="secondary" onClick={resetRetention} disabled={!canEditRetention}>
-                {t("Reset")}
-              </Button>
-              <Button type="submit" variant="default" disabled={!canEditRetention}>
-                {t("Confirm")}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setShowRetentionView(false)}>
-                {t("Cancel")}
-              </Button>
+                  {t("Reset")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={() => void submitRetention()}
+                  disabled={!canEditRetention || isUpdatingRetention}
+                >
+                  {isUpdatingRetention ? <Spinner className="size-4" /> : null}
+                  {t("Confirm")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowRetentionView(false)}
+                  disabled={isUpdatingRetention}
+                >
+                  {t("Cancel")}
+                </Button>
+              </div>
             </div>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 

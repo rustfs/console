@@ -3,6 +3,7 @@
 import { useCallback } from "react"
 import {
   DeleteObjectCommand,
+  GetObjectLegalHoldCommand,
   GetObjectRetentionCommand,
   GetObjectTaggingCommand,
   GetObjectCommand,
@@ -196,6 +197,22 @@ export function useObject(bucket: string) {
     [client, bucket],
   )
 
+  const getObjectLegalHold = useCallback(
+    async (key: string): Promise<{ Status: string }> => {
+      try {
+        const response = await client.send(new GetObjectLegalHoldCommand({ Bucket: bucket, Key: key }))
+        return { Status: response?.LegalHold?.Status ?? "" }
+      } catch (err) {
+        const msg = (err as Error)?.message ?? ""
+        if (msg.includes("Deserialization error")) {
+          return { Status: "" }
+        }
+        throw err
+      }
+    },
+    [client, bucket],
+  )
+
   const putObjectRetention = useCallback(
     async (
       key: string,
@@ -260,6 +277,7 @@ export function useObject(bucket: string) {
     getObjectInfo,
     getObjectTags,
     putObjectTags,
+    getObjectLegalHold,
     getObjectRetention,
     putObjectRetention,
     setLegalHold,

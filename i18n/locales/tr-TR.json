@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "Saklama SonTariheKadar",
   "Retention Save Failed": "Saklama Kaydetme Başarısız",
   "Retention Unit": "Saklama Birimi",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "Denemeleri Yeniden Dene",
   "Review before decommission": "Devreden çıkarmadan önce incele",
   "Role ID": "Rol Kimliği",

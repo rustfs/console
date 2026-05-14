@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "Retención Hasta Fecha",
   "Retention Save Failed": "Error al Guardar Retención",
   "Retention Unit": "Unidad de Retención",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "Intentos de Reintento",
   "Review before decommission": "Revisar antes de retirar",
   "Role ID": "ID de Rol",

@@ -931,6 +931,7 @@
   "Retention RetainUntilDate": "Aufbewahrung bis Datum",
   "Retention Save Failed": "Aufbewahrung speichern fehlgeschlagen",
   "Retention Unit": "Aufbewahrungseinheit",
+  "The retain until date must be in the future": "The retain until date must be in the future",
   "Retry Attempts": "Wiederholungsversuche",
   "Review before decommission": "Vor der Stilllegung prüfen",
   "Role ID": "Rollen-ID",

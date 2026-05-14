@@ -56,6 +56,13 @@ test("clamps ISO values to min and max bounds", () => {
   assert.equal(applyDateTimeBounds("not-a-date", min, max), null)
 })
 
+test("keeps future-day times when the minimum is near the current time", () => {
+  const min = "2026-05-14T12:01:00.000Z"
+  const tomorrowEarly = "2026-05-15T01:00:00.000Z"
+
+  assert.equal(applyDateTimeBounds(tomorrowEarly, min), tomorrowEarly)
+})
+
 test("returns localized display text", () => {
   const value = "2026-05-08T09:30:00.000Z"
 
@@ -69,4 +76,20 @@ test("DateTimePicker does not render native date or time picker inputs inside th
 
   assert.equal(source.includes('type="date"'), false)
   assert.equal(source.includes('type="time"'), false)
+})
+
+test("DateTimePicker can render its popover inside an existing dialog", () => {
+  const pickerSource = fs.readFileSync("components/datetime-picker.tsx", "utf8")
+  const popoverSource = fs.readFileSync("components/ui/popover.tsx", "utf8")
+
+  assert.equal(popoverSource.includes("portalContainer?:"), true)
+  assert.equal(popoverSource.includes("<PopoverPrimitive.Portal container={portalContainer}>"), true)
+  assert.equal(pickerSource.includes("portalContainer={portalContainer}"), true)
+})
+
+test("DateTimePicker keeps the calendar date selected when clicked again", () => {
+  const source = fs.readFileSync("components/datetime-picker.tsx", "utf8")
+
+  assert.equal(source.includes('mode="single"'), true)
+  assert.equal(source.includes("required"), true)
 })

@@ -32,8 +32,7 @@ export function BucketReplicationTab({ bucketName, hideTitle = false }: BucketRe
   const message = useMessage()
   const dialog = useDialog()
   const { canCapability } = usePermissions()
-  const { getBucketReplication, putBucketReplication, deleteBucketReplication, deleteRemoteReplicationTarget } =
-    useBucket()
+  const { getBucketReplication, putBucketReplication, deleteBucketReplication } = useBucket()
   const replicationContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
   const canEditReplication = canCapability("bucket.replication.edit", replicationContext)
 
@@ -65,7 +64,6 @@ export function BucketReplicationTab({ bucketName, hideTitle = false }: BucketRe
       try {
         if (remaining.length === 0) {
           await deleteBucketReplication(bucketName)
-          await deleteRemoteReplicationTarget(bucketName, rule.Destination?.Bucket ?? "")
         } else {
           const currentConfig = await getBucketReplication(bucketName)
           const role = currentConfig?.ReplicationConfiguration?.Role
@@ -88,7 +86,6 @@ export function BucketReplicationTab({ bucketName, hideTitle = false }: BucketRe
       data,
       deleteBucketReplication,
       bucketName,
-      deleteRemoteReplicationTarget,
       getBucketReplication,
       putBucketReplication,
       message,

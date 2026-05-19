@@ -292,6 +292,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
         ),
       ])
       const data = { ...head, SignedUrl: signed }
+      setShowVersions(false)
       onPreview({ key, data })
     } catch (err) {
       message.error((err as Error)?.message ?? t("Failed to fetch versions"))
@@ -326,16 +327,24 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     }
   }
 
-  const submitTagForm = async (e?: React.FormEvent | React.MouseEvent<HTMLButtonElement>) => {
-    e?.preventDefault()
-    if (!canEditObjectTags || !object?.Key) return
-    if (!tagFormValue.Key || !tagFormValue.Value) {
+  const submitTagForm = async () => {
+    if (!canEditObjectTags) return
+    if (!resolvedObjectKey) {
+      message.error(t("Failed to fetch object info"))
+      return
+    }
+
+    const nextTag = {
+      Key: tagFormValue.Key.trim(),
+      Value: tagFormValue.Value.trim(),
+    }
+    if (!nextTag.Key || !nextTag.Value) {
       message.error(t("Please fill in the correct format"))
       return
     }
     try {
-      const nextTags = [...tags, { ...tagFormValue }]
-      await objectApi.putObjectTags(object.Key as string, nextTags)
+      const nextTags = [...tags, nextTag]
+      await objectApi.putObjectTags(resolvedObjectKey, nextTags)
       setTags(nextTags)
       setTagFormValue({ Key: "", Value: "" })
       message.success(t("Create Success"))
@@ -355,10 +364,10 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }
 
   const removeTag = async (tagKey: string) => {
-    if (!canEditObjectTags || !object?.Key) return
+    if (!canEditObjectTags || !resolvedObjectKey) return
     try {
       const nextTags = tags.filter((tag) => tag.Key !== tagKey)
-      await objectApi.putObjectTags(object.Key as string, nextTags)
+      await objectApi.putObjectTags(resolvedObjectKey, nextTags)
       setTags(nextTags)
       message.success(t("Delete Success"))
     } catch (err) {
@@ -426,8 +435,8 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
 
   return (
     <>
-      <Drawer open={open} onOpenChange={(nextOpen) => !showRetentionView && onOpenChange(nextOpen)} direction="right">
-        <DrawerContent className="max-h-[95vh] overflow-y-auto overflow-x-hidden data-[vaul-drawer-direction=right]:w-[92vw] data-[vaul-drawer-direction=right]:sm:max-w-2xl">
+      <Drawer open={open} onOpenChange={onOpenChange} direction="right">
+        <DrawerContent className="overflow-y-auto overflow-x-hidden data-[vaul-drawer-direction=right]:w-[92vw] data-[vaul-drawer-direction=right]:sm:max-w-2xl">
           <DrawerHeader>
             <DrawerTitle>{t("Object Details")}</DrawerTitle>
             <DrawerDescription />
@@ -635,7 +644,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
         </DrawerContent>
       </Drawer>
 
-      <Dialog open={showTagView} onOpenChange={setShowTagView}>
+      <Dialog open={showTagView} onOpenChange={setShowTagView} disablePointerDismissal>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t("Set Tags")}</DialogTitle>
@@ -657,7 +666,13 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                 </Badge>
               ))}
             </div>
-            <form className="space-y-4" onSubmit={submitTagForm}>
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void submitTagForm()
+              }}
+            >
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field>
                   <FieldLabel>{t("Tag Key")}</FieldLabel>
@@ -688,7 +703,12 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                 </Field>
               </div>
               <div className="flex justify-end">
-                <Button type="button" variant="default" onClick={submitTagForm} disabled={!canEditObjectTags}>
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={() => void submitTagForm()}
+                  disabled={!canEditObjectTags || !resolvedObjectKey}
+                >
                   {t("Add")}
                 </Button>
               </div>
@@ -697,7 +717,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showRetentionView} onOpenChange={setShowRetentionView}>
+      <Dialog open={showRetentionView} onOpenChange={setShowRetentionView} disablePointerDismissal>
         <DialogContent className="sm:max-w-lg">
           <div ref={retentionDialogContentRef} className="contents">
             <DialogHeader>

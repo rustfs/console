@@ -214,7 +214,7 @@ export function ObjectVersions({
   })
 
   return (
-    <Dialog open={visible} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={visible} onOpenChange={(open) => !open && onClose()} disablePointerDismissal>
       <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>{t("Object Versions")}</DialogTitle>

@@ -8,6 +8,7 @@ import {
 import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from "./task-manager"
 import { formatBytes } from "./functions"
 import { createTaskId } from "./task-id"
+import { getUploadContentType } from "./upload-content-type"
 
 export type UploadStatus = "pending" | "running" | "completed" | "failed" | "canceled" | "paused"
 
@@ -129,13 +130,14 @@ async function putObject(task: UploadTask, s3Client: S3Client) {
   const { file, bucketName, key } = task
   const abortController = new AbortController()
   task.abortController = abortController
+  const contentType = await getUploadContentType(file, key)
 
   await s3Client.send(
     new PutObjectCommand({
       Bucket: bucketName,
       Key: key,
       Body: file,
-      ContentType: file.type || "application/octet-stream",
+      ContentType: contentType,
     }),
     { abortSignal: abortController.signal },
   )
@@ -149,6 +151,7 @@ async function multipartUpload(task: UploadTask, s3Client: S3Client, chunkSize: 
 
   let uploadId: string | undefined = task.uploadId
   const completedParts: { ETag: string; PartNumber: number }[] = task.completedParts || []
+  const contentType = await getUploadContentType(file, key)
 
   try {
     if (!uploadId) {
@@ -156,7 +159,7 @@ async function multipartUpload(task: UploadTask, s3Client: S3Client, chunkSize: 
         new CreateMultipartUploadCommand({
           Bucket: bucketName,
           Key: key,
-          ContentType: file.type || "application/octet-stream",
+          ContentType: contentType,
         }),
         { abortSignal: abortController.signal },
       )

@@ -14,6 +14,7 @@ on:
         type: string
 
 env:
+  PNPM_VERSION: "11.4"
   NODE_VERSION: "22"
 
 jobs:
@@ -58,7 +59,7 @@ jobs:
         if: steps.detect-package-manager.outputs.manager == 'pnpm'
         uses: pnpm/action-setup@v6
         with:
-          version: 10.19.0
+          version: ${{ env.PNPM_VERSION}}
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
@@ -144,7 +145,7 @@ jobs:
         if: steps.detect-package-manager.outputs.manager == 'pnpm'
         uses: pnpm/action-setup@v6
         with:
-          version: 10.19.0
+          version: ${{ env.PNPM_VERSION }}
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:

@@ -11,6 +11,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PNPM_VERSION: "11.4"
+  NODE_VERSION: "22"
+
 jobs:
   # ============================================================================
   # 代码质量检查
@@ -47,11 +51,11 @@ jobs:
         if: steps.detect-package-manager.outputs.manager == 'pnpm'
         uses: pnpm/action-setup@v6
         with:
-          version: 10.19.0
+          version: ${{ env.PNPM_VERSION }}
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: ${{ env.NODE_VERSION }}
           cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
@@ -103,7 +107,7 @@ jobs:
         if: steps.detect-package-manager.outputs.manager == 'pnpm'
         uses: pnpm/action-setup@v6
         with:
-          version: 10.19.0
+          version: ${{ env.PNPM_VERSION }}
       - name: 📦 Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6
         with:
@@ -163,11 +167,11 @@ jobs:
         if: steps.detect-package-manager.outputs.manager == 'pnpm'
         uses: pnpm/action-setup@v6
         with:
-          version: 10.19.0
+          version: ${{ env.PNPM_VERSION }}
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: ${{ env.NODE_VERSION }}
           cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies

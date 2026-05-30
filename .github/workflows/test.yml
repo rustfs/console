@@ -76,10 +76,6 @@ jobs:
     timeout-minutes: 15
     needs: lint
 
-    strategy:
-      matrix:
-        node-version: [20, 22]
-
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
@@ -108,10 +104,10 @@ jobs:
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
-      - name: 📦 Setup Node.js ${{ matrix.node-version }}
+      - name: 📦 Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
@@ -124,7 +120,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: unit-test-results-node-${{ matrix.node-version }}
+          name: unit-test-results-node-${{ env.NODE_VERSION }}
           path: |
             coverage/
             test-results.xml

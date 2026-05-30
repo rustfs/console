@@ -25,46 +25,27 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 💅 Check Prettier formatting
-        run: ${{ steps.detect-package-manager.outputs.manager }} run lint
+        run: pnpm run lint
 
       - name: 🔧 Auto-fix formatting (PR only)
         if: github.event_name == 'pull_request'
         run: |
-          ${{ steps.detect-package-manager.outputs.manager }} run lint:fix
+          pnpm run lint:fix
           if [[ -n $(git status --porcelain) ]]; then
             echo "## 💅 Formatting Changes Applied" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
@@ -86,41 +67,22 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 📘 Type check
-        run: ${{ steps.detect-package-manager.outputs.manager }} run type-check
+        run: pnpm run type-check
 
       - name: 📊 Generate type report
         run: |
@@ -139,38 +101,19 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 🔍 Check for outdated packages
         run: |
@@ -178,7 +121,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 检查过期的包
-          if ${{ steps.detect-package-manager.outputs.manager }} outdated --json > outdated.json 2>/dev/null; then
+          if pnpm outdated --json > outdated.json 2>/dev/null; then
             if [ -s outdated.json ]; then
               echo "### ⚠️ Outdated Packages" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
@@ -204,7 +147,7 @@ jobs:
           echo "### 🔒 Security Audit" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          if ${{ steps.detect-package-manager.outputs.manager }} audit --json > audit.json 2>/dev/null; then
+          if pnpm audit --json > audit.json 2>/dev/null; then
             vulnerabilities=$(node -e "
               const audit = require('./audit.json');
               const total = audit.metadata?.vulnerabilities?.total || 0;
@@ -214,7 +157,7 @@ jobs:
             if [ "$vulnerabilities" -gt 0 ]; then
               echo "⚠️ Found $vulnerabilities security vulnerabilities" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
-              echo "Run \`${{ steps.detect-package-manager.outputs.manager }} audit fix\` to resolve automatically fixable issues." >> $GITHUB_STEP_SUMMARY
+              echo "Run \`pnpm audit fix\` to resolve automatically fixable issues." >> $GITHUB_STEP_SUMMARY
             else
               echo "✅ No security vulnerabilities found!" >> $GITHUB_STEP_SUMMARY
             fi
@@ -233,40 +176,21 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
         run: |
-          ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
-          ${{ steps.detect-package-manager.outputs.manager }} add -D eslint-plugin-complexity
+          pnpm ci
+          pnpm add -D eslint-plugin-complexity
 
       - name: 🧮 Analyze code complexity
         run: |

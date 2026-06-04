@@ -64,8 +64,8 @@ jobs:
               zip -r ../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
             )
           fi
-
-      - uses: actions/upload-artifact@v4
+          
+      - uses: actions/upload-artifact@v7
         name: Upload artifacts
         with:
           path: ./artifacts/rustfs-console-latest.zip
@@ -82,6 +82,6 @@ jobs:
 
       - name: Upload release asset `versioned`
         if: ${{ github.event_name == 'release' }}
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ./artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip

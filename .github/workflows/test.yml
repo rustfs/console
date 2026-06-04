@@ -28,44 +28,25 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 🔍 Run linter
-        run: ${{ steps.detect-package-manager.outputs.manager }} run lint
+        run: pnpm run lint
 
       - name: 🔍 Type check
-        run: ${{ steps.detect-package-manager.outputs.manager }} run type-check 2>/dev/null || pnpm exec tsc --noEmit
+        run: pnpm type-check 2>/dev/null || pnpm exec tsc --noEmit
 
   # ============================================================================
   # 单元测试 (有测试时运行)
@@ -80,41 +61,22 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 🧪 Run unit tests
-        run: ${{ steps.detect-package-manager.outputs.manager }} run test:run 2>/dev/null || echo "No test:run script, skipping"
+        run: pnpm run test:run 2>/dev/null || echo "No test:run script, skipping"
 
       - name: 📊 Upload test results
         uses: actions/upload-artifact@v7
@@ -140,41 +102,22 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 🏗️ Build project
-        run: ${{ steps.detect-package-manager.outputs.manager }} run build
+        run: pnpm run build
 
       - name: 📦 Upload build artifacts
         uses: actions/upload-artifact@v7

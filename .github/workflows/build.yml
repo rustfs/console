@@ -30,39 +30,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
+
       - name: Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
+
       - name: Build Next.js
-        run: ${{ steps.detect-package-manager.outputs.manager }} run build
+        run: pnpm build
+
       - name: Zip files
         run: |
           set -euo pipefail
@@ -79,10 +64,12 @@ jobs:
               zip -r ../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
             )
           fi
+          
       - uses: actions/upload-artifact@v7
         name: Upload artifacts
         with:
           path: ./artifacts/rustfs-console-latest.zip
+
       - name: Upload to Bucket for `latest`
         uses: JohnGuan/oss-upload-action@main
         with:
@@ -92,6 +79,7 @@ jobs:
           bucket: rustfs-artifacts
           assets: |
             ./artifacts/**:/artifacts/console/
+
       - name: Upload release asset `versioned`
         if: ${{ github.event_name == 'release' }}
         uses: softprops/action-gh-release@v3

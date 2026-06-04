@@ -33,38 +33,19 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 🔒 Run security audit
         run: |
@@ -72,7 +53,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 运行安全审计
-          if ${{ steps.detect-package-manager.outputs.manager }} audit --json > audit-report.json 2>/dev/null; then
+          if pnpm audit --json > audit-report.json 2>/dev/null; then
             # 解析审计结果
             vulnerabilities=$(node -e "
               const audit = require('./audit-report.json');
@@ -102,7 +83,7 @@ jobs:
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "⚠️ **Action Required**: $total_vulns security vulnerabilities found!" >> $GITHUB_STEP_SUMMARY
               echo "" >> $GITHUB_STEP_SUMMARY
-              echo "Run \`${{ steps.detect-package-manager.outputs.manager }} audit fix\` to automatically fix vulnerabilities." >> $GITHUB_STEP_SUMMARY
+              echo "Run \`pnpm audit --fix\` to automatically fix vulnerabilities." >> $GITHUB_STEP_SUMMARY
 
               # 如果有高危或严重漏洞，创建 issue
               critical=$(echo $vulnerabilities | jq -r '.critical')
@@ -179,38 +160,19 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 📋 Check for outdated packages
         id: check
@@ -219,7 +181,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 检查过期的包
-          if ${{ steps.detect-package-manager.outputs.manager }} outdated --json > outdated.json 2>/dev/null; then
+          if pnpm outdated --json > outdated.json 2>/dev/null; then
             if [ -s outdated.json ]; then
               echo "has-updates=true" >> $GITHUB_OUTPUT
 
@@ -279,14 +241,19 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v6
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
 
       - name: 📥 Install dependencies
-        run: npm ci
+        run: pnpm ci
 
       - name: 🔄 Update dependencies
         run: |
@@ -298,22 +265,22 @@ jobs:
           case $update_type in
             "patch")
               echo "Updating patch versions..." >> $GITHUB_STEP_SUMMARY
-              ${{ steps.detect-package-manager.outputs.manager }} update
+              pnpm update
               ;;
             "minor")
               echo "Updating minor versions..." >> $GITHUB_STEP_SUMMARY
-              npx npm-check-updates -u --target minor
-              ${{ steps.detect-package-manager.outputs.manager }} install
+              pnpm dlx npm-check-updates -u -p pnpm --target minor
+              pnpm install
               ;;
             "major")
               echo "Updating major versions..." >> $GITHUB_STEP_SUMMARY
-              npx npm-check-updates -u --target major
-              ${{ steps.detect-package-manager.outputs.manager }} install
+              pnpm dlx npm-check-updates -u -p pnpm --target major
+              pnpm install
               ;;
             "all")
               echo "Updating all versions..." >> $GITHUB_STEP_SUMMARY
-              npx npm-check-updates -u
-              ${{ steps.detect-package-manager.outputs.manager }} install
+              pnpm dlx npm-check-updates -u -p pnpm
+              pnpm install
               ;;
           esac
 
@@ -323,10 +290,10 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 安装测试依赖
-          ${{ steps.detect-package-manager.outputs.manager }} add -D vitest jsdom @vitest/ui c8
+          pnpm add -D vitest jsdom @vitest/ui c8
 
           # 运行测试
-          if npx vitest run tests/utils/config-helpers*.test.ts --reporter=verbose; then
+          if pnpm vitest run tests/utils/config-helpers*.test.ts --reporter=verbose; then
             echo "✅ All tests passed with updated dependencies!" >> $GITHUB_STEP_SUMMARY
             echo "test_status=passed" >> $GITHUB_ENV
           else
@@ -349,7 +316,7 @@ jobs:
             done
 
             # 检查 package.json 的变更
-            if git diff --name-only | grep -q "package.json\|pnpm-lock.yaml\|package-lock.json\|yarn.lock"; then
+            if git diff --name-only | grep -q "package.json\|pnpm-lock.yaml"; then
               echo "" >> $GITHUB_STEP_SUMMARY
               echo "### Package Changes:" >> $GITHUB_STEP_SUMMARY
               echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
@@ -445,38 +412,19 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 📊 Generate dependency report
         run: |
@@ -484,8 +432,8 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
 
           # 依赖统计
-          total_deps=$(${{ steps.detect-package-manager.outputs.manager }} list --depth=0 --json | jq '.dependencies | length')
-          dev_deps=$(${{ steps.detect-package-manager.outputs.manager }} list --depth=0 --dev --json | jq '.dependencies | length // 0')
+          total_deps=$(pnpm list --depth=0 --json | jq '.dependencies | length')
+          dev_deps=$(pnpm list --depth=0 --dev --json | jq '.dependencies | length // 0')
           prod_deps=$((total_deps - dev_deps))
 
           echo "## 📈 Dependency Statistics" >> $GITHUB_STEP_SUMMARY

@@ -36,38 +36,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
-          version: ${{ env.PNPM_VERSION}}
+          version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 🏷️ Extract version
         id: version
@@ -85,19 +66,19 @@ jobs:
           echo "## 🧪 Running Full Test Suite" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -d "tests" ] && [ -n "$(find tests -name '*.test.ts' -o -name '*.spec.ts' 2>/dev/null)" ]; then
-            ${{ steps.detect-package-manager.outputs.manager }} run test:run 2>/dev/null || true
+            pnpm run test:run 2>/dev/null || true
           fi
           echo "✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
 
       - name: 🔍 Validate code quality
         run: |
-          ${{ steps.detect-package-manager.outputs.manager }} run lint
-          ${{ steps.detect-package-manager.outputs.manager }} run type-check 2>/dev/null || pnpm exec tsc --noEmit
+          pnpm run lint
+          pnpm run type-check 2>/dev/null || pnpm exec tsc --noEmit
           echo "✅ Code quality checks passed!" >> $GITHUB_STEP_SUMMARY
 
       - name: 🏗️ Test build
         run: |
-          ${{ steps.detect-package-manager.outputs.manager }} run build
+          pnpm run build
           echo "✅ Build successful!" >> $GITHUB_STEP_SUMMARY
 
       - name: ✅ Validation summary
@@ -122,42 +103,23 @@ jobs:
       - name: 📥 Checkout code
         uses: actions/checkout@v6
 
-      - name: Detect package manager
-        id: detect-package-manager
-        run: |
-          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
-            echo "manager=pnpm" >> $GITHUB_OUTPUT
-            echo "command=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
-            echo "manager=yarn" >> $GITHUB_OUTPUT
-            echo "command=install" >> $GITHUB_OUTPUT
-            exit 0
-          elif [ -f "${{ github.workspace }}/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-            echo "command=ci" >> $GITHUB_OUTPUT
-            exit 0
-          else
-            echo "Unable to determine package manager"
-            exit 1
-          fi
-      - name: Setup pnpm
-        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+      - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
           version: ${{ env.PNPM_VERSION }}
+          cache: true
+
       - name: 📦 Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: ${{ steps.detect-package-manager.outputs.manager }}
 
       - name: 📥 Install dependencies
-        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+        run: pnpm ci
 
       - name: 🏗️ Build for production
         run: |
-          ${{ steps.detect-package-manager.outputs.manager }} run build
+          pnpm run build
           echo "## 🏗️ Build Information" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Version**: ${{ needs.pre-release-validation.outputs.version }}" >> $GITHUB_STEP_SUMMARY

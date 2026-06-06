@@ -41,6 +41,8 @@ export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: Acces
   const [description, setDescription] = React.useState("")
   const [status, setStatus] = React.useState<"on" | "off">("on")
   const [submitting, setSubmitting] = React.useState(false)
+  const [initialName, setInitialName] = React.useState("")
+  const [initialDescription, setInitialDescription] = React.useState("")
 
   const minExpiry = React.useMemo(() => dayjs().toISOString(), [])
 
@@ -56,13 +58,26 @@ export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: Acces
             accountStatus?: string
           }) => {
             setAccesskey(row.accessKey)
-            const policyValue = typeof res.policy === "string" ? res.policy : JSON.stringify(res.policy ?? {}, null, 2)
+            let policyValue: string
+            if (typeof res.policy === "string") {
+              try {
+                policyValue = JSON.stringify(JSON.parse(res.policy), null, 2)
+              } catch {
+                policyValue = res.policy
+              }
+            } else {
+              policyValue = JSON.stringify(res.policy ?? {}, null, 2)
+            }
             setPolicy(policyValue)
             setExpiry(
               res.expiration && res.expiration !== "9999-01-01T00:00:00Z" ? dayjs(res.expiration).toISOString() : null,
             )
-            setName(res.name ?? "")
-            setDescription(res.description ?? "")
+            const initialNameValue = res.name ?? ""
+            const initialDescriptionValue = res.description ?? ""
+            setName(initialNameValue)
+            setDescription(initialDescriptionValue)
+            setInitialName(initialNameValue)
+            setInitialDescription(initialDescriptionValue)
             setStatus((res.accountStatus as "on" | "off") ?? "on")
           },
         )
@@ -79,21 +94,47 @@ export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: Acces
   const submitForm = async () => {
     if (!accesskey) return
 
+    // Validate policy JSON format before submitting
+    if (policy) {
+      try {
+        const parsed = JSON.parse(policy)
+        // Basic structure validation
+        if (typeof parsed !== "object" || parsed === null) {
+          message.error(t("Policy must be a valid JSON object"))
+          return
+        }
+        if (parsed.Statement !== undefined && !Array.isArray(parsed.Statement)) {
+          message.error(t("Policy Statement must be an array"))
+          return
+        }
+      } catch {
+        message.error(t("Policy format is invalid. Please check the JSON syntax."))
+        return
+      }
+    }
+
     setSubmitting(true)
     try {
-      await updateServiceAccount(accesskey, {
+      const payload: Record<string, unknown> = {
         newPolicy: policy || "{}",
         newStatus: status,
-        newName: name,
-        newDescription: description,
         newExpiration: expiry ? dayjs(expiry).toISOString() : "9999-01-01T00:00:00Z",
-      })
+      }
+      // Only send newName if it has changed to avoid validation errors on unchanged invalid names
+      if (name !== initialName) {
+        payload.newName = name
+      }
+      // Only send newDescription if it has changed
+      if (description !== initialDescription) {
+        payload.newDescription = description
+      }
+      await updateServiceAccount(accesskey, payload)
       message.success(t("Updated successfully"))
       closeModal()
       onSuccess()
     } catch (error) {
       console.error(error)
-      message.error(t("Update failed"))
+      message.error((error as Error)?.message || t("Update failed"))
     } finally {
       setSubmitting(false)
     }

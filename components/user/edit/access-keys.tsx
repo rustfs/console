@@ -422,7 +422,7 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
       onSuccess()
     } catch (error) {
       console.error(error)
-      message.error(t("Update failed"))
+      message.error((error as Error)?.message || t("Update failed"))
     } finally {
       setSubmitting(false)
     }

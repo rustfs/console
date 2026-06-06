@@ -31,6 +31,43 @@ export const getXmlErrorMessage = (xml: string): string | null => {
     return null
   }
 
+  // Use DOMParser for proper XML parsing with automatic entity decoding
+  if (typeof DOMParser !== "undefined") {
+    try {
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(trimmed, "text/xml")
+      
+      // Check for parse errors
+      const parseError = doc.querySelector("parsererror")
+      if (parseError) {
+        return null
+      }
+      
+      // Try to extract Message first (most specific)
+      const message = doc.querySelector("Message")?.textContent?.trim()
+      if (message && !GENERIC_ERROR_MESSAGES.has(message.toLowerCase())) {
+        return message
+      }
+      
+      // Fall back to Code
+      const code = doc.querySelector("Code")?.textContent?.trim()
+      if (code && !GENERIC_ERROR_MESSAGES.has(code.toLowerCase())) {
+        return code
+      }
+      
+      // Fall back to Error element text
+      const error = doc.querySelector("Error")?.textContent?.trim()
+      if (error && !GENERIC_ERROR_MESSAGES.has(error.toLowerCase())) {
+        return error
+      }
+      
+      return message || code || error || null
+    } catch {
+      // Fall through to regex-based parsing
+    }
+  }
+
+  // Fallback: regex-based parsing (for SSR or if DOMParser fails)
   const message = getXmlTagText(trimmed, "Message")
   if (isSpecificErrorText(message)) {
     return message

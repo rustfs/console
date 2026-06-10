@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react"
 import { PdfViewer } from "@/components/object/pdf-viewer"
+import { ParquetViewer } from "@/components/object/parquet-viewer"
 import Image from "next/image"
 
 const SAFE_TEXT_MIMES = [
@@ -25,7 +26,10 @@ const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".jsonl", ".ndjson", ".xml", ".cs
 const SAFE_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".tif", ".tiff"]
 const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
 
-type PreviewMode = "text" | "image" | "pdf" | "sandbox" | "download"
+type PreviewMode = "text" | "image" | "pdf" | "parquet" | "sandbox" | "download"
+
+const PARQUET_MIMES = ["application/vnd.apache.parquet", "application/x-parquet", "application/parquet"]
+const PARQUET_EXTENSIONS = [".parquet", ".pq"]
 
 interface ObjectPreviewModalProps {
   show: boolean
@@ -68,6 +72,12 @@ function isPdfPreview(contentType: string, objectKey: string) {
   return contentType === "application/pdf" || keyLower.endsWith(".pdf")
 }
 
+function isParquetPreview(contentType: string, objectKey: string) {
+  const keyLower = objectKey.toLowerCase()
+  if (PARQUET_MIMES.includes(contentType)) return true
+  return PARQUET_EXTENSIONS.some((ext) => keyLower.endsWith(ext))
+}
+
 export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreviewModalProps) {
   const { t } = useTranslation()
   const [textContent, setTextContent] = React.useState("")
@@ -93,8 +103,14 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const canRenderText = hasPreviewUrl && isSafeTextPreview(normalizedContentType, objectKey, objectSize)
   const canRenderImage = hasPreviewUrl && isImagePreview(normalizedContentType, objectKey)
   const canRenderPdf = hasPreviewUrl && isPdfPreview(normalizedContentType, objectKey)
-  const previewMode = canRenderPdf ? "pdf" : getPreviewMode(hasPreviewUrl, canRenderText, canRenderImage)
+  const canRenderParquet = hasPreviewUrl && isParquetPreview(normalizedContentType, objectKey)
+  const previewMode: PreviewMode = canRenderParquet
+    ? "parquet"
+    : canRenderPdf
+      ? "pdf"
+      : getPreviewMode(hasPreviewUrl, canRenderText, canRenderImage)
   const isImageMode = previewMode === "image"
+  const isSelfScrollMode = isImageMode || previewMode === "parquet"
 
   const getFormattedContent = () => {
     if (!isJson || !isFormatted) return textContent
@@ -302,6 +318,8 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
         )
       case "pdf":
         return <PdfViewer url={previewUrl} />
+      case "parquet":
+        return <ParquetViewer url={previewUrl} sizeBytes={objectSize} />
       case "download":
       default:
         return (
@@ -317,15 +335,15 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   return (
     <Dialog open={show} onOpenChange={onShowChange}>
       <DialogContent
-        className={cn("z-[1000] max-h-[85vh] sm:max-w-4xl", isImageMode ? "overflow-hidden" : "overflow-auto")}
+        className={cn("z-[1000] max-h-[85vh] sm:max-w-4xl", isSelfScrollMode ? "overflow-hidden" : "overflow-auto")}
       >
         <DialogHeader>
           <DialogTitle className="flex items-start justify-between me-6">{t("Preview")}</DialogTitle>
         </DialogHeader>
         <div
           className={cn(
-            "min-h-[300px] rounded-md border p-4",
-            isImageMode ? "flex max-h-[70vh] flex-col overflow-hidden" : "flex flex-col",
+            "min-h-[300px] min-w-0 rounded-md border p-4",
+            isSelfScrollMode ? "flex max-h-[70vh] flex-col overflow-hidden" : "flex flex-col",
           )}
         >
           {renderPreview()}

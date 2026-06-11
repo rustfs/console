@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import { parquetMetadata, parquetReadObjects } from "hyparquet"
+import { parquetMetadata, parquetReadObjects, parquetSchema } from "hyparquet"
 import { compressors } from "hyparquet-compressors"
 import { Spinner } from "@/components/ui/spinner"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -40,20 +40,7 @@ function formatCell(value: unknown): string {
 }
 
 function getTopLevelColumns(metadata: ReturnType<typeof parquetMetadata>): string[] {
-  const schema = metadata.schema
-  if (!schema?.length) return []
-  const rootChildren = schema[0]?.num_children ?? 0
-  const columns: string[] = []
-  let index = 1
-  let remaining = rootChildren
-  while (remaining > 0 && index < schema.length) {
-    const element = schema[index]
-    columns.push(element.name)
-    const childCount = element.num_children ?? 0
-    index += 1 + childCount
-    remaining -= 1
-  }
-  return columns
+  return parquetSchema(metadata).children.map((child) => child.element.name)
 }
 
 export function ParquetViewer({ url, sizeBytes }: ParquetViewerProps) {

@@ -19,7 +19,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  PNPM_VERSION: "11.4"
+  PNPM_VERSION: "11"
   NODE_VERSION: "22"
 
 jobs:
@@ -64,7 +64,7 @@ jobs:
               zip -r ../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
             )
           fi
-          
+
       - uses: actions/upload-artifact@v7
         name: Upload artifacts
         with:

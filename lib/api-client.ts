@@ -40,6 +40,10 @@ export class ApiClient {
     this.errorHandler = handler
   }
 
+  resolveUrl(url: string): string {
+    return new URL(url, this.config?.baseUrl).toString()
+  }
+
   async request(url: string, options: RequestOptions = {}, parseJson: boolean = true) {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url
     options.headers = { ...this.config?.headers, ...options.headers }

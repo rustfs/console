@@ -35,6 +35,7 @@ import { useObject } from "@/hooks/use-object"
 import { useBucket } from "@/hooks/use-bucket"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { usePermissions } from "@/hooks/use-permissions"
+import { useApi } from "@/contexts/api-context"
 import { useMessage } from "@/lib/feedback/message"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
@@ -56,12 +57,15 @@ import {
   shouldShowDeleteAllVersions,
   type BucketVersioningState,
 } from "@/lib/object-delete"
+import {
+  buildObjectZipDownloadPayload,
+  normalizeObjectZipDownloadUrl,
+  type CreateObjectZipDownloadResponse,
+} from "@/lib/object-zip-download"
 import { TaskStatsButton } from "@/components/tasks/stats-button"
 import { useAddDeleteKeys, useAddDeleteFolder, useTasks } from "@/contexts/task-context"
 import type { ColumnDef } from "@tanstack/react-table"
 import dayjs from "dayjs"
-import { saveAs } from "file-saver"
-import JSZip from "jszip"
 
 interface ObjectRow {
   Key: string
@@ -95,7 +99,8 @@ export function ObjectList({
 }: ObjectListProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const { listObject, getSignedUrl, mapAllFiles } = useObject(bucket)
+  const api = useApi()
+  const { listObject, getSignedUrl } = useObject(bucket)
   const { getBucketVersioning } = useBucket()
   const { canCapability } = usePermissions()
   const addDeleteKeys = useAddDeleteKeys()
@@ -416,12 +421,6 @@ export function ObjectList({
 
   const checkedKeys = selectedRowIds
 
-  const computeRelativeKey = (key: string) => {
-    if (!key) return ""
-    const base = prefix || ""
-    return base && key.startsWith(base) ? key.slice(base.length) : key
-  }
-
   const downloadMultiple = async () => {
     if (!checkedKeys.length) {
       message.warning(t("Please select at least one item"))
@@ -434,74 +433,28 @@ export function ObjectList({
       return
     }
 
-    const collecting = message.loading(t("Collecting files"), { duration: 0 })
-    const allFiles: { key: string; relative: string }[] = []
+    const loadingMsg = message.loading(t("Preparing download"), { duration: 0 })
 
     try {
-      for (const item of selectedRows) {
-        if (item.type === "object") {
-          allFiles.push({
-            key: item.Key,
-            relative: computeRelativeKey(item.Key),
-          })
-        } else if (item.type === "prefix") {
-          await mapAllFiles(bucket, item.Key, (fileKey) => {
-            allFiles.push({
-              key: fileKey,
-              relative: computeRelativeKey(fileKey),
-            })
-          })
-        }
-      }
-    } catch (err) {
-      collecting.destroy()
-      message.error((err as Error)?.message ?? t("Download Failed"))
-      return
-    }
-
-    collecting.destroy()
-
-    if (!allFiles.length) {
-      message.warning(t("No files to download"))
-      return
-    }
-
-    const zip = new JSZip()
-    let finished = 0
-    const destroyRef: { current: (() => void) | null } = { current: null }
-
-    const updateProgress = () => {
-      if (destroyRef.current) destroyRef.current()
-      const handle = message.loading(`${t("Downloading files")} ${Math.round((finished / allFiles.length) * 100)}%`, {
-        duration: 0,
+      const payload = buildObjectZipDownloadPayload({
+        bucket,
+        basePrefix: prefix,
+        rows: selectedRows,
       })
-      destroyRef.current = handle.destroy
-    }
+      const response = (await api.post("/object-zip-downloads", payload)) as CreateObjectZipDownloadResponse
 
-    updateProgress()
+      if (!response.download_url) {
+        throw new Error(t("Download Failed"))
+      }
 
-    try {
-      await Promise.all(
-        allFiles.map(async ({ key, relative }) => {
-          const url = await getSignedUrl(key)
-          const response = await fetch(url)
-          const blob = await response.blob()
-          zip.file(relative || key, blob)
-          finished++
-          updateProgress()
-        }),
-      )
+      window.location.href = normalizeObjectZipDownloadUrl(response.download_url, api.resolveUrl("/"))
+      table.resetRowSelection()
+      message.success(t("Download ready"))
     } catch (err) {
-      if (destroyRef.current) destroyRef.current()
       message.error((err as Error)?.message ?? t("Download Failed"))
-      return
+    } finally {
+      loadingMsg.destroy()
     }
-
-    if (destroyRef.current) destroyRef.current()
-
-    const content = await zip.generateAsync({ type: "blob" })
-    saveAs(content, `${bucket ?? "download"}.zip`)
-    message.success(t("Download ready"))
   }
 
   const openDeleteDialog = (keys: string[]) => {

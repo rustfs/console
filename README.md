@@ -27,7 +27,7 @@ A modern, responsive web management console for RustFS distributed file system, 
 
 - **[Next.js 16](https://nextjs.org/)** - React full-stack framework with App Router
 - **[React 19](https://react.dev/)** - UI library
-- **[TypeScript 5](https://www.typescriptlang.org/)** - Type safety
+- **[TypeScript 6](https://www.typescriptlang.org/)** - Type safety
 
 ### UI & Styling
 

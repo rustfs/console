@@ -42,6 +42,15 @@ interface ObjectPreviewModalProps {
   } | null
 }
 
+type FullscreenDocument = Document & {
+  webkitExitFullscreen?: () => Promise<void> | void
+  webkitFullscreenElement?: Element | null
+}
+
+type FullscreenElement = HTMLElement & {
+  webkitRequestFullscreen?: () => Promise<void> | void
+}
+
 function normalizeContentType(contentType: string) {
   return contentType.split(";")[0]?.trim().toLowerCase() ?? ""
 }
@@ -76,6 +85,34 @@ function isParquetPreview(contentType: string, objectKey: string) {
   const keyLower = objectKey.toLowerCase()
   if (PARQUET_MIMES.includes(contentType)) return true
   return PARQUET_EXTENSIONS.some((ext) => keyLower.endsWith(ext))
+}
+
+function getFullscreenElement(doc: FullscreenDocument): Element | null {
+  return doc.fullscreenElement ?? doc.webkitFullscreenElement ?? null
+}
+
+function exitFullscreen(doc: FullscreenDocument): Promise<void> {
+  if (typeof doc.exitFullscreen === "function") {
+    return Promise.resolve(doc.exitFullscreen()).then(() => undefined)
+  }
+
+  if (typeof doc.webkitExitFullscreen === "function") {
+    return Promise.resolve(doc.webkitExitFullscreen()).then(() => undefined)
+  }
+
+  return Promise.resolve()
+}
+
+function requestFullscreen(element: FullscreenElement): Promise<void> {
+  if (typeof element.requestFullscreen === "function") {
+    return Promise.resolve(element.requestFullscreen()).then(() => undefined)
+  }
+
+  if (typeof element.webkitRequestFullscreen === "function") {
+    return Promise.resolve(element.webkitRequestFullscreen()).then(() => undefined)
+  }
+
+  return Promise.resolve()
 }
 
 export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreviewModalProps) {
@@ -146,7 +183,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
 
   React.useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsImageFullscreen(document.fullscreenElement === imagePreviewRef.current)
+      setIsImageFullscreen(getFullscreenElement(document as FullscreenDocument) === imagePreviewRef.current)
     }
 
     document.addEventListener("fullscreenchange", handleFullscreenChange)
@@ -156,8 +193,10 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   }, [])
 
   React.useEffect(() => {
-    if (!show && document.fullscreenElement === imagePreviewRef.current) {
-      void document.exitFullscreen().catch(() => {})
+    const fullscreenDocument = document as FullscreenDocument
+
+    if (!show && getFullscreenElement(fullscreenDocument) === imagePreviewRef.current) {
+      void exitFullscreen(fullscreenDocument).catch(() => {})
     }
     if (!show) {
       setIsImageFullscreen(false)
@@ -184,20 +223,21 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   }, [imageNaturalSize])
 
   const toggleImageFullscreen = React.useCallback(() => {
-    const container = imagePreviewRef.current
+    const fullscreenDocument = document as FullscreenDocument
+    const container = imagePreviewRef.current as FullscreenElement | null
     if (!container) return
 
-    if (document.fullscreenElement === container) {
-      void document.exitFullscreen().catch(() => {})
+    if (getFullscreenElement(fullscreenDocument) === container) {
+      void exitFullscreen(fullscreenDocument).catch(() => {})
       return
     }
 
-    if (document.fullscreenElement) {
-      void document.exitFullscreen().catch(() => {})
+    if (getFullscreenElement(fullscreenDocument)) {
+      void exitFullscreen(fullscreenDocument).catch(() => {})
       return
     }
 
-    void container.requestFullscreen().catch(() => {})
+    void requestFullscreen(container).catch(() => {})
   }, [])
 
   React.useLayoutEffect(() => {

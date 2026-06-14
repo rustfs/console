@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { addApiPrefixMiddleware } from "@/lib/api-prefix-middleware"
 import { configManager } from "@/lib/config"
 import { getServiceErrorMessage, getXmlErrorMessage } from "@/lib/error-handler"
+import { scheduleMicrotask } from "@/lib/schedule-microtask"
 import type { SiteConfig } from "@/types/config"
 
 interface S3Response {
@@ -79,14 +80,14 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated || !credentials?.AccessKeyId) {
-      queueMicrotask(() => {
+      scheduleMicrotask(() => {
         setS3Client(null)
         setIsReady(true)
       })
       return
     }
 
-    queueMicrotask(() => setIsReady(false))
+    scheduleMicrotask(() => setIsReady(false))
     let cancelled = false
 
     configManager.loadConfig().then((siteConfig: SiteConfig) => {

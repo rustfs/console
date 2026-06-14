@@ -12,6 +12,7 @@ import { useBucket } from "@/hooks/use-bucket"
 import { useSystem } from "@/hooks/use-system"
 import { Spinner } from "@/components/ui/spinner"
 import { niceBytes } from "@/lib/functions"
+import { normalizeDateToIso } from "@/lib/safe-date"
 import type { ColumnDef } from "@tanstack/react-table"
 import dayjs from "dayjs"
 
@@ -132,7 +133,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
 
             return {
               Name: name,
-              CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : "",
+              CreationDate: normalizeDateToIso(item?.CreationDate),
             }
           })
           .filter((bucket): bucket is BucketListRow => bucket !== null)

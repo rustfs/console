@@ -9,6 +9,7 @@ import { useObject } from "@/hooks/use-object"
 import { useMessage } from "@/lib/feedback/message"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
+import { normalizeDateToIso } from "@/lib/safe-date"
 
 interface ObjectViewProps {
   bucketName: string
@@ -49,7 +50,7 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
     }
   }
 
-  const lastModified = object?.LastModified ? new Date(object.LastModified as string).toISOString() : ""
+  const lastModified = normalizeDateToIso((object?.LastModified as string | Date | undefined) ?? undefined)
 
   return (
     <div className="space-y-4">

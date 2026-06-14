@@ -40,6 +40,7 @@ import { useMessage } from "@/lib/feedback/message"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
 import { formatBytes } from "@/lib/functions"
+import { normalizeDateToIso } from "@/lib/safe-date"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
   createObjectListScope,
@@ -189,10 +190,24 @@ export function ObjectList({
           Key: item.Key ?? "",
           type: "object" as const,
           Size: item.Size ?? 0,
-          LastModified: item.LastModified ? item.LastModified.toISOString() : "",
+          LastModified: normalizeDateToIso(item.LastModified),
         }))
 
         setData([...prefixItems, ...objectItems])
+      } catch (error) {
+        console.error("Failed to fetch objects:", error)
+        message.error((error as Error)?.message ?? t("Failed to load objects"))
+        if (
+          shouldApplyObjectListResponse({
+            requestId,
+            activeRequestId: requestIdRef.current,
+            requestScope,
+            activeScope: activeScopeRef.current,
+          })
+        ) {
+          setNextToken(undefined)
+          setData([])
+        }
       } finally {
         window.setTimeout(() => {
           if (
@@ -208,7 +223,7 @@ export function ObjectList({
         }, 200)
       }
     },
-    [bucket, prefix, resolvedPageSize, continuationToken, showDeleted, listObject],
+    [bucket, prefix, resolvedPageSize, continuationToken, showDeleted, listObject, message, t],
   )
 
   const prevRefreshTriggerRef = React.useRef(refreshTrigger)

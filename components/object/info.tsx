@@ -22,6 +22,7 @@ import { useMessage } from "@/lib/feedback/message"
 import { useDialog } from "@/lib/feedback/dialog"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
+import { normalizeDateToIso } from "@/lib/safe-date"
 import {
   getDefaultObjectRetentionDate,
   getMinimumObjectRetentionDate,
@@ -431,7 +432,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     }
   }
 
-  const lastModified = object?.LastModified ? new Date(object.LastModified as string | Date).toISOString() : ""
+  const lastModified = normalizeDateToIso((object?.LastModified as string | Date | undefined) ?? undefined)
 
   return (
     <>

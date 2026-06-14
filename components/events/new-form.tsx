@@ -13,6 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useBucket } from "@/hooks/use-bucket"
 import { useEventTarget } from "@/hooks/use-event-target"
 import { useMessage } from "@/lib/feedback/message"
+import { scheduleMicrotask } from "@/lib/schedule-microtask"
 
 interface EventsNewFormProps {
   open: boolean
@@ -67,7 +68,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
   }, [getEventTargetArnList])
 
   useEffect(() => {
-    queueMicrotask(() => loadArnList())
+    scheduleMicrotask(() => loadArnList())
   }, [loadArnList])
 
   const resetForm = useCallback(() => {
@@ -81,7 +82,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
 
   useEffect(() => {
     if (open) {
-      queueMicrotask(() => resetForm())
+      scheduleMicrotask(() => resetForm())
     }
   }, [open, resetForm])
 

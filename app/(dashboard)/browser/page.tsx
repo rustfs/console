@@ -20,6 +20,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { niceBytes } from "@/lib/functions"
+import { normalizeDateToIso } from "@/lib/safe-date"
 import { BrowserContent } from "./content"
 import type { ColumnDef } from "@tanstack/react-table"
 import dayjs from "dayjs"
@@ -154,7 +155,7 @@ function BrowserBucketsPage() {
 
             const bucketRow: BucketRow = {
               Name: name,
-              CreationDate: item?.CreationDate ? new Date(item.CreationDate).toISOString() : "",
+              CreationDate: normalizeDateToIso(item?.CreationDate),
             }
 
             return bucketRow

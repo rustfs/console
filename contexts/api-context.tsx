@@ -7,6 +7,7 @@ import { AwsClient } from "@/lib/aws4fetch"
 import { ApiErrorHandler } from "@/lib/api-error-handler"
 import { useAuth } from "@/contexts/auth-context"
 import { configManager } from "@/lib/config"
+import { scheduleMicrotask } from "@/lib/schedule-microtask"
 
 interface ApiContextValue {
   api: ApiClient | null
@@ -24,14 +25,14 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!isAuthenticated || !credentials?.AccessKeyId) {
-      queueMicrotask(() => {
+      scheduleMicrotask(() => {
         setApiClient(null)
         setIsReady(true)
       })
       return
     }
 
-    queueMicrotask(() => setIsReady(false))
+    scheduleMicrotask(() => setIsReady(false))
     let cancelled = false
 
     configManager.loadConfig().then((siteConfig) => {

@@ -35,7 +35,15 @@ function formatDateTime(value?: string) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
 }
 
-export function PoolsOverviewCard({ overview, operationLabel }: { overview: PoolsOverview; operationLabel: string }) {
+export function PoolsOverviewCard({
+  overview,
+  operationLabel,
+  showDecommissionColumns = false,
+}: {
+  overview: PoolsOverview
+  operationLabel: string
+  showDecommissionColumns?: boolean
+}) {
   const { t } = useTranslation()
   const usedPercent = useMemo(() => {
     if (!overview.totalCapacity) return 0
@@ -77,21 +85,25 @@ export function PoolsOverviewCard({ overview, operationLabel }: { overview: Pool
                 <TableHead>{t("Available")}</TableHead>
                 <TableHead>{t("Usage")}</TableHead>
                 <TableHead>{t("Updated At")}</TableHead>
-                <TableHead>{t("Start Time")}</TableHead>
-                <TableHead>{t("Start Size")}</TableHead>
-                <TableHead>{t("Complete")}</TableHead>
-                <TableHead>{t("Failed Status")}</TableHead>
-                <TableHead>{t("Canceled")}</TableHead>
-                <TableHead>{t("Objects")}</TableHead>
-                <TableHead>{t("Objects Failed")}</TableHead>
-                <TableHead>{t("Bytes Moved")}</TableHead>
-                <TableHead>{t("Bytes Failed")}</TableHead>
+                {showDecommissionColumns ? (
+                  <>
+                    <TableHead>{t("Start Time")}</TableHead>
+                    <TableHead>{t("Start Size")}</TableHead>
+                    <TableHead>{t("Complete")}</TableHead>
+                    <TableHead>{t("Failed Status")}</TableHead>
+                    <TableHead>{t("Canceled")}</TableHead>
+                    <TableHead>{t("Objects")}</TableHead>
+                    <TableHead>{t("Objects Failed")}</TableHead>
+                    <TableHead>{t("Bytes Moved")}</TableHead>
+                    <TableHead>{t("Bytes Failed")}</TableHead>
+                  </>
+                ) : null}
               </TableRow>
             </TableHeader>
             <TableBody>
               {overview.pools.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={18} className="text-center text-muted-foreground">
+                  <TableCell colSpan={showDecommissionColumns ? 18 : 9} className="text-center text-muted-foreground">
                     {t("No Data")}
                   </TableCell>
                 </TableRow>
@@ -109,15 +121,19 @@ export function PoolsOverviewCard({ overview, operationLabel }: { overview: Pool
                     <TableCell>{formatBytesValue(pool.available)}</TableCell>
                     <TableCell>{formatPercentValue(pool.usagePercent)}</TableCell>
                     <TableCell>{formatDateTime(pool.lastUpdate)}</TableCell>
-                    <TableCell>{formatDateTime(pool.decommission.startTime)}</TableCell>
-                    <TableCell>{formatBytesValue(pool.decommission.startSize)}</TableCell>
-                    <TableCell>{pool.decommission.complete ? t("Yes") : t("No")}</TableCell>
-                    <TableCell>{pool.decommission.failed ? t("Yes") : t("No")}</TableCell>
-                    <TableCell>{pool.decommission.canceled ? t("Yes") : t("No")}</TableCell>
-                    <TableCell>{formatNumberValue(pool.decommission.objects)}</TableCell>
-                    <TableCell>{formatNumberValue(pool.decommission.objectsFailed)}</TableCell>
-                    <TableCell>{formatBytesValue(pool.decommission.bytes)}</TableCell>
-                    <TableCell>{formatBytesValue(pool.decommission.bytesFailed)}</TableCell>
+                    {showDecommissionColumns ? (
+                      <>
+                        <TableCell>{formatDateTime(pool.decommission.startTime)}</TableCell>
+                        <TableCell>{formatBytesValue(pool.decommission.startSize)}</TableCell>
+                        <TableCell>{pool.decommission.complete ? t("Yes") : t("No")}</TableCell>
+                        <TableCell>{pool.decommission.failed ? t("Yes") : t("No")}</TableCell>
+                        <TableCell>{pool.decommission.canceled ? t("Yes") : t("No")}</TableCell>
+                        <TableCell>{formatNumberValue(pool.decommission.objects)}</TableCell>
+                        <TableCell>{formatNumberValue(pool.decommission.objectsFailed)}</TableCell>
+                        <TableCell>{formatBytesValue(pool.decommission.bytes)}</TableCell>
+                        <TableCell>{formatBytesValue(pool.decommission.bytesFailed)}</TableCell>
+                      </>
+                    ) : null}
                   </TableRow>
                 ))
               )}

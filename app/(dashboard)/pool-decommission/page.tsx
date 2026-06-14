@@ -78,6 +78,10 @@ function getPoolStatusBadgeVariant(state: DecommissionDisplayState) {
   return "secondary"
 }
 
+function hasDecommissionProgress(state: DecommissionDisplayState) {
+  return ["running", "canceling", "completed", "failed", "canceled"].includes(state)
+}
+
 export default function PoolDecommissionPage() {
   const { t } = useTranslation()
   const message = useMessage()
@@ -167,6 +171,7 @@ export default function PoolDecommissionPage() {
     rebalanceState,
     confirmingPoolId === activePoolId,
   )
+  const showActiveProgress = Boolean(activeStatus) && hasDecommissionProgress(activeDisplayState)
   const canCancelActive = activePoolId
     ? getPoolDisplayState(activeStatus, overview.supportState, rebalanceState) === "running"
     : false
@@ -264,7 +269,7 @@ export default function PoolDecommissionPage() {
       </PageHeader>
 
       <div className="space-y-6">
-        <PoolsOverviewCard overview={overview} operationLabel={t("Pool Decommission")} />
+        <PoolsOverviewCard overview={overview} operationLabel={t("Pool Decommission")} showDecommissionColumns />
 
         {overview.supportState === "unsupported" ? (
           <Alert>
@@ -328,11 +333,15 @@ export default function PoolDecommissionPage() {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("Progress")}</p>
-                    <p className="text-sm font-medium">{Math.round(activeStatus?.progressPercent ?? 0)}%</p>
+                    <p className="text-sm font-medium">
+                      {showActiveProgress ? `${Math.round(activeStatus?.progressPercent ?? 0)}%` : "--"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">{t("Bytes Moved")}</p>
-                    <p className="text-sm font-medium">{formatBytesValue(activeStatus?.bytes)}</p>
+                    <p className="text-sm font-medium">
+                      {showActiveProgress ? formatBytesValue(activeStatus?.bytes) : "--"}
+                    </p>
                   </div>
                 </div>
 
@@ -357,7 +366,7 @@ export default function PoolDecommissionPage() {
                       </TableRow>
                     ) : (
                       poolRows.map(({ pool, status: rowStatus, displayState: rowState }) => {
-                        const hasDecommissionStarted = Boolean(rowStatus)
+                        const showProgress = Boolean(rowStatus) && hasDecommissionProgress(rowState)
                         const canRequestStart = !submitting && rowState === "ready"
                         const canConfirm = !submitting && rowState === "confirming"
                         const canCancel = !submitting && rowState === "running"
@@ -376,7 +385,7 @@ export default function PoolDecommissionPage() {
                             </TableCell>
                             <TableCell>{formatBytesValue(pool.used)}</TableCell>
                             <TableCell className="min-w-32">
-                              {hasDecommissionStarted ? (
+                              {showProgress ? (
                                 <div className="flex items-center gap-2">
                                   <Progress value={rowStatus?.progressPercent ?? 0} className="h-2 w-20" />
                                   <span className="text-xs text-muted-foreground">
@@ -387,8 +396,8 @@ export default function PoolDecommissionPage() {
                                 "--"
                               )}
                             </TableCell>
-                            <TableCell>{hasDecommissionStarted ? (rowStatus?.objects ?? "--") : "--"}</TableCell>
-                            <TableCell>{hasDecommissionStarted ? formatBytesValue(rowStatus?.bytes) : "--"}</TableCell>
+                            <TableCell>{showProgress ? (rowStatus?.objects ?? "--") : "--"}</TableCell>
+                            <TableCell>{showProgress ? formatBytesValue(rowStatus?.bytes) : "--"}</TableCell>
                             <TableCell>
                               <div className="flex justify-end gap-2">
                                 {rowState === "confirming" ? (
@@ -423,7 +432,7 @@ export default function PoolDecommissionPage() {
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      disabled={!canRequestStart || hasDecommissionStarted}
+                                      disabled={!canRequestStart || showProgress}
                                       onClick={(event) => {
                                         event.stopPropagation()
                                         setActivePoolId(pool.id)

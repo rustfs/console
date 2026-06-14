@@ -18,8 +18,13 @@ test("pool decommission page keeps status panel independent from list clicks and
   assert.doesNotMatch(source, /{t\("Rebalance Status"\)}/)
   assert.match(source, /onClick=\{\(\) => setSelectedPoolId\(pool\.id\)\}/)
   assert.doesNotMatch(source, /onClick=\{\(\) => setActivePoolId\(pool\.id\)\}/)
-  assert.match(source, /const hasDecommissionStarted = Boolean\(rowStatus\)/)
-  assert.match(source, /hasDecommissionStarted \?/)
+  assert.match(source, /function hasDecommissionProgress\(state: DecommissionDisplayState\)/)
+  assert.match(
+    source,
+    /const showActiveProgress = Boolean\(activeStatus\) && hasDecommissionProgress\(activeDisplayState\)/,
+  )
+  assert.match(source, /const showProgress = Boolean\(rowStatus\) && hasDecommissionProgress\(rowState\)/)
+  assert.match(source, /showProgress \?/)
   assert.match(source, /rowState === "ready"/)
   assert.doesNotMatch(source, /\["ready", "failed", "canceled", "completed"\]\.includes\(rowState\)/)
 })

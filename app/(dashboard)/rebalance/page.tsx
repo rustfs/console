@@ -19,6 +19,7 @@ import type { PoolSummary, PoolsOverview, RebalanceDisplayState, RebalanceStatus
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { niceBytes } from "@/lib/functions"
+import { cn } from "@/lib/utils"
 
 const POLL_MS = 5000
 
@@ -42,6 +43,10 @@ function formatBytesValue(value?: number) {
 
 function formatNumberValue(value?: number) {
   return value === undefined ? "--" : String(value)
+}
+
+function isFailedRebalancePool(pool: PoolSummary) {
+  return ["failed", "error"].includes(pool.status.trim().toLowerCase())
 }
 
 export default function RebalancePage() {
@@ -205,7 +210,7 @@ export default function RebalancePage() {
       </PageHeader>
 
       <div className="space-y-6">
-        <PoolsOverviewCard overview={overview} operationLabel={t("Rebalance")} />
+        <PoolsOverviewCard overview={overview} operationLabel={t("Rebalance")} showDecommissionColumns={false} />
 
         {overview.supportState === "unsupported" ? (
           <Alert>
@@ -285,7 +290,7 @@ export default function RebalancePage() {
                       </TableRow>
                     ) : (
                       pools.map((pool) => (
-                        <TableRow key={pool.id}>
+                        <TableRow key={pool.id} className={cn(isFailedRebalancePool(pool) && "bg-destructive/10")}>
                           <TableCell>{pool.name}</TableCell>
                           <TableCell>{pool.status || "--"}</TableCell>
                           <TableCell>{formatBytesValue(pool.used)}</TableCell>

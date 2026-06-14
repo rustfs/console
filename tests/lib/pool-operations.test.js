@@ -197,6 +197,44 @@ test("normalizeRebalanceStatus aggregates pool progress when totals are missing"
   assert.equal(status.totals.eta, 40)
 })
 
+test("normalizeRebalanceStatus does not infer full progress from aggregated bytes", () => {
+  const status = normalizeRebalanceStatus({
+    id: "reb-3",
+    pools: [
+      {
+        id: 0,
+        status: "Completed",
+        progress: {
+          objects: 9,
+          versions: 9,
+          bytes: 18 * 1024 ** 3,
+          elapsed: 53,
+          eta: 0,
+        },
+      },
+      {
+        id: 1,
+        status: "Failed",
+        progress: {
+          objects: 173,
+          versions: 173,
+          bytes: 346 * 1024 ** 3,
+          elapsed: 1072,
+          eta: 0,
+        },
+      },
+      {
+        id: 2,
+        status: "None",
+        progress: null,
+      },
+    ],
+  })
+
+  assert.equal(status.status, "failed")
+  assert.equal(status.progressPercent, 33)
+})
+
 test("normalizeDecommissionInfo reads nested response", () => {
   const info = normalizeDecommissionInfo({
     decommissionInfo: {

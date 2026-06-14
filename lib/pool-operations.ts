@@ -174,6 +174,26 @@ function aggregatePoolProgress(pools: PoolSummary[]): PoolUsageProgress {
   )
 }
 
+function hasExplicitProgressPercent(record: JsonRecord): boolean {
+  return (
+    record.progressPercent !== undefined ||
+    record.ProgressPercent !== undefined ||
+    record.percent !== undefined ||
+    record.Percent !== undefined
+  )
+}
+
+function deriveRebalanceProgressPercent(status: string, pools: PoolSummary[]): number {
+  const state = normalizeState(status)
+  if (["completed", "complete", "success", "finished"].includes(state)) return 100
+  if (pools.length === 0) return 0
+
+  const finishedPools = pools.filter((pool) =>
+    ["completed", "complete", "success", "finished"].includes(normalizeState(pool.status)),
+  ).length
+  return Math.round((finishedPools / pools.length) * 100)
+}
+
 function pickStatus(record: JsonRecord): string {
   return (
     asString(record.status) ||
@@ -256,15 +276,14 @@ export function normalizeRebalanceStatus(value: unknown): RebalanceStatus {
       : []
   const pools = poolsSource.map((pool, index) => normalizePool(pool, index))
   const explicitTotals = normalizeProgress(record.progress || record.Progress || record.totals || record.Totals)
-  const totals = hasProgress(explicitTotals) ? explicitTotals : aggregatePoolProgress(pools)
+  const totalsAreExplicit = hasProgress(explicitTotals)
+  const totals = totalsAreExplicit ? explicitTotals : aggregatePoolProgress(pools)
   const status = pickStatus(record) || deriveStatusFromPools(pools)
-  const rawProgress =
-    asNumber(record.progressPercent || record.ProgressPercent || record.percent || record.Percent) ||
-    (totals.bytes > 0 && pools.length > 0
+  const rawProgress = hasExplicitProgressPercent(record)
+    ? asNumber(record.progressPercent || record.ProgressPercent || record.percent || record.Percent)
+    : totalsAreExplicit && totals.bytes > 0 && pools.length > 0
       ? (pools.reduce((sum, pool) => sum + pool.progress.bytes, 0) / totals.bytes) * 100
-      : ["completed", "complete", "success", "finished"].includes(normalizeState(status))
-        ? 100
-        : 0)
+      : deriveRebalanceProgressPercent(status, pools)
 
   return {
     id: asString(record.id) || asString(record.ID),

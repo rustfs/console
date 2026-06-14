@@ -29,6 +29,14 @@ export interface PoolUsageProgress {
   elapsed: number
 }
 
+export interface RebalanceCleanupWarnings {
+  count: number
+  lastMessage?: string
+  lastBucket?: string
+  lastObject?: string
+  lastAt?: string
+}
+
 export interface PoolDecommissionSummary {
   startTime?: string
   startSize: number
@@ -54,6 +62,7 @@ export interface PoolSummary {
   lastUpdate?: string
   status: string
   progress: PoolUsageProgress
+  cleanupWarnings: RebalanceCleanupWarnings
   decommission: PoolDecommissionSummary
 }
 
@@ -138,6 +147,17 @@ function normalizeProgress(value: unknown): PoolUsageProgress {
   }
 }
 
+function normalizeCleanupWarnings(value: unknown): RebalanceCleanupWarnings {
+  const record = asRecord(value)
+  return {
+    count: asNumber(record.count || record.Count),
+    lastMessage: asString(record.lastMsg || record.LastMsg || record.lastMessage || record.LastMessage) || undefined,
+    lastBucket: asString(record.lastBucket || record.LastBucket) || undefined,
+    lastObject: asString(record.lastObject || record.LastObject) || undefined,
+    lastAt: asString(record.lastAt || record.LastAt) || undefined,
+  }
+}
+
 function normalizeDecommissionSummary(value: unknown): PoolDecommissionSummary {
   const record = asRecord(value)
   return {
@@ -185,12 +205,12 @@ function hasExplicitProgressPercent(record: JsonRecord): boolean {
 
 function deriveRebalanceProgressPercent(status: string, pools: PoolSummary[]): number {
   const state = normalizeState(status)
-  if (["completed", "complete", "success", "finished"].includes(state)) return 100
+  if (["completed", "complete", "success", "finished"].includes(state) && pools.every(isCompletedRebalancePool)) {
+    return 100
+  }
   if (pools.length === 0) return 0
 
-  const finishedPools = pools.filter((pool) =>
-    ["completed", "complete", "success", "finished"].includes(normalizeState(pool.status)),
-  ).length
+  const finishedPools = pools.filter(isCompletedRebalancePool).length
   return Math.round((finishedPools / pools.length) * 100)
 }
 
@@ -224,6 +244,7 @@ function normalizePool(value: unknown, index: number): PoolSummary {
     rawUsagePercent > 0 && rawUsagePercent <= 1 ? rawUsagePercent * 100 : rawUsagePercent,
   )
   const progress = normalizeProgress(record.progress || record.Progress)
+  const cleanupWarnings = normalizeCleanupWarnings(record.cleanupWarnings || record.CleanupWarnings)
   const rawId =
     record.id ?? record.poolId ?? record.pool ?? record.index ?? record.ID ?? record.PoolID ?? record.poolIndex
 
@@ -238,6 +259,7 @@ function normalizePool(value: unknown, index: number): PoolSummary {
     lastUpdate: asString(record.lastUpdate || record.LastUpdate || record.updatedAt || record.UpdatedAt) || undefined,
     status: pickStatus(record),
     progress,
+    cleanupWarnings,
     decommission,
   }
 }
@@ -327,6 +349,14 @@ function normalizeState(value: string): string {
   return value.trim().toLowerCase()
 }
 
+function isIdleRebalancePool(pool: PoolSummary): boolean {
+  return ["", "none", "not_started", "not-started", "idle"].includes(normalizeState(pool.status))
+}
+
+function isCompletedRebalancePool(pool: PoolSummary): boolean {
+  return ["completed", "complete", "success", "finished"].includes(normalizeState(pool.status))
+}
+
 function deriveStatusFromPools(pools: PoolSummary[]): string {
   if (pools.length === 0) return ""
 
@@ -340,13 +370,11 @@ function deriveStatusFromPools(pools: PoolSummary[]): string {
   ) {
     return "running"
   }
-  if (
-    states.every((state) =>
-      ["completed", "complete", "success", "finished", "none", "not_started", "not-started"].includes(state),
-    )
-  ) {
+  if (pools.every(isCompletedRebalancePool)) {
     return "completed"
   }
+  if (pools.some(isCompletedRebalancePool) && pools.some(isIdleRebalancePool)) return "running"
+  if (pools.every(isIdleRebalancePool)) return ""
   return ""
 }
 

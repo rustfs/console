@@ -115,15 +115,31 @@ test("normalizeRebalanceStatus reads progress and pool details", () => {
     id: "reb-1",
     status: "running",
     progress: { bytes: "1000", objects: "10", versions: "3", eta: "12", elapsed: "6" },
-    pools: [{ id: 1, used: "20", progress: { bytes: "400" } }],
+    pools: [
+      {
+        id: 1,
+        used: "20",
+        progress: { bytes: "400" },
+        cleanupWarnings: {
+          count: 1,
+          lastMsg: "cleanup warning",
+          lastBucket: "test-bucket",
+          lastObject: "object-a",
+          lastAt: "2026-06-12T00:00:00Z",
+        },
+      },
+    ],
   })
 
   assert.equal(status.id, "reb-1")
   assert.equal(status.progressPercent, 40)
   assert.equal(status.pools[0]?.progress.bytes, 400)
+  assert.equal(status.pools[0]?.cleanupWarnings.count, 1)
+  assert.equal(status.pools[0]?.cleanupWarnings.lastMessage, "cleanup warning")
+  assert.equal(status.pools[0]?.cleanupWarnings.lastBucket, "test-bucket")
 })
 
-test("normalizeRebalanceStatus derives status from pool-only response", () => {
+test("normalizeRebalanceStatus does not complete mixed completed and idle pools", () => {
   const status = normalizeRebalanceStatus({
     id: "3be0831f-4315-4adb-9904-3bb0609b3bfc",
     pools: [
@@ -154,11 +170,11 @@ test("normalizeRebalanceStatus derives status from pool-only response", () => {
     stoppedAt: null,
   })
 
-  assert.equal(status.status, "completed")
-  assert.equal(status.progressPercent, 100)
+  assert.equal(status.status, "running")
+  assert.equal(status.progressPercent, 50)
   assert.equal(status.pools[0]?.status, "Completed")
   assert.equal(status.pools[1]?.status, "None")
-  assert.equal(deriveRebalanceDisplayState(status, "supported"), "completed")
+  assert.equal(deriveRebalanceDisplayState(status, "supported"), "running")
 })
 
 test("normalizeRebalanceStatus aggregates pool progress when totals are missing", () => {

@@ -16,7 +16,7 @@ test("rebalance page highlights failed pool rows", () => {
 
   assert.match(source, /function isFailedRebalancePool\(pool: PoolSummary\)/)
   assert.match(source, /\["failed", "error"\]\.includes\(pool\.status\.trim\(\)\.toLowerCase\(\)\)/)
-  assert.match(source, /className=\{cn\(isFailedRebalancePool\(pool\) && "bg-destructive\/10"\)\}/)
+  assert.match(source, /bg-destructive\/15 hover:bg-destructive\/20/)
 })
 
 test("decommission page keeps decommission detail columns", () => {

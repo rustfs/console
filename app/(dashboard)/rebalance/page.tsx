@@ -49,6 +49,14 @@ function isFailedRebalancePool(pool: PoolSummary) {
   return ["failed", "error"].includes(pool.status.trim().toLowerCase())
 }
 
+function formatCleanupWarnings(pool: PoolSummary) {
+  const warnings = pool.cleanupWarnings
+  if (!warnings.count) return "--"
+
+  const context = [warnings.lastBucket, warnings.lastObject].filter(Boolean).join("/")
+  return context ? `${warnings.count} (${context})` : String(warnings.count)
+}
+
 export default function RebalancePage() {
   const { t } = useTranslation()
   const dialog = useDialog()
@@ -178,6 +186,7 @@ export default function RebalancePage() {
         ...pool,
         status: statusPool.status || pool.status,
         progress: statusPool.progress,
+        cleanupWarnings: statusPool.cleanupWarnings,
       }
     })
   }, [overview.pools, status?.pools])
@@ -279,24 +288,37 @@ export default function RebalancePage() {
                       <TableHead>{t("Bytes Moved")}</TableHead>
                       <TableHead>{t("Objects")}</TableHead>
                       <TableHead>{t("Versions")}</TableHead>
+                      <TableHead>{t("Cleanup Warnings")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {pools.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center text-muted-foreground">
                           {t("No Data")}
                         </TableCell>
                       </TableRow>
                     ) : (
                       pools.map((pool) => (
-                        <TableRow key={pool.id} className={cn(isFailedRebalancePool(pool) && "bg-destructive/10")}>
+                        <TableRow
+                          key={pool.id}
+                          className={cn(isFailedRebalancePool(pool) && "bg-destructive/15 hover:bg-destructive/20")}
+                        >
                           <TableCell>{pool.name}</TableCell>
                           <TableCell>{pool.status || "--"}</TableCell>
                           <TableCell>{formatBytesValue(pool.used)}</TableCell>
                           <TableCell>{formatBytesValue(pool.progress.bytes)}</TableCell>
                           <TableCell>{formatNumberValue(pool.progress.objects)}</TableCell>
                           <TableCell>{formatNumberValue(pool.progress.versions)}</TableCell>
+                          <TableCell>
+                            {pool.cleanupWarnings.count > 0 ? (
+                              <Badge variant="secondary" className="bg-amber-100 text-amber-900 hover:bg-amber-100">
+                                {formatCleanupWarnings(pool)}
+                              </Badge>
+                            ) : (
+                              "--"
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))
                     )}

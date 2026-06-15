@@ -3,7 +3,6 @@
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import dayjs from "dayjs"
 import { RiAddLine, RiDeleteBin5Line, RiEdit2Line, RiGroup2Fill } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,6 +19,7 @@ import { UserAddToGroupForm } from "@/components/user/add-to-group-form"
 import { useUsers } from "@/hooks/use-users"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
+import { formatDateTime } from "@/lib/functions"
 import type { ColumnDef } from "@tanstack/react-table"
 
 interface UserRow {
@@ -33,15 +33,15 @@ interface UserRow {
 
 function formatDate(dateStr?: string) {
   if (!dateStr) return "-"
-  let d = dayjs(dateStr)
-  if (d.isValid()) return d.format("YYYY-MM-DD HH:mm:ss")
-  const [date, timeRaw, offsetRaw] = (dateStr || "").split(" ")
-  if (date && timeRaw && offsetRaw) {
+  const parsedDate = new Date(dateStr)
+  if (!Number.isNaN(parsedDate.getTime())) return formatDateTime(parsedDate)
+  const [datePart, timeRaw, offsetRaw] = (dateStr || "").split(" ")
+  if (datePart && timeRaw && offsetRaw) {
     const time = timeRaw.substring(0, 12)
     const offset = offsetRaw.substring(0, 6)
-    const isoStr = `${date}T${time}${offset}`
-    d = dayjs(isoStr)
-    if (d.isValid()) return d.format("YYYY-MM-DD HH:mm:ss")
+    const isoStr = `${datePart}T${time}${offset}`
+    const normalizedDate = new Date(isoStr)
+    if (!Number.isNaN(normalizedDate.getTime())) return formatDateTime(normalizedDate)
   }
   return "-"
 }
@@ -134,13 +134,13 @@ export default function UsersPage() {
         <div className="flex items-center gap-2">
           {canEditUser ? (
             <Button type="button" variant="outline" size="sm" onClick={() => openEditItem(row.original)}>
-              <RiEdit2Line className="size-4" />
+              <RiEdit2Line className="size-4" aria-hidden />
               <span>{t("Edit")}</span>
             </Button>
           ) : null}
           {canDeleteUser ? (
             <Button type="button" variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
-              <RiDeleteBin5Line className="size-4" />
+              <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
           ) : null}
@@ -235,7 +235,7 @@ export default function UsersPage() {
               disabled={!canBulkDeleteUsers || !selectedKeys.length}
               onClick={deleteByList}
             >
-              <RiDeleteBin5Line className="size-4" />
+              <RiDeleteBin5Line className="size-4" aria-hidden />
               {t("Delete Selected")}
             </Button>
             <Button
@@ -244,12 +244,12 @@ export default function UsersPage() {
               disabled={!canAssignGroups || !selectedKeys.length}
               onClick={addToGroup}
             >
-              <RiGroup2Fill className="size-4" />
+              <RiGroup2Fill className="size-4" aria-hidden />
               {t("Add to Group")}
             </Button>
             {canCreateUser ? (
               <Button type="button" variant="outline" onClick={() => setNewFormOpen(true)}>
-                <RiAddLine className="size-4" />
+                <RiAddLine className="size-4" aria-hidden />
                 {t("Add User")}
               </Button>
             ) : null}

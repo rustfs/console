@@ -44,7 +44,7 @@ export function ObjectPathLinks({ objectKey, bucketName, onClick }: ObjectPathLi
     .map((item, index) => ({ value: item, index }))
 
   const displaySegments: Segment[] =
-    segments.length <= 6 ? segments : [...segments.slice(0, 3), { value: "...", index: -1 }, ...segments.slice(-3)]
+    segments.length <= 6 ? segments : [...segments.slice(0, 3), { value: "…", index: -1 }, ...segments.slice(-3)]
 
   const handleClick = (segment: Segment) => {
     if (segment.index === -1) return
@@ -56,24 +56,32 @@ export function ObjectPathLinks({ objectKey, bucketName, onClick }: ObjectPathLi
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center">
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center">
         {displaySegments.map((segment) => (
           <React.Fragment key={segment.index}>
             <span className="text-muted-foreground">&nbsp;/&nbsp;</span>
-            <button
-              type="button"
-              onClick={() => handleClick(segment)}
-              className={segment.index > -1 ? "text-blue-500 hover:underline" : "cursor-default"}
-            >
-              {segment.value}
-            </button>
+            {segment.index > -1 ? (
+              <button
+                type="button"
+                onClick={() => handleClick(segment)}
+                className="max-w-full break-all text-start text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+              >
+                {segment.value}
+              </button>
+            ) : (
+              <span className="break-all text-muted-foreground">{segment.value}</span>
+            )}
           </React.Fragment>
         ))}
       </div>
       {objectKey ? (
         <Button variant="ghost" size="sm" className="shrink-0" onClick={copy} title={t("Copy Path")}>
-          {copied ? <RiCheckLine className="size-4 text-green-600" /> : <RiFileCopyLine className="size-4" />}
+          {copied ? (
+            <RiCheckLine className="size-4 text-primary" aria-hidden />
+          ) : (
+            <RiFileCopyLine className="size-4" aria-hidden />
+          )}
           <span className="sr-only">{t("Copy Path")}</span>
         </Button>
       ) : null}

@@ -19,11 +19,10 @@ import { useSystem } from "@/hooks/use-system"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
-import { niceBytes } from "@/lib/functions"
+import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { BrowserContent } from "./content"
 import type { ColumnDef } from "@tanstack/react-table"
-import dayjs from "dayjs"
 
 interface BucketRow {
   Name: string
@@ -208,17 +207,17 @@ function BrowserBucketsPage() {
       cell: ({ row }) => (
         <Link
           href={`/browser?bucket=${encodeURIComponent(row.original.Name)}`}
-          className="flex items-center gap-2 text-primary hover:underline"
+          className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
         >
-          <RiArchiveLine className="size-4" />
-          {row.original.Name}
+          <RiArchiveLine className="size-4 shrink-0" aria-hidden />
+          <span className="min-w-0 truncate">{row.original.Name}</span>
         </Link>
       ),
     },
     {
       header: () => t("Creation Date"),
       accessorKey: "CreationDate",
-      cell: ({ row }) => dayjs(row.original.CreationDate).format("YYYY-MM-DD HH:mm:ss"),
+      cell: ({ row }) => formatDateTime(row.original.CreationDate),
     },
   ]
 
@@ -228,7 +227,7 @@ function BrowserBucketsPage() {
       accessorKey: "Count",
       cell: ({ row }) =>
         typeof row.original.Count === "number" ? (
-          row.original.Count.toLocaleString()
+          formatInteger(row.original.Count)
         ) : usageLoading ? (
           <Spinner className="size-3 text-muted-foreground" />
         ) : (
@@ -251,7 +250,7 @@ function BrowserBucketsPage() {
     cell: ({ row }) => {
       if (typeof row.original.IsPublic === "boolean") {
         return row.original.IsPublic ? (
-          <span className="text-red-600 dark:text-red-400">{t("Public")}</span>
+          <span className="text-destructive">{t("Public")}</span>
         ) : (
           <span className="text-muted-foreground">{t("Private")}</span>
         )
@@ -272,12 +271,12 @@ function BrowserBucketsPage() {
           size="sm"
           onClick={() => router.push(`/buckets?bucket=${encodeURIComponent(row.original.Name)}`)}
         >
-          <RiSettings5Line className="size-4" />
+          <RiSettings5Line className="size-4" aria-hidden />
           <span>{t("Settings")}</span>
         </Button>
         {canCapability("bucket.delete", { bucket: row.original.Name }) ? (
           <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
-            <RiDeleteBin5Line className="size-4" />
+            <RiDeleteBin5Line className="size-4" aria-hidden />
             <span>{t("Delete")}</span>
           </Button>
         ) : null}
@@ -343,12 +342,12 @@ function BrowserBucketsPage() {
             />
             {canCreateBucket ? (
               <Button variant="outline" onClick={() => setFormVisible(true)}>
-                <RiAddLine className="size-4" />
+                <RiAddLine className="size-4" aria-hidden />
                 <span>{t("Create Bucket")}</span>
               </Button>
             ) : null}
             <Button variant="outline" onClick={() => fetchBuckets({ force: true })}>
-              <RiRefreshLine className="size-4" />
+              <RiRefreshLine className="size-4" aria-hidden />
               <span>{t("Refresh")}</span>
             </Button>
           </>

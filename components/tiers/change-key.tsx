@@ -70,26 +70,32 @@ export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: Tier
         </DialogHeader>
         <div className="space-y-4">
           <Field>
-            <FieldLabel>{t("Access Key")}</FieldLabel>
+            <FieldLabel htmlFor="tier-change-access-key">{t("Access Key")}</FieldLabel>
             <FieldContent>
               <Input
+                id="tier-change-access-key"
+                name="tier-change-access-key"
                 value={accessKey}
                 onChange={(e) => setAccessKey(e.target.value)}
                 placeholder={t("Please enter Access Key")}
                 autoComplete="off"
+                spellCheck={false}
               />
             </FieldContent>
           </Field>
 
           <Field>
-            <FieldLabel>{t("Secret Key")}</FieldLabel>
+            <FieldLabel htmlFor="tier-change-secret-key">{t("Secret Key")}</FieldLabel>
             <FieldContent>
               <Input
+                id="tier-change-secret-key"
+                name="tier-change-secret-key"
                 value={secretKey}
                 onChange={(e) => setSecretKey(e.target.value)}
                 type="password"
                 placeholder={t("Please enter Secret Key")}
                 autoComplete="off"
+                spellCheck={false}
               />
             </FieldContent>
           </Field>

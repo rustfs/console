@@ -67,7 +67,7 @@ export function UserAddToGroupForm({ open, onOpenChange, selectedUsers, onSucces
 
   return (
     <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Add to Group")}</DialogTitle>
         </DialogHeader>
@@ -75,10 +75,12 @@ export function UserAddToGroupForm({ open, onOpenChange, selectedUsers, onSucces
         <div className="space-y-4">
           <div className="space-y-2">
             <div className="text-sm font-medium">{t("Users")}</div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex min-w-0 flex-wrap gap-2">
               {selectedUsers.map((user) => (
-                <Badge key={user} variant="secondary">
-                  {user}
+                <Badge key={user} variant="secondary" className="h-auto max-w-full justify-start whitespace-normal">
+                  <span className="min-w-0 break-all" title={user}>
+                    {user}
+                  </span>
                 </Badge>
               ))}
             </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 import { RiSearchLine, RiCloseLine } from "@remixicon/react"
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
 import { cn } from "@/lib/utils"
@@ -19,8 +20,13 @@ export function SearchInput({
   placeholder = "",
   clearable = false,
   className,
-  ...props
+  "aria-label": ariaLabel,
+  type = "search",
+  autoComplete = "off",
+  spellCheck = false,
+  ...inputProps
 }: SearchInputProps) {
+  const { t } = useTranslation()
   const showClear = clearable && Boolean(value)
 
   const handleClear = () => {
@@ -28,14 +34,29 @@ export function SearchInput({
   }
 
   return (
-    <InputGroup className={cn("w-full", className)} {...props}>
+    <InputGroup className={cn("w-full", className)}>
       <InputGroupAddon className="text-muted-foreground">
-        <RiSearchLine className="size-4" />
+        <RiSearchLine className="size-4" aria-hidden />
       </InputGroupAddon>
-      <InputGroupInput value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      <InputGroupInput
+        {...inputProps}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        aria-label={(ariaLabel ?? placeholder) || "Search"}
+        autoComplete={autoComplete}
+        spellCheck={spellCheck}
+      />
       {showClear && (
-        <InputGroupButton variant="ghost" size="icon-xs" type="button" aria-label="Clear" onClick={handleClear}>
-          <RiCloseLine className="size-4" />
+        <InputGroupButton
+          variant="ghost"
+          size="icon-xs"
+          type="button"
+          aria-label={t("Clear search")}
+          onClick={handleClear}
+        >
+          <RiCloseLine className="size-4" aria-hidden />
         </InputGroupButton>
       )}
     </InputGroup>

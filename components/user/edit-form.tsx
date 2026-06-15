@@ -227,12 +227,12 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
 
   return (
     <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className="sm:max-w-5xl">
+      <DialogContent className="overflow-x-hidden sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>{user.accessKey || row?.accessKey || t("Account")}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 max-h-[80vh] overflow-auto px-2 -mx-2">
+        <div className="-mx-2 max-h-[80vh] space-y-4 overflow-y-auto overflow-x-hidden px-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">
             <TabsList className="justify-start overflow-x-auto">
               {canEditAccount ? <TabsTrigger value="account">{t("Account")}</TabsTrigger> : null}
@@ -243,9 +243,12 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
 
             {canEditAccount ? (
               <TabsContent value="account" className="mt-0 space-y-4">
-                <div className="flex items-center justify-start gap-2 rounded-md border px-3 py-2">
-                  <span className="text-sm text-muted-foreground">{t("Status")}</span>
+                <div className="flex items-center justify-start gap-2 border px-3 py-2">
+                  <label htmlFor="edit-user-status" className="text-sm text-muted-foreground">
+                    {t("Status")}
+                  </label>
                   <Switch
+                    id="edit-user-status"
                     checked={statusBoolean}
                     onCheckedChange={handleStatusChange}
                     disabled={loading || submitting}

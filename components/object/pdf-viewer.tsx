@@ -27,7 +27,7 @@ export function PdfViewer({ url }: PdfViewerProps) {
   }
 
   return (
-    <div className="relative h-[70vh] w-full overflow-hidden rounded-md bg-muted/20 p-3">
+    <div className="relative h-[70vh] w-full overflow-hidden bg-muted/20 p-3">
       {loading && !loadError ? (
         <div className="absolute inset-0 z-10 flex items-center justify-center">
           <Spinner className="size-8 text-muted-foreground" />
@@ -40,7 +40,7 @@ export function PdfViewer({ url }: PdfViewerProps) {
           key={url}
           src={url}
           title={t("Preview")}
-          className="h-full w-full rounded-md border-0 bg-background"
+          className="h-full w-full border-0 bg-background"
           onLoad={() => {
             setLoading(false)
             setLoadError(null)
@@ -57,7 +57,7 @@ export function PdfViewer({ url }: PdfViewerProps) {
       )}
       {loading ? (
         <div className="sr-only" aria-live="polite">
-          {t("Loading...")}
+          {t("Loading…")}
         </div>
       ) : null}
       <noscript>

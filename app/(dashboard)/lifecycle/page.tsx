@@ -33,7 +33,7 @@ export default function LifecyclePage() {
       <PageHeader
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/lifecycle" />}>
-            <RiArrowLeftLine className="size-4" />
+            <RiArrowLeftLine className="size-4" aria-hidden />
             <span>{t("Buckets")}</span>
           </Button>
         }

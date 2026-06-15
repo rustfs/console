@@ -133,7 +133,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
             />
           </div>
           <Button variant="outline" className="inline-flex items-center gap-2" onClick={startEditing}>
-            <RiAddLine className="size-4" />
+            <RiAddLine className="size-4" aria-hidden />
             {t("Edit Policy")}
           </Button>
         </div>
@@ -154,7 +154,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
                       <span className="truncate">
                         {selectedPolicies.length ? selectedPolicies.join(", ") : t("Select user group policies")}
                       </span>
-                      <RiArrowDownSLine className="size-4 text-muted-foreground" />
+                      <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
                     </Button>
                   }
                 />

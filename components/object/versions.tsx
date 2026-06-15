@@ -13,12 +13,11 @@ import { useMessage } from "@/lib/feedback/message"
 import { copyToClipboard } from "@/lib/clipboard"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
-import { formatBytes } from "@/lib/functions"
+import { formatBytes, formatDateTime } from "@/lib/functions"
 import { GetObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
 import type { ColumnDef } from "@tanstack/react-table"
-import dayjs from "dayjs"
 
 interface VersionRow {
   VersionId?: string
@@ -140,16 +139,19 @@ export function ObjectVersions({
         cell: ({ row }) => {
           const versionId = row.original.VersionId ?? ""
           return (
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-sm">{versionId}</span>
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="min-w-0 truncate font-mono text-sm" title={versionId}>
+                {versionId}
+              </span>
               <Button
                 variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0 shrink-0"
+                size="icon-xs"
+                className="shrink-0"
                 onClick={() => copyVersionId(versionId)}
                 title={t("Copy")}
+                aria-label={t("Copy")}
               >
-                <RiFileCopyLine className="size-3.5" />
+                <RiFileCopyLine className="size-3" aria-hidden />
               </Button>
             </div>
           )
@@ -158,8 +160,7 @@ export function ObjectVersions({
       {
         id: "lastModified",
         header: () => t("LastModified"),
-        cell: ({ row }) =>
-          row.original.LastModified ? dayjs(row.original.LastModified).format("YYYY-MM-DD HH:mm:ss") : "",
+        cell: ({ row }) => (row.original.LastModified ? formatDateTime(row.original.LastModified) : ""),
       },
       {
         id: "size",
@@ -179,13 +180,13 @@ export function ObjectVersions({
             <div className="flex gap-2">
               {canCapability("objects.version.view", objectContext) ? (
                 <Button variant="outline" size="sm" onClick={() => onPreview(row.original.VersionId ?? "")}>
-                  <RiEyeLine className="size-4" />
+                  <RiEyeLine className="size-4" aria-hidden />
                   {t("Preview")}
                 </Button>
               ) : null}
               {canCapability("objects.download", objectContext) ? (
                 <Button variant="outline" size="sm" onClick={() => downloadVersion(row.original)}>
-                  <RiDownloadCloud2Line className="size-4" />
+                  <RiDownloadCloud2Line className="size-4" aria-hidden />
                   {t("Download")}
                 </Button>
               ) : null}
@@ -196,7 +197,7 @@ export function ObjectVersions({
                   className="text-white"
                   onClick={() => deleteVersion(row.original)}
                 >
-                  <RiDeleteBin5Line className="size-4" />
+                  <RiDeleteBin5Line className="size-4" aria-hidden />
                   {t("Delete")}
                 </Button>
               ) : null}
@@ -215,7 +216,7 @@ export function ObjectVersions({
 
   return (
     <Dialog open={visible} onOpenChange={(open) => !open && onClose()} disablePointerDismissal>
-      <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-auto">
+      <DialogContent className="max-h-[80vh] overflow-y-auto overflow-x-hidden sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{t("Object Versions")}</DialogTitle>
         </DialogHeader>

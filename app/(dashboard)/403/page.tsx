@@ -31,17 +31,17 @@ export default function ForbiddenPage() {
         <EmptyContent className="max-w-sm text-center">
           <EmptyHeader>
             <EmptyMedia variant="icon" className="mx-auto">
-              <svg viewBox="0 0 48 48" fill="none" className="h-12 w-12">
-                <circle cx="24" cy="24" r="22" fill="#F3F4F6" stroke="#E5E7EB" strokeWidth="2" />
+              <svg viewBox="0 0 48 48" fill="none" className="h-12 w-12 text-muted-foreground" aria-hidden>
+                <circle cx="24" cy="24" r="22" className="fill-muted stroke-border" strokeWidth="2" />
                 <path
                   d="M16 21V19a8 8 0 0116 0v2"
-                  stroke="#A3A3A3"
+                  className="stroke-muted-foreground"
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                <rect x="16" y="28" width="16" height="4" rx="2" fill="#A3A3A3" />
-                <rect x="22" y="32" width="4" height="4" rx="2" fill="#A3A3A3" />
+                <rect x="16" y="28" width="16" height="4" rx="2" className="fill-muted-foreground" />
+                <rect x="22" y="32" width="4" height="4" rx="2" className="fill-muted-foreground" />
               </svg>
             </EmptyMedia>
             <EmptyTitle>{t("Access Denied")}</EmptyTitle>

@@ -81,7 +81,7 @@ export function BucketSelector({
     <div className={cn(containerClasses)}>
       <div className={controlWrapperClasses}>
         <Select value={value ?? ""} onValueChange={(v) => onChange(v || null)} disabled={disabled || isLoading}>
-          <SelectTrigger className={cn("min-w-[200px]", selectorClass)}>
+          <SelectTrigger className={cn("min-w-[200px]", selectorClass)} aria-label={displayLabel}>
             <SelectValue placeholder={t(placeholder)}>
               {value ? `${displayLabel}: ${buckets.find((b) => b.value === value)?.label ?? value}` : null}
             </SelectValue>

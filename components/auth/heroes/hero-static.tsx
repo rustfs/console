@@ -15,9 +15,9 @@ export function AuthHeroStatic() {
   const theme = getThemeManifest()
 
   return (
-    <div className="relative flex h-full w-full flex-col justify-center gap-8 overflow-hidden border-e bg-gray-50 p-16 dark:border-none dark:bg-black">
+    <div className="relative flex h-full w-full flex-col justify-center gap-8 overflow-hidden border-e bg-muted/40 p-16">
       <div className="z-10 flex max-w-7xl flex-col">
-        <ThemeLogo width={112} height={24} className="max-w-28" alt={theme.brand.name} />
+        <ThemeLogo width={112} height={24} alt={theme.brand.name} priority />
         <div className="my-6 px-0 text-4xl font-semibold text-primary">
           <span className={locale !== "zh" ? "pe-1" : undefined}>{t("Rust-based")} </span>
           <FlipWords
@@ -36,13 +36,20 @@ export function AuthHeroStatic() {
       </div>
       <Link
         href="https://www.rustfs.com"
-        className="z-10 inline-flex w-max items-center gap-2 rounded-full border border-blue-500 p-2 px-5 leading-none text-primary-500"
+        className="z-10 inline-flex w-max items-center gap-2 rounded-none border border-primary/30 p-2 px-5 leading-none text-primary transition-colors hover:bg-accent"
       >
         <span>{t("Visit website")}</span>
-        <RiArrowRightLongFill className="me-2 rtl:-scale-x-100" />
+        <RiArrowRightLongFill className="me-2 size-4 rtl:-scale-x-100" aria-hidden />
       </Link>
       <div className="absolute inset-0 z-0 h-full">
-        <Image src={buildRoute("/backgrounds/ttten.svg")} alt="" fill className="object-cover opacity-45" />
+        <Image
+          src={buildRoute("/backgrounds/ttten.svg")}
+          alt=""
+          fill
+          priority
+          sizes="50vw"
+          className="object-cover opacity-45"
+        />
       </div>
     </div>
   )

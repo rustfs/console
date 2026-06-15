@@ -56,7 +56,7 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="outline" size="sm" onClick={download}>
-          <RiDownloadLine className="size-4" />
+          <RiDownloadLine className="size-4" aria-hidden />
           {t("Download")}
         </Button>
       </div>

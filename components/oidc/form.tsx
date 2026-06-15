@@ -58,7 +58,7 @@ export function OidcForm({
   const showRedirectUri = !values.redirect_uri_dynamic
 
   return (
-    <div className="space-y-4 rounded-md border p-4 md:p-6">
+    <div className="space-y-4 border p-4 md:p-6">
       <div className="flex flex-col gap-3 border-b pb-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -84,12 +84,12 @@ export function OidcForm({
         <div className="flex flex-wrap gap-2">
           {isCreateMode && !isReadOnly ? (
             <Button type="button" variant="outline" onClick={onValidate} disabled={isValidating || isSaving}>
-              {isValidating ? t("Validating...") : t("Validate")}
+              {isValidating ? t("Validating…") : t("Validate")}
             </Button>
           ) : null}
           {!isReadOnly ? (
             <Button type="button" onClick={onSave} disabled={isSaving || isValidating}>
-              {isSaving ? t("Saving...") : t("Save")}
+              {isSaving ? t("Saving…") : t("Save")}
             </Button>
           ) : null}
           {!isCreateMode && !isReadOnly ? (
@@ -142,9 +142,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="provider_id"
+              name="provider_id"
               value={values.provider_id}
               onChange={(event) => onChange("provider_id", event.target.value)}
+              autoComplete="off"
               placeholder={t("Provider ID")}
+              spellCheck={false}
               disabled={!isCreateMode || isReadOnly}
             />
           </FieldContent>
@@ -152,12 +155,13 @@ export function OidcForm({
           <FieldError>{errors.provider_id}</FieldError>
         </Field>
 
-        <Field orientation="responsive" className="items-start gap-3 rounded-md border p-3">
+        <Field orientation="responsive" className="items-start gap-3 border p-3">
           <FieldLabel htmlFor="enabled">{t("Enabled")}</FieldLabel>
           <FieldContent className="gap-2">
             <div className="flex items-center gap-3">
               <Switch
                 id="enabled"
+                name="enabled"
                 checked={values.enabled}
                 onCheckedChange={(checked) => onChange("enabled", checked)}
                 disabled={isReadOnly}
@@ -172,8 +176,10 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="display_name"
+              name="display_name"
               value={values.display_name}
               onChange={(event) => onChange("display_name", event.target.value)}
+              autoComplete="off"
               placeholder={t("Display Name")}
               disabled={isReadOnly}
             />
@@ -185,9 +191,13 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="config_url"
+              name="config_url"
+              type="url"
               value={values.config_url}
               onChange={(event) => onChange("config_url", event.target.value)}
+              autoComplete="off"
               placeholder="https://idp.example.com/.well-known/openid-configuration"
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -199,9 +209,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="client_id"
+              name="client_id"
               value={values.client_id}
               onChange={(event) => onChange("client_id", event.target.value)}
+              autoComplete="off"
               placeholder={t("Client ID")}
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -213,10 +226,13 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="client_secret"
+              name="client_secret"
               type="password"
               value={values.client_secret}
               onChange={(event) => onChange("client_secret", event.target.value)}
+              autoComplete="new-password"
               placeholder={isCreateMode ? t("Client Secret") : t("Leave empty to keep current secret")}
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -236,9 +252,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="scopes"
+              name="scopes"
               value={values.scopes}
               onChange={(event) => onChange("scopes", event.target.value)}
+              autoComplete="off"
               placeholder="openid,profile,email"
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -251,9 +270,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="other_audiences"
+              name="other_audiences"
               value={values.other_audiences}
               onChange={(event) => onChange("other_audiences", event.target.value)}
+              autoComplete="off"
               placeholder=""
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -261,12 +283,13 @@ export function OidcForm({
           <FieldError>{errors.other_audiences}</FieldError>
         </Field>
 
-        <Field orientation="responsive" className="items-start gap-3 rounded-md border p-3">
+        <Field orientation="responsive" className="items-start gap-3 border p-3">
           <FieldLabel htmlFor="redirect_uri_dynamic">{t("Use Dynamic Redirect URI")}</FieldLabel>
           <FieldContent className="gap-2">
             <div className="flex items-center gap-3">
               <Switch
                 id="redirect_uri_dynamic"
+                name="redirect_uri_dynamic"
                 checked={values.redirect_uri_dynamic}
                 onCheckedChange={(checked) => onChange("redirect_uri_dynamic", checked)}
                 disabled={isReadOnly}
@@ -288,9 +311,13 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="redirect_uri"
+              name="redirect_uri"
+              type="url"
               value={values.redirect_uri}
               onChange={(event) => onChange("redirect_uri", event.target.value)}
+              autoComplete="off"
               placeholder="https://rustfs.example.com/rustfs/admin/v3/oidc/callback/default"
+              spellCheck={false}
               disabled={isReadOnly || !showRedirectUri}
             />
           </FieldContent>
@@ -307,9 +334,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="claim_name"
+              name="claim_name"
               value={values.claim_name}
               onChange={(event) => onChange("claim_name", event.target.value)}
+              autoComplete="off"
               placeholder={t("Claim Name")}
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -320,9 +350,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="claim_prefix"
+              name="claim_prefix"
               value={values.claim_prefix}
               onChange={(event) => onChange("claim_prefix", event.target.value)}
+              autoComplete="off"
               placeholder={t("Claim Prefix")}
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -333,9 +366,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="role_policy"
+              name="role_policy"
               value={values.role_policy}
               onChange={(event) => onChange("role_policy", event.target.value)}
+              autoComplete="off"
               placeholder={t("Role Policy")}
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -349,9 +385,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="groups_claim"
+              name="groups_claim"
               value={values.groups_claim}
               onChange={(event) => onChange("groups_claim", event.target.value)}
+              autoComplete="off"
               placeholder={t("Groups Claim")}
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -362,9 +401,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="roles_claim"
+              name="roles_claim"
               value={values.roles_claim}
               onChange={(event) => onChange("roles_claim", event.target.value)}
+              autoComplete="off"
               placeholder="roles"
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -378,9 +420,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="email_claim"
+              name="email_claim"
               value={values.email_claim}
               onChange={(event) => onChange("email_claim", event.target.value)}
+              autoComplete="off"
               placeholder={t("Email Claim")}
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>
@@ -391,9 +436,12 @@ export function OidcForm({
           <FieldContent>
             <Input
               id="username_claim"
+              name="username_claim"
               value={values.username_claim}
               onChange={(event) => onChange("username_claim", event.target.value)}
+              autoComplete="off"
               placeholder={t("Username Claim")}
+              spellCheck={false}
               disabled={isReadOnly}
             />
           </FieldContent>

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
-import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { SearchInput } from "@/components/search-input"
 import { DateTimePicker } from "@/components/datetime-picker"
@@ -22,7 +22,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { usePolicies } from "@/hooks/use-policies"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
-import { makeRandomString } from "@/lib/functions"
+import { formatDateTime, makeRandomString } from "@/lib/functions"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "react-i18next"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -57,7 +57,7 @@ function formatExpiration(value?: string | null) {
   if (!value || value === "9999-01-01T00:00:00Z") return "-"
   const date = dayjs(value)
   if (!date.isValid()) return "-"
-  return date.format("YYYY-MM-DD HH:mm")
+  return formatDateTime(value)
 }
 
 function formatPolicy(value: unknown) {
@@ -201,12 +201,12 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
 
   return (
     <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
+      <DialogContent className={cn("overflow-x-hidden sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
         <DialogHeader>
           <DialogTitle>{t("Create Key")}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex max-h-[80vh] flex-col gap-4 overflow-auto px-2 -mx-2 lg:flex-row">
+        <div className="-mx-2 flex max-h-[80vh] flex-col gap-4 overflow-y-auto overflow-x-hidden px-2 lg:flex-row">
           <div
             className={cn(
               impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
@@ -217,14 +217,15 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
               <FieldContent>
                 <Input
                   id="create-user-access-key"
+                  name="create-user-access-key"
                   value={accessKey}
                   onChange={(event) => setAccessKey(event.target.value)}
                   autoComplete="off"
+                  spellCheck={false}
+                  aria-invalid={Boolean(errors.accessKey)}
                 />
               </FieldContent>
-              {errors.accessKey ? (
-                <FieldDescription className="text-destructive">{errors.accessKey}</FieldDescription>
-              ) : null}
+              <FieldError>{errors.accessKey}</FieldError>
             </Field>
 
             <Field>
@@ -232,15 +233,16 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
               <FieldContent>
                 <Input
                   id="create-user-secret-key"
+                  name="create-user-secret-key"
                   type="password"
                   value={secretKey}
                   onChange={(event) => setSecretKey(event.target.value)}
                   autoComplete="off"
+                  spellCheck={false}
+                  aria-invalid={Boolean(errors.secretKey)}
                 />
               </FieldContent>
-              {errors.secretKey ? (
-                <FieldDescription className="text-destructive">{errors.secretKey}</FieldDescription>
-              ) : null}
+              <FieldError>{errors.secretKey}</FieldError>
             </Field>
 
             <Field>
@@ -263,12 +265,15 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
               <FieldContent>
                 <Input
                   id="create-user-key-name"
+                  name="create-user-key-name"
                   value={name}
                   onChange={(event) => setName(event.target.value)}
                   autoComplete="off"
+                  spellCheck={false}
+                  aria-invalid={Boolean(errors.name)}
                 />
               </FieldContent>
-              {errors.name ? <FieldDescription className="text-destructive">{errors.name}</FieldDescription> : null}
+              <FieldError>{errors.name}</FieldError>
             </Field>
 
             <Field>
@@ -276,6 +281,7 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
               <FieldContent>
                 <Textarea
                   id="create-user-key-description"
+                  name="create-user-key-description"
                   value={description}
                   onChange={(event) => setDescription(event.target.value)}
                   rows={3}
@@ -283,26 +289,35 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
               </FieldContent>
             </Field>
 
-            <Field orientation="responsive" className="items-start gap-3 rounded-md border p-3">
-              <FieldLabel className="text-sm font-medium">{t("Use main account policy")}</FieldLabel>
+            <Field orientation="responsive" className="items-start gap-3 border p-3">
+              <FieldLabel htmlFor="create-user-access-key-implied-policy" className="text-sm font-medium">
+                {t("Use main account policy")}
+              </FieldLabel>
               <FieldContent className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <p className="text-xs text-muted-foreground">
                   {t("Automatically inherit the main account policy when enabled.")}
                 </p>
-                <Switch checked={impliedPolicy} onCheckedChange={setImpliedPolicy} />
+                <Switch
+                  id="create-user-access-key-implied-policy"
+                  checked={impliedPolicy}
+                  onCheckedChange={setImpliedPolicy}
+                />
               </FieldContent>
             </Field>
           </div>
 
           {!impliedPolicy ? (
-            <div className="flex-1 max-h-[60vh] overflow-auto">
+            <div className="max-h-[60vh] flex-1 overflow-y-auto overflow-x-hidden">
               <Field className="h-full">
-                <FieldLabel>{t("Current user policy")}</FieldLabel>
+                <FieldLabel htmlFor="create-user-policy">{t("Current user policy")}</FieldLabel>
                 <FieldContent className="h-full">
                   <Textarea
+                    id="create-user-policy"
+                    name="create-user-policy"
                     value={policy}
                     onChange={(event) => setPolicy(event.target.value)}
                     className="h-full min-h-[200px] font-mono text-xs"
+                    spellCheck={false}
                   />
                 </FieldContent>
               </Field>
@@ -430,72 +445,100 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
 
   return (
     <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
+      <DialogContent className={cn("overflow-x-hidden sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
         <DialogHeader>
           <DialogTitle>{t("Edit Key")}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex max-h-[80vh] flex-col gap-4 overflow-auto px-2 -mx-2 lg:flex-row">
+        <div className="-mx-2 flex max-h-[80vh] flex-col gap-4 overflow-y-auto overflow-x-hidden px-2 lg:flex-row">
           <div
             className={cn(
               impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
             )}
           >
             <Field>
-              <FieldLabel>{t("Access Key")}</FieldLabel>
+              <FieldLabel htmlFor="edit-user-access-key">{t("Access Key")}</FieldLabel>
               <FieldContent>
-                <Input value={accessKey} disabled />
+                <Input id="edit-user-access-key" name="edit-user-access-key" value={accessKey} disabled />
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel>{t("Expiry")}</FieldLabel>
+              <FieldLabel htmlFor="edit-user-expiry">{t("Expiry")}</FieldLabel>
               <FieldContent>
-                <DateTimePicker value={expiry} onChange={setExpiry} min={minExpiry} />
+                <DateTimePicker id="edit-user-expiry" value={expiry} onChange={setExpiry} min={minExpiry} />
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel>{t("Name")}</FieldLabel>
+              <FieldLabel htmlFor="edit-user-key-name">{t("Name")}</FieldLabel>
               <FieldContent>
-                <Input value={name} onChange={(event) => setName(event.target.value)} />
+                <Input
+                  id="edit-user-key-name"
+                  name="edit-user-key-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                />
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel>{t("Description")}</FieldLabel>
+              <FieldLabel htmlFor="edit-user-key-description">{t("Description")}</FieldLabel>
               <FieldContent>
-                <Textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={2} />
+                <Textarea
+                  id="edit-user-key-description"
+                  name="edit-user-key-description"
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  rows={2}
+                />
               </FieldContent>
             </Field>
 
-            <Field orientation="responsive" className="items-start gap-3 rounded-md border p-3">
-              <FieldLabel className="text-sm font-medium">{t("Use main account policy")}</FieldLabel>
+            <Field orientation="responsive" className="items-start gap-3 border p-3">
+              <FieldLabel htmlFor="edit-user-access-key-implied-policy" className="text-sm font-medium">
+                {t("Use main account policy")}
+              </FieldLabel>
               <FieldContent className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <p className="text-xs text-muted-foreground">
                   {t("Automatically inherit the main account policy when enabled.")}
                 </p>
-                <Switch checked={impliedPolicy} onCheckedChange={setImpliedPolicy} />
+                <Switch
+                  id="edit-user-access-key-implied-policy"
+                  checked={impliedPolicy}
+                  onCheckedChange={setImpliedPolicy}
+                />
               </FieldContent>
             </Field>
 
             <Field orientation="responsive">
-              <FieldLabel className="text-sm font-medium">{t("Status")}</FieldLabel>
+              <FieldLabel htmlFor="edit-user-access-key-status" className="text-sm font-medium">
+                {t("Status")}
+              </FieldLabel>
               <FieldContent className="flex justify-end">
-                <Switch checked={status === "on"} onCheckedChange={(checked) => setStatus(checked ? "on" : "off")} />
+                <Switch
+                  id="edit-user-access-key-status"
+                  checked={status === "on"}
+                  onCheckedChange={(checked) => setStatus(checked ? "on" : "off")}
+                />
               </FieldContent>
             </Field>
           </div>
 
           {!impliedPolicy ? (
-            <div className="flex-1 max-h-[60vh] overflow-auto">
+            <div className="max-h-[60vh] flex-1 overflow-y-auto overflow-x-hidden">
               <Field className="h-full">
-                <FieldLabel>{t("Current user policy")}</FieldLabel>
+                <FieldLabel htmlFor="edit-user-policy">{t("Current user policy")}</FieldLabel>
                 <FieldContent className="h-full">
                   <Textarea
+                    id="edit-user-policy"
+                    name="edit-user-policy"
                     value={policy}
                     onChange={(event) => setPolicy(event.target.value)}
                     className="h-full min-h-[200px] font-mono text-xs"
+                    spellCheck={false}
                   />
                 </FieldContent>
               </Field>
@@ -640,13 +683,13 @@ export function UserEditAccessKeys({ userName }: UserEditAccessKeysProps) {
                   setEditDialogOpen(true)
                 }}
               >
-                <RiEdit2Line className="size-4" />
+                <RiEdit2Line className="size-4" aria-hidden />
                 <span>{t("Edit")}</span>
               </Button>
             ) : null}
             {canDeleteAccessKey ? (
               <Button type="button" variant="outline" size="sm" onClick={() => handleDelete(row.original)}>
-                <RiDeleteBin5Line className="size-4" />
+                <RiDeleteBin5Line className="size-4" aria-hidden />
                 <span>{t("Delete")}</span>
               </Button>
             ) : null}
@@ -686,7 +729,7 @@ export function UserEditAccessKeys({ userName }: UserEditAccessKeysProps) {
         />
         {canCreateAccessKey ? (
           <Button type="button" variant="outline" onClick={() => setNewDialogOpen(true)}>
-            <RiAddLine className="size-4" />
+            <RiAddLine className="size-4" aria-hidden />
             <span>{t("Add Access Key")}</span>
           </Button>
         ) : null}

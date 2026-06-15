@@ -18,7 +18,7 @@ import { usePoolOperations } from "@/hooks/use-pool-operations"
 import type { PoolSummary, PoolsOverview, RebalanceDisplayState, RebalanceStatus } from "@/lib/pool-operations"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
-import { niceBytes } from "@/lib/functions"
+import { formatInteger, niceBytes } from "@/lib/functions"
 import { cn } from "@/lib/utils"
 
 const POLL_MS = 5000
@@ -42,7 +42,7 @@ function formatBytesValue(value?: number) {
 }
 
 function formatNumberValue(value?: number) {
-  return value === undefined ? "--" : String(value)
+  return formatInteger(value)
 }
 
 function isFailedRebalancePool(pool: PoolSummary) {
@@ -197,19 +197,19 @@ export default function RebalancePage() {
         actions={
           <>
             <Button variant="outline" onClick={() => void loadData()} disabled={loading || submitting}>
-              <RiRefreshLine className="me-2 size-4" />
+              <RiRefreshLine className="me-2 size-4" aria-hidden />
               {t("Sync")}
             </Button>
             <Button onClick={handleStart} disabled={!canStart || submitting}>
               {submitting && canStart ? (
                 <Spinner className="me-2 size-4" />
               ) : (
-                <RiPlayCircleLine className="me-2 size-4" />
+                <RiPlayCircleLine className="me-2 size-4" aria-hidden />
               )}
               {t("Start Rebalance")}
             </Button>
             <Button variant="outline" onClick={handleStop} disabled={!canStop || submitting}>
-              <RiPauseCircleLine className="me-2 size-4" />
+              <RiPauseCircleLine className="me-2 size-4" aria-hidden />
               {t("Stop")}
             </Button>
           </>

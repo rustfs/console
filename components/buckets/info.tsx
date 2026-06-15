@@ -532,7 +532,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             <ItemActions>
               {canEditBucketPolicy ? (
                 <Button variant="outline" size="sm" className="shrink-0" onClick={openPolicyModal}>
-                  <RiEdit2Line className="me-2 size-4" />
+                  <RiEdit2Line className="me-2 size-4" aria-hidden />
                   {t("Edit")}
                 </Button>
               ) : null}
@@ -553,7 +553,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             <ItemActions>
               {canEditEncryption ? (
                 <Button variant="outline" size="sm" className="shrink-0" onClick={openEncryptModal}>
-                  <RiEdit2Line className="me-2 size-4" />
+                  <RiEdit2Line className="me-2 size-4" aria-hidden />
                   {t("Edit")}
                 </Button>
               ) : null}
@@ -573,7 +573,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             <ItemActions>
               {canEditCors ? (
                 <Button variant="outline" size="sm" className="shrink-0" onClick={openCorsModal}>
-                  <RiEdit2Line className="me-2 size-4" />
+                  <RiEdit2Line className="me-2 size-4" aria-hidden />
                   {t("Edit")}
                 </Button>
               ) : null}
@@ -608,7 +608,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             <ItemActions>
               {canEditTags ? (
                 <Button variant="outline" size="sm" className="shrink-0" onClick={() => openTagModal()}>
-                  <RiAddLine className="me-2 size-4" />
+                  <RiAddLine className="me-2 size-4" aria-hidden />
                   {t("Add")}
                 </Button>
               ) : null}
@@ -620,24 +620,25 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                 {tags.map((tag, index) => (
                   <div
                     key={`${tag.Key}-${index}`}
-                    className="flex items-center gap-2 rounded-full border bg-muted/40 px-3 py-1 text-xs"
+                    className="flex max-w-full items-center gap-2 rounded-none border bg-muted/40 px-3 py-1 text-xs"
                   >
                     <button
                       type="button"
-                      className="text-left hover:underline disabled:no-underline"
+                      className="min-w-0 break-all text-start hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 disabled:no-underline"
                       onClick={() => openTagModal(index)}
                       disabled={!canEditTags}
+                      title={`${tag.Key}:${tag.Value}`}
                     >
                       {tag.Key}:{tag.Value}
                     </button>
                     <Button
                       variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0"
+                      size="icon-xs"
                       onClick={() => setDeleteTagIndex(index)}
                       disabled={!canEditTags}
+                      aria-label={t("Delete Tag")}
                     >
-                      <RiCloseLine className="size-3.5" />
+                      <RiCloseLine className="size-3" aria-hidden />
                     </Button>
                   </div>
                 ))}
@@ -655,15 +656,20 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           </ItemHeader>
           <ItemContent className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-sm font-medium text-foreground">{t("Object Lock")}</p>
-              <Switch checked={objectLock ?? false} disabled />
+              <label htmlFor="bucket-info-object-lock" className="text-sm font-medium text-foreground">
+                {t("Object Lock")}
+              </label>
+              <Switch id="bucket-info-object-lock" checked={objectLock ?? false} disabled />
             </div>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-foreground">{t("Version Control")}</p>
+                <label htmlFor="bucket-info-version-control" className="text-sm font-medium text-foreground">
+                  {t("Version Control")}
+                </label>
                 {versionLoading && <Spinner className="size-3 text-muted-foreground" />}
               </div>
               <Switch
+                id="bucket-info-version-control"
                 checked={versioning === "Enabled"}
                 disabled={!canEditVersioning || (objectLock ?? false) || versionLoading}
                 onCheckedChange={handleVersionToggle}
@@ -757,7 +763,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                   value={policyFormPolicy}
                   onValueChange={(v) => setPolicyFormPolicy(v as BucketPolicyType | "custom")}
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full" aria-label={t("Policy")}>
                     <SelectValue placeholder={t("Please select policy")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -770,20 +776,23 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             </Field>
             {policyFormPolicy === "custom" && (
               <Field>
-                <FieldLabel>{t("Policy Content")}</FieldLabel>
+                <FieldLabel htmlFor="bucket-policy-content">{t("Policy Content")}</FieldLabel>
                 <FieldContent>
-                  <div className="max-h-[60vh] overflow-y-auto rounded-md border p-2">
+                  <div className="max-h-[60vh] overflow-y-auto border p-2">
                     <Textarea
+                      id="bucket-policy-content"
+                      name="bucket-policy-content"
                       value={policyFormContent}
                       onChange={(e) => setPolicyFormContent(e.target.value)}
                       className="min-h-[200px] font-mono text-xs"
+                      spellCheck={false}
                     />
                   </div>
                 </FieldContent>
               </Field>
             )}
           </div>
-          <DialogFooter showCloseButton>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowPolicyModal(false)}>
               {t("Cancel")}
             </Button>
@@ -803,7 +812,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               <FieldLabel>{t("Encryption Type")}</FieldLabel>
               <FieldContent>
                 <Select value={encryptFormType} onValueChange={(value) => setEncryptFormType(value ?? "")}>
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full" aria-label={t("Encryption Type")}>
                     <SelectValue placeholder={t("Please select encryption type")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -819,7 +828,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                 <FieldLabel>KMS Key ID</FieldLabel>
                 <FieldContent>
                   <Select value={encryptFormKmsKeyId} onValueChange={(value) => setEncryptFormKmsKeyId(value ?? "")}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full" aria-label="KMS Key ID">
                       <SelectValue placeholder={t("Please select KMS key")} />
                     </SelectTrigger>
                     <SelectContent>
@@ -834,7 +843,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               </Field>
             )}
           </div>
-          <DialogFooter showCloseButton>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowEncryptModal(false)}>
               {t("Cancel")}
             </Button>
@@ -845,26 +854,29 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
 
       {/* CORS Modal */}
       <Dialog open={showCorsModal} onOpenChange={setShowCorsModal}>
-        <DialogContent className="sm:max-w-2xl" showCloseButton>
+        <DialogContent className="overflow-x-hidden sm:max-w-2xl" showCloseButton>
           <DialogHeader>
             <DialogTitle>{t("Set Bucket CORS")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <Field className="flex items-center justify-between">
-              <FieldLabel>{t("Bucket CORS")}</FieldLabel>
+              <FieldLabel htmlFor="bucket-info-cors-enabled">{t("Bucket CORS")}</FieldLabel>
               <FieldContent className="flex justify-end">
-                <Switch checked={corsFormEnabled} onCheckedChange={setCorsFormEnabled} />
+                <Switch id="bucket-info-cors-enabled" checked={corsFormEnabled} onCheckedChange={setCorsFormEnabled} />
               </FieldContent>
             </Field>
             {corsFormEnabled ? (
               <Field>
-                <FieldLabel>{t("CORS Configuration")}</FieldLabel>
+                <FieldLabel htmlFor="bucket-cors-content">{t("CORS Configuration")}</FieldLabel>
                 <FieldContent>
-                  <div className="max-h-[60vh] overflow-y-auto rounded-md border p-2">
+                  <div className="max-h-[60vh] overflow-y-auto border p-2">
                     <Textarea
+                      id="bucket-cors-content"
+                      name="bucket-cors-content"
                       value={corsFormContent}
                       onChange={(e) => setCorsFormContent(e.target.value)}
                       className="min-h-[260px] font-mono text-xs"
+                      spellCheck={false}
                     />
                   </div>
                 </FieldContent>
@@ -902,27 +914,35 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           </DialogHeader>
           <div className="space-y-4">
             <Field>
-              <FieldLabel>{t("Tag Key")}</FieldLabel>
+              <FieldLabel htmlFor="bucket-tag-key">{t("Tag Key")}</FieldLabel>
               <FieldContent>
                 <Input
+                  id="bucket-tag-key"
+                  name="bucket-tag-key"
                   value={tagFormKey}
                   onChange={(e) => setTagFormKey(e.target.value)}
+                  autoComplete="off"
                   placeholder={t("Tag Key Placeholder")}
+                  spellCheck={false}
                 />
               </FieldContent>
             </Field>
             <Field>
-              <FieldLabel>{t("Tag Value")}</FieldLabel>
+              <FieldLabel htmlFor="bucket-tag-value">{t("Tag Value")}</FieldLabel>
               <FieldContent>
                 <Input
+                  id="bucket-tag-value"
+                  name="bucket-tag-value"
                   value={tagFormValue}
                   onChange={(e) => setTagFormValue(e.target.value)}
+                  autoComplete="off"
                   placeholder={t("Please enter tag value")}
+                  spellCheck={false}
                 />
               </FieldContent>
             </Field>
           </div>
-          <DialogFooter showCloseButton>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowTagModal(false)}>
               {t("Cancel")}
             </Button>
@@ -939,19 +959,26 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           </DialogHeader>
           <div className="space-y-4">
             <Field className="flex items-center justify-between">
-              <FieldLabel>{t("Bucket Quota")}</FieldLabel>
+              <FieldLabel htmlFor="bucket-info-quota-enabled">{t("Bucket Quota")}</FieldLabel>
               <FieldContent className="flex justify-end">
-                <Switch checked={quotaFormEnabled} onCheckedChange={setQuotaFormEnabled} />
+                <Switch
+                  id="bucket-info-quota-enabled"
+                  checked={quotaFormEnabled}
+                  onCheckedChange={setQuotaFormEnabled}
+                />
               </FieldContent>
             </Field>
             {quotaFormEnabled && (
-              <div className="space-y-4 rounded-lg border p-4">
+              <div className="space-y-4 border p-4">
                 <Field>
                   <FieldLabel>{t("Quota Size")}</FieldLabel>
                   <FieldContent>
                     <div className="flex flex-col gap-2 sm:flex-row">
                       <Input
+                        name="bucket-quota-size"
                         type="number"
+                        inputMode="numeric"
+                        aria-label={t("Quota Size")}
                         value={quotaFormSize}
                         onChange={(e) => setQuotaFormSize(e.target.value)}
                         className="sm:w-32"
@@ -964,11 +991,14 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                         {["MiB", "GiB", "TiB", "PiB"].map((u) => (
                           <label
                             key={u}
-                            className={cn(
-                              "flex items-start gap-3 rounded-md border border-border/50 p-3 cursor-pointer",
-                            )}
+                            htmlFor={`bucket-info-quota-unit-${u.toLowerCase()}`}
+                            className={cn("flex items-start gap-3 border border-border/50 p-3 cursor-pointer")}
                           >
-                            <RadioGroupItem value={u} className="mt-0.5" />
+                            <RadioGroupItem
+                              id={`bucket-info-quota-unit-${u.toLowerCase()}`}
+                              value={u}
+                              className="mt-0.5"
+                            />
                             <span className="text-sm font-medium">{u}</span>
                           </label>
                         ))}
@@ -979,7 +1009,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               </div>
             )}
           </div>
-          <DialogFooter showCloseButton>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowQuotaModal(false)}>
               {t("Cancel")}
             </Button>
@@ -1009,9 +1039,14 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                   ].map((opt) => (
                     <label
                       key={opt.value}
-                      className="flex items-start gap-3 rounded-md border border-border/50 p-3 cursor-pointer"
+                      htmlFor={`bucket-info-retention-mode-${opt.value.toLowerCase()}`}
+                      className="flex items-start gap-3 border border-border/50 p-3 cursor-pointer"
                     >
-                      <RadioGroupItem value={opt.value} className="mt-0.5" />
+                      <RadioGroupItem
+                        id={`bucket-info-retention-mode-${opt.value.toLowerCase()}`}
+                        value={opt.value}
+                        className="mt-0.5"
+                      />
                       <span className="text-sm font-medium">{opt.label}</span>
                     </label>
                   ))}
@@ -1032,9 +1067,14 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                   ].map((opt) => (
                     <label
                       key={opt.value}
-                      className="flex items-start gap-3 rounded-md border border-border/50 p-3 cursor-pointer"
+                      htmlFor={`bucket-info-retention-unit-${opt.value.toLowerCase()}`}
+                      className="flex items-start gap-3 border border-border/50 p-3 cursor-pointer"
                     >
-                      <RadioGroupItem value={opt.value} className="mt-0.5" />
+                      <RadioGroupItem
+                        id={`bucket-info-retention-unit-${opt.value.toLowerCase()}`}
+                        value={opt.value}
+                        className="mt-0.5"
+                      />
                       <span className="text-sm font-medium">{opt.label}</span>
                     </label>
                   ))}
@@ -1045,14 +1085,17 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               <FieldLabel>{t("Retention Period")}</FieldLabel>
               <FieldContent>
                 <Input
+                  name="bucket-retention-period"
                   type="number"
+                  inputMode="numeric"
+                  aria-label={t("Retention Period")}
                   value={retentionPeriodInput}
                   onChange={(e) => setRetentionPeriodInput(e.target.value)}
                 />
               </FieldContent>
             </Field>
           </div>
-          <DialogFooter showCloseButton>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowRetentionModal(false)}>
               {t("Cancel")}
             </Button>

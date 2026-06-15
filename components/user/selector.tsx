@@ -71,7 +71,7 @@ export function UserSelector({
                 aria-label={displayLabel}
               >
                 <span className="truncate">{value.length ? value.join(", ") : displayPlaceholder}</span>
-                <RiArrowDownSLine className="size-4 text-muted-foreground" />
+                <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
               </Button>
             }
           />

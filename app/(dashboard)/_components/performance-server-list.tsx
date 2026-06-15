@@ -147,7 +147,7 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <span className="text-sm text-muted-foreground">{t("Sort by")}</span>
             <Select value={sortBy} onValueChange={(value) => setSortBy(value as PerformanceServerSort)}>
-              <SelectTrigger className="w-[180px] shadow-none">
+              <SelectTrigger className="w-[180px] shadow-none" aria-label={t("Sort by")}>
                 <SelectValue placeholder={t("Default")} />
               </SelectTrigger>
               <SelectContent>
@@ -171,12 +171,12 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
               value={server.endpoint ? `${server.endpoint}-${originalIndex}` : `server-${originalIndex}`}
             >
               <AccordionTrigger>
-                <div className="flex flex-col gap-2 text-left sm:flex-row sm:items-center sm:gap-4">
+                <div className="flex flex-col gap-2 text-start sm:flex-row sm:items-center sm:gap-4">
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
                         "inline-flex h-2 w-2 rounded-full",
-                        server.state === "online" ? "bg-emerald-500" : "bg-rose-500",
+                        server.state === "online" ? "bg-primary" : "bg-destructive",
                       )}
                     />
                     <span className="font-semibold">{server.endpoint ?? "--"}</span>

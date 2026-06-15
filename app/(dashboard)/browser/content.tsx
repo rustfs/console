@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Page } from "@/components/page"
@@ -161,19 +162,13 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
     <Page>
       <PageHeader>
         <div className="flex items-center gap-4 min-w-[40vw]">
-          <h1
-            className="text-2xl font-bold cursor-pointer"
-            onClick={() => router.push(bucketPath())}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault()
-                router.push(bucketPath())
-              }
-            }}
-          >
-            {bucketName}
+          <h1 className="min-w-0 text-2xl font-bold text-pretty">
+            <Link
+              href={bucketPath()}
+              className="truncate hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {bucketName}
+            </Link>
           </h1>
           <ObjectPathLinks objectKey={keyPath} bucketName={bucketName} onClick={handlePathClick} />
         </div>

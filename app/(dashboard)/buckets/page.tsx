@@ -16,7 +16,7 @@ export default function BucketSettingsPage() {
     <Page>
       <PageHeader>
         <h1 className="text-2xl font-bold">
-          {t("Bucket")}: {bucketName || "..."}
+          {t("Bucket")}: {bucketName || "…"}
         </h1>
       </PageHeader>
 

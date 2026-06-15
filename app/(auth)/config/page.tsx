@@ -101,25 +101,25 @@ function ConfigPageContent() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 dark:bg-neutral-800 lg:p-20">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-6 lg:p-20">
       <Image
         src={buildRoute("/backgrounds/scillate.svg")}
         alt=""
         fill
+        priority
+        sizes="100vw"
         className="absolute inset-0 z-0 opacity-45 object-cover"
       />
-      <div className="z-10 mx-auto flex max-h-[85vh] w-full max-w-7xl flex-1 flex-col overflow-hidden rounded-lg shadow-lg dark:border-neutral-700 dark:bg-neutral-800 lg:flex-row">
+      <div className="z-10 mx-auto flex w-full max-w-7xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[560px] lg:flex-row">
         <div className="hidden w-1/2 lg:block">
           <AuthHeroStatic />
         </div>
-        <div className="flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
+        <div className="flex w-full flex-col items-center justify-center bg-card lg:w-1/2">
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <ThemeLogo width={112} height={24} className="max-w-28" />
+            <ThemeLogo width={112} height={24} priority />
             <div className="py-6">
-              <h1 className="block text-2xl font-bold text-gray-800 dark:text-white">{t("Server Configuration")}</h1>
-              <p className="mt-2 text-sm text-gray-600 dark:text-neutral-400">
-                {t("Please configure your RustFS server address")}
-              </p>
+              <h1 className="block text-2xl font-bold text-foreground">{t("Server Configuration")}</h1>
+              <p className="mt-2 text-sm text-muted-foreground">{t("Please configure your RustFS server address")}</p>
             </div>
 
             <div className="mt-5 space-y-4">
@@ -131,9 +131,12 @@ function ConfigPageContent() {
                     <FieldContent>
                       <Input
                         id="serverHost"
+                        name="serverHost"
                         value={serverHost}
                         onChange={(e) => setServerHost(e.target.value)}
-                        type="text"
+                        type="url"
+                        autoComplete="off"
+                        spellCheck={false}
                         placeholder={t("Please enter server address (e.g., http://localhost:9000)")}
                       />
                     </FieldContent>
@@ -142,16 +145,28 @@ function ConfigPageContent() {
                     </FieldDescription>
                   </Field>
 
-                  <div className="flex gap-3">
-                    <Button type="submit" className="flex-1" disabled={isSaving}>
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" className="w-full sm:flex-1" disabled={isSaving}>
                       {t("Save Configuration")}
                     </Button>
 
-                    <Button type="button" variant="outline" onClick={resetToCurrentHost} disabled={isSaving}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={resetToCurrentHost}
+                      disabled={isSaving}
+                    >
                       {t("Reset")}
                     </Button>
 
-                    <Button type="button" variant="outline" onClick={skipConfig} disabled={isSaving}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full sm:w-auto"
+                      onClick={skipConfig}
+                      disabled={isSaving}
+                    >
                       {t("Skip")}
                     </Button>
                   </div>
@@ -160,9 +175,9 @@ function ConfigPageContent() {
             </div>
 
             <div className="my-8">
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
+              <p className="text-sm text-muted-foreground">
                 {t("Need help?")}{" "}
-                <Link href={docs} className="text-blue-600 hover:underline">
+                <Link href={docs} className="text-foreground underline-offset-4 hover:underline">
                   {t("View Documentation")}
                 </Link>
               </p>

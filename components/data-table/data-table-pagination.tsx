@@ -37,7 +37,7 @@ export function DataTablePagination<TData>({
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">{t("Rows per page")}</span>
         <Select value={String(pagination.pageSize)} onValueChange={(value) => handlePageSizeChange(value ?? "")}>
-          <SelectTrigger className="w-24">
+          <SelectTrigger className="w-24" aria-label={t("Rows per page")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -440,31 +440,31 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
         <DrawerContent className="overflow-y-auto overflow-x-hidden data-[vaul-drawer-direction=right]:w-[92vw] data-[vaul-drawer-direction=right]:sm:max-w-2xl">
           <DrawerHeader>
             <DrawerTitle>{t("Object Details")}</DrawerTitle>
-            <DrawerDescription />
+            <DrawerDescription className="break-all">{resolvedObjectKey || bucketName}</DrawerDescription>
           </DrawerHeader>
           <div className="min-w-0 space-y-4 p-4 overflow-hidden">
             <div className="flex flex-wrap items-center gap-2">
               {canDownloadObject ? (
                 <Button variant="outline" size="sm" onClick={download}>
-                  <RiDownloadLine className="size-4" />
+                  <RiDownloadLine className="size-4" aria-hidden />
                   {t("Download")}
                 </Button>
               ) : null}
               {canPreviewObject ? (
                 <Button variant="outline" size="sm" onClick={() => onPreview({ key: String(object?.Key ?? "") })}>
-                  <RiEyeLine className="size-4" />
+                  <RiEyeLine className="size-4" aria-hidden />
                   {t("Preview")}
                 </Button>
               ) : null}
               {canViewObjectTags || canEditObjectTags ? (
                 <Button variant="outline" size="sm" onClick={() => setShowTagView(true)}>
-                  <RiPriceTag3Line className="size-4" />
+                  <RiPriceTag3Line className="size-4" aria-hidden />
                   {t("Set Tags")}
                 </Button>
               ) : null}
               {canViewVersions ? (
                 <Button variant="outline" size="sm" onClick={() => setShowVersions(true)}>
-                  <RiFileList2Line className="size-4" />
+                  <RiFileList2Line className="size-4" aria-hidden />
                   {t("Versions")}
                 </Button>
               ) : null}
@@ -480,7 +480,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                     setShowRetentionView(true)
                   }}
                 >
-                  <RiLockLine className="size-4" />
+                  <RiLockLine className="size-4" aria-hidden />
                   {t("Retention")}
                 </Button>
               ) : null}
@@ -488,7 +488,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
 
             <Item variant="outline" className="flex-col items-stretch gap-4">
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="inline-flex h-9 mb-2 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground">
+                <TabsList className="mb-2 inline-flex h-9 items-center justify-center rounded-none bg-muted p-1 text-muted-foreground">
                   <TabsTrigger value="info" className="px-4">
                     {t("Info")}
                   </TabsTrigger>
@@ -496,42 +496,52 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                     {t("Metadata")}
                   </TabsTrigger>
                 </TabsList>
-                <TabsContent value="info" className="space-y-4 outline-none">
+                <TabsContent
+                  value="info"
+                  className="space-y-4 outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                >
                   <ItemContent className="min-w-0 space-y-3 text-sm overflow-hidden">
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">{t("Object Name")}</span>
-                      <span className="flex-1 truncate text-right" title={String(object?.Key ?? "")}>
+                      <span className="flex-1 truncate text-end" title={String(object?.Key ?? "")}>
                         {String(object?.Key ?? "")}
                       </span>
                       <CopyButton value={String(object?.Key ?? "")} iconOnly />
                     </div>
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">{t("Object Size")}</span>
-                      <span className="max-w-[60%] truncate text-right" title={String(object?.ContentLength ?? "-")}>
+                      <span className="max-w-[60%] truncate text-end" title={String(object?.ContentLength ?? "-")}>
                         {String(object?.ContentLength ?? "-")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">{t("Object Type")}</span>
-                      <span className="max-w-[60%] truncate text-right" title={String(object?.ContentType ?? "")}>
+                      <span className="max-w-[60%] truncate text-end" title={String(object?.ContentType ?? "")}>
                         {String(object?.ContentType ?? "-")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">ETag</span>
-                      <span className="max-w-[60%] truncate text-right" title={String(object?.ETag ?? "-")}>
+                      <span className="max-w-[60%] truncate text-end" title={String(object?.ETag ?? "-")}>
                         {String(object?.ETag ?? "-")}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">{t("Last Modified Time")}</span>
-                      <span className="max-w-[60%] truncate text-right" title={lastModified || "-"}>
+                      <span className="max-w-[60%] truncate text-end" title={lastModified || "-"}>
                         {lastModified || "-"}
                       </span>
                     </div>
                     <div className="flex items-center justify-between gap-3 min-w-0">
-                      <span className="font-medium text-muted-foreground">{t("Legal Hold")}</span>
-                      <Switch checked={lockStatus} onCheckedChange={toggleLegalHold} disabled={!canEditLegalHold} />
+                      <label htmlFor="object-legal-hold" className="font-medium text-muted-foreground">
+                        {t("Legal Hold")}
+                      </label>
+                      <Switch
+                        id="object-legal-hold"
+                        checked={lockStatus}
+                        onCheckedChange={toggleLegalHold}
+                        disabled={!canEditLegalHold}
+                      />
                     </div>
                     <div className="flex flex-col gap-2">
                       <span className="font-medium text-muted-foreground">
@@ -551,11 +561,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                     </div>
                   </ItemContent>
                 </TabsContent>
-                <TabsContent value="metadata" className="space-y-4 outline-none">
+                <TabsContent
+                  value="metadata"
+                  className="space-y-4 outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                >
                   <ItemContent className="min-w-0 space-y-3 text-sm overflow-hidden">
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">{t("Content Type")}</span>
-                      <span className="max-w-[60%] truncate text-right" title={String(object?.ContentType ?? "")}>
+                      <span className="max-w-[60%] truncate text-end" title={String(object?.ContentType ?? "")}>
                         {String(object?.ContentType ?? "")}
                       </span>
                     </div>
@@ -564,7 +577,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                         <React.Fragment key={key}>
                           <div className="flex items-center justify-between gap-3 min-w-0">
                             <span className="font-medium text-muted-foreground">{t(key)}</span>
-                            <span className="max-w-[60%] truncate text-right" title={String(key)}>
+                            <span className="max-w-[60%] truncate text-end" title={String(key)}>
                               {String(value)}
                             </span>
                           </div>
@@ -579,9 +592,12 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <div className="flex items-center gap-1.5 shrink-0">
                       <Input
+                        name="temporary-url-expiration-days"
                         type="number"
+                        inputMode="numeric"
                         min={0}
                         max={7}
+                        aria-label={t("Days")}
                         placeholder={t("Days")}
                         className="w-14 shrink-0"
                         value={expirationDays}
@@ -591,9 +607,12 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <Input
+                        name="temporary-url-expiration-hours"
                         type="number"
+                        inputMode="numeric"
                         min={0}
                         max={expirationDays > 0 ? 23 : 24}
+                        aria-label={t("Hours")}
                         placeholder={t("Hours")}
                         className="w-14 shrink-0"
                         value={expirationHours}
@@ -603,9 +622,12 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       <Input
+                        name="temporary-url-expiration-minutes"
                         type="number"
+                        inputMode="numeric"
                         min={0}
                         max={59}
+                        aria-label={t("Minutes")}
                         placeholder={t("Minutes")}
                         className="w-14 shrink-0"
                         value={expirationMinutes}
@@ -634,7 +656,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                 <div className="flex flex-col gap-2 min-w-0 w-full">
                   <CopyInput value={signedUrl} readonly copyIcon className="min-w-0 flex-1" />
                   {signedUrl && (
-                    <div className="text-xs text-amber-600 mt-1">
+                    <div className="mt-1 text-xs text-muted-foreground">
                       {t("This link will expire when your session ends or at the specified time.")}
                     </div>
                   )}
@@ -653,15 +675,22 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
           <div className="space-y-4">
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
-                <Badge key={tag.Key} variant="secondary" className="gap-1 pr-1">
-                  {tag.Key}: {tag.Value}
+                <Badge
+                  key={tag.Key}
+                  variant="secondary"
+                  className="h-auto max-w-full justify-start gap-1 pe-1 whitespace-normal"
+                >
+                  <span className="min-w-0 break-all" title={`${tag.Key}: ${tag.Value}`}>
+                    {tag.Key}: {tag.Value}
+                  </span>
                   {canEditObjectTags ? (
                     <button
                       type="button"
-                      className="hover:text-destructive transition-colors"
+                      aria-label={t("Delete Tag")}
+                      className="inline-flex size-6 shrink-0 items-center justify-center transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
                       onClick={() => confirmDeleteTag(tag.Key)}
                     >
-                      <RiCloseLine className="size-3" />
+                      <RiCloseLine className="size-4" aria-hidden />
                     </button>
                   ) : null}
                 </Badge>
@@ -676,9 +705,11 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field>
-                  <FieldLabel>{t("Tag Key")}</FieldLabel>
+                  <FieldLabel htmlFor="object-tag-key">{t("Tag Key")}</FieldLabel>
                   <FieldContent>
                     <Input
+                      id="object-tag-key"
+                      name="object-tag-key"
                       value={tagFormValue.Key}
                       onChange={(e) => setTagFormValue((v) => ({ ...v, Key: e.target.value }))}
                       placeholder={t("Tag Key Placeholder")}
@@ -687,9 +718,11 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                   </FieldContent>
                 </Field>
                 <Field>
-                  <FieldLabel>{t("Tag Value")}</FieldLabel>
+                  <FieldLabel htmlFor="object-tag-value">{t("Tag Value")}</FieldLabel>
                   <FieldContent>
                     <Input
+                      id="object-tag-value"
+                      name="object-tag-value"
                       value={tagFormValue.Value}
                       onChange={(e) =>
                         setTagFormValue((v) => ({
@@ -739,9 +772,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                     ].map((opt) => (
                       <label
                         key={opt.value}
-                        className="flex items-start gap-3 rounded-md border border-border/50 p-3 cursor-pointer"
+                        htmlFor={`object-retention-mode-${opt.value.toLowerCase()}`}
+                        className="flex items-start gap-3 border border-border/50 p-3 cursor-pointer"
                       >
-                        <RadioGroupItem value={opt.value} className="mt-0.5" />
+                        <RadioGroupItem
+                          id={`object-retention-mode-${opt.value.toLowerCase()}`}
+                          value={opt.value}
+                          className="mt-0.5"
+                        />
                         <span className="text-sm font-medium">{opt.label}</span>
                       </label>
                     ))}

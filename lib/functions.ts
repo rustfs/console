@@ -16,6 +16,32 @@ export function formatBytes(n: number, isK8sUnits = false): string {
   return `${value.toFixed(1)} ${isK8sUnits ? K8S_UNITS[l] : UNITS[l]}`
 }
 
+function getRuntimeLocale() {
+  if (typeof document !== "undefined") {
+    return document.documentElement.lang || undefined
+  }
+
+  return undefined
+}
+
+export function formatInteger(value?: number | null, fallback = "--"): string {
+  if (typeof value !== "number" || !Number.isFinite(value)) return fallback
+
+  return new Intl.NumberFormat(getRuntimeLocale(), { maximumFractionDigits: 0 }).format(value)
+}
+
+export function formatDateTime(value?: string | number | Date | null, fallback = "--"): string {
+  if (!value) return fallback
+
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+
+  return new Intl.DateTimeFormat(getRuntimeLocale(), {
+    dateStyle: "medium",
+    timeStyle: "medium",
+  }).format(date)
+}
+
 export function getBytes(value: string, unit: string, fromK8s = false): string {
   return convertToBytes(value, unit, fromK8s).toString(10)
 }

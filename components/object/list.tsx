@@ -39,7 +39,7 @@ import { useApi } from "@/contexts/api-context"
 import { useMessage } from "@/lib/feedback/message"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
-import { formatBytes } from "@/lib/functions"
+import { formatBytes, formatDateTime } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
@@ -66,7 +66,6 @@ import {
 import { TaskStatsButton } from "@/components/tasks/stats-button"
 import { useAddDeleteKeys, useAddDeleteFolder, useTasks } from "@/contexts/task-context"
 import type { ColumnDef } from "@tanstack/react-table"
-import dayjs from "dayjs"
 
 interface ObjectRow {
   Key: string
@@ -348,21 +347,21 @@ export function ObjectList({
             return (
               <Link
                 href={bucketPath(row.original.Key)}
-                className="flex items-center gap-2 text-blue-500 hover:underline"
+                className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
               >
-                <RiFolderLine className="size-4" />
-                <span>{display}</span>
+                <RiFolderLine className="size-4 shrink-0" aria-hidden />
+                <span className="min-w-0 truncate">{display}</span>
               </Link>
             )
           }
           return (
             <button
               type="button"
-              className="flex items-center gap-2 text-primary hover:underline text-left"
+              className="flex min-w-0 max-w-full items-center gap-2 text-start text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
               onClick={() => onOpenInfo(bucket, row.original.Key)}
             >
-              <RiFileLine className="size-4" />
-              <span>{display}</span>
+              <RiFileLine className="size-4 shrink-0" aria-hidden />
+              <span className="min-w-0 truncate">{display}</span>
             </button>
           )
         },
@@ -382,8 +381,7 @@ export function ObjectList({
         id: "lastModified",
         header: () => t("Last Modified"),
         accessorFn: (row) => (row.type === "prefix" || !row.LastModified ? "" : new Date(row.LastModified).getTime()),
-        cell: ({ row }) =>
-          row.original.LastModified ? dayjs(row.original.LastModified).format("YYYY-MM-DD HH:mm:ss") : "-",
+        cell: ({ row }) => (row.original.LastModified ? formatDateTime(row.original.LastModified) : "-"),
       },
       {
         id: "actions",
@@ -401,13 +399,13 @@ export function ObjectList({
                       onPreview({ key: row.original.Key })
                     }}
                   >
-                    <RiEyeLine className="size-4" />
+                    <RiEyeLine className="size-4" aria-hidden />
                     <span>{t("Preview")}</span>
                   </Button>
                 ) : null}
                 {canCapability("objects.download", { bucket, objectKey: row.original.Key }) ? (
                   <Button variant="outline" size="sm" onClick={() => downloadFile(row.original.Key)}>
-                    <RiDownloadCloud2Line className="size-4" />
+                    <RiDownloadCloud2Line className="size-4" aria-hidden />
                     <span>{t("Download")}</span>
                   </Button>
                 ) : null}
@@ -415,7 +413,7 @@ export function ObjectList({
             ) : null}
             {canCapability("objects.delete", { bucket, objectKey: row.original.Key }) ? (
               <Button variant="outline" size="sm" onClick={() => openDeleteDialog([row.original.Key])}>
-                <RiDeleteBin5Line className="size-4" />
+                <RiDeleteBin5Line className="size-4" aria-hidden />
                 <span>{t("Delete")}</span>
               </Button>
             ) : null}
@@ -590,7 +588,7 @@ export function ObjectList({
             <TaskStatsButton />
             {canUpload ? (
               <Button variant="outline" onClick={onUploadClick}>
-                <RiFileAddLine className="size-4" />
+                <RiFileAddLine className="size-4" aria-hidden />
                 <span>
                   {t("Upload File")}/{t("Folder")}
                 </span>
@@ -600,13 +598,13 @@ export function ObjectList({
               <>
                 {canBulkDelete ? (
                   <Button variant="outline" className="text-destructive border-destructive" onClick={handleBatchDelete}>
-                    <RiDeleteBin5Line className="size-4" />
+                    <RiDeleteBin5Line className="size-4" aria-hidden />
                     <span>{t("Delete Selected")}</span>
                   </Button>
                 ) : null}
                 {canBulkDownload ? (
                   <Button variant="outline" onClick={downloadMultiple}>
-                    <RiDownloadCloud2Line className="size-4" />
+                    <RiDownloadCloud2Line className="size-4" aria-hidden />
                     <span>{t("Download")}</span>
                   </Button>
                 ) : null}
@@ -616,7 +614,7 @@ export function ObjectList({
               variant="outline"
               onClick={() => (onRefresh ? onRefresh() : void fetchObjects({ resetPagination: true }))}
             >
-              <RiRefreshLine className="size-4" />
+              <RiRefreshLine className="size-4" aria-hidden />
               <span>{t("Refresh")}</span>
             </Button>
           </>
@@ -630,8 +628,15 @@ export function ObjectList({
             clearable
             className="lg:max-w-sm"
           />
-          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-            <Checkbox checked={showDeleted} onCheckedChange={(v) => setShowDeleted(v === true)} />
+          <label
+            htmlFor="object-list-show-deleted"
+            className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer"
+          >
+            <Checkbox
+              id="object-list-show-deleted"
+              checked={showDeleted}
+              onCheckedChange={(v) => setShowDeleted(v === true)}
+            />
             <span>{t("Show Deleted Objects")}</span>
           </label>
         </div>
@@ -656,7 +661,7 @@ export function ObjectList({
           <div className="flex items-center gap-2">
             <span>{t("Rows per page")}</span>
             <Select value={String(resolvedPageSize)} onValueChange={(value) => handlePageSizeChange(value ?? "")}>
-              <SelectTrigger className="h-9 w-24">
+              <SelectTrigger className="h-9 w-24" aria-label={t("Rows per page")}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -671,12 +676,12 @@ export function ObjectList({
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" disabled={tokenHistory.length === 0} onClick={goToPreviousPage}>
-            <RiArrowLeftSLine className="me-2 size-4 rtl:-scale-x-100" />
+            <RiArrowLeftSLine className="me-2 size-4 rtl:-scale-x-100" aria-hidden />
             <span>{t("Previous Page")}</span>
           </Button>
           <Button variant="outline" disabled={!nextToken} onClick={goToNextPage}>
             <span>{t("Next Page")}</span>
-            <RiArrowRightSLine className="ms-2 size-4 rtl:-scale-x-100" />
+            <RiArrowRightSLine className="ms-2 size-4 rtl:-scale-x-100" aria-hidden />
           </Button>
         </div>
       </div>
@@ -688,8 +693,12 @@ export function ObjectList({
             <AlertDialogDescription>
               {t("Are you sure you want to delete the selected objects?")}
               {shouldShowDeleteAllVersions(bucketVersioningState) && (
-                <label className="mt-4 flex items-center gap-2">
-                  <Checkbox checked={deleteAllVersions} onCheckedChange={(v) => setDeleteAllVersions(v === true)} />
+                <label htmlFor="object-list-delete-all-versions" className="mt-4 flex items-center gap-2">
+                  <Checkbox
+                    id="object-list-delete-all-versions"
+                    checked={deleteAllVersions}
+                    onCheckedChange={(v) => setDeleteAllVersions(v === true)}
+                  />
                   <span>{t("Delete All Versions")}</span>
                 </label>
               )}

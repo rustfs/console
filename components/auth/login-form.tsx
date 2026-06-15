@@ -57,30 +57,33 @@ export function LoginForm({
   const website = theme.links.website ?? "https://www.rustfs.com"
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-gray-100 dark:bg-neutral-800 lg:p-20">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-6 lg:p-20">
       <Image
         src={buildRoute("/backgrounds/scillate.svg")}
         alt=""
         fill
+        priority
+        sizes="100vw"
         className="absolute inset-0 z-0 opacity-45 object-cover"
       />
-      <div className="z-10 mx-auto flex max-h-[85vh] w-full max-w-7xl flex-1 flex-col overflow-hidden rounded-lg shadow-lg dark:border-neutral-700 dark:bg-neutral-800 lg:flex-row">
+      <div className="z-10 mx-auto flex w-full max-w-7xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[560px] lg:flex-row">
         <div className="hidden w-1/2 lg:block">
           <AuthHeroStatic />
         </div>
-        <div className="relative flex w-full flex-col items-center justify-center bg-white dark:border-neutral-700 dark:bg-neutral-900 lg:w-1/2">
+        <div className="relative flex w-full flex-col items-center justify-center bg-card lg:w-1/2">
           <div className="absolute end-4 top-4 z-10">
             <Link
               href="/config"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-sm transition-colors hover:bg-gray-50 hover:text-gray-800 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
+              className="inline-flex h-8 w-8 items-center justify-center border bg-background text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-accent-foreground"
               title={t("Server Configuration")}
+              aria-label={t("Server Configuration")}
             >
-              <RiSettings3Line className="text-sm" />
+              <RiSettings3Line className="size-4" aria-hidden />
             </Link>
           </div>
 
           <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <ThemeLogo width={112} height={24} className="max-w-28" />
+            <ThemeLogo width={112} height={24} priority />
 
             <div className="space-y-4">
               <Tabs value={method} onValueChange={(v) => setMethod(v as LoginMethod)} className="flex flex-col gap-4">
@@ -102,6 +105,7 @@ export function LoginForm({
                           <FieldContent>
                             <Input
                               id="accessKey"
+                              name="accessKey"
                               value={accessKeyAndSecretKey.accessKeyId}
                               onChange={(e) =>
                                 setAccessKeyAndSecretKey((prev) => ({
@@ -111,6 +115,7 @@ export function LoginForm({
                               }
                               autoComplete="username"
                               type="text"
+                              spellCheck={false}
                               placeholder={t("Please enter account")}
                             />
                           </FieldContent>
@@ -120,6 +125,7 @@ export function LoginForm({
                           <FieldContent>
                             <Input
                               id="secretKey"
+                              name="secretKey"
                               value={accessKeyAndSecretKey.secretAccessKey}
                               onChange={(e) =>
                                 setAccessKeyAndSecretKey((prev) => ({
@@ -129,6 +135,7 @@ export function LoginForm({
                               }
                               autoComplete="current-password"
                               type="password"
+                              spellCheck={false}
                               placeholder={t("Please enter key")}
                             />
                           </FieldContent>
@@ -141,6 +148,7 @@ export function LoginForm({
                           <FieldContent>
                             <Input
                               id="stsAccessKey"
+                              name="stsAccessKey"
                               value={sts.accessKeyId}
                               onChange={(e) =>
                                 setSts((prev) => ({
@@ -150,6 +158,7 @@ export function LoginForm({
                               }
                               autoComplete="new-password"
                               type="text"
+                              spellCheck={false}
                               placeholder={t("Please enter STS username")}
                             />
                           </FieldContent>
@@ -159,6 +168,7 @@ export function LoginForm({
                           <FieldContent>
                             <Input
                               id="stsSecretKey"
+                              name="stsSecretKey"
                               value={sts.secretAccessKey}
                               onChange={(e) =>
                                 setSts((prev) => ({
@@ -168,6 +178,7 @@ export function LoginForm({
                               }
                               autoComplete="new-password"
                               type="password"
+                              spellCheck={false}
                               placeholder={t("Please enter STS key")}
                             />
                           </FieldContent>
@@ -177,6 +188,7 @@ export function LoginForm({
                           <FieldContent>
                             <Input
                               id="sessionToken"
+                              name="sessionToken"
                               value={sts.sessionToken}
                               onChange={(e) =>
                                 setSts((prev) => ({
@@ -186,6 +198,7 @@ export function LoginForm({
                               }
                               autoComplete="new-password"
                               type="text"
+                              spellCheck={false}
                               placeholder={t("Please enter STS session token")}
                             />
                           </FieldContent>
@@ -204,11 +217,9 @@ export function LoginForm({
             {oidcProviders && oidcProviders.length > 0 && onOidcLogin && (
               <div className="space-y-3">
                 <div className="relative flex items-center">
-                  <div className="flex-grow border-t border-gray-200 dark:border-neutral-700" />
-                  <span className="mx-3 flex-shrink text-xs text-gray-500 dark:text-neutral-500">
-                    {t("Or continue with")}
-                  </span>
-                  <div className="flex-grow border-t border-gray-200 dark:border-neutral-700" />
+                  <div className="flex-grow border-t" />
+                  <span className="mx-3 flex-shrink text-xs text-muted-foreground">{t("Or continue with")}</span>
+                  <div className="flex-grow border-t" />
                 </div>
                 <div className="grid gap-2">
                   {oidcProviders.map((provider) => (
@@ -227,9 +238,9 @@ export function LoginForm({
             )}
 
             <div>
-              <p className="text-sm text-gray-600 dark:text-neutral-400">
+              <p className="text-sm text-muted-foreground">
                 {t("Login Problems?")}{" "}
-                <Link href={website} className="text-blue-600 hover:underline">
+                <Link href={website} className="text-foreground underline-offset-4 hover:underline">
                   {t("Get Help")}
                 </Link>
               </p>

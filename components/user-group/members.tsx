@@ -117,7 +117,7 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
                 />
               </div>
               <Button type="button" variant="outline" className="inline-flex items-center gap-2" onClick={startEditing}>
-                <RiAddLine className="size-4" />
+                <RiAddLine className="size-4" aria-hidden />
                 {t("Edit User")}
               </Button>
             </div>

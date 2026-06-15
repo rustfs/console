@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
-import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/datetime-picker"
@@ -148,12 +148,12 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
 
   return (
     <Dialog open={visible} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className={cn("sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
+      <DialogContent className={cn("overflow-x-hidden sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
         <DialogHeader>
           <DialogTitle>{t("Create Key")}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 lg:flex-row max-h-[80vh] overflow-auto px-2 -mx-2">
+        <div className="-mx-2 flex max-h-[80vh] flex-col gap-4 overflow-y-auto overflow-x-hidden px-2 lg:flex-row">
           <div
             className={cn(
               impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
@@ -164,12 +164,15 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
               <FieldContent>
                 <Input
                   id="create-access-key"
+                  name="create-access-key"
                   value={accessKey}
                   onChange={(e) => setAccessKey(e.target.value)}
                   autoComplete="off"
+                  spellCheck={false}
+                  aria-invalid={Boolean(errors.accessKey)}
                 />
               </FieldContent>
-              {errors.accessKey && <FieldDescription className="text-destructive">{errors.accessKey}</FieldDescription>}
+              <FieldError>{errors.accessKey}</FieldError>
             </Field>
 
             <Field>
@@ -177,13 +180,16 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
               <FieldContent>
                 <Input
                   id="create-secret-key"
+                  name="create-secret-key"
                   type="password"
                   value={secretKey}
                   onChange={(e) => setSecretKey(e.target.value)}
                   autoComplete="off"
+                  spellCheck={false}
+                  aria-invalid={Boolean(errors.secretKey)}
                 />
               </FieldContent>
-              {errors.secretKey && <FieldDescription className="text-destructive">{errors.secretKey}</FieldDescription>}
+              <FieldError>{errors.secretKey}</FieldError>
             </Field>
 
             <Field>
@@ -204,9 +210,17 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
             <Field>
               <FieldLabel htmlFor="create-name">{t("Name")}</FieldLabel>
               <FieldContent>
-                <Input id="create-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />
+                <Input
+                  id="create-name"
+                  name="create-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-invalid={Boolean(errors.name)}
+                />
               </FieldContent>
-              {errors.name && <FieldDescription className="text-destructive">{errors.name}</FieldDescription>}
+              <FieldError>{errors.name}</FieldError>
             </Field>
 
             <Field>
@@ -214,6 +228,7 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
               <FieldContent>
                 <Textarea
                   id="create-description"
+                  name="create-description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
@@ -221,13 +236,20 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
               </FieldContent>
             </Field>
 
-            <Field orientation="responsive" className="items-start gap-3 rounded-md border p-3">
-              <FieldLabel className="text-sm font-medium">{t("Use main account policy")}</FieldLabel>
+            <Field orientation="responsive" className="items-start gap-3 border p-3">
+              <FieldLabel htmlFor="create-implied-policy" className="text-sm font-medium">
+                {t("Use main account policy")}
+              </FieldLabel>
               <FieldContent className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <p className="text-xs text-muted-foreground">
                   {t("Automatically inherit the main account policy when enabled.")}
                 </p>
-                <Switch checked={impliedPolicy} onCheckedChange={setImpliedPolicy} />
+                <Switch
+                  id="create-implied-policy"
+                  name="create-implied-policy"
+                  checked={impliedPolicy}
+                  onCheckedChange={setImpliedPolicy}
+                />
               </FieldContent>
             </Field>
           </div>
@@ -235,12 +257,15 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
           {!impliedPolicy && (
             <div className="flex-1 max-h-[60vh] overflow-auto">
               <Field className="h-full">
-                <FieldLabel>{t("Current user policy")}</FieldLabel>
+                <FieldLabel htmlFor="create-policy">{t("Current user policy")}</FieldLabel>
                 <FieldContent className="h-full">
                   <Textarea
+                    id="create-policy"
+                    name="create-policy"
                     value={policy}
                     onChange={(e) => setPolicy(e.target.value)}
                     className="h-full min-h-[200px] font-mono text-xs"
+                    spellCheck={false}
                   />
                 </FieldContent>
               </Field>

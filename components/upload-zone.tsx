@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 interface UploadZoneProps {
   accept?: string
   disabled?: boolean
+  name?: string
   className?: string
   icon?: React.ComponentType<{ className?: string }>
   children: ReactNode
@@ -16,6 +17,7 @@ interface UploadZoneProps {
 export function UploadZone({
   accept,
   disabled = false,
+  name = "upload-file",
   className,
   icon: Icon = RiUploadCloud2Line,
   children,
@@ -56,7 +58,7 @@ export function UploadZone({
   return (
     <label
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/70 px-6 py-10 text-center transition hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "flex cursor-pointer flex-col items-center justify-center gap-3 border border-dashed border-border/70 px-6 py-10 text-center transition hover:border-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
         hovering && !disabled && "border-primary bg-primary/5",
         disabled && "pointer-events-none opacity-60",
         className,
@@ -65,8 +67,8 @@ export function UploadZone({
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
     >
-      <input type="file" accept={accept} className="hidden" disabled={disabled} onChange={onInputChange} />
-      <Icon className="h-12 w-12 text-muted-foreground" />
+      <input type="file" name={name} accept={accept} className="sr-only" disabled={disabled} onChange={onInputChange} />
+      <Icon className="size-12 text-muted-foreground" aria-hidden />
       {children}
     </label>
   )

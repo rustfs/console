@@ -39,7 +39,7 @@ export function TaskStatsButton() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <RiCheckLine className="size-4 text-emerald-600" />
+              <RiCheckLine className="size-4 text-primary" aria-hidden />
               <span>{t("Task Completed", { completed: completed.length, failed: failed.length })}</span>
             </div>
           )}

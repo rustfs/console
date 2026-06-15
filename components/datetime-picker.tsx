@@ -120,7 +120,7 @@ export function DateTimePicker({
               variant="outline"
               disabled={disabled}
               className={cn(
-                "h-8 w-full justify-start px-2.5 text-left font-normal",
+                "h-8 w-full justify-start px-2.5 text-start font-normal",
                 displayValue && "pe-8",
                 !displayValue && "text-muted-foreground",
                 className,
@@ -139,7 +139,7 @@ export function DateTimePicker({
             type="button"
             variant="ghost"
             size="icon-xs"
-            className="absolute top-1 right-1 text-muted-foreground hover:text-foreground"
+            className="absolute top-1 end-1 text-muted-foreground hover:text-foreground"
             onClick={clearValue}
             aria-label={t("Remove")}
           >
@@ -161,6 +161,7 @@ export function DateTimePicker({
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <RiTimeLine className="size-4 text-muted-foreground" aria-hidden />
             <Input
+              name="datetime-hours"
               type="number"
               inputMode="numeric"
               min={0}
@@ -173,6 +174,7 @@ export function DateTimePicker({
             />
             <span className="text-muted-foreground">:</span>
             <Input
+              name="datetime-minutes"
               type="number"
               inputMode="numeric"
               min={0}

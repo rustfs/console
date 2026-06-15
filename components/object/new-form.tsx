@@ -65,10 +65,13 @@ export function ObjectNewForm({
             <AlertDescription>{t("Overwrite Warning")}</AlertDescription>
           </Alert>
           <Input
+            name="object-key"
             value={objectKey}
             onChange={(e) => setObjectKey(e.target.value)}
+            aria-label={t("Name Placeholder", { type: displayType })}
             placeholder={t("Name Placeholder", { type: displayType })}
             autoComplete="off"
+            spellCheck={false}
           />
         </div>
         <DialogFooter>

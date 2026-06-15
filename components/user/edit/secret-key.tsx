@@ -2,7 +2,7 @@
 
 import { useTranslation } from "react-i18next"
 import { Input } from "@/components/ui/input"
-import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 
 interface UserEditSecretKeyProps {
   value: string
@@ -20,14 +20,17 @@ export function UserEditSecretKey({ value, error, disabled = false, onChange }: 
       <FieldContent>
         <Input
           id="edit-user-secret-key"
+          name="edit-user-secret-key"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           type="password"
           autoComplete="new-password"
+          spellCheck={false}
           disabled={disabled}
+          aria-invalid={Boolean(error)}
         />
       </FieldContent>
-      {error && <FieldDescription className="text-destructive">{error}</FieldDescription>}
+      <FieldError>{error}</FieldError>
     </Field>
   )
 }

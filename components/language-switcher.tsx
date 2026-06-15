@@ -29,7 +29,7 @@ const options = LOCALE_CODES.map((key) => ({
 }))
 
 export function LanguageSwitcher() {
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation()
   const currentLocale = (i18n.language?.split("-")[0] ?? "en") as Locale
   const currentLanguage = languageConfig[currentLocale] ?? languageConfig.en
 
@@ -39,8 +39,8 @@ export function LanguageSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost">
-            <CurrentIcon className="h-4 w-4 shrink-0" />
+          <Button variant="ghost" size="icon" aria-label={t("Language")}>
+            <CurrentIcon className="size-4 shrink-0" aria-hidden />
           </Button>
         }
       />

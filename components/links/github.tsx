@@ -9,10 +9,13 @@ export function LinksGithub() {
   if (!github) return null
 
   return (
-    <Button variant="link">
-      <a href={github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1">
-        <RiGithubLine className="size-4" />
-      </a>
+    <Button
+      variant="ghost"
+      size="icon"
+      nativeButton={false}
+      render={<a href={github} target="_blank" rel="noopener noreferrer" aria-label="GitHub" />}
+    >
+      <RiGithubLine className="size-4" aria-hidden />
     </Button>
   )
 }

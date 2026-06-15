@@ -33,6 +33,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useSSE } from "@/hooks/use-sse"
 import { useMessage } from "@/lib/feedback/message"
+import { formatDateTime } from "@/lib/functions"
 import type { KmsConfigPayload, KmsKeyInfo, KmsKeyMetadata, KmsServiceStatusResponse } from "@/types/kms"
 import {
   AlertDialog,
@@ -101,10 +102,7 @@ function getStatusKind(status: KmsServiceStatusResponse | null): "NotConfigured"
 }
 
 function formatTimestamp(value?: string | null) {
-  if (!value) return "-"
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleString()
+  return formatDateTime(value, "-")
 }
 
 function getKeyDisplayName(key: KmsKeyInfo | KmsKeyMetadata | null) {
@@ -617,7 +615,7 @@ export default function SSEPage() {
       <Page>
         <PageHeader
           description={
-            <p className="text-gray-600 dark:text-gray-400">
+            <p className="text-muted-foreground">
               {t("Configure server-side encryption for your objects using external key management services.")}
             </p>
           }
@@ -631,7 +629,7 @@ export default function SSEPage() {
               <div className="flex flex-wrap items-center gap-3">
                 <CardTitle className="text-base sm:text-lg">{t("KMS Status Overview")}</CardTitle>
                 <Badge variant={getStateBadgeVariant(statusBadgeValue)} className="text-sm uppercase">
-                  {loadingStatus ? t("Loading...") : getKmsStatusText()}
+                  {loadingStatus ? t("Loading…") : getKmsStatusText()}
                 </Badge>
               </div>
               <CardDescription>{getKmsStatusDescription()}</CardDescription>
@@ -643,23 +641,23 @@ export default function SSEPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-md border bg-muted/40 p-3">
+                <div className="border bg-muted/40 p-3">
                   <p className="text-xs text-muted-foreground">{t("Backend Type")}</p>
                   <p className="text-sm font-medium text-foreground">{status?.backend_type ?? t("Not configured")}</p>
                 </div>
-                <div className="rounded-md border bg-muted/40 p-3">
+                <div className="border bg-muted/40 p-3">
                   <p className="text-xs text-muted-foreground">{t("Status")}</p>
                   <p className="text-sm font-medium text-foreground">
-                    {loadingStatus ? t("Loading...") : getKmsStatusText()}
+                    {loadingStatus ? t("Loading…") : getKmsStatusText()}
                   </p>
                 </div>
-                <div className="rounded-md border bg-muted/40 p-3">
+                <div className="border bg-muted/40 p-3">
                   <p className="text-xs text-muted-foreground">{t("Health")}</p>
                   <p className="text-sm font-medium text-foreground">
                     {status?.healthy == null ? t("Unknown") : status.healthy ? t("Healthy") : t("Unhealthy")}
                   </p>
                 </div>
-                <div className="rounded-md border bg-muted/40 p-3">
+                <div className="border bg-muted/40 p-3">
                   <p className="text-xs text-muted-foreground">{t("Default SSE Key")}</p>
                   <p className="text-sm font-medium text-foreground">
                     {status?.config_summary?.default_key_id || t("Not set")}
@@ -687,7 +685,7 @@ export default function SSEPage() {
 
               <div className="flex flex-wrap items-center justify-end gap-2">
                 <Button size="sm" variant="outline" disabled={refreshingStatus} onClick={handleRefresh}>
-                  {refreshingStatus ? <Spinner className="size-4" /> : <RiRefreshLine className="size-4" />}
+                  {refreshingStatus ? <Spinner className="size-4" /> : <RiRefreshLine className="size-4" aria-hidden />}
                   {t("Refresh")}
                 </Button>
 
@@ -709,7 +707,7 @@ export default function SSEPage() {
                     />
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem disabled={!isRunning || clearingCache} onClick={handleClearCache}>
-                        {clearingCache ? t("Clearing cache...") : t("Clear Cache")}
+                        {clearingCache ? t("Clearing cache…") : t("Clear Cache")}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
@@ -717,7 +715,7 @@ export default function SSEPage() {
                         onClick={handleStopKMS}
                         className="text-destructive focus:text-destructive"
                       >
-                        {stoppingKMS ? t("Stopping KMS...") : t("Stop KMS")}
+                        {stoppingKMS ? t("Stopping KMS…") : t("Stop KMS")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -749,7 +747,7 @@ export default function SSEPage() {
                           updateFormState("backendType", value as ConfigFormState["backendType"])
                         }
                       >
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full" aria-label={t("KMS Backend")}>
                           <SelectValue placeholder={t("Select backend type")} />
                         </SelectTrigger>
                         <SelectContent>
@@ -763,12 +761,16 @@ export default function SSEPage() {
                   </Field>
 
                   <Field>
-                    <FieldLabel>{t("Default SSE Key")}</FieldLabel>
+                    <FieldLabel htmlFor="defaultKeyId">{t("Default SSE Key")}</FieldLabel>
                     <FieldContent>
                       <Input
+                        id="defaultKeyId"
+                        name="defaultKeyId"
                         value={formState.defaultKeyId}
                         onChange={(event) => updateFormState("defaultKeyId", event.target.value)}
+                        autoComplete="off"
                         placeholder={t("Enter the default SSE key ID")}
+                        spellCheck={false}
                       />
                     </FieldContent>
                     <FieldDescription>
@@ -780,23 +782,31 @@ export default function SSEPage() {
                 {formState.backendType === "local" ? (
                   <FieldGroup className="grid gap-4 lg:grid-cols-2">
                     <Field>
-                      <FieldLabel>{t("Local Key Directory")}</FieldLabel>
+                      <FieldLabel htmlFor="keyDir">{t("Local Key Directory")}</FieldLabel>
                       <FieldContent>
                         <Input
+                          id="keyDir"
+                          name="keyDir"
                           value={formState.keyDir}
                           onChange={(event) => updateFormState("keyDir", event.target.value)}
+                          autoComplete="off"
                           placeholder={t("Enter an absolute path such as D:/data/kms-keys")}
+                          spellCheck={false}
                         />
                       </FieldContent>
                       <FieldDescription>{t("The directory must be an absolute path on the server.")}</FieldDescription>
                     </Field>
 
                     <Field>
-                      <FieldLabel>{t("File Permissions")}</FieldLabel>
+                      <FieldLabel htmlFor="filePermissions">{t("File Permissions")}</FieldLabel>
                       <FieldContent>
                         <Input
+                          id="filePermissions"
+                          name="filePermissions"
                           type="number"
+                          inputMode="numeric"
                           min={0}
+                          autoComplete="off"
                           value={formState.filePermissions}
                           onChange={(event) => updateFormState("filePermissions", event.target.value)}
                           placeholder="384"
@@ -816,20 +826,27 @@ export default function SSEPage() {
 
                     <FieldGroup className="grid gap-4 lg:grid-cols-2">
                       <Field>
-                        <FieldLabel>{t("Vault Server Address")}</FieldLabel>
+                        <FieldLabel htmlFor="vaultAddress">{t("Vault Server Address")}</FieldLabel>
                         <FieldContent>
                           <Input
+                            id="vaultAddress"
+                            name="vaultAddress"
+                            type="url"
                             value={formState.address}
                             onChange={(event) => updateFormState("address", event.target.value)}
+                            autoComplete="off"
                             placeholder="http://127.0.0.1:8200"
+                            spellCheck={false}
                           />
                         </FieldContent>
                       </Field>
 
                       <Field>
-                        <FieldLabel>{t("Vault Token")}</FieldLabel>
+                        <FieldLabel htmlFor="vaultToken">{t("Vault Token")}</FieldLabel>
                         <FieldContent>
                           <Input
+                            id="vaultToken"
+                            name="vaultToken"
                             type="password"
                             value={formState.vaultToken}
                             onChange={(event) => updateFormState("vaultToken", event.target.value)}
@@ -839,6 +856,7 @@ export default function SSEPage() {
                                 : t("Enter your Vault authentication token")
                             }
                             autoComplete="off"
+                            spellCheck={false}
                           />
                         </FieldContent>
                         <FieldDescription>
@@ -851,23 +869,31 @@ export default function SSEPage() {
 
                     <FieldGroup className="grid gap-4 lg:grid-cols-2">
                       <Field>
-                        <FieldLabel>{t("Vault Namespace")}</FieldLabel>
+                        <FieldLabel htmlFor="vaultNamespace">{t("Vault Namespace")}</FieldLabel>
                         <FieldContent>
                           <Input
+                            id="vaultNamespace"
+                            name="vaultNamespace"
                             value={formState.namespace}
                             onChange={(event) => updateFormState("namespace", event.target.value)}
+                            autoComplete="off"
                             placeholder={t("Optional Vault namespace")}
+                            spellCheck={false}
                           />
                         </FieldContent>
                       </Field>
 
                       <Field>
-                        <FieldLabel>{t("Transit Mount Path")}</FieldLabel>
+                        <FieldLabel htmlFor="transitMountPath">{t("Transit Mount Path")}</FieldLabel>
                         <FieldContent>
                           <Input
+                            id="transitMountPath"
+                            name="transitMountPath"
                             value={formState.mountPath}
                             onChange={(event) => updateFormState("mountPath", event.target.value)}
+                            autoComplete="off"
                             placeholder="transit"
+                            spellCheck={false}
                           />
                         </FieldContent>
                       </Field>
@@ -875,23 +901,31 @@ export default function SSEPage() {
                       {formState.backendType === "vault-kv2" && (
                         <>
                           <Field>
-                            <FieldLabel>{t("KV Mount")}</FieldLabel>
+                            <FieldLabel htmlFor="kvMount">{t("KV Mount")}</FieldLabel>
                             <FieldContent>
                               <Input
+                                id="kvMount"
+                                name="kvMount"
                                 value={formState.kvMount}
                                 onChange={(event) => updateFormState("kvMount", event.target.value)}
+                                autoComplete="off"
                                 placeholder="secret"
+                                spellCheck={false}
                               />
                             </FieldContent>
                           </Field>
 
                           <Field>
-                            <FieldLabel>{t("Key Path Prefix")}</FieldLabel>
+                            <FieldLabel htmlFor="keyPathPrefix">{t("Key Path Prefix")}</FieldLabel>
                             <FieldContent>
                               <Input
+                                id="keyPathPrefix"
+                                name="keyPathPrefix"
                                 value={formState.keyPathPrefix}
                                 onChange={(event) => updateFormState("keyPathPrefix", event.target.value)}
+                                autoComplete="off"
                                 placeholder="rustfs/kms/keys"
+                                spellCheck={false}
                               />
                             </FieldContent>
                           </Field>
@@ -899,8 +933,9 @@ export default function SSEPage() {
                       )}
                     </FieldGroup>
 
-                    <div className="flex items-center gap-3 rounded-md border p-3">
+                    <div className="flex items-center gap-3 border p-3">
                       <Checkbox
+                        name="skipTlsVerify"
                         checked={formState.skipTlsVerify}
                         onCheckedChange={(checked) => updateFormState("skipTlsVerify", checked === true)}
                         id="skipTlsVerify"
@@ -914,11 +949,15 @@ export default function SSEPage() {
 
                 <FieldGroup className="grid gap-4 lg:grid-cols-3">
                   <Field>
-                    <FieldLabel>{t("Timeout (seconds)")}</FieldLabel>
+                    <FieldLabel htmlFor="timeoutSeconds">{t("Timeout (seconds)")}</FieldLabel>
                     <FieldContent>
                       <Input
+                        id="timeoutSeconds"
+                        name="timeoutSeconds"
                         type="number"
+                        inputMode="numeric"
                         min={1}
+                        autoComplete="off"
                         value={formState.timeoutSeconds}
                         onChange={(event) => updateFormState("timeoutSeconds", event.target.value)}
                       />
@@ -926,11 +965,15 @@ export default function SSEPage() {
                   </Field>
 
                   <Field>
-                    <FieldLabel>{t("Retry Attempts")}</FieldLabel>
+                    <FieldLabel htmlFor="retryAttempts">{t("Retry Attempts")}</FieldLabel>
                     <FieldContent>
                       <Input
+                        id="retryAttempts"
+                        name="retryAttempts"
                         type="number"
+                        inputMode="numeric"
                         min={0}
+                        autoComplete="off"
                         value={formState.retryAttempts}
                         onChange={(event) => updateFormState("retryAttempts", event.target.value)}
                       />
@@ -938,9 +981,10 @@ export default function SSEPage() {
                   </Field>
                 </FieldGroup>
 
-                <div className="space-y-4 rounded-md border p-4">
+                <div className="space-y-4 border p-4">
                   <div className="flex items-center gap-3">
                     <Checkbox
+                      name="enableCache"
                       checked={formState.enableCache}
                       onCheckedChange={(checked) => updateFormState("enableCache", checked === true)}
                       id="enableCache"
@@ -953,11 +997,15 @@ export default function SSEPage() {
                   {formState.enableCache && (
                     <FieldGroup className="grid gap-4 lg:grid-cols-2">
                       <Field>
-                        <FieldLabel>{t("Max Cached Keys")}</FieldLabel>
+                        <FieldLabel htmlFor="maxCachedKeys">{t("Max Cached Keys")}</FieldLabel>
                         <FieldContent>
                           <Input
+                            id="maxCachedKeys"
+                            name="maxCachedKeys"
                             type="number"
+                            inputMode="numeric"
                             min={1}
+                            autoComplete="off"
                             value={formState.maxCachedKeys}
                             onChange={(event) => updateFormState("maxCachedKeys", event.target.value)}
                           />
@@ -965,11 +1013,15 @@ export default function SSEPage() {
                       </Field>
 
                       <Field>
-                        <FieldLabel>{t("Cache TTL (seconds)")}</FieldLabel>
+                        <FieldLabel htmlFor="cacheTtlSeconds">{t("Cache TTL (seconds)")}</FieldLabel>
                         <FieldContent>
                           <Input
+                            id="cacheTtlSeconds"
+                            name="cacheTtlSeconds"
                             type="number"
+                            inputMode="numeric"
                             min={1}
+                            autoComplete="off"
                             value={formState.cacheTtlSeconds}
                             onChange={(event) => updateFormState("cacheTtlSeconds", event.target.value)}
                           />
@@ -1014,11 +1066,11 @@ export default function SSEPage() {
                       disabled={loadingKeys}
                       onClick={() => void loadKeys(currentMarker)}
                     >
-                      {loadingKeys ? <Spinner className="size-4" /> : <RiRefreshLine className="size-4" />}
+                      {loadingKeys ? <Spinner className="size-4" /> : <RiRefreshLine className="size-4" aria-hidden />}
                       {t("Refresh")}
                     </Button>
                     <Button size="sm" onClick={() => setCreateKeyOpen(true)}>
-                      <RiAddLine className="size-4" />
+                      <RiAddLine className="size-4" aria-hidden />
                       {t("Create Key")}
                     </Button>
                   </div>
@@ -1033,11 +1085,11 @@ export default function SSEPage() {
                 </Alert>
 
                 {loadingKeys ? (
-                  <div className="flex items-center justify-center rounded-md border py-10">
+                  <div className="flex items-center justify-center border py-10">
                     <Spinner className="size-5" />
                   </div>
                 ) : keys.length === 0 ? (
-                  <div className="rounded-md border border-dashed py-10 text-center text-sm text-muted-foreground">
+                  <div className="border border-dashed py-10 text-center text-sm text-muted-foreground">
                     {t("No KMS keys found")}
                   </div>
                 ) : (
@@ -1050,7 +1102,7 @@ export default function SSEPage() {
                         <TableHead>{t("Algorithm")}</TableHead>
                         <TableHead>{t("Usage")}</TableHead>
                         <TableHead>{t("Created")}</TableHead>
-                        <TableHead className="text-right">{t("Actions")}</TableHead>
+                        <TableHead className="text-end">{t("Actions")}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1129,7 +1181,7 @@ export default function SSEPage() {
                         void loadKeys(previousMarker)
                       }}
                     >
-                      <RiArrowLeftSLine className="size-4" />
+                      <RiArrowLeftSLine className="size-4" aria-hidden />
                       {t("Previous")}
                     </Button>
                     <Button
@@ -1143,7 +1195,7 @@ export default function SSEPage() {
                       }}
                     >
                       {t("Next")}
-                      <RiArrowRightSLine className="size-4" />
+                      <RiArrowRightSLine className="size-4" aria-hidden />
                     </Button>
                   </div>
                 </div>
@@ -1164,7 +1216,7 @@ export default function SSEPage() {
           }
         }}
       >
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t("Create New Key")}</DialogTitle>
             <DialogDescription>
@@ -1174,29 +1226,37 @@ export default function SSEPage() {
 
           <div className="space-y-4">
             <Field>
-              <FieldLabel>{t("Key Name")}</FieldLabel>
+              <FieldLabel htmlFor="kms-key-name">{t("Key Name")}</FieldLabel>
               <FieldContent>
                 <Input
+                  id="kms-key-name"
+                  name="kms-key-name"
                   value={createKeyName}
                   onChange={(event) => setCreateKeyName(event.target.value)}
+                  autoComplete="off"
                   placeholder={t("Optional display name for the key")}
+                  spellCheck={false}
                 />
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel>{t("Description")}</FieldLabel>
+              <FieldLabel htmlFor="kms-key-description">{t("Description")}</FieldLabel>
               <FieldContent>
                 <Input
+                  id="kms-key-description"
+                  name="kms-key-description"
                   value={createKeyDescription}
                   onChange={(event) => setCreateKeyDescription(event.target.value)}
+                  autoComplete="off"
                   placeholder={t("Describe the purpose of this key")}
                 />
               </FieldContent>
             </Field>
 
-            <div className="flex items-start gap-3 rounded-md border p-3">
+            <div className="flex items-start gap-3 border p-3">
               <Checkbox
+                name="setAsDefaultKey"
                 checked={createKeySetAsDefault}
                 onCheckedChange={(checked) => setCreateKeySetAsDefault(checked === true)}
                 id="setAsDefaultKey"
@@ -1235,56 +1295,56 @@ export default function SSEPage() {
                 <Spinner className="size-5" />
               </div>
             ) : !keyDetails ? (
-              <div className="rounded-md border border-dashed py-10 text-center text-sm text-muted-foreground">
+              <div className="border border-dashed py-10 text-center text-sm text-muted-foreground">
                 {t("No key details available")}
               </div>
             ) : (
               <>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-md border p-3">
+                  <div className="border p-3">
                     <p className="text-xs text-muted-foreground">{t("Name")}</p>
                     <p className="text-sm font-medium">{getKeyDisplayName(keyDetails)}</p>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="border p-3">
                     <p className="text-xs text-muted-foreground">{t("State")}</p>
                     <div className="pt-1">
                       <Badge variant={getStateBadgeVariant(keyDetails.key_state)}>{keyDetails.key_state || "-"}</Badge>
                     </div>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="border p-3">
                     <p className="text-xs text-muted-foreground">{t("KMS Key ID")}</p>
                     <p className="text-sm font-medium break-all">{keyDetails.key_id}</p>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="border p-3">
                     <p className="text-xs text-muted-foreground">{t("Usage")}</p>
                     <p className="text-sm font-medium">{keyDetails.key_usage || "-"}</p>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="border p-3">
                     <p className="text-xs text-muted-foreground">{t("Creation Date")}</p>
                     <p className="text-sm font-medium">{formatTimestamp(keyDetails.creation_date)}</p>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="border p-3">
                     <p className="text-xs text-muted-foreground">{t("Deletion Date")}</p>
                     <p className="text-sm font-medium">{formatTimestamp(keyDetails.deletion_date)}</p>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="border p-3">
                     <p className="text-xs text-muted-foreground">{t("Origin")}</p>
                     <p className="text-sm font-medium">{keyDetails.origin || "-"}</p>
                   </div>
-                  <div className="rounded-md border p-3">
+                  <div className="border p-3">
                     <p className="text-xs text-muted-foreground">{t("Key Manager")}</p>
                     <p className="text-sm font-medium">{keyDetails.key_manager || "-"}</p>
                   </div>
                 </div>
 
                 {keyDetails.description && (
-                  <div className="rounded-md border p-3">
+                  <div className="border p-3">
                     <p className="text-xs text-muted-foreground">{t("Description")}</p>
                     <p className="text-sm">{keyDetails.description}</p>
                   </div>
                 )}
 
-                <div className="rounded-md border p-3">
+                <div className="border p-3">
                   <p className="text-xs text-muted-foreground">{t("Tags")}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {Object.entries(keyDetails.tags ?? {}).length > 0 ? (

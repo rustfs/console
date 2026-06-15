@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import {
   Breadcrumb,
@@ -25,7 +26,6 @@ function getLabelByPath(pathSegment: string, t: (k: string) => string): string {
 export function TopNavBreadcrumb() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const router = useRouter()
   const { t } = useTranslation()
 
   const segments = pathname?.split("/").filter(Boolean) ?? []
@@ -79,10 +79,10 @@ export function TopNavBreadcrumb() {
 
   if (items.length <= 1) {
     return (
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbPage>{items[0]?.label ?? ""}</BreadcrumbPage>
+      <Breadcrumb className="min-w-0 overflow-hidden">
+        <BreadcrumbList className="min-w-0 flex-nowrap overflow-hidden">
+          <BreadcrumbItem className="min-w-0">
+            <BreadcrumbPage className="truncate">{items[0]?.label ?? ""}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -90,24 +90,16 @@ export function TopNavBreadcrumb() {
   }
 
   return (
-    <Breadcrumb>
-      <BreadcrumbList>
+    <Breadcrumb className="min-w-0 overflow-hidden">
+      <BreadcrumbList className="min-w-0 flex-nowrap overflow-hidden">
         {items.map((item, i) => (
           <React.Fragment key={i}>
             {i > 0 && <BreadcrumbSeparator />}
-            <BreadcrumbItem>
+            <BreadcrumbItem className="min-w-0">
               {item.href ? (
-                <BreadcrumbLink
-                  href={item.href}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    router.push(item.href!)
-                  }}
-                >
-                  {item.label}
-                </BreadcrumbLink>
+                <BreadcrumbLink className="truncate" render={<Link href={item.href}>{item.label}</Link>} />
               ) : (
-                <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
               )}
             </BreadcrumbItem>
           </React.Fragment>

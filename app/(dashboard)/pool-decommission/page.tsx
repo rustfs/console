@@ -256,7 +256,7 @@ export default function PoolDecommissionPage() {
         actions={
           <>
             <Button variant="outline" onClick={() => void loadData()} disabled={loading || submitting}>
-              <RiRefreshLine className="me-2 size-4" />
+              <RiRefreshLine className="me-2 size-4" aria-hidden />
               {t("Sync")}
             </Button>
             <Button variant="outline" onClick={() => void handleCancel()} disabled={!canCancelActive || submitting}>
@@ -280,7 +280,7 @@ export default function PoolDecommissionPage() {
 
         {["starting", "running", "stopping", "failed", "stopped", "unknown"].includes(rebalanceState) ? (
           <Alert>
-            <RiAlertLine className="size-4" />
+            <RiAlertLine className="size-4" aria-hidden />
             <AlertTitle>{t("Rebalance must complete before decommission")}</AlertTitle>
             <AlertDescription>{t("Finish rebalance successfully before retiring a pool.")}</AlertDescription>
           </Alert>
@@ -354,7 +354,7 @@ export default function PoolDecommissionPage() {
                       <TableHead>{t("Progress")}</TableHead>
                       <TableHead>{t("Objects")}</TableHead>
                       <TableHead>{t("Bytes Moved")}</TableHead>
-                      <TableHead className="text-right">{t("Actions")}</TableHead>
+                      <TableHead className="text-end">{t("Actions")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -374,8 +374,16 @@ export default function PoolDecommissionPage() {
                         return (
                           <TableRow
                             key={pool.id}
+                            tabIndex={0}
+                            aria-selected={pool.id === selectedPoolId}
+                            className="cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                             data-state={pool.id === selectedPoolId ? "selected" : undefined}
                             onClick={() => setSelectedPoolId(pool.id)}
+                            onKeyDown={(event) => {
+                              if (event.key !== "Enter" && event.key !== " ") return
+                              event.preventDefault()
+                              setSelectedPoolId(pool.id)
+                            }}
                           >
                             <TableCell className="max-w-[320px] truncate">{pool.name}</TableCell>
                             <TableCell>

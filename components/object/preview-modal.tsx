@@ -288,7 +288,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
         return (
           <div
             ref={imagePreviewRef}
-            className={`relative flex overflow-hidden ${isImageFullscreen ? "h-screen w-screen bg-black" : "flex-1 min-h-0 rounded-md bg-muted/20"}`}
+            className={`relative flex overflow-hidden ${isImageFullscreen ? "h-screen w-screen bg-black" : "flex-1 min-h-0 bg-muted/20"}`}
           >
             <div className="absolute end-2 top-2 z-10 flex items-center gap-1 border bg-background/90 p-1 backdrop-blur-xs">
               <Button
@@ -299,14 +299,18 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
                 aria-label={isImageFullscreen ? t("Exit Fullscreen") : t("Fullscreen")}
                 title={isImageFullscreen ? t("Exit Fullscreen") : t("Fullscreen")}
               >
-                {isImageFullscreen ? <RiFullscreenExitLine /> : <RiFullscreenLine />}
+                {isImageFullscreen ? (
+                  <RiFullscreenExitLine className="size-3" aria-hidden />
+                ) : (
+                  <RiFullscreenLine className="size-3" aria-hidden />
+                )}
               </Button>
             </div>
             <div ref={imageViewportRef} className="h-full w-full overflow-auto p-2">
               <div className="flex min-h-full min-w-full items-center justify-center">
                 <div
                   className={cn(
-                    "shrink-0 flex items-center justify-center transition-opacity",
+                    "relative flex shrink-0 items-center justify-center transition-opacity",
                     imageLayoutReady ? "opacity-100" : "opacity-0",
                   )}
                   style={
@@ -321,11 +325,11 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
                   <Image
                     src={previewUrl}
                     alt={objectKey || t("Preview")}
+                    fill
+                    sizes="100vw"
+                    unoptimized
                     referrerPolicy="no-referrer"
-                    className={cn(
-                      imageNaturalSize ? "h-full w-full" : "max-h-full max-w-full",
-                      "object-contain cursor-zoom-in",
-                    )}
+                    className="cursor-zoom-in object-contain"
                     onLoad={(event) => {
                       const nextSize = {
                         width: event.currentTarget.naturalWidth || event.currentTarget.clientWidth,
@@ -382,7 +386,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
         </DialogHeader>
         <div
           className={cn(
-            "min-h-[300px] min-w-0 rounded-md border p-4",
+            "min-h-[300px] min-w-0 border p-4",
             isSelfScrollMode ? "flex max-h-[70vh] flex-col overflow-hidden" : "flex flex-col",
           )}
         >

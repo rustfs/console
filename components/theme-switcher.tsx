@@ -28,15 +28,15 @@ export function ThemeSwitcher() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost">
-            <Icon className="h-4 w-4 shrink-0" />
+          <Button variant="ghost" size="icon" aria-label={t("Theme")}>
+            <Icon className="size-4 shrink-0" aria-hidden />
           </Button>
         }
       />
       <DropdownMenuContent className="w-40" align="start">
         {themeOptions.map(({ labelKey, key, Icon: OptionIcon }) => (
           <DropdownMenuItem key={key} onClick={() => setTheme(key)}>
-            <OptionIcon className="me-2 h-4 w-4" />
+            <OptionIcon className="me-2 size-4" aria-hidden />
             {t(labelKey)}
           </DropdownMenuItem>
         ))}

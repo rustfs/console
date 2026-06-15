@@ -234,7 +234,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
       }}
       disablePointerDismissal
     >
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
             {t("Add Lifecycle Rule")} ({t("Bucket")}: {bucketName || ""})
@@ -259,7 +259,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                     <FieldLabel>{t("Object Version")}</FieldLabel>
                     <FieldContent>
                       <Select value={versionType} onValueChange={(value) => setVersionType(value ?? "")}>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full" aria-label={t("Object Version")}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -280,8 +280,11 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                   <FieldContent>
                     <div className="flex items-center gap-3">
                       <Input
+                        name="lifecycle-expire-days"
                         type="number"
+                        inputMode="numeric"
                         min={1}
+                        aria-label={t("Days")}
                         value={days}
                         onChange={(e) => setDays(Number(e.target.value))}
                         className="w-32"
@@ -299,12 +302,16 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                 </summary>
                 <div className="mt-4 space-y-4">
                   <Field>
-                    <FieldLabel>{t("Prefix")}</FieldLabel>
+                    <FieldLabel htmlFor="lifecycle-expire-prefix">{t("Prefix")}</FieldLabel>
                     <FieldContent>
                       <Input
+                        id="lifecycle-expire-prefix"
+                        name="lifecycle-expire-prefix"
                         value={prefix}
                         onChange={(e) => setPrefix(e.target.value)}
+                        autoComplete="off"
                         placeholder={t("Please enter prefix")}
+                        spellCheck={false}
                       />
                     </FieldContent>
                   </Field>
@@ -322,16 +329,26 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                         {tags.map((tag, index) => (
                           <div key={index} className="grid gap-2 md:grid-cols-2 md:items-center md:gap-4">
                             <Input
+                              id={`lifecycle-expire-tag-key-${index}`}
+                              name={`lifecycle-expire-tag-key-${index}`}
                               value={tag.key}
                               onChange={(e) => updateTag(index, "key", e.target.value)}
+                              aria-label={`${t("Tag Name")} ${index + 1}`}
+                              autoComplete="off"
                               placeholder={t("Tag Name")}
+                              spellCheck={false}
                             />
                             <div className="flex items-center gap-2">
                               <Input
+                                id={`lifecycle-expire-tag-value-${index}`}
+                                name={`lifecycle-expire-tag-value-${index}`}
                                 value={tag.value}
                                 onChange={(e) => updateTag(index, "value", e.target.value)}
+                                aria-label={`${t("Tag Value")} ${index + 1}`}
+                                autoComplete="off"
                                 placeholder={t("Tag Value")}
                                 className="flex-1"
+                                spellCheck={false}
                               />
                               <Button
                                 variant="ghost"
@@ -359,12 +376,18 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                   <Field className="mt-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <FieldLabel className="text-sm font-medium">{t("Delete Marker Handling")}</FieldLabel>
+                        <FieldLabel htmlFor="lifecycle-expired-delete-marker" className="text-sm font-medium">
+                          {t("Delete Marker Handling")}
+                        </FieldLabel>
                         <FieldDescription>
                           {t("If no versions remain, delete references to this object")}
                         </FieldDescription>
                       </div>
-                      <Switch checked={expiredDeleteMark} onCheckedChange={setExpiredDeleteMark} />
+                      <Switch
+                        id="lifecycle-expired-delete-marker"
+                        checked={expiredDeleteMark}
+                        onCheckedChange={setExpiredDeleteMark}
+                      />
                     </div>
                   </Field>
                 </details>
@@ -378,7 +401,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                     <FieldLabel>{t("Object Version")}</FieldLabel>
                     <FieldContent>
                       <Select value={versionType} onValueChange={(value) => setVersionType(value ?? "")}>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger className="w-full" aria-label={t("Object Version")}>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -398,8 +421,11 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                   <FieldContent>
                     <div className="flex items-center gap-3">
                       <Input
+                        name="lifecycle-transition-days"
                         type="number"
+                        inputMode="numeric"
                         min={1}
+                        aria-label={t("Days")}
                         value={days}
                         onChange={(e) => setDays(Number(e.target.value))}
                         className="w-32"
@@ -414,7 +440,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                   <FieldLabel>{t("Storage Type")}</FieldLabel>
                   <FieldContent>
                     <Select value={storageType} onValueChange={(value) => setStorageType(value ?? "")}>
-                      <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full" aria-label={t("Storage Type")}>
                         <SelectValue placeholder={t("Please select storage type")} />
                       </SelectTrigger>
                       <SelectContent>
@@ -435,12 +461,16 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                 </summary>
                 <div className="mt-4 space-y-4">
                   <Field>
-                    <FieldLabel>{t("Prefix")}</FieldLabel>
+                    <FieldLabel htmlFor="lifecycle-transition-prefix">{t("Prefix")}</FieldLabel>
                     <FieldContent>
                       <Input
+                        id="lifecycle-transition-prefix"
+                        name="lifecycle-transition-prefix"
                         value={prefix}
                         onChange={(e) => setPrefix(e.target.value)}
+                        autoComplete="off"
                         placeholder={t("Please enter prefix")}
+                        spellCheck={false}
                       />
                     </FieldContent>
                   </Field>
@@ -456,21 +486,28 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                     {tags.length > 0 && (
                       <div className="space-y-3">
                         {tags.map((tag, index) => (
-                          <div
-                            key={index}
-                            className="grid gap-2 rounded-md border p-3 md:grid-cols-2 md:items-center md:gap-4"
-                          >
+                          <div key={index} className="grid gap-2 border p-3 md:grid-cols-2 md:items-center md:gap-4">
                             <Input
+                              id={`lifecycle-transition-tag-key-${index}`}
+                              name={`lifecycle-transition-tag-key-${index}`}
                               value={tag.key}
                               onChange={(e) => updateTag(index, "key", e.target.value)}
+                              aria-label={`${t("Tag Name")} ${index + 1}`}
+                              autoComplete="off"
                               placeholder={t("Tag Name")}
+                              spellCheck={false}
                             />
                             <div className="flex items-center gap-2">
                               <Input
+                                id={`lifecycle-transition-tag-value-${index}`}
+                                name={`lifecycle-transition-tag-value-${index}`}
                                 value={tag.value}
                                 onChange={(e) => updateTag(index, "value", e.target.value)}
+                                aria-label={`${t("Tag Value")} ${index + 1}`}
+                                autoComplete="off"
                                 placeholder={t("Tag Value")}
                                 className="flex-1"
+                                spellCheck={false}
                               />
                               <Button
                                 variant="ghost"
@@ -498,7 +535,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
             {t("Cancel")}
           </Button>
           <Button onClick={handleSave} disabled={submitting}>
-            {submitting ? t("Saving...") : t("Save")}
+            {submitting ? t("Saving…") : t("Save")}
           </Button>
         </DialogFooter>
       </DialogContent>

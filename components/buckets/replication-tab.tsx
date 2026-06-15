@@ -178,12 +178,12 @@ export function BucketReplicationTab({ bucketName, hideTitle = false }: BucketRe
         <div className="flex gap-2">
           {canEditReplication ? (
             <Button variant="outline" onClick={() => setNewFormOpen(true)}>
-              <RiAddLine className="size-4" />
+              <RiAddLine className="size-4" aria-hidden />
               <span>{t("Add Replication Rule")}</span>
             </Button>
           ) : null}
           <Button variant="outline" onClick={loadData}>
-            <RiRefreshLine className="size-4" />
+            <RiRefreshLine className="size-4" aria-hidden />
             <span>{t("Refresh")}</span>
           </Button>
         </div>

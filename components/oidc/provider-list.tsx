@@ -32,7 +32,7 @@ export function ProviderList({
   const { t } = useTranslation()
 
   return (
-    <div className="flex h-full min-h-[28rem] flex-col rounded-md border">
+    <div className="flex h-full min-h-[28rem] flex-col border">
       <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold">{t("OIDC Providers")}</h2>
@@ -40,7 +40,7 @@ export function ProviderList({
         </div>
         {canAddProvider ? (
           <Button type="button" variant="outline" size="sm" onClick={onAddProvider}>
-            <RiAddLine className="size-4" />
+            <RiAddLine className="size-4" aria-hidden />
             {t("Add Provider")}
           </Button>
         ) : null}
@@ -50,7 +50,7 @@ export function ProviderList({
         {loading ? (
           <div className="flex flex-1 items-center justify-center gap-2 px-4 py-8 text-sm text-muted-foreground">
             <Spinner className="size-4" />
-            <span>{t("Loading...")}</span>
+            <span>{t("Loading…")}</span>
           </div>
         ) : providers.length === 0 ? (
           <div className="flex flex-1 items-center justify-center px-4 py-8 text-center text-sm text-muted-foreground">
@@ -66,9 +66,10 @@ export function ProviderList({
                 <button
                   key={provider.provider_id}
                   type="button"
+                  aria-pressed={selected}
                   onClick={() => onSelectProvider(provider.provider_id)}
                   className={cn(
-                    "flex flex-col items-start gap-2 border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-muted/40",
+                    "flex flex-col items-start gap-2 border-b px-4 py-3 text-start transition-colors last:border-b-0 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
                     selected && "bg-muted/60",
                   )}
                 >

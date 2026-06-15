@@ -6,7 +6,7 @@ import { RiArrowDownSLine, RiCheckLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -136,42 +136,48 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
 
   return (
     <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Create User")}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 max-h-[80vh] overflow-auto px-2 -mx-2">
+        <div className="-mx-2 max-h-[80vh] space-y-6 overflow-y-auto overflow-x-hidden px-2">
           <div className="grid gap-4 md:grid-cols-2">
             <Field>
-              <FieldLabel>{t("User Name")}</FieldLabel>
+              <FieldLabel htmlFor="new-user-access-key">{t("User Name")}</FieldLabel>
               <FieldContent>
                 <Input
+                  id="new-user-access-key"
+                  name="new-user-access-key"
                   value={accessKey}
                   onChange={(e) => setAccessKey(e.target.value)}
                   minLength={USERNAME_MIN_LENGTH}
                   maxLength={USERNAME_MAX_LENGTH}
-                  name="new-user-access-key"
-                  autoComplete="new-user-access-key"
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-invalid={Boolean(errors.accessKey)}
                 />
               </FieldContent>
-              {errors.accessKey && <FieldDescription className="text-destructive">{errors.accessKey}</FieldDescription>}
+              <FieldError>{errors.accessKey}</FieldError>
             </Field>
 
             <Field>
-              <FieldLabel>{t("Password")}</FieldLabel>
+              <FieldLabel htmlFor="new-user-password">{t("Password")}</FieldLabel>
               <FieldContent>
                 <Input
+                  id="new-user-password"
+                  name="new-user-password"
                   value={secretKey}
                   onChange={(e) => setSecretKey(e.target.value)}
                   type="password"
                   minLength={PASSWORD_MIN_LENGTH}
                   maxLength={PASSWORD_MAX_LENGTH}
-                  name="new-user-password"
-                  autoComplete="new-user-password"
+                  autoComplete="new-password"
+                  spellCheck={false}
+                  aria-invalid={Boolean(errors.secretKey)}
                 />
               </FieldContent>
-              {errors.secretKey && <FieldDescription className="text-destructive">{errors.secretKey}</FieldDescription>}
+              <FieldError>{errors.secretKey}</FieldError>
             </Field>
           </div>
 
@@ -188,7 +194,7 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
                       aria-label={t("Groups")}
                     >
                       <span className="truncate">{groups.length ? groups.join(", ") : t("Select Group")}</span>
-                      <RiArrowDownSLine className="size-4 text-muted-foreground" />
+                      <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
                     </Button>
                   }
                 />
@@ -242,7 +248,7 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
                       <span className="truncate">
                         {policies.length ? policies.join(", ") : t("Select user group policies")}
                       </span>
-                      <RiArrowDownSLine className="size-4 text-muted-foreground" />
+                      <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
                     </Button>
                   }
                 />

@@ -118,11 +118,11 @@ export default function UserGroupsPage() {
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <Button type="button" size="sm" variant="outline" onClick={() => openEditItem(row.original)}>
-              <RiEdit2Line className="size-4" />
+              <RiEdit2Line className="size-4" aria-hidden />
               <span>{t("Edit")}</span>
             </Button>
             <Button type="button" size="sm" variant="outline" onClick={() => confirmDelete(row.original)}>
-              <RiDeleteBin5Line className="size-4" />
+              <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
           </div>
@@ -163,11 +163,11 @@ export default function UserGroupsPage() {
               disabled={!selectedKeys.length}
               onClick={() => setPoliciesDialogOpen(true)}
             >
-              <RiGroup2Fill className="size-4" />
+              <RiGroup2Fill className="size-4" aria-hidden />
               {t("Assign Policy")}
             </Button>
             <Button type="button" variant="outline" onClick={() => setNewFormOpen(true)}>
-              <RiAddLine className="size-4" />
+              <RiAddLine className="size-4" aria-hidden />
               {t("Add User Group")}
             </Button>
           </>

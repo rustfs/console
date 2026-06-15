@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI Audit"
+  short_description: "Audit UI dimensions, spacing, colors, states, and theme quality"
+  default_prompt: "Use $ui-audit to audit and fix UI dimensions, spacing, whitespace, colors, typography, states, and theme quality, then verify with screenshots."

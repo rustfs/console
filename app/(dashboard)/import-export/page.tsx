@@ -53,14 +53,14 @@ export default function ImportExportPage() {
 
   const exportHighlights = useMemo(
     () => [
-      { label: "Users", icon: RiUserLine, iconClass: "text-blue-500" },
-      { label: "User Groups", icon: RiGroupLine, iconClass: "text-green-500" },
+      { label: "Users", icon: RiUserLine, iconClass: "text-chart-1" },
+      { label: "User Groups", icon: RiGroupLine, iconClass: "text-chart-2" },
       {
         label: "IAM Policies",
         icon: RiShieldCheckLine,
-        iconClass: "text-purple-500",
+        iconClass: "text-chart-3",
       },
-      { label: "AK/SK", icon: RiKeyLine, iconClass: "text-orange-500" },
+      { label: "AK/SK", icon: RiKeyLine, iconClass: "text-chart-4" },
     ],
     [],
   )
@@ -148,7 +148,7 @@ export default function ImportExportPage() {
               <CardContent className="space-y-6">
                 <div className="grid gap-4 sm:grid-cols-2">
                   {exportHighlights.map((item) => (
-                    <div key={item.label} className="flex items-center gap-3 rounded-md border bg-muted/40 p-3">
+                    <div key={item.label} className="flex items-center gap-3 border bg-muted/40 p-3">
                       <item.icon className={`size-5 ${item.iconClass}`} aria-hidden />
                       <span className="text-sm font-medium text-foreground">{t(item.label)}</span>
                     </div>
@@ -169,7 +169,7 @@ export default function ImportExportPage() {
                 </div>
                 <Button variant="default" size="lg" disabled={isLoading} onClick={handleExportIam}>
                   <RiDownload2Line className="size-4" aria-hidden />
-                  <span>{isLoading ? t("Exporting...") : t("Export Now")}</span>
+                  <span>{isLoading ? t("Exporting…") : t("Export Now")}</span>
                 </Button>
               </CardFooter>
             </Card>
@@ -198,7 +198,13 @@ export default function ImportExportPage() {
                           <p className="text-sm font-medium text-foreground">{selectedFile.name}</p>
                           <p className="text-xs text-muted-foreground">{formatSize(selectedFile.size)}</p>
                         </div>
-                        <Button variant="ghost" size="icon" className="text-destructive" onClick={clearSelectedFile}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          aria-label={t("Remove")}
+                          onClick={clearSelectedFile}
+                        >
                           <RiCloseLine className="size-4" aria-hidden />
                         </Button>
                       </CardContent>
@@ -216,7 +222,7 @@ export default function ImportExportPage() {
                 </div>
                 <Button variant="default" size="lg" disabled={isLoading || !selectedFile} onClick={handleImportIam}>
                   <RiUpload2Line className="size-4" aria-hidden />
-                  <span>{isLoading ? t("Importing...") : t("Import Now")}</span>
+                  <span>{isLoading ? t("Importing…") : t("Import Now")}</span>
                 </Button>
               </CardFooter>
             </Card>

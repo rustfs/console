@@ -135,7 +135,7 @@ export function ParquetViewer({ url, sizeBytes }: ParquetViewerProps) {
 
   return (
     <div className="flex w-full min-w-0 max-h-[70vh] flex-1 flex-col gap-2">
-      <div className="min-h-0 w-full min-w-0 flex-1 overflow-auto rounded-md border">
+      <div className="min-h-0 w-full min-w-0 flex-1 overflow-auto border">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>

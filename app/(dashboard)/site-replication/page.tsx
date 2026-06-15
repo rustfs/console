@@ -34,7 +34,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { useDataTable } from "@/hooks/use-data-table"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useSiteReplication } from "@/hooks/use-site-replication"
-import { niceBytes } from "@/lib/functions"
+import { formatDateTime, niceBytes } from "@/lib/functions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import type {
@@ -57,15 +57,6 @@ const STATUS_QUERY = {
 function isNotImplementedError(error: unknown) {
   const message = (error as Error | undefined)?.message ?? ""
   return /notimplemented|not implemented/i.test(message)
-}
-
-function formatDateTime(value?: string) {
-  if (!value) return "--"
-
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-
-  return date.toLocaleString()
 }
 
 function formatSyncBadge(t: (key: string) => string, syncState: SiteReplicationPeerInfo["syncState"]) {
@@ -356,7 +347,7 @@ export default function SiteReplicationPage() {
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button type="button" variant="ghost" size="icon-sm" disabled={isBusy}>
+                  <Button type="button" variant="ghost" size="icon" disabled={isBusy}>
                     <RiMore2Line className="size-4" aria-hidden />
                     <span className="sr-only">{t("Actions")}</span>
                   </Button>

@@ -10,7 +10,6 @@ import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/
 import { ThemeImage } from "@/components/theme/image"
 import { useTiers } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
-import { cn } from "@/lib/utils"
 import { getThemeManifest } from "@/lib/theme/manifest"
 
 interface TiersNewFormProps {
@@ -141,7 +140,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Add Tier")}</DialogTitle>
         </DialogHeader>
@@ -153,12 +152,14 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                   key={item.value}
                   type="button"
                   onClick={() => setType(item.value)}
-                  className={cn("cursor-pointer border border-border/70 text-left transition hover:border-primary")}
+                  className="cursor-pointer border border-border/70 text-start transition hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
                 >
                   <div className="flex items-center gap-3 p-4">
                     {renderTypeIcon(item.icon)}
-                    <div>
-                      <p className="text-base font-semibold">{t(item.labelKey)}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold" title={t(item.labelKey)}>
+                        {t(item.labelKey)}
+                      </p>
                       <p className="text-sm text-muted-foreground">{t(item.descKey)}</p>
                     </div>
                   </div>
@@ -170,51 +171,64 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
               <button
                 type="button"
                 onClick={() => setType("")}
-                className="w-full cursor-pointer border text-left transition hover:border-primary"
+                className="w-full cursor-pointer border text-start transition hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
               >
                 <div className="flex items-center gap-3 p-4">
                   {selectedOption ? renderTypeIcon(selectedOption.icon) : null}
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm text-muted-foreground">{t("Selected Type")}</p>
-                    <p className="text-base font-semibold">{type === "rustfs" ? theme.brand.name : type}</p>
+                    <p className="truncate text-base font-semibold" title={type === "rustfs" ? theme.brand.name : type}>
+                      {type === "rustfs" ? theme.brand.name : type}
+                    </p>
                   </div>
                 </div>
               </button>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Field>
-                  <FieldLabel>{t("Name")} (A-Z,0-9,_)</FieldLabel>
+                  <FieldLabel htmlFor="tier-name">{t("Name")} (A-Z,0-9,_)</FieldLabel>
                   <FieldContent>
                     <Input
+                      id="tier-name"
+                      name="tier-name"
                       value={name}
                       onChange={handleNameChange}
                       placeholder={t("Please enter name")}
                       autoComplete="off"
+                      spellCheck={false}
                     />
                   </FieldContent>
                   {nameError && <FieldDescription className="text-destructive">{nameError}</FieldDescription>}
                 </Field>
 
                 <Field>
-                  <FieldLabel>{t("Endpoint")}</FieldLabel>
+                  <FieldLabel htmlFor="tier-endpoint">{t("Endpoint")}</FieldLabel>
                   <FieldContent>
                     <Input
+                      id="tier-endpoint"
+                      name="tier-endpoint"
+                      type="url"
                       value={endpoint}
                       onChange={(e) => setEndpoint(e.target.value)}
+                      autoComplete="off"
                       placeholder={t("Please enter endpoint")}
+                      spellCheck={false}
                     />
                   </FieldContent>
                 </Field>
 
                 {type === "gcs" ? (
                   <Field className="md:col-span-2">
-                    <FieldLabel>{t("Credentials")} (JSON)</FieldLabel>
+                    <FieldLabel htmlFor="tier-credentials">{t("Credentials")} (JSON)</FieldLabel>
                     <FieldContent>
                       <Textarea
+                        id="tier-credentials"
+                        name="tier-credentials"
                         value={creds}
                         onChange={(e) => setCreds(e.target.value)}
                         placeholder={t("Please enter GCS credentials JSON")}
                         autoComplete="off"
+                        spellCheck={false}
                         rows={6}
                       />
                     </FieldContent>
@@ -222,25 +236,31 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                 ) : (
                   <>
                     <Field>
-                      <FieldLabel>{t("Access Key")}</FieldLabel>
+                      <FieldLabel htmlFor="tier-access-key">{t("Access Key")}</FieldLabel>
                       <FieldContent>
                         <Input
+                          id="tier-access-key"
+                          name="tier-access-key"
                           value={accesskey}
                           onChange={(e) => setAccesskey(e.target.value)}
                           placeholder={t("Please enter Access Key")}
                           autoComplete="off"
+                          spellCheck={false}
                         />
                       </FieldContent>
                     </Field>
                     <Field>
-                      <FieldLabel>{t("Secret Key")}</FieldLabel>
+                      <FieldLabel htmlFor="tier-secret-key">{t("Secret Key")}</FieldLabel>
                       <FieldContent>
                         <Input
+                          id="tier-secret-key"
+                          name="tier-secret-key"
                           value={secretkey}
                           onChange={(e) => setSecretkey(e.target.value)}
                           type="password"
                           placeholder={t("Please enter Secret Key")}
                           autoComplete="off"
+                          spellCheck={false}
                         />
                       </FieldContent>
                     </Field>
@@ -248,45 +268,61 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                 )}
 
                 <Field>
-                  <FieldLabel>{t("Bucket")}</FieldLabel>
+                  <FieldLabel htmlFor="tier-bucket">{t("Bucket")}</FieldLabel>
                   <FieldContent>
                     <Input
+                      id="tier-bucket"
+                      name="tier-bucket"
                       value={bucket}
                       onChange={(e) => setBucket(e.target.value)}
+                      autoComplete="off"
                       placeholder={t("Please enter bucket")}
+                      spellCheck={false}
                     />
                   </FieldContent>
                 </Field>
 
                 <Field>
-                  <FieldLabel>{t("Prefix")}</FieldLabel>
+                  <FieldLabel htmlFor="tier-prefix">{t("Prefix")}</FieldLabel>
                   <FieldContent>
                     <Input
+                      id="tier-prefix"
+                      name="tier-prefix"
                       value={prefix}
                       onChange={(e) => setPrefix(e.target.value)}
+                      autoComplete="off"
                       placeholder={t("Please enter prefix")}
+                      spellCheck={false}
                     />
                   </FieldContent>
                 </Field>
 
                 <Field>
-                  <FieldLabel>{t("Region")}</FieldLabel>
+                  <FieldLabel htmlFor="tier-region">{t("Region")}</FieldLabel>
                   <FieldContent>
                     <Input
+                      id="tier-region"
+                      name="tier-region"
                       value={region}
                       onChange={(e) => setRegion(e.target.value)}
+                      autoComplete="off"
                       placeholder={t("Please enter region")}
+                      spellCheck={false}
                     />
                   </FieldContent>
                 </Field>
 
                 <Field>
-                  <FieldLabel>{t("Storage Class")}</FieldLabel>
+                  <FieldLabel htmlFor="tier-storage-class">{t("Storage Class")}</FieldLabel>
                   <FieldContent>
                     <Input
+                      id="tier-storage-class"
+                      name="tier-storage-class"
                       value={storageclass}
                       onChange={(e) => setStorageclass(e.target.value)}
+                      autoComplete="off"
                       placeholder={t("Please Enter storage class")}
+                      spellCheck={false}
                     />
                   </FieldContent>
                 </Field>
@@ -299,7 +335,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
             {t("Cancel")}
           </Button>
           <Button onClick={handleSave} disabled={!type} aria-disabled={submitting}>
-            {submitting ? t("Saving...") : t("Save")}
+            {submitting ? t("Saving…") : t("Save")}
           </Button>
         </DialogFooter>
       </DialogContent>

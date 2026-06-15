@@ -19,8 +19,8 @@ import { UserNotice } from "@/components/user/notice"
 import { useAccessKeys } from "@/hooks/use-access-keys"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
+import { formatDateTime } from "@/lib/functions"
 import type { ColumnDef } from "@tanstack/react-table"
-import dayjs from "dayjs"
 
 interface RowData {
   accessKey: string
@@ -89,7 +89,7 @@ export default function AccessKeysPage() {
       header: () => t("Expiration"),
       cell: ({ row }) =>
         row.original.expiration && row.original.expiration !== "9999-01-01T00:00:00Z"
-          ? dayjs(row.original.expiration).format("YYYY-MM-DD HH:mm")
+          ? formatDateTime(row.original.expiration)
           : "-",
     },
     {
@@ -121,13 +121,13 @@ export default function AccessKeysPage() {
         <div className="flex justify-center gap-2">
           {canEditAccessKey ? (
             <Button variant="outline" size="sm" onClick={() => openEditItem(row.original)}>
-              <RiEdit2Line className="size-4" />
+              <RiEdit2Line className="size-4" aria-hidden />
               <span>{t("Edit")}</span>
             </Button>
           ) : null}
           {canDeleteAccessKey ? (
             <Button variant="outline" size="sm" onClick={() => confirmDeleteSingle(row.original)}>
-              <RiDeleteBin5Line className="size-4" />
+              <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
           ) : null}
@@ -222,13 +222,13 @@ export default function AccessKeysPage() {
             />
             {selectedKeys.length > 0 && canBulkDeleteAccessKeys && (
               <Button variant="outline" disabled={!selectedKeys.length} onClick={deleteSelected}>
-                <RiDeleteBin5Line className="size-4" />
+                <RiDeleteBin5Line className="size-4" aria-hidden />
                 <span>{t("Delete Selected")}</span>
               </Button>
             )}
             {canCreateAccessKey ? (
               <Button variant="outline" onClick={() => setNewItemVisible(true)}>
-                <RiAddLine className="size-4" />
+                <RiAddLine className="size-4" aria-hidden />
                 <span>{t("Add Access Key")}</span>
               </Button>
             ) : null}

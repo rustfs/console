@@ -72,14 +72,16 @@ export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{group.name || t("Members")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-md border px-3 py-2">
-            <span className="text-sm text-muted-foreground">{t("Status")}</span>
-            <Switch checked={statusBoolean} onCheckedChange={handleStatusToggle} />
+          <div className="flex items-center justify-between border px-3 py-2">
+            <label htmlFor="user-group-status" className="text-sm text-muted-foreground">
+              {t("Status")}
+            </label>
+            <Switch id="user-group-status" checked={statusBoolean} onCheckedChange={handleStatusToggle} />
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">

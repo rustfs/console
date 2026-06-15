@@ -69,10 +69,10 @@ export default function OidcCallbackPage() {
   }, [credentialsSet, isAuthenticated, hasResolvedFirstRoute, firstAccessibleRoute, router])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-neutral-800">
+    <div className="flex min-h-screen items-center justify-center bg-muted">
       <div className="text-center">
-        <div className="mb-4 h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 mx-auto" />
-        <p className="text-gray-600 dark:text-neutral-400">{t("Completing SSO login...")}</p>
+        <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-muted-foreground/25 border-t-primary" />
+        <p className="text-muted-foreground">{t("Completing SSO login…")}</p>
       </div>
     </div>
   )

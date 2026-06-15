@@ -15,7 +15,6 @@ import {
   type EventTargetType,
 } from "@/lib/events-target-config"
 import { useMessage } from "@/lib/feedback/message"
-import { cn } from "@/lib/utils"
 import { buildRoute } from "@/lib/routes"
 
 interface EventsTargetNewFormProps {
@@ -130,7 +129,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[80vh] overflow-y-auto overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{type ? t("Add {type} Destination", { type }) : t("Add Event Destination")}</DialogTitle>
         </DialogHeader>
@@ -142,7 +141,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
                   key={option.value}
                   type="button"
                   onClick={() => setType(option.value)}
-                  className={cn("cursor-pointer border border-border/70 text-left transition hover:border-primary")}
+                  className="cursor-pointer border border-border/70 text-start transition hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
                 >
                   <div className="flex items-center gap-3 p-4">
                     <Image
@@ -152,9 +151,11 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
                       height={40}
                       className="size-10 shrink-0 object-contain"
                     />
-                    <div>
-                      <p className="text-base font-semibold">{t(option.labelKey)}</p>
-                      <p className="text-sm text-muted-foreground">{t(option.descKey)}</p>
+                    <div className="min-w-0">
+                      <p className="truncate text-base font-semibold" title={t(option.labelKey)}>
+                        {t(option.labelKey)}
+                      </p>
+                      <p className="break-words text-sm text-muted-foreground">{t(option.descKey)}</p>
                     </div>
                   </div>
                 </button>
@@ -165,7 +166,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
               <button
                 type="button"
                 onClick={() => setType("")}
-                className="flex w-full cursor-pointer items-center gap-3 border p-4 text-left transition hover:border-primary"
+                className="flex w-full cursor-pointer items-center gap-3 border p-4 text-start transition hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
               >
                 {selectedOption && (
                   <Image
@@ -176,9 +177,11 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
                     className="size-10 shrink-0 object-contain"
                   />
                 )}
-                <div className="flex flex-col">
+                <div className="flex min-w-0 flex-col">
                   <span className="text-sm text-muted-foreground">{t("Selected Type")}</span>
-                  <span className="text-base font-semibold">{type}</span>
+                  <span className="truncate text-base font-semibold" title={type}>
+                    {type}
+                  </span>
                 </div>
               </button>
 
@@ -188,10 +191,12 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
                   <FieldContent>
                     <Input
                       id="target-name"
+                      name="target-name"
                       value={name}
                       onChange={handleNameChange}
                       placeholder={t("Please enter name")}
                       autoComplete="off"
+                      spellCheck={false}
                     />
                   </FieldContent>
                   {nameError && <FieldDescription className="text-destructive">{nameError}</FieldDescription>}
@@ -203,6 +208,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
                     <FieldContent>
                       <Input
                         id={`config-${cfg.name}`}
+                        name={`config-${cfg.name}`}
                         value={String(config[cfg.name] ?? "")}
                         onChange={(e) =>
                           setConfig((prev) => ({
@@ -213,6 +219,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
                         type={cfg.type === "password" ? "password" : "text"}
                         autoComplete="off"
                         placeholder={`${t("Please enter")} ${t(cfg.label).toLowerCase()}`}
+                        spellCheck={false}
                       />
                     </FieldContent>
                   </Field>
@@ -226,7 +233,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
             {t("Cancel")}
           </Button>
           <Button onClick={handleSave} disabled={!type} aria-disabled={submitting}>
-            {submitting ? t("Saving...") : t("Save")}
+            {submitting ? t("Saving…") : t("Save")}
           </Button>
         </DialogFooter>
       </DialogContent>

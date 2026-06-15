@@ -70,6 +70,7 @@ export function UserGroupSetPoliciesMultiple({
         id: "select",
         header: () => (
           <Checkbox
+            aria-label={`${t("Select")} ${t("Policies")}`}
             checked={allVisibleSelected}
             indeterminate={!allVisibleSelected && checked.length > 0}
             onCheckedChange={(v) => toggleSelectAll(v === true)}
@@ -78,6 +79,7 @@ export function UserGroupSetPoliciesMultiple({
         enableSorting: false,
         cell: ({ row }) => (
           <Checkbox
+            aria-label={`${t("Select")} ${row.original.name}`}
             checked={isSelected(row.original.name)}
             onCheckedChange={(v) => toggleSelection(row.original.name, v === true)}
           />

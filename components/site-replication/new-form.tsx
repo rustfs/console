@@ -190,8 +190,8 @@ export function SiteReplicationNewForm({
         showCloseButton={false}
       >
         <div className="grid overflow-hidden border bg-background lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.35fr)]">
-          <section className="relative overflow-hidden border-b bg-[radial-gradient(circle_at_top_left,_rgba(251,191,36,0.26),_transparent_45%),linear-gradient(160deg,_rgba(255,247,237,0.92),_rgba(255,255,255,1)_65%)] px-6 py-6 lg:border-r lg:border-b-0">
-            <div className="absolute inset-y-0 right-0 hidden w-px bg-border/70 lg:block" />
+          <section className="relative overflow-hidden border-b bg-muted/20 px-6 py-6 lg:border-e lg:border-b-0">
+            <div className="absolute inset-y-0 end-0 hidden w-px bg-border/70 lg:block" />
             <div className="relative space-y-6">
               <DialogHeader className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
@@ -248,12 +248,20 @@ export function SiteReplicationNewForm({
               <div className="border bg-background/75 p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
-                    <p className="text-sm font-medium">{t("Replicate ILM Expiry")}</p>
+                    <label htmlFor="site-replication-ilm-expiry" className="text-sm font-medium">
+                      {t("Replicate ILM Expiry")}
+                    </label>
                     <p className="text-xs text-muted-foreground">
                       {t("Matches the backend and MinIO site replication option for expiry lifecycle rules.")}
                     </p>
                   </div>
-                  <Switch checked={replicateIlmExpiry} onCheckedChange={setReplicateIlmExpiry} disabled={saving} />
+                  <Switch
+                    id="site-replication-ilm-expiry"
+                    name="site-replication-ilm-expiry"
+                    checked={replicateIlmExpiry}
+                    onCheckedChange={setReplicateIlmExpiry}
+                    disabled={saving}
+                  />
                 </div>
                 <Separator className="my-4" />
                 <div className="space-y-2 text-xs text-muted-foreground">
@@ -284,7 +292,7 @@ export function SiteReplicationNewForm({
                   <RiAddLine className="size-4" aria-hidden />
                   {t("Add Site")}
                 </Button>
-                <Button type="button" variant="ghost" size="icon-sm" onClick={handleCancel} disabled={saving}>
+                <Button type="button" variant="ghost" size="icon" onClick={handleCancel} disabled={saving}>
                   <RiCloseLine className="size-4" aria-hidden />
                   <span className="sr-only">{t("Cancel")}</span>
                 </Button>
@@ -314,7 +322,7 @@ export function SiteReplicationNewForm({
                       {sites.length > 1 ? (
                         <Button
                           type="button"
-                          size="icon-sm"
+                          size="icon"
                           variant="ghost"
                           aria-label={t("Delete")}
                           onClick={() => removeSite(index)}
@@ -330,9 +338,12 @@ export function SiteReplicationNewForm({
                         <Label htmlFor={`site-name-${index}`}>{t("Site Name")}</Label>
                         <Input
                           id={`site-name-${index}`}
+                          name={`site-name-${index}`}
                           value={site.name}
                           onChange={(event) => updateSite(index, "name", event.target.value)}
+                          autoComplete="off"
                           placeholder={t("Site Name")}
+                          spellCheck={false}
                           disabled={saving}
                         />
                       </div>
@@ -341,9 +352,13 @@ export function SiteReplicationNewForm({
                         <Label htmlFor={`site-endpoint-${index}`}>{t("Endpoint *")}</Label>
                         <Input
                           id={`site-endpoint-${index}`}
+                          name={`site-endpoint-${index}`}
+                          type="url"
                           value={site.endpoint}
                           onChange={(event) => updateSite(index, "endpoint", event.target.value)}
+                          autoComplete="off"
                           placeholder="https://remote-rustfs.example.com"
+                          spellCheck={false}
                           disabled={saving}
                         />
                         {errors[index]?.endpoint ? (
@@ -359,9 +374,12 @@ export function SiteReplicationNewForm({
                         <Label htmlFor={`site-access-${index}`}>{t("Access Key *")}</Label>
                         <Input
                           id={`site-access-${index}`}
+                          name={`site-access-${index}`}
                           value={site.accessKey}
                           onChange={(event) => updateSite(index, "accessKey", event.target.value)}
+                          autoComplete="off"
                           placeholder={t("Access Key")}
+                          spellCheck={false}
                           disabled={saving}
                         />
                         {errors[index]?.accessKey ? (
@@ -377,10 +395,13 @@ export function SiteReplicationNewForm({
                         <Label htmlFor={`site-secret-${index}`}>{t("Secret Key *")}</Label>
                         <Input
                           id={`site-secret-${index}`}
+                          name={`site-secret-${index}`}
                           type="password"
                           value={site.secretKey}
                           onChange={(event) => updateSite(index, "secretKey", event.target.value)}
+                          autoComplete="off"
                           placeholder={t("Secret Key")}
+                          spellCheck={false}
                           disabled={saving}
                         />
                         {errors[index]?.secretKey ? (
@@ -402,7 +423,7 @@ export function SiteReplicationNewForm({
                 {t("Cancel")}
               </Button>
               <Button type="button" onClick={handleSave} disabled={saving}>
-                {saving ? t("Saving...") : t("Save")}
+                {saving ? t("Saving…") : t("Save")}
               </Button>
             </DialogFooter>
           </section>

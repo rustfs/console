@@ -114,7 +114,14 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
           <Field>
             <FieldLabel htmlFor="policy-name">{t("Policy Name")}</FieldLabel>
             <FieldContent>
-              <Input id="policy-name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="off" />
+              <Input
+                id="policy-name"
+                name="policy-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+              />
             </FieldContent>
             {errors.name && <FieldDescription className="text-destructive">{errors.name}</FieldDescription>}
           </Field>
@@ -122,12 +129,14 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
           <Field>
             <FieldLabel htmlFor="policy-content">{t("Policy Original")}</FieldLabel>
             <FieldContent>
-              <div className="max-h-[60vh] overflow-auto rounded-md border">
+              <div className="max-h-[60vh] overflow-auto border">
                 <Textarea
                   id="policy-content"
+                  name="policy-content"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   className="min-h-[200px] font-mono text-xs"
+                  spellCheck={false}
                 />
               </div>
             </FieldContent>

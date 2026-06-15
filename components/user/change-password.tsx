@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import { Field, FieldContent, FieldLabel, FieldDescription } from "@/components/ui/field"
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { useMessage } from "@/lib/feedback/message"
 import { useApiOptional } from "@/contexts/api-context"
 import { useUsers } from "@/hooks/use-users"
@@ -92,7 +92,7 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
 
   return (
     <Dialog open={visible} onOpenChange={closeModal}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Change current account password")}</DialogTitle>
         </DialogHeader>
@@ -103,13 +103,16 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
             <FieldContent>
               <Input
                 id="password-current"
+                name="password-current"
                 value={currentSecretKey}
                 onChange={(e) => setCurrentSecretKey(e.target.value)}
                 type="password"
                 autoComplete="off"
+                spellCheck={false}
+                aria-invalid={Boolean(errors.current)}
               />
             </FieldContent>
-            {errors.current && <FieldDescription className="text-destructive">{errors.current}</FieldDescription>}
+            <FieldError>{errors.current}</FieldError>
           </Field>
 
           <Field>
@@ -117,13 +120,16 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
             <FieldContent>
               <Input
                 id="password-new"
+                name="password-new"
                 value={newSecretKey}
                 onChange={(e) => setNewSecretKey(e.target.value)}
                 type="password"
-                autoComplete="off"
+                autoComplete="new-password"
+                spellCheck={false}
+                aria-invalid={Boolean(errors.new)}
               />
             </FieldContent>
-            {errors.new && <FieldDescription className="text-destructive">{errors.new}</FieldDescription>}
+            <FieldError>{errors.new}</FieldError>
           </Field>
 
           <Field>
@@ -131,14 +137,17 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
             <FieldContent>
               <Input
                 id="password-new-confirm"
+                name="password-new-confirm"
                 value={reNewSecretKey}
                 onChange={(e) => setReNewSecretKey(e.target.value)}
                 type="password"
-                autoComplete="off"
+                autoComplete="new-password"
+                spellCheck={false}
                 disabled={!newSecretKey}
+                aria-invalid={Boolean(errors.reNew)}
               />
             </FieldContent>
-            {errors.reNew && <FieldDescription className="text-destructive">{errors.reNew}</FieldDescription>}
+            <FieldError>{errors.reNew}</FieldError>
           </Field>
         </div>
 

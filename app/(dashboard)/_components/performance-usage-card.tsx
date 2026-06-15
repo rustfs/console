@@ -45,13 +45,13 @@ export function PerformanceUsageCard({
           </div>
           <div className="w-full max-w-xs space-y-2">
             <Progress value={usedPercent} className="h-2" />
-            <p className="text-right text-xs text-muted-foreground">{usedPercent.toFixed(0)}%</p>
+            <p className="text-end text-xs text-muted-foreground">{usedPercent.toFixed(0)}%</p>
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
           {usageStats.map((item) => (
-            <div key={item.label} className="rounded-lg border bg-muted/40 p-4">
+            <div key={item.label} className="border bg-muted/40 p-4">
               <p className="text-xs uppercase text-muted-foreground">{item.label}</p>
               <p className="mt-2 text-sm font-medium text-foreground">{item.value}</p>
             </div>

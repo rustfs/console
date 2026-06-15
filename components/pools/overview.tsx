@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { niceBytes } from "@/lib/functions"
+import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import type { PoolsOverview } from "@/lib/pool-operations"
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -21,18 +21,8 @@ function formatBytesValue(value?: number) {
   return value === undefined ? "--" : niceBytes(String(value))
 }
 
-function formatNumberValue(value?: number) {
-  return value === undefined ? "--" : value.toLocaleString()
-}
-
 function formatPercentValue(value?: number) {
   return value === undefined ? "--" : `${value.toFixed(2)}%`
-}
-
-function formatDateTime(value?: string) {
-  if (!value) return "--"
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
 }
 
 export function PoolsOverviewCard({
@@ -128,8 +118,8 @@ export function PoolsOverviewCard({
                         <TableCell>{pool.decommission.complete ? t("Yes") : t("No")}</TableCell>
                         <TableCell>{pool.decommission.failed ? t("Yes") : t("No")}</TableCell>
                         <TableCell>{pool.decommission.canceled ? t("Yes") : t("No")}</TableCell>
-                        <TableCell>{formatNumberValue(pool.decommission.objects)}</TableCell>
-                        <TableCell>{formatNumberValue(pool.decommission.objectsFailed)}</TableCell>
+                        <TableCell>{formatInteger(pool.decommission.objects)}</TableCell>
+                        <TableCell>{formatInteger(pool.decommission.objectsFailed)}</TableCell>
                         <TableCell>{formatBytesValue(pool.decommission.bytes)}</TableCell>
                         <TableCell>{formatBytesValue(pool.decommission.bytesFailed)}</TableCell>
                       </>

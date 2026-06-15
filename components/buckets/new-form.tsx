@@ -4,7 +4,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -147,57 +147,77 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
 
   return (
     <Dialog open={show} onOpenChange={(open) => !open && closeModal()} disablePointerDismissal>
-      <DialogContent className="sm:max-w-2xl" showCloseButton={false}>
+      <DialogContent className="overflow-x-hidden sm:max-w-2xl" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{t("Create Bucket")}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 max-h-[80vh] overflow-auto px-2 -mx-2">
+        <div className="-mx-2 max-h-[80vh] space-y-6 overflow-y-auto overflow-x-hidden px-2">
           <Field>
             <FieldLabel htmlFor="bucket-name">{t("Please enter name")}</FieldLabel>
             <FieldContent>
               <Input
                 id="bucket-name"
+                name="bucket-name"
                 value={objectKey}
                 onChange={(e) => setObjectKey(e.target.value)}
                 autoComplete="off"
                 className={cn("w-full", nameError && "border-destructive focus-visible:ring-destructive")}
+                aria-invalid={Boolean(nameError)}
               />
             </FieldContent>
-            {nameError && <FieldDescription className="text-destructive">{t(nameError)}</FieldDescription>}
+            <FieldError>{nameError ? t(nameError) : undefined}</FieldError>
           </Field>
 
           <Field orientation="responsive" className="items-center">
-            <FieldLabel>{t("Version")}</FieldLabel>
+            <FieldLabel htmlFor="bucket-new-version">{t("Version")}</FieldLabel>
             <FieldContent className="flex justify-end">
-              <Switch checked={version} onCheckedChange={setVersion} disabled={!canEditVersioning} />
+              <Switch
+                id="bucket-new-version"
+                checked={version}
+                onCheckedChange={setVersion}
+                disabled={!canEditVersioning}
+              />
             </FieldContent>
           </Field>
 
           <Field orientation="responsive" className="items-center">
-            <FieldLabel>{t("Object Lock")}</FieldLabel>
+            <FieldLabel htmlFor="bucket-new-object-lock">{t("Object Lock")}</FieldLabel>
             <FieldContent className="flex justify-end">
-              <Switch checked={objectLock} onCheckedChange={setObjectLock} disabled={!canEditObjectLock} />
+              <Switch
+                id="bucket-new-object-lock"
+                checked={objectLock}
+                onCheckedChange={setObjectLock}
+                disabled={!canEditObjectLock}
+              />
             </FieldContent>
           </Field>
 
           <Field orientation="responsive" className="items-center">
-            <FieldLabel>{t("Bucket Quota")}</FieldLabel>
+            <FieldLabel htmlFor="bucket-new-quota">{t("Bucket Quota")}</FieldLabel>
             <FieldContent className="flex justify-end">
-              <Switch checked={quotaEnabled} onCheckedChange={setQuotaEnabled} disabled={!canEditQuota} />
+              <Switch
+                id="bucket-new-quota"
+                checked={quotaEnabled}
+                onCheckedChange={setQuotaEnabled}
+                disabled={!canEditQuota}
+              />
             </FieldContent>
           </Field>
 
           {quotaEnabled && (
-            <div className="space-y-4 rounded-lg border p-4">
+            <div className="space-y-4 border p-4">
               <Field>
                 <FieldLabel>{t("Quota Size")}</FieldLabel>
                 <FieldContent>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
+                      name="bucket-quota-size"
                       value={quotaSize}
                       onChange={(e) => setQuotaSize(e.target.value)}
                       type="number"
+                      inputMode="numeric"
+                      aria-label={t("Quota Size")}
                       className="sm:w-32"
                     />
                     <RadioGroup
@@ -206,8 +226,16 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                       className="grid grid-cols-2 gap-2 sm:grid-cols-4"
                     >
                       {["MiB", "GiB", "TiB", "PiB"].map((unit) => (
-                        <label key={unit} className="flex items-start gap-3 rounded-md border border-border/50 p-3">
-                          <RadioGroupItem value={unit} className="mt-0.5" />
+                        <label
+                          key={unit}
+                          htmlFor={`bucket-new-quota-unit-${unit.toLowerCase()}`}
+                          className="flex items-start gap-3 border border-border/50 p-3"
+                        >
+                          <RadioGroupItem
+                            id={`bucket-new-quota-unit-${unit.toLowerCase()}`}
+                            value={unit}
+                            className="mt-0.5"
+                          />
                           <span className="text-sm font-medium">{unit}</span>
                         </label>
                       ))}
@@ -219,11 +247,11 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
           )}
 
           {objectLock && (
-            <div className="space-y-4 rounded-lg border p-4">
+            <div className="space-y-4 border p-4">
               <Field orientation="responsive" className="items-center">
-                <FieldLabel>{t("Retention")}</FieldLabel>
+                <FieldLabel htmlFor="bucket-new-retention">{t("Retention")}</FieldLabel>
                 <FieldContent className="flex justify-end">
-                  <Switch checked={retentionEnabled} onCheckedChange={setRetentionEnabled} />
+                  <Switch id="bucket-new-retention" checked={retentionEnabled} onCheckedChange={setRetentionEnabled} />
                 </FieldContent>
               </Field>
 
@@ -240,9 +268,14 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                         {retentionModeOptions.map((option) => (
                           <label
                             key={option.value}
-                            className="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                            htmlFor={`bucket-new-retention-mode-${option.value.toLowerCase()}`}
+                            className="flex items-start gap-3 border border-border/50 p-3"
                           >
-                            <RadioGroupItem value={option.value} className="mt-0.5" />
+                            <RadioGroupItem
+                              id={`bucket-new-retention-mode-${option.value.toLowerCase()}`}
+                              value={option.value}
+                              className="mt-0.5"
+                            />
                             <span className="text-sm font-medium">{t(option.label)}</span>
                           </label>
                         ))}
@@ -255,9 +288,12 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                     <FieldContent>
                       <div className="flex flex-col gap-2 sm:flex-row">
                         <Input
+                          name="bucket-retention-period"
                           value={retentionPeriod}
                           onChange={(e) => setRetentionPeriod(e.target.value)}
                           type="number"
+                          inputMode="numeric"
+                          aria-label={t("Validity")}
                           className="sm:w-32"
                         />
                         <RadioGroup
@@ -268,9 +304,14 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                           {retentionUnitOptions.map((option) => (
                             <label
                               key={option.value}
-                              className="flex items-start gap-3 rounded-md border border-border/50 p-3"
+                              htmlFor={`bucket-new-retention-unit-${option.value}`}
+                              className="flex items-start gap-3 border border-border/50 p-3"
                             >
-                              <RadioGroupItem value={option.value} className="mt-0.5" />
+                              <RadioGroupItem
+                                id={`bucket-new-retention-unit-${option.value}`}
+                                value={option.value}
+                                className="mt-0.5"
+                              />
                               <span className="text-sm font-medium">{t(option.labelKey)}</span>
                             </label>
                           ))}

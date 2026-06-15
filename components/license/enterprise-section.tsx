@@ -3,7 +3,6 @@
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { RiUploadFill, RiCustomerService2Line } from "@remixicon/react"
-import dayjs from "dayjs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,7 +12,7 @@ import { useDataTable } from "@/hooks/use-data-table"
 import type { ColumnDef } from "@tanstack/react-table"
 
 const hasValidLicense = false
-const endDate = dayjs().format("YYYY-MM-DD")
+const endDate = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())
 
 interface PermissionItem {
   name: string
@@ -233,7 +232,7 @@ export function LicenseEnterpriseSection() {
                   <Badge variant={hasValidLicense ? "default" : "destructive"}>{t("Enterprise License")}</Badge>
                   <span
                     className={
-                      hasValidLicense ? "text-sm font-medium text-emerald-600" : "text-sm font-medium text-rose-500"
+                      hasValidLicense ? "text-sm font-medium text-foreground" : "text-sm font-medium text-destructive"
                     }
                   >
                     {t("Status")}：{hasValidLicense ? t("Normal") : t("Expired")}

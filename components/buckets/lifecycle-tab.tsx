@@ -191,12 +191,12 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false }: BucketLife
         <div className="flex gap-2">
           {canEditLifecycle ? (
             <Button variant="outline" onClick={() => setNewFormOpen(true)}>
-              <RiAddLine className="size-4" />
+              <RiAddLine className="size-4" aria-hidden />
               <span>{t("Add Lifecycle Rule")}</span>
             </Button>
           ) : null}
           <Button variant="outline" onClick={loadData}>
-            <RiRefreshLine className="size-4" />
+            <RiRefreshLine className="size-4" aria-hidden />
             <span>{t("Refresh")}</span>
           </Button>
         </div>

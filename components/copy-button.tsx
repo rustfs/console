@@ -37,7 +37,7 @@ export function CopyButton({ value = "", iconOnly = false }) {
     >
       {iconOnly ? (
         <>
-          <RiFileCopyLine className="size-[18px]" />
+          <RiFileCopyLine className="size-4" aria-hidden />
           <span className="sr-only">{t("Copy")}</span>
         </>
       ) : (

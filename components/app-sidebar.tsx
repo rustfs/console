@@ -43,7 +43,7 @@ function NavIcon({ name }: { name?: string }) {
   // Icon from static map lookup; rule flags dynamic lookup as "component during render"
   return (
     // eslint-disable-next-line react-hooks/static-components -- icon from static map
-    <Icon className="size-4 shrink-0" />
+    <Icon className="size-4 shrink-0" aria-hidden />
   )
 }
 
@@ -149,12 +149,12 @@ export function AppSidebar() {
       <SidebarHeader>
         <Link href={homeRoute ?? "/"} className="flex items-center gap-3">
           {isCollapsed ? (
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-md font-semibold text-primary-foreground">
+            <div className="flex size-8 items-center justify-center rounded-none bg-primary text-sm font-semibold text-primary-foreground">
               <span>{brandInitial}</span>
             </div>
           ) : (
             <div className="flex min-w-0 items-baseline gap-2 px-3 py-4">
-              <ThemeLogo width={64} height={16} className="h-4 w-auto shrink-0" alt={APP_NAME} />
+              <ThemeLogo width={64} height={16} className="shrink-0" alt={APP_NAME} priority />
             </div>
           )}
         </Link>
@@ -184,7 +184,10 @@ export function AppSidebar() {
                                   >
                                     <NavIcon name={item.icon} />
                                     <span className="flex-1 truncate">{getLabel(item)}</span>
-                                    <RiArrowRightSLine className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                                    <RiArrowRightSLine
+                                      className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+                                      aria-hidden
+                                    />
                                   </SidebarMenuButton>
                                 }
                               />
@@ -204,7 +207,10 @@ export function AppSidebar() {
                                             >
                                               <NavIcon name={child.icon} />
                                               <span className="truncate">{getLabel(child)}</span>
-                                              <RiExternalLinkLine className="ms-auto size-3 text-muted-foreground" />
+                                              <RiExternalLinkLine
+                                                className="ms-auto size-3 text-muted-foreground"
+                                                aria-hidden
+                                              />
                                             </a>
                                           }
                                         />
@@ -239,7 +245,7 @@ export function AppSidebar() {
                                     >
                                       <NavIcon name={item.icon} />
                                       <span className="flex-1 truncate">{getLabel(item)}</span>
-                                      <RiExternalLinkLine className="size-3.5 text-muted-foreground" />
+                                      <RiExternalLinkLine className="size-3.5 text-muted-foreground" aria-hidden />
                                     </a>
                                   }
                                 />

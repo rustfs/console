@@ -33,7 +33,7 @@ export default function ReplicationPage() {
       <PageHeader
         actions={
           <Button variant="outline" nativeButton={false} render={<Link href="/replication" />}>
-            <RiArrowLeftLine className="size-4" />
+            <RiArrowLeftLine className="size-4" aria-hidden />
             <span>{t("Buckets")}</span>
           </Button>
         }

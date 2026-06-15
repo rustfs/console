@@ -54,13 +54,13 @@ export function TaskPanel({ tasks, onClearTasks }: TaskPanelProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-100">
+      <Alert variant="destructive">
         <AlertDescription className="space-y-2 text-sm leading-relaxed">
           <p>
-            <span className="font-medium text-amber-600 dark:text-amber-300">{t("Browser Warning")}</span>
+            <span className="font-medium text-destructive">{t("Browser Warning")}</span>
           </p>
           <p>
-            <span className="font-medium text-amber-600 dark:text-amber-300">{t("Cache Warning")}</span>
+            <span className="font-medium text-destructive">{t("Cache Warning")}</span>
           </p>
         </AlertDescription>
       </Alert>

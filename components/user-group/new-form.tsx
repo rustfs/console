@@ -61,15 +61,24 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{t("Add group members")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           <Field>
-            <FieldLabel className="text-sm font-medium">{t("Name")}</FieldLabel>
+            <FieldLabel htmlFor="user-group-name" className="text-sm font-medium">
+              {t("Name")}
+            </FieldLabel>
             <FieldContent>
-              <Input value={group} onChange={(e) => setGroup(e.target.value)} autoComplete="off" />
+              <Input
+                id="user-group-name"
+                name="user-group-name"
+                value={group}
+                onChange={(e) => setGroup(e.target.value)}
+                autoComplete="off"
+                spellCheck={false}
+              />
             </FieldContent>
           </Field>
           <UserSelector

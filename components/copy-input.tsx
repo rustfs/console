@@ -43,6 +43,7 @@ export function CopyInput({
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
         readOnly={readonly}
+        aria-label={props["aria-label"] ?? t("Copy")}
         className="flex-1"
         {...props}
       />
@@ -59,7 +60,7 @@ export function CopyInput({
           title={t("Copy")}
           onClick={handleCopy}
         >
-          <RiFileCopyLine className="size-[18px]" />
+          <RiFileCopyLine className="size-4" aria-hidden />
           <span className="sr-only">{t("Copy")}</span>
         </Button>
       )}

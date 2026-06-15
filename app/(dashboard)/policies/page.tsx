@@ -95,13 +95,13 @@ export default function PoliciesPage() {
         <div className="flex items-center gap-2">
           {canEditPolicy ? (
             <Button variant="outline" size="sm" onClick={() => handleEdit(row.original)}>
-              <RiEdit2Line className="size-4" />
+              <RiEdit2Line className="size-4" aria-hidden />
               <span>{t("Edit")}</span>
             </Button>
           ) : null}
           {canDeletePolicy ? (
             <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
-              <RiDeleteBin5Line className="size-4" />
+              <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
           ) : null}
@@ -152,7 +152,7 @@ export default function PoliciesPage() {
             />
             {canCreatePolicy ? (
               <Button variant="outline" onClick={handleNew}>
-                <RiAddLine className="size-4" />
+                <RiAddLine className="size-4" aria-hidden />
                 <span>{t("New Policy")}</span>
               </Button>
             ) : null}

@@ -142,57 +142,79 @@ export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: Acces
 
   return (
     <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className="sm:max-w-6xl">
+      <DialogContent className="overflow-x-hidden sm:max-w-6xl">
         <DialogHeader>
           <DialogTitle>{t("Edit Key")}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 lg:flex-row max-h-[80vh] overflow-auto px-2 -mx-2">
+        <div className="-mx-2 flex max-h-[80vh] flex-col gap-4 overflow-y-auto overflow-x-hidden px-2 lg:flex-row">
           <div className="flex w-full flex-col gap-4 lg:w-72 lg:shrink-0">
             <Field>
-              <FieldLabel>{t("Access Key")}</FieldLabel>
+              <FieldLabel htmlFor="edit-access-key">{t("Access Key")}</FieldLabel>
               <FieldContent>
-                <Input value={accesskey} disabled />
+                <Input id="edit-access-key" name="edit-access-key" value={accesskey} disabled />
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel>{t("Expiry")}</FieldLabel>
+              <FieldLabel htmlFor="edit-access-key-expiry">{t("Expiry")}</FieldLabel>
               <FieldContent>
-                <DateTimePicker value={expiry} onChange={setExpiry} min={minExpiry} />
+                <DateTimePicker id="edit-access-key-expiry" value={expiry} onChange={setExpiry} min={minExpiry} />
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel>{t("Name")}</FieldLabel>
+              <FieldLabel htmlFor="edit-access-key-name">{t("Name")}</FieldLabel>
               <FieldContent>
-                <Input value={name} onChange={(e) => setName(e.target.value)} />
+                <Input
+                  id="edit-access-key-name"
+                  name="edit-access-key-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                />
               </FieldContent>
             </Field>
 
             <Field>
-              <FieldLabel>{t("Description")}</FieldLabel>
+              <FieldLabel htmlFor="edit-access-key-description">{t("Description")}</FieldLabel>
               <FieldContent>
-                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+                <Textarea
+                  id="edit-access-key-description"
+                  name="edit-access-key-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={2}
+                />
               </FieldContent>
             </Field>
 
             <Field orientation="responsive">
-              <FieldLabel className="text-sm font-medium">{t("Status")}</FieldLabel>
+              <FieldLabel htmlFor="edit-access-key-status" className="text-sm font-medium">
+                {t("Status")}
+              </FieldLabel>
               <FieldContent className="flex justify-end">
-                <Switch checked={status === "on"} onCheckedChange={(checked) => setStatus(checked ? "on" : "off")} />
+                <Switch
+                  id="edit-access-key-status"
+                  checked={status === "on"}
+                  onCheckedChange={(checked) => setStatus(checked ? "on" : "off")}
+                />
               </FieldContent>
             </Field>
           </div>
 
-          <div className="flex-1 max-h-[60vh] overflow-auto">
+          <div className="max-h-[60vh] flex-1 overflow-y-auto overflow-x-hidden">
             <Field className="h-full">
-              <FieldLabel>{t("Policy")}</FieldLabel>
+              <FieldLabel htmlFor="edit-access-key-policy">{t("Policy")}</FieldLabel>
               <FieldContent className="h-full">
                 <Textarea
+                  id="edit-access-key-policy"
+                  name="edit-access-key-policy"
                   value={policy}
                   onChange={(e) => setPolicy(e.target.value)}
                   className="h-full min-h-[200px] font-mono text-xs"
+                  spellCheck={false}
                 />
               </FieldContent>
             </Field>

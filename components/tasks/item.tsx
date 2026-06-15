@@ -36,9 +36,10 @@ export function TaskItem({ task }: TaskItemProps) {
           variant="ghost"
           size="sm"
           className="h-auto shrink-0 px-2 text-xs opacity-0 group-hover:opacity-100"
+          aria-label={t("Delete Record")}
           onClick={() => taskManager.removeTask(task.id)}
         >
-          <RiDeleteBinLine className="size-4 text-red-500" />
+          <RiDeleteBinLine className="size-4 text-destructive" aria-hidden />
         </Button>
       </div>
       <Progress value={task.progress} className="h-[2px]" />

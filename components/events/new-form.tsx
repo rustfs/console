@@ -193,8 +193,8 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
       }}
       disablePointerDismissal
     >
-      <DialogContent className="max-w-2xl">
-        <DialogHeader className="text-left">
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto overflow-x-hidden">
+        <DialogHeader className="text-start">
           <DialogTitle>
             {t("Subscribe to event notification")}
             <span className="mt-1 block text-sm font-normal text-muted-foreground">
@@ -212,7 +212,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
                 onValueChange={(value) => setResourceName(value ?? "")}
                 disabled={disabled || !arnList.length}
               >
-                <SelectTrigger id="event-resource-name">
+                <SelectTrigger id="event-resource-name" aria-label={t("Amazon Resource Name")}>
                   <SelectValue placeholder={t("Please select resource name")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -232,10 +232,13 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
             <FieldContent>
               <Input
                 id="event-prefix"
+                name="event-prefix"
                 value={prefix}
                 onChange={(e) => setPrefix(e.target.value)}
+                autoComplete="off"
                 disabled={disabled}
                 placeholder={t("Please enter prefix")}
+                spellCheck={false}
               />
             </FieldContent>
           </Field>
@@ -245,10 +248,13 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
             <FieldContent>
               <Input
                 id="event-suffix"
+                name="event-suffix"
                 value={suffix}
                 onChange={(e) => setSuffix(e.target.value)}
+                autoComplete="off"
                 disabled={disabled}
                 placeholder={t("Please enter suffix")}
+                spellCheck={false}
               />
             </FieldContent>
           </Field>
@@ -256,11 +262,16 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
           <Field>
             <FieldLabel>{t("Select events")}</FieldLabel>
             <FieldContent>
-              <ScrollArea className="max-h-64 rounded-md border">
+              <ScrollArea className="max-h-64 border">
                 <div className="flex flex-col gap-2 p-4">
                   {EVENT_OPTIONS.map((event) => (
-                    <label key={event.value} className="flex cursor-pointer items-start gap-3">
+                    <label
+                      key={event.value}
+                      htmlFor={`event-option-${event.value.toLowerCase()}`}
+                      className="flex cursor-pointer items-start gap-3"
+                    >
                       <Checkbox
+                        id={`event-option-${event.value.toLowerCase()}`}
                         checked={events.includes(event.value)}
                         onCheckedChange={(v) => handleEventChecked(event.value, v)}
                         disabled={disabled}

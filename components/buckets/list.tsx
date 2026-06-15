@@ -11,10 +11,9 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { useBucket } from "@/hooks/use-bucket"
 import { useSystem } from "@/hooks/use-system"
 import { Spinner } from "@/components/ui/spinner"
-import { niceBytes } from "@/lib/functions"
+import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import type { ColumnDef } from "@tanstack/react-table"
-import dayjs from "dayjs"
 
 export interface BucketListRow {
   Name: string
@@ -176,25 +175,24 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         cell: ({ row }) => (
           <Link
             href={getBucketHref(row.original.Name)}
-            className="flex items-center gap-2 text-primary hover:underline"
+            className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
           >
-            <RiArchiveLine className="size-4" />
-            {row.original.Name}
+            <RiArchiveLine className="size-4 shrink-0" aria-hidden />
+            <span className="min-w-0 truncate">{row.original.Name}</span>
           </Link>
         ),
       },
       {
         header: () => t("Creation Date"),
         accessorKey: "CreationDate",
-        cell: ({ row }) =>
-          row.original.CreationDate ? dayjs(row.original.CreationDate).format("YYYY-MM-DD HH:mm:ss") : "--",
+        cell: ({ row }) => formatDateTime(row.original.CreationDate),
       },
       {
         header: () => t("Object Count"),
         accessorKey: "Count",
         cell: ({ row }) =>
           typeof row.original.Count === "number" ? (
-            row.original.Count.toLocaleString()
+            formatInteger(row.original.Count)
           ) : usageLoading ? (
             <Spinner className="size-3 text-muted-foreground" />
           ) : (
@@ -214,7 +212,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         cell: ({ row }) => {
           if (typeof row.original.IsPublic === "boolean") {
             return row.original.IsPublic ? (
-              <span className="text-red-600 dark:text-red-400">{t("Public")}</span>
+              <span className="text-destructive">{t("Public")}</span>
             ) : (
               <span className="text-muted-foreground">{t("Private")}</span>
             )
@@ -246,7 +244,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
             className="max-w-sm"
           />
           <Button variant="outline" onClick={() => fetchBuckets({ force: true })}>
-            <RiRefreshLine className="size-4" />
+            <RiRefreshLine className="size-4" aria-hidden />
             <span>{t("Refresh")}</span>
           </Button>
         </div>

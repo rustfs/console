@@ -9,9 +9,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <SidebarProvider defaultOpen>
         <AppSidebar />
         <SidebarInset>
-          <div className="flex flex-1 flex-col gap-4 p-6 pt-0">
+          <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-0 sm:px-6">
             <AppTopNav />
-            {children}
+            <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 scroll-mt-16">
+              {children}
+            </main>
           </div>
         </SidebarInset>
       </SidebarProvider>

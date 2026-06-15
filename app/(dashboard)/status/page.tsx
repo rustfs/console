@@ -172,7 +172,7 @@ export default function PerformancePage() {
         >
           <h1 className="text-2xl font-bold">{t("Running Status")}</h1>
         </PageHeader>
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+        <div className="border border-destructive/50 bg-destructive/10 p-6 text-center">
           <p className="text-sm text-destructive">{error}</p>
         </div>
       </Page>

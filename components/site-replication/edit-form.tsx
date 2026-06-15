@@ -102,8 +102,8 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
         onOpenChange(nextOpen)
       }}
     >
-      <DialogContent className="max-w-xl">
-        <DialogHeader className="space-y-2 text-left">
+      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto overflow-x-hidden">
+        <DialogHeader className="space-y-2 text-start">
           <DialogTitle>{t("Edit Site")}</DialogTitle>
           <DialogDescription>
             {t(
@@ -118,9 +118,12 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
               <Label htmlFor="site-edit-name">{t("Site Name")}</Label>
               <Input
                 id="site-edit-name"
+                name="site-edit-name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
+                autoComplete="off"
                 placeholder={t("Site Name")}
+                spellCheck={false}
                 disabled={saving}
               />
             </div>
@@ -128,7 +131,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
             <div className="space-y-2">
               <Label htmlFor="site-edit-sync">{t("Sync")}</Label>
               <Select value={syncState} onValueChange={(value) => setSyncState(value as SiteReplicationSyncState)}>
-                <SelectTrigger id="site-edit-sync" className="w-full" disabled={saving}>
+                <SelectTrigger id="site-edit-sync" className="w-full" aria-label={t("Sync")} disabled={saving}>
                   <SelectValue placeholder={t("Select")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -143,6 +146,8 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
             <Label htmlFor="site-edit-endpoint">{t("Endpoint *")}</Label>
             <Input
               id="site-edit-endpoint"
+              name="site-edit-endpoint"
+              type="url"
               value={endpoint}
               onChange={(event) => {
                 setEndpoint(event.target.value)
@@ -150,7 +155,9 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
                   setEndpointError("")
                 }
               }}
+              autoComplete="off"
               placeholder="https://remote-rustfs.example.com"
+              spellCheck={false}
               disabled={saving}
             />
             {endpointError ? <p className="text-sm text-destructive">{endpointError}</p> : null}
@@ -160,9 +167,12 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
             <Label htmlFor="site-edit-object-naming-mode">{t("Object Naming Mode")}</Label>
             <Input
               id="site-edit-object-naming-mode"
+              name="site-edit-object-naming-mode"
               value={objectNamingMode}
               onChange={(event) => setObjectNamingMode(event.target.value)}
+              autoComplete="off"
               placeholder={t("Optional")}
+              spellCheck={false}
               disabled={saving}
             />
           </div>
@@ -187,7 +197,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
             {t("Cancel")}
           </Button>
           <Button type="button" onClick={handleSave} disabled={saving}>
-            {saving ? t("Saving...") : t("Save")}
+            {saving ? t("Saving…") : t("Save")}
           </Button>
         </DialogFooter>
       </DialogContent>

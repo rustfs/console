@@ -69,7 +69,7 @@ export function DataTable<TData>({
   const hasRows = table.getRowModel().rows.length > 0
 
   const tableContent = (
-    <UiTable className={cn(bodyHeight ? tableClass : "border rounded-md", tableClass)}>
+    <UiTable className={cn("min-w-full tabular-nums", tableClass)}>
       <TableHeader className={stickyHeader ? "sticky top-0 z-10 bg-muted/40 backdrop-blur" : ""}>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id} className={stickyHeader ? "bg-muted/40 backdrop-blur" : undefined}>
@@ -84,16 +84,16 @@ export function DataTable<TData>({
                     {canSort(header.column) ? (
                       <button
                         type="button"
-                        className="flex items-center gap-2 cursor-pointer select-none hover:text-foreground"
+                        className="flex cursor-pointer items-center gap-2 select-none rounded-none outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring/50"
                         onClick={header.column.getToggleSortingHandler()}
                       >
                         {flexRender(header.column.columnDef.header, header.getContext())}
                         {header.column.getIsSorted() === "asc" ? (
-                          <RiArrowUpSLine className="size-4" />
+                          <RiArrowUpSLine className="size-4" aria-hidden />
                         ) : header.column.getIsSorted() === "desc" ? (
-                          <RiArrowDownSLine className="size-4" />
+                          <RiArrowDownSLine className="size-4" aria-hidden />
                         ) : (
-                          <RiArrowUpDownLine className="size-4 text-muted-foreground opacity-50" />
+                          <RiArrowUpDownLine className="size-4 text-muted-foreground opacity-50" aria-hidden />
                         )}
                       </button>
                     ) : (
@@ -112,7 +112,7 @@ export function DataTable<TData>({
             <TableCell colSpan={visibleColumnCount} className="h-48 text-center align-middle">
               <div className="flex flex-col items-center gap-2">
                 <Spinner className="size-6" />
-                <span className="text-sm text-muted-foreground">Loading...</span>
+                <span className="text-sm text-muted-foreground">Loading…</span>
               </div>
             </TableCell>
           </TableRow>
@@ -148,9 +148,9 @@ export function DataTable<TData>({
   return (
     <div className={cn("flex flex-col gap-4", className)}>
       {bodyHeight ? (
-        <ScrollArea className={cn("rounded-md border", bodyHeight)}>{tableContent}</ScrollArea>
+        <ScrollArea className={cn("border", bodyHeight)}>{tableContent}</ScrollArea>
       ) : (
-        tableContent
+        <div className="w-full overflow-x-auto border">{tableContent}</div>
       )}
     </div>
   )

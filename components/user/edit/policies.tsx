@@ -49,7 +49,7 @@ export function UserEditPolicies({ value, options, disabled = false, onChange }:
                 disabled={disabled}
               >
                 <span className="truncate">{value.length ? value.join(", ") : t("Select user group policies")}</span>
-                <RiArrowDownSLine className="size-4 text-muted-foreground" />
+                <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
               </Button>
             }
           />

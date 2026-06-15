@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import {
@@ -99,18 +98,14 @@ export function TopNavBreadcrumb() {
             <BreadcrumbItem>
               {item.href ? (
                 <BreadcrumbLink
-                  render={
-                    <Link
-                      href={item.href}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        if (item.href) router.push(item.href)
-                      }}
-                    >
-                      {item.label}
-                    </Link>
-                  }
-                />
+                  href={item.href}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    router.push(item.href!)
+                  }}
+                >
+                  {item.label}
+                </BreadcrumbLink>
               ) : (
                 <BreadcrumbPage>{item.label}</BreadcrumbPage>
               )}

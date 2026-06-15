@@ -1335,5 +1335,8 @@
   "Preparing download": "Preparing download",
   "User menu": "User menu",
   "Cleanup Warnings": "Cleanup Warnings",
-  "Failed to load objects": "Failed to load objects"
+  "Failed to load objects": "Failed to load objects",
+  "Access Key cannot contain spaces": "Access Key cannot contain spaces",
+  "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter",
+  "Name must be at most 32 characters": "Name must be at most 32 characters"
 }

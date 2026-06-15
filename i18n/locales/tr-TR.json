@@ -1335,5 +1335,8 @@
   "Preparing download": "İndirme hazırlanıyor",
   "User menu": "Kullanıcı menüsü",
   "Cleanup Warnings": "Temizleme uyarıları",
-  "Failed to load objects": "Nesneler yüklenemedi"
+  "Failed to load objects": "Nesneler yüklenemedi",
+  "Access Key cannot contain spaces": "Erişim anahtarı boşluk içeremez",
+  "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "Ad yalnızca harf, rakam, alt çizgi ve tire içerebilir ve bir harfle başlamalıdır",
+  "Name must be at most 32 characters": "Ad en fazla 32 karakter olmalıdır"
 }

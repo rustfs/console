@@ -1335,5 +1335,8 @@
   "Preparing download": "Đang chuẩn bị tải xuống",
   "User menu": "Menu người dùng",
   "Cleanup Warnings": "Cảnh báo dọn dẹp",
-  "Failed to load objects": "Không thể tải đối tượng"
+  "Failed to load objects": "Không thể tải đối tượng",
+  "Access Key cannot contain spaces": "Khóa truy cập không được chứa khoảng trắng",
+  "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "Tên chỉ được chứa chữ cái, số, dấu gạch dưới và dấu gạch nối, và phải bắt đầu bằng một chữ cái",
+  "Name must be at most 32 characters": "Tên không được dài quá 32 ký tự"
 }

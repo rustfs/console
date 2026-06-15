@@ -1335,5 +1335,8 @@
   "Preparing download": "Menyiapkan unduhan",
   "User menu": "Menu pengguna",
   "Cleanup Warnings": "Peringatan pembersihan",
-  "Failed to load objects": "Gagal memuat objek"
+  "Failed to load objects": "Gagal memuat objek",
+  "Access Key cannot contain spaces": "Kunci akses tidak boleh mengandung spasi",
+  "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "Nama hanya boleh berisi huruf, angka, garis bawah, dan tanda hubung, serta harus diawali dengan huruf",
+  "Name must be at most 32 characters": "Nama tidak boleh lebih dari 32 karakter"
 }

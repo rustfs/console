@@ -37,6 +37,7 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
   const [policy, setPolicy] = React.useState("")
   const [impliedPolicy, setImpliedPolicy] = React.useState(true)
   const [submitting, setSubmitting] = React.useState(false)
+  const [submitError, setSubmitError] = React.useState("")
   const [errors, setErrors] = React.useState({
     accessKey: "",
     secretKey: "",
@@ -60,6 +61,7 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
       setExpiry(null)
       setImpliedPolicy(true)
       setErrors({ accessKey: "", secretKey: "", name: "" })
+      setSubmitError("")
       api
         .get("/accountinfo")
         .then((userInfo: { policy?: unknown; Policy?: unknown }) => {
@@ -92,6 +94,8 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
       newErrors.accessKey = t("Please enter Access Key")
     } else if (accessKey.length < 3 || accessKey.length > 20) {
       newErrors.accessKey = t("Access Key length must be between 3 and 20 characters")
+    } else if (/\s/.test(accessKey)) {
+      newErrors.accessKey = t("Access Key cannot contain spaces")
     }
     if (!secretKey) {
       newErrors.secretKey = t("Please enter Secret Key")
@@ -100,12 +104,42 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
     }
     if (!name) {
       newErrors.name = t("Please enter name")
+    } else if (name.length > 32) {
+      newErrors.name = t("Name must be at most 32 characters")
+    } else if (!/^[A-Za-z][A-Za-z0-9_-]*$/.test(name)) {
+      newErrors.name = t(
+        "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter",
+      )
     }
     setErrors(newErrors)
     return !newErrors.accessKey && !newErrors.secretKey && !newErrors.name
   }
 
+  // Map a server-side validation error to the field it belongs to, so the
+  // message renders directly under the relevant input. Returns false when the
+  // error is not field-specific (caller falls back to a general message).
+  const applyServerError = (reason: string): boolean => {
+    const lowered = reason.toLowerCase()
+    if (lowered.includes("access key") && lowered.includes("space")) {
+      setErrors((prev) => ({ ...prev, accessKey: t("Access Key cannot contain spaces") }))
+      return true
+    }
+    if (lowered.includes("name must contain only") || lowered.includes("name must start")) {
+      setErrors((prev) => ({
+        ...prev,
+        name: t("Name can only contain letters, numbers, underscores and hyphens, and must start with a letter"),
+      }))
+      return true
+    }
+    if (lowered.includes("name must not be longer") || lowered.includes("name is too long")) {
+      setErrors((prev) => ({ ...prev, name: t("Name must be at most 32 characters") }))
+      return true
+    }
+    return false
+  }
+
   const submitForm = async () => {
+    setSubmitError("")
     if (!validate()) {
       message.error(t("Please fill in the correct format"))
       return
@@ -140,7 +174,12 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
       onSuccess()
     } catch (error) {
       console.error(error)
-      message.error(t("Add failed"))
+      const reason = error instanceof Error && error.message ? error.message : ""
+      const handledByField = reason ? applyServerError(reason) : false
+      if (!handledByField) {
+        setSubmitError(reason || t("Add failed"))
+      }
+      message.error(reason || t("Add failed"))
     } finally {
       setSubmitting(false)
     }
@@ -272,6 +311,12 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
             </div>
           )}
         </div>
+
+        {submitError && (
+          <p role="alert" className="px-2 text-sm text-destructive">
+            {submitError}
+          </p>
+        )}
 
         <DialogFooter className="border-t pt-4">
           <Button variant="outline" onClick={closeModal}>

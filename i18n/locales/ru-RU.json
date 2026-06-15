@@ -1335,5 +1335,8 @@
   "Preparing download": "Подготовка загрузки",
   "User menu": "Меню пользователя",
   "Cleanup Warnings": "Предупреждения очистки",
-  "Failed to load objects": "Не удалось загрузить объекты"
+  "Failed to load objects": "Не удалось загрузить объекты",
+  "Access Key cannot contain spaces": "Ключ доступа не может содержать пробелы",
+  "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "Имя может содержать только буквы, цифры, символы подчёркивания и дефисы и должно начинаться с буквы",
+  "Name must be at most 32 characters": "Имя не должно превышать 32 символа"
 }

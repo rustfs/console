@@ -1335,5 +1335,8 @@
   "Preparing download": "다운로드 준비 중",
   "User menu": "사용자 메뉴",
   "Cleanup Warnings": "정리 경고",
-  "Failed to load objects": "객체를 불러오지 못했습니다"
+  "Failed to load objects": "객체를 불러오지 못했습니다",
+  "Access Key cannot contain spaces": "액세스 키에는 공백을 포함할 수 없습니다",
+  "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "이름은 영문자, 숫자, 밑줄, 하이픈만 사용할 수 있으며 영문자로 시작해야 합니다",
+  "Name must be at most 32 characters": "이름은 최대 32자입니다"
 }

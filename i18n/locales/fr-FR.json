@@ -1335,5 +1335,8 @@
   "Preparing download": "Préparation du téléchargement",
   "User menu": "Menu utilisateur",
   "Cleanup Warnings": "Avertissements de nettoyage",
-  "Failed to load objects": "Impossible de charger les objets"
+  "Failed to load objects": "Impossible de charger les objets",
+  "Access Key cannot contain spaces": "La clé d'accès ne peut pas contenir d'espaces",
+  "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "Le nom ne peut contenir que des lettres, des chiffres, des traits de soulignement et des traits d'union, et doit commencer par une lettre",
+  "Name must be at most 32 characters": "Le nom ne doit pas dépasser 32 caractères"
 }

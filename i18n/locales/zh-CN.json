@@ -1335,5 +1335,8 @@
   "Preparing download": "正在准备下载",
   "User menu": "用户菜单",
   "Cleanup Warnings": "清理警告",
-  "Failed to load objects": "加载对象失败"
+  "Failed to load objects": "加载对象失败",
+  "Access Key cannot contain spaces": "访问密钥不能包含空格",
+  "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "名称只能包含字母、数字、下划线和连字符，并且必须以字母开头",
+  "Name must be at most 32 characters": "名称最多 32 个字符"
 }

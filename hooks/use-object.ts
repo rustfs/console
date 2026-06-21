@@ -18,6 +18,7 @@ import {
 } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
+import { decodeS3UrlEncodedObjectList, decodeS3UrlEncodedObjectVersions } from "@/lib/s3-object-encoding"
 
 function attachIncludeDeletedHeader(command: ListObjectsV2Command) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -101,11 +102,13 @@ export function useObject(bucket: string) {
         MaxKeys: pageSize,
         Delimiter: "/",
         ContinuationToken: continuationToken,
+        EncodingType: "url",
       })
       if (options?.includeDeleted) {
         attachIncludeDeletedHeader(command)
       }
-      return client.send(command)
+      const response = await client.send(command)
+      return decodeS3UrlEncodedObjectList(response)
     },
     [client],
   )
@@ -121,8 +124,10 @@ export function useObject(bucket: string) {
             Bucket: bucketName,
             Prefix: prefix,
             ContinuationToken: continuationToken,
+            EncodingType: "url",
           }),
         )
+        decodeS3UrlEncodedObjectList(data)
 
         data.Contents?.forEach((item) => {
           if (item.Key) callback(item.Key)
@@ -256,8 +261,10 @@ export function useObject(bucket: string) {
           Bucket: bucket,
           Prefix: key,
           Delimiter: "/",
+          EncodingType: "url",
         }),
       )
+      decodeS3UrlEncodedObjectVersions(res)
       const Versions = (res.Versions ?? []).filter((v) => v.Key === key)
       const DeleteMarkers = (res.DeleteMarkers ?? []).filter((m) => m.Key === key)
       Versions.sort((a, b) => new Date(b.LastModified!).getTime() - new Date(a.LastModified!).getTime())

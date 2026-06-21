@@ -5,6 +5,7 @@ import {
   ListObjectVersionsCommand,
   S3Client,
 } from "@aws-sdk/client-s3"
+import { decodeS3UrlEncodedObjectList, decodeS3UrlEncodedObjectVersions } from "./s3-object-encoding"
 import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from "./task-manager"
 import { createTaskId } from "./task-id"
 
@@ -116,9 +117,11 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
             Prefix: prefix,
             KeyMarker: keyMarker,
             VersionIdMarker: versionIdMarker,
+            EncodingType: "url",
           }),
           { abortSignal: abortController.signal },
         )
+        decodeS3UrlEncodedObjectVersions(data)
 
         const objectsToDelete: { Key: string; VersionId?: string }[] = []
         data.Versions?.forEach((v) => {
@@ -151,9 +154,11 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
             Bucket: bucketName,
             Prefix: prefix,
             ContinuationToken: continuationToken,
+            EncodingType: "url",
           }),
           { abortSignal: abortController.signal },
         )
+        decodeS3UrlEncodedObjectList(data)
 
         const objectsToDelete = (data.Contents ?? []).filter((item) => item.Key).map((item) => ({ Key: item.Key! }))
 

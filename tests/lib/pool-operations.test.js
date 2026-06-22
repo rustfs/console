@@ -139,7 +139,7 @@ test("normalizeRebalanceStatus reads progress and pool details", () => {
   assert.equal(status.pools[0]?.cleanupWarnings.lastBucket, "test-bucket")
 })
 
-test("normalizeRebalanceStatus does not complete mixed completed and idle pools", () => {
+test("normalizeRebalanceStatus completes mixed completed and non-participating pools", () => {
   const status = normalizeRebalanceStatus({
     id: "3be0831f-4315-4adb-9904-3bb0609b3bfc",
     pools: [
@@ -170,11 +170,11 @@ test("normalizeRebalanceStatus does not complete mixed completed and idle pools"
     stoppedAt: null,
   })
 
-  assert.equal(status.status, "running")
-  assert.equal(status.progressPercent, 50)
+  assert.equal(status.status, "completed")
+  assert.equal(status.progressPercent, 100)
   assert.equal(status.pools[0]?.status, "Completed")
   assert.equal(status.pools[1]?.status, "None")
-  assert.equal(deriveRebalanceDisplayState(status, "supported"), "running")
+  assert.equal(deriveRebalanceDisplayState(status, "supported"), "completed")
 })
 
 test("normalizeRebalanceStatus aggregates pool progress when totals are missing", () => {
@@ -248,7 +248,7 @@ test("normalizeRebalanceStatus does not infer full progress from aggregated byte
   })
 
   assert.equal(status.status, "failed")
-  assert.equal(status.progressPercent, 33)
+  assert.equal(status.progressPercent, 50)
 })
 
 test("normalizeDecommissionInfo reads nested response", () => {

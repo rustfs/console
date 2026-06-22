@@ -205,13 +205,18 @@ function hasExplicitProgressPercent(record: JsonRecord): boolean {
 
 function deriveRebalanceProgressPercent(status: string, pools: PoolSummary[]): number {
   const state = normalizeState(status)
-  if (["completed", "complete", "success", "finished"].includes(state) && pools.every(isCompletedRebalancePool)) {
+  const rebalancePools = participatingRebalancePools(pools)
+  if (
+    ["completed", "complete", "success", "finished"].includes(state) &&
+    rebalancePools.length > 0 &&
+    rebalancePools.every(isCompletedRebalancePool)
+  ) {
     return 100
   }
-  if (pools.length === 0) return 0
+  if (rebalancePools.length === 0) return 0
 
-  const finishedPools = pools.filter(isCompletedRebalancePool).length
-  return Math.round((finishedPools / pools.length) * 100)
+  const finishedPools = rebalancePools.filter(isCompletedRebalancePool).length
+  return Math.round((finishedPools / rebalancePools.length) * 100)
 }
 
 function pickStatus(record: JsonRecord): string {
@@ -357,6 +362,10 @@ function isCompletedRebalancePool(pool: PoolSummary): boolean {
   return ["completed", "complete", "success", "finished"].includes(normalizeState(pool.status))
 }
 
+function participatingRebalancePools(pools: PoolSummary[]): PoolSummary[] {
+  return pools.filter((pool) => !isIdleRebalancePool(pool) || hasProgress(pool.progress))
+}
+
 function deriveStatusFromPools(pools: PoolSummary[]): string {
   if (pools.length === 0) return ""
 
@@ -370,7 +379,8 @@ function deriveStatusFromPools(pools: PoolSummary[]): string {
   ) {
     return "running"
   }
-  if (pools.every(isCompletedRebalancePool)) {
+  const rebalancePools = participatingRebalancePools(pools)
+  if (rebalancePools.length > 0 && rebalancePools.every(isCompletedRebalancePool)) {
     return "completed"
   }
   if (pools.some(isCompletedRebalancePool) && pools.some(isIdleRebalancePool)) return "running"

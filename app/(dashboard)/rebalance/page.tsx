@@ -46,7 +46,7 @@ function formatNumberValue(value?: number) {
 }
 
 function isFailedRebalancePool(pool: PoolSummary) {
-  return ["failed", "error"].includes(pool.status.trim().toLowerCase())
+  return ["failed", "error"].includes(pool.rebalanceStatus.trim().toLowerCase())
 }
 
 function formatCleanupWarnings(pool: PoolSummary) {
@@ -117,7 +117,12 @@ export default function RebalancePage() {
   }, [displayState, loadData])
 
   const canStart =
-    overview.supportState === "supported" && ["idle", "completed", "failed", "stopped"].includes(displayState)
+    overview.supportState === "supported" &&
+    overview.pools.filter((pool) => pool.status.trim().toLowerCase() === "active").length > 1 &&
+    !overview.pools.some((pool) =>
+      ["decommissioning", "queued", "running"].includes(pool.decommissionStatus.trim().toLowerCase()),
+    ) &&
+    ["idle", "completed", "failed", "stopped"].includes(displayState)
   const canStop = ["starting", "running"].includes(displayState)
 
   const handleStart = async () => {
@@ -184,7 +189,7 @@ export default function RebalancePage() {
       if (!statusPool) return pool
       return {
         ...pool,
-        status: statusPool.status || pool.status,
+        rebalanceStatus: statusPool.rebalanceStatus || statusPool.status || pool.rebalanceStatus,
         progress: statusPool.progress,
         cleanupWarnings: statusPool.cleanupWarnings,
       }
@@ -305,7 +310,7 @@ export default function RebalancePage() {
                           className={cn(isFailedRebalancePool(pool) && "bg-destructive/15 hover:bg-destructive/20")}
                         >
                           <TableCell>{pool.name}</TableCell>
-                          <TableCell>{pool.status || "--"}</TableCell>
+                          <TableCell>{pool.rebalanceStatus || "--"}</TableCell>
                           <TableCell>{formatBytesValue(pool.used)}</TableCell>
                           <TableCell>{formatBytesValue(pool.progress.bytes)}</TableCell>
                           <TableCell>{formatNumberValue(pool.progress.objects)}</TableCell>

@@ -129,8 +129,16 @@ function canClearDecommission(row: PoolRow) {
   return row.displayState === "failed" || row.displayState === "canceled"
 }
 
-function canStartDecommission(row: PoolRow, selectionLocked: boolean) {
-  return row.displayState === "ready" && !selectionLocked
+function isActivePool(pool: PoolSummary) {
+  return pool.status.trim().toLowerCase() === "active"
+}
+
+function isRebalanceBlockingDecommission(state: RebalanceDisplayState) {
+  return ["starting", "running", "stopping"].includes(state)
+}
+
+function canStartDecommission(row: PoolRow, selectionLocked: boolean, activePoolCount: number) {
+  return row.displayState === "ready" && !selectionLocked && isActivePool(row.pool) && activePoolCount > 1
 }
 
 function UsageMeter({ value, tone = "primary" }: { value: number; tone?: "primary" | "destructive" | "muted" }) {
@@ -155,7 +163,7 @@ export default function PoolDecommissionPage() {
   const {
     getPoolsOverview,
     getRebalanceStatus,
-    getDecommissionStatus,
+    getDecommissionStatuses,
     startDecommission,
     cancelDecommission,
     clearDecommission,
@@ -194,9 +202,8 @@ export default function PoolDecommissionPage() {
           getRebalanceStatus().catch(() => null),
         ])
         const nextRebalanceState = deriveRebalanceDisplayState(rebalanceStatus, nextOverview.supportState)
-        const statusEntries = await Promise.all(
-          nextOverview.pools.map(async (pool) => [pool.id, await getDecommissionStatus(pool.id).catch(() => null)]),
-        )
+        const decommissionStatuses = await getDecommissionStatuses().catch(() => [])
+        const statusEntries = decommissionStatuses.map((status) => [status.poolId, status])
 
         setOverview(nextOverview)
         setStatuses(Object.fromEntries(statusEntries) as Record<string, DecommissionInfo | null>)
@@ -210,7 +217,7 @@ export default function PoolDecommissionPage() {
         if (showSpinner) setLoading(false)
       }
     },
-    [getDecommissionStatus, getPoolsOverview, getRebalanceStatus, selectedPoolId, t],
+    [getDecommissionStatuses, getPoolsOverview, getRebalanceStatus, selectedPoolId, t],
   )
 
   useEffect(() => {
@@ -243,6 +250,7 @@ export default function PoolDecommissionPage() {
     activeTask ??
     (selectedRow && hasDecommissionProgress(selectedRow.displayState) && selectedRow.status ? selectedRow : undefined)
   const selectionLocked = isTaskLocked(activeTask)
+  const activePoolCount = poolRows.filter((row) => isActivePool(row.pool)).length
   const selectedPoolName = selectedRow?.pool.name ?? "--"
   const trackedProgress = trackedTask ? getProgressPercent(trackedTask.status, trackedTask.pool) : 0
 
@@ -398,7 +406,7 @@ export default function PoolDecommissionPage() {
           </Alert>
         ) : null}
 
-        {["starting", "running", "stopping", "failed", "stopped", "unknown"].includes(rebalanceState) ? (
+        {isRebalanceBlockingDecommission(rebalanceState) ? (
           <Alert>
             <RiAlertLine className="size-4" aria-hidden />
             <AlertTitle>{t("Rebalance must complete before decommission")}</AlertTitle>
@@ -462,7 +470,7 @@ export default function PoolDecommissionPage() {
                           const showProgress = Boolean(rowStatus) && hasDecommissionProgress(rowState)
                           const progressPercent = showProgress ? getProgressPercent(rowStatus, pool) : 0
                           const isSelected = selectedRow?.pool.id === pool.id
-                          const canStart = canStartDecommission(row, selectionLocked) && !submitting
+                          const canStart = canStartDecommission(row, selectionLocked, activePoolCount) && !submitting
                           const canConfirm = rowState === "confirming" && !submitting
                           const canCancel = rowState === "running" && !submitting
                           const canClear = canClearDecommission(row) && !submitting

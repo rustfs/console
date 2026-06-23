@@ -69,6 +69,8 @@ export interface PoolSummary {
   usagePercent: number
   lastUpdate?: string
   status: string
+  decommissionStatus: string
+  rebalanceStatus: string
   progress: PoolUsageProgress
   cleanupWarnings: RebalanceCleanupWarnings
   decommission: PoolDecommissionSummary
@@ -98,6 +100,7 @@ export interface RebalanceStatus {
 
 export interface DecommissionInfo {
   status: string
+  poolStatus: string
   poolId: string
   complete: boolean
   failed: boolean
@@ -138,6 +141,10 @@ function asStringArray(value: unknown): string[] {
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value : ""
+}
+
+function asIdString(value: unknown): string {
+  return value === undefined || value === null ? "" : String(value)
 }
 
 function asNumber(value: unknown): number {
@@ -259,6 +266,20 @@ function pickStatus(record: JsonRecord): string {
   )
 }
 
+function pickFieldStatus(record: JsonRecord, camelKey: string, pascalKey: string): string {
+  return asString(record[camelKey]) || asString(record[pascalKey])
+}
+
+function derivePoolLifecycleStatus(decommissionStatus: string): string {
+  const state = normalizeState(decommissionStatus)
+  if (["complete", "completed", "success", "finished"].includes(state)) return "decommissioned"
+  if (["failed", "canceled", "cancelled"].includes(state)) return "blocked"
+  if (["queued", "running", "starting", "started", "in_progress", "in-progress", "stopping"].includes(state)) {
+    return "decommissioning"
+  }
+  return "active"
+}
+
 function normalizePool(value: unknown, index: number): PoolSummary {
   const record = asRecord(value)
   const decommissionInfo = asRecord(record.decommissionInfo || record.DecommissionInfo)
@@ -282,6 +303,10 @@ function normalizePool(value: unknown, index: number): PoolSummary {
   const cleanupWarnings = normalizeCleanupWarnings(record.cleanupWarnings || record.CleanupWarnings)
   const rawId =
     record.id ?? record.poolId ?? record.pool ?? record.index ?? record.ID ?? record.PoolID ?? record.poolIndex
+  const decommissionStatus =
+    pickFieldStatus(record, "decommissionStatus", "DecommissionStatus") || deriveDecommissionStatus(decommissionInfo)
+  const rebalanceStatus = pickFieldStatus(record, "rebalanceStatus", "RebalanceStatus")
+  const lifecycleStatus = pickStatus(record) || derivePoolLifecycleStatus(decommissionStatus)
 
   return {
     id: String(rawId ?? index),
@@ -292,7 +317,9 @@ function normalizePool(value: unknown, index: number): PoolSummary {
     currentSize,
     usagePercent: usagePercent || (total > 0 ? clampPercent((used / total) * 100) : 0),
     lastUpdate: asString(record.lastUpdate || record.LastUpdate || record.updatedAt || record.UpdatedAt) || undefined,
-    status: pickStatus(record),
+    status: lifecycleStatus,
+    decommissionStatus,
+    rebalanceStatus,
     progress,
     cleanupWarnings,
     decommission,
@@ -331,7 +358,14 @@ export function normalizeRebalanceStatus(value: unknown): RebalanceStatus {
     : asArray(record.Pools).length
       ? asArray(record.Pools)
       : []
-  const pools = poolsSource.map((pool, index) => normalizePool(pool, index))
+  const pools = poolsSource.map((pool, index) => {
+    const normalized = normalizePool(pool, index)
+    const poolRecord = asRecord(pool)
+    return {
+      ...normalized,
+      rebalanceStatus: normalized.rebalanceStatus || pickStatus(poolRecord),
+    }
+  })
   const explicitTotals = normalizeProgress(record.progress || record.Progress || record.totals || record.Totals)
   const totalsAreExplicit = hasProgress(explicitTotals)
   const totals = totalsAreExplicit ? explicitTotals : aggregatePoolProgress(pools)
@@ -360,6 +394,7 @@ export function normalizeDecommissionInfo(value: unknown, fallbackPoolId = ""): 
   const record = asRecord(value)
   const info = asRecord(record.decommissionInfo || record.DecommissionInfo || value)
   const status = pickStatus(record) || pickStatus(info) || deriveDecommissionStatus(info)
+  const poolStatus = pickFieldStatus(record, "poolStatus", "PoolStatus")
   const startSize = asNumber(info.startSize || info.StartSize)
   const totalSize =
     asNumber(info.totalSize || info.TotalSize) || asNumber(record.totalSize || record.TotalSize || record.capacity)
@@ -371,7 +406,18 @@ export function normalizeDecommissionInfo(value: unknown, fallbackPoolId = ""): 
 
   return {
     status,
-    poolId: asString(info.poolId || info.pool || info.PoolID || info.Pool) || fallbackPoolId,
+    poolStatus,
+    poolId:
+      asIdString(
+        record.id ??
+          record.poolId ??
+          record.pool ??
+          record.ID ??
+          record.PoolID ??
+          info.poolId ??
+          info.pool ??
+          info.PoolID,
+      ) || fallbackPoolId,
     complete: asBoolean(info.complete || info.Complete),
     failed: asBoolean(info.failed || info.Failed),
     canceled: asBoolean(info.canceled || info.Canceled),
@@ -398,6 +444,26 @@ export function normalizeDecommissionInfo(value: unknown, fallbackPoolId = ""): 
   }
 }
 
+export function normalizeDecommissionStatus(value: unknown): DecommissionInfo[] {
+  const record = asRecord(value)
+  const source = asArray(record.pools).length
+    ? asArray(record.pools)
+    : asArray(record.Pools).length
+      ? asArray(record.Pools)
+      : []
+  if (source.length === 0 && Object.keys(record).length > 0) {
+    const poolId = asIdString(record.id ?? record.poolId ?? record.pool ?? record.ID ?? record.PoolID)
+    return [normalizeDecommissionInfo(record, poolId)]
+  }
+  return source.map((item) => {
+    const itemRecord = asRecord(item)
+    const poolId = asIdString(
+      itemRecord.id ?? itemRecord.poolId ?? itemRecord.pool ?? itemRecord.ID ?? itemRecord.PoolID,
+    )
+    return normalizeDecommissionInfo(item, poolId)
+  })
+}
+
 function normalizeState(value: string): string {
   return value.trim().toLowerCase()
 }
@@ -412,11 +478,11 @@ function deriveDecommissionStatus(info: JsonRecord): string {
 }
 
 function isIdleRebalancePool(pool: PoolSummary): boolean {
-  return ["", "none", "not_started", "not-started", "idle"].includes(normalizeState(pool.status))
+  return ["", "none", "not_started", "not-started", "idle"].includes(normalizeState(pool.rebalanceStatus))
 }
 
 function isCompletedRebalancePool(pool: PoolSummary): boolean {
-  return ["completed", "complete", "success", "finished"].includes(normalizeState(pool.status))
+  return ["completed", "complete", "success", "finished"].includes(normalizeState(pool.rebalanceStatus))
 }
 
 function participatingRebalancePools(pools: PoolSummary[]): PoolSummary[] {
@@ -426,7 +492,7 @@ function participatingRebalancePools(pools: PoolSummary[]): PoolSummary[] {
 function deriveStatusFromPools(pools: PoolSummary[]): string {
   if (pools.length === 0) return ""
 
-  const states = pools.map((pool) => normalizeState(pool.status))
+  const states = pools.map((pool) => normalizeState(pool.rebalanceStatus))
   if (states.some((state) => ["failed", "error"].includes(state))) return "failed"
   if (states.some((state) => ["stopping", "stop_requested", "stop-requested"].includes(state))) return "stopping"
   if (
@@ -471,7 +537,7 @@ export function deriveDecommissionDisplayState(
   isConfirming = false,
 ): DecommissionDisplayState {
   if (supportState === "unsupported") return "unsupported"
-  if (["starting", "running", "stopping", "failed", "stopped", "unknown"].includes(rebalanceState)) {
+  if (["starting", "running", "stopping"].includes(rebalanceState)) {
     return "blocked-by-rebalance"
   }
   if (isConfirming) return "confirming"

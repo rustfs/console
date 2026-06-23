@@ -6,6 +6,7 @@ import {
   deriveDecommissionDisplayState,
   deriveRebalanceDisplayState,
   normalizeDecommissionInfo,
+  normalizeDecommissionStatus,
   normalizePoolsOverview,
   normalizeRebalanceStatus,
   type DecommissionDisplayState,
@@ -53,7 +54,7 @@ export function usePoolOperations() {
 
   const getDecommissionStatus = useCallback(
     async (poolId: string) => {
-      const response = await api.get("/pools/status", {
+      const response = await api.get("/decommission/status", {
         params: {
           pool: poolId,
           "by-id": "true",
@@ -63,6 +64,11 @@ export function usePoolOperations() {
     },
     [api],
   )
+
+  const getDecommissionStatuses = useCallback(async () => {
+    const response = await api.get("/decommission/status")
+    return normalizeDecommissionStatus(response)
+  }, [api])
 
   const startDecommission = useCallback(
     async (poolId: string) => {
@@ -127,6 +133,7 @@ export function usePoolOperations() {
     startRebalance,
     stopRebalance,
     getDecommissionStatus,
+    getDecommissionStatuses,
     startDecommission,
     cancelDecommission,
     clearDecommission,

@@ -1338,5 +1338,13 @@
   "Failed to load objects": "Objekte konnten nicht geladen werden",
   "Access Key cannot contain spaces": "Der Zugriffsschlüssel darf keine Leerzeichen enthalten",
   "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "Der Name darf nur Buchstaben, Ziffern, Unterstriche und Bindestriche enthalten und muss mit einem Buchstaben beginnen",
-  "Name must be at most 32 characters": "Der Name darf höchstens 32 Zeichen lang sein"
+  "Name must be at most 32 characters": "Der Name darf höchstens 32 Zeichen lang sein",
+  "Queued": "Queued",
+  "Remaining Bytes": "Remaining Bytes",
+  "Current Object": "Current Object",
+  "Waiting Reason": "Waiting Reason",
+  "Selection Locked": "Selection Locked",
+  "Decommission cleared": "Decommission cleared",
+  "Failed to clear decommission": "Failed to clear decommission",
+  "Clear Decommission": "Clear Decommission"
 }

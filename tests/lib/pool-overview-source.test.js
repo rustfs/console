@@ -19,13 +19,13 @@ test("rebalance page highlights failed pool rows", () => {
   assert.match(source, /bg-destructive\/15 hover:bg-destructive\/20/)
 })
 
-test("decommission page keeps decommission detail columns", () => {
+test("decommission page owns pool operation columns", () => {
   const source = fs.readFileSync("app/(dashboard)/pool-decommission/page.tsx", "utf8")
 
-  assert.match(
-    source,
-    /<PoolsOverviewCard overview=\{overview\} operationLabel=\{t\("Pool Decommission"\)\} showDecommissionColumns \/>/,
-  )
+  assert.doesNotMatch(source, /<PoolsOverviewCard/)
+  assert.match(source, /<TableHead>\{t\("Usage"\)\}<\/TableHead>/)
+  assert.match(source, /<TableHead>\{t\("Progress"\)\}<\/TableHead>/)
+  assert.match(source, /<TableHead>\{t\("Bytes Moved"\)\}<\/TableHead>/)
 })
 
 test("pool overview card gates decommission-specific columns", () => {

@@ -110,6 +110,110 @@ test("normalizePoolsOverview preserves detailed pool list fields", () => {
   assert.equal(pool?.decommission.bytesFailed, 512)
 })
 
+test("normalizePoolsOverview preserves decommission runtime details", () => {
+  const overview = normalizePoolsOverview([
+    {
+      id: 0,
+      cmdline: "pool-0",
+      status: "running",
+      totalSize: 1000,
+      currentSize: 400,
+      usedSize: 600,
+      decommissionInfo: {
+        startTime: "2026-06-23T08:00:00Z",
+        startSize: 100,
+        totalSize: 1000,
+        currentSize: 400,
+        queued: true,
+        queuedBuckets: ["a"],
+        decommissionedBuckets: ["b"],
+        bucket: "logs",
+        prefix: "2026/",
+        object: "part-1",
+        stage: "copy_object",
+        objectsDecommissioned: 7,
+        objectsDecommissionedFailed: 1,
+        bytesDecommissioned: 2048,
+        bytesDecommissionedFailed: 512,
+        waitingReason: "queued",
+      },
+    },
+  ])
+
+  const decommission = overview.pools[0]?.decommission
+
+  assert.equal(decommission?.queued, true)
+  assert.deepEqual(decommission?.queuedBuckets, ["a"])
+  assert.deepEqual(decommission?.decommissionedBuckets, ["b"])
+  assert.equal(decommission?.bucket, "logs")
+  assert.equal(decommission?.prefix, "2026/")
+  assert.equal(decommission?.object, "part-1")
+  assert.equal(decommission?.stage, "copy_object")
+  assert.equal(decommission?.waitingReason, "queued")
+})
+
+test("normalizeDecommissionInfo reads RustFS decommission details", () => {
+  const status = normalizeDecommissionInfo(
+    {
+      id: 0,
+      status: "running",
+      totalSize: 1000,
+      currentSize: 300,
+      decommissionInfo: {
+        startTime: "2026-06-23T08:00:00Z",
+        startSize: 100,
+        totalSize: 1000,
+        currentSize: 300,
+        queued: false,
+        bucket: "logs",
+        prefix: "2026/",
+        object: "part-1",
+        stage: "copy_object",
+        objectsDecommissioned: 9,
+        objectsDecommissionedFailed: 2,
+        bytesDecommissioned: 450,
+        bytesDecommissionedFailed: 50,
+        waitingReason: "waiting_for_worker",
+      },
+    },
+    "0",
+  )
+
+  assert.equal(status.status, "running")
+  assert.equal(status.progressPercent, 50)
+  assert.equal(status.objects, 9)
+  assert.equal(status.objectsFailed, 2)
+  assert.equal(status.bytes, 450)
+  assert.equal(status.bytesFailed, 50)
+  assert.equal(status.startSize, 100)
+  assert.equal(status.totalSize, 1000)
+  assert.equal(status.currentSize, 300)
+  assert.equal(status.bucket, "logs")
+  assert.equal(status.prefix, "2026/")
+  assert.equal(status.object, "part-1")
+  assert.equal(status.stage, "copy_object")
+  assert.equal(status.waitingReason, "waiting_for_worker")
+  assert.equal(status.startedAt, "2026-06-23T08:00:00Z")
+})
+
+test("normalizeDecommissionInfo derives queued status from decommission info", () => {
+  const status = normalizeDecommissionInfo(
+    {
+      id: 1,
+      decommissionInfo: {
+        queued: true,
+        totalSize: 100,
+        currentSize: 40,
+      },
+    },
+    "1",
+  )
+
+  assert.equal(status.status, "queued")
+  assert.equal(status.queued, true)
+  assert.equal(deriveDecommissionDisplayState(status, "supported", "idle"), "running")
+})
+
 test("normalizeRebalanceStatus reads progress and pool details", () => {
   const status = normalizeRebalanceStatus({
     id: "reb-1",

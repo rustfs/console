@@ -16,15 +16,24 @@ test("pool decommission page keeps status panel independent from list clicks and
   const source = fs.readFileSync("app/(dashboard)/pool-decommission/page.tsx", "utf8")
 
   assert.doesNotMatch(source, /{t\("Rebalance Status"\)}/)
-  assert.match(source, /onClick=\{\(\) => setSelectedPoolId\(pool\.id\)\}/)
+  assert.match(source, /if \(selectionLocked\) return/)
+  assert.match(source, /setSelectedPoolId\(pool\.id\)/)
   assert.doesNotMatch(source, /onClick=\{\(\) => setActivePoolId\(pool\.id\)\}/)
   assert.match(source, /function hasDecommissionProgress\(state: DecommissionDisplayState\)/)
-  assert.match(
-    source,
-    /const showActiveProgress = Boolean\(activeStatus\) && hasDecommissionProgress\(activeDisplayState\)/,
-  )
   assert.match(source, /const showProgress = Boolean\(rowStatus\) && hasDecommissionProgress\(rowState\)/)
   assert.match(source, /showProgress \?/)
-  assert.match(source, /rowState === "ready"/)
+  assert.match(source, /return row\.displayState === "ready" && !selectionLocked/)
   assert.doesNotMatch(source, /\["ready", "failed", "canceled", "completed"\]\.includes\(rowState\)/)
+})
+
+test("pool decommission page gates start, cancel, and clear by decommission state", () => {
+  const source = fs.readFileSync("app/(dashboard)/pool-decommission/page.tsx", "utf8")
+
+  assert.match(source, /function canStartDecommission\(row: PoolRow, selectionLocked: boolean\)/)
+  assert.match(source, /return row\.displayState === "ready" && !selectionLocked/)
+  assert.match(source, /function canClearDecommission\(row: PoolRow\)/)
+  assert.match(source, /return row\.displayState === "failed" \|\| row\.displayState === "canceled"/)
+  assert.match(source, /const canCancel = rowState === "running" && !submitting/)
+  assert.match(source, /clearDecommission/)
+  assert.match(source, /t\("Clear Decommission"\)/)
 })

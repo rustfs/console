@@ -1338,5 +1338,13 @@
   "Failed to load objects": "Gagal memuat objek",
   "Access Key cannot contain spaces": "Kunci akses tidak boleh mengandung spasi",
   "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "Nama hanya boleh berisi huruf, angka, garis bawah, dan tanda hubung, serta harus diawali dengan huruf",
-  "Name must be at most 32 characters": "Nama tidak boleh lebih dari 32 karakter"
+  "Name must be at most 32 characters": "Nama tidak boleh lebih dari 32 karakter",
+  "Queued": "Queued",
+  "Remaining Bytes": "Remaining Bytes",
+  "Current Object": "Current Object",
+  "Waiting Reason": "Waiting Reason",
+  "Selection Locked": "Selection Locked",
+  "Decommission cleared": "Decommission cleared",
+  "Failed to clear decommission": "Failed to clear decommission",
+  "Clear Decommission": "Clear Decommission"
 }

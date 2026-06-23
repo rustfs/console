@@ -1338,5 +1338,13 @@
   "Failed to load objects": "オブジェクトの読み込みに失敗しました",
   "Access Key cannot contain spaces": "アクセスキーにスペースを含めることはできません",
   "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "名前には英字、数字、アンダースコア、ハイフンのみ使用でき、英字で始まる必要があります",
-  "Name must be at most 32 characters": "名前は最大32文字です"
+  "Name must be at most 32 characters": "名前は最大32文字です",
+  "Queued": "Queued",
+  "Remaining Bytes": "Remaining Bytes",
+  "Current Object": "Current Object",
+  "Waiting Reason": "Waiting Reason",
+  "Selection Locked": "Selection Locked",
+  "Decommission cleared": "Decommission cleared",
+  "Failed to clear decommission": "Failed to clear decommission",
+  "Clear Decommission": "Clear Decommission"
 }

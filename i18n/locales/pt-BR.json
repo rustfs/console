@@ -1338,5 +1338,13 @@
   "Failed to load objects": "Falha ao carregar objetos",
   "Access Key cannot contain spaces": "A chave de acesso não pode conter espaços",
   "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "O nome só pode conter letras, números, sublinhados e hifens, e deve começar com uma letra",
-  "Name must be at most 32 characters": "O nome não pode ter mais de 32 caracteres"
+  "Name must be at most 32 characters": "O nome não pode ter mais de 32 caracteres",
+  "Queued": "Queued",
+  "Remaining Bytes": "Remaining Bytes",
+  "Current Object": "Current Object",
+  "Waiting Reason": "Waiting Reason",
+  "Selection Locked": "Selection Locked",
+  "Decommission cleared": "Decommission cleared",
+  "Failed to clear decommission": "Failed to clear decommission",
+  "Clear Decommission": "Clear Decommission"
 }

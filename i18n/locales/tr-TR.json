@@ -1338,5 +1338,13 @@
   "Failed to load objects": "Nesneler yüklenemedi",
   "Access Key cannot contain spaces": "Erişim anahtarı boşluk içeremez",
   "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "Ad yalnızca harf, rakam, alt çizgi ve tire içerebilir ve bir harfle başlamalıdır",
-  "Name must be at most 32 characters": "Ad en fazla 32 karakter olmalıdır"
+  "Name must be at most 32 characters": "Ad en fazla 32 karakter olmalıdır",
+  "Queued": "Queued",
+  "Remaining Bytes": "Remaining Bytes",
+  "Current Object": "Current Object",
+  "Waiting Reason": "Waiting Reason",
+  "Selection Locked": "Selection Locked",
+  "Decommission cleared": "Decommission cleared",
+  "Failed to clear decommission": "Failed to clear decommission",
+  "Clear Decommission": "Clear Decommission"
 }

@@ -80,6 +80,14 @@ export function usePoolOperations() {
     [api],
   )
 
+  const clearDecommission = useCallback(
+    async (poolId: string) => {
+      const response = await api.post(`/pools/clear?pool=${encodeURIComponent(poolId)}&by-id=true`, {})
+      return normalizeDecommissionInfo(response, poolId)
+    },
+    [api],
+  )
+
   const getRebalanceViewModel = useCallback(async (): Promise<RebalanceViewModel> => {
     const [overview, status] = await Promise.all([getPoolsOverview(), getRebalanceStatus().catch(() => null)])
     return {
@@ -121,6 +129,7 @@ export function usePoolOperations() {
     getDecommissionStatus,
     startDecommission,
     cancelDecommission,
+    clearDecommission,
     getRebalanceViewModel,
     getDecommissionViewModel,
   }

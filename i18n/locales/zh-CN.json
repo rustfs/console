@@ -1338,5 +1338,13 @@
   "Failed to load objects": "加载对象失败",
   "Access Key cannot contain spaces": "访问密钥不能包含空格",
   "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "名称只能包含字母、数字、下划线和连字符，并且必须以字母开头",
-  "Name must be at most 32 characters": "名称最多 32 个字符"
+  "Name must be at most 32 characters": "名称最多 32 个字符",
+  "Queued": "排队中",
+  "Remaining Bytes": "剩余字节数",
+  "Current Object": "当前对象",
+  "Waiting Reason": "等待原因",
+  "Selection Locked": "选择已锁定",
+  "Decommission cleared": "退役记录已清理",
+  "Failed to clear decommission": "清理退役记录失败",
+  "Clear Decommission": "清理退役"
 }

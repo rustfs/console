@@ -45,10 +45,18 @@ export interface PoolDecommissionSummary {
   complete: boolean
   failed: boolean
   canceled: boolean
+  queued: boolean
+  queuedBuckets: string[]
+  decommissionedBuckets: string[]
+  bucket: string
+  prefix: string
+  object: string
+  stage: string
   objects: number
   objectsFailed: number
   bytes: number
   bytesFailed: number
+  waitingReason?: string
 }
 
 export interface PoolSummary {
@@ -94,11 +102,21 @@ export interface DecommissionInfo {
   complete: boolean
   failed: boolean
   canceled: boolean
+  queued: boolean
   progressPercent: number
   objects: number
+  objectsFailed: number
   versions: number
   bytes: number
+  bytesFailed: number
+  startSize: number
+  totalSize: number
   currentSize: number
+  bucket: string
+  prefix: string
+  object: string
+  stage: string
+  waitingReason?: string
   message?: string
   startedAt?: string
   updatedAt?: string
@@ -112,6 +130,10 @@ function asRecord(value: unknown): JsonRecord {
 
 function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : []
+}
+
+function asStringArray(value: unknown): string[] {
+  return asArray(value).map(String)
 }
 
 function asString(value: unknown): string {
@@ -168,12 +190,20 @@ function normalizeDecommissionSummary(value: unknown): PoolDecommissionSummary {
     complete: asBoolean(record.complete || record.Complete),
     failed: asBoolean(record.failed || record.Failed),
     canceled: asBoolean(record.canceled || record.Canceled),
+    queued: asBoolean(record.queued || record.Queued),
+    queuedBuckets: asStringArray(record.queuedBuckets || record.QueuedBuckets),
+    decommissionedBuckets: asStringArray(record.decommissionedBuckets || record.DecommissionedBuckets),
+    bucket: asString(record.bucket || record.Bucket),
+    prefix: asString(record.prefix || record.Prefix),
+    object: asString(record.object || record.Object),
+    stage: asString(record.stage || record.Stage),
     objects: asNumber(record.objectsDecommissioned || record.ObjectsDecommissioned || record.objects || record.Objects),
     objectsFailed: asNumber(
       record.objectsDecommissionedFailed || record.ObjectsDecommissionedFailed || record.objectsFailed,
     ),
     bytes: asNumber(record.bytesDecommissioned || record.BytesDecommissioned || record.bytes || record.Bytes),
     bytesFailed: asNumber(record.bytesDecommissionedFailed || record.BytesDecommissionedFailed || record.bytesFailed),
+    waitingReason: asString(record.waitingReason || record.WaitingReason) || undefined,
   }
 }
 
@@ -329,29 +359,56 @@ export function normalizeRebalanceStatus(value: unknown): RebalanceStatus {
 export function normalizeDecommissionInfo(value: unknown, fallbackPoolId = ""): DecommissionInfo {
   const record = asRecord(value)
   const info = asRecord(record.decommissionInfo || record.DecommissionInfo || value)
-  const progressPercent =
+  const status = pickStatus(record) || pickStatus(info) || deriveDecommissionStatus(info)
+  const startSize = asNumber(info.startSize || info.StartSize)
+  const totalSize =
+    asNumber(info.totalSize || info.TotalSize) || asNumber(record.totalSize || record.TotalSize || record.capacity)
+  const bytes = asNumber(info.bytesDecommissioned || info.BytesDecommissioned || info.bytes || info.Bytes)
+  const progressBase = Math.max(totalSize - startSize, 0)
+  const rawProgress =
     asNumber(info.progressPercent || info.ProgressPercent || info.percent || info.Percent) ||
-    (asBoolean(info.complete || info.Complete) ? 100 : 0)
+    (asBoolean(info.complete || info.Complete) ? 100 : progressBase > 0 ? (bytes / progressBase) * 100 : 0)
 
   return {
-    status: pickStatus(info),
+    status,
     poolId: asString(info.poolId || info.pool || info.PoolID || info.Pool) || fallbackPoolId,
     complete: asBoolean(info.complete || info.Complete),
     failed: asBoolean(info.failed || info.Failed),
     canceled: asBoolean(info.canceled || info.Canceled),
-    progressPercent: clampPercent(progressPercent),
-    objects: asNumber(info.objects || info.Objects || info.objectCount),
+    queued: asBoolean(info.queued || info.Queued),
+    progressPercent: clampPercent(rawProgress),
+    objects: asNumber(
+      info.objectsDecommissioned || info.ObjectsDecommissioned || info.objects || info.Objects || info.objectCount,
+    ),
+    objectsFailed: asNumber(info.objectsDecommissionedFailed || info.ObjectsDecommissionedFailed || info.objectsFailed),
     versions: asNumber(info.versions || info.Versions || info.versionCount),
-    bytes: asNumber(info.bytes || info.Bytes),
+    bytes,
+    bytesFailed: asNumber(info.bytesDecommissionedFailed || info.BytesDecommissionedFailed || info.bytesFailed),
+    startSize,
+    totalSize,
     currentSize: asNumber(info.currentSize || info.CurrentSize || info.size || info.Size),
+    bucket: asString(info.bucket || info.Bucket),
+    prefix: asString(info.prefix || info.Prefix),
+    object: asString(info.object || info.Object),
+    stage: asString(info.stage || info.Stage),
+    waitingReason: asString(info.waitingReason || info.WaitingReason) || undefined,
     message: asString(info.message || info.Message) || undefined,
-    startedAt: asString(info.startedAt || info.StartedAt) || undefined,
+    startedAt: asString(info.startedAt || info.StartedAt || info.startTime || info.StartTime) || undefined,
     updatedAt: asString(info.updatedAt || info.UpdatedAt) || undefined,
   }
 }
 
 function normalizeState(value: string): string {
   return value.trim().toLowerCase()
+}
+
+function deriveDecommissionStatus(info: JsonRecord): string {
+  if (asBoolean(info.complete || info.Complete)) return "complete"
+  if (asBoolean(info.failed || info.Failed)) return "failed"
+  if (asBoolean(info.canceled || info.Canceled)) return "canceled"
+  if (asBoolean(info.queued || info.Queued)) return "queued"
+  if (asString(info.startTime || info.StartTime)) return "running"
+  return ""
 }
 
 function isIdleRebalancePool(pool: PoolSummary): boolean {
@@ -424,6 +481,7 @@ export function deriveDecommissionDisplayState(
   if (info.complete || ["complete", "completed", "success", "finished"].includes(state)) return "completed"
   if (info.failed || ["failed", "error"].includes(state)) return "failed"
   if (info.canceled || ["canceled", "cancelled", "stopped"].includes(state)) return "canceled"
+  if (info.queued || ["queued", "waiting"].includes(state)) return "running"
   if (["canceling", "cancelling", "stopping"].includes(state)) return "canceling"
   if (["running", "in_progress", "in-progress", "started", "starting"].includes(state)) return "running"
   return "ready"

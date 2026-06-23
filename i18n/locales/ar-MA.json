@@ -1338,5 +1338,13 @@
   "Failed to load objects": "فشل تحميل الكائنات",
   "Access Key cannot contain spaces": "لا يمكن أن يحتوي مفتاح الوصول على مسافات",
   "Name can only contain letters, numbers, underscores and hyphens, and must start with a letter": "يمكن أن يحتوي الاسم على أحرف وأرقام وشرطات سفلية وشرطات فقط، ويجب أن يبدأ بحرف",
-  "Name must be at most 32 characters": "يجب ألا يزيد الاسم عن 32 حرفًا"
+  "Name must be at most 32 characters": "يجب ألا يزيد الاسم عن 32 حرفًا",
+  "Queued": "Queued",
+  "Remaining Bytes": "Remaining Bytes",
+  "Current Object": "Current Object",
+  "Waiting Reason": "Waiting Reason",
+  "Selection Locked": "Selection Locked",
+  "Decommission cleared": "Decommission cleared",
+  "Failed to clear decommission": "Failed to clear decommission",
+  "Clear Decommission": "Clear Decommission"
 }

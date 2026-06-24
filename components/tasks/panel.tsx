@@ -80,7 +80,7 @@ export function TaskPanel({ tasks, onClearTasks }: TaskPanelProps) {
       )}
 
       <Tabs value={tab} onValueChange={setTab} className="flex flex-col gap-4">
-        <TabsList className="justify-start overflow-x-auto">
+        <TabsList className="justify-start overflow-x-auto overflow-y-hidden">
           {tabs.map((tabItem) => (
             <TabsTrigger key={tabItem.value} value={tabItem.value} className="capitalize">
               {tabItem.label}

@@ -234,7 +234,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
 
         <div className="-mx-2 max-h-[80vh] space-y-4 overflow-y-auto overflow-x-hidden px-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">
-            <TabsList className="justify-start overflow-x-auto">
+            <TabsList className="justify-start overflow-x-auto overflow-y-hidden">
               {canEditAccount ? <TabsTrigger value="account">{t("Account")}</TabsTrigger> : null}
               {canAssignGroups ? <TabsTrigger value="groups">{t("Groups")}</TabsTrigger> : null}
               {canEditPolicies ? <TabsTrigger value="policy">{t("Policies")}</TabsTrigger> : null}

@@ -247,7 +247,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
             onValueChange={(v) => setActiveTab(v as "expire" | "transition")}
             className="flex flex-col gap-4"
           >
-            <TabsList className="justify-start overflow-x-auto">
+            <TabsList className="justify-start overflow-x-auto overflow-y-hidden">
               <TabsTrigger value="expire">{t("Expiration")}</TabsTrigger>
               <TabsTrigger value="transition">{t("Transition")}</TabsTrigger>
             </TabsList>

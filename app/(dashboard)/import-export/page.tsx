@@ -129,7 +129,7 @@ export default function ImportExportPage() {
           onValueChange={(v) => setActiveTab(v as "export" | "import")}
           className="flex flex-col gap-6"
         >
-          <TabsList className="justify-start overflow-x-auto">
+          <TabsList className="justify-start overflow-x-auto overflow-y-hidden">
             {tabs.map((tab) => (
               <TabsTrigger key={tab.key} value={tab.key} className="capitalize">
                 {tab.label}

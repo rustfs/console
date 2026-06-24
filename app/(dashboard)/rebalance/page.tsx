@@ -51,7 +51,7 @@ function isFailedRebalancePool(pool: PoolSummary) {
 
 function formatCleanupWarnings(pool: PoolSummary) {
   const warnings = pool.cleanupWarnings
-  if (!warnings.count) return "--"
+  if (!warnings.present && !warnings.count) return "--"
 
   const context = [warnings.lastBucket, warnings.lastObject].filter(Boolean).join("/")
   return context ? `${warnings.count} (${context})` : String(warnings.count)
@@ -321,7 +321,7 @@ export default function RebalancePage() {
                                 {formatCleanupWarnings(pool)}
                               </Badge>
                             ) : (
-                              "--"
+                              formatCleanupWarnings(pool)
                             )}
                           </TableCell>
                         </TableRow>

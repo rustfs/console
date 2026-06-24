@@ -35,6 +35,7 @@ export interface RebalanceCleanupWarnings {
   lastBucket?: string
   lastObject?: string
   lastAt?: string
+  present?: boolean
 }
 
 export interface PoolDecommissionSummary {
@@ -177,13 +178,17 @@ function normalizeProgress(value: unknown): PoolUsageProgress {
 }
 
 function normalizeCleanupWarnings(value: unknown): RebalanceCleanupWarnings {
+  const present = value !== undefined && value !== null && typeof value === "object"
   const record = asRecord(value)
+  const entries = asArray(record.entries || record.Entries)
+  const rawCount = record.count ?? record.Count
   return {
-    count: asNumber(record.count || record.Count),
+    count: rawCount === undefined || rawCount === null ? entries.length : asNumber(rawCount),
     lastMessage: asString(record.lastMsg || record.LastMsg || record.lastMessage || record.LastMessage) || undefined,
     lastBucket: asString(record.lastBucket || record.LastBucket) || undefined,
     lastObject: asString(record.lastObject || record.LastObject) || undefined,
     lastAt: asString(record.lastAt || record.LastAt) || undefined,
+    present,
   }
 }
 

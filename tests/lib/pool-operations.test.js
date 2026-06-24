@@ -243,6 +243,29 @@ test("normalizeRebalanceStatus reads progress and pool details", () => {
   assert.equal(status.pools[0]?.cleanupWarnings.lastBucket, "test-bucket")
 })
 
+test("normalizeRebalanceStatus preserves explicit zero cleanup warnings", () => {
+  const status = normalizeRebalanceStatus({
+    id: "reb-1",
+    pools: [
+      {
+        id: 0,
+        status: "Completed",
+        cleanupWarnings: {
+          count: 0,
+          lastMsg: null,
+          lastBucket: null,
+          lastObject: null,
+          lastAt: null,
+          entries: [],
+        },
+      },
+    ],
+  })
+
+  assert.equal(status.pools[0]?.cleanupWarnings.count, 0)
+  assert.equal(status.pools[0]?.cleanupWarnings.present, true)
+})
+
 test("normalizeRebalanceStatus completes mixed completed and non-participating pools", () => {
   const status = normalizeRebalanceStatus({
     id: "3be0831f-4315-4adb-9904-3bb0609b3bfc",
@@ -374,10 +397,10 @@ test("normalizeDecommissionInfo reads nested response", () => {
   assert.equal(info.status, "running")
 })
 
-test("derive states enforce rebalance before decommission", () => {
-  const rebalanceState = deriveRebalanceDisplayState(normalizeRebalanceStatus({ status: "failed" }), "supported")
+test("derive states enforce active rebalance before decommission", () => {
+  const rebalanceState = deriveRebalanceDisplayState(normalizeRebalanceStatus({ status: "running" }), "supported")
   const decommissionState = deriveDecommissionDisplayState(null, "supported", rebalanceState, false)
 
-  assert.equal(rebalanceState, "failed")
+  assert.equal(rebalanceState, "running")
   assert.equal(decommissionState, "blocked-by-rebalance")
 })

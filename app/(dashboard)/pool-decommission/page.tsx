@@ -451,6 +451,7 @@ export default function PoolDecommissionPage() {
                         <TableHead>{t("Status")}</TableHead>
                         <TableHead>{t("Total Capacity")}</TableHead>
                         <TableHead>{t("Used Capacity")}</TableHead>
+                        <TableHead>{t("Available")}</TableHead>
                         <TableHead>{t("Usage")}</TableHead>
                         <TableHead>{t("Progress")}</TableHead>
                         <TableHead>{t("Bytes Moved")}</TableHead>
@@ -460,7 +461,7 @@ export default function PoolDecommissionPage() {
                     <TableBody>
                       {poolRows.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center text-muted-foreground">
+                          <TableCell colSpan={10} className="text-center text-muted-foreground">
                             {t("No Data")}
                           </TableCell>
                         </TableRow>
@@ -507,6 +508,7 @@ export default function PoolDecommissionPage() {
                               </TableCell>
                               <TableCell>{formatBytesValue(pool.total)}</TableCell>
                               <TableCell>{formatBytesValue(pool.used)}</TableCell>
+                              <TableCell>{formatBytesValue(pool.available)}</TableCell>
                               <TableCell>
                                 <UsageMeter value={pool.usagePercent} />
                               </TableCell>

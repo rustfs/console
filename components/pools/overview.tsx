@@ -70,7 +70,6 @@ export function PoolsOverviewCard({
                 <TableHead>{t("Pool")}</TableHead>
                 <TableHead>{t("Status")}</TableHead>
                 <TableHead>{t("Total Capacity")}</TableHead>
-                <TableHead>{t("Current Size")}</TableHead>
                 <TableHead>{t("Used Capacity")}</TableHead>
                 <TableHead>{t("Available")}</TableHead>
                 <TableHead>{t("Usage")}</TableHead>
@@ -93,7 +92,7 @@ export function PoolsOverviewCard({
             <TableBody>
               {overview.pools.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={showDecommissionColumns ? 18 : 9} className="text-center text-muted-foreground">
+                  <TableCell colSpan={showDecommissionColumns ? 17 : 8} className="text-center text-muted-foreground">
                     {t("No Data")}
                   </TableCell>
                 </TableRow>
@@ -106,7 +105,6 @@ export function PoolsOverviewCard({
                     </TableCell>
                     <TableCell>{pool.status || "--"}</TableCell>
                     <TableCell>{formatBytesValue(pool.total)}</TableCell>
-                    <TableCell>{formatBytesValue(pool.currentSize)}</TableCell>
                     <TableCell>{formatBytesValue(pool.used)}</TableCell>
                     <TableCell>{formatBytesValue(pool.available)}</TableCell>
                     <TableCell>{formatPercentValue(pool.usagePercent)}</TableCell>

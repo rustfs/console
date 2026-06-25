@@ -4,6 +4,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "private": true,
+  "packageManager": "pnpm@11.8.0",
   "scripts": {
     "dev": "node scripts/apply-theme-overrides.js && next dev",
     "build": "node scripts/apply-theme-overrides.js && next build && node scripts/prepare-static-basepath.js",
@@ -68,11 +69,6 @@
     "runtime": {
       "name": "node",
       "version": ">=22.0.0",
-      "onFail": "error"
-    },
-    "packageManager": {
-      "name": "pnpm",
-      "version": "11.8.0",
       "onFail": "error"
     }
   }

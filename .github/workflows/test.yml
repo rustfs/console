@@ -12,7 +12,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PNPM_VERSION: "11"
   NODE_VERSION: "22"
 
 jobs:
@@ -31,7 +30,6 @@ jobs:
       - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
-          version: ${{ env.PNPM_VERSION }}
           cache: true
 
       - name: 📦 Setup Node.js
@@ -64,7 +62,6 @@ jobs:
       - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
-          version: ${{ env.PNPM_VERSION }}
           cache: true
 
       - name: 📦 Setup Node.js ${{ env.NODE_VERSION }}
@@ -105,7 +102,6 @@ jobs:
       - name: Setup PNPM
         uses: pnpm/action-setup@v6
         with:
-          version: ${{ env.PNPM_VERSION }}
           cache: true
 
       - name: 📦 Setup Node.js

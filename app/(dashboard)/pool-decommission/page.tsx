@@ -648,37 +648,6 @@ export default function PoolDecommissionPage() {
                 </div>
               </CardContent>
             </Card>
-
-            <Card className="rounded-none">
-              <CardHeader>
-                <CardTitle>{t("Actions")}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm">
-                <div className="flex items-start justify-between gap-4 border-b pb-3">
-                  <div>
-                    <p className="font-medium">{t("Start Decommission")}</p>
-                    <p className="text-xs text-muted-foreground">{t("Ready")}</p>
-                  </div>
-                  <Badge variant="secondary">{t("Ready")}</Badge>
-                </div>
-                <div className="flex items-start justify-between gap-4 border-b pb-3">
-                  <div>
-                    <p className="font-medium">{t("Cancel")}</p>
-                    <p className="text-xs text-muted-foreground">{t("Running")}</p>
-                  </div>
-                  <Badge variant="outline">{t("Running")}</Badge>
-                </div>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="font-medium">{t("Clear Decommission")}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {t("Failed Status")} / {t("Canceled")}
-                    </p>
-                  </div>
-                  <Badge variant="destructive">{t("Clear Records")}</Badge>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>

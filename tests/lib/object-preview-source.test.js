@@ -13,3 +13,14 @@ test("object preview modal falls back when standard fullscreen APIs are unavaila
   assert.equal(source.includes("void document.exitFullscreen().catch(() => {})"), false)
   assert.equal(source.includes("void container.requestFullscreen().catch(() => {})"), false)
 })
+
+test("object preview modal only uses the PDF viewer for application/pdf content", () => {
+  const source = fs.readFileSync("components/object/preview-modal.tsx", "utf8")
+
+  assert.match(
+    source,
+    /function isPdfPreview\(contentType: string\) \{\s+return contentType === "application\/pdf"\s+\}/,
+  )
+  assert.match(source, /isPdfPreview\(normalizedContentType\)/)
+  assert.doesNotMatch(source, /keyLower\.endsWith\("\.pdf"\)/)
+})

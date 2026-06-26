@@ -76,9 +76,8 @@ function getPreviewMode(hasPreviewUrl: boolean, canRenderText: boolean, canRende
   return canRenderText ? "text" : "sandbox"
 }
 
-function isPdfPreview(contentType: string, objectKey: string) {
-  const keyLower = objectKey.toLowerCase()
-  return contentType === "application/pdf" || keyLower.endsWith(".pdf")
+function isPdfPreview(contentType: string) {
+  return contentType === "application/pdf"
 }
 
 function isParquetPreview(contentType: string, objectKey: string) {
@@ -139,7 +138,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const isJson = normalizedContentType === "application/json" || objectKeyLower.endsWith(".json")
   const canRenderText = hasPreviewUrl && isSafeTextPreview(normalizedContentType, objectKey, objectSize)
   const canRenderImage = hasPreviewUrl && isImagePreview(normalizedContentType, objectKey)
-  const canRenderPdf = hasPreviewUrl && isPdfPreview(normalizedContentType, objectKey)
+  const canRenderPdf = hasPreviewUrl && isPdfPreview(normalizedContentType)
   const canRenderParquet = hasPreviewUrl && isParquetPreview(normalizedContentType, objectKey)
   const previewMode: PreviewMode = canRenderParquet
     ? "parquet"

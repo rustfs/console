@@ -4,54 +4,16 @@ import * as React from "react"
 import { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useSystem } from "@/hooks/use-system"
+import {
+  normalizeStorageInfo,
+  normalizeSystemInfo,
+  type DataUsageInfo,
+  type MetricsInfo,
+  type StorageInfo,
+  type SystemInfo,
+} from "@/lib/performance-data"
 
-export interface ServerInfo {
-  endpoint?: string
-  state?: string
-  version?: string
-  uptime?: number
-  drives?: Array<{
-    uuid?: string
-    drive_path?: string
-    usedspace?: number
-    totalspace?: number
-    availspace?: number
-    state?: string
-  }>
-  network?: Record<string, string>
-}
-
-export interface SystemInfo {
-  buckets?: { count?: number }
-  objects?: { count?: number }
-  servers?: ServerInfo[]
-  backend?: {
-    backendType?: string
-    onlineDisks?: number
-    offlineDisks?: number
-  }
-}
-
-export interface DataUsageInfo {
-  total_capacity?: number
-  total_used_capacity?: number
-}
-
-export interface StorageInfo {
-  backend?: {
-    StandardSCParity?: string
-    RRSCParity?: string
-  }
-}
-
-export interface MetricsInfo {
-  aggregated?: {
-    scanner?: {
-      current_started?: string
-      cycle_complete_times?: string[]
-    }
-  }
-}
+export type { DataUsageInfo, MetricsInfo, ServerInfo, StorageInfo, SystemInfo } from "@/lib/performance-data"
 
 export function usePerformanceData() {
   const { t } = useTranslation()
@@ -78,9 +40,9 @@ export function usePerformanceData() {
         systemApi.getStorageInfo(),
       ])
       if (!mountedRef.current) return
-      setSystemInfo((sysRes as SystemInfo) ?? {})
+      setSystemInfo(normalizeSystemInfo(sysRes))
       setDatausageinfo((usageRes as DataUsageInfo) ?? {})
-      setStorageinfo((storageRes as StorageInfo) ?? {})
+      setStorageinfo(normalizeStorageInfo(storageRes))
     } catch (err) {
       if (!mountedRef.current) return
       console.error("Failed to load performance data:", err)

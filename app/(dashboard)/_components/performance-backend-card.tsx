@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export interface BackendInfoItem {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>
   title: string
-  value?: string
+  value?: string | number
 }
 
 export function PerformanceBackendCard({ items, t }: { items: BackendInfoItem[]; t: (key: string) => string }) {

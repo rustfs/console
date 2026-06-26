@@ -203,10 +203,10 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
                 <ScrollArea className="w-full">
                   <div className="flex gap-4 pb-2">
                     {(server.drives || []).map((drive) => (
-                      <Card key={drive.uuid ?? drive.drive_path} className="min-w-[260px] shadow-none">
+                      <Card key={drive.uuid ?? drive.drive_path ?? drive.path} className="min-w-[260px] shadow-none">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-sm font-medium text-muted-foreground">
-                            {drive.drive_path ?? "--"}
+                            {drive.drive_path ?? drive.path ?? "--"}
                           </CardTitle>
                           <CardDescription className="text-xs">
                             {niceBytes(String(drive.usedspace ?? 0))} / {niceBytes(String(drive.totalspace ?? 0))}

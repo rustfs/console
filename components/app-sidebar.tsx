@@ -154,7 +154,7 @@ export function AppSidebar() {
             </div>
           ) : (
             <div className="flex min-w-0 items-baseline gap-2 px-3 py-4">
-              <ThemeLogo width={64} height={16} className="shrink-0" alt={APP_NAME} priority />
+              <ThemeLogo width={96} height={16} className="shrink-0" alt={APP_NAME} priority />
             </div>
           )}
         </Link>

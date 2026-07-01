@@ -68,15 +68,40 @@ jobs:
         with:
           path: ./artifacts/rustfs-console-latest.zip
 
-      - name: Upload to Bucket for `latest`
-        uses: JohnGuan/oss-upload-action@main
-        with:
-          key-id: ${{ secrets.ALICLOUDOSS_KEY_ID }}
-          key-secret: ${{ secrets.ALICLOUDOSS_KEY_SECRET }}
-          region: oss-cn-beijing
-          bucket: rustfs-artifacts
-          assets: |
-            ./artifacts/**:/artifacts/console/
+      - name: Upload to Cloudflare R2
+        env:
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          AWS_EC2_METADATA_DISABLED: true
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$R2_ACCESS_KEY_ID" || -z "$R2_SECRET_ACCESS_KEY" || -z "$R2_ENDPOINT" || -z "$R2_BUCKET" ]]; then
+            echo "⚠️ R2 credentials or endpoint missing, skipping artifact upload"
+            exit 0
+          fi
+
+          if ! command -v aws >/dev/null 2>&1; then
+            echo "❌ aws CLI not found on runner; cannot upload to R2"
+            exit 1
+          fi
+
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
+          export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+          export AWS_DEFAULT_REGION="auto"
+
+          R2_PATH="s3://${R2_BUCKET}/artifacts/console/"
+
+          echo "📤 Uploading ./artifacts to $R2_PATH..."
+          aws s3 cp ./artifacts "$R2_PATH" \
+            --recursive \
+            --endpoint-url "$R2_ENDPOINT" \
+            --only-show-errors
+
+          echo "✅ Upload completed successfully"
 
       - name: Upload release asset `versioned`
         if: ${{ github.event_name == 'release' }}

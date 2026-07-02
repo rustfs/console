@@ -20,14 +20,22 @@ export async function fetchOidcProviders(serverHost: string): Promise<OidcProvid
 }
 
 /**
- * Redirect the browser to the OIDC authorization endpoint.
+ * Build the backend OIDC authorization endpoint URL.
  */
-export function initiateOidcLogin(serverHost: string, providerId: string, redirectAfter?: string): void {
+export function buildOidcLoginUrl(serverHost: string, providerId: string, redirectAfter?: string): string {
   let url = `${serverHost}/rustfs/admin/v3/oidc/authorize/${encodeURIComponent(providerId)}`
   if (redirectAfter) {
     url += `?redirect_after=${encodeURIComponent(redirectAfter)}`
   }
-  window.location.href = url
+  return url
+}
+
+/**
+ * Redirect the browser to the OIDC authorization endpoint.
+ */
+export function initiateOidcLogin(serverHost: string, providerId: string, redirectAfter?: string): void {
+  const url = buildOidcLoginUrl(serverHost, providerId, redirectAfter)
+  window.location.href = new URL(url, window.location.origin).href
 }
 
 /**

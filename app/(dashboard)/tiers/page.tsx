@@ -26,10 +26,6 @@ function getConfig(row: TierRow): TierConfig | undefined {
       return row.s3
     case "aliyun":
       return row.aliyun
-    case "tencent":
-      return row.tencent
-    case "huaweicloud":
-      return row.huaweicloud
     case "azure":
       return row.azure
     case "gcs":

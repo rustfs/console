@@ -23,13 +23,6 @@ const TYPE_OPTIONS = [
   { labelKey: "Minio", value: "minio", icon: "/svg/minio.svg", descKey: "External MinIO tier" },
   { labelKey: "AWS S3", value: "s3", icon: "/svg/aws.svg", descKey: "Standard AWS S3 tier" },
   { labelKey: "Aliyun OSS", value: "aliyun", icon: "/svg/aliyun.svg", descKey: "Alibaba Cloud Object Storage Service" },
-  { labelKey: "Tencent COS", value: "tencent", icon: "/svg/tenxunyun.svg", descKey: "Tencent Cloud Object Storage" },
-  {
-    labelKey: "Huawei OBS",
-    value: "huaweicloud",
-    icon: "/svg/huaweiyun.svg",
-    descKey: "Huawei Cloud Object Storage Service",
-  },
   { labelKey: "Azure Blob", value: "azure", icon: "/svg/azure.svg", descKey: "Microsoft Azure Blob Storage" },
   { labelKey: "Google Cloud Storage", value: "gcs", icon: "/svg/google.svg", descKey: "Google Cloud Storage" },
   { labelKey: "Cloudflare R2", value: "r2", icon: "/svg/cloudflare.svg", descKey: "Cloudflare R2 Storage" },

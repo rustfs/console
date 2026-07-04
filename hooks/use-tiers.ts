@@ -18,13 +18,13 @@ export interface TierRow {
   minio?: TierConfig
   s3?: TierConfig
   aliyun?: TierConfig
+  tencent?: TierConfig
+  huaweicloud?: TierConfig
   azure?: TierConfig
   gcs?: TierConfig
   r2?: TierConfig
   [key: string]: unknown
 }
-
-const UNSUPPORTED_TIER_TYPES = new Set(["huaweicloud", "tencent"])
 
 export function useTiers() {
   const api = useApi()
@@ -44,8 +44,7 @@ export function useTiers() {
   )
 
   const listTiers = useCallback(async () => {
-    const tiers = (await api.get("/tier")) as TierRow[] | undefined
-    return (tiers ?? []).filter((tier) => !UNSUPPORTED_TIER_TYPES.has(tier.type))
+    return api.get("/tier") as Promise<TierRow[]>
   }, [api])
 
   const removeTiers = useCallback(

@@ -1346,5 +1346,13 @@
   "Selection Locked": "Selection Locked",
   "Decommission cleared": "Decommission cleared",
   "Failed to clear decommission": "Failed to clear decommission",
-  "Clear Decommission": "Clear Decommission"
+  "Clear Decommission": "Clear Decommission",
+  "New object name must be different": "Tên đối tượng mới phải khác",
+  "Object name cannot contain slashes": "Tên đối tượng không được chứa dấu gạch chéo",
+  "Object name is required": "Tên đối tượng là bắt buộc",
+  "Object renamed": "Đã đổi tên đối tượng",
+  "Rename": "Đổi tên",
+  "Rename Failed": "Đổi tên thất bại",
+  "Rename Object": "Đổi tên đối tượng",
+  "Renaming object": "Đang đổi tên đối tượng"
 }

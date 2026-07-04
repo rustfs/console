@@ -1346,5 +1346,13 @@
   "Selection Locked": "选择已锁定",
   "Decommission cleared": "退役记录已清理",
   "Failed to clear decommission": "清理退役记录失败",
-  "Clear Decommission": "清理退役"
+  "Clear Decommission": "清理退役",
+  "New object name must be different": "新对象名称必须不同",
+  "Object name cannot contain slashes": "对象名称不能包含斜杠",
+  "Object name is required": "对象名称不能为空",
+  "Object renamed": "对象已重命名",
+  "Rename": "重命名",
+  "Rename Failed": "重命名失败",
+  "Rename Object": "重命名对象",
+  "Renaming object": "正在重命名对象"
 }

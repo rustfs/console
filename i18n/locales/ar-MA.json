@@ -1346,5 +1346,13 @@
   "Selection Locked": "Selection Locked",
   "Decommission cleared": "Decommission cleared",
   "Failed to clear decommission": "Failed to clear decommission",
-  "Clear Decommission": "Clear Decommission"
+  "Clear Decommission": "Clear Decommission",
+  "New object name must be different": "يجب أن يكون اسم الكائن الجديد مختلفًا",
+  "Object name cannot contain slashes": "لا يمكن أن يحتوي اسم الكائن على شرطات مائلة",
+  "Object name is required": "اسم الكائن مطلوب",
+  "Object renamed": "تمت إعادة تسمية الكائن",
+  "Rename": "إعادة التسمية",
+  "Rename Failed": "فشلت إعادة التسمية",
+  "Rename Object": "إعادة تسمية الكائن",
+  "Renaming object": "جارٍ إعادة تسمية الكائن"
 }

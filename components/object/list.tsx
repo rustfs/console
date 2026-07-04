@@ -13,6 +13,7 @@ import {
   RiArrowLeftSLine,
   RiArrowRightSLine,
   RiEyeLine,
+  RiEdit2Line,
 } from "@remixicon/react"
 import {
   AlertDialog,
@@ -26,6 +27,15 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SearchInput } from "@/components/search-input"
 import { PageHeader } from "@/components/page-header"
@@ -63,6 +73,12 @@ import {
   normalizeObjectZipDownloadUrl,
   type CreateObjectZipDownloadResponse,
 } from "@/lib/object-zip-download"
+import {
+  buildRenamedObjectKey,
+  getObjectBaseName,
+  validateObjectRename,
+  type ObjectRenameValidation,
+} from "@/lib/object-rename"
 import { TaskStatsButton } from "@/components/tasks/stats-button"
 import { useAddDeleteKeys, useAddDeleteFolder, useTasks } from "@/contexts/task-context"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -100,7 +116,7 @@ export function ObjectList({
   const { t } = useTranslation()
   const message = useMessage()
   const api = useApi()
-  const { listObject, getSignedUrl } = useObject(bucket)
+  const { listObject, getSignedUrl, renameObject } = useObject(bucket)
   const { getBucketVersioning } = useBucket()
   const { canCapability } = usePermissions()
   const addDeleteKeys = useAddDeleteKeys()
@@ -122,6 +138,10 @@ export function ObjectList({
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [deleteDialogKeys, setDeleteDialogKeys] = React.useState<string[]>([])
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
+  const [renameDialogOpen, setRenameDialogOpen] = React.useState(false)
+  const [renameSourceKey, setRenameSourceKey] = React.useState("")
+  const [renameName, setRenameName] = React.useState("")
+  const [renameSubmitting, setRenameSubmitting] = React.useState(false)
 
   const prefix = decodeURIComponent(path)
   const resolvedPageSize = normalizeObjectListPageSize(storedPageSize)
@@ -333,6 +353,22 @@ export function ObjectList({
     [message, t, getSignedUrl],
   )
 
+  const getRenameValidationMessage = React.useCallback(
+    (validation: ObjectRenameValidation) => {
+      switch (validation) {
+        case "empty":
+          return t("Object name is required")
+        case "containsSlash":
+          return t("Object name cannot contain slashes")
+        case "sameName":
+          return t("New object name must be different")
+      }
+    },
+    [t],
+  )
+
+  const renameValidation = renameSourceKey ? validateObjectRename(renameSourceKey, renameName) : "empty"
+
   const columns: ColumnDef<ObjectRow>[] = React.useMemo(
     () => [
       {
@@ -409,6 +445,12 @@ export function ObjectList({
                     <span>{t("Download")}</span>
                   </Button>
                 ) : null}
+                {canCapability("objects.rename", { bucket, objectKey: row.original.Key, prefix }) ? (
+                  <Button variant="outline" size="sm" onClick={() => openRenameDialog(row.original.Key)}>
+                    <RiEdit2Line className="size-4" aria-hidden />
+                    <span>{t("Rename")}</span>
+                  </Button>
+                ) : null}
               </>
             ) : null}
             {canCapability("objects.delete", { bucket, objectKey: row.original.Key }) ? (
@@ -421,7 +463,7 @@ export function ObjectList({
         ),
       },
     ],
-    [t, displayKey, bucketPath, onOpenInfo, bucket, downloadFile, canCapability, onPreview],
+    [t, displayKey, bucketPath, onOpenInfo, bucket, downloadFile, canCapability, onPreview, prefix],
   )
 
   const { table, selectedRowIds } = useDataTable<ObjectRow>({
@@ -474,6 +516,50 @@ export function ObjectList({
     setDeleteDialogKeys(keys)
     setDeleteAllVersions(false)
     setDeleteDialogOpen(true)
+  }
+
+  const openRenameDialog = (key: string) => {
+    setRenameSourceKey(key)
+    setRenameName(getObjectBaseName(key))
+    setRenameDialogOpen(true)
+  }
+
+  const handleRenameOpenChange = (open: boolean) => {
+    if (renameSubmitting) return
+    setRenameDialogOpen(open)
+    if (!open) {
+      setRenameSourceKey("")
+      setRenameName("")
+    }
+  }
+
+  const handleConfirmRename = async () => {
+    if (!renameSourceKey) return
+
+    const validation = validateObjectRename(renameSourceKey, renameName)
+    if (validation) {
+      message.warning(getRenameValidationMessage(validation))
+      return
+    }
+
+    const targetKey = buildRenamedObjectKey(renameSourceKey, renameName)
+    const loadingMsg = message.loading(t("Renaming object"), { duration: 0 })
+    setRenameSubmitting(true)
+
+    try {
+      await renameObject(renameSourceKey, targetKey)
+      message.success(t("Object renamed"))
+      table.resetRowSelection()
+      setRenameDialogOpen(false)
+      setRenameSourceKey("")
+      setRenameName("")
+      void fetchObjects({ resetPagination: true })
+    } catch (err) {
+      message.error((err as Error)?.message ?? t("Rename Failed"))
+    } finally {
+      loadingMsg.destroy()
+      setRenameSubmitting(false)
+    }
   }
 
   const handleConfirmDelete = async () => {
@@ -722,6 +808,37 @@ export function ObjectList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={renameDialogOpen} onOpenChange={handleRenameOpenChange} disablePointerDismissal>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("Rename Object")}</DialogTitle>
+            <DialogDescription className="break-all">{renameSourceKey}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Input
+              name="object-rename-name"
+              value={renameName}
+              onChange={(e) => setRenameName(e.target.value)}
+              aria-label={t("Object Name")}
+              autoComplete="off"
+              spellCheck={false}
+              autoFocus
+            />
+            {renameValidation ? (
+              <p className="text-xs text-destructive">{getRenameValidationMessage(renameValidation)}</p>
+            ) : null}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" disabled={renameSubmitting} onClick={() => handleRenameOpenChange(false)}>
+              {t("Cancel")}
+            </Button>
+            <Button disabled={Boolean(renameValidation) || renameSubmitting} onClick={handleConfirmRename}>
+              {t("Rename")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

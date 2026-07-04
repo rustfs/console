@@ -26,6 +26,7 @@ export type ConsoleCapability =
   | "objects.view"
   | "objects.preview"
   | "objects.download"
+  | "objects.rename"
   | "objects.delete"
   | "objects.bulkDelete"
   | "objects.tag.view"
@@ -76,6 +77,10 @@ const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]
   "objects.view": [{ actions: ["s3:GetObject"], resource: "object" }],
   "objects.preview": [{ actions: ["s3:GetObject"], resource: "object" }],
   "objects.download": [{ actions: ["s3:GetObject"], resource: "object" }],
+  "objects.rename": [
+    { actions: ["s3:GetObject", "s3:DeleteObject"], resource: "object" },
+    { actions: ["s3:PutObject"], resource: "objectPattern" },
+  ],
   "objects.delete": [{ actions: ["s3:DeleteObject"], resource: "object" }],
   "objects.bulkDelete": [{ actions: ["s3:DeleteObject"], resource: "objectPattern" }],
   "objects.tag.view": [{ actions: ["s3:GetObjectTagging"], resource: "object" }],

@@ -1346,5 +1346,13 @@
   "Selection Locked": "Selection Locked",
   "Decommission cleared": "Decommission cleared",
   "Failed to clear decommission": "Failed to clear decommission",
-  "Clear Decommission": "Clear Decommission"
+  "Clear Decommission": "Clear Decommission",
+  "New object name must be different": "Yeni nesne adı farklı olmalıdır",
+  "Object name cannot contain slashes": "Nesne adı eğik çizgi içeremez",
+  "Object name is required": "Nesne adı gerekli",
+  "Object renamed": "Nesne yeniden adlandırıldı",
+  "Rename": "Yeniden adlandır",
+  "Rename Failed": "Yeniden adlandırma başarısız",
+  "Rename Object": "Nesneyi yeniden adlandır",
+  "Renaming object": "Nesne yeniden adlandırılıyor"
 }

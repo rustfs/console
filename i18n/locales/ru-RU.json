@@ -1346,5 +1346,13 @@
   "Selection Locked": "Selection Locked",
   "Decommission cleared": "Decommission cleared",
   "Failed to clear decommission": "Failed to clear decommission",
-  "Clear Decommission": "Clear Decommission"
+  "Clear Decommission": "Clear Decommission",
+  "New object name must be different": "Новое имя объекта должно отличаться",
+  "Object name cannot contain slashes": "Имя объекта не может содержать косые черты",
+  "Object name is required": "Требуется имя объекта",
+  "Object renamed": "Объект переименован",
+  "Rename": "Переименовать",
+  "Rename Failed": "Не удалось переименовать",
+  "Rename Object": "Переименовать объект",
+  "Renaming object": "Переименование объекта"
 }

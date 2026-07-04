@@ -1346,5 +1346,13 @@
   "Selection Locked": "Selection Locked",
   "Decommission cleared": "Decommission cleared",
   "Failed to clear decommission": "Failed to clear decommission",
-  "Clear Decommission": "Clear Decommission"
+  "Clear Decommission": "Clear Decommission",
+  "New object name must be different": "O novo nome do objeto deve ser diferente",
+  "Object name cannot contain slashes": "O nome do objeto não pode conter barras",
+  "Object name is required": "O nome do objeto é obrigatório",
+  "Object renamed": "Objeto renomeado",
+  "Rename": "Renomear",
+  "Rename Failed": "Falha ao renomear",
+  "Rename Object": "Renomear objeto",
+  "Renaming object": "Renomeando objeto"
 }

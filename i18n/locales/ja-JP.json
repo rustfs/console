@@ -1346,5 +1346,13 @@
   "Selection Locked": "Selection Locked",
   "Decommission cleared": "Decommission cleared",
   "Failed to clear decommission": "Failed to clear decommission",
-  "Clear Decommission": "Clear Decommission"
+  "Clear Decommission": "Clear Decommission",
+  "New object name must be different": "新しいオブジェクト名は異なる必要があります",
+  "Object name cannot contain slashes": "オブジェクト名にスラッシュは使用できません",
+  "Object name is required": "オブジェクト名は必須です",
+  "Object renamed": "オブジェクト名を変更しました",
+  "Rename": "名前を変更",
+  "Rename Failed": "名前の変更に失敗しました",
+  "Rename Object": "オブジェクト名を変更",
+  "Renaming object": "オブジェクト名を変更中"
 }

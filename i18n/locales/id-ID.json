@@ -1346,5 +1346,13 @@
   "Selection Locked": "Selection Locked",
   "Decommission cleared": "Decommission cleared",
   "Failed to clear decommission": "Failed to clear decommission",
-  "Clear Decommission": "Clear Decommission"
+  "Clear Decommission": "Clear Decommission",
+  "New object name must be different": "Nama objek baru harus berbeda",
+  "Object name cannot contain slashes": "Nama objek tidak boleh berisi garis miring",
+  "Object name is required": "Nama objek wajib diisi",
+  "Object renamed": "Objek diganti namanya",
+  "Rename": "Ganti nama",
+  "Rename Failed": "Gagal mengganti nama",
+  "Rename Object": "Ganti nama objek",
+  "Renaming object": "Mengganti nama objek"
 }

@@ -1346,5 +1346,13 @@
   "Selection Locked": "Selection Locked",
   "Decommission cleared": "Decommission cleared",
   "Failed to clear decommission": "Failed to clear decommission",
-  "Clear Decommission": "Clear Decommission"
+  "Clear Decommission": "Clear Decommission",
+  "New object name must be different": "새 객체 이름은 달라야 합니다",
+  "Object name cannot contain slashes": "객체 이름에는 슬래시를 포함할 수 없습니다",
+  "Object name is required": "객체 이름은 필수입니다",
+  "Object renamed": "객체 이름이 변경되었습니다",
+  "Rename": "이름 변경",
+  "Rename Failed": "이름 변경 실패",
+  "Rename Object": "객체 이름 변경",
+  "Renaming object": "객체 이름 변경 중"
 }

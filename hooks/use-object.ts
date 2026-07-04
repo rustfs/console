@@ -2,6 +2,7 @@
 
 import { useCallback } from "react"
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetObjectLegalHoldCommand,
   GetObjectRetentionCommand,
@@ -18,6 +19,7 @@ import {
 } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
+import { encodeObjectCopySource } from "@/lib/object-rename"
 import { decodeS3UrlEncodedObjectList, decodeS3UrlEncodedObjectVersions } from "@/lib/s3-object-encoding"
 
 function attachIncludeDeletedHeader(command: ListObjectsV2Command) {
@@ -86,6 +88,24 @@ export function useObject(bucket: string) {
       return client.send(command)
     },
     [client, bucket],
+  )
+
+  const renameObject = useCallback(
+    async (sourceKey: string, targetKey: string) => {
+      await client.send(
+        new CopyObjectCommand({
+          Bucket: bucket,
+          Key: targetKey,
+          CopySource: encodeObjectCopySource(bucket, sourceKey),
+          IfNoneMatch: "*",
+          MetadataDirective: "COPY",
+          TaggingDirective: "COPY",
+        }),
+      )
+
+      return deleteObject(sourceKey)
+    },
+    [client, bucket, deleteObject],
   )
 
   const listObject = useCallback(
@@ -278,6 +298,7 @@ export function useObject(bucket: string) {
     headObject,
     putObject,
     deleteObject,
+    renameObject,
     getSignedUrl: getSignedUrlFn,
     listObject,
     mapAllFiles,

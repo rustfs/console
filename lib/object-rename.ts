@@ -35,7 +35,8 @@ export function validateObjectRename(sourceKey: string, newName: string): Object
   return null
 }
 
-export function encodeObjectCopySource(bucket: string, key: string): string {
+export function encodeObjectCopySource(bucket: string, key: string, versionId?: string): string {
   const encodedKey = key.split("/").map(encodeURIComponent).join("/")
-  return `/${encodeURIComponent(bucket)}/${encodedKey}`
+  const source = `/${encodeURIComponent(bucket)}/${encodedKey}`
+  return versionId ? `${source}?versionId=${encodeURIComponent(versionId)}` : source
 }

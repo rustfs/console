@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { useFirstAccessibleDashboardRoute } from "@/hooks/use-first-accessible-dashboard-route"
 import { useMessage } from "@/lib/feedback/message"
 import { parseOidcCallback } from "@/lib/oidc"
 import { isSafeRedirectPath } from "@/lib/routes"
@@ -12,7 +11,6 @@ import { useTranslation } from "react-i18next"
 export default function OidcCallbackPage() {
   const router = useRouter()
   const { loginWithStsCredentials, isAuthenticated } = useAuth()
-  const { route: firstAccessibleRoute, isReady: hasResolvedFirstRoute } = useFirstAccessibleDashboardRoute()
   const message = useMessage()
   const { t } = useTranslation()
   const processed = useRef(false)
@@ -63,10 +61,8 @@ export default function OidcCallbackPage() {
       return
     }
 
-    if (hasResolvedFirstRoute && firstAccessibleRoute) {
-      router.replace(firstAccessibleRoute)
-    }
-  }, [credentialsSet, isAuthenticated, hasResolvedFirstRoute, firstAccessibleRoute, router])
+    router.replace("/")
+  }, [credentialsSet, isAuthenticated, router])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted">

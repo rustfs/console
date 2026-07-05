@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { DEFAULT_LOCALE, initI18n, isRtlLocale, normalizeLocale } from "@/lib/i18n"
 import { DirectionProvider } from "@/components/ui/direction"
+import { AppLoadingShell } from "@/components/app-loading-shell"
 import i18n from "i18next"
 
 type Dir = "ltr" | "rtl"
@@ -50,7 +51,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   if (!ready) {
-    return <div className="min-h-screen bg-background" />
+    return <AppLoadingShell />
   }
 
   return <DirectionProvider direction={dir}>{children}</DirectionProvider>

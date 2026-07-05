@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next"
 import { RiTranslate2 } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { LOCALE_CODES, type Locale } from "@/lib/i18n"
+import { changeLocale, LOCALE_CODES, type Locale } from "@/lib/i18n"
 
 const languageConfig: Record<string, { text: string; icon: typeof RiTranslate2 }> = {
   en: { text: "English", icon: RiTranslate2 },
@@ -46,7 +46,7 @@ export function LanguageSwitcher() {
       />
       <DropdownMenuContent className="w-40" align="start">
         {options.map(({ label, key }) => (
-          <DropdownMenuItem key={key} onClick={() => i18n.changeLanguage(key)}>
+          <DropdownMenuItem key={key} onClick={() => void changeLocale(key)}>
             {label}
           </DropdownMenuItem>
         ))}

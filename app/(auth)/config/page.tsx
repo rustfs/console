@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
+import { AppLoadingShell } from "@/components/app-loading-shell"
 import { Button } from "@/components/ui/button"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -20,7 +21,7 @@ import { getThemeManifest } from "@/lib/theme/manifest"
 
 export default function ConfigPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+    <Suspense fallback={<AppLoadingShell />}>
       <ConfigPageContent />
     </Suspense>
   )

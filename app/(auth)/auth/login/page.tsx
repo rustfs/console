@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { LoginForm, type LoginMethod } from "@/components/auth/login-form"
+import { AppLoadingShell } from "@/components/app-loading-shell"
 import { useAuth } from "@/contexts/auth-context"
-import { useFirstAccessibleDashboardRoute } from "@/hooks/use-first-accessible-dashboard-route"
 import { useMessage } from "@/lib/feedback/message"
 import { configManager } from "@/lib/config"
 import { fetchOidcProviders, initiateOidcLogin } from "@/lib/oidc"
@@ -14,7 +14,7 @@ import type { OidcProvider } from "@/types/config"
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+    <Suspense fallback={<AppLoadingShell />}>
       <LoginPageContent />
     </Suspense>
   )
@@ -25,7 +25,6 @@ function LoginPageContent() {
   const searchParams = useSearchParams()
   const message = useMessage()
   const { login, isAuthenticated } = useAuth()
-  const { route: firstAccessibleRoute, isReady: hasResolvedFirstRoute } = useFirstAccessibleDashboardRoute()
   const { t } = useTranslation()
 
   const [method, setMethod] = useState<LoginMethod>("accessKeyAndSecretKey")
@@ -41,9 +40,9 @@ function LoginPageContent() {
   const [oidcProviders, setOidcProviders] = useState<OidcProvider[]>([])
 
   useEffect(() => {
-    if (!isAuthenticated || !hasResolvedFirstRoute || !firstAccessibleRoute) return
-    router.replace(firstAccessibleRoute)
-  }, [isAuthenticated, hasResolvedFirstRoute, firstAccessibleRoute, router])
+    if (!isAuthenticated) return
+    router.replace("/")
+  }, [isAuthenticated, router])
 
   useEffect(() => {
     if (searchParams.get("unauthorized") === "true") {
@@ -52,13 +51,38 @@ function LoginPageContent() {
     }
   }, [searchParams, message, t, router])
 
-  // Fetch OIDC providers on mount
+  // Fetch OIDC providers after the first paint path has had a chance to settle.
   useEffect(() => {
-    configManager.loadConfig().then((config) => {
-      if (config?.serverHost) {
-        fetchOidcProviders(config.serverHost).then(setOidcProviders)
+    let cancelled = false
+    const loadOidcProviders = () => {
+      configManager.loadConfig().then((config) => {
+        if (cancelled) return
+        if (config?.serverHost) {
+          fetchOidcProviders(config.serverHost).then((providers) => {
+            if (!cancelled) setOidcProviders(providers)
+          })
+        }
+      })
+    }
+
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: IdleRequestCallback) => number
+      cancelIdleCallback?: (handle: number) => void
+    }
+
+    if (typeof idleWindow.requestIdleCallback === "function") {
+      const idleId = idleWindow.requestIdleCallback(loadOidcProviders)
+      return () => {
+        cancelled = true
+        idleWindow.cancelIdleCallback?.(idleId)
       }
-    })
+    }
+
+    const timerId = window.setTimeout(loadOidcProviders, 0)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timerId)
+    }
   }, [])
 
   const handleLogin = async (e: React.FormEvent) => {

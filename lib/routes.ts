@@ -28,6 +28,13 @@ export function getLoginRoute(): string {
   return buildRoute("/auth/login")
 }
 
+function stripBasePath(path: string): string {
+  if (!BASE_PATH) return path
+  if (path === BASE_PATH) return "/"
+  if (path.startsWith(`${BASE_PATH}/`)) return path.slice(BASE_PATH.length) || "/"
+  return path
+}
+
 /**
  * Validate that a redirect path is safe (relative, no protocol, no external domain).
  * Returns the path if safe, or the fallback otherwise.
@@ -53,8 +60,10 @@ export function isSafeRedirectPath(path: string, fallback = "/"): string {
   // Ensure it starts with / (relative path)
   if (!trimmed.startsWith("/")) return fallback
 
-  // Block directory traversal sequences (e.g. /../evil.com, /../../etc/passwd)
-  if (/(?:^|\/)\.\.(?:\/|$)/.test(trimmed)) return fallback
+  const appPath = stripBasePath(trimmed)
 
-  return trimmed
+  // Block directory traversal sequences (e.g. /../evil.com, /../../etc/passwd)
+  if (/(?:^|\/)\.\.(?:\/|$)/.test(appPath)) return fallback
+
+  return appPath
 }

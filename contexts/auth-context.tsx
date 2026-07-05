@@ -2,7 +2,6 @@
 
 import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react"
 import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@aws-sdk/types"
-import { getStsToken } from "@/lib/sts"
 import type { SiteConfig } from "@/types/config"
 import { getLoginRoute } from "@/lib/routes"
 import { useLocalStorage } from "@/hooks/use-local-storage"
@@ -95,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         customConfig = await configManager.loadConfig()
       }
 
+      const { getStsToken } = await import("@/lib/sts")
       const credentialsResponse = await getStsToken(credentials, "arn:aws:iam::*:role/Admin", customConfig)
 
       setCredentials({

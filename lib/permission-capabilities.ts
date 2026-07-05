@@ -34,6 +34,7 @@ export type ConsoleCapability =
   | "objects.legalHold.edit"
   | "objects.retention.edit"
   | "objects.version.view"
+  | "objects.version.restore"
   | "objects.share"
   | "accessKeys.create"
   | "accessKeys.edit"
@@ -88,6 +89,7 @@ const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]
   "objects.legalHold.edit": [{ actions: ["s3:PutObjectLegalHold"], resource: "object" }],
   "objects.retention.edit": [{ actions: ["s3:PutObjectRetention"], resource: "object" }],
   "objects.version.view": [{ actions: ["s3:GetObject"], resource: "object" }],
+  "objects.version.restore": [{ actions: ["s3:GetObject", "s3:PutObject"], resource: "object" }],
   "objects.share": [{ actions: ["s3:GetObject"], resource: "object" }],
   "accessKeys.create": [{ actions: ["admin:CreateServiceAccount"], resource: "none" }],
   "accessKeys.edit": [{ actions: ["admin:UpdateServiceAccount"], resource: "none" }],

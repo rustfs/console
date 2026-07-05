@@ -108,6 +108,21 @@ export function useObject(bucket: string) {
     [client, bucket, deleteObject],
   )
 
+  const restoreObjectVersion = useCallback(
+    async (key: string, versionId: string) => {
+      return client.send(
+        new CopyObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          CopySource: encodeObjectCopySource(bucket, key, versionId),
+          MetadataDirective: "COPY",
+          TaggingDirective: "COPY",
+        }),
+      )
+    },
+    [client, bucket],
+  )
+
   const listObject = useCallback(
     async (
       bucketName: string,
@@ -299,6 +314,7 @@ export function useObject(bucket: string) {
     putObject,
     deleteObject,
     renameObject,
+    restoreObjectVersion,
     getSignedUrl: getSignedUrlFn,
     listObject,
     mapAllFiles,

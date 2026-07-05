@@ -2,13 +2,15 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import { RiFileCopyLine, RiEyeLine, RiDownloadCloud2Line, RiDeleteBin5Line } from "@remixicon/react"
+import { RiFileCopyLine, RiEyeLine, RiDownloadCloud2Line, RiDeleteBin5Line, RiLoopLeftLine } from "@remixicon/react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
 import { usePermissions } from "@/hooks/use-permissions"
+import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { copyToClipboard } from "@/lib/clipboard"
 import { exportFile } from "@/lib/export-file"
@@ -24,6 +26,7 @@ interface VersionRow {
   LastModified?: Date
   Size?: number
   Key?: string
+  IsLatest?: boolean
 }
 
 interface ObjectVersionsProps {
@@ -45,7 +48,8 @@ export function ObjectVersions({
 }: ObjectVersionsProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const { listObjectVersions, deleteObject } = useObject(bucketName)
+  const dialog = useDialog()
+  const { listObjectVersions, deleteObject, restoreObjectVersion } = useObject(bucketName)
   const { canCapability } = usePermissions()
   const client = useS3()
 
@@ -131,10 +135,46 @@ export function ObjectVersions({
     [deleteObject, objectKey, message, t, fetchVersions, onRefreshParent],
   )
 
+  const restoreVersion = React.useCallback(
+    (row: VersionRow) => {
+      const versionId = row.VersionId
+      if (!versionId || row.IsLatest) return
+
+      dialog.warning({
+        title: t("Restore Version"),
+        content: t("This will copy the selected historical version and make it the current object version."),
+        positiveText: t("Restore"),
+        negativeText: t("Cancel"),
+        onPositiveClick: async () => {
+          try {
+            await restoreObjectVersion(objectKey, versionId)
+            message.success(t("Restore Success"))
+            await fetchVersions()
+            onRefreshParent()
+          } catch (err) {
+            message.error((err as Error)?.message ?? t("Restore Failed"))
+            return false
+          }
+        },
+      })
+    },
+    [dialog, fetchVersions, message, objectKey, onRefreshParent, restoreObjectVersion, t],
+  )
+
+  const versionStats = React.useMemo(
+    () => ({
+      count: versions.length,
+      totalSize: versions.reduce((total, row) => total + (typeof row.Size === "number" ? row.Size : 0), 0),
+    }),
+    [versions],
+  )
+
   const columns: ColumnDef<VersionRow>[] = React.useMemo(
     () => [
       {
         id: "versionId",
+        accessorKey: "VersionId",
+        enableSorting: false,
         header: () => t("VersionId"),
         cell: ({ row }) => {
           const versionId = row.original.VersionId ?? ""
@@ -153,22 +193,33 @@ export function ObjectVersions({
               >
                 <RiFileCopyLine className="size-3" aria-hidden />
               </Button>
+              {row.original.IsLatest ? (
+                <Badge variant="secondary" className="shrink-0">
+                  {t("Current")}
+                </Badge>
+              ) : null}
             </div>
           )
         },
+        meta: { minWidth: 300 },
       },
       {
         id: "lastModified",
+        accessorFn: (row) => (row.LastModified ? new Date(row.LastModified).getTime() : 0),
         header: () => t("LastModified"),
         cell: ({ row }) => (row.original.LastModified ? formatDateTime(row.original.LastModified) : ""),
+        meta: { width: 200 },
       },
       {
         id: "size",
+        accessorFn: (row) => row.Size ?? 0,
         header: () => t("Size"),
         cell: ({ row }) => (typeof row.original.Size === "number" ? formatBytes(row.original.Size) : ""),
+        meta: { width: 140 },
       },
       {
         id: "actions",
+        enableSorting: false,
         header: () => t("Action"),
         cell: ({ row }) => {
           const objectContext = {
@@ -177,11 +228,17 @@ export function ObjectVersions({
           }
 
           return (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {canCapability("objects.version.view", objectContext) ? (
                 <Button variant="outline" size="sm" onClick={() => onPreview(row.original.VersionId ?? "")}>
                   <RiEyeLine className="size-4" aria-hidden />
                   {t("Preview")}
+                </Button>
+              ) : null}
+              {!row.original.IsLatest && canCapability("objects.version.restore", objectContext) ? (
+                <Button variant="outline" size="sm" onClick={() => restoreVersion(row.original)}>
+                  <RiLoopLeftLine className="size-4" aria-hidden />
+                  {t("Restore")}
                 </Button>
               ) : null}
               {canCapability("objects.download", objectContext) ? (
@@ -204,9 +261,10 @@ export function ObjectVersions({
             </div>
           )
         },
+        meta: { minWidth: 360 },
       },
     ],
-    [t, onPreview, copyVersionId, downloadVersion, deleteVersion, canCapability, bucketName, objectKey],
+    [t, onPreview, copyVersionId, restoreVersion, downloadVersion, deleteVersion, canCapability, bucketName, objectKey],
   )
 
   const { table } = useDataTable<VersionRow>({
@@ -216,10 +274,19 @@ export function ObjectVersions({
 
   return (
     <Dialog open={visible} onOpenChange={(open) => !open && onClose()} disablePointerDismissal>
-      <DialogContent className="max-h-[80vh] overflow-y-auto overflow-x-hidden sm:max-w-4xl">
+      <DialogContent className="max-h-[80vh] w-[calc(100vw-2rem)] overflow-y-auto overflow-x-hidden sm:max-w-5xl 2xl:w-[80vw] 2xl:max-w-[80vw]">
         <DialogHeader>
           <DialogTitle>{t("Object Versions")}</DialogTitle>
         </DialogHeader>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+          <span>
+            {t("Versions")}: <span className="font-medium text-foreground">{versionStats.count}</span>
+          </span>
+          <span>
+            {t("Total")} {t("Size")}:{" "}
+            <span className="font-medium text-foreground">{formatBytes(versionStats.totalSize)}</span>
+          </span>
+        </div>
         <DataTable table={table} isLoading={loading} emptyTitle={t("No Versions")} />
       </DialogContent>
     </Dialog>

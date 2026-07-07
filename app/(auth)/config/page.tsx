@@ -32,7 +32,7 @@ function ConfigPageContent() {
   const router = useRouter()
   const message = useMessage()
   const theme = getThemeManifest()
-  const docs = theme.links.documentation ?? "https://docs.rustfs.com/"
+  const docs = theme.links.documentation ?? "https://docs.rustfs.com/?ref=console"
 
   const [serverHost, setServerHost] = useState(() =>
     typeof window !== "undefined" ? (localStorage.getItem("rustfs-server-host") ?? "") : "",

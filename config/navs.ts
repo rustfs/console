@@ -122,7 +122,7 @@ export default [
   },
   {
     label: "Documentation",
-    to: theme.links.documentation ?? "https://docs.rustfs.com/",
+    to: theme.links.documentation ?? "https://docs.rustfs.com/?ref=console",
     target: "_blank",
     icon: "ri:file-list-3-line",
   },

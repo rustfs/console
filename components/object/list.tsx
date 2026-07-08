@@ -10,10 +10,10 @@ import {
   RiRefreshLine,
   RiFolderLine,
   RiFileLine,
-  RiArrowLeftSLine,
-  RiArrowRightSLine,
   RiEyeLine,
   RiEdit2Line,
+  RiArrowUpSLine,
+  RiArrowDownSLine,
 } from "@remixicon/react"
 import {
   AlertDialog,
@@ -36,10 +36,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SearchInput } from "@/components/search-input"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
+import { Spinner } from "@/components/ui/spinner"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
 import { useBucket } from "@/hooks/use-bucket"
@@ -57,11 +57,7 @@ import {
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
 } from "@/lib/object-list-state"
-import {
-  OBJECT_LIST_DEFAULT_PAGE_SIZE,
-  OBJECT_LIST_PAGE_SIZE_OPTIONS,
-  normalizeObjectListPageSize,
-} from "@/lib/object-list-pagination"
+import { OBJECT_LIST_DEFAULT_PAGE_SIZE, resolveObjectListPageSize } from "@/lib/object-list-pagination"
 import {
   resolveBucketVersioningState,
   shouldForceDeleteObjects,
@@ -125,15 +121,10 @@ export function ObjectList({
 
   const [searchTerm, setSearchTerm] = React.useState("")
   const [showDeleted, setShowDeleted] = useLocalStorage("object-list-show-deleted", false)
-  const [storedPageSize, setStoredPageSize] = useLocalStorage(
-    "object-list-page-size",
-    normalizeObjectListPageSize(pageSize),
-  )
   const [loading, setLoading] = React.useState(false)
   const [data, setData] = React.useState<ObjectRow[]>([])
-  const [continuationToken, setContinuationToken] = React.useState<string | undefined>()
-  const [tokenHistory, setTokenHistory] = React.useState<string[]>([])
   const [nextToken, setNextToken] = React.useState<string | undefined>()
+  const [showScrollShortcuts, setShowScrollShortcuts] = React.useState(false)
   const [bucketVersioningState, setBucketVersioningState] = React.useState<BucketVersioningState>("unknown")
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [deleteDialogKeys, setDeleteDialogKeys] = React.useState<string[]>([])
@@ -144,7 +135,7 @@ export function ObjectList({
   const [renameSubmitting, setRenameSubmitting] = React.useState(false)
 
   const prefix = decodeURIComponent(path)
-  const resolvedPageSize = normalizeObjectListPageSize(storedPageSize)
+  const resolvedPageSize = resolveObjectListPageSize(pageSize)
   const listScope = React.useMemo(
     () =>
       createObjectListScope({
@@ -162,17 +153,52 @@ export function ObjectList({
   const requestIdRef = React.useRef(0)
   const activeScopeRef = React.useRef(listScope)
   const previousScopeRef = React.useRef(listScope)
+  const loadingRef = React.useRef(false)
+  const loadMoreRef = React.useRef<HTMLDivElement | null>(null)
 
   React.useEffect(() => {
     activeScopeRef.current = listScope
   }, [listScope])
 
+  React.useEffect(() => {
+    loadingRef.current = loading
+  }, [loading])
+
+  const updateScrollShortcutVisibility = React.useCallback(() => {
+    setShowScrollShortcuts(document.documentElement.scrollHeight > window.innerHeight)
+  }, [])
+
+  React.useEffect(() => {
+    updateScrollShortcutVisibility()
+  }, [data.length, loading, updateScrollShortcutVisibility])
+
+  React.useEffect(() => {
+    updateScrollShortcutVisibility()
+    window.addEventListener("resize", updateScrollShortcutVisibility)
+    window.addEventListener("scroll", updateScrollShortcutVisibility, { passive: true })
+
+    return () => {
+      window.removeEventListener("resize", updateScrollShortcutVisibility)
+      window.removeEventListener("scroll", updateScrollShortcutVisibility)
+    }
+  }, [updateScrollShortcutVisibility])
+
+  const scrollToTop = React.useCallback(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" })
+  }, [])
+
+  const scrollToBottom = React.useCallback(() => {
+    window.scrollTo({ top: document.documentElement.scrollHeight, left: 0, behavior: "auto" })
+  }, [])
+
   const fetchObjects = React.useCallback(
-    async (options?: { token?: string; resetPagination?: boolean }) => {
-      const token = options?.resetPagination ? undefined : (options?.token ?? continuationToken)
+    async (options?: { token?: string; resetPagination?: boolean; append?: boolean }) => {
+      const token = options?.resetPagination ? undefined : options?.token
+      const shouldAppend = Boolean(options?.append && token)
       const requestId = requestIdRef.current + 1
       requestIdRef.current = requestId
       const requestScope = activeScopeRef.current
+      loadingRef.current = true
       setLoading(true)
       try {
         const response = await listObject(bucket, prefix || undefined, resolvedPageSize, token, {
@@ -212,7 +238,12 @@ export function ObjectList({
           LastModified: normalizeDateToIso(item.LastModified),
         }))
 
-        setData([...prefixItems, ...objectItems])
+        const rows = [...prefixItems, ...objectItems]
+        if (shouldAppend) {
+          setData((currentRows) => [...currentRows, ...rows])
+        } else {
+          setData(rows)
+        }
       } catch (error) {
         console.error("Failed to fetch objects:", error)
         message.error((error as Error)?.message ?? t("Failed to load objects"))
@@ -225,7 +256,9 @@ export function ObjectList({
           })
         ) {
           setNextToken(undefined)
-          setData([])
+          if (!shouldAppend) {
+            setData([])
+          }
         }
       } finally {
         window.setTimeout(() => {
@@ -237,13 +270,20 @@ export function ObjectList({
               activeScope: activeScopeRef.current,
             })
           ) {
+            loadingRef.current = false
             setLoading(false)
           }
         }, 200)
       }
     },
-    [bucket, prefix, resolvedPageSize, continuationToken, showDeleted, listObject, message, t],
+    [bucket, prefix, resolvedPageSize, showDeleted, listObject, message, t],
   )
+
+  const resetAndFetchObjects = React.useCallback(() => {
+    setNextToken(undefined)
+    setData([])
+    void fetchObjects({ resetPagination: true })
+  }, [fetchObjects])
 
   const prevRefreshTriggerRef = React.useRef(refreshTrigger)
 
@@ -254,13 +294,11 @@ export function ObjectList({
     prevRefreshTriggerRef.current = refreshTrigger
 
     if (isRefresh || shouldResetPagination) {
-      setContinuationToken(undefined)
-      setTokenHistory([])
-      void fetchObjects({ resetPagination: true })
+      resetAndFetchObjects()
     } else {
-      void fetchObjects()
+      void fetchObjects({ resetPagination: true })
     }
-  }, [listScope, bucket, prefix, resolvedPageSize, continuationToken, showDeleted, refreshTrigger, fetchObjects])
+  }, [listScope, refreshTrigger, fetchObjects, resetAndFetchObjects])
 
   const prevDeleteTaskIdsRef = React.useRef<Set<string>>(new Set())
 
@@ -274,12 +312,12 @@ export function ObjectList({
       const anyActive = currentDeleteTasks.some((t) => ["pending", "running"].includes(t.status))
       if (!anyActive) {
         // No more active delete tasks, refresh the list
-        void fetchObjects({ resetPagination: true })
+        resetAndFetchObjects()
       }
     }
 
     prevDeleteTaskIdsRef.current = new Set(completedDeleteTasks.map((t) => t.id))
-  }, [tasks, fetchObjects])
+  }, [tasks, resetAndFetchObjects])
 
   React.useEffect(() => {
     let cancelled = false
@@ -305,11 +343,6 @@ export function ObjectList({
       cancelled = true
     }
   }, [bucket, getBucketVersioning])
-
-  React.useEffect(() => {
-    setContinuationToken(undefined)
-    setTokenHistory([])
-  }, [showDeleted])
 
   const displayKey = React.useCallback(
     (key: string) => {
@@ -553,7 +586,7 @@ export function ObjectList({
       setRenameDialogOpen(false)
       setRenameSourceKey("")
       setRenameName("")
-      void fetchObjects({ resetPagination: true })
+      resetAndFetchObjects()
     } catch (err) {
       message.error((err as Error)?.message ?? t("Rename Failed"))
     } finally {
@@ -640,31 +673,35 @@ export function ObjectList({
     openDeleteDialog([...checkedKeys])
   }
 
-  const goToNextPage = () => {
-    if (!nextToken) return
-    setTokenHistory((h) => [...h, continuationToken as string])
-    setContinuationToken(nextToken)
-  }
-
-  const goToPreviousPage = () => {
-    if (tokenHistory.length === 0) return
-    const prevToken = tokenHistory[tokenHistory.length - 1]
-    setContinuationToken(prevToken)
-    setTokenHistory((h) => h.slice(0, -1))
-  }
-
-  const handlePageSizeChange = (value: string) => {
-    const parsed = Number.parseInt(value, 10)
-    const nextPageSize = normalizeObjectListPageSize(Number.isNaN(parsed) ? undefined : parsed)
-    setStoredPageSize(nextPageSize)
-    setContinuationToken(undefined)
-    setTokenHistory([])
-  }
-
   React.useEffect(() => {
     const col = table.getColumn("object")
     if (col) col.setFilterValue(searchTerm || undefined)
   }, [searchTerm, table])
+
+  const loadNextBatch = React.useCallback(() => {
+    if (!nextToken || loadingRef.current) return
+    void fetchObjects({ token: nextToken, append: true })
+  }, [fetchObjects, nextToken])
+
+  React.useEffect(() => {
+    const node = loadMoreRef.current
+    if (!node || !nextToken || typeof IntersectionObserver === "undefined") return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          loadNextBatch()
+        }
+      },
+      { rootMargin: "320px 0px" },
+    )
+
+    observer.observe(node)
+
+    return () => {
+      observer.disconnect()
+    }
+  }, [loadNextBatch, nextToken])
 
   return (
     <div className="space-y-6">
@@ -696,10 +733,7 @@ export function ObjectList({
                 ) : null}
               </>
             ) : null}
-            <Button
-              variant="outline"
-              onClick={() => (onRefresh ? onRefresh() : void fetchObjects({ resetPagination: true }))}
-            >
+            <Button variant="outline" onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}>
               <RiRefreshLine className="size-4" aria-hidden />
               <span>{t("Refresh")}</span>
             </Button>
@@ -710,7 +744,7 @@ export function ObjectList({
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder={t("Filter current page")}
+            placeholder={t("Filter loaded objects")}
             clearable
             className="lg:max-w-sm"
           />
@@ -730,47 +764,59 @@ export function ObjectList({
 
       <DataTable
         table={table}
-        isLoading={loading}
+        isLoading={loading && data.length === 0}
         emptyTitle={t("No Objects")}
         emptyDescription={t("Upload files or create folders to populate this bucket.")}
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-          <span>
-            {t("Loaded {count} of up to {pageSize} keys on this page", {
-              count: data.length,
-              pageSize: resolvedPageSize,
-            })}
-          </span>
-          <span>{t("Filtering and sorting apply to the current page")}</span>
-          <div className="flex items-center gap-2">
-            <span>{t("Rows per page")}</span>
-            <Select value={String(resolvedPageSize)} onValueChange={(value) => handlePageSizeChange(value ?? "")}>
-              <SelectTrigger className="h-9 w-24" aria-label={t("Rows per page")}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {OBJECT_LIST_PAGE_SIZE_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={String(option)}>
-                    {String(option)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" disabled={tokenHistory.length === 0} onClick={goToPreviousPage}>
-            <RiArrowLeftSLine className="me-2 size-4 rtl:-scale-x-100" aria-hidden />
-            <span>{t("Previous Page")}</span>
-          </Button>
-          <Button variant="outline" disabled={!nextToken} onClick={goToNextPage}>
-            <span>{t("Next Page")}</span>
-            <RiArrowRightSLine className="ms-2 size-4 rtl:-scale-x-100" aria-hidden />
-          </Button>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+        <span>
+          {t("Loaded {count} objects", {
+            count: data.length,
+          })}
+        </span>
+        <span>{t("Filtering and sorting apply to loaded objects")}</span>
       </div>
+
+      {nextToken ? (
+        <div ref={loadMoreRef} className="flex min-h-10 items-center justify-center text-sm text-muted-foreground">
+          {loading && data.length > 0 ? (
+            <span className="inline-flex items-center gap-2">
+              <Spinner className="size-4" />
+              {t("Loading more objects")}
+            </span>
+          ) : (
+            <span>{t("Scroll to load more objects")}</span>
+          )}
+        </div>
+      ) : null}
+
+      {showScrollShortcuts ? (
+        <div className="fixed end-4 bottom-4 z-40 flex flex-col gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="bg-background/95 shadow-none backdrop-blur"
+            onClick={scrollToTop}
+            aria-label={t("Back to top")}
+            title={t("Back to top")}
+          >
+            <RiArrowUpSLine className="size-5" aria-hidden />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="bg-background/95 shadow-none backdrop-blur"
+            onClick={scrollToBottom}
+            aria-label={t("Go to bottom")}
+            title={t("Go to bottom")}
+          >
+            <RiArrowDownSLine className="size-5" aria-hidden />
+          </Button>
+        </div>
+      ) : null}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="sm:max-w-md">

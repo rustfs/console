@@ -1360,5 +1360,12 @@
   "Rename": "Rinomina",
   "Rename Failed": "Rinomina non riuscita",
   "Rename Object": "Rinomina oggetto",
-  "Renaming object": "Rinomina oggetto in corso"
+  "Renaming object": "Rinomina oggetto in corso",
+  "Filter loaded objects": "Filter loaded objects",
+  "Loaded {count} objects": "Loaded {count} objects",
+  "Filtering and sorting apply to loaded objects": "Filtering and sorting apply to loaded objects",
+  "Loading more objects": "Loading more objects",
+  "Scroll to load more objects": "Scroll to load more objects",
+  "Back to top": "Back to top",
+  "Go to bottom": "Go to bottom"
 }

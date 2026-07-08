@@ -1360,5 +1360,12 @@
   "Rename": "名前を変更",
   "Rename Failed": "名前の変更に失敗しました",
   "Rename Object": "オブジェクト名を変更",
-  "Renaming object": "オブジェクト名を変更中"
+  "Renaming object": "オブジェクト名を変更中",
+  "Filter loaded objects": "Filter loaded objects",
+  "Loaded {count} objects": "Loaded {count} objects",
+  "Filtering and sorting apply to loaded objects": "Filtering and sorting apply to loaded objects",
+  "Loading more objects": "Loading more objects",
+  "Scroll to load more objects": "Scroll to load more objects",
+  "Back to top": "Back to top",
+  "Go to bottom": "Go to bottom"
 }

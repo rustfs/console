@@ -1360,5 +1360,12 @@
   "Rename": "重命名",
   "Rename Failed": "重命名失败",
   "Rename Object": "重命名对象",
-  "Renaming object": "正在重命名对象"
+  "Renaming object": "正在重命名对象",
+  "Filter loaded objects": "筛选已加载对象",
+  "Loaded {count} objects": "已加载 {count} 个对象",
+  "Filtering and sorting apply to loaded objects": "筛选和排序作用于已加载对象",
+  "Loading more objects": "正在加载更多对象",
+  "Scroll to load more objects": "滚动以加载更多对象",
+  "Back to top": "回到顶部",
+  "Go to bottom": "直达底部"
 }

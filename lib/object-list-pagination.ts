@@ -1,12 +1,8 @@
-export const OBJECT_LIST_DEFAULT_PAGE_SIZE = 100
+export const OBJECT_LIST_DEFAULT_PAGE_SIZE = 1000
 
-export const OBJECT_LIST_PAGE_SIZE_OPTIONS = [25, 50, 100, 500, 1000] as const
-
-export type ObjectListPageSize = (typeof OBJECT_LIST_PAGE_SIZE_OPTIONS)[number]
-
-export function normalizeObjectListPageSize(value: unknown): ObjectListPageSize {
-  if (typeof value === "number" && OBJECT_LIST_PAGE_SIZE_OPTIONS.includes(value as ObjectListPageSize)) {
-    return value as ObjectListPageSize
+export function resolveObjectListPageSize(value: unknown): number {
+  if (typeof value === "number" && Number.isInteger(value) && value > 0) {
+    return value
   }
 
   return OBJECT_LIST_DEFAULT_PAGE_SIZE

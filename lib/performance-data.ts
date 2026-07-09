@@ -23,6 +23,7 @@ export interface SystemInfo {
     backendType?: string
     onlineDisks?: number
     offlineDisks?: number
+    unknownDisks?: number
   }
 }
 
@@ -50,6 +51,8 @@ export interface MetricsInfo {
 
 type JsonRecord = Record<string, unknown>
 
+export type ServerHealthState = "online" | "offline" | "unknown" | "degraded"
+
 function asRecord(value: unknown): JsonRecord {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as JsonRecord) : {}
 }
@@ -69,6 +72,14 @@ function asNumber(value: unknown): number | undefined {
 
 function asString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() !== "" ? value : undefined
+}
+
+export function normalizeServerHealthState(state?: string | null): ServerHealthState {
+  const normalized = state?.trim().toLowerCase()
+  if (normalized === "online" || normalized === "offline" || normalized === "unknown" || normalized === "degraded") {
+    return normalized
+  }
+  return "unknown"
 }
 
 function unwrapInfoRecord(value: unknown): JsonRecord {
@@ -95,6 +106,7 @@ export function normalizeSystemInfo(value: unknown): SystemInfo {
       backendType: asString(backend.backendType ?? backend.BackendType),
       onlineDisks: asNumber(backend.onlineDisks ?? backend.OnlineDisks),
       offlineDisks: asNumber(backend.offlineDisks ?? backend.OfflineDisks),
+      unknownDisks: asNumber(backend.unknownDisks ?? backend.UnknownDisks),
     },
   }
 }

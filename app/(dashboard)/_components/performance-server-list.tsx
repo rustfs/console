@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { niceBytes } from "@/lib/functions"
+import { normalizeServerHealthState, type ServerHealthState } from "@/lib/performance-data"
 import { cn } from "@/lib/utils"
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
@@ -29,13 +30,39 @@ type PerformanceServerSort =
   | "endpoint-desc"
   | "status-online"
   | "status-offline"
+  | "status-unknown"
+  | "status-degraded"
   | "uptime-desc"
   | "uptime-asc"
 
-type PerformanceServerFilter = "all" | "online" | "offline"
+type PerformanceServerFilter = "all" | ServerHealthState
 
-function isOnlineServer(server: ServerInfo) {
-  return (server.state ?? "").toLowerCase() === "online"
+const serverStates: ServerHealthState[] = ["online", "offline", "unknown", "degraded"]
+
+function getServerState(server: ServerInfo) {
+  return normalizeServerHealthState(server.state)
+}
+
+function getServerStateLabel(state: ServerHealthState, t: (key: string) => string) {
+  if (state === "online") return t("Online")
+  if (state === "offline") return t("Offline")
+  if (state === "degraded") return t("Degraded")
+  return t("Unknown")
+}
+
+function getServerStateTone(state: ServerHealthState) {
+  if (state === "online") return "bg-primary"
+  if (state === "offline") return "bg-destructive"
+  if (state === "degraded") return "bg-amber-500"
+  return "bg-muted-foreground"
+}
+
+function getServerStateButtonClass(state: ServerHealthState, active: boolean) {
+  if (!active) return "shadow-none"
+  if (state === "offline") return "border-destructive/40 text-destructive shadow-none"
+  if (state === "degraded") return "border-amber-500/50 text-amber-700 shadow-none dark:text-amber-300"
+  if (state === "unknown") return "border-muted-foreground/40 text-muted-foreground shadow-none"
+  return "shadow-none"
 }
 
 function compareEndpoint(left: ServerInfo, right: ServerInfo, direction: "asc" | "desc") {
@@ -68,7 +95,17 @@ function compareUptime(left: ServerInfo, right: ServerInfo, direction: "asc" | "
 export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t: (key: string) => string }) {
   const [sortBy, setSortBy] = React.useState<PerformanceServerSort>("default")
   const [filterBy, setFilterBy] = React.useState<PerformanceServerFilter>("all")
-  const onlineCount = servers.filter((server) => isOnlineServer(server)).length
+  const stateCounts = React.useMemo(
+    () =>
+      servers.reduce(
+        (counts, server) => {
+          counts[getServerState(server)] += 1
+          return counts
+        },
+        { online: 0, offline: 0, unknown: 0, degraded: 0 } satisfies Record<ServerHealthState, number>,
+      ),
+    [servers],
+  )
 
   const visibleServers = React.useMemo(() => {
     const rows = servers
@@ -77,8 +114,7 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
         originalIndex,
       }))
       .filter(({ server }) => {
-        if (filterBy === "online") return isOnlineServer(server)
-        if (filterBy === "offline") return !isOnlineServer(server)
+        if (filterBy !== "all") return getServerState(server) === filterBy
         return true
       })
 
@@ -90,13 +126,25 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
           return compareEndpoint(left.server, right.server, "desc") || left.originalIndex - right.originalIndex
         case "status-online":
           return (
-            Number(isOnlineServer(right.server)) - Number(isOnlineServer(left.server)) ||
+            Number(getServerState(right.server) === "online") - Number(getServerState(left.server) === "online") ||
             compareEndpoint(left.server, right.server, "asc") ||
             left.originalIndex - right.originalIndex
           )
         case "status-offline":
           return (
-            Number(isOnlineServer(left.server)) - Number(isOnlineServer(right.server)) ||
+            Number(getServerState(right.server) === "offline") - Number(getServerState(left.server) === "offline") ||
+            compareEndpoint(left.server, right.server, "asc") ||
+            left.originalIndex - right.originalIndex
+          )
+        case "status-unknown":
+          return (
+            Number(getServerState(right.server) === "unknown") - Number(getServerState(left.server) === "unknown") ||
+            compareEndpoint(left.server, right.server, "asc") ||
+            left.originalIndex - right.originalIndex
+          )
+        case "status-degraded":
+          return (
+            Number(getServerState(right.server) === "degraded") - Number(getServerState(left.server) === "degraded") ||
             compareEndpoint(left.server, right.server, "asc") ||
             left.originalIndex - right.originalIndex
           )
@@ -125,24 +173,18 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
             {t("Total")}: {visibleServers.length}/{servers.length}
           </span>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <Button
-              type="button"
-              size="sm"
-              variant={filterBy === "online" ? "secondary" : "outline"}
-              className="shadow-none"
-              onClick={() => setFilterBy((current) => (current === "online" ? "all" : "online"))}
-            >
-              {t("Online")} ({onlineCount})
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={filterBy === "offline" ? "secondary" : "outline"}
-              className={cn("shadow-none", filterBy === "offline" ? "border-destructive/40 text-destructive" : "")}
-              onClick={() => setFilterBy((current) => (current === "offline" ? "all" : "offline"))}
-            >
-              {t("Offline")} ({servers.length - onlineCount})
-            </Button>
+            {serverStates.map((state) => (
+              <Button
+                key={state}
+                type="button"
+                size="sm"
+                variant={filterBy === state ? "secondary" : "outline"}
+                className={getServerStateButtonClass(state, filterBy === state)}
+                onClick={() => setFilterBy((current) => (current === state ? "all" : state))}
+              >
+                {getServerStateLabel(state, t)} ({stateCounts[state]})
+              </Button>
+            ))}
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <span className="text-sm text-muted-foreground">{t("Sort by")}</span>
@@ -156,6 +198,8 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
                 <SelectItem value="endpoint-desc">{`${t("Endpoint")} ↓`}</SelectItem>
                 <SelectItem value="status-online">{`${t("Status")} · ${t("Online")}`}</SelectItem>
                 <SelectItem value="status-offline">{`${t("Status")} · ${t("Offline")}`}</SelectItem>
+                <SelectItem value="status-unknown">{`${t("Status")} · ${t("Unknown")}`}</SelectItem>
+                <SelectItem value="status-degraded">{`${t("Status")} · ${t("Degraded")}`}</SelectItem>
                 <SelectItem value="uptime-desc">{`${t("Uptime")} ↓`}</SelectItem>
                 <SelectItem value="uptime-asc">{`${t("Uptime")} ↑`}</SelectItem>
               </SelectContent>
@@ -174,12 +218,12 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
                 <div className="flex flex-col gap-2 text-start sm:flex-row sm:items-center sm:gap-4">
                   <div className="flex items-center gap-2">
                     <span
-                      className={cn(
-                        "inline-flex h-2 w-2 rounded-full",
-                        server.state === "online" ? "bg-primary" : "bg-destructive",
-                      )}
+                      className={cn("inline-flex h-2 w-2 rounded-full", getServerStateTone(getServerState(server)))}
                     />
                     <span className="font-semibold">{server.endpoint ?? "--"}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {getServerStateLabel(getServerState(server), t)}
+                    </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     <span>

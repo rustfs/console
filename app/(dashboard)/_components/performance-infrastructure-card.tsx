@@ -5,14 +5,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export function PerformanceInfrastructureCard({
   onlineServers,
   offlineServers,
+  unknownServers,
+  degradedServers,
   onlineDisks,
   offlineDisks,
+  unknownDisks,
   t,
 }: {
   onlineServers: number
   offlineServers: number
+  unknownServers: number
+  degradedServers: number
   onlineDisks: number
   offlineDisks: number
+  unknownDisks: number
   t: (key: string) => string
 }) {
   return (
@@ -25,7 +31,7 @@ export function PerformanceInfrastructureCard({
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="border bg-muted/40 p-4">
             <p className="text-sm font-medium text-muted-foreground">{t("Servers")}</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <div className="border bg-background p-3">
                 <p className="text-xs text-muted-foreground">{t("Online")}</p>
                 <p className="mt-1 text-xl font-semibold text-foreground">{onlineServers}</p>
@@ -34,11 +40,19 @@ export function PerformanceInfrastructureCard({
                 <p className="text-xs text-muted-foreground">{t("Offline")}</p>
                 <p className="mt-1 text-xl font-semibold text-foreground">{offlineServers}</p>
               </div>
+              <div className="border bg-background p-3">
+                <p className="text-xs text-muted-foreground">{t("Unknown")}</p>
+                <p className="mt-1 text-xl font-semibold text-foreground">{unknownServers}</p>
+              </div>
+              <div className="border bg-background p-3">
+                <p className="text-xs text-muted-foreground">{t("Degraded")}</p>
+                <p className="mt-1 text-xl font-semibold text-foreground">{degradedServers}</p>
+              </div>
             </div>
           </div>
           <div className="border bg-muted/40 p-4">
             <p className="text-sm font-medium text-muted-foreground">{t("Disks")}</p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="border bg-background p-3">
                 <p className="text-xs text-muted-foreground">{t("Online")}</p>
                 <p className="mt-1 text-xl font-semibold text-foreground">{onlineDisks}</p>
@@ -46,6 +60,10 @@ export function PerformanceInfrastructureCard({
               <div className="border bg-background p-3">
                 <p className="text-xs text-muted-foreground">{t("Offline")}</p>
                 <p className="mt-1 text-xl font-semibold text-foreground">{offlineDisks}</p>
+              </div>
+              <div className="border bg-background p-3">
+                <p className="text-xs text-muted-foreground">{t("Unknown")}</p>
+                <p className="mt-1 text-xl font-semibold text-foreground">{unknownDisks}</p>
               </div>
             </div>
           </div>

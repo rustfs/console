@@ -6,6 +6,7 @@ import { RiFileCopyLine, RiEyeLine, RiDownloadCloud2Line, RiDeleteBin5Line, RiLo
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Spinner } from "@/components/ui/spinner"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
@@ -55,6 +56,7 @@ export function ObjectVersions({
 
   const [versions, setVersions] = React.useState<VersionRow[]>([])
   const [loading, setLoading] = React.useState(false)
+  const [deletingVersionId, setDeletingVersionId] = React.useState<string | null>(null)
 
   const fetchVersions = React.useCallback(async () => {
     if (!objectKey) return
@@ -123,13 +125,16 @@ export function ObjectVersions({
     async (row: VersionRow) => {
       const versionId = row.VersionId
       if (!versionId) return
+      setDeletingVersionId(versionId)
       try {
         await deleteObject(objectKey, versionId)
         message.success(t("Delete Success"))
-        void fetchVersions()
+        await fetchVersions()
         onRefreshParent()
       } catch (err) {
         message.error((err as Error)?.message ?? t("Delete Failed"))
+      } finally {
+        setDeletingVersionId(null)
       }
     },
     [deleteObject, objectKey, message, t, fetchVersions, onRefreshParent],
@@ -251,10 +256,14 @@ export function ObjectVersions({
                 <Button
                   variant="destructive"
                   size="sm"
-                  className="text-white"
+                  disabled={deletingVersionId === row.original.VersionId}
                   onClick={() => deleteVersion(row.original)}
                 >
-                  <RiDeleteBin5Line className="size-4" aria-hidden />
+                  {deletingVersionId === row.original.VersionId ? (
+                    <Spinner className="size-4" aria-hidden />
+                  ) : (
+                    <RiDeleteBin5Line className="size-4" aria-hidden />
+                  )}
                   {t("Delete")}
                 </Button>
               ) : null}
@@ -264,12 +273,24 @@ export function ObjectVersions({
         meta: { minWidth: 360 },
       },
     ],
-    [t, onPreview, copyVersionId, restoreVersion, downloadVersion, deleteVersion, canCapability, bucketName, objectKey],
+    [
+      t,
+      onPreview,
+      copyVersionId,
+      restoreVersion,
+      downloadVersion,
+      deleteVersion,
+      canCapability,
+      bucketName,
+      objectKey,
+      deletingVersionId,
+    ],
   )
 
   const { table } = useDataTable<VersionRow>({
     data: versions,
     columns,
+    disablePagination: true,
   })
 
   return (

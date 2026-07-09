@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { usePerformanceData } from "@/hooks/use-performance-data"
 import { niceBytes } from "@/lib/functions"
+import { normalizeServerHealthState, type ServerHealthState } from "@/lib/performance-data"
 import {
   RiArchiveDrawerFill,
   RiArchiveLine,
@@ -115,15 +116,20 @@ export default function PerformancePage() {
     [t, fromLastStartTime, fromLastScanTime, lastScanTime],
   )
 
-  const onlineServers = useMemo(
-    () => (systemInfo?.servers || []).filter((s) => s.state === "online").length,
-    [systemInfo],
-  )
+  const serverCounts = useMemo(() => {
+    const counts: Record<ServerHealthState, number> = {
+      online: 0,
+      offline: 0,
+      unknown: 0,
+      degraded: 0,
+    }
 
-  const offlineServers = useMemo(
-    () => (systemInfo?.servers || []).filter((s) => s.state === "offline").length,
-    [systemInfo],
-  )
+    for (const server of systemInfo?.servers ?? []) {
+      counts[normalizeServerHealthState(server.state)] += 1
+    }
+
+    return counts
+  }, [systemInfo])
 
   const backendInfo = useMemo(
     () => [
@@ -204,10 +210,13 @@ export default function PerformancePage() {
         />
 
         <PerformanceInfrastructureCard
-          onlineServers={onlineServers}
-          offlineServers={offlineServers}
+          onlineServers={serverCounts.online}
+          offlineServers={serverCounts.offline}
+          unknownServers={serverCounts.unknown}
+          degradedServers={serverCounts.degraded}
           onlineDisks={systemInfo?.backend?.onlineDisks ?? 0}
           offlineDisks={systemInfo?.backend?.offlineDisks ?? 0}
+          unknownDisks={systemInfo?.backend?.unknownDisks ?? 0}
           t={t}
         />
 

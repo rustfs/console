@@ -4,13 +4,16 @@ import { useCallback } from "react"
 import {
   CopyObjectCommand,
   DeleteObjectCommand,
+  type DeleteMarkerEntry,
   GetObjectLegalHoldCommand,
   GetObjectRetentionCommand,
   GetObjectTaggingCommand,
   GetObjectCommand,
   HeadObjectCommand,
   ListObjectVersionsCommand,
+  type ListObjectVersionsCommandOutput,
   ListObjectsV2Command,
+  type ObjectVersion,
   ObjectLockRetentionMode,
   PutObjectCommand,
   PutObjectLegalHoldCommand,
@@ -291,20 +294,36 @@ export function useObject(bucket: string) {
 
   const listObjectVersions = useCallback(
     async (key: string) => {
-      const res = await client.send(
-        new ListObjectVersionsCommand({
-          Bucket: bucket,
-          Prefix: key,
-          Delimiter: "/",
-          EncodingType: "url",
-        }),
-      )
-      decodeS3UrlEncodedObjectVersions(res)
-      const Versions = (res.Versions ?? []).filter((v) => v.Key === key)
-      const DeleteMarkers = (res.DeleteMarkers ?? []).filter((m) => m.Key === key)
+      const Versions: ObjectVersion[] = []
+      const DeleteMarkers: DeleteMarkerEntry[] = []
+      let keyMarker: string | undefined
+      let versionIdMarker: string | undefined
+      let isTruncated = true
+      let lastResponse: Partial<ListObjectVersionsCommandOutput> = {}
+
+      while (isTruncated) {
+        const res = await client.send(
+          new ListObjectVersionsCommand({
+            Bucket: bucket,
+            Prefix: key,
+            Delimiter: "/",
+            EncodingType: "url",
+            KeyMarker: keyMarker,
+            VersionIdMarker: versionIdMarker,
+          }),
+        )
+        decodeS3UrlEncodedObjectVersions(res)
+        lastResponse = res
+        Versions.push(...(res.Versions ?? []).filter((v) => v.Key === key))
+        DeleteMarkers.push(...(res.DeleteMarkers ?? []).filter((m) => m.Key === key))
+        isTruncated = res.IsTruncated ?? false
+        keyMarker = res.NextKeyMarker
+        versionIdMarker = res.NextVersionIdMarker
+      }
+
       Versions.sort((a, b) => new Date(b.LastModified!).getTime() - new Date(a.LastModified!).getTime())
       DeleteMarkers.sort((a, b) => new Date(b.LastModified!).getTime() - new Date(a.LastModified!).getTime())
-      return { ...res, Versions, DeleteMarkers }
+      return { ...lastResponse, Versions, DeleteMarkers, IsTruncated: false }
     },
     [client, bucket],
   )

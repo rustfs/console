@@ -26,3 +26,29 @@ test("object versions dialog is wide, sortable by date and size, and shows summa
   assert.match(source, /accessorFn: \(row\) => \(row\.LastModified \? new Date\(row\.LastModified\)\.getTime\(\) : 0\)/)
   assert.match(source, /accessorFn: \(row\) => row\.Size \?\? 0/)
 })
+
+test("object versions dialog does not hide versions behind unreachable default pagination", () => {
+  const source = fs.readFileSync("components/object/versions.tsx", "utf8")
+
+  assert.match(source, /disablePagination: true/)
+})
+
+test("object versions delete button reflects the active delete request", () => {
+  const source = fs.readFileSync("components/object/versions.tsx", "utf8")
+
+  assert.match(source, /const \[deletingVersionId, setDeletingVersionId\] = React\.useState<string \| null>\(null\)/)
+  assert.match(source, /disabled=\{deletingVersionId === row\.original\.VersionId\}/)
+  assert.doesNotMatch(source, /variant="destructive"\s+size="sm"\s+className="text-white"/)
+})
+
+test("object version listing follows S3 version pagination markers", () => {
+  const source = fs.readFileSync("hooks/use-object.ts", "utf8")
+
+  assert.match(source, /let keyMarker: string \| undefined/)
+  assert.match(source, /let versionIdMarker: string \| undefined/)
+  assert.match(source, /KeyMarker: keyMarker/)
+  assert.match(source, /VersionIdMarker: versionIdMarker/)
+  assert.match(source, /keyMarker = res\.NextKeyMarker/)
+  assert.match(source, /versionIdMarker = res\.NextVersionIdMarker/)
+  assert.match(source, /while \(isTruncated\)/)
+})

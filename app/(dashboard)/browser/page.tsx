@@ -15,12 +15,12 @@ import { BucketNewForm } from "@/components/buckets/new-form"
 import { Spinner } from "@/components/ui/spinner"
 import { useBucket } from "@/hooks/use-bucket"
 import { useObject } from "@/hooks/use-object"
-import { useSystem } from "@/hooks/use-system"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
+import { getAccountBucketUsage } from "@/lib/account-bucket-usage"
 import { BrowserContent } from "./content"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -33,69 +33,22 @@ interface BucketRow {
   IsPublic?: boolean
 }
 
-type BucketUsageMap = Record<string, { objects_count?: number; size?: number } | undefined>
-
 function BrowserBucketsPage() {
   const { t } = useTranslation()
   const router = useRouter()
   const message = useMessage()
   const dialog = useDialog()
-  const { canCapability } = usePermissions()
+  const { canCapability, userInfo, isLoading: accountInfoLoading, hasFetchedPolicy, fetchUserPolicy } = usePermissions()
   const { listBuckets, deleteBucket, getBucketPolicyStatus } = useBucket()
-  const { getDataUsageInfo } = useSystem()
 
   const [formVisible, setFormVisible] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [data, setData] = useState<BucketRow[]>([])
   const [pending, setPending] = useState(true)
-  const [usageLoading, setUsageLoading] = useState(false)
   const [policyLoading, setPolicyLoading] = useState(false)
   const fetchIdRef = useRef(0)
 
   const canCreateBucket = canCapability("bucket.create")
-
-  const loadBucketUsage = useCallback(
-    async (fetchId: number, bucketNames: string[]) => {
-      if (bucketNames.length === 0) {
-        setUsageLoading(false)
-        return
-      }
-
-      try {
-        const usage = (await getDataUsageInfo()) as { buckets_usage?: BucketUsageMap } | undefined
-        if (fetchId !== fetchIdRef.current) return
-
-        // getDataUsageInfo returns undefined on 403; don't update data so table shows "--"
-        if (!usage) {
-          return
-        }
-
-        const bucketUsage = usage?.buckets_usage ?? {}
-
-        setData((prev) =>
-          prev.map((row) => {
-            const stats = bucketUsage[row.Name]
-            const objectsCount = typeof stats?.objects_count === "number" ? stats.objects_count : 0
-            const totalSize = typeof stats?.size === "number" ? stats.size : 0
-            return {
-              ...row,
-              Count: objectsCount,
-              Size: niceBytes(String(totalSize)),
-              SizeBytes: totalSize,
-            }
-          }),
-        )
-      } catch {
-        if (fetchId !== fetchIdRef.current) return
-        // On error, don't update the data - keep showing "--"
-      } finally {
-        if (fetchId === fetchIdRef.current) {
-          setUsageLoading(false)
-        }
-      }
-    },
-    [getDataUsageInfo],
-  )
 
   const loadPolicyStatus = useCallback(
     async (fetchId: number, bucketNames: string[]) => {
@@ -165,11 +118,9 @@ function BrowserBucketsPage() {
         setData(buckets)
         setPending(false)
 
-        setUsageLoading(true)
-        void loadBucketUsage(
-          fetchId,
-          buckets.map((bucket) => bucket.Name),
-        )
+        if (options?.force) {
+          void fetchUserPolicy()
+        }
 
         setPolicyLoading(true)
         void loadPolicyStatus(
@@ -186,16 +137,36 @@ function BrowserBucketsPage() {
         }
       }
     },
-    [listBuckets, loadBucketUsage, loadPolicyStatus],
+    [fetchUserPolicy, listBuckets, loadPolicyStatus],
   )
 
   useEffect(() => {
     fetchBuckets()
   }, [fetchBuckets])
 
+  const usageLoading = accountInfoLoading || !hasFetchedPolicy
+  const bucketUsage = useMemo(() => getAccountBucketUsage(userInfo), [userInfo])
+  const rowsWithUsage = useMemo(
+    () =>
+      data.map((row) => {
+        const usage = bucketUsage.get(row.Name)
+        if (!usage) return row
+
+        return {
+          ...row,
+          Count: usage.objectsCount,
+          Size: niceBytes(String(usage.sizeBytes)),
+          SizeBytes: usage.sizeBytes,
+        }
+      }),
+    [bucketUsage, data],
+  )
   const filteredData = useMemo(
-    () => (searchTerm ? data.filter((bucket) => bucket.Name.toLowerCase().includes(searchTerm.toLowerCase())) : data),
-    [data, searchTerm],
+    () =>
+      searchTerm
+        ? rowsWithUsage.filter((bucket) => bucket.Name.toLowerCase().includes(searchTerm.toLowerCase()))
+        : rowsWithUsage,
+    [rowsWithUsage, searchTerm],
   )
 
   const objectApi = useObject("")

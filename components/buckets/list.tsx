@@ -9,10 +9,11 @@ import { SearchInput } from "@/components/search-input"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useBucket } from "@/hooks/use-bucket"
-import { useSystem } from "@/hooks/use-system"
+import { usePermissions } from "@/hooks/use-permissions"
 import { Spinner } from "@/components/ui/spinner"
 import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
+import { getAccountBucketUsage } from "@/lib/account-bucket-usage"
 import type { ColumnDef } from "@tanstack/react-table"
 
 export interface BucketListRow {
@@ -24,8 +25,6 @@ export interface BucketListRow {
   IsPublic?: boolean
 }
 
-type BucketUsageMap = Record<string, { objects_count?: number; size?: number } | undefined>
-
 interface BucketListProps {
   title: React.ReactNode
   emptyDescription: string
@@ -35,48 +34,13 @@ interface BucketListProps {
 export function BucketList({ title, emptyDescription, getBucketHref }: BucketListProps) {
   const { t } = useTranslation()
   const { listBuckets, getBucketPolicyStatus } = useBucket()
-  const { getDataUsageInfo } = useSystem()
+  const { userInfo, isLoading: accountInfoLoading, hasFetchedPolicy, fetchUserPolicy } = usePermissions()
 
   const [searchTerm, setSearchTerm] = React.useState("")
   const [data, setData] = React.useState<BucketListRow[]>([])
   const [pending, setPending] = React.useState(true)
-  const [usageLoading, setUsageLoading] = React.useState(false)
   const [policyLoading, setPolicyLoading] = React.useState(false)
   const fetchIdRef = React.useRef(0)
-
-  const loadBucketUsage = React.useCallback(
-    async (fetchId: number, bucketNames: string[]) => {
-      if (bucketNames.length === 0) {
-        setUsageLoading(false)
-        return
-      }
-
-      try {
-        const usage = (await getDataUsageInfo()) as { buckets_usage?: BucketUsageMap } | undefined
-        if (fetchId !== fetchIdRef.current || !usage) return
-
-        const bucketUsage = usage.buckets_usage ?? {}
-        setData((prev) =>
-          prev.map((row) => {
-            const stats = bucketUsage[row.Name]
-            const objectsCount = typeof stats?.objects_count === "number" ? stats.objects_count : 0
-            const totalSize = typeof stats?.size === "number" ? stats.size : 0
-            return {
-              ...row,
-              Count: objectsCount,
-              Size: niceBytes(String(totalSize)),
-              SizeBytes: totalSize,
-            }
-          }),
-        )
-      } finally {
-        if (fetchId === fetchIdRef.current) {
-          setUsageLoading(false)
-        }
-      }
-    },
-    [getDataUsageInfo],
-  )
 
   const loadPolicyStatus = React.useCallback(
     async (fetchId: number, bucketNames: string[]) => {
@@ -141,8 +105,9 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         setData(buckets)
 
         const bucketNames = buckets.map((bucket) => bucket.Name)
-        setUsageLoading(true)
-        void loadBucketUsage(fetchId, bucketNames)
+        if (options?.force) {
+          void fetchUserPolicy()
+        }
 
         setPolicyLoading(true)
         void loadPolicyStatus(fetchId, bucketNames)
@@ -155,16 +120,36 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         }
       }
     },
-    [listBuckets, loadBucketUsage, loadPolicyStatus],
+    [fetchUserPolicy, listBuckets, loadPolicyStatus],
   )
 
   React.useEffect(() => {
     fetchBuckets()
   }, [fetchBuckets])
 
+  const usageLoading = accountInfoLoading || !hasFetchedPolicy
+  const bucketUsage = React.useMemo(() => getAccountBucketUsage(userInfo), [userInfo])
+  const rowsWithUsage = React.useMemo(
+    () =>
+      data.map((row) => {
+        const usage = bucketUsage.get(row.Name)
+        if (!usage) return row
+
+        return {
+          ...row,
+          Count: usage.objectsCount,
+          Size: niceBytes(String(usage.sizeBytes)),
+          SizeBytes: usage.sizeBytes,
+        }
+      }),
+    [bucketUsage, data],
+  )
   const filteredData = React.useMemo(
-    () => (searchTerm ? data.filter((bucket) => bucket.Name.toLowerCase().includes(searchTerm.toLowerCase())) : data),
-    [data, searchTerm],
+    () =>
+      searchTerm
+        ? rowsWithUsage.filter((bucket) => bucket.Name.toLowerCase().includes(searchTerm.toLowerCase()))
+        : rowsWithUsage,
+    [rowsWithUsage, searchTerm],
   )
 
   const columns: ColumnDef<BucketListRow>[] = React.useMemo(

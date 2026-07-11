@@ -210,6 +210,7 @@ export function LicenseEnterpriseSection() {
     window.open(
       "https://ww18.53kf.com/webCompany.php?arg=11003151&kf_sign=DA4MDMTc0Ng4MjE1MjEzODAyNDkyMDAyNzMwMDMxNTE%253D&style=2",
       "_blank",
+      "noopener,noreferrer",
     )
   }
 

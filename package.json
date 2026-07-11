@@ -11,6 +11,7 @@
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
+    "test:run": "node --experimental-strip-types --import ./scripts/register-typescript-loader.mjs --test tests/lib/*.test.{js,ts}",
     "type-check": "node scripts/apply-theme-overrides.js && tsc --noEmit",
     "prettier": "prettier",
     "format": "prettier --write .",

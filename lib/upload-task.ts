@@ -9,8 +9,9 @@ import type { ManagedTask, TaskHandler, TaskLifecycleStatus } from "./task-manag
 import { formatBytes } from "./functions"
 import { createTaskId } from "./task-id"
 import { getUploadContentType } from "./upload-content-type"
+import { logger } from "./logger"
 
-export type UploadStatus = "pending" | "running" | "completed" | "failed" | "canceled" | "paused"
+export type UploadStatus = "pending" | "running" | "completed" | "failed" | "canceled"
 
 export interface UploadTask extends ManagedTask<UploadStatus> {
   kind: "upload"
@@ -23,7 +24,6 @@ export interface UploadTask extends ManagedTask<UploadStatus> {
   subInfo: string
   uploadId?: string
   completedParts?: { ETag: string; PartNumber: number }[]
-  _pauseRequested?: boolean
 }
 
 export interface UploadTaskConfig {
@@ -33,7 +33,7 @@ export interface UploadTaskConfig {
 }
 
 export interface UploadTaskHelpers {
-  handler: TaskHandler<UploadTask, UploadStatus>
+  handler: TaskHandler<UploadTask>
   createTasks: (items: { file: File; key: string }[], bucketName: string) => UploadTask[]
 }
 
@@ -43,7 +43,6 @@ const lifecycle: TaskLifecycleStatus<UploadStatus> = {
   completed: "completed",
   failed: "failed",
   canceled: "canceled",
-  paused: "paused",
 }
 
 export function createUploadTaskHelpers(s3Client: S3Client, config: UploadTaskConfig = {}): UploadTaskHelpers {
@@ -51,7 +50,7 @@ export function createUploadTaskHelpers(s3Client: S3Client, config: UploadTaskCo
   const maxRetries = config.maxRetries ?? 3
   const retryDelay = config.retryDelay ?? 1000
 
-  const perform: TaskHandler<UploadTask, UploadStatus>["perform"] = async (task) => {
+  const perform: TaskHandler<UploadTask>["perform"] = async (task) => {
     task.progress = 0
     if (task.file.size > chunkSize) {
       await multipartUpload(task, s3Client, chunkSize)
@@ -60,12 +59,12 @@ export function createUploadTaskHelpers(s3Client: S3Client, config: UploadTaskCo
     }
   }
 
-  const shouldRetry: TaskHandler<UploadTask, UploadStatus>["shouldRetry"] = (task, error) => {
+  const shouldRetry: TaskHandler<UploadTask>["shouldRetry"] = (task, error) => {
     if (task.status === lifecycle.canceled) return false
     if ((task.retryCount || 0) >= maxRetries) return false
     const err = error as { $metadata?: { httpStatusCode?: number }; message?: string }
-    if (err?.$metadata?.httpStatusCode && err.$metadata.httpStatusCode >= 400 && err.$metadata.httpStatusCode < 500)
-      return false
+    const statusCode = err?.$metadata?.httpStatusCode
+    if (statusCode && statusCode >= 400 && statusCode < 500 && statusCode !== 408 && statusCode !== 429) return false
     const errorMessage = (err?.message || "").toLowerCase()
     const nonRetryableErrors = [
       "access denied",
@@ -77,22 +76,10 @@ export function createUploadTaskHelpers(s3Client: S3Client, config: UploadTaskCo
     return !nonRetryableErrors.some((msg) => errorMessage.includes(msg))
   }
 
-  const handleError: TaskHandler<UploadTask, UploadStatus>["handleError"] = async (task, error) => {
-    if (
-      task._pauseRequested &&
-      ((error as Error)?.message === "Upload paused" || (error as Error)?.message === "Request aborted")
-    ) {
-      task.status = "paused"
-      return "handled"
-    }
-    return "fail"
-  }
-
-  const handler: TaskHandler<UploadTask, UploadStatus> = {
+  const handler: TaskHandler<UploadTask> = {
     lifecycle,
     perform,
     shouldRetry,
-    handleError,
     isCanceledError: (error) =>
       (error as Error)?.name === "AbortError" || (error as Error)?.message?.includes("canceled"),
     maxRetries,
@@ -118,7 +105,6 @@ export function createUploadTaskHelpers(s3Client: S3Client, config: UploadTaskCo
           displayName,
           subInfo: formatBytes(item.file.size),
           retryCount: 0,
-          _pauseRequested: false,
         }
       })
   }
@@ -172,7 +158,7 @@ async function multipartUpload(task: UploadTask, s3Client: S3Client, chunkSize: 
 
     const totalChunks = Math.ceil(file.size / chunkSize)
     for (let partNumber = 1; partNumber <= totalChunks; partNumber++) {
-      if (abortController.signal.aborted) throw new Error("Upload paused")
+      if (abortController.signal.aborted) throw new DOMException("Upload canceled", "AbortError")
       if (completedParts.some((p) => p.PartNumber === partNumber)) continue
 
       const start = (partNumber - 1) * chunkSize
@@ -207,12 +193,15 @@ async function multipartUpload(task: UploadTask, s3Client: S3Client, chunkSize: 
     task.uploadId = undefined
     task.completedParts = undefined
   } catch (error) {
-    if (!task._pauseRequested && uploadId) {
+    if (uploadId) {
       try {
         const { AbortMultipartUploadCommand } = await import("@aws-sdk/client-s3")
         await s3Client.send(new AbortMultipartUploadCommand({ Bucket: bucketName, Key: key, UploadId: uploadId }))
-      } catch {
-        // ignore cleanup errors
+      } catch (cleanupError) {
+        logger.warn("Failed to abort multipart upload", cleanupError)
+      } finally {
+        task.uploadId = undefined
+        task.completedParts = undefined
       }
     }
     throw error

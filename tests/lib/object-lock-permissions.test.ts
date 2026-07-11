@@ -22,3 +22,25 @@ test("browser console scope allows editing object lock controls", () => {
   assert.equal(hasConsoleCapability(browserPolicy, "objects.legalHold.edit", context), true)
   assert.equal(hasConsoleCapability(browserPolicy, "objects.retention.edit", context), true)
 })
+
+test("an explicit deny overrides an implied browser capability", () => {
+  const policy: ConsolePolicy = {
+    ...browserPolicy,
+    Statement: [
+      ...browserPolicy.Statement,
+      {
+        Effect: "Deny",
+        Action: ["s3:PutObjectRetention"],
+        Resource: ["arn:aws:s3:::locked-bucket/folder/*"],
+      },
+    ],
+  }
+
+  assert.equal(
+    hasConsoleCapability(policy, "objects.retention.edit", {
+      bucket: "locked-bucket",
+      objectKey: "folder/object.txt",
+    }),
+    false,
+  )
+})

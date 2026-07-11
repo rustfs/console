@@ -2,45 +2,27 @@
 
 import * as React from "react"
 import { useSyncExternalStore } from "react"
-import { TaskManager, type TaskHandler } from "@/lib/task-manager"
-import { createUploadTaskHelpers } from "@/lib/upload-task"
-import { createDeleteTaskHelpers } from "@/lib/delete-task"
+import { TaskManager, type TaskManagerApi } from "@/lib/task-manager"
+import { createUploadTaskHelpers, type UploadTask } from "@/lib/upload-task"
+import { createDeleteTaskHelpers, type AnyDeleteTask } from "@/lib/delete-task"
 import { useS3Optional } from "@/contexts/s3-context"
 
-export type UploadTask = {
-  id: string
-  kind: "upload"
-  status: string
-  progress: number
-  error?: string
-  displayName: string
-  subInfo: string
-  actionLabel: string
-}
+export type AnyTask = UploadTask | AnyDeleteTask
 
-export type AnyTask = {
-  id: string
-  kind: string
-  status: string
-  progress: number
-  error?: string
-  displayName: string
-  subInfo: string
-  actionLabel: string
-  bucketName?: string
-}
-
-const emptyTasks: AnyTask[] = []
-const emptyManager = {
+const emptyTasks: readonly AnyTask[] = []
+const emptyManager: TaskManagerApi<AnyTask> = {
   getTasks: () => emptyTasks,
   enqueue: () => {},
-  removeTask: () => {},
-  clearTasks: () => {},
+  cancelTask: () => false,
+  cancelAll: () => {},
+  removeFinishedTask: () => false,
+  clearFinishedTasks: () => {},
+  dispose: () => {},
   subscribe: () => () => {},
-} as unknown as TaskManager<AnyTask, string>
+}
 
 const TaskContext = React.createContext<{
-  taskManager: TaskManager<AnyTask, string>
+  taskManager: TaskManagerApi<AnyTask>
   addUploadFiles: (items: { file: File; key: string }[], bucketName: string) => void
   addDeleteKeys: (keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) => void
   addDeleteFolder: (prefix: string, bucketName: string, options?: { forceDelete?: boolean }) => void
@@ -56,7 +38,7 @@ const TaskContext = React.createContext<{
 })
 
 type ManagerState = {
-  manager: TaskManager<AnyTask, string>
+  manager: TaskManager<AnyTask>
   uploadHelpers: ReturnType<typeof createUploadTaskHelpers>
   deleteHelpers: ReturnType<typeof createDeleteTaskHelpers>
 } | null
@@ -67,7 +49,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const [managerState, setManagerState] = React.useState<ManagerState>(null)
 
   React.useEffect(() => {
-    if (!client) return
+    if (!client) {
+      setManagerState(null)
+      return
+    }
     const uploadHelpers = createUploadTaskHelpers(client, {
       chunkSize: 16,
       maxRetries: 3,
@@ -77,17 +62,19 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       maxRetries: 3,
       retryDelay: 1000,
     })
-    const manager = new TaskManager<AnyTask, string>({
+    const manager = new TaskManager<AnyTask>({
       handlers: {
-        upload: uploadHelpers.handler as TaskHandler<unknown, string>,
-        delete: deleteHelpers.handler as TaskHandler<unknown, string>,
-        "delete-folder": deleteHelpers.folderHandler as TaskHandler<unknown, string>,
+        upload: uploadHelpers.handler,
+        delete: deleteHelpers.handler,
+        "delete-folder": deleteHelpers.folderHandler,
       },
       maxConcurrent: 6,
       maxRetries: 3,
       retryDelay: 1000,
     })
     setManagerState({ manager, uploadHelpers, deleteHelpers })
+
+    return () => manager.dispose()
   }, [client])
 
   const taskManager = managerState?.manager ?? emptyManager
@@ -96,16 +83,19 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     (items: { file: File; key: string }[], bucketName: string) => {
       if (!managerState) return
       const { manager, uploadHelpers } = managerState
-      const allTasks = manager.getTasks() as Array<{ status: string; bucketName?: string; key?: string }>
+      const allTasks = manager.getTasks()
       const activeKeys = new Set(
         allTasks
-          .filter((t) => ["pending", "running", "failed", "paused"].includes(t.status))
-          .map((t) => `${t.bucketName ?? ""}/${t.key ?? ""}`),
+          .filter(
+            (task): task is UploadTask =>
+              task.kind === "upload" && (task.status === "pending" || task.status === "running"),
+          )
+          .map((task) => `${task.bucketName}/${task.key}`),
       )
       const newTasks = uploadHelpers
         .createTasks(items, bucketName)
         .filter((t) => !activeKeys.has(`${t.bucketName}/${t.key}`))
-      manager.enqueue(newTasks as AnyTask[])
+      manager.enqueue(newTasks)
     },
     [managerState],
   )
@@ -115,7 +105,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       if (!managerState) return
       const { manager, deleteHelpers } = managerState
       const newTasks = deleteHelpers.createTasks(keys, bucketName, prefix, options)
-      manager.enqueue(newTasks as AnyTask[])
+      manager.enqueue(newTasks)
     },
     [managerState],
   )
@@ -125,7 +115,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       if (!managerState) return
       const { manager, deleteHelpers } = managerState
       const task = deleteHelpers.createFolderDeleteTask(prefix, bucketName, options)
-      manager.enqueue([task as AnyTask])
+      manager.enqueue([task])
     },
     [managerState],
   )
@@ -157,7 +147,7 @@ export function useTasks() {
     () => taskManager.getTasks(),
     () => taskManager.getTasks(),
   )
-  return tasks as AnyTask[]
+  return tasks
 }
 
 export function useAddUploadFiles() {

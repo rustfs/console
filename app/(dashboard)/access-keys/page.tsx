@@ -184,16 +184,19 @@ export default function AccessKeysPage() {
       positiveText: t("Confirm"),
       negativeText: t("Cancel"),
       onPositiveClick: async () => {
-        try {
-          await Promise.all(selectedKeys.map((key) => deleteServiceAccount(key)))
+        const results = await Promise.allSettled(selectedKeys.map((key) => deleteServiceAccount(key)))
+        const failures = results.filter((result) => result.status === "rejected")
+
+        if (failures.length === 0) {
           message.success(t("Delete Success"))
           table.resetRowSelection()
-          await listUserAccounts()
-        } catch (error) {
+        } else {
+          const firstFailure = failures[0]
+          const error = firstFailure?.status === "rejected" ? firstFailure.reason : undefined
           console.error(error)
-          const msg = (error as Error)?.message || t("Delete Failed")
-          message.error(msg)
+          message.error((error as Error)?.message || t("Delete Failed"))
         }
+        await listUserAccounts()
       },
     })
   }

@@ -54,5 +54,9 @@ export function buildObjectZipDownloadPayload({
 }
 
 export function normalizeObjectZipDownloadUrl(downloadUrl: string, origin: string) {
-  return new URL(downloadUrl, origin).toString()
+  const url = new URL(downloadUrl, origin)
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new Error("Unsupported download URL protocol")
+  }
+  return url.toString()
 }

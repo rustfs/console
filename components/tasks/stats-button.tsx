@@ -15,9 +15,11 @@ export function TaskStatsButton() {
   const taskManager = useTaskManager()
   const { isTaskPanelOpen, setTaskPanelOpen } = useTaskPanelOpen()
 
+  const pending = tasks.filter((task) => task.status === "pending")
   const processing = tasks.filter((task) => task.status === "running")
   const completed = tasks.filter((task) => task.status === "completed")
   const failed = tasks.filter((task) => task.status === "failed")
+  const active = pending.length + processing.length
   const total = tasks.length
 
   if (total === 0) return null
@@ -26,7 +28,7 @@ export function TaskStatsButton() {
     <Drawer open={isTaskPanelOpen} onOpenChange={setTaskPanelOpen} direction="right">
       <DrawerTrigger asChild>
         <Button variant="outline">
-          {processing.length > 0 ? (
+          {active > 0 ? (
             <div className="flex items-center gap-2">
               <Spinner className="size-3 text-muted-foreground" />
               <span>
@@ -50,7 +52,7 @@ export function TaskStatsButton() {
           <DrawerTitle>{t("Task Management")}</DrawerTitle>
         </DrawerHeader>
         <div className="overflow-auto p-4">
-          <TaskPanel tasks={tasks} onClearTasks={() => taskManager.clearTasks()} />
+          <TaskPanel tasks={tasks} onClearFinishedTasks={() => taskManager.clearFinishedTasks()} />
         </div>
       </DrawerContent>
     </Drawer>

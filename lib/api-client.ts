@@ -1,8 +1,14 @@
 import { joinURL } from "ufo"
 import type { IApiErrorHandler } from "@/types/api"
+import { redactRequestOptionsForLog } from "./api-request-log"
 import { parseApiError } from "./error-handler"
 import { logger } from "./logger"
-import type { AwsClient } from "./aws4fetch"
+
+type ApiRequestInit = RequestInit & { body?: BodyInit | null; aws?: Record<string, unknown> }
+
+export interface ApiTransport {
+  fetch(input: string | Request, init?: ApiRequestInit): Promise<Response>
+}
 
 interface ApiClientOptions {
   baseUrl?: string
@@ -24,43 +30,19 @@ interface RequestOptions {
   signal?: AbortSignal
 }
 
-const SENSITIVE_LOG_KEY = /(?:token|secret|password|authorization|cookie|api[_-]?key|master[_-]?key)/i
-
-function redactLogValue(value: unknown, key?: string): unknown {
-  if (key && SENSITIVE_LOG_KEY.test(key)) return "[REDACTED]"
-  if (Array.isArray(value)) return value.map((item) => redactLogValue(item))
-  if (!value || typeof value !== "object") return value
-
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).map(([entryKey, entryValue]) => [
-      entryKey,
-      redactLogValue(entryValue, entryKey),
-    ]),
-  )
-}
-
-function redactRequestOptionsForLog(options: RequestOptions) {
-  const body =
-    typeof options.body === "string"
-      ? (() => {
-          try {
-            return JSON.stringify(redactLogValue(JSON.parse(options.body)))
-          } catch {
-            return options.body
-          }
-        })()
-      : options.body
-
-  return { ...options, body }
+async function createHttpError(response: Response) {
+  const error = new Error(await parseApiError(response)) as Error & { status: number }
+  error.status = response.status
+  return error
 }
 
 export class ApiClient {
-  private $api: AwsClient
+  private $api: ApiTransport
   private config?: ApiClientOptions
   private errorHandler?: IApiErrorHandler
   private inflightGetRequests = new Map<string, Promise<unknown>>()
 
-  constructor(api: AwsClient, options?: ApiClientOptions) {
+  constructor(api: ApiTransport, options?: ApiClientOptions) {
     this.$api = api
     this.config = options
     this.errorHandler = options?.errorHandler
@@ -76,37 +58,42 @@ export class ApiClient {
 
   async request(url: string, options: RequestOptions = {}, parseJson: boolean = true) {
     url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url
-    options.headers = { ...this.config?.headers, ...options.headers }
-    const method = (options.method ?? "GET").toUpperCase()
-    options.method = method
+    const { params, ...providedOptions } = options
+    const requestOptions: RequestOptions = {
+      ...providedOptions,
+      headers: { ...this.config?.headers, ...providedOptions.headers },
+    }
+    const method = (requestOptions.method ?? "GET").toUpperCase()
+    requestOptions.method = method
     if (
-      options.body &&
-      !(options.body instanceof FormData) &&
-      !(options.body instanceof Blob) &&
-      !(options.body instanceof ArrayBuffer) &&
-      !(options.body instanceof Uint8Array) &&
-      !(options.body instanceof File)
+      requestOptions.body &&
+      !(requestOptions.body instanceof FormData) &&
+      !(requestOptions.body instanceof Blob) &&
+      !(requestOptions.body instanceof ArrayBuffer) &&
+      !(requestOptions.body instanceof Uint8Array) &&
+      !(requestOptions.body instanceof File)
     ) {
-      options.body = JSON.stringify(options.body)
+      requestOptions.body = JSON.stringify(requestOptions.body)
     }
 
-    if (options.params) {
-      const queryString = new URLSearchParams(options.params).toString()
-      url += `?${queryString}`
-      delete options.params
+    if (params) {
+      const queryString = new URLSearchParams(params).toString()
+      if (queryString) url += `${url.includes("?") ? "&" : "?"}${queryString}`
     }
 
-    const shouldDedupe = method === "GET" && parseJson && options.dedupe !== false
+    const shouldDedupe =
+      method === "GET" &&
+      parseJson &&
+      requestOptions.dedupe !== false &&
+      !providedOptions.headers &&
+      !requestOptions.signal
     const dedupeKey = shouldDedupe ? `${method}:${url}` : null
 
     const executeRequest = async () => {
       logger.log("[request] url:", url)
-      logger.log("[request] options:", redactRequestOptionsForLog(options))
+      logger.log("[request] options:", redactRequestOptionsForLog(requestOptions))
 
-      const response = await this.$api.fetch(
-        url,
-        options as RequestInit & { body?: BodyInit | null; aws?: Record<string, unknown> },
-      )
+      const response = await this.$api.fetch(url, requestOptions as ApiRequestInit)
 
       logger.log("[request] response:", response)
 
@@ -114,16 +101,13 @@ export class ApiClient {
         if (this.errorHandler) {
           await this.errorHandler.handle401(url)
         }
-        return
+        throw await createHttpError(response)
       }
       if (response.status === 403) {
         // If suppress403Redirect is true, throw error instead of triggering global handler
         // This allows components to handle permission errors gracefully
-        if (options.suppress403Redirect) {
-          const errorMsg = await parseApiError(response)
-          const error = new Error(errorMsg) as Error & { status: number }
-          error.status = response.status
-          throw error
+        if (requestOptions.suppress403Redirect) {
+          throw await createHttpError(response)
         }
 
         try {
@@ -160,14 +144,11 @@ export class ApiClient {
             await this.errorHandler.handle403(url)
           }
         }
-        return
+        throw await createHttpError(response)
       }
 
       if (!response.ok) {
-        const errorMsg = await parseApiError(response)
-        const error = new Error(errorMsg) as Error & { status: number }
-        error.status = response.status
-        throw error
+        throw await createHttpError(response)
       }
 
       if (response.status === 204 || response.headers.get("content-length") === "0" || !response.body) {

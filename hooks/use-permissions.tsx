@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useState, useCallback, useEffect, useMemo } from "react"
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from "react"
 import { hasConsoleScopes, type ConsolePolicy } from "@/lib/console-policy-parser"
 import { hasConsoleCapability, type ConsoleCapability } from "@/lib/permission-capabilities"
 import type { PermissionResourceContext } from "@/lib/permission-resources"
@@ -34,8 +34,10 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   const [isLoading, setIsLoading] = useState(false)
   const [hasResolvedAdmin, setHasResolvedAdmin] = useState(false)
   const [hasFetchedPolicy, setHasFetchedPolicy] = useState(false)
+  const requestEpochRef = useRef(0)
 
   useEffect(() => {
+    requestEpochRef.current += 1
     setUserInfo(null)
     setUserPolicy(null)
     setHasResolvedAdmin(false)
@@ -43,28 +45,33 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
     if (isAuthenticated) {
       setIsAdmin(false)
     }
-  }, [credentials?.AccessKeyId, credentials?.SessionToken, isAuthenticated, setIsAdmin])
+  }, [api, credentials?.AccessKeyId, credentials?.SessionToken, isAuthenticated, setIsAdmin])
 
   const fetchAdminStatus = useCallback(async () => {
     if (!api) return
+    const requestEpoch = requestEpochRef.current
 
     try {
       const info = (await api.get("/is-admin")) as { is_admin?: boolean }
+      if (requestEpoch !== requestEpochRef.current) return
       setIsAdmin(info?.is_admin ?? false)
     } catch (e) {
+      if (requestEpoch !== requestEpochRef.current) return
       console.error("Failed to resolve admin status", e)
       setIsAdmin(false)
     } finally {
-      setHasResolvedAdmin(true)
+      if (requestEpoch === requestEpochRef.current) setHasResolvedAdmin(true)
     }
   }, [api, setIsAdmin])
 
   const fetchUserPolicy = useCallback(async () => {
     if (!api) return
+    const requestEpoch = requestEpochRef.current
 
     setIsLoading(true)
     try {
       const info = (await api.get("/accountinfo")) as Record<string, unknown>
+      if (requestEpoch !== requestEpochRef.current) return
       setUserInfo(info)
       const policyStr = info?.policy as string
       if (policyStr) {
@@ -73,11 +80,14 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
         setUserPolicy(null)
       }
     } catch (e) {
+      if (requestEpoch !== requestEpochRef.current) return
       console.error("Failed to fetch user policy", e)
       setUserPolicy(null)
     } finally {
-      setIsLoading(false)
-      setHasFetchedPolicy(true)
+      if (requestEpoch === requestEpochRef.current) {
+        setIsLoading(false)
+        setHasFetchedPolicy(true)
+      }
     }
   }, [api])
 

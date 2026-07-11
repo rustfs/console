@@ -4,7 +4,7 @@ import {
   createObjectListScope,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
-} from "../../lib/object-list-state.js"
+} from "../../lib/object-list-state"
 
 test("shouldResetObjectListPagination returns false for the same listing scope", () => {
   const previousScope = createObjectListScope({

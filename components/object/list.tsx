@@ -375,6 +375,7 @@ export function ObjectList({
       try {
         const url = await getSignedUrl(key)
         const response = await fetch(url)
+        if (!response.ok) throw new Error(t("Download Failed"))
         const filename = key.split("/").pop() ?? ""
         const headers: Record<string, string> = {
           "content-type": getContentType(response.headers, filename),

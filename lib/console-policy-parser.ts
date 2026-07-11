@@ -144,6 +144,13 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
   [CONSOLE_SCOPES.VIEW_LICENSE]: ["admin:ServerInfo", "admin:*"],
 }
 
+function matchesImpliedConsoleAction(policyActions: string[] | undefined, action: string): boolean {
+  return Object.entries(IMPLIED_SCOPES).some(
+    ([scope, impliedActions]) =>
+      matchAction(policyActions, scope) && impliedActions.some((implied) => matchAction([implied], action)),
+  )
+}
+
 function isConsoleResource(resource: string): boolean {
   return resource === "console" || resource === "*" || resource.includes("console")
 }
@@ -163,6 +170,14 @@ function matchStatementResource(statement: ConsoleStatement, requestResource: st
   }
 
   if (shouldIgnoreConsoleResourceCheck(statement, action)) {
+    return true
+  }
+
+  if (
+    !isConsoleScope(action) &&
+    matchesImpliedConsoleAction(statement.Action, action) &&
+    (statement.Resource ?? []).some(isConsoleResource)
+  ) {
     return true
   }
 
@@ -189,7 +204,7 @@ function matchesRequestedAction(policyActions: string[] | undefined, action: str
   }
 
   if (!isConsoleScope(action)) {
-    return false
+    return matchesImpliedConsoleAction(policyActions, action)
   }
 
   if (

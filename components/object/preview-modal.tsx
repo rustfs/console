@@ -160,13 +160,24 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
 
   React.useEffect(() => {
     if (show && previewMode === "text" && previewUrl) {
+      const controller = new AbortController()
       setLoading(true)
       setIsFormatted(true)
-      fetch(previewUrl)
-        .then((r) => r.text())
+      setTextContent("")
+      fetch(previewUrl, { signal: controller.signal })
+        .then((response) => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          return response.text()
+        })
         .then(setTextContent)
-        .catch(() => setTextContent(t("Preview unavailable")))
-        .finally(() => setLoading(false))
+        .catch((error: unknown) => {
+          if ((error as Error)?.name !== "AbortError") setTextContent(t("Preview unavailable"))
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) setLoading(false)
+        })
+
+      return () => controller.abort()
     } else if (!show) {
       setTextContent("")
       setLoading(false)

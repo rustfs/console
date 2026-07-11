@@ -24,3 +24,12 @@ test("object preview modal only uses the PDF viewer for application/pdf content"
   assert.match(source, /isPdfPreview\(normalizedContentType\)/)
   assert.doesNotMatch(source, /keyLower\.endsWith\("\.pdf"\)/)
 })
+
+test("object text preview aborts stale requests and rejects non-success responses", () => {
+  const source = fs.readFileSync("components/object/preview-modal.tsx", "utf8")
+
+  assert.match(source, /const controller = new AbortController\(\)/)
+  assert.match(source, /fetch\(previewUrl, \{ signal: controller\.signal \}\)/)
+  assert.match(source, /if \(!response\.ok\) throw new Error/)
+  assert.match(source, /return \(\) => controller\.abort\(\)/)
+})

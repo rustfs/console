@@ -28,9 +28,11 @@ test("object bulk download resolves relative download URLs through the API clien
 
 test("ApiClient redacts credential fields before development logging", () => {
   const source = fs.readFileSync("lib/api-client.ts", "utf8")
+  const redactionSource = fs.readFileSync("lib/api-request-log.ts", "utf8")
 
-  assert.match(source, /SENSITIVE_LOG_KEY/)
-  assert.match(source, /master\[_-\]\?key/)
-  assert.match(source, /redactRequestOptionsForLog\(options\)/)
-  assert.match(source, /JSON\.stringify\(redactLogValue\(JSON\.parse\(options\.body\)\)\)/)
+  assert.match(redactionSource, /SENSITIVE_LOG_KEY/)
+  assert.match(redactionSource, /master\[_-\]\?key/)
+  assert.match(redactionSource, /credential\|creds/)
+  assert.match(source, /redactRequestOptionsForLog\(requestOptions\)/)
+  assert.match(redactionSource, /redactLogValue\(\{ \.\.\.options, body \}\)/)
 })

@@ -4,7 +4,7 @@ import {
   buildObjectZipDownloadPayload,
   getObjectZipDownloadFilename,
   normalizeObjectZipDownloadUrl,
-} from "../../lib/object-zip-download.js"
+} from "../../lib/object-zip-download.ts"
 
 test("buildObjectZipDownloadPayload separates object keys and prefixes", () => {
   const payload = buildObjectZipDownloadPayload({
@@ -56,4 +56,10 @@ test("normalizeObjectZipDownloadUrl resolves relative URLs against the API base 
     ),
     "https://api.example.com/rustfs/admin/v3/object-zip-downloads/abc.zip?token=abc",
   )
+})
+
+test("normalizeObjectZipDownloadUrl rejects active and local URL protocols", () => {
+  for (const url of ["javascript:alert(1)", "data:text/html,unsafe", "file:///tmp/unsafe.zip"]) {
+    assert.throws(() => normalizeObjectZipDownloadUrl(url, "https://console.example.com"), /Unsupported download/)
+  }
 })

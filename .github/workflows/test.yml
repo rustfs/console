@@ -73,7 +73,7 @@ jobs:
         run: pnpm ci
 
       - name: 🧪 Run unit tests
-        run: pnpm run test:run 2>/dev/null || echo "No test:run script, skipping"
+        run: pnpm run test:run
 
       - name: 📊 Upload test results
         uses: actions/upload-artifact@v7

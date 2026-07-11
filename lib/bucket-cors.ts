@@ -166,5 +166,5 @@ export function validateBucketCorsJson(content: string): BucketCorsValidationRes
 }
 
 export function stringifyBucketCorsConfig(config?: BucketCorsConfiguration | null): string {
-  return JSON.stringify(config?.CORSRules ?? DEFAULT_BUCKET_CORS_CONFIGURATION.CORSRules, null, 2)
+  return JSON.stringify(config ?? DEFAULT_BUCKET_CORS_CONFIGURATION, null, 2)
 }

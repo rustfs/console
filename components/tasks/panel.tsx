@@ -10,11 +10,11 @@ import { TaskItem } from "./item"
 import type { AnyTask } from "@/contexts/task-context"
 
 interface TaskPanelProps {
-  tasks: AnyTask[]
-  onClearTasks: () => void
+  tasks: readonly AnyTask[]
+  onClearFinishedTasks: () => void
 }
 
-export function TaskPanel({ tasks, onClearTasks }: TaskPanelProps) {
+export function TaskPanel({ tasks, onClearFinishedTasks }: TaskPanelProps) {
   const { t } = useTranslation()
   const [tab, setTab] = React.useState("pending")
 
@@ -22,27 +22,30 @@ export function TaskPanel({ tasks, onClearTasks }: TaskPanelProps) {
   const processing = tasks.filter((task) => task.status === "running")
   const completed = tasks.filter((task) => task.status === "completed")
   const failed = tasks.filter((task) => task.status === "failed")
+  const canceled = tasks.filter((task) => task.status === "canceled")
 
   const total = tasks.length
-  const percentage = total === 0 ? 100 : Math.floor((completed.length / total) * 100)
+  const finished = completed.length + failed.length + canceled.length
+  const percentage = total === 0 ? 100 : Math.floor((finished / total) * 100)
 
   React.useEffect(() => {
     if (processing.length > 0) setTab("processing")
     else if (pending.length > 0) setTab("pending")
     else if (completed.length > 0) setTab("completed")
+    else if (failed.length > 0) setTab("failed")
+    else if (canceled.length > 0) setTab("canceled")
     else setTab("pending")
-  }, [processing.length, pending.length, completed.length])
-
-  const withCount = (key: string, count: number) => t(key).replace(/\{[^}]*\}/g, String(count))
+  }, [processing.length, pending.length, completed.length, failed.length, canceled.length])
 
   const tabs = [
-    { value: "pending", label: withCount("Pending", pending.length) },
-    { value: "processing", label: withCount("Processing (with count)", processing.length) },
-    { value: "completed", label: withCount("Completed", completed.length) },
-    { value: "failed", label: withCount("Failed", failed.length) },
+    { value: "pending", label: t("Pending", { count: pending.length }) },
+    { value: "processing", label: t("Processing (with count)", { count: processing.length }) },
+    { value: "completed", label: t("Completed", { count: completed.length }) },
+    { value: "failed", label: t("Failed", { count: failed.length }) },
+    { value: "canceled", label: `${t("Canceled")} (${canceled.length})` },
   ]
 
-  const renderList = (list: AnyTask[]) => (
+  const renderList = (list: readonly AnyTask[]) => (
     <div className="flex flex-col gap-3">
       {list.length === 0 ? (
         <p className="py-4 text-center text-sm text-muted-foreground">{t("No Data")}</p>
@@ -69,11 +72,13 @@ export function TaskPanel({ tasks, onClearTasks }: TaskPanelProps) {
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div>
-              {total - pending.length - processing.length}/{total}
+              {finished}/{total}
             </div>
-            <Button variant="ghost" size="sm" className="h-auto px-2" onClick={onClearTasks}>
-              {t("Clear Records")}
-            </Button>
+            {finished > 0 && (
+              <Button variant="ghost" size="sm" className="h-auto px-2" onClick={onClearFinishedTasks}>
+                {t("Clear Records")}
+              </Button>
+            )}
           </div>
           <Progress value={percentage} className="h-[3px]" />
         </div>
@@ -99,6 +104,9 @@ export function TaskPanel({ tasks, onClearTasks }: TaskPanelProps) {
         </TabsContent>
         <TabsContent value="failed" className="mt-0">
           {renderList(failed)}
+        </TabsContent>
+        <TabsContent value="canceled" className="mt-0">
+          {renderList(canceled)}
         </TabsContent>
       </Tabs>
     </div>

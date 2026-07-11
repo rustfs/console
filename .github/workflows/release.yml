@@ -63,9 +63,7 @@ jobs:
         run: |
           echo "## 🧪 Running Full Test Suite" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          if [ -d "tests" ] && [ -n "$(find tests -name '*.test.ts' -o -name '*.spec.ts' 2>/dev/null)" ]; then
-            pnpm run test:run 2>/dev/null || true
-          fi
+          pnpm run test:run
           echo "✅ All tests passed!" >> $GITHUB_STEP_SUMMARY
 
       - name: 🔍 Validate code quality

@@ -49,7 +49,7 @@ export function useTiers() {
 
   const removeTiers = useCallback(
     async (name: string) => {
-      return api.delete(`/tier/${encodeURIComponent(name)}?force=true`, {})
+      return api.delete(`/tier/${encodeURIComponent(name)}?force=false`, {})
     },
     [api],
   )

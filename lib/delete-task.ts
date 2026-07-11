@@ -41,8 +41,8 @@ export interface DeleteTaskConfig {
 }
 
 export interface DeleteTaskHelpers {
-  handler: TaskHandler<DeleteTask, DeleteStatus>
-  folderHandler: TaskHandler<FolderDeleteTask, DeleteStatus>
+  handler: TaskHandler<DeleteTask>
+  folderHandler: TaskHandler<FolderDeleteTask>
   createTasks: (
     keys: string[],
     bucketName: string,
@@ -66,6 +66,13 @@ const lifecycle: TaskLifecycleStatus<DeleteStatus> = {
   canceled: "canceled",
 }
 
+function assertDeleteObjectsSucceeded(errors: { Key?: string; Code?: string; Message?: string }[] | undefined) {
+  if (!errors?.length) return
+  const first = errors[0]
+  const target = first?.Key ? ` for ${first.Key}` : ""
+  throw new Error(first?.Message || first?.Code || `Failed to delete ${errors.length} object(s)${target}`)
+}
+
 function attachForceDeleteHeader(command: DeleteObjectCommand | DeleteObjectsCommand) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ;(command.middlewareStack.add as any)(
@@ -83,7 +90,7 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
   const maxRetries = config.maxRetries ?? 3
   const retryDelay = config.retryDelay ?? 1000
 
-  const perform: TaskHandler<DeleteTask, DeleteStatus>["perform"] = async (task) => {
+  const perform: TaskHandler<DeleteTask>["perform"] = async (task) => {
     const { key, bucketName, prefix, versionId, forceDelete } = task
     const abortController = new AbortController()
     task.abortController = abortController
@@ -100,7 +107,7 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
     task.progress = 100
   }
 
-  const performFolder: TaskHandler<FolderDeleteTask, DeleteStatus>["perform"] = async (task) => {
+  const performFolder: TaskHandler<FolderDeleteTask>["perform"] = async (task) => {
     const { bucketName, prefix, forceDelete } = task
     const abortController = new AbortController()
     task.abortController = abortController
@@ -137,7 +144,8 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
             Delete: { Objects: objectsToDelete, Quiet: true },
           })
           attachForceDeleteHeader(command)
-          await s3Client.send(command, { abortSignal: abortController.signal })
+          const result = await s3Client.send(command, { abortSignal: abortController.signal })
+          assertDeleteObjectsSucceeded(result.Errors)
         }
 
         isTruncated = data.IsTruncated ?? false
@@ -167,7 +175,8 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
             Bucket: bucketName,
             Delete: { Objects: objectsToDelete, Quiet: true },
           })
-          await s3Client.send(command, { abortSignal: abortController.signal })
+          const result = await s3Client.send(command, { abortSignal: abortController.signal })
+          assertDeleteObjectsSucceeded(result.Errors)
         }
 
         isTruncated = data.IsTruncated ?? false
@@ -185,7 +194,7 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
     return !nonRetryableErrors.some((msg) => errorMessage.includes(msg))
   }
 
-  const handler: TaskHandler<DeleteTask, DeleteStatus> = {
+  const handler: TaskHandler<DeleteTask> = {
     lifecycle,
     perform,
     shouldRetry,
@@ -195,7 +204,7 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
     retryDelay,
   }
 
-  const folderHandler: TaskHandler<FolderDeleteTask, DeleteStatus> = {
+  const folderHandler: TaskHandler<FolderDeleteTask> = {
     lifecycle,
     perform: performFolder,
     shouldRetry,

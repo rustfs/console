@@ -1841,21 +1841,23 @@ export default function SSEPage() {
         </DialogContent>
       </Dialog>
 
-      <Drawer open={!!selectedKeyId} onOpenChange={(open) => !open && setSelectedKeyId(null)} direction="right">
-        <DrawerContent className="h-dvh overflow-hidden data-[vaul-drawer-direction=right]:w-[92vw] data-[vaul-drawer-direction=right]:sm:max-w-xl">
+      <Drawer open={!!selectedKeyId} onOpenChange={(open) => !open && setSelectedKeyId(null)} swipeDirection="right">
+        <DrawerContent className="h-dvh overflow-hidden data-[swipe-direction=right]:w-[92vw] data-[swipe-direction=right]:sm:max-w-xl">
           <DrawerHeader className="relative shrink-0 border-b pe-14">
             <DrawerTitle>{t("KMS Key Details")}</DrawerTitle>
             <DrawerDescription className="break-all">{selectedKeyId || ""}</DrawerDescription>
-            <DrawerClose asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute end-3 top-3"
-                aria-label={t("Close")}
-              >
-                <RiCloseLine className="size-4" aria-hidden />
-              </Button>
+            <DrawerClose
+              render={
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute end-3 top-3"
+                  aria-label={t("Close")}
+                />
+              }
+            >
+              <RiCloseLine className="size-4" aria-hidden />
             </DrawerClose>
           </DrawerHeader>
 

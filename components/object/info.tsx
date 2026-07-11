@@ -436,8 +436,8 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
 
   return (
     <>
-      <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-        <DrawerContent className="overflow-y-auto overflow-x-hidden data-[vaul-drawer-direction=right]:w-[92vw] data-[vaul-drawer-direction=right]:sm:max-w-2xl">
+      <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
+        <DrawerContent className="overflow-y-auto overflow-x-hidden data-[swipe-direction=right]:w-[92vw] data-[swipe-direction=right]:sm:max-w-2xl">
           <DrawerHeader>
             <DrawerTitle>{t("Object Details")}</DrawerTitle>
             <DrawerDescription className="break-all">{resolvedObjectKey || bucketName}</DrawerDescription>

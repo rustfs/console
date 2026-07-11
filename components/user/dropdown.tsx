@@ -73,13 +73,13 @@ export function UserDropdown() {
           render={
             <Button variant="ghost" size={isCollapsed ? "icon" : "default"} aria-label={t("User menu")}>
               <div className="flex items-center gap-3">
-                <span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border bg-muted">
+                <span className="flex size-6 items-center justify-center overflow-hidden rounded-full border bg-muted">
                   <Image
                     src={avatar}
                     alt={theme.brand.name}
-                    width={32}
-                    height={32}
-                    className="rounded-full object-cover"
+                    width={24}
+                    height={24}
+                    className="size-6 rounded-full object-cover"
                     onError={() => {
                       const fallback = resolveAvatarPath(baseAvatarPath)
                       setAvatar((current) => (current === fallback ? current : fallback))

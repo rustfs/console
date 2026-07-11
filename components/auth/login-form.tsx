@@ -57,24 +57,24 @@ export function LoginForm({
   const website = theme.links.website ?? "https://www.rustfs.com"
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-6 lg:p-20">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-8 lg:p-12">
       <Image
         src={buildRoute("/backgrounds/scillate.svg")}
         alt=""
         fill
         priority
         sizes="100vw"
-        className="absolute inset-0 z-0 opacity-45 object-cover"
+        className="absolute inset-0 z-0 object-cover opacity-30"
       />
-      <div className="z-10 mx-auto flex w-full max-w-7xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[560px] lg:flex-row">
-        <div className="hidden w-1/2 lg:block">
+      <div className="z-10 mx-auto flex w-full max-w-6xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[600px] lg:flex-row">
+        <div className="hidden lg:block lg:w-1/2">
           <AuthHeroStatic />
         </div>
         <div className="relative flex w-full flex-col items-center justify-center bg-card lg:w-1/2">
           <div className="absolute end-4 top-4 z-10">
             <Link
               href="/config"
-              className="inline-flex h-8 w-8 items-center justify-center border bg-background text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="inline-flex size-11 items-center justify-center border bg-background text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-accent-foreground sm:size-9"
               title={t("Server Configuration")}
               aria-label={t("Server Configuration")}
             >
@@ -82,22 +82,23 @@ export function LoginForm({
             </Link>
           </div>
 
-          <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <ThemeLogo width={112} height={24} priority />
+          <div className="w-full max-w-sm space-y-7 p-6 sm:p-8 lg:p-10">
+            <ThemeLogo width={112} height={24} className="lg:hidden" priority />
+            <h1 className="sr-only">{t("Login")}</h1>
 
             <div className="space-y-4">
               <Tabs value={method} onValueChange={(v) => setMethod(v as LoginMethod)} className="flex flex-col gap-4">
-                <TabsList className="w-full">
-                  <TabsTrigger className="w-1/2" value="accessKeyAndSecretKey">
+                <TabsList className="h-11 w-full border bg-muted/60 sm:h-9">
+                  <TabsTrigger className="w-1/2 text-sm sm:text-xs" value="accessKeyAndSecretKey">
                     {t("Key Login")}
                   </TabsTrigger>
-                  <TabsTrigger className="w-1/2" value="sts">
+                  <TabsTrigger className="w-1/2 text-sm sm:text-xs" value="sts">
                     {t("STS Login")}
                   </TabsTrigger>
                 </TabsList>
 
                 <form onSubmit={handleLogin} autoComplete="off">
-                  <div className="grid gap-y-6">
+                  <div className="grid gap-y-5">
                     {method === "accessKeyAndSecretKey" ? (
                       <>
                         <Field>
@@ -116,6 +117,8 @@ export function LoginForm({
                               autoComplete="username"
                               type="text"
                               spellCheck={false}
+                              required
+                              className="h-11 text-base sm:h-8 sm:text-xs"
                               placeholder={t("Please enter account")}
                             />
                           </FieldContent>
@@ -136,6 +139,8 @@ export function LoginForm({
                               autoComplete="current-password"
                               type="password"
                               spellCheck={false}
+                              required
+                              className="h-11 text-base sm:h-8 sm:text-xs"
                               placeholder={t("Please enter key")}
                             />
                           </FieldContent>
@@ -159,6 +164,8 @@ export function LoginForm({
                               autoComplete="new-password"
                               type="text"
                               spellCheck={false}
+                              required
+                              className="h-11 text-base sm:h-8 sm:text-xs"
                               placeholder={t("Please enter STS username")}
                             />
                           </FieldContent>
@@ -179,6 +186,8 @@ export function LoginForm({
                               autoComplete="new-password"
                               type="password"
                               spellCheck={false}
+                              required
+                              className="h-11 text-base sm:h-8 sm:text-xs"
                               placeholder={t("Please enter STS key")}
                             />
                           </FieldContent>
@@ -199,6 +208,8 @@ export function LoginForm({
                               autoComplete="new-password"
                               type="text"
                               spellCheck={false}
+                              required
+                              className="h-11 text-base sm:h-8 sm:text-xs"
                               placeholder={t("Please enter STS session token")}
                             />
                           </FieldContent>
@@ -206,7 +217,11 @@ export function LoginForm({
                       </>
                     )}
 
-                    <Button type="submit" variant="default" className="w-full justify-center">
+                    <Button
+                      type="submit"
+                      variant="default"
+                      className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
+                    >
                       {t("Login")}
                     </Button>
                   </div>
@@ -227,7 +242,7 @@ export function LoginForm({
                       key={provider.provider_id}
                       type="button"
                       variant="outline"
-                      className="w-full justify-center"
+                      className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
                       onClick={() => onOidcLogin(provider.provider_id)}
                     >
                       {t("Login with {name}", { name: provider.display_name })}
@@ -237,20 +252,15 @@ export function LoginForm({
               </div>
             )}
 
-            <div>
-              <p className="text-sm text-muted-foreground">
+            <div className="flex items-center justify-between gap-4 border-t pt-5">
+              <p className="min-w-0 text-sm text-muted-foreground">
                 {t("Login Problems?")}{" "}
                 <Link href={website} className="text-foreground underline-offset-4 hover:underline">
                   {t("Get Help")}
                 </Link>
               </p>
-            </div>
-
-            <div className="mx-auto flex w-1/2 items-center justify-around gap-4">
-              <div className="inline-flex">
+              <div className="flex shrink-0 items-center gap-1 [&_[data-slot=button]]:size-10 sm:[&_[data-slot=button]]:size-8">
                 <ThemeSwitcher />
-              </div>
-              <div className="inline-flex">
                 <LanguageSwitcher />
               </div>
             </div>

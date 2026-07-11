@@ -2,13 +2,14 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import fs from "node:fs"
 
-test("rebalance page uses basic pool overview columns", () => {
+test("rebalance page keeps the overview compact and renders operation detail once", () => {
   const source = fs.readFileSync("app/(dashboard)/rebalance/page.tsx", "utf8")
+  const overview = fs.readFileSync("components/pools/overview.tsx", "utf8")
 
-  assert.match(
-    source,
-    /<PoolsOverviewCard overview=\{overview\} operationLabel=\{t\("Rebalance"\)\} showDecommissionColumns=\{false\} \/>/,
-  )
+  assert.match(source, /<PoolsOverviewCard overview=\{overview\} operationLabel=\{t\("Rebalance"\)\} \/>/)
+  assert.doesNotMatch(overview, /<Table/)
+  assert.match(source, /className="space-y-3 md:hidden"/)
+  assert.match(source, /className="hidden md:block"/)
 })
 
 test("rebalance page highlights failed pool rows", () => {
@@ -31,15 +32,15 @@ test("decommission page owns pool operation columns", () => {
   const source = fs.readFileSync("app/(dashboard)/pool-decommission/page.tsx", "utf8")
 
   assert.doesNotMatch(source, /<PoolsOverviewCard/)
-  assert.match(source, /<TableHead>\{t\("Usage"\)\}<\/TableHead>/)
-  assert.match(source, /<TableHead>\{t\("Progress"\)\}<\/TableHead>/)
-  assert.match(source, /<TableHead>\{t\("Bytes Moved"\)\}<\/TableHead>/)
+  assert.match(source, /<TableHead scope="col">\{t\("Usage"\)\}<\/TableHead>/)
+  assert.match(source, /<TableHead scope="col">\{t\("Progress"\)\}<\/TableHead>/)
+  assert.match(source, /<TableHead scope="col" className="text-end">/)
 })
 
-test("pool overview card gates decommission-specific columns", () => {
+test("pool overview card is a compact summary without a duplicate pool table", () => {
   const source = fs.readFileSync("components/pools/overview.tsx", "utf8")
 
-  assert.match(source, /showDecommissionColumns = false/)
-  assert.match(source, /showDecommissionColumns \? 17 : 8/)
-  assert.match(source, /showDecommissionColumns \? \(/)
+  assert.doesNotMatch(source, /showDecommissionColumns/)
+  assert.doesNotMatch(source, /<Table/)
+  assert.match(source, /grid-cols-2/)
 })

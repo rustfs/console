@@ -1,0 +1,4 @@
+interface:
+  display_name: "RustFS Console Design Guide"
+  short_description: "Design consistent Console pages, settings, forms, dialogs, tables, and responsive flows"
+  default_prompt: "Use $rustfs-console-design-guide to design or review this RustFS Console interface, applying the project hierarchy, state, form, dialog, responsive, and accessibility patterns."

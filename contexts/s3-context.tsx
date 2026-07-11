@@ -6,7 +6,7 @@ import { S3Client } from "@aws-sdk/client-s3"
 import { useAuth } from "@/contexts/auth-context"
 import { addApiPrefixMiddleware } from "@/lib/api-prefix-middleware"
 import { configManager } from "@/lib/config"
-import { getServiceErrorMessage, getXmlErrorMessage } from "@/lib/error-handler"
+import { getServiceErrorMessage, getXmlErrorCode, getXmlErrorMessage } from "@/lib/error-handler"
 import { scheduleMicrotask } from "@/lib/schedule-microtask"
 import type { SiteConfig } from "@/types/config"
 
@@ -37,13 +37,13 @@ const readResponseBodyText = async (
   return new TextDecoder("utf-8").decode(bytes)
 }
 
-const createS3ServiceError = (message: string, statusCode: number) => {
+const createS3ServiceError = (message: string, statusCode: number, code?: string | null) => {
   const error = new Error(message) as Error & {
     Code?: string
     $metadata?: { httpStatusCode?: number }
   }
-  error.name = message
-  error.Code = message
+  error.name = code ?? "S3ServiceError"
+  if (code) error.Code = code
   error.$metadata = { httpStatusCode: statusCode }
   return error
 }
@@ -142,10 +142,11 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
           if (typeof statusCode === "number" && statusCode >= 300) {
             const streamCollector = client.config.streamCollector as StreamCollector | undefined
             const bodyText = await readResponseBodyText(response.body, streamCollector)
+            const errorCode = bodyText ? getXmlErrorCode(bodyText) : null
             const errorMessage = bodyText ? (getXmlErrorMessage(bodyText) ?? bodyText.trim()) : null
 
             if (errorMessage) {
-              throw createS3ServiceError(errorMessage, statusCode)
+              throw createS3ServiceError(errorMessage, statusCode, errorCode)
             }
           }
 
@@ -202,8 +203,8 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
             }
 
             const serviceErrorMessage = getServiceErrorMessage(error)
-            if (serviceErrorMessage) {
-              throw new Error(serviceErrorMessage)
+            if (serviceErrorMessage && error instanceof Error) {
+              error.message = serviceErrorMessage
             }
             throw error
           }

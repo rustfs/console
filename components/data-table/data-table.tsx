@@ -14,6 +14,7 @@ interface DataTableProps<TData> {
   isLoading?: boolean
   emptyTitle?: string
   emptyDescription?: string
+  caption?: string
   className?: string
   tableClass?: string
   stickyHeader?: boolean
@@ -55,11 +56,20 @@ function canSort<TData>(column: Column<TData, unknown>) {
   return hasAccessorKey || hasAccessorFn
 }
 
+function getAriaSort<TData>(column: Column<TData, unknown>): React.AriaAttributes["aria-sort"] {
+  if (!canSort(column)) return undefined
+  const direction = column.getIsSorted()
+  if (direction === "asc") return "ascending"
+  if (direction === "desc") return "descending"
+  return "none"
+}
+
 export function DataTable<TData>({
   table,
   isLoading = false,
   emptyTitle = "No data",
   emptyDescription = "There is nothing to display yet.",
+  caption,
   className,
   tableClass,
   stickyHeader = false,
@@ -69,13 +79,19 @@ export function DataTable<TData>({
   const hasRows = table.getRowModel().rows.length > 0
 
   const tableContent = (
-    <UiTable className={cn("min-w-full tabular-nums", tableClass)}>
-      <TableHeader className={stickyHeader ? "sticky top-0 z-10 bg-muted/40 backdrop-blur" : ""}>
+    <UiTable className={cn("min-w-full tabular-nums", tableClass)} aria-busy={isLoading}>
+      {caption ? <caption className="sr-only">{caption}</caption> : null}
+      <TableHeader className={stickyHeader ? "sticky top-0 z-10 bg-muted/40 backdrop-blur" : "bg-muted/20"}>
         {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow key={headerGroup.id} className={stickyHeader ? "bg-muted/40 backdrop-blur" : undefined}>
+          <TableRow
+            key={headerGroup.id}
+            className={stickyHeader ? "bg-muted/40 backdrop-blur" : "bg-muted/20 hover:bg-muted/30"}
+          >
             {headerGroup.headers.map((header) => (
               <TableHead
                 key={header.id}
+                scope="col"
+                aria-sort={getAriaSort(header.column)}
                 className={bodyHeight ? undefined : "py-2"}
                 style={getColumnStyles(header.column)}
               >
@@ -150,7 +166,7 @@ export function DataTable<TData>({
       {bodyHeight ? (
         <ScrollArea className={cn("border", bodyHeight)}>{tableContent}</ScrollArea>
       ) : (
-        <div className="w-full overflow-x-auto border">{tableContent}</div>
+        <div className="w-full border">{tableContent}</div>
       )}
     </div>
   )

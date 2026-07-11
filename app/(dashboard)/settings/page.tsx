@@ -45,6 +45,7 @@ export default function SettingsPage() {
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   const applySnapshot = useCallback((nextSnapshot: ModuleSwitchSnapshot) => {
     setSnapshot(nextSnapshot)
@@ -56,10 +57,13 @@ export default function SettingsPage() {
 
   const loadSwitches = useCallback(async () => {
     setLoading(true)
+    setLoadError(null)
     try {
       applySnapshot(await getModuleSwitches())
     } catch (error) {
-      message.error((error as Error).message || t("Failed to load module switches"))
+      const description = (error as Error).message || t("Failed to load module switches")
+      setLoadError(description)
+      message.error(description)
     } finally {
       setLoading(false)
     }
@@ -88,7 +92,7 @@ export default function SettingsPage() {
   }
 
   const handleSave = async () => {
-    if (!snapshot) return
+    if (!snapshot || loadError) return
     if (!canUpdateModuleSwitches) {
       message.warning(t("You do not have permission to update module switches."))
       return
@@ -154,7 +158,11 @@ export default function SettingsPage() {
               {t("Sync")}
             </Button>
             {canUpdateModuleSwitches ? (
-              <Button type="button" onClick={handleSave} disabled={!snapshot || !isDirty || loading || saving}>
+              <Button
+                type="button"
+                onClick={handleSave}
+                disabled={!snapshot || Boolean(loadError) || !isDirty || loading || saving}
+              >
                 {saving ? <Spinner className="me-2 size-4" /> : <RiSave3Line className="me-2 size-4" aria-hidden />}
                 {t("Save")}
               </Button>
@@ -165,7 +173,7 @@ export default function SettingsPage() {
         <h1 className="text-2xl font-bold">{t("Settings")}</h1>
       </PageHeader>
 
-      <div className="space-y-4">
+      <div className="max-w-4xl space-y-4">
         {hasEnvManagedSwitch ? (
           <Alert>
             <AlertTitle>{t("Environment variables are controlling some switches")}</AlertTitle>
@@ -182,11 +190,24 @@ export default function SettingsPage() {
           </Alert>
         ) : null}
 
+        {loadError ? (
+          <Alert variant="destructive" role="alert">
+            <AlertTitle>{t("Failed to load module switches")}</AlertTitle>
+            <AlertDescription className="flex flex-wrap items-center justify-between gap-3">
+              <span>{loadError}</span>
+              <Button type="button" variant="outline" size="sm" onClick={loadSwitches} disabled={loading || saving}>
+                <RiRefreshLine className="me-2 size-4" aria-hidden />
+                {t("Sync")}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         <div className="divide-y rounded-none border">
           {switchItems.map((item) => {
             const isEnvManaged = isEnvManagedSource(item.source)
             return (
-              <Field key={item.name} className="grid gap-3 p-4 md:grid-cols-[1fr_auto] md:items-center">
+              <Field key={item.name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 p-4 sm:p-5">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <FieldLabel htmlFor={`${item.name}-module-switch`} className="text-sm font-medium">
@@ -203,12 +224,12 @@ export default function SettingsPage() {
                     </FieldDescription>
                   ) : null}
                 </div>
-                <FieldContent className="md:justify-self-end">
+                <FieldContent className="justify-self-end">
                   <Switch
                     id={`${item.name}-module-switch`}
                     checked={item.checked}
                     onCheckedChange={(checked) => updateSwitch(item.name, checked)}
-                    disabled={!canUpdateModuleSwitches || isEnvManaged || loading || saving}
+                    disabled={!canUpdateModuleSwitches || isEnvManaged || Boolean(loadError) || loading || saving}
                   />
                 </FieldContent>
               </Field>

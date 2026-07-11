@@ -32,7 +32,7 @@ export function ProviderList({
   const { t } = useTranslation()
 
   return (
-    <div className="flex h-full min-h-[28rem] flex-col border">
+    <div className="flex max-h-80 min-h-0 flex-col overflow-hidden border lg:max-h-none lg:min-h-[28rem]">
       <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold">{t("OIDC Providers")}</h2>
@@ -46,7 +46,7 @@ export function ProviderList({
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         {loading ? (
           <div className="flex flex-1 items-center justify-center gap-2 px-4 py-8 text-sm text-muted-foreground">
             <Spinner className="size-4" />

@@ -4,12 +4,12 @@ import * as React from "react"
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { useBucket } from "@/hooks/use-bucket"
 import { useEventTarget } from "@/hooks/use-event-target"
 import { useMessage } from "@/lib/feedback/message"
@@ -55,21 +55,31 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
   const [suffix, setSuffix] = useState("")
   const [events, setEvents] = useState<string[]>([])
   const [arnList, setArnList] = useState<Array<{ label: string; value: string }>>([])
+  const [arnLoading, setArnLoading] = useState(false)
+  const [arnError, setArnError] = useState("")
+  const [arnReloadVersion, setArnReloadVersion] = useState(0)
   const [resourceNameError, setResourceNameError] = useState("")
   const [eventsError, setEventsError] = useState("")
+  const [saveError, setSaveError] = useState("")
+  const [submitting, setSubmitting] = useState(false)
 
   const loadArnList = useCallback(async () => {
+    setArnLoading(true)
+    setArnError("")
     try {
       const res = (await getEventTargetArnList()) as string[]
       setArnList((res ?? []).map((item) => ({ label: item, value: item })))
     } catch {
       setArnList([])
+      setArnError(t("Unable to load event targets."))
+    } finally {
+      setArnLoading(false)
     }
-  }, [getEventTargetArnList])
+  }, [getEventTargetArnList, t])
 
   useEffect(() => {
-    scheduleMicrotask(() => loadArnList())
-  }, [loadArnList])
+    if (open) scheduleMicrotask(() => loadArnList())
+  }, [arnReloadVersion, loadArnList, open])
 
   const resetForm = useCallback(() => {
     setResourceName("")
@@ -78,6 +88,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
     setEvents([])
     setResourceNameError("")
     setEventsError("")
+    setSaveError("")
   }, [])
 
   useEffect(() => {
@@ -88,6 +99,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
 
   const handleEventChecked = (eventValue: string, checked: boolean | "indeterminate") => {
     const isChecked = checked === true || checked === "indeterminate"
+    if (isChecked) setEventsError("")
     setEvents((prev) =>
       isChecked ? (prev.includes(eventValue) ? prev : [...prev, eventValue]) : prev.filter((e) => e !== eventValue),
     )
@@ -98,17 +110,23 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
     const evErr = events.length === 0 ? t("Please select at least one event") : ""
     setResourceNameError(rnErr)
     setEventsError(evErr)
+    if (rnErr) document.getElementById("event-resource-name")?.focus()
+    else if (evErr) document.getElementById("event-option-put")?.focus()
     return !rnErr && !evErr
   }
 
   const handleSubmit = async () => {
-    if (disabled) {
-      message.warning(t("Notify is disabled. Enable notify before managing bucket event subscriptions."))
+    if (disabled || submitting || arnLoading || arnError) {
+      if (disabled) {
+        message.warning(t("Notify is disabled. Enable notify before managing bucket event subscriptions."))
+      }
       return
     }
 
     if (!validate()) return
 
+    setSubmitting(true)
+    setSaveError("")
     try {
       const s3Events: string[] = []
       events.forEach((event) => {
@@ -125,13 +143,8 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
         return
       }
 
-      let currentNotifications: Record<string, unknown> = {}
-      try {
-        const currentResponse = await listBucketNotifications(bucketName)
-        currentNotifications = (currentResponse ?? {}) as unknown as Record<string, unknown>
-      } catch {
-        currentNotifications = {}
-      }
+      const currentResponse = await listBucketNotifications(bucketName)
+      const currentNotifications = (currentResponse ?? {}) as unknown as Record<string, unknown>
 
       const arn = resourceName
       const baseConfig = {
@@ -172,11 +185,15 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
     } catch (error) {
       console.error("Failed to create bucket notification:", error)
       const msg = (error as Error)?.message || t("Create Failed")
+      setSaveError(msg)
       message.error(msg)
+    } finally {
+      setSubmitting(false)
     }
   }
 
   const handleCancel = () => {
+    if (submitting) return
     onOpenChange(false)
     resetForm()
   }
@@ -184,17 +201,17 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
   return (
     <Dialog
       open={open}
-      onOpenChange={(nextOpen, details) => {
-        if (!nextOpen && details.reason === "escape-key") {
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          handleCancel()
           return
         }
-
-        onOpenChange(nextOpen)
+        onOpenChange(true)
       }}
       disablePointerDismissal
     >
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto overflow-x-hidden">
-        <DialogHeader className="text-start">
+      <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <DialogHeader className="border-b px-4 py-3 pe-12 text-start sm:px-6">
           <DialogTitle>
             {t("Subscribe to event notification")}
             <span className="mt-1 block text-sm font-normal text-muted-foreground">
@@ -203,98 +220,160 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <Field>
-            <FieldLabel htmlFor="event-resource-name">{t("Amazon Resource Name")}</FieldLabel>
-            <FieldContent>
-              <Select
-                value={resourceName}
-                onValueChange={(value) => setResourceName(value ?? "")}
-                disabled={disabled || !arnList.length}
+        <form
+          className="contents"
+          aria-busy={submitting}
+          onSubmit={(event) => {
+            event.preventDefault()
+            void handleSubmit()
+          }}
+        >
+          <div className="min-h-0 space-y-6 overflow-y-auto overscroll-contain p-4 sm:p-6">
+            {saveError ? (
+              <div role="alert" className="border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                {saveError}
+              </div>
+            ) : null}
+            {arnError ? (
+              <Alert variant="destructive">
+                <AlertTitle>{t("Unable to load event targets.")}</AlertTitle>
+                <AlertDescription>{t("Refresh to try again.")}</AlertDescription>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => setArnReloadVersion((value) => value + 1)}
+                >
+                  {t("Refresh")}
+                </Button>
+              </Alert>
+            ) : null}
+            <Field>
+              <FieldLabel htmlFor="event-resource-name">{t("Amazon Resource Name")}</FieldLabel>
+              <FieldContent>
+                <Select
+                  value={resourceName}
+                  onValueChange={(value) => {
+                    setResourceName(value ?? "")
+                    if (value) setResourceNameError("")
+                  }}
+                  disabled={disabled || submitting || arnLoading || Boolean(arnError) || !arnList.length}
+                >
+                  <SelectTrigger
+                    id="event-resource-name"
+                    aria-label={t("Amazon Resource Name")}
+                    aria-invalid={Boolean(resourceNameError)}
+                    aria-describedby={resourceNameError ? "event-resource-name-error" : undefined}
+                  >
+                    <SelectValue placeholder={t("Please select resource name")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {arnList.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FieldContent>
+              {arnLoading ? <FieldDescription>{t("Loading")}</FieldDescription> : null}
+              {!arnLoading && !arnError && arnList.length === 0 ? (
+                <FieldDescription>{t("No Data")}</FieldDescription>
+              ) : null}
+              {resourceNameError ? (
+                <FieldDescription id="event-resource-name-error" role="alert" className="text-destructive">
+                  {resourceNameError}
+                </FieldDescription>
+              ) : null}
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="event-prefix">{t("Prefix")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="event-prefix"
+                  name="event-prefix"
+                  value={prefix}
+                  onChange={(e) => setPrefix(e.target.value)}
+                  autoComplete="off"
+                  disabled={disabled || submitting}
+                  placeholder={t("Please enter prefix")}
+                  spellCheck={false}
+                />
+              </FieldContent>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="event-suffix">{t("Suffix")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="event-suffix"
+                  name="event-suffix"
+                  value={suffix}
+                  onChange={(e) => setSuffix(e.target.value)}
+                  autoComplete="off"
+                  disabled={disabled || submitting}
+                  placeholder={t("Please enter suffix")}
+                  spellCheck={false}
+                />
+              </FieldContent>
+            </Field>
+
+            <Field>
+              <fieldset
+                aria-invalid={Boolean(eventsError)}
+                aria-describedby={eventsError ? "event-selection-error" : undefined}
               >
-                <SelectTrigger id="event-resource-name" aria-label={t("Amazon Resource Name")}>
-                  <SelectValue placeholder={t("Please select resource name")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {arnList.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </FieldContent>
-            {resourceNameError && <FieldDescription className="text-destructive">{resourceNameError}</FieldDescription>}
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="event-prefix">{t("Prefix")}</FieldLabel>
-            <FieldContent>
-              <Input
-                id="event-prefix"
-                name="event-prefix"
-                value={prefix}
-                onChange={(e) => setPrefix(e.target.value)}
-                autoComplete="off"
-                disabled={disabled}
-                placeholder={t("Please enter prefix")}
-                spellCheck={false}
-              />
-            </FieldContent>
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="event-suffix">{t("Suffix")}</FieldLabel>
-            <FieldContent>
-              <Input
-                id="event-suffix"
-                name="event-suffix"
-                value={suffix}
-                onChange={(e) => setSuffix(e.target.value)}
-                autoComplete="off"
-                disabled={disabled}
-                placeholder={t("Please enter suffix")}
-                spellCheck={false}
-              />
-            </FieldContent>
-          </Field>
-
-          <Field>
-            <FieldLabel>{t("Select events")}</FieldLabel>
-            <FieldContent>
-              <ScrollArea className="max-h-64 border">
-                <div className="flex flex-col gap-2 p-4">
-                  {EVENT_OPTIONS.map((event) => (
-                    <label
-                      key={event.value}
-                      htmlFor={`event-option-${event.value.toLowerCase()}`}
-                      className="flex cursor-pointer items-start gap-3"
-                    >
-                      <Checkbox
-                        id={`event-option-${event.value.toLowerCase()}`}
-                        checked={events.includes(event.value)}
-                        onCheckedChange={(v) => handleEventChecked(event.value, v)}
-                        disabled={disabled}
-                        className="mt-1"
-                      />
-                      <span>{t(event.labelKey)}</span>
-                    </label>
-                  ))}
+                <legend className="mb-2 text-sm font-medium">{t("Select events")}</legend>
+                <div className="bg-muted/20 p-4">
+                  <div className="flex flex-col gap-3">
+                    {EVENT_OPTIONS.map((event) => (
+                      <label
+                        key={event.value}
+                        htmlFor={`event-option-${event.value.toLowerCase()}`}
+                        className="flex cursor-pointer items-start gap-3"
+                      >
+                        <Checkbox
+                          id={`event-option-${event.value.toLowerCase()}`}
+                          checked={events.includes(event.value)}
+                          onCheckedChange={(v) => handleEventChecked(event.value, v)}
+                          disabled={disabled || submitting}
+                          className="mt-1"
+                        />
+                        <span>{t(event.labelKey)}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </ScrollArea>
-            </FieldContent>
-            {eventsError && <FieldDescription className="text-destructive">{eventsError}</FieldDescription>}
-          </Field>
-        </div>
+              </fieldset>
+              {eventsError ? (
+                <FieldDescription id="event-selection-error" role="alert" className="text-destructive">
+                  {eventsError}
+                </FieldDescription>
+              ) : null}
+            </Field>
+          </div>
 
-        <div className="flex flex-col gap-2 pt-6 sm:flex-row sm:justify-center">
-          <Button variant="outline" onClick={handleCancel}>
-            {t("Cancel")}
-          </Button>
-          <Button onClick={handleSubmit} disabled={disabled}>
-            {t("Save")}
-          </Button>
-        </div>
+          <DialogFooter className="border-t bg-muted/20 px-4 py-3 sm:px-6">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={handleCancel}
+              disabled={submitting}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button
+              type="submit"
+              className="w-full sm:w-auto"
+              disabled={disabled || submitting || arnLoading || Boolean(arnError)}
+            >
+              {submitting ? t("Saving…") : t("Save")}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

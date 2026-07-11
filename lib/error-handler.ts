@@ -25,6 +25,24 @@ const getXmlTagText = (xml: string, tagName: string): string | null => {
   return normalizeErrorText(match?.[1])
 }
 
+export const getXmlErrorCode = (xml: string): string | null => {
+  const trimmed = xml.trim()
+  if (!trimmed.startsWith("<")) return null
+
+  if (typeof DOMParser !== "undefined") {
+    try {
+      const doc = new DOMParser().parseFromString(trimmed, "text/xml")
+      if (!doc.querySelector("parsererror")) {
+        return normalizeErrorText(doc.querySelector("Code")?.textContent)
+      }
+    } catch {
+      // Fall through to regex-based parsing.
+    }
+  }
+
+  return getXmlTagText(trimmed, "Code")
+}
+
 export const getXmlErrorMessage = (xml: string): string | null => {
   const trimmed = xml.trim()
   if (!trimmed.startsWith("<")) {

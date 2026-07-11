@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { useSiteReplication } from "@/hooks/use-site-replication"
@@ -186,14 +185,25 @@ export function SiteReplicationNewForm({
       }}
     >
       <DialogContent
-        className="max-w-6xl gap-0 border-0 bg-transparent p-0 ring-0 shadow-none sm:max-w-6xl"
+        className="max-h-[min(94dvh,56rem)] max-w-6xl grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden border-0 bg-transparent p-0 ring-0 shadow-none sm:max-w-6xl"
         showCloseButton={false}
       >
-        <div className="grid overflow-hidden border bg-background lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.35fr)]">
-          <section className="relative overflow-hidden border-b bg-muted/20 px-6 py-6 lg:border-e lg:border-b-0">
+        <div className="grid min-h-0 overflow-y-auto overscroll-contain border bg-background lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.35fr)] lg:overflow-hidden">
+          <section className="relative border-b bg-muted/20 px-4 py-5 sm:px-6 sm:py-6 lg:min-h-0 lg:overflow-y-auto lg:border-e lg:border-b-0">
             <div className="absolute inset-y-0 end-0 hidden w-px bg-border/70 lg:block" />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute top-3 end-3 lg:hidden"
+              onClick={handleCancel}
+              disabled={saving}
+            >
+              <RiCloseLine className="size-4" aria-hidden />
+              <span className="sr-only">{t("Cancel")}</span>
+            </Button>
             <div className="relative space-y-6">
-              <DialogHeader className="space-y-3">
+              <DialogHeader className="space-y-3 pe-10 lg:pe-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className="bg-background/70">
                     {isConfigured ? t("Expand replication group") : t("First-time setup")}
@@ -208,8 +218,8 @@ export function SiteReplicationNewForm({
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-                <div className="border bg-background/70 p-4">
+              <div className="grid gap-5 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                <div className="p-1">
                   <div className="mb-3 flex items-center gap-2 text-foreground">
                     <RiStackLine className="size-4" aria-hidden />
                     <span className="text-xs font-medium uppercase tracking-[0.18em]">{t("Topology")}</span>
@@ -220,7 +230,7 @@ export function SiteReplicationNewForm({
                   </p>
                 </div>
 
-                <div className="border bg-background/70 p-4">
+                <div className="p-1">
                   <div className="mb-3 flex items-center gap-2 text-foreground">
                     <RiShieldCheckLine className="size-4" aria-hidden />
                     <span className="text-xs font-medium uppercase tracking-[0.18em]">{t("Handshake")}</span>
@@ -233,7 +243,7 @@ export function SiteReplicationNewForm({
                   </p>
                 </div>
 
-                <div className="border bg-background/70 p-4">
+                <div className="p-1">
                   <div className="mb-3 flex items-center gap-2 text-foreground">
                     <RiKeyLine className="size-4" aria-hidden />
                     <span className="text-xs font-medium uppercase tracking-[0.18em]">{t("Credentials")}</span>
@@ -245,7 +255,7 @@ export function SiteReplicationNewForm({
                 </div>
               </div>
 
-              <div className="border bg-background/75 p-5">
+              <div className="border-t pt-5">
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
                     <label htmlFor="site-replication-ilm-expiry" className="text-sm font-medium">
@@ -274,8 +284,8 @@ export function SiteReplicationNewForm({
             </div>
           </section>
 
-          <section className="min-w-0 bg-background">
-            <div className="flex flex-wrap items-start justify-between gap-4 border-b px-6 py-5">
+          <section className="min-w-0 bg-background lg:grid lg:min-h-0 lg:grid-rows-[auto_minmax(0,1fr)_auto]">
+            <div className="sticky top-0 z-10 flex flex-wrap items-start justify-between gap-4 border-b bg-background px-4 py-5 sm:px-6 lg:static">
               <div className="space-y-1">
                 <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   {t("Remote Sites")}
@@ -299,11 +309,14 @@ export function SiteReplicationNewForm({
               </div>
             </div>
 
-            <ScrollArea className="max-h-[72vh]">
+            <div className="lg:min-h-0 lg:overflow-y-auto">
               <div className="space-y-5 px-6 py-6">
                 {sites.map((site, index) => (
-                  <div key={index} className="overflow-hidden border bg-muted/20">
-                    <div className="flex flex-wrap items-start justify-between gap-3 border-b bg-background px-5 py-4">
+                  <fieldset key={index} className="overflow-hidden bg-muted/20">
+                    <legend className="sr-only">
+                      {t("Remote Site")} {index + 1}
+                    </legend>
+                    <div className="flex flex-wrap items-start justify-between gap-3 bg-background/60 px-5 py-4">
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="secondary">
@@ -413,12 +426,12 @@ export function SiteReplicationNewForm({
                         )}
                       </div>
                     </div>
-                  </div>
+                  </fieldset>
                 ))}
               </div>
-            </ScrollArea>
+            </div>
 
-            <DialogFooter className="border-t px-6 py-4">
+            <DialogFooter className="sticky bottom-0 z-10 border-t bg-background px-4 py-4 sm:px-6 lg:static">
               <Button type="button" variant="outline" onClick={handleCancel} disabled={saving}>
                 {t("Cancel")}
               </Button>

@@ -64,6 +64,8 @@ export function getEventsColumns(
               size="sm"
               variant="outline"
               className="gap-2"
+              disabled={!row.original.sourceId}
+              aria-label={`${t("Delete Event Subscription")} ${row.original.sourceId ?? t("Unnamed subscription")}`}
               onClick={(e) => {
                 e.stopPropagation()
                 onDelete(row.original)

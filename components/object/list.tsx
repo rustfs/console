@@ -126,6 +126,8 @@ export function ObjectList({
   const [nextToken, setNextToken] = React.useState<string | undefined>()
   const [showScrollShortcuts, setShowScrollShortcuts] = React.useState(false)
   const [bucketVersioningState, setBucketVersioningState] = React.useState<BucketVersioningState>("unknown")
+  const [versioningError, setVersioningError] = React.useState("")
+  const [versioningReload, setVersioningReload] = React.useState(0)
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [deleteDialogKeys, setDeleteDialogKeys] = React.useState<string[]>([])
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
@@ -324,15 +326,18 @@ export function ObjectList({
 
     const loadBucketVersioningStatus = async () => {
       setBucketVersioningState("unknown")
+      setVersioningError("")
 
       try {
         const resp = await getBucketVersioning(bucket)
         if (!cancelled) {
           setBucketVersioningState(resolveBucketVersioningState((resp as { Status?: string })?.Status))
         }
-      } catch {
+      } catch (error) {
+        console.error("Failed to load bucket versioning status:", error)
         if (!cancelled) {
-          setBucketVersioningState("disabled")
+          setBucketVersioningState("unknown")
+          setVersioningError(t("Failed to get data"))
         }
       }
     }
@@ -342,7 +347,7 @@ export function ObjectList({
     return () => {
       cancelled = true
     }
-  }, [bucket, getBucketVersioning])
+  }, [bucket, getBucketVersioning, t, versioningReload])
 
   const displayKey = React.useCallback(
     (key: string) => {
@@ -401,6 +406,20 @@ export function ObjectList({
   )
 
   const renameValidation = renameSourceKey ? validateObjectRename(renameSourceKey, renameName) : "empty"
+
+  const openDeleteDialog = React.useCallback(
+    (keys: string[]) => {
+      if (bucketVersioningState === "unknown") {
+        message.error(t("Failed to get data"))
+        return
+      }
+
+      setDeleteDialogKeys(keys)
+      setDeleteAllVersions(false)
+      setDeleteDialogOpen(true)
+    },
+    [bucketVersioningState, message, t],
+  )
 
   const columns: ColumnDef<ObjectRow>[] = React.useMemo(
     () => [
@@ -487,7 +506,13 @@ export function ObjectList({
               </>
             ) : null}
             {canCapability("objects.delete", { bucket, objectKey: row.original.Key }) ? (
-              <Button variant="outline" size="sm" onClick={() => openDeleteDialog([row.original.Key])}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openDeleteDialog([row.original.Key])}
+                disabled={bucketVersioningState === "unknown"}
+                aria-describedby={bucketVersioningState === "unknown" ? "object-versioning-status" : undefined}
+              >
                 <RiDeleteBin5Line className="size-4" aria-hidden />
                 <span>{t("Delete")}</span>
               </Button>
@@ -496,7 +521,19 @@ export function ObjectList({
         ),
       },
     ],
-    [t, displayKey, bucketPath, onOpenInfo, bucket, downloadFile, canCapability, onPreview, prefix],
+    [
+      t,
+      displayKey,
+      bucketPath,
+      onOpenInfo,
+      bucket,
+      downloadFile,
+      canCapability,
+      onPreview,
+      prefix,
+      bucketVersioningState,
+      openDeleteDialog,
+    ],
   )
 
   const { table, selectedRowIds } = useDataTable<ObjectRow>({
@@ -545,12 +582,6 @@ export function ObjectList({
     }
   }
 
-  const openDeleteDialog = (keys: string[]) => {
-    setDeleteDialogKeys(keys)
-    setDeleteAllVersions(false)
-    setDeleteDialogOpen(true)
-  }
-
   const openRenameDialog = (key: string) => {
     setRenameSourceKey(key)
     setRenameName(getObjectBaseName(key))
@@ -596,6 +627,11 @@ export function ObjectList({
   }
 
   const handleConfirmDelete = async () => {
+    if (bucketVersioningState === "unknown") {
+      message.error(t("Failed to get data"))
+      return
+    }
+
     const keys = [...deleteDialogKeys]
     setDeleteDialogOpen(false)
     if (!keys.length) return
@@ -720,7 +756,13 @@ export function ObjectList({
             {checkedKeys.length > 0 ? (
               <>
                 {canBulkDelete ? (
-                  <Button variant="outline" className="text-destructive border-destructive" onClick={handleBatchDelete}>
+                  <Button
+                    variant="outline"
+                    className="border-destructive text-destructive"
+                    onClick={handleBatchDelete}
+                    disabled={bucketVersioningState === "unknown"}
+                    aria-describedby={bucketVersioningState === "unknown" ? "object-versioning-status" : undefined}
+                  >
                     <RiDeleteBin5Line className="size-4" aria-hidden />
                     <span>{t("Delete Selected")}</span>
                   </Button>
@@ -761,6 +803,29 @@ export function ObjectList({
           </label>
         </div>
       </PageHeader>
+
+      {bucketVersioningState === "unknown" ? (
+        <div
+          id="object-versioning-status"
+          role={versioningError ? "alert" : "status"}
+          className="flex flex-col gap-3 border border-border bg-muted/30 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
+        >
+          <span className={versioningError ? "text-destructive" : "text-muted-foreground"}>
+            {versioningError || t("Loading…")}
+          </span>
+          {versioningError ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setVersioningReload((value) => value + 1)}
+            >
+              <RiRefreshLine className="size-4" aria-hidden />
+              {t("Refresh")}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
       <DataTable
         table={table}
@@ -846,7 +911,12 @@ export function ObjectList({
             />
             <AlertDialogAction
               render={
-                <Button variant="destructive" className="w-full sm:w-auto text-white" onClick={handleConfirmDelete}>
+                <Button
+                  variant="destructive"
+                  className="w-full text-white sm:w-auto"
+                  onClick={handleConfirmDelete}
+                  disabled={bucketVersioningState === "unknown"}
+                >
                   {t("Confirm")}
                 </Button>
               }

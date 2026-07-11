@@ -33,11 +33,11 @@ export function DataTablePagination<TData>({
   }
 
   return (
-    <div className={cn("flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", className)}>
+    <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between", className)}>
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">{t("Rows per page")}</span>
         <Select value={String(pagination.pageSize)} onValueChange={(value) => handlePageSizeChange(value ?? "")}>
-          <SelectTrigger className="w-24" aria-label={t("Rows per page")}>
+          <SelectTrigger className="h-10 w-24 sm:h-8" aria-label={t("Rows per page")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -50,26 +50,45 @@ export function DataTablePagination<TData>({
         </Select>
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center">
+        <span className="text-sm text-muted-foreground" role="status" aria-live="polite">
           {t("Page {current} of {total}", {
             current: pageCount === 0 ? 0 : currentPage,
             total: pageCount,
           })}
         </span>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" disabled={!canPrevious} onClick={() => table.setPageIndex(0)}>
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 w-full sm:h-7 sm:w-auto"
+            disabled={!canPrevious}
+            onClick={() => table.setPageIndex(0)}
+          >
             {t("First")}
           </Button>
-          <Button variant="outline" size="sm" disabled={!canPrevious} onClick={() => table.previousPage()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 w-full sm:h-7 sm:w-auto"
+            disabled={!canPrevious}
+            onClick={() => table.previousPage()}
+          >
             {t("Prev")}
           </Button>
-          <Button variant="outline" size="sm" disabled={!canNext} onClick={() => table.nextPage()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-10 w-full sm:h-7 sm:w-auto"
+            disabled={!canNext}
+            onClick={() => table.nextPage()}
+          >
             {t("Next")}
           </Button>
           <Button
             variant="outline"
             size="sm"
+            className="h-10 w-full sm:h-7 sm:w-auto"
             disabled={!canNext}
             onClick={() => table.setPageIndex(Math.max(pageCount - 1, 0))}
           >

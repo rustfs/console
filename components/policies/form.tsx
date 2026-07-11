@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
-import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { usePolicies } from "@/hooks/use-policies"
@@ -32,6 +32,7 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
   const [content, setContent] = React.useState("")
   const [errors, setErrors] = React.useState({ name: "", content: "" })
   const [submitting, setSubmitting] = React.useState(false)
+  const isEditing = Boolean(policy?.name)
 
   React.useEffect(() => {
     if (show && policy) {
@@ -50,6 +51,12 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
     setSubmitting(false)
   }
 
+  const handleOpenChange = (nextShow: boolean) => {
+    if (!submitting || nextShow) {
+      onShowChange(nextShow)
+    }
+  }
+
   const validate = () => {
     const newErrors = { name: "", content: "" }
     if (!name.trim()) {
@@ -59,7 +66,12 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
       newErrors.content = t("Please enter policy content")
     } else {
       try {
-        JSON.parse(content)
+        const parsed = JSON.parse(content)
+        if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+          newErrors.content = t("Policy must be a valid JSON object")
+        } else if (parsed.Statement !== undefined && !Array.isArray(parsed.Statement)) {
+          newErrors.content = t("Policy Statement must be an array")
+        }
       } catch {
         newErrors.content = t("Policy format invalid")
       }
@@ -82,6 +94,7 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
   }
 
   const submitForm = async () => {
+    if (submitting) return
     if (!validate()) {
       message.error(t("Please fill in the correct format"))
       return
@@ -104,61 +117,87 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
   }
 
   return (
-    <Dialog open={show} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t("Policy Original")}</DialogTitle>
+    <Dialog open={show} onOpenChange={handleOpenChange} disablePointerDismissal={submitting}>
+      <DialogContent
+        className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-3xl"
+        aria-busy={submitting}
+      >
+        <DialogHeader className="border-b px-4 py-3 pe-12">
+          <DialogTitle>{isEditing ? t("Edit Policy") : t("New Policy")}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 max-h-[80vh] overflow-auto px-2 -mx-2">
-          <Field>
-            <FieldLabel htmlFor="policy-name">{t("Policy Name")}</FieldLabel>
-            <FieldContent>
-              <Input
-                id="policy-name"
-                name="policy-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoComplete="off"
-                spellCheck={false}
-              />
-            </FieldContent>
-            {errors.name && <FieldDescription className="text-destructive">{errors.name}</FieldDescription>}
-          </Field>
+        <form
+          className="contents"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void submitForm()
+          }}
+        >
+          <div className="flex min-h-0 flex-col gap-4 overflow-hidden p-4">
+            <Field>
+              <FieldLabel htmlFor="policy-name">{t("Policy Name")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="policy-name"
+                  name="policy-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                  required
+                  disabled={isEditing || submitting}
+                  aria-invalid={Boolean(errors.name)}
+                  aria-describedby={errors.name ? "policy-name-error" : undefined}
+                />
+              </FieldContent>
+              <FieldError id="policy-name-error">{errors.name}</FieldError>
+            </Field>
 
-          <Field>
-            <FieldLabel htmlFor="policy-content">{t("Policy Original")}</FieldLabel>
-            <FieldContent>
-              <div className="max-h-[60vh] overflow-auto border">
+            <Field className="flex min-h-0 flex-1 flex-col">
+              <FieldLabel htmlFor="policy-content">{t("Policy")}</FieldLabel>
+              <FieldContent className="flex min-h-0 flex-1">
                 <Textarea
                   id="policy-content"
                   name="policy-content"
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[200px] font-mono text-xs"
+                  onChange={(e) => {
+                    setContent(e.target.value)
+                    if (errors.content) setErrors((current) => ({ ...current, content: "" }))
+                  }}
+                  className="min-h-[12rem] flex-1 resize-none overflow-y-auto font-mono text-xs"
                   spellCheck={false}
+                  required
+                  disabled={submitting}
+                  aria-invalid={Boolean(errors.content)}
+                  aria-describedby={errors.content ? "policy-content-error" : undefined}
                 />
-              </div>
-            </FieldContent>
-            {errors.content && <FieldDescription className="text-destructive">{errors.content}</FieldDescription>}
-          </Field>
-        </div>
+              </FieldContent>
+              <FieldError id="policy-content-error">{errors.content}</FieldError>
+            </Field>
+          </div>
 
-        <DialogFooter className="border-t pt-4">
-          <Button variant="outline" onClick={closeModal}>
-            {t("Cancel")}
-          </Button>
-          <Button variant="default" disabled={submitting} onClick={submitForm}>
-            {submitting ? (
-              <span className="flex items-center gap-2">
-                <Spinner className="size-4" />
-                {t("Submit")}
-              </span>
-            ) : (
-              t("Submit")
-            )}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={closeModal}
+              disabled={submitting}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button type="submit" variant="default" className="w-full sm:w-auto" disabled={submitting}>
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <Spinner className="size-4" />
+                  {t("Save")}
+                </span>
+              ) : (
+                t("Save")
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

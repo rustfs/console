@@ -30,20 +30,31 @@ export default function LifecyclePage() {
 
   return (
     <Page>
-      <PageHeader
-        actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/lifecycle" />}>
-            <RiArrowLeftLine className="size-4" aria-hidden />
-            <span>{t("Buckets")}</span>
-          </Button>
-        }
-      >
-        <h1 className="text-2xl font-bold">
-          {t("Lifecycle")}: {bucketName}
-        </h1>
-      </PageHeader>
-
-      <BucketLifecycleTab bucketName={bucketName} hideTitle />
+      <BucketLifecycleTab
+        key={bucketName}
+        bucketName={bucketName}
+        hideTitle
+        renderHeader={(actions) => (
+          <PageHeader
+            description={
+              <p className="text-sm text-muted-foreground">
+                {t("Bucket")}: <span className="break-all font-medium text-foreground">{bucketName}</span>
+              </p>
+            }
+            actions={
+              <>
+                <Button variant="outline" nativeButton={false} render={<Link href="/lifecycle" />}>
+                  <RiArrowLeftLine className="size-4" aria-hidden />
+                  <span>{t("Buckets")}</span>
+                </Button>
+                {actions}
+              </>
+            }
+          >
+            <h1 className="text-2xl font-bold">{t("Lifecycle")}</h1>
+          </PageHeader>
+        )}
+      />
     </Page>
   )
 }

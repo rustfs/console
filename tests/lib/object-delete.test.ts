@@ -18,9 +18,9 @@ test("shouldShowDeleteAllVersions only shows the option for enabled buckets", ()
   assert.equal(shouldShowDeleteAllVersions("unknown"), false)
 })
 
-test("shouldForceDeleteObjects keeps existing delete behavior outside enabled buckets", () => {
+test("shouldForceDeleteObjects never force deletes while versioning state is unknown", () => {
   assert.equal(shouldForceDeleteObjects("enabled", true), true)
   assert.equal(shouldForceDeleteObjects("enabled", false), false)
   assert.equal(shouldForceDeleteObjects("disabled", false), true)
-  assert.equal(shouldForceDeleteObjects("unknown", false), true)
+  assert.equal(shouldForceDeleteObjects("unknown", false), false)
 })

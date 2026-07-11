@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
-import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DateTimePicker } from "@/components/datetime-picker"
@@ -88,6 +88,12 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
     onVisibleChange(false)
   }
 
+  const handleOpenChange = (nextVisible: boolean) => {
+    if (!submitting || nextVisible) {
+      onVisibleChange(nextVisible)
+    }
+  }
+
   const validate = () => {
     const newErrors = { accessKey: "", secretKey: "", name: "" }
     if (!accessKey) {
@@ -139,6 +145,7 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
   }
 
   const submitForm = async () => {
+    if (submitting) return
     setSubmitError("")
     if (!validate()) {
       message.error(t("Please fill in the correct format"))
@@ -186,153 +193,190 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
   }
 
   return (
-    <Dialog open={visible} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className={cn("overflow-x-hidden sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
-        <DialogHeader>
+    <Dialog open={visible} onOpenChange={handleOpenChange} disablePointerDismissal={submitting}>
+      <DialogContent
+        className={cn(
+          "max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-xl",
+          !impliedPolicy && "sm:max-w-6xl",
+        )}
+        aria-busy={submitting}
+      >
+        <DialogHeader className="border-b px-4 py-3 pe-12">
           <DialogTitle>{t("Create Key")}</DialogTitle>
         </DialogHeader>
 
-        <div className="-mx-2 flex max-h-[80vh] flex-col gap-4 overflow-y-auto overflow-x-hidden px-2 lg:flex-row">
-          <div
-            className={cn(
-              impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
-            )}
-          >
-            <Field>
-              <FieldLabel htmlFor="create-access-key">{t("Access Key")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="create-access-key"
-                  name="create-access-key"
-                  value={accessKey}
-                  onChange={(e) => setAccessKey(e.target.value)}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-invalid={Boolean(errors.accessKey)}
-                />
-              </FieldContent>
-              <FieldError>{errors.accessKey}</FieldError>
-            </Field>
+        <form
+          className="contents"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void submitForm()
+          }}
+        >
+          <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+            <div className="flex flex-col gap-4 lg:min-h-[32rem] lg:flex-row">
+              <div
+                className={cn(
+                  impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
+                )}
+              >
+                <Field>
+                  <FieldLabel htmlFor="create-access-key">{t("Access Key")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="create-access-key"
+                      name="create-access-key"
+                      value={accessKey}
+                      onChange={(e) => setAccessKey(e.target.value)}
+                      autoComplete="off"
+                      spellCheck={false}
+                      required
+                      disabled={submitting}
+                      aria-invalid={Boolean(errors.accessKey)}
+                      aria-describedby={errors.accessKey ? "create-access-key-error" : undefined}
+                    />
+                  </FieldContent>
+                  <FieldError id="create-access-key-error">{errors.accessKey}</FieldError>
+                </Field>
 
-            <Field>
-              <FieldLabel htmlFor="create-secret-key">{t("Secret Key")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="create-secret-key"
-                  name="create-secret-key"
-                  type="password"
-                  value={secretKey}
-                  onChange={(e) => setSecretKey(e.target.value)}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-invalid={Boolean(errors.secretKey)}
-                />
-              </FieldContent>
-              <FieldError>{errors.secretKey}</FieldError>
-            </Field>
+                <Field>
+                  <FieldLabel htmlFor="create-secret-key">{t("Secret Key")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="create-secret-key"
+                      name="create-secret-key"
+                      type="password"
+                      value={secretKey}
+                      onChange={(e) => setSecretKey(e.target.value)}
+                      autoComplete="off"
+                      spellCheck={false}
+                      required
+                      disabled={submitting}
+                      aria-invalid={Boolean(errors.secretKey)}
+                      aria-describedby={errors.secretKey ? "create-secret-key-error" : undefined}
+                    />
+                  </FieldContent>
+                  <FieldError id="create-secret-key-error">{errors.secretKey}</FieldError>
+                </Field>
 
-            <Field>
-              <FieldLabel htmlFor="create-expiry">
-                {t("Expiry")}({t("empty is indicates permanent validity")})
-              </FieldLabel>
-              <FieldContent>
-                <DateTimePicker
-                  id="create-expiry"
-                  value={expiry}
-                  onChange={setExpiry}
-                  min={minExpiry}
-                  placeholder={t("Please select expiry date")}
-                />
-              </FieldContent>
-            </Field>
+                <Field>
+                  <FieldLabel htmlFor="create-expiry">{t("Expiry")}</FieldLabel>
+                  <FieldContent>
+                    <DateTimePicker
+                      id="create-expiry"
+                      value={expiry}
+                      onChange={setExpiry}
+                      min={minExpiry}
+                      placeholder={t("Please select expiry date")}
+                      disabled={submitting}
+                      aria-describedby="create-expiry-description"
+                    />
+                  </FieldContent>
+                  <FieldDescription id="create-expiry-description">
+                    {t("empty is indicates permanent validity")}
+                  </FieldDescription>
+                </Field>
 
-            <Field>
-              <FieldLabel htmlFor="create-name">{t("Name")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="create-name"
-                  name="create-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-invalid={Boolean(errors.name)}
-                />
-              </FieldContent>
-              <FieldError>{errors.name}</FieldError>
-            </Field>
+                <Field>
+                  <FieldLabel htmlFor="create-name">{t("Name")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="create-name"
+                      name="create-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      autoComplete="off"
+                      spellCheck={false}
+                      required
+                      disabled={submitting}
+                      aria-invalid={Boolean(errors.name)}
+                      aria-describedby={errors.name ? "create-name-error" : undefined}
+                    />
+                  </FieldContent>
+                  <FieldError id="create-name-error">{errors.name}</FieldError>
+                </Field>
 
-            <Field>
-              <FieldLabel htmlFor="create-description">{t("Description")}</FieldLabel>
-              <FieldContent>
-                <Textarea
-                  id="create-description"
-                  name="create-description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                />
-              </FieldContent>
-            </Field>
+                <Field>
+                  <FieldLabel htmlFor="create-description">{t("Description")}</FieldLabel>
+                  <FieldContent>
+                    <Textarea
+                      id="create-description"
+                      name="create-description"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={3}
+                      disabled={submitting}
+                    />
+                  </FieldContent>
+                </Field>
 
-            <Field orientation="responsive" className="items-start gap-3 border p-3">
-              <FieldLabel htmlFor="create-implied-policy" className="text-sm font-medium">
-                {t("Use main account policy")}
-              </FieldLabel>
-              <FieldContent className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                <p className="text-xs text-muted-foreground">
-                  {t("Automatically inherit the main account policy when enabled.")}
-                </p>
-                <Switch
-                  id="create-implied-policy"
-                  name="create-implied-policy"
-                  checked={impliedPolicy}
-                  onCheckedChange={setImpliedPolicy}
-                />
-              </FieldContent>
-            </Field>
+                <Field orientation="responsive" className="items-start gap-3 border p-3">
+                  <FieldLabel htmlFor="create-implied-policy" className="text-sm font-medium">
+                    {t("Use main account policy")}
+                  </FieldLabel>
+                  <FieldContent className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                    <p className="text-xs text-muted-foreground">
+                      {t("Automatically inherit the main account policy when enabled.")}
+                    </p>
+                    <Switch
+                      id="create-implied-policy"
+                      name="create-implied-policy"
+                      checked={impliedPolicy}
+                      onCheckedChange={setImpliedPolicy}
+                      disabled={submitting}
+                    />
+                  </FieldContent>
+                </Field>
+              </div>
+
+              {!impliedPolicy && (
+                <div className="min-h-[20rem] flex-1 lg:min-h-0">
+                  <Field className="h-full">
+                    <FieldLabel htmlFor="create-policy">{t("Current user policy")}</FieldLabel>
+                    <FieldContent className="h-full">
+                      <Textarea
+                        id="create-policy"
+                        name="create-policy"
+                        value={policy}
+                        onChange={(e) => setPolicy(e.target.value)}
+                        className="min-h-[24rem] font-mono text-xs lg:h-full"
+                        spellCheck={false}
+                        disabled={submitting}
+                      />
+                    </FieldContent>
+                  </Field>
+                </div>
+              )}
+            </div>
           </div>
 
-          {!impliedPolicy && (
-            <div className="flex-1 max-h-[60vh] overflow-auto">
-              <Field className="h-full">
-                <FieldLabel htmlFor="create-policy">{t("Current user policy")}</FieldLabel>
-                <FieldContent className="h-full">
-                  <Textarea
-                    id="create-policy"
-                    name="create-policy"
-                    value={policy}
-                    onChange={(e) => setPolicy(e.target.value)}
-                    className="h-full min-h-[200px] font-mono text-xs"
-                    spellCheck={false}
-                  />
-                </FieldContent>
-              </Field>
-            </div>
+          {submitError && (
+            <p role="alert" className="px-4 text-sm text-destructive">
+              {submitError}
+            </p>
           )}
-        </div>
 
-        {submitError && (
-          <p role="alert" className="px-2 text-sm text-destructive">
-            {submitError}
-          </p>
-        )}
-
-        <DialogFooter className="border-t pt-4">
-          <Button variant="outline" onClick={closeModal}>
-            {t("Cancel")}
-          </Button>
-          <Button variant="default" disabled={submitting} onClick={submitForm}>
-            {submitting ? (
-              <span className="flex items-center gap-2">
-                <Spinner className="size-4" />
-                {t("Submit")}
-              </span>
-            ) : (
-              t("Submit")
-            )}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={closeModal}
+              disabled={submitting}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button type="submit" variant="default" className="w-full sm:w-auto" disabled={submitting}>
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <Spinner className="size-4" />
+                  {t("Submit")}
+                </span>
+              ) : (
+                t("Submit")
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

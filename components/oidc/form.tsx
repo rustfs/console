@@ -58,11 +58,11 @@ export function OidcForm({
   const showRedirectUri = !values.redirect_uri_dynamic
 
   return (
-    <div className="space-y-4 border p-4 md:p-6">
+    <section className="space-y-4 border p-4 md:p-6" aria-labelledby="oidc-provider-form-title">
       <div className="flex flex-col gap-3 border-b pb-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-lg font-semibold">
+            <h2 id="oidc-provider-form-title" className="text-lg font-semibold">
               {isCreateMode
                 ? t("Add Provider")
                 : values.display_name.trim() || values.provider_id || t("OIDC Provider")}
@@ -155,7 +155,7 @@ export function OidcForm({
           <FieldError>{errors.provider_id}</FieldError>
         </Field>
 
-        <Field orientation="responsive" className="items-start gap-3 border p-3">
+        <Field orientation="responsive" className="items-start gap-3 py-2">
           <FieldLabel htmlFor="enabled">{t("Enabled")}</FieldLabel>
           <FieldContent className="gap-2">
             <div className="flex items-center gap-3">
@@ -283,7 +283,7 @@ export function OidcForm({
           <FieldError>{errors.other_audiences}</FieldError>
         </Field>
 
-        <Field orientation="responsive" className="items-start gap-3 border p-3">
+        <Field orientation="responsive" className="items-start gap-3 py-2">
           <FieldLabel htmlFor="redirect_uri_dynamic">{t("Use Dynamic Redirect URI")}</FieldLabel>
           <FieldContent className="gap-2">
             <div className="flex items-center gap-3">
@@ -329,124 +329,135 @@ export function OidcForm({
           <FieldError>{errors.redirect_uri}</FieldError>
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="claim_name">{t("Claim Name")}</FieldLabel>
-          <FieldContent>
-            <Input
-              id="claim_name"
-              name="claim_name"
-              value={values.claim_name}
-              onChange={(event) => onChange("claim_name", event.target.value)}
-              autoComplete="off"
-              placeholder={t("Claim Name")}
-              spellCheck={false}
-              disabled={isReadOnly}
-            />
-          </FieldContent>
-        </Field>
+        <details className="space-y-4 border-t pt-4 md:col-span-2">
+          <summary className="cursor-pointer text-sm font-semibold">
+            {t("Advanced Settings")}
+            <span className="ml-2 font-normal text-muted-foreground">
+              {t("Claim Name")} · {t("Groups Claim")} · {t("Roles Claim")}
+            </span>
+          </summary>
 
-        <Field>
-          <FieldLabel htmlFor="claim_prefix">{t("Claim Prefix")}</FieldLabel>
-          <FieldContent>
-            <Input
-              id="claim_prefix"
-              name="claim_prefix"
-              value={values.claim_prefix}
-              onChange={(event) => onChange("claim_prefix", event.target.value)}
-              autoComplete="off"
-              placeholder={t("Claim Prefix")}
-              spellCheck={false}
-              disabled={isReadOnly}
-            />
-          </FieldContent>
-        </Field>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field>
+              <FieldLabel htmlFor="claim_name">{t("Claim Name")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="claim_name"
+                  name="claim_name"
+                  value={values.claim_name}
+                  onChange={(event) => onChange("claim_name", event.target.value)}
+                  autoComplete="off"
+                  placeholder={t("Claim Name")}
+                  spellCheck={false}
+                  disabled={isReadOnly}
+                />
+              </FieldContent>
+            </Field>
 
-        <Field>
-          <FieldLabel htmlFor="role_policy">{t("Role Policy")}</FieldLabel>
-          <FieldContent>
-            <Input
-              id="role_policy"
-              name="role_policy"
-              value={values.role_policy}
-              onChange={(event) => onChange("role_policy", event.target.value)}
-              autoComplete="off"
-              placeholder={t("Role Policy")}
-              spellCheck={false}
-              disabled={isReadOnly}
-            />
-          </FieldContent>
-          <FieldDescription>
-            {t("Optional. Leave empty to let the backend apply its default role mapping.")}
-          </FieldDescription>
-        </Field>
+            <Field>
+              <FieldLabel htmlFor="claim_prefix">{t("Claim Prefix")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="claim_prefix"
+                  name="claim_prefix"
+                  value={values.claim_prefix}
+                  onChange={(event) => onChange("claim_prefix", event.target.value)}
+                  autoComplete="off"
+                  placeholder={t("Claim Prefix")}
+                  spellCheck={false}
+                  disabled={isReadOnly}
+                />
+              </FieldContent>
+            </Field>
 
-        <Field>
-          <FieldLabel htmlFor="groups_claim">{t("Groups Claim")}</FieldLabel>
-          <FieldContent>
-            <Input
-              id="groups_claim"
-              name="groups_claim"
-              value={values.groups_claim}
-              onChange={(event) => onChange("groups_claim", event.target.value)}
-              autoComplete="off"
-              placeholder={t("Groups Claim")}
-              spellCheck={false}
-              disabled={isReadOnly}
-            />
-          </FieldContent>
-        </Field>
+            <Field>
+              <FieldLabel htmlFor="role_policy">{t("Role Policy")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="role_policy"
+                  name="role_policy"
+                  value={values.role_policy}
+                  onChange={(event) => onChange("role_policy", event.target.value)}
+                  autoComplete="off"
+                  placeholder={t("Role Policy")}
+                  spellCheck={false}
+                  disabled={isReadOnly}
+                />
+              </FieldContent>
+              <FieldDescription>
+                {t("Optional. Leave empty to let the backend apply its default role mapping.")}
+              </FieldDescription>
+            </Field>
 
-        <Field>
-          <FieldLabel htmlFor="roles_claim">{t("Roles Claim")}</FieldLabel>
-          <FieldContent>
-            <Input
-              id="roles_claim"
-              name="roles_claim"
-              value={values.roles_claim}
-              onChange={(event) => onChange("roles_claim", event.target.value)}
-              autoComplete="off"
-              placeholder="roles"
-              spellCheck={false}
-              disabled={isReadOnly}
-            />
-          </FieldContent>
-          <FieldDescription>
-            {t("Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.")}
-          </FieldDescription>
-        </Field>
+            <Field>
+              <FieldLabel htmlFor="groups_claim">{t("Groups Claim")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="groups_claim"
+                  name="groups_claim"
+                  value={values.groups_claim}
+                  onChange={(event) => onChange("groups_claim", event.target.value)}
+                  autoComplete="off"
+                  placeholder={t("Groups Claim")}
+                  spellCheck={false}
+                  disabled={isReadOnly}
+                />
+              </FieldContent>
+            </Field>
 
-        <Field>
-          <FieldLabel htmlFor="email_claim">{t("Email Claim")}</FieldLabel>
-          <FieldContent>
-            <Input
-              id="email_claim"
-              name="email_claim"
-              value={values.email_claim}
-              onChange={(event) => onChange("email_claim", event.target.value)}
-              autoComplete="off"
-              placeholder={t("Email Claim")}
-              spellCheck={false}
-              disabled={isReadOnly}
-            />
-          </FieldContent>
-        </Field>
+            <Field>
+              <FieldLabel htmlFor="roles_claim">{t("Roles Claim")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="roles_claim"
+                  name="roles_claim"
+                  value={values.roles_claim}
+                  onChange={(event) => onChange("roles_claim", event.target.value)}
+                  autoComplete="off"
+                  placeholder="roles"
+                  spellCheck={false}
+                  disabled={isReadOnly}
+                />
+              </FieldContent>
+              <FieldDescription>
+                {t("Optional. Separate claim for role values (e.g. roles). Leave empty to use groups claim only.")}
+              </FieldDescription>
+            </Field>
 
-        <Field>
-          <FieldLabel htmlFor="username_claim">{t("Username Claim")}</FieldLabel>
-          <FieldContent>
-            <Input
-              id="username_claim"
-              name="username_claim"
-              value={values.username_claim}
-              onChange={(event) => onChange("username_claim", event.target.value)}
-              autoComplete="off"
-              placeholder={t("Username Claim")}
-              spellCheck={false}
-              disabled={isReadOnly}
-            />
-          </FieldContent>
-        </Field>
+            <Field>
+              <FieldLabel htmlFor="email_claim">{t("Email Claim")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="email_claim"
+                  name="email_claim"
+                  value={values.email_claim}
+                  onChange={(event) => onChange("email_claim", event.target.value)}
+                  autoComplete="off"
+                  placeholder={t("Email Claim")}
+                  spellCheck={false}
+                  disabled={isReadOnly}
+                />
+              </FieldContent>
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="username_claim">{t("Username Claim")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="username_claim"
+                  name="username_claim"
+                  value={values.username_claim}
+                  onChange={(event) => onChange("username_claim", event.target.value)}
+                  autoComplete="off"
+                  placeholder={t("Username Claim")}
+                  spellCheck={false}
+                  disabled={isReadOnly}
+                />
+              </FieldContent>
+            </Field>
+          </div>
+        </details>
       </div>
-    </div>
+    </section>
   )
 }

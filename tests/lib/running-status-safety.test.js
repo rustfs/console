@@ -1,0 +1,66 @@
+import test from "node:test"
+import assert from "node:assert/strict"
+import fs from "node:fs"
+
+const hookSource = fs.readFileSync("hooks/use-performance-data.ts", "utf8")
+const systemSource = fs.readFileSync("hooks/use-system.ts", "utf8")
+const pageSource = fs.readFileSync("app/(dashboard)/status/page.tsx", "utf8")
+const serverSource = fs.readFileSync("app/(dashboard)/_components/performance-server-list.tsx", "utf8")
+const usageSource = fs.readFileSync("app/(dashboard)/_components/performance-usage-card.tsx", "utf8")
+const healthSource = fs.readFileSync("app/(dashboard)/_components/performance-infrastructure-card.tsx", "utf8")
+const backendSource = fs.readFileSync("app/(dashboard)/_components/performance-backend-card.tsx", "utf8")
+
+test("performance refresh keeps partial data and rejects stale responses", () => {
+  assert.match(hookSource, /Promise\.allSettled/)
+  assert.match(hookSource, /requestVersionRef/)
+  assert.match(hookSource, /sourceErrors/)
+  assert.match(hookSource, /lastUpdatedAt/)
+  assert.match(hookSource, /metricsUpdatedAt/)
+  assert.match(hookSource, /setMetricsUpdatedAt\(new Date\(\)\)/)
+  assert.match(hookSource, /refreshing/)
+  assert.match(hookSource, /new AbortController/)
+  assert.match(hookSource, /controller\.abort/)
+  assert.match(hookSource, /document\.visibilityState/)
+  assert.match(hookSource, /hasSystemDataRef\.current = false[\s\S]*setSystemInfo\(\{\}\)/)
+  assert.doesNotMatch(hookSource, /setLoading\(false\)[\s\S]*getSystemMetrics/)
+  assert.ok((systemSource.match(/suppress403Redirect: true/g) ?? []).length >= 3)
+})
+
+test("running status distinguishes unknown values and exposes recovery feedback", () => {
+  assert.match(pageSource, /role="alert"/)
+  assert.match(pageSource, /aria-busy=\{refreshing\}/)
+  assert.match(pageSource, /lastUpdatedAt/)
+  assert.match(pageSource, /sourceErrors/)
+  assert.match(pageSource, /order-2 xl:order-3 xl:col-span-2/)
+  assert.match(pageSource, /scannerCycle/)
+  assert.match(pageSource, /t\("Scanner Status"\)/)
+  assert.doesNotMatch(pageSource, /dayjs\(last\)/)
+  assert.doesNotMatch(pageSource, /t\("Uptime"\)/)
+  assert.doesNotMatch(pageSource, /t\("Current Scan Started"\)/)
+})
+
+test("server health is textual, filterable, and usable on narrow screens", () => {
+  assert.match(serverSource, /aria-pressed=/)
+  assert.match(serverSource, /<Badge/)
+  assert.match(serverSource, /unknown/)
+  assert.match(serverSource, /min-h-11/)
+  assert.match(serverSource, /overflow-wrap:anywhere/)
+  assert.match(serverSource, /grid gap-3 md:grid-cols-2/)
+  assert.match(serverSource, /No servers match the current filter/)
+  assert.match(serverSource, /stateCounts\[state\] > 0 \|\| filterBy === state/)
+  assert.match(serverSource, /reportedServers\.length === 0/)
+  assert.doesNotMatch(serverSource, /<ScrollArea/)
+  assert.doesNotMatch(serverSource, /dayjs\(\)\.subtract/)
+})
+
+test("status sections expose semantic headings and named progress", () => {
+  assert.match(usageSource, /<h2/)
+  assert.match(usageSource, /aria-label=/)
+  assert.match(healthSource, /<h2/)
+  assert.match(healthSource, /Needs attention/)
+  assert.match(healthSource, /serverCounts\.some/)
+  assert.match(healthSource, /diskCounts\.some/)
+  assert.match(healthSource, /unavailableLabel/)
+  assert.match(backendSource, /<h2/)
+  assert.match(backendSource, /Storage Configuration/)
+})

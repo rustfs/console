@@ -95,7 +95,7 @@ export function usePoolOperations() {
   )
 
   const getRebalanceViewModel = useCallback(async (): Promise<RebalanceViewModel> => {
-    const [overview, status] = await Promise.all([getPoolsOverview(), getRebalanceStatus().catch(() => null)])
+    const [overview, status] = await Promise.all([getPoolsOverview(), getRebalanceStatus()])
     return {
       overview,
       status,
@@ -105,12 +105,9 @@ export function usePoolOperations() {
 
   const getDecommissionViewModel = useCallback(
     async (poolId?: string, isConfirming = false): Promise<DecommissionViewModel> => {
-      const [overview, rebalanceStatus] = await Promise.all([
-        getPoolsOverview(),
-        getRebalanceStatus().catch(() => null),
-      ])
+      const [overview, rebalanceStatus] = await Promise.all([getPoolsOverview(), getRebalanceStatus()])
       const rebalanceState = deriveRebalanceDisplayState(rebalanceStatus, overview.supportState)
-      const decommissionStatus = poolId ? await getDecommissionStatus(poolId).catch(() => null) : null
+      const decommissionStatus = poolId ? await getDecommissionStatus(poolId) : null
 
       return {
         overview,

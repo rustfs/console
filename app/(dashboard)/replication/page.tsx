@@ -30,20 +30,31 @@ export default function ReplicationPage() {
 
   return (
     <Page>
-      <PageHeader
-        actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/replication" />}>
-            <RiArrowLeftLine className="size-4" aria-hidden />
-            <span>{t("Buckets")}</span>
-          </Button>
-        }
-      >
-        <h1 className="text-2xl font-bold">
-          {t("Bucket Replication")}: {bucketName}
-        </h1>
-      </PageHeader>
-
-      <BucketReplicationTab bucketName={bucketName} hideTitle />
+      <BucketReplicationTab
+        key={bucketName}
+        bucketName={bucketName}
+        hideTitle
+        renderHeader={(actions) => (
+          <PageHeader
+            description={
+              <p className="text-sm text-muted-foreground">
+                {t("Bucket")}: <span className="break-all font-medium text-foreground">{bucketName}</span>
+              </p>
+            }
+            actions={
+              <>
+                <Button variant="outline" nativeButton={false} render={<Link href="/replication" />}>
+                  <RiArrowLeftLine className="size-4" aria-hidden />
+                  <span>{t("Buckets")}</span>
+                </Button>
+                {actions}
+              </>
+            }
+          >
+            <h1 className="text-2xl font-bold">{t("Bucket Replication")}</h1>
+          </PageHeader>
+        )}
+      />
     </Page>
   )
 }

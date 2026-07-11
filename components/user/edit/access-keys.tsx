@@ -2,14 +2,14 @@
 
 import * as React from "react"
 import dayjs from "dayjs"
-import { RiAddLine, RiDeleteBin5Line, RiEdit2Line } from "@remixicon/react"
+import { RiAddLine, RiDeleteBin5Line, RiEdit2Line, RiRefreshLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
-import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { SearchInput } from "@/components/search-input"
 import { DateTimePicker } from "@/components/datetime-picker"
@@ -84,9 +84,12 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
   const [description, setDescription] = React.useState("")
   const [expiry, setExpiry] = React.useState<string | null>(null)
   const [policy, setPolicy] = React.useState("{}")
-  const [parentPolicy, setParentPolicy] = React.useState("{}")
   const [impliedPolicy, setImpliedPolicy] = React.useState(true)
   const [submitting, setSubmitting] = React.useState(false)
+  const [parentPolicyLoading, setParentPolicyLoading] = React.useState(false)
+  const [parentPolicyError, setParentPolicyError] = React.useState("")
+  const [parentPolicyVersion, setParentPolicyVersion] = React.useState(0)
+  const [formOwner, setFormOwner] = React.useState("")
   const [errors, setErrors] = React.useState({
     accessKey: "",
     secretKey: "",
@@ -94,9 +97,15 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
   })
 
   const minExpiry = React.useMemo(() => new Date().toISOString(), [])
+  const ownerMismatch = open && formOwner !== userName
 
   React.useEffect(() => {
-    if (!open) return
+    if (!open) {
+      setFormOwner("")
+      return
+    }
+    const targetUser = userName
+    setFormOwner(targetUser)
 
     try {
       setAccessKey(makeRandomString(20))
@@ -110,29 +119,43 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
     setName("")
     setDescription("")
     setExpiry(null)
+    setPolicy("{}")
     setImpliedPolicy(true)
     setErrors({ accessKey: "", secretKey: "", name: "" })
-
-    getPolicyByUserName(userName)
-      .then((result) => {
-        const value = JSON.stringify(result ?? {}, null, 2)
-        setParentPolicy(value)
-        setPolicy(value)
-      })
-      .catch(() => {
-        setParentPolicy("{}")
-        setPolicy("{}")
-      })
-  }, [getPolicyByUserName, message, open, t, userName])
+  }, [message, open, t, userName])
 
   React.useEffect(() => {
-    if (impliedPolicy) {
-      setPolicy(parentPolicy)
+    if (!open) return
+    let cancelled = false
+    const targetUser = userName
+    setParentPolicyError("")
+    setParentPolicyLoading(true)
+
+    getPolicyByUserName(targetUser)
+      .then((result) => {
+        if (cancelled) return
+        const value = JSON.stringify(result ?? {}, null, 2)
+        setPolicy(value)
+      })
+      .catch((error) => {
+        if (cancelled) return
+        setParentPolicyError((error as Error)?.message || t("Failed to get data"))
+      })
+      .finally(() => {
+        if (!cancelled) setParentPolicyLoading(false)
+      })
+
+    return () => {
+      cancelled = true
     }
-  }, [impliedPolicy, parentPolicy])
+  }, [getPolicyByUserName, open, parentPolicyVersion, t, userName])
 
   const closeModal = () => {
     onOpenChange(false)
+  }
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!submitting || nextOpen) onOpenChange(nextOpen)
   }
 
   const validate = () => {
@@ -159,6 +182,7 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
   }
 
   const submitForm = async () => {
+    if (ownerMismatch || submitting || (!impliedPolicy && (parentPolicyLoading || parentPolicyError))) return
     if (!validate()) {
       message.error(t("Please fill in the correct format"))
       return
@@ -200,146 +224,212 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
   }
 
   return (
-    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className={cn("overflow-x-hidden sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
-        <DialogHeader>
+    <Dialog open={open} onOpenChange={handleOpenChange} disablePointerDismissal={submitting}>
+      <DialogContent
+        className={cn(
+          "max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-xl",
+          !impliedPolicy && "sm:max-w-6xl",
+        )}
+        aria-busy={ownerMismatch || parentPolicyLoading || submitting}
+      >
+        <DialogHeader className="border-b px-4 py-3 pe-12">
           <DialogTitle>{t("Create Key")}</DialogTitle>
         </DialogHeader>
 
-        <div className="-mx-2 flex max-h-[80vh] flex-col gap-4 overflow-y-auto overflow-x-hidden px-2 lg:flex-row">
-          <div
-            className={cn(
-              impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
+        <form
+          className="contents"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void submitForm()
+          }}
+        >
+          <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+            {ownerMismatch ? (
+              <div
+                className="flex min-h-72 items-center justify-center gap-2 text-sm text-muted-foreground"
+                role="status"
+              >
+                <Spinner className="size-4" />
+                {t("Loading…")}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4 lg:min-h-[32rem] lg:flex-row">
+                <div
+                  className={cn(
+                    impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
+                  )}
+                >
+                  <Field>
+                    <FieldLabel htmlFor="create-user-access-key">{t("Access Key")}</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="create-user-access-key"
+                        name="create-user-access-key"
+                        value={accessKey}
+                        onChange={(event) => setAccessKey(event.target.value)}
+                        autoComplete="off"
+                        spellCheck={false}
+                        required
+                        disabled={submitting}
+                        aria-invalid={Boolean(errors.accessKey)}
+                        aria-describedby={errors.accessKey ? "create-user-access-key-error" : undefined}
+                      />
+                    </FieldContent>
+                    <FieldError id="create-user-access-key-error">{errors.accessKey}</FieldError>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="create-user-secret-key">{t("Secret Key")}</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="create-user-secret-key"
+                        name="create-user-secret-key"
+                        type="password"
+                        value={secretKey}
+                        onChange={(event) => setSecretKey(event.target.value)}
+                        autoComplete="off"
+                        spellCheck={false}
+                        required
+                        disabled={submitting}
+                        aria-invalid={Boolean(errors.secretKey)}
+                        aria-describedby={errors.secretKey ? "create-user-secret-key-error" : undefined}
+                      />
+                    </FieldContent>
+                    <FieldError id="create-user-secret-key-error">{errors.secretKey}</FieldError>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="create-user-expiry">{t("Expiry")}</FieldLabel>
+                    <FieldContent>
+                      <DateTimePicker
+                        id="create-user-expiry"
+                        value={expiry}
+                        onChange={setExpiry}
+                        min={minExpiry}
+                        placeholder={t("Please select expiry date")}
+                        disabled={submitting}
+                        aria-describedby="create-user-expiry-description"
+                      />
+                    </FieldContent>
+                    <FieldDescription id="create-user-expiry-description">
+                      {t("empty is indicates permanent validity")}
+                    </FieldDescription>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="create-user-key-name">{t("Name")}</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="create-user-key-name"
+                        name="create-user-key-name"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        autoComplete="off"
+                        spellCheck={false}
+                        required
+                        disabled={submitting}
+                        aria-invalid={Boolean(errors.name)}
+                        aria-describedby={errors.name ? "create-user-key-name-error" : undefined}
+                      />
+                    </FieldContent>
+                    <FieldError id="create-user-key-name-error">{errors.name}</FieldError>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="create-user-key-description">{t("Description")}</FieldLabel>
+                    <FieldContent>
+                      <Textarea
+                        id="create-user-key-description"
+                        name="create-user-key-description"
+                        value={description}
+                        onChange={(event) => setDescription(event.target.value)}
+                        rows={3}
+                        disabled={submitting}
+                      />
+                    </FieldContent>
+                  </Field>
+
+                  <Field orientation="responsive" className="items-start gap-3 border p-3">
+                    <FieldLabel htmlFor="create-user-access-key-implied-policy" className="text-sm font-medium">
+                      {t("Use main account policy")}
+                    </FieldLabel>
+                    <FieldContent className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                      <p className="text-xs text-muted-foreground">
+                        {t("Automatically inherit the main account policy when enabled.")}
+                      </p>
+                      <Switch
+                        id="create-user-access-key-implied-policy"
+                        checked={impliedPolicy}
+                        onCheckedChange={setImpliedPolicy}
+                        disabled={parentPolicyLoading || Boolean(parentPolicyError) || submitting}
+                      />
+                    </FieldContent>
+                    {parentPolicyLoading ? (
+                      <FieldDescription className="flex items-center gap-2" role="status">
+                        <Spinner className="size-3.5" />
+                        {t("Loading…")}
+                      </FieldDescription>
+                    ) : parentPolicyError ? (
+                      <div className="flex flex-wrap items-center gap-2" role="alert">
+                        <FieldError className="flex-1">{parentPolicyError}</FieldError>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setParentPolicyVersion((current) => current + 1)}
+                        >
+                          <RiRefreshLine className="size-4" aria-hidden />
+                          {t("Refresh")}
+                        </Button>
+                      </div>
+                    ) : null}
+                  </Field>
+                </div>
+
+                {!impliedPolicy ? (
+                  <div className="min-h-[20rem] flex-1 lg:min-h-0">
+                    <Field className="h-full">
+                      <FieldLabel htmlFor="create-user-policy">{t("Current user policy")}</FieldLabel>
+                      <FieldContent className="h-full">
+                        <Textarea
+                          id="create-user-policy"
+                          name="create-user-policy"
+                          value={policy}
+                          onChange={(event) => setPolicy(event.target.value)}
+                          className="min-h-[24rem] font-mono text-xs lg:h-full"
+                          spellCheck={false}
+                          disabled={parentPolicyLoading || submitting}
+                        />
+                      </FieldContent>
+                    </Field>
+                  </div>
+                ) : null}
+              </div>
             )}
-          >
-            <Field>
-              <FieldLabel htmlFor="create-user-access-key">{t("Access Key")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="create-user-access-key"
-                  name="create-user-access-key"
-                  value={accessKey}
-                  onChange={(event) => setAccessKey(event.target.value)}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-invalid={Boolean(errors.accessKey)}
-                />
-              </FieldContent>
-              <FieldError>{errors.accessKey}</FieldError>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="create-user-secret-key">{t("Secret Key")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="create-user-secret-key"
-                  name="create-user-secret-key"
-                  type="password"
-                  value={secretKey}
-                  onChange={(event) => setSecretKey(event.target.value)}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-invalid={Boolean(errors.secretKey)}
-                />
-              </FieldContent>
-              <FieldError>{errors.secretKey}</FieldError>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="create-user-expiry">
-                {t("Expiry")}({t("empty is indicates permanent validity")})
-              </FieldLabel>
-              <FieldContent>
-                <DateTimePicker
-                  id="create-user-expiry"
-                  value={expiry}
-                  onChange={setExpiry}
-                  min={minExpiry}
-                  placeholder={t("Please select expiry date")}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="create-user-key-name">{t("Name")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="create-user-key-name"
-                  name="create-user-key-name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  autoComplete="off"
-                  spellCheck={false}
-                  aria-invalid={Boolean(errors.name)}
-                />
-              </FieldContent>
-              <FieldError>{errors.name}</FieldError>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="create-user-key-description">{t("Description")}</FieldLabel>
-              <FieldContent>
-                <Textarea
-                  id="create-user-key-description"
-                  name="create-user-key-description"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  rows={3}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field orientation="responsive" className="items-start gap-3 border p-3">
-              <FieldLabel htmlFor="create-user-access-key-implied-policy" className="text-sm font-medium">
-                {t("Use main account policy")}
-              </FieldLabel>
-              <FieldContent className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                <p className="text-xs text-muted-foreground">
-                  {t("Automatically inherit the main account policy when enabled.")}
-                </p>
-                <Switch
-                  id="create-user-access-key-implied-policy"
-                  checked={impliedPolicy}
-                  onCheckedChange={setImpliedPolicy}
-                />
-              </FieldContent>
-            </Field>
           </div>
 
-          {!impliedPolicy ? (
-            <div className="max-h-[60vh] flex-1 overflow-y-auto overflow-x-hidden">
-              <Field className="h-full">
-                <FieldLabel htmlFor="create-user-policy">{t("Current user policy")}</FieldLabel>
-                <FieldContent className="h-full">
-                  <Textarea
-                    id="create-user-policy"
-                    name="create-user-policy"
-                    value={policy}
-                    onChange={(event) => setPolicy(event.target.value)}
-                    className="h-full min-h-[200px] font-mono text-xs"
-                    spellCheck={false}
-                  />
-                </FieldContent>
-              </Field>
-            </div>
-          ) : null}
-        </div>
-
-        <DialogFooter className="border-t pt-4">
-          <Button variant="outline" onClick={closeModal}>
-            {t("Cancel")}
-          </Button>
-          <Button variant="default" disabled={submitting} onClick={submitForm}>
-            {submitting ? (
-              <span className="flex items-center gap-2">
-                <Spinner className="size-4" />
-                {t("Submit")}
-              </span>
-            ) : (
-              t("Submit")
-            )}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+            <Button type="button" variant="outline" onClick={closeModal} disabled={submitting}>
+              {t("Cancel")}
+            </Button>
+            <Button
+              type="submit"
+              variant="default"
+              disabled={
+                ownerMismatch || submitting || (!impliedPolicy && (parentPolicyLoading || Boolean(parentPolicyError)))
+              }
+            >
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <Spinner className="size-4" />
+                  {t("Submit")}
+                </span>
+              ) : (
+                t("Submit")
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
@@ -353,21 +443,38 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
 
   const [accessKey, setAccessKey] = React.useState("")
   const [policy, setPolicy] = React.useState("{}")
-  const [parentPolicy, setParentPolicy] = React.useState("{}")
   const [impliedPolicy, setImpliedPolicy] = React.useState(true)
   const [expiry, setExpiry] = React.useState<string | null>(null)
   const [name, setName] = React.useState("")
   const [description, setDescription] = React.useState("")
   const [status, setStatus] = React.useState<"on" | "off">("on")
   const [submitting, setSubmitting] = React.useState(false)
+  const [loading, setLoading] = React.useState(false)
+  const [loadError, setLoadError] = React.useState("")
+  const [loadVersion, setLoadVersion] = React.useState(0)
+  const [policyError, setPolicyError] = React.useState("")
 
   const minExpiry = React.useMemo(() => dayjs().toISOString(), [])
 
   React.useEffect(() => {
     if (!open || !row?.accessKey) return
+    let cancelled = false
+    const targetAccessKey = row.accessKey
 
-    Promise.all([getServiceAccount(row.accessKey), getPolicyByUserName(userName)])
+    setAccessKey(targetAccessKey)
+    setPolicy("{}")
+    setImpliedPolicy(true)
+    setExpiry(null)
+    setName("")
+    setDescription("")
+    setStatus("on")
+    setPolicyError("")
+    setLoadError("")
+    setLoading(true)
+
+    Promise.all([getServiceAccount(targetAccessKey), getPolicyByUserName(userName)])
       .then(([result, parentUserPolicy]) => {
+        if (cancelled) return
         const response = result as {
           impliedPolicy?: boolean
           policy?: unknown
@@ -381,8 +488,6 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
         const nextImpliedPolicy =
           typeof response.impliedPolicy === "boolean" ? response.impliedPolicy : response.policy == null
 
-        setAccessKey(row.accessKey)
-        setParentPolicy(parentPolicyValue)
         setImpliedPolicy(nextImpliedPolicy)
         setPolicy(nextImpliedPolicy ? parentPolicyValue : formatPolicy(response.policy))
         setExpiry(
@@ -394,37 +499,50 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
         setDescription(response.description ?? "")
         setStatus((response.accountStatus as "on" | "off") ?? "on")
       })
-      .catch(() => {
-        message.error(t("Failed to get data"))
+      .catch((error) => {
+        if (cancelled) return
+        const reason = (error as Error)?.message || t("Failed to get data")
+        setLoadError(reason)
+        message.error(reason)
       })
-  }, [getPolicyByUserName, getServiceAccount, message, open, row?.accessKey, t, userName])
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
 
-  React.useEffect(() => {
-    if (impliedPolicy) {
-      setPolicy(parentPolicy)
+    return () => {
+      cancelled = true
     }
-  }, [impliedPolicy, parentPolicy])
+  }, [getPolicyByUserName, getServiceAccount, loadVersion, message, open, row?.accessKey, t, userName])
 
   const closeModal = () => {
     onOpenChange(false)
   }
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!submitting || nextOpen) onOpenChange(nextOpen)
+  }
+
   const submitForm = async () => {
-    if (!accessKey) return
+    if (!accessKey || accessKey !== row?.accessKey || loading || loadError || submitting) return
+    setPolicyError("")
+
+    let customPolicy: string | null = null
+    if (!impliedPolicy) {
+      try {
+        const parsed = JSON.parse(policy || "{}") as unknown
+        if (typeof parsed !== "object" || parsed === null) {
+          setPolicyError(t("Policy must be a valid JSON object"))
+          return
+        }
+        customPolicy = JSON.stringify(parsed)
+      } catch {
+        setPolicyError(t("Policy format invalid"))
+        return
+      }
+    }
 
     setSubmitting(true)
     try {
-      let customPolicy: string | null = null
-      if (!impliedPolicy) {
-        try {
-          customPolicy = JSON.stringify(JSON.parse(policy || "{}") as Record<string, unknown>)
-        } catch {
-          message.error(t("Policy format invalid"))
-          setSubmitting(false)
-          return
-        }
-      }
-
       await updateServiceAccount(accessKey, {
         newPolicy: customPolicy,
         newStatus: status,
@@ -444,123 +562,181 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
   }
 
   return (
-    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className={cn("overflow-x-hidden sm:max-w-xl", !impliedPolicy && "sm:max-w-6xl")}>
-        <DialogHeader>
+    <Dialog open={open} onOpenChange={handleOpenChange} disablePointerDismissal={submitting}>
+      <DialogContent
+        className={cn(
+          "max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-xl",
+          !impliedPolicy && "sm:max-w-6xl",
+        )}
+        aria-busy={loading || submitting}
+      >
+        <DialogHeader className="border-b px-4 py-3 pe-12">
           <DialogTitle>{t("Edit Key")}</DialogTitle>
         </DialogHeader>
 
-        <div className="-mx-2 flex max-h-[80vh] flex-col gap-4 overflow-y-auto overflow-x-hidden px-2 lg:flex-row">
-          <div
-            className={cn(
-              impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
+        <form
+          className="contents"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void submitForm()
+          }}
+        >
+          <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+            {loading || accessKey !== row?.accessKey ? (
+              <div
+                className="flex min-h-72 items-center justify-center gap-2 text-sm text-muted-foreground"
+                role="status"
+              >
+                <Spinner className="size-4" />
+                {t("Loading…")}
+              </div>
+            ) : loadError ? (
+              <div
+                className="flex min-h-72 flex-col items-center justify-center gap-3 border border-dashed p-6 text-center"
+                role="alert"
+              >
+                <p className="max-w-md text-sm text-destructive">{loadError}</p>
+                <Button type="button" variant="outline" onClick={() => setLoadVersion((current) => current + 1)}>
+                  <RiRefreshLine className="size-4" aria-hidden />
+                  {t("Refresh")}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4 lg:min-h-[32rem] lg:flex-row">
+                <div
+                  className={cn(
+                    impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
+                  )}
+                >
+                  <Field>
+                    <FieldLabel htmlFor="edit-user-access-key">{t("Access Key")}</FieldLabel>
+                    <FieldContent>
+                      <Input id="edit-user-access-key" name="edit-user-access-key" value={accessKey} disabled />
+                    </FieldContent>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="edit-user-expiry">{t("Expiry")}</FieldLabel>
+                    <FieldContent>
+                      <DateTimePicker
+                        id="edit-user-expiry"
+                        value={expiry}
+                        onChange={setExpiry}
+                        min={minExpiry}
+                        disabled={loading || submitting}
+                      />
+                    </FieldContent>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="edit-user-key-name">{t("Name")}</FieldLabel>
+                    <FieldContent>
+                      <Input
+                        id="edit-user-key-name"
+                        name="edit-user-key-name"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        autoComplete="off"
+                        spellCheck={false}
+                        disabled={loading || submitting}
+                      />
+                    </FieldContent>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="edit-user-key-description">{t("Description")}</FieldLabel>
+                    <FieldContent>
+                      <Textarea
+                        id="edit-user-key-description"
+                        name="edit-user-key-description"
+                        value={description}
+                        onChange={(event) => setDescription(event.target.value)}
+                        rows={2}
+                        disabled={loading || submitting}
+                      />
+                    </FieldContent>
+                  </Field>
+
+                  <Field orientation="responsive" className="items-start gap-3 border p-3">
+                    <FieldLabel htmlFor="edit-user-access-key-implied-policy" className="text-sm font-medium">
+                      {t("Use main account policy")}
+                    </FieldLabel>
+                    <FieldContent className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                      <p className="text-xs text-muted-foreground">
+                        {t("Automatically inherit the main account policy when enabled.")}
+                      </p>
+                      <Switch
+                        id="edit-user-access-key-implied-policy"
+                        checked={impliedPolicy}
+                        onCheckedChange={setImpliedPolicy}
+                        disabled={loading || submitting}
+                      />
+                    </FieldContent>
+                  </Field>
+
+                  <Field orientation="responsive">
+                    <FieldLabel htmlFor="edit-user-access-key-status" className="text-sm font-medium">
+                      {t("Status")}
+                    </FieldLabel>
+                    <FieldContent className="flex justify-end">
+                      <Switch
+                        id="edit-user-access-key-status"
+                        checked={status === "on"}
+                        onCheckedChange={(checked) => setStatus(checked ? "on" : "off")}
+                        disabled={loading || submitting}
+                      />
+                    </FieldContent>
+                  </Field>
+                </div>
+
+                {!impliedPolicy ? (
+                  <div className="min-h-[20rem] flex-1 lg:min-h-0">
+                    <Field className="h-full">
+                      <FieldLabel htmlFor="edit-user-policy">{t("Current user policy")}</FieldLabel>
+                      <FieldContent className="h-full">
+                        <Textarea
+                          id="edit-user-policy"
+                          name="edit-user-policy"
+                          value={policy}
+                          onChange={(event) => {
+                            setPolicy(event.target.value)
+                            setPolicyError("")
+                          }}
+                          className="min-h-[24rem] font-mono text-xs lg:h-full"
+                          spellCheck={false}
+                          disabled={loading || submitting}
+                          aria-invalid={Boolean(policyError)}
+                          aria-describedby={policyError ? "edit-user-policy-error" : undefined}
+                        />
+                      </FieldContent>
+                      <FieldError id="edit-user-policy-error">{policyError}</FieldError>
+                    </Field>
+                  </div>
+                ) : null}
+              </div>
             )}
-          >
-            <Field>
-              <FieldLabel htmlFor="edit-user-access-key">{t("Access Key")}</FieldLabel>
-              <FieldContent>
-                <Input id="edit-user-access-key" name="edit-user-access-key" value={accessKey} disabled />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="edit-user-expiry">{t("Expiry")}</FieldLabel>
-              <FieldContent>
-                <DateTimePicker id="edit-user-expiry" value={expiry} onChange={setExpiry} min={minExpiry} />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="edit-user-key-name">{t("Name")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="edit-user-key-name"
-                  name="edit-user-key-name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="edit-user-key-description">{t("Description")}</FieldLabel>
-              <FieldContent>
-                <Textarea
-                  id="edit-user-key-description"
-                  name="edit-user-key-description"
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  rows={2}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field orientation="responsive" className="items-start gap-3 border p-3">
-              <FieldLabel htmlFor="edit-user-access-key-implied-policy" className="text-sm font-medium">
-                {t("Use main account policy")}
-              </FieldLabel>
-              <FieldContent className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                <p className="text-xs text-muted-foreground">
-                  {t("Automatically inherit the main account policy when enabled.")}
-                </p>
-                <Switch
-                  id="edit-user-access-key-implied-policy"
-                  checked={impliedPolicy}
-                  onCheckedChange={setImpliedPolicy}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field orientation="responsive">
-              <FieldLabel htmlFor="edit-user-access-key-status" className="text-sm font-medium">
-                {t("Status")}
-              </FieldLabel>
-              <FieldContent className="flex justify-end">
-                <Switch
-                  id="edit-user-access-key-status"
-                  checked={status === "on"}
-                  onCheckedChange={(checked) => setStatus(checked ? "on" : "off")}
-                />
-              </FieldContent>
-            </Field>
           </div>
 
-          {!impliedPolicy ? (
-            <div className="max-h-[60vh] flex-1 overflow-y-auto overflow-x-hidden">
-              <Field className="h-full">
-                <FieldLabel htmlFor="edit-user-policy">{t("Current user policy")}</FieldLabel>
-                <FieldContent className="h-full">
-                  <Textarea
-                    id="edit-user-policy"
-                    name="edit-user-policy"
-                    value={policy}
-                    onChange={(event) => setPolicy(event.target.value)}
-                    className="h-full min-h-[200px] font-mono text-xs"
-                    spellCheck={false}
-                  />
-                </FieldContent>
-              </Field>
-            </div>
-          ) : null}
-        </div>
-
-        <DialogFooter className="border-t pt-4">
-          <Button variant="outline" onClick={closeModal}>
-            {t("Cancel")}
-          </Button>
-          <Button variant="default" disabled={submitting} onClick={submitForm}>
-            {submitting ? (
-              <span className="flex items-center gap-2">
-                <Spinner className="size-4" />
-                {t("Submit")}
-              </span>
-            ) : (
-              t("Submit")
-            )}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+            <Button type="button" variant="outline" onClick={closeModal} disabled={submitting}>
+              {t("Cancel")}
+            </Button>
+            <Button
+              type="submit"
+              variant="default"
+              disabled={loading || submitting || Boolean(loadError) || accessKey !== row?.accessKey}
+            >
+              {submitting ? (
+                <span className="flex items-center gap-2">
+                  <Spinner className="size-4" />
+                  {t("Submit")}
+                </span>
+              ) : (
+                t("Submit")
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
@@ -580,46 +756,80 @@ export function UserEditAccessKeys({ userName }: UserEditAccessKeysProps) {
 
   const [data, setData] = React.useState<AccessKeyRow[]>([])
   const [loading, setLoading] = React.useState(false)
+  const [loadError, setLoadError] = React.useState("")
+  const [loadedUserName, setLoadedUserName] = React.useState("")
   const [searchTerm, setSearchTerm] = React.useState("")
   const [newDialogOpen, setNewDialogOpen] = React.useState(false)
   const [editDialogOpen, setEditDialogOpen] = React.useState(false)
   const [editRow, setEditRow] = React.useState<AccessKeyRow | null>(null)
   const [noticeOpen, setNoticeOpen] = React.useState(false)
   const [noticeData, setNoticeData] = React.useState<CredentialsData | null>(null)
+  const requestVersionRef = React.useRef(0)
+  const activeUserRef = React.useRef(userName)
 
   const loadAccounts = React.useCallback(async () => {
-    if (!userName) return
+    const targetUser = userName
+    const requestId = ++requestVersionRef.current
+    if (!targetUser) {
+      setData([])
+      setLoadError("")
+      setLoadedUserName("")
+      setLoading(false)
+      return
+    }
 
+    setLoadError("")
     setLoading(true)
     try {
-      const response = (await listAllUserServiceAccounts(userName)) as { accounts?: AccessKeyRow[] }
+      const response = (await listAllUserServiceAccounts(targetUser)) as { accounts?: AccessKeyRow[] }
+      if (requestId !== requestVersionRef.current || activeUserRef.current !== targetUser) return
       setData(response?.accounts ?? [])
+      setLoadedUserName(targetUser)
     } catch (error) {
+      if (requestId !== requestVersionRef.current || activeUserRef.current !== targetUser) return
       console.error(error)
-      message.error(t("Get Data Failed"))
+      setLoadError((error as Error)?.message || t("Get Data Failed"))
     } finally {
-      setLoading(false)
+      if (requestId === requestVersionRef.current && activeUserRef.current === targetUser) setLoading(false)
     }
-  }, [listAllUserServiceAccounts, message, t, userName])
+  }, [listAllUserServiceAccounts, t, userName])
 
   React.useEffect(() => {
+    activeUserRef.current = userName
+    requestVersionRef.current += 1
+    setData([])
+    setLoadedUserName("")
+    setSearchTerm("")
+    setLoadError("")
+    setNewDialogOpen(false)
+    setEditDialogOpen(false)
+    setEditRow(null)
+    setNoticeOpen(false)
+    setNoticeData(null)
     void loadAccounts()
-  }, [loadAccounts])
+
+    return () => {
+      requestVersionRef.current += 1
+    }
+  }, [loadAccounts, userName])
 
   const filteredData = React.useMemo(() => {
+    if (loadedUserName !== userName) return []
     if (!searchTerm) return data
     const term = searchTerm.toLowerCase()
     return data.filter((row) => row.accessKey.toLowerCase().includes(term))
-  }, [data, searchTerm])
+  }, [data, loadedUserName, searchTerm, userName])
 
   const handleDelete = React.useCallback(
     (row: AccessKeyRow) => {
+      const targetUser = userName
       dialog.error({
         title: t("Warning"),
         content: t("Are you sure you want to delete this key?"),
         positiveText: t("Confirm"),
         negativeText: t("Cancel"),
         onPositiveClick: async () => {
+          if (activeUserRef.current !== targetUser) return
           try {
             await deleteServiceAccount(row.accessKey)
             message.success(t("Delete Success"))
@@ -631,7 +841,7 @@ export function UserEditAccessKeys({ userName }: UserEditAccessKeysProps) {
         },
       })
     },
-    [deleteServiceAccount, dialog, loadAccounts, message, t],
+    [deleteServiceAccount, dialog, loadAccounts, message, t, userName],
   )
 
   const columns = React.useMemo<ColumnDef<AccessKeyRow>[]>(
@@ -735,13 +945,26 @@ export function UserEditAccessKeys({ userName }: UserEditAccessKeysProps) {
         ) : null}
       </div>
 
-      <DataTable
-        table={table}
-        isLoading={loading}
-        emptyTitle={t("No Access Keys")}
-        emptyDescription={t("Create a new access key to get started.")}
-        tableClass="min-w-full"
-      />
+      {loadError ? (
+        <div
+          className="flex flex-col items-center justify-center gap-3 border border-dashed p-6 text-center"
+          role="alert"
+        >
+          <p className="max-w-md text-sm text-destructive">{loadError}</p>
+          <Button type="button" variant="outline" onClick={() => void loadAccounts()}>
+            <RiRefreshLine className="size-4" aria-hidden />
+            {t("Refresh")}
+          </Button>
+        </div>
+      ) : (
+        <DataTable
+          table={table}
+          isLoading={loading || loadedUserName !== userName}
+          emptyTitle={t("No Access Keys")}
+          emptyDescription={t("Create a new access key to get started.")}
+          tableClass="min-w-full"
+        />
+      )}
 
       <UserAccessKeysNewDialog
         open={newDialogOpen}

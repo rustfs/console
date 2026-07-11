@@ -30,20 +30,31 @@ export default function EventsPage() {
 
   return (
     <Page>
-      <PageHeader
-        actions={
-          <Button variant="outline" nativeButton={false} render={<Link href="/events" />}>
-            <RiArrowLeftLine className="size-4" aria-hidden />
-            <span>{t("Buckets")}</span>
-          </Button>
-        }
-      >
-        <h1 className="text-2xl font-bold">
-          {t("Events")}: {bucketName}
-        </h1>
-      </PageHeader>
-
-      <BucketEventsTab bucketName={bucketName} hideTitle />
+      <BucketEventsTab
+        key={bucketName}
+        bucketName={bucketName}
+        hideTitle
+        renderHeader={(actions) => (
+          <PageHeader
+            description={
+              <p className="text-sm text-muted-foreground">
+                {t("Bucket")}: <span className="break-all font-medium text-foreground">{bucketName}</span>
+              </p>
+            }
+            actions={
+              <>
+                <Button variant="outline" nativeButton={false} render={<Link href="/events" />}>
+                  <RiArrowLeftLine className="size-4" aria-hidden />
+                  <span>{t("Buckets")}</span>
+                </Button>
+                {actions}
+              </>
+            }
+          >
+            <h1 className="text-2xl font-bold">{t("Events")}</h1>
+          </PageHeader>
+        )}
+      />
     </Page>
   )
 }

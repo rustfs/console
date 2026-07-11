@@ -34,7 +34,6 @@ import {
   DeleteBucketReplicationCommand,
   PutBucketNotificationConfigurationCommand,
   GetBucketNotificationConfigurationCommand,
-  MFADelete,
   BucketVersioningStatus,
   type S3Client,
 } from "@aws-sdk/client-s3"
@@ -164,7 +163,6 @@ export function useBucket() {
           Bucket: bucket,
           VersioningConfiguration: {
             Status: status === "Enabled" ? BucketVersioningStatus.Enabled : BucketVersioningStatus.Suspended,
-            MFADelete: MFADelete.Enabled,
           },
         }),
       )

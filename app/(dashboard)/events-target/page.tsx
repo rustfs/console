@@ -191,25 +191,30 @@ export default function EventsTargetPage() {
     <Page>
       <PageHeader
         actions={
-          <>
-            <div className="w-full sm:max-w-xs">
-              <SearchInput
-                value={searchTerm}
-                onChange={setSearchTerm}
-                placeholder={t("Search")}
-                clearable
-                className="w-full"
-              />
+          <div className="grid w-full shrink-0 gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto] lg:w-auto">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={t("Search")}
+              clearable
+              className="h-11 w-full sm:h-8 sm:w-64"
+            />
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end lg:flex-nowrap">
+              <Button
+                variant="outline"
+                className="h-11 w-full sm:h-8 sm:w-auto"
+                onClick={() => setNewFormOpen(true)}
+                disabled={!canManageDestinations}
+              >
+                <RiAddLine className="size-4" aria-hidden />
+                <span>{t("Add Event Destination")}</span>
+              </Button>
+              <Button variant="outline" className="h-11 w-full sm:h-8 sm:w-auto" onClick={loadData}>
+                <RiRefreshLine className="size-4" aria-hidden />
+                <span>{t("Refresh")}</span>
+              </Button>
             </div>
-            <Button variant="outline" onClick={() => setNewFormOpen(true)} disabled={!canManageDestinations}>
-              <RiAddLine className="size-4" aria-hidden />
-              <span>{t("Add Event Destination")}</span>
-            </Button>
-            <Button variant="outline" onClick={loadData}>
-              <RiRefreshLine className="size-4" aria-hidden />
-              <span>{t("Refresh")}</span>
-            </Button>
-          </>
+          </div>
         }
       >
         <h1 className="text-2xl font-bold">{t("Event Destinations")}</h1>

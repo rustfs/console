@@ -206,7 +206,8 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
           </Field>
 
           {quotaEnabled && (
-            <div className="space-y-4 border p-4">
+            <fieldset className="space-y-4 border-t pt-4">
+              <legend className="text-sm font-semibold">{t("Bucket Quota")}</legend>
               <Field>
                 <FieldLabel>{t("Quota Size")}</FieldLabel>
                 <FieldContent>
@@ -224,6 +225,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                       value={quotaUnit}
                       onValueChange={(v) => setQuotaUnit(v)}
                       className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+                      aria-label={t("Quota Unit")}
                     >
                       {["MiB", "GiB", "TiB", "PiB"].map((unit) => (
                         <label
@@ -243,11 +245,12 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                   </div>
                 </FieldContent>
               </Field>
-            </div>
+            </fieldset>
           )}
 
           {objectLock && (
-            <div className="space-y-4 border p-4">
+            <fieldset className="space-y-4 border-t pt-4">
+              <legend className="text-sm font-semibold">{t("Object Lock")}</legend>
               <Field orientation="responsive" className="items-center">
                 <FieldLabel htmlFor="bucket-new-retention">{t("Retention")}</FieldLabel>
                 <FieldContent className="flex justify-end">
@@ -264,6 +267,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                         value={retentionMode}
                         onValueChange={(v) => setRetentionMode(v as "COMPLIANCE" | "GOVERNANCE")}
                         className="grid gap-2 sm:grid-cols-2"
+                        aria-label={t("Retention Mode")}
                       >
                         {retentionModeOptions.map((option) => (
                           <label
@@ -300,6 +304,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                           value={retentionUnit}
                           onValueChange={(v) => setRetentionUnit(v as "day" | "year")}
                           className="grid gap-2 sm:grid-cols-2"
+                          aria-label={t("Retention Unit")}
                         >
                           {retentionUnitOptions.map((option) => (
                             <label
@@ -321,7 +326,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                   </Field>
                 </div>
               )}
-            </div>
+            </fieldset>
           )}
         </div>
 

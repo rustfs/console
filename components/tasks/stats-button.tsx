@@ -23,27 +23,25 @@ export function TaskStatsButton() {
   if (total === 0) return null
 
   return (
-    <Drawer open={isTaskPanelOpen} onOpenChange={setTaskPanelOpen} direction="right">
-      <DrawerTrigger asChild>
-        <Button variant="outline">
-          {processing.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <Spinner className="size-3 text-muted-foreground" />
-              <span>
-                {t("In Progress", {
-                  total,
-                  processing: processing.length,
-                  completed: completed.length,
-                })}
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <RiCheckLine className="size-4 text-primary" aria-hidden />
-              <span>{t("Task Completed", { completed: completed.length, failed: failed.length })}</span>
-            </div>
-          )}
-        </Button>
+    <Drawer open={isTaskPanelOpen} onOpenChange={setTaskPanelOpen} swipeDirection="right">
+      <DrawerTrigger render={<Button variant="outline" />}>
+        {processing.length > 0 ? (
+          <div className="flex items-center gap-2">
+            <Spinner className="size-3 text-muted-foreground" />
+            <span>
+              {t("In Progress", {
+                total,
+                processing: processing.length,
+                completed: completed.length,
+              })}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <RiCheckLine className="size-4 text-primary" aria-hidden />
+            <span>{t("Task Completed", { completed: completed.length, failed: failed.length })}</span>
+          </div>
+        )}
       </DrawerTrigger>
       <DrawerContent className="sm:max-w-sm">
         <DrawerHeader>

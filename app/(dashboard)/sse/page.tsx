@@ -1282,8 +1282,8 @@ export default function SSEPage() {
         </DialogContent>
       </Dialog>
 
-      <Drawer open={!!selectedKeyId} onOpenChange={(open) => !open && setSelectedKeyId(null)} direction="right">
-        <DrawerContent className="max-h-[95vh] overflow-y-auto overflow-x-hidden data-[vaul-drawer-direction=right]:w-[92vw] data-[vaul-drawer-direction=right]:sm:max-w-xl">
+      <Drawer open={!!selectedKeyId} onOpenChange={(open) => !open && setSelectedKeyId(null)} swipeDirection="right">
+        <DrawerContent className="max-h-[95vh] overflow-y-auto overflow-x-hidden data-[swipe-direction=right]:w-[92vw] data-[swipe-direction=right]:sm:max-w-xl">
           <DrawerHeader>
             <DrawerTitle>{t("KMS Key Details")}</DrawerTitle>
             <DrawerDescription>{selectedKeyId || ""}</DrawerDescription>

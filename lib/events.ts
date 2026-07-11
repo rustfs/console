@@ -4,6 +4,7 @@
 
 export interface NotificationItem {
   id: string
+  sourceId?: string
   type: "Lambda" | "SQS" | "SNS" | "Topic"
   arn: string
   events: string[]

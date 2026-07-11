@@ -2,12 +2,13 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import { RiArrowDownSLine, RiCheckLine } from "@remixicon/react"
+import { RiArrowDownSLine, RiCheckLine, RiRefreshLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { useMessage } from "@/lib/feedback/message"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandList } from "@/components/ui/command"
+import { Spinner } from "@/components/ui/spinner"
+import { MultiSelectCommandItem } from "@/components/user/multi-select-command-item"
 import { useUsers } from "@/hooks/use-users"
 import { cn } from "@/lib/utils"
 
@@ -29,68 +30,136 @@ export function UserSelector({
   autoLoad = true,
 }: UserSelectorProps) {
   const { t } = useTranslation()
-  const message = useMessage()
   const { listUsers } = useUsers()
   const [open, setOpen] = React.useState(false)
   const [users, setUsers] = React.useState<{ label: string; value: string }[]>([])
+  const [loading, setLoading] = React.useState(false)
+  const [loadError, setLoadError] = React.useState("")
+  const [loadVersion, setLoadVersion] = React.useState(0)
+  const triggerId = React.useId()
 
   React.useEffect(() => {
-    if (autoLoad && open) {
-      listUsers()
-        .then((res: Record<string, unknown>) => {
-          setUsers(
-            Object.entries(res ?? {}).map(([username]) => ({
-              label: username,
-              value: username,
-            })),
-          )
-        })
-        .catch(() => message.error(t("Failed to get data")))
+    if (disabled) setOpen(false)
+  }, [disabled])
+
+  React.useEffect(() => {
+    if (!autoLoad || !open) return
+    let cancelled = false
+
+    setUsers([])
+    setLoadError("")
+    setLoading(true)
+    listUsers()
+      .then((res: Record<string, unknown> | null) => {
+        if (cancelled) return
+        setUsers(
+          Object.keys(res ?? {})
+            .sort((a, b) => a.localeCompare(b))
+            .map((username) => ({ label: username, value: username })),
+        )
+      })
+      .catch((error) => {
+        if (cancelled) return
+        setLoadError((error as Error)?.message || t("Failed to get data"))
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
     }
-  }, [autoLoad, open, listUsers, message, t])
+  }, [autoLoad, open, listUsers, loadVersion, t])
 
   const displayLabel = label ?? t("Users")
   const displayPlaceholder = placeholder ?? t("Select user group members")
+  const selectionSummaryId = `${triggerId}-selection`
+  const selectionSummary = value.length ? value.join(", ") : displayPlaceholder
 
   const toggleUser = (v: string) => {
+    if (disabled || loading) return
     onChange(value.includes(v) ? value.filter((item) => item !== v) : [...value, v])
+  }
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!disabled) setOpen(nextOpen)
   }
 
   return (
     <Field>
-      <FieldLabel className="text-sm font-medium">{displayLabel}</FieldLabel>
+      <FieldLabel htmlFor={triggerId} className="text-sm font-medium">
+        {displayLabel}
+      </FieldLabel>
       <FieldContent>
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover open={open} onOpenChange={handleOpenChange}>
           <PopoverTrigger
             render={
               <Button
+                id={triggerId}
                 type="button"
                 variant="outline"
-                className="min-h-10 w-full justify-between gap-2"
+                className="min-h-10 w-full min-w-0 justify-between gap-2"
                 disabled={disabled}
-                aria-label={displayLabel}
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                aria-label={`${displayLabel}: ${selectionSummary}`}
+                aria-describedby={selectionSummaryId}
               >
-                <span className="truncate">{value.length ? value.join(", ") : displayPlaceholder}</span>
+                <span id={selectionSummaryId} className="truncate">
+                  {selectionSummary}
+                </span>
                 <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
               </Button>
             }
           />
-          <PopoverContent className="w-72 p-0" align="start">
-            <Command>
-              <CommandInput placeholder={t("Search User")} />
-              <CommandList>
-                <CommandEmpty>{t("No Data")}</CommandEmpty>
-                <CommandGroup>
-                  {users.map((option) => (
-                    <CommandItem key={option.value} value={option.label} onSelect={() => toggleUser(option.value)}>
-                      <RiCheckLine
-                        className={cn("me-2 size-4", value.includes(option.value) ? "opacity-100" : "opacity-0")}
-                      />
-                      <span>{option.label}</span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
+          <PopoverContent
+            className="w-(--anchor-width) max-w-(--available-width) p-0"
+            align="start"
+            aria-busy={loading}
+          >
+            <Command shouldFilter={!loading && !loadError}>
+              <CommandInput
+                aria-label={t("Search User")}
+                placeholder={t("Search User")}
+                disabled={loading || Boolean(loadError)}
+              />
+              {loading ? (
+                <div
+                  className="flex min-h-24 items-center justify-center gap-2 text-sm text-muted-foreground"
+                  role="status"
+                >
+                  <Spinner className="size-4" aria-hidden />
+                  {t("Loading…")}
+                </div>
+              ) : loadError ? (
+                <div className="flex min-h-24 flex-col items-center justify-center gap-3 p-4 text-center" role="alert">
+                  <p className="max-w-full break-words text-sm text-destructive">{loadError}</p>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setLoadVersion((v) => v + 1)}>
+                    <RiRefreshLine className="size-4" aria-hidden />
+                    {t("Refresh")}
+                  </Button>
+                </div>
+              ) : (
+                <CommandList role="listbox" aria-label={displayLabel} aria-multiselectable="true">
+                  <CommandEmpty>{t("No Data")}</CommandEmpty>
+                  <CommandGroup>
+                    {users.map((option) => {
+                      const selected = value.includes(option.value)
+                      return (
+                        <MultiSelectCommandItem
+                          key={option.value}
+                          value={option.label}
+                          selected={selected}
+                          onSelect={() => toggleUser(option.value)}
+                        >
+                          <RiCheckLine className={cn("me-2 size-4", selected ? "opacity-100" : "opacity-0")} />
+                          <span className="min-w-0 break-all">{option.label}</span>
+                        </MultiSelectCommandItem>
+                      )
+                    })}
+                  </CommandGroup>
+                </CommandList>
+              )}
             </Command>
           </PopoverContent>
         </Popover>

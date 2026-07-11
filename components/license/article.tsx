@@ -20,7 +20,7 @@ export function LicenseArticle() {
   }, [])
 
   return (
-    <Page>
+    <Page className="max-w-5xl">
       <PageHeader>
         <h1 className="text-2xl font-bold">{t("License")}</h1>
       </PageHeader>
@@ -31,8 +31,8 @@ export function LicenseArticle() {
             <h2 className="text-xl font-semibold">{t("Apache License")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{t("Version 2.0, January 2004")}</p>
           </div>
-          <ScrollArea className="h-[70vh] border">
-            <pre className="whitespace-pre-wrap p-6 text-sm leading-6 text-muted-foreground">
+          <ScrollArea className="h-[min(70dvh,48rem)] min-h-[28rem] border">
+            <pre className="whitespace-pre-line break-words p-4 text-start text-sm leading-6 text-foreground/80 sm:p-6">
               {licenseContent || t("Loading…")}
             </pre>
           </ScrollArea>

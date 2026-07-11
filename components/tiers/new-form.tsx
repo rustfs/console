@@ -131,18 +131,24 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
   }
 
   const handleCancel = () => {
+    if (submitting) return
     onOpenChange(false)
-    setSubmitting(false)
     resetForm()
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-lg">
-        <DialogHeader>
+    <Dialog
+      open={open}
+      disablePointerDismissal={submitting}
+      onOpenChange={(nextOpen) => {
+        if (!submitting) onOpenChange(nextOpen)
+      }}
+    >
+      <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogHeader className="border-b px-4 py-4 pe-12 sm:px-6">
           <DialogTitle>{t("Add Tier")}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-6">
+        <div className="min-h-0 space-y-6 overflow-y-auto px-4 py-5 sm:px-6" aria-busy={submitting}>
           {!type ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {TYPE_OPTIONS.map((item) => (
@@ -328,11 +334,11 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
             </div>
           )}
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
+        <DialogFooter className="border-t bg-muted/20 px-4 py-4 sm:px-6">
+          <Button variant="outline" onClick={handleCancel} disabled={submitting}>
             {t("Cancel")}
           </Button>
-          <Button onClick={handleSave} disabled={!type} aria-disabled={submitting}>
+          <Button onClick={handleSave} disabled={!type || submitting}>
             {submitting ? t("Saving…") : t("Save")}
           </Button>
         </DialogFooter>

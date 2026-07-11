@@ -4,139 +4,139 @@ import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { usePerformanceData } from "@/hooks/use-performance-data"
-import { niceBytes } from "@/lib/functions"
-import { normalizeServerHealthState, type ServerHealthState } from "@/lib/performance-data"
+import { usePerformanceData, type PerformanceDataSource } from "@/hooks/use-performance-data"
+import { usePermissions } from "@/hooks/use-permissions"
+import { formatRelativeTime, summarizeServerStates } from "@/lib/performance-data"
+import { cn } from "@/lib/utils"
 import {
   RiArchiveDrawerFill,
   RiArchiveLine,
-  RiHardDrive2Line,
   RiListSettingsFill,
   RiRefreshLine,
   RiSecurePaymentFill,
   RiStackLine,
 } from "@remixicon/react"
 import dayjs from "dayjs"
-import relativeTime from "dayjs/plugin/relativeTime"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { usePermissions } from "@/hooks/use-permissions"
+import { PerformanceBackendCard } from "../_components/performance-backend-card"
+import { PerformanceInfrastructureCard } from "../_components/performance-infrastructure-card"
+import { PerformanceServerList } from "../_components/performance-server-list"
 import { PerformanceSummaryCards } from "../_components/performance-summary-cards"
 import { PerformanceUsageCard } from "../_components/performance-usage-card"
-import { PerformanceInfrastructureCard } from "../_components/performance-infrastructure-card"
-import { PerformanceBackendCard } from "../_components/performance-backend-card"
-import { PerformanceServerList } from "../_components/performance-server-list"
 
-dayjs.extend(relativeTime)
+function formatDuration(seconds: number | undefined, t: (key: string) => string) {
+  if (seconds === undefined || !Number.isFinite(seconds) || seconds < 0) return t("Unknown")
+  const totalMinutes = Math.floor(seconds / 60)
+  const days = Math.floor(totalMinutes / 1440)
+  const hours = Math.floor((totalMinutes % 1440) / 60)
+  const minutes = totalMinutes % 60
+  const parts = [
+    days ? `${days} ${t("Days")}` : "",
+    hours ? `${hours} ${t("Hours")}` : "",
+    !days && minutes ? `${minutes} ${t("Minutes")}` : "",
+  ].filter(Boolean)
+  return parts.slice(0, 2).join(" ") || `0 ${t("Minutes")}`
+}
 
 export default function PerformancePage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { canAccessPath } = usePermissions()
-  const { systemInfo, metricsInfo, datausageinfo, storageinfo, loading, error, refetch } = usePerformanceData()
+  const {
+    systemInfo,
+    metricsInfo,
+    datausageinfo,
+    storageinfo,
+    loading,
+    refreshing,
+    hasLoaded,
+    error,
+    sourceErrors,
+    lastUpdatedAt,
+    metricsUpdatedAt,
+    refetch,
+  } = usePerformanceData()
   const browserHref = canAccessPath("/browser") ? "/browser" : undefined
 
-  const numberFormatter = useMemo(() => new Intl.NumberFormat(), [])
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(i18n.resolvedLanguage), [i18n.resolvedLanguage])
+  const storageBackend = storageinfo.backend
 
-  const storageBackend = useMemo(
-    () => storageinfo?.backend ?? (storageinfo as { Backend?: typeof storageinfo.backend })?.Backend,
-    [storageinfo],
-  )
-
+  const totalCapacity = datausageinfo.total_capacity
+  const totalUsedCapacity = datausageinfo.total_used_capacity
   const usedPercent = useMemo(() => {
-    const total = Number(datausageinfo.total_capacity || 0)
-    if (!total) return 0
-    const used = Number(datausageinfo.total_used_capacity || 0)
-    return Math.min(100, Math.max(0, (used / total) * 100))
-  }, [datausageinfo])
-
-  const lastUpdatedLabel = useMemo(() => {
-    const last = metricsInfo?.aggregated?.scanner?.current_started
-    const time = dayjs(last)
-    return time.isValid() ? time.fromNow() : "--"
-  }, [metricsInfo])
+    if (totalCapacity === undefined || totalUsedCapacity === undefined) return undefined
+    if (totalCapacity === 0) return totalUsedCapacity === 0 ? 0 : undefined
+    return Math.min(100, Math.max(0, (totalUsedCapacity / totalCapacity) * 100))
+  }, [totalCapacity, totalUsedCapacity])
 
   const summaryMetrics = useMemo(
     () => [
       {
         label: t("Buckets"),
-        display: numberFormatter.format(systemInfo?.buckets?.count ?? 0),
+        display:
+          systemInfo.buckets?.count === undefined ? t("Unknown") : numberFormatter.format(systemInfo.buckets.count),
         icon: RiArchiveLine,
         caption: null as string | null,
         href: browserHref,
       },
       {
         label: t("Objects"),
-        display: numberFormatter.format(systemInfo?.objects?.count ?? 0),
+        display:
+          systemInfo.objects?.count === undefined ? t("Unknown") : numberFormatter.format(systemInfo.objects.count),
         icon: RiStackLine,
         caption: null as string | null,
         href: browserHref,
       },
-      {
-        label: t("Total Capacity"),
-        display: datausageinfo.total_capacity ? niceBytes(String(datausageinfo.total_capacity)) : "--",
-        icon: RiHardDrive2Line,
-        caption: datausageinfo.total_used_capacity
-          ? `${t("Used")}: ${niceBytes(String(datausageinfo.total_used_capacity))}`
-          : null,
-        href: undefined as string | undefined,
-      },
     ],
-    [systemInfo, datausageinfo, numberFormatter, t, browserHref],
+    [browserHref, numberFormatter, systemInfo.buckets, systemInfo.objects, t],
   )
 
-  const fromLastStartTime = useMemo(() => {
-    const times = metricsInfo?.aggregated?.scanner?.cycle_complete_times || []
-    if (!times.length) return "--"
-    const start = dayjs(times[times.length - 1])
-    return dayjs().from(start)
-  }, [metricsInfo])
-
-  const fromLastScanTime = useMemo(() => {
-    const start = dayjs(metricsInfo?.aggregated?.scanner?.current_started)
-    if (!start.isValid()) return "--"
-    return dayjs().from(start)
-  }, [metricsInfo])
-
-  const lastScanTime = useMemo(() => {
-    const currentStart = dayjs(metricsInfo?.aggregated?.scanner?.current_started)
-    const cycleTimes = metricsInfo?.aggregated?.scanner?.cycle_complete_times || []
-    if (!currentStart.isValid()) return "--"
-    const lastComplete = dayjs(cycleTimes[cycleTimes.length - 1])
-    return lastComplete.isValid() && currentStart.isBefore(lastComplete)
-      ? lastComplete.from(currentStart)
-      : dayjs().from(currentStart)
-  }, [metricsInfo])
+  const scannerStartedAt = metricsInfo.aggregated?.scanner?.current_started
+  const scannerCycle = metricsInfo.aggregated?.scanner?.current_cycle
+  const scannerCompleteTimes = metricsInfo.aggregated?.scanner?.cycle_complete_times ?? []
+  const scannerCompletedAt = scannerCompleteTimes.at(-1)
+  const scannerActive = (scannerCycle ?? 0) > 0
+  const scannerStatus = scannerActive ? t("Scanning") : scannerCompletedAt ? t("Idle") : t("Never run")
+  const scannerDuration = useMemo(() => {
+    if (!scannerStartedAt) return undefined
+    const started = dayjs(scannerStartedAt)
+    if (!started.isValid()) return undefined
+    if (scannerActive) return Math.max(0, dayjs(metricsUpdatedAt ?? undefined).diff(started, "second"))
+    if (!scannerCompletedAt) return undefined
+    const completed = dayjs(scannerCompletedAt)
+    return completed.isValid() && completed.isAfter(started)
+      ? Math.max(0, completed.diff(started, "second"))
+      : undefined
+  }, [metricsUpdatedAt, scannerActive, scannerCompletedAt, scannerStartedAt])
 
   const usageStats = useMemo(
     () => [
-      { label: t("Last Normal Operation"), value: fromLastStartTime },
-      { label: t("Last Scan Activity"), value: fromLastScanTime },
-      { label: t("Uptime"), value: lastScanTime },
+      {
+        label: t("Last Completed Scan"),
+        value: scannerCompletedAt
+          ? (formatRelativeTime(scannerCompletedAt, i18n.resolvedLanguage, metricsUpdatedAt?.getTime()) ?? t("Unknown"))
+          : t("Unknown"),
+      },
+      {
+        label: t("Scanner Status"),
+        value: scannerStatus,
+      },
+      { label: t("Scan Duration"), value: formatDuration(scannerDuration, t) },
     ],
-    [t, fromLastStartTime, fromLastScanTime, lastScanTime],
+    [i18n.resolvedLanguage, metricsUpdatedAt, scannerCompletedAt, scannerDuration, scannerStatus, t],
   )
 
-  const serverCounts = useMemo(() => {
-    const counts: Record<ServerHealthState, number> = {
-      online: 0,
-      offline: 0,
-      unknown: 0,
-      degraded: 0,
-    }
-
-    for (const server of systemInfo?.servers ?? []) {
-      counts[normalizeServerHealthState(server.state)] += 1
-    }
-
-    return counts
-  }, [systemInfo])
+  const serverSummary = useMemo(
+    () => (systemInfo.servers ? summarizeServerStates(systemInfo.servers) : undefined),
+    [systemInfo.servers],
+  )
 
   const backendInfo = useMemo(
     () => [
       {
         icon: RiArchiveDrawerFill,
         title: t("Backend Type"),
-        value: systemInfo?.backend?.backendType,
+        value: systemInfo.backend?.backendType ?? storageBackend?.BackendType,
       },
       {
         icon: RiSecurePaymentFill,
@@ -149,17 +149,43 @@ export default function PerformancePage() {
         value: storageBackend?.RRSCParity,
       },
     ],
-    [systemInfo, storageBackend, t],
+    [storageBackend, systemInfo.backend?.backendType, t],
   )
 
-  if (loading && !Object.keys(systemInfo).length && !Object.keys(datausageinfo).length) {
+  const unavailableSources = Object.keys(sourceErrors) as PerformanceDataSource[]
+  const sourceLabels: Record<PerformanceDataSource, string> = {
+    system: t("Cluster information"),
+    usage: t("Storage Usage Statistics"),
+    storage: t("Storage Configuration"),
+    metrics: t("Scanner metrics"),
+  }
+
+  const refreshAction = (
+    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+      {lastUpdatedAt ? (
+        <span className="text-xs text-muted-foreground">
+          {t("Last refreshed")}: {formatRelativeTime(lastUpdatedAt, i18n.resolvedLanguage) ?? t("Unknown")}
+        </span>
+      ) : null}
+      <Button variant="outline" className="min-h-11 sm:min-h-0" onClick={refetch} disabled={refreshing}>
+        <RiRefreshLine
+          className={cn("me-2 size-4", refreshing && "animate-spin motion-reduce:animate-none")}
+          aria-hidden
+        />
+        {refreshing ? t("Refreshing…") : t("Refresh")}
+      </Button>
+    </div>
+  )
+
+  if (loading && !hasLoaded) {
     return (
       <Page>
         <PageHeader>
           <h1 className="text-2xl font-bold">{t("Running Status")}</h1>
         </PageHeader>
-        <div className="flex items-center justify-center py-24">
-          <Spinner className="size-8 text-muted-foreground" />
+        <div className="flex min-h-64 items-center justify-center gap-3 text-sm text-muted-foreground" role="status">
+          <Spinner className="size-6 motion-reduce:animate-none" role="presentation" aria-hidden />
+          <span>{t("Loading…")}</span>
         </div>
       </Page>
     )
@@ -168,18 +194,21 @@ export default function PerformancePage() {
   if (error) {
     return (
       <Page>
-        <PageHeader
-          actions={
-            <Button variant="outline" onClick={refetch}>
-              <RiRefreshLine className="me-2 size-4" aria-hidden />
-              {t("Sync")}
-            </Button>
-          }
-        >
+        <PageHeader actions={refreshAction}>
           <h1 className="text-2xl font-bold">{t("Running Status")}</h1>
         </PageHeader>
-        <div className="border border-destructive/50 bg-destructive/10 p-6 text-center">
-          <p className="text-sm text-destructive">{error}</p>
+        <div className="border border-destructive/50 bg-destructive/10 p-6" role="alert">
+          <p className="font-medium text-destructive">{t(error)}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("Check your connection, then refresh the status page.")}
+          </p>
+          <Button variant="outline" className="mt-4 min-h-11 sm:min-h-0" onClick={refetch} disabled={refreshing}>
+            <RiRefreshLine
+              className={cn("me-2 size-4", refreshing && "animate-spin motion-reduce:animate-none")}
+              aria-hidden
+            />
+            {refreshing ? t("Refreshing…") : t("Refresh")}
+          </Button>
         </div>
       </Page>
     )
@@ -187,42 +216,62 @@ export default function PerformancePage() {
 
   return (
     <Page>
-      <PageHeader
-        actions={
-          <Button variant="outline" onClick={refetch} disabled={loading}>
-            <RiRefreshLine className="me-2 size-4" aria-hidden />
-            {t("Sync")}
-          </Button>
-        }
-      >
+      <PageHeader actions={refreshAction}>
         <h1 className="text-2xl font-bold">{t("Running Status")}</h1>
       </PageHeader>
 
-      <div className="space-y-8">
-        <PerformanceSummaryCards metrics={summaryMetrics} />
+      <div className="space-y-6" aria-busy={refreshing}>
+        <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {refreshing
+            ? t("Refreshing…")
+            : !unavailableSources.length && lastUpdatedAt
+              ? t("Status refreshed successfully")
+              : ""}
+        </span>
 
-        <PerformanceUsageCard
-          lastUpdatedLabel={lastUpdatedLabel}
-          totalUsedCapacity={datausageinfo.total_used_capacity ?? 0}
-          usedPercent={usedPercent}
-          usageStats={usageStats}
-          t={t}
-        />
+        {unavailableSources.length ? (
+          <div className="border border-amber-500/40 bg-amber-500/10 p-4" role="status" aria-live="polite">
+            <p className="text-sm font-medium">{t("Some status data is unavailable.")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t("Previously loaded values may be stale.")} {t("Unavailable")}:{" "}
+              {unavailableSources.map((source) => sourceLabels[source]).join(", ")}. {t("Refresh to try again.")}
+            </p>
+          </div>
+        ) : null}
 
-        <PerformanceInfrastructureCard
-          onlineServers={serverCounts.online}
-          offlineServers={serverCounts.offline}
-          unknownServers={serverCounts.unknown}
-          degradedServers={serverCounts.degraded}
-          onlineDisks={systemInfo?.backend?.onlineDisks ?? 0}
-          offlineDisks={systemInfo?.backend?.offlineDisks ?? 0}
-          unknownDisks={systemInfo?.backend?.unknownDisks ?? 0}
-          t={t}
-        />
+        <div className="grid gap-4 xl:grid-cols-2">
+          <div className="order-1">
+            <PerformanceInfrastructureCard
+              onlineServers={serverSummary?.online}
+              offlineServers={serverSummary?.offline}
+              degradedServers={serverSummary?.degraded}
+              initializingServers={serverSummary?.initializing}
+              unknownServers={serverSummary?.unknown}
+              onlineDisks={systemInfo.backend?.onlineDisks}
+              offlineDisks={systemInfo.backend?.offlineDisks}
+              unknownDisks={systemInfo.backend?.unknownDisks}
+              t={t}
+            />
+          </div>
+
+          <div className="order-3 xl:order-2">
+            <PerformanceUsageCard
+              totalCapacity={totalCapacity}
+              totalUsedCapacity={totalUsedCapacity}
+              usedPercent={usedPercent}
+              usageStats={usageStats}
+              t={t}
+            />
+          </div>
+
+          <div className="order-2 xl:order-3 xl:col-span-2">
+            <PerformanceServerList servers={systemInfo.servers} t={t} />
+          </div>
+        </div>
+
+        <PerformanceSummaryCards metrics={summaryMetrics} title={t("Inventory")} />
 
         <PerformanceBackendCard items={backendInfo} t={t} />
-
-        <PerformanceServerList servers={systemInfo?.servers ?? []} t={t} />
       </div>
     </Page>
   )

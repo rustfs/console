@@ -21,14 +21,44 @@ interface RequestOptions {
    * This allows components to handle permission errors gracefully
    */
   suppress403Redirect?: boolean
+  signal?: AbortSignal
 }
 
-const inflightGetRequests = new Map<string, Promise<unknown>>()
+const SENSITIVE_LOG_KEY = /(?:token|secret|password|authorization|cookie|api[_-]?key|master[_-]?key)/i
+
+function redactLogValue(value: unknown, key?: string): unknown {
+  if (key && SENSITIVE_LOG_KEY.test(key)) return "[REDACTED]"
+  if (Array.isArray(value)) return value.map((item) => redactLogValue(item))
+  if (!value || typeof value !== "object") return value
+
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([entryKey, entryValue]) => [
+      entryKey,
+      redactLogValue(entryValue, entryKey),
+    ]),
+  )
+}
+
+function redactRequestOptionsForLog(options: RequestOptions) {
+  const body =
+    typeof options.body === "string"
+      ? (() => {
+          try {
+            return JSON.stringify(redactLogValue(JSON.parse(options.body)))
+          } catch {
+            return options.body
+          }
+        })()
+      : options.body
+
+  return { ...options, body }
+}
 
 export class ApiClient {
   private $api: AwsClient
   private config?: ApiClientOptions
   private errorHandler?: IApiErrorHandler
+  private inflightGetRequests = new Map<string, Promise<unknown>>()
 
   constructor(api: AwsClient, options?: ApiClientOptions) {
     this.$api = api
@@ -71,7 +101,7 @@ export class ApiClient {
 
     const executeRequest = async () => {
       logger.log("[request] url:", url)
-      logger.log("[request] options:", options)
+      logger.log("[request] options:", redactRequestOptionsForLog(options))
 
       const response = await this.$api.fetch(
         url,
@@ -91,7 +121,9 @@ export class ApiClient {
         // This allows components to handle permission errors gracefully
         if (options.suppress403Redirect) {
           const errorMsg = await parseApiError(response)
-          throw new Error(errorMsg)
+          const error = new Error(errorMsg) as Error & { status: number }
+          error.status = response.status
+          throw error
         }
 
         try {
@@ -133,7 +165,9 @@ export class ApiClient {
 
       if (!response.ok) {
         const errorMsg = await parseApiError(response)
-        throw new Error(errorMsg)
+        const error = new Error(errorMsg) as Error & { status: number }
+        error.status = response.status
+        throw error
       }
 
       if (response.status === 204 || response.headers.get("content-length") === "0" || !response.body) {
@@ -151,17 +185,17 @@ export class ApiClient {
       return executeRequest()
     }
 
-    const inflight = inflightGetRequests.get(dedupeKey)
+    const inflight = this.inflightGetRequests.get(dedupeKey)
     if (inflight) {
       return inflight
     }
 
     const requestPromise = executeRequest()
-    inflightGetRequests.set(dedupeKey, requestPromise)
+    this.inflightGetRequests.set(dedupeKey, requestPromise)
     try {
       return await requestPromise
     } finally {
-      inflightGetRequests.delete(dedupeKey)
+      this.inflightGetRequests.delete(dedupeKey)
     }
   }
 

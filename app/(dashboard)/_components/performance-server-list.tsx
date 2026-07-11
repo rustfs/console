@@ -2,68 +2,88 @@
 
 import * as React from "react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { niceBytes } from "@/lib/functions"
 import { normalizeServerHealthState, type ServerHealthState } from "@/lib/performance-data"
 import { cn } from "@/lib/utils"
-import dayjs from "dayjs"
-import relativeTime from "dayjs/plugin/relativeTime"
 import type { ServerInfo } from "@/hooks/use-performance-data"
 
-dayjs.extend(relativeTime)
+type Translate = (key: string) => string
 
-function countOnlineDrives(server: ServerInfo, type: string) {
-  return (server?.drives || []).filter((d) => d.state === type).length
+function countOnlineDrives(server: ServerInfo) {
+  return (server.drives ?? []).filter((drive) => {
+    const state = drive.state?.toLowerCase()
+    return state === "ok" || state === "online"
+  }).length
 }
 
-function countOnlineNetworks(server: ServerInfo, type: string) {
-  return Object.values(server?.network || {}).filter((state) => state === type).length
+function countOnlineNetworks(server: ServerInfo) {
+  return Object.values(server.network ?? {}).filter((state) => state.toLowerCase() === "online").length
 }
 
-type PerformanceServerSort =
-  | "default"
-  | "endpoint-asc"
-  | "endpoint-desc"
-  | "status-online"
-  | "status-offline"
-  | "status-unknown"
-  | "status-degraded"
-  | "uptime-desc"
-  | "uptime-asc"
+function getStateLabel(state: ServerHealthState, t: Translate) {
+  switch (state) {
+    case "online":
+      return t("Online")
+    case "offline":
+      return t("Offline")
+    case "degraded":
+      return t("Degraded")
+    case "initializing":
+      return t("Initializing")
+    default:
+      return t("Unknown")
+  }
+}
 
+function getStatePriority(state: ServerHealthState) {
+  return { offline: 0, degraded: 1, unknown: 2, initializing: 3, online: 4 }[state]
+}
+
+function getStateVariant(state: ServerHealthState): "secondary" | "destructive" | "outline" {
+  if (state === "online") return "secondary"
+  if (state === "offline" || state === "degraded") return "destructive"
+  return "outline"
+}
+
+function formatUptime(seconds: number | undefined, t: Translate) {
+  if (seconds === undefined || !Number.isFinite(seconds) || seconds < 0) return t("Unknown")
+  const totalMinutes = Math.floor(seconds / 60)
+  const days = Math.floor(totalMinutes / 1440)
+  const hours = Math.floor((totalMinutes % 1440) / 60)
+  const minutes = totalMinutes % 60
+  const parts = [
+    days ? `${days} ${t("Days")}` : "",
+    hours ? `${hours} ${t("Hours")}` : "",
+    !days && minutes ? `${minutes} ${t("Minutes")}` : "",
+  ].filter(Boolean)
+  return parts.slice(0, 2).join(" ") || `0 ${t("Minutes")}`
+}
+
+function formatBytes(value: number | undefined, t: Translate) {
+  return value === undefined || !Number.isFinite(value) || value < 0 ? t("Unknown") : niceBytes(String(value))
+}
+
+function getDriveUsagePercent(drive: NonNullable<ServerInfo["drives"]>[number]) {
+  if (!Number.isFinite(drive.totalspace) || !drive.totalspace || drive.totalspace <= 0) return undefined
+  if (!Number.isFinite(drive.usedspace) || drive.usedspace === undefined || drive.usedspace < 0) return undefined
+  const used = drive.usedspace
+  return Math.min(100, Math.max(0, (used / drive.totalspace) * 100))
+}
+
+function getDriveState(drive: NonNullable<ServerInfo["drives"]>[number]) {
+  const state = drive.state?.toLowerCase()
+  if (state === "ok" || state === "online") return "online" as const
+  if (state === "offline" || state === "faulty" || state === "error") return "offline" as const
+  return "unknown" as const
+}
+
+type PerformanceServerSort = "attention" | "endpoint-asc" | "endpoint-desc" | "uptime-desc" | "uptime-asc"
 type PerformanceServerFilter = "all" | ServerHealthState
-
-const serverStates: ServerHealthState[] = ["online", "offline", "unknown", "degraded"]
-
-function getServerState(server: ServerInfo) {
-  return normalizeServerHealthState(server.state)
-}
-
-function getServerStateLabel(state: ServerHealthState, t: (key: string) => string) {
-  if (state === "online") return t("Online")
-  if (state === "offline") return t("Offline")
-  if (state === "degraded") return t("Degraded")
-  return t("Unknown")
-}
-
-function getServerStateTone(state: ServerHealthState) {
-  if (state === "online") return "bg-primary"
-  if (state === "offline") return "bg-destructive"
-  if (state === "degraded") return "bg-amber-500"
-  return "bg-muted-foreground"
-}
-
-function getServerStateButtonClass(state: ServerHealthState, active: boolean) {
-  if (!active) return "shadow-none"
-  if (state === "offline") return "border-destructive/40 text-destructive shadow-none"
-  if (state === "degraded") return "border-amber-500/50 text-amber-700 shadow-none dark:text-amber-300"
-  if (state === "unknown") return "border-muted-foreground/40 text-muted-foreground shadow-none"
-  return "shadow-none"
-}
 
 function compareEndpoint(left: ServerInfo, right: ServerInfo, direction: "asc" | "desc") {
   const normalizedLeft = left.endpoint?.trim()
@@ -82,8 +102,8 @@ function compareEndpoint(left: ServerInfo, right: ServerInfo, direction: "asc" |
 }
 
 function compareUptime(left: ServerInfo, right: ServerInfo, direction: "asc" | "desc") {
-  const hasLeft = Number.isFinite(left.uptime)
-  const hasRight = Number.isFinite(right.uptime)
+  const hasLeft = Number.isFinite(left.uptime) && (left.uptime ?? -1) >= 0
+  const hasRight = Number.isFinite(right.uptime) && (right.uptime ?? -1) >= 0
 
   if (!hasLeft && !hasRight) return 0
   if (!hasLeft) return 1
@@ -92,31 +112,29 @@ function compareUptime(left: ServerInfo, right: ServerInfo, direction: "asc" | "
   return direction === "asc" ? left.uptime! - right.uptime! : right.uptime! - left.uptime!
 }
 
-export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t: (key: string) => string }) {
-  const [sortBy, setSortBy] = React.useState<PerformanceServerSort>("default")
+const filterOrder: ServerHealthState[] = ["offline", "degraded", "initializing", "unknown", "online"]
+
+export function PerformanceServerList({ servers, t }: { servers?: ServerInfo[]; t: Translate }) {
+  const [sortBy, setSortBy] = React.useState<PerformanceServerSort>("attention")
   const [filterBy, setFilterBy] = React.useState<PerformanceServerFilter>("all")
-  const stateCounts = React.useMemo(
-    () =>
-      servers.reduce(
-        (counts, server) => {
-          counts[getServerState(server)] += 1
-          return counts
-        },
-        { online: 0, offline: 0, unknown: 0, degraded: 0 } satisfies Record<ServerHealthState, number>,
-      ),
-    [servers],
-  )
+  const reportedServers = React.useMemo(() => servers ?? [], [servers])
+
+  const stateCounts = React.useMemo(() => {
+    const counts: Record<ServerHealthState, number> = {
+      online: 0,
+      offline: 0,
+      degraded: 0,
+      initializing: 0,
+      unknown: 0,
+    }
+    for (const server of reportedServers) counts[normalizeServerHealthState(server.state)] += 1
+    return counts
+  }, [reportedServers])
 
   const visibleServers = React.useMemo(() => {
-    const rows = servers
-      .map((server, originalIndex) => ({
-        server,
-        originalIndex,
-      }))
-      .filter(({ server }) => {
-        if (filterBy !== "all") return getServerState(server) === filterBy
-        return true
-      })
+    const rows = reportedServers
+      .map((server, originalIndex) => ({ server, originalIndex }))
+      .filter(({ server }) => filterBy === "all" || normalizeServerHealthState(server.state) === filterBy)
 
     return rows.sort((left, right) => {
       switch (sortBy) {
@@ -124,166 +142,206 @@ export function PerformanceServerList({ servers, t }: { servers: ServerInfo[]; t
           return compareEndpoint(left.server, right.server, "asc") || left.originalIndex - right.originalIndex
         case "endpoint-desc":
           return compareEndpoint(left.server, right.server, "desc") || left.originalIndex - right.originalIndex
-        case "status-online":
-          return (
-            Number(getServerState(right.server) === "online") - Number(getServerState(left.server) === "online") ||
-            compareEndpoint(left.server, right.server, "asc") ||
-            left.originalIndex - right.originalIndex
-          )
-        case "status-offline":
-          return (
-            Number(getServerState(right.server) === "offline") - Number(getServerState(left.server) === "offline") ||
-            compareEndpoint(left.server, right.server, "asc") ||
-            left.originalIndex - right.originalIndex
-          )
-        case "status-unknown":
-          return (
-            Number(getServerState(right.server) === "unknown") - Number(getServerState(left.server) === "unknown") ||
-            compareEndpoint(left.server, right.server, "asc") ||
-            left.originalIndex - right.originalIndex
-          )
-        case "status-degraded":
-          return (
-            Number(getServerState(right.server) === "degraded") - Number(getServerState(left.server) === "degraded") ||
-            compareEndpoint(left.server, right.server, "asc") ||
-            left.originalIndex - right.originalIndex
-          )
         case "uptime-desc":
           return compareUptime(left.server, right.server, "desc") || left.originalIndex - right.originalIndex
         case "uptime-asc":
           return compareUptime(left.server, right.server, "asc") || left.originalIndex - right.originalIndex
-        case "default":
+        case "attention":
         default:
-          return left.originalIndex - right.originalIndex
+          return (
+            getStatePriority(normalizeServerHealthState(left.server.state)) -
+              getStatePriority(normalizeServerHealthState(right.server.state)) ||
+            compareEndpoint(left.server, right.server, "asc") ||
+            left.originalIndex - right.originalIndex
+          )
       }
     })
-  }, [filterBy, servers, sortBy])
+  }, [filterBy, reportedServers, sortBy])
+
+  const filters: PerformanceServerFilter[] = [
+    "all",
+    ...filterOrder.filter((state) => stateCounts[state] > 0 || filterBy === state),
+  ]
+  const sortLabels: Record<PerformanceServerSort, string> = {
+    attention: t("Needs attention first"),
+    "endpoint-asc": t("Endpoint, ascending"),
+    "endpoint-desc": t("Endpoint, descending"),
+    "uptime-desc": t("Uptime, longest first"),
+    "uptime-asc": t("Uptime, shortest first"),
+  }
 
   return (
     <Card className="shadow-none">
-      <CardHeader className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <CardTitle>{t("Server List")}</CardTitle>
-          <CardDescription>
-            {t("Inspect individual server health, disk utilization, and network status.")}
-          </CardDescription>
-        </div>
-        <div className="flex flex-col gap-2 sm:items-end">
-          <span className="text-sm text-muted-foreground">
-            {t("Total")}: {visibleServers.length}/{servers.length}
-          </span>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            {serverStates.map((state) => (
-              <Button
-                key={state}
-                type="button"
-                size="sm"
-                variant={filterBy === state ? "secondary" : "outline"}
-                className={getServerStateButtonClass(state, filterBy === state)}
-                onClick={() => setFilterBy((current) => (current === state ? "all" : state))}
-              >
-                {getServerStateLabel(state, t)} ({stateCounts[state]})
-              </Button>
-            ))}
+      <CardHeader className="gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1.5">
+            <h2 id="server-list-title" className="text-base font-semibold">
+              {t("Server List")}
+            </h2>
+            <CardDescription>
+              {t("Inspect individual server health, disk utilization, and network status.")}
+            </CardDescription>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="text-sm text-muted-foreground">{t("Sort by")}</span>
-            <Select value={sortBy} onValueChange={(value) => setSortBy(value as PerformanceServerSort)}>
-              <SelectTrigger className="w-[180px] shadow-none" aria-label={t("Sort by")}>
-                <SelectValue placeholder={t("Default")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="default">{t("Default")}</SelectItem>
-                <SelectItem value="endpoint-asc">{`${t("Endpoint")} ↑`}</SelectItem>
-                <SelectItem value="endpoint-desc">{`${t("Endpoint")} ↓`}</SelectItem>
-                <SelectItem value="status-online">{`${t("Status")} · ${t("Online")}`}</SelectItem>
-                <SelectItem value="status-offline">{`${t("Status")} · ${t("Offline")}`}</SelectItem>
-                <SelectItem value="status-unknown">{`${t("Status")} · ${t("Unknown")}`}</SelectItem>
-                <SelectItem value="status-degraded">{`${t("Status")} · ${t("Degraded")}`}</SelectItem>
-                <SelectItem value="uptime-desc">{`${t("Uptime")} ↓`}</SelectItem>
-                <SelectItem value="uptime-asc">{`${t("Uptime")} ↑`}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {servers !== undefined ? (
+            <span className="text-sm text-muted-foreground" role="status" aria-live="polite">
+              {t("Total")}: {visibleServers.length}/{reportedServers.length}
+            </span>
+          ) : null}
         </div>
+
+        {servers !== undefined && reportedServers.length ? (
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap" role="group" aria-label={t("Filter servers")}>
+              {filters.map((filter) => {
+                const selected = filterBy === filter
+                const label = filter === "all" ? t("All") : getStateLabel(filter, t)
+                const count = filter === "all" ? reportedServers.length : stateCounts[filter]
+                return (
+                  <Button
+                    key={filter}
+                    type="button"
+                    variant={selected ? "secondary" : "outline"}
+                    className={cn(
+                      "min-h-11 whitespace-normal shadow-none sm:min-h-0",
+                      filter === "offline" || filter === "degraded" ? "data-[selected=true]:text-destructive" : "",
+                    )}
+                    data-selected={selected}
+                    aria-pressed={selected}
+                    aria-controls="performance-server-list"
+                    onClick={() => setFilterBy(filter)}
+                  >
+                    {label} ({count})
+                  </Button>
+                )
+              })}
+            </div>
+
+            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center">
+              <label htmlFor="performance-server-sort" className="text-sm text-muted-foreground">
+                {t("Sort by")}
+              </label>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as PerformanceServerSort)}>
+                <SelectTrigger
+                  id="performance-server-sort"
+                  className="min-h-11 w-full shadow-none sm:min-h-0 sm:w-[230px]"
+                >
+                  <SelectValue>{sortLabels[sortBy]}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(sortLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value} className="min-h-11">
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        ) : null}
       </CardHeader>
+
       <CardContent>
-        <Accordion className="space-y-2">
-          {visibleServers.map(({ server, originalIndex }) => (
-            <AccordionItem
-              key={server.endpoint ? `${server.endpoint}-${originalIndex}` : `server-${originalIndex}`}
-              value={server.endpoint ? `${server.endpoint}-${originalIndex}` : `server-${originalIndex}`}
-            >
-              <AccordionTrigger>
-                <div className="flex flex-col gap-2 text-start sm:flex-row sm:items-center sm:gap-4">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={cn("inline-flex h-2 w-2 rounded-full", getServerStateTone(getServerState(server)))}
-                    />
-                    <span className="font-semibold">{server.endpoint ?? "--"}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {getServerStateLabel(getServerState(server), t)}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                    <span>
-                      {t("Disks")}: {countOnlineDrives(server, "ok")} / {server.drives?.length ?? 0}
-                    </span>
-                    <span>
-                      {t("Network")}: {countOnlineNetworks(server, "online")} /{" "}
-                      {Object.keys(server.network ?? {}).length}
-                    </span>
-                    <span>
-                      {t("Uptime")}:{" "}
-                      {server.uptime != null ? dayjs().subtract(server.uptime, "second").fromNow() : "--"}
-                    </span>
-                  </div>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent>
-                <p className="pb-2 text-xs text-muted-foreground">
-                  {t("Version")}: {server.version ?? "--"}
-                </p>
-                <ScrollArea className="w-full">
-                  <div className="flex gap-4 pb-2">
-                    {(server.drives || []).map((drive) => (
-                      <Card key={drive.uuid ?? drive.drive_path ?? drive.path} className="min-w-[260px] shadow-none">
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm font-medium text-muted-foreground">
-                            {drive.drive_path ?? drive.path ?? "--"}
-                          </CardTitle>
-                          <CardDescription className="text-xs">
-                            {niceBytes(String(drive.usedspace ?? 0))} / {niceBytes(String(drive.totalspace ?? 0))}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <Progress
-                            value={drive.totalspace ? ((drive.usedspace ?? 0) / drive.totalspace) * 100 : 0}
-                            className="mb-3 h-2"
-                          />
-                          <div className="space-y-1 text-xs text-muted-foreground">
-                            <p>
-                              {t("Used")}:{" "}
-                              <span className="font-medium text-foreground">
-                                {niceBytes(String(drive.usedspace ?? 0))}
-                              </span>
-                            </p>
-                            <p>
-                              {t("Available")}:{" "}
-                              <span className="font-medium text-foreground">
-                                {niceBytes(String(drive.availspace ?? 0))}
-                              </span>
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        {servers === undefined || reportedServers.length === 0 ? (
+          <div id="performance-server-list" className="border border-dashed p-8 text-center">
+            <p className="text-sm font-medium">{t("No server information was reported.")}</p>
+          </div>
+        ) : visibleServers.length ? (
+          <Accordion id="performance-server-list" className="space-y-2" aria-labelledby="server-list-title">
+            {visibleServers.map(({ server, originalIndex }) => {
+              const state = normalizeServerHealthState(server.state)
+              return (
+                <AccordionItem
+                  key={server.endpoint ?? `server-${originalIndex}`}
+                  value={server.endpoint ?? `server-${originalIndex}`}
+                >
+                  <AccordionTrigger className="min-h-11 py-3">
+                    <div className="grid min-w-0 flex-1 gap-2 pe-3 text-start lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Badge variant={getStateVariant(state)}>{getStateLabel(state, t)}</Badge>
+                        <span className="min-w-0 break-words font-semibold [overflow-wrap:anywhere]">
+                          {server.endpoint ?? t("Unknown")}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground sm:flex sm:flex-wrap">
+                        <span>
+                          {t("Disks")}: {countOnlineDrives(server)} / {server.drives?.length ?? 0}
+                        </span>
+                        <span>
+                          {t("Network")}: {countOnlineNetworks(server)} / {Object.keys(server.network ?? {}).length}
+                        </span>
+                        <span className="col-span-2">
+                          {t("Uptime")}: {formatUptime(server.uptime, t)}
+                        </span>
+                      </div>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <p className="pb-3 text-xs text-muted-foreground">
+                      {t("Version")}: <span className="break-all">{server.version ?? t("Unknown")}</span>
+                    </p>
+                    {server.drives?.length ? (
+                      <div className="grid gap-3 md:grid-cols-2">
+                        {server.drives.map((drive, driveIndex) => {
+                          const path = drive.drive_path ?? drive.path ?? t("Unknown")
+                          const driveState = getDriveState(drive)
+                          const usedPercent = getDriveUsagePercent(drive)
+                          return (
+                            <Card
+                              key={`${drive.uuid ?? drive.drive_path ?? drive.path ?? "drive"}-${driveIndex}`}
+                              className="min-w-0 shadow-none"
+                            >
+                              <CardHeader className="gap-2 pb-2">
+                                <div className="flex min-w-0 items-start justify-between gap-3">
+                                  <h4 className="min-w-0 break-all text-sm font-medium">{path}</h4>
+                                  <Badge variant={getStateVariant(driveState)}>{getStateLabel(driveState, t)}</Badge>
+                                </div>
+                                <CardDescription className="text-xs tabular-nums">
+                                  {formatBytes(drive.usedspace, t)} / {formatBytes(drive.totalspace, t)}
+                                </CardDescription>
+                              </CardHeader>
+                              <CardContent className="space-y-3">
+                                <Progress
+                                  value={usedPercent ?? null}
+                                  aria-label={`${path} ${t("Storage Usage Statistics")}: ${usedPercent === undefined ? t("Unknown") : `${usedPercent.toFixed(0)}%`}`}
+                                  className="h-2"
+                                />
+                                <dl className="grid grid-cols-2 gap-3 text-xs">
+                                  <div>
+                                    <dt className="text-muted-foreground">{t("Used")}</dt>
+                                    <dd className="mt-1 font-medium text-foreground tabular-nums">
+                                      {formatBytes(drive.usedspace, t)}
+                                    </dd>
+                                  </div>
+                                  <div>
+                                    <dt className="text-muted-foreground">{t("Available")}</dt>
+                                    <dd className="mt-1 font-medium text-foreground tabular-nums">
+                                      {formatBytes(drive.availspace, t)}
+                                    </dd>
+                                  </div>
+                                </dl>
+                              </CardContent>
+                            </Card>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <p className="border border-dashed p-4 text-sm text-muted-foreground">
+                        {t("No drive information was reported for this server.")}
+                      </p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              )
+            })}
+          </Accordion>
+        ) : (
+          <div id="performance-server-list" className="border border-dashed p-8 text-center">
+            <p className="text-sm font-medium">{t("No servers match the current filter")}</p>
+            <Button type="button" variant="link" className="mt-2 min-h-11" onClick={() => setFilterBy("all")}>
+              {t("Show all servers")}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

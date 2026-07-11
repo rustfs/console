@@ -16,27 +16,27 @@ interface ChangePasswordProps {
   onVisibleChange: (visible: boolean) => void
 }
 
+const PASSWORD_MIN_LENGTH = 8
+const PASSWORD_MAX_LENGTH = 40
+
 export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const api = useApiOptional()
   const { createUser } = useUsers()
 
-  const [currentSecretKey, setCurrentSecretKey] = useState("")
   const [newSecretKey, setNewSecretKey] = useState("")
   const [reNewSecretKey, setReNewSecretKey] = useState("")
   const [errors, setErrors] = useState({
-    current: "",
     new: "",
     reNew: "",
   })
   const [submitting, setSubmitting] = useState(false)
 
   const clearForm = () => {
-    setCurrentSecretKey("")
     setNewSecretKey("")
     setReNewSecretKey("")
-    setErrors({ current: "", new: "", reNew: "" })
+    setErrors({ new: "", reNew: "" })
     setSubmitting(false)
   }
 
@@ -45,10 +45,17 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
     if (!open) clearForm()
   }
 
+  const handleOpenChange = (open: boolean) => {
+    if (!submitting || open) closeModal(open)
+  }
+
   const validate = () => {
     const newErrors = {
-      current: !currentSecretKey ? t("Please enter current password") : "",
-      new: !newSecretKey ? t("Please enter new password") : "",
+      new: !newSecretKey
+        ? t("Please enter new password")
+        : newSecretKey.length < PASSWORD_MIN_LENGTH || newSecretKey.length > PASSWORD_MAX_LENGTH
+          ? t("password length cannot be less than 8 characters and greater than 40 characters")
+          : "",
       reNew: !reNewSecretKey
         ? t("Please enter new password again")
         : reNewSecretKey !== newSecretKey
@@ -56,10 +63,11 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
           : "",
     }
     setErrors(newErrors)
-    return !newErrors.current && !newErrors.new && !newErrors.reNew
+    return !newErrors.new && !newErrors.reNew
   }
 
   const submitForm = async () => {
+    if (submitting) return
     if (!validate()) {
       message.error(t("Please fill in the correct format"))
       return
@@ -72,9 +80,13 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
         return
       }
       const userInfo = (await api.get("/accountinfo")) as { account_name?: string }
+      if (!userInfo?.account_name) {
+        message.error(t("Failed to get data"))
+        return
+      }
       await createUser(
         {
-          accessKey: userInfo?.account_name ?? "",
+          accessKey: userInfo.account_name,
           secretKey: newSecretKey,
           status: "enabled",
         },
@@ -91,75 +103,78 @@ export function ChangePassword({ visible, onVisibleChange }: ChangePasswordProps
   }
 
   return (
-    <Dialog open={visible} onOpenChange={closeModal}>
-      <DialogContent className="overflow-x-hidden sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{t("Change current account password")}</DialogTitle>
+    <Dialog open={visible} onOpenChange={handleOpenChange} disablePointerDismissal>
+      <DialogContent
+        className="max-h-[min(90dvh,40rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg"
+        aria-busy={submitting}
+      >
+        <DialogHeader className="border-b px-4 py-3 pe-12">
+          <DialogTitle>{t("Change Password")}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          <Field>
-            <FieldLabel htmlFor="password-current">{t("Current Password")}</FieldLabel>
-            <FieldContent>
-              <Input
-                id="password-current"
-                name="password-current"
-                value={currentSecretKey}
-                onChange={(e) => setCurrentSecretKey(e.target.value)}
-                type="password"
-                autoComplete="off"
-                spellCheck={false}
-                aria-invalid={Boolean(errors.current)}
-              />
-            </FieldContent>
-            <FieldError>{errors.current}</FieldError>
-          </Field>
+        <form
+          className="contents"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void submitForm()
+          }}
+        >
+          <div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4">
+            <Field>
+              <FieldLabel htmlFor="password-new">{t("New Password")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="password-new"
+                  name="password-new"
+                  value={newSecretKey}
+                  onChange={(e) => setNewSecretKey(e.target.value)}
+                  type="password"
+                  autoComplete="new-password"
+                  spellCheck={false}
+                  minLength={PASSWORD_MIN_LENGTH}
+                  maxLength={PASSWORD_MAX_LENGTH}
+                  required
+                  disabled={submitting}
+                  aria-invalid={Boolean(errors.new)}
+                  aria-describedby={errors.new ? "password-new-error" : undefined}
+                />
+              </FieldContent>
+              <FieldError id="password-new-error">{errors.new}</FieldError>
+            </Field>
 
-          <Field>
-            <FieldLabel htmlFor="password-new">{t("New Password")}</FieldLabel>
-            <FieldContent>
-              <Input
-                id="password-new"
-                name="password-new"
-                value={newSecretKey}
-                onChange={(e) => setNewSecretKey(e.target.value)}
-                type="password"
-                autoComplete="new-password"
-                spellCheck={false}
-                aria-invalid={Boolean(errors.new)}
-              />
-            </FieldContent>
-            <FieldError>{errors.new}</FieldError>
-          </Field>
+            <Field>
+              <FieldLabel htmlFor="password-new-confirm">{t("Confirm New Password")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="password-new-confirm"
+                  name="password-new-confirm"
+                  value={reNewSecretKey}
+                  onChange={(e) => setReNewSecretKey(e.target.value)}
+                  type="password"
+                  autoComplete="new-password"
+                  spellCheck={false}
+                  minLength={PASSWORD_MIN_LENGTH}
+                  maxLength={PASSWORD_MAX_LENGTH}
+                  required
+                  disabled={!newSecretKey || submitting}
+                  aria-invalid={Boolean(errors.reNew)}
+                  aria-describedby={errors.reNew ? "password-new-confirm-error" : undefined}
+                />
+              </FieldContent>
+              <FieldError id="password-new-confirm-error">{errors.reNew}</FieldError>
+            </Field>
+          </div>
 
-          <Field>
-            <FieldLabel htmlFor="password-new-confirm">{t("Confirm New Password")}</FieldLabel>
-            <FieldContent>
-              <Input
-                id="password-new-confirm"
-                name="password-new-confirm"
-                value={reNewSecretKey}
-                onChange={(e) => setReNewSecretKey(e.target.value)}
-                type="password"
-                autoComplete="new-password"
-                spellCheck={false}
-                disabled={!newSecretKey}
-                aria-invalid={Boolean(errors.reNew)}
-              />
-            </FieldContent>
-            <FieldError>{errors.reNew}</FieldError>
-          </Field>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => closeModal()}>
-            {t("Cancel")}
-          </Button>
-          <Button onClick={submitForm} disabled={submitting}>
-            {submitting ? <Spinner className="size-4" /> : null}
-            <span>{t("Submit")}</span>
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+            <Button type="button" variant="outline" onClick={() => closeModal()} disabled={submitting}>
+              {t("Cancel")}
+            </Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? <Spinner className="size-4" /> : null}
+              <span>{t("Submit")}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

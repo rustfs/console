@@ -9,6 +9,8 @@ description: Audit and fix UI quality issues across web apps, dashboards, landin
 
 Treat the request as implementation work unless the user asks for analysis only. Read local instructions first, preserve unrelated changes, and keep edits surgical. Do not create project summary documents or reports unless explicitly requested.
 
+In this repository, read `skills/rustfs-console-design-guide/SKILL.md` before auditing or changing Console UI. Use that guide as the source of design decisions; use this skill for audit execution, browser validation, evidence capture, and verification.
+
 If the user asks to pull latest, do it before editing after checking `git status`. If local unrelated work is present, preserve it and avoid destructive git commands.
 
 ## Classify The Surface

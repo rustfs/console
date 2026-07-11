@@ -578,22 +578,22 @@ export function ObjectUploadPicker({
             )}
 
             {isFolderLoading && (
-              <div className="space-y-2 border border-dashed p-3">
+              <div className="space-y-2 border-t bg-muted/30 p-3" role="status" aria-live="polite">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{t("Reading Folder Files")}</span>
                   <span>{folderLoadingProgress}%</span>
                 </div>
-                <Progress value={folderLoadingProgress} className="h-2" />
+                <Progress value={folderLoadingProgress} className="h-2" aria-label={t("Reading Folder Files")} />
               </div>
             )}
 
             {isAdding && (
-              <div className="space-y-2 border border-dashed p-3">
+              <div className="space-y-2 border-t bg-muted/30 p-3" role="status" aria-live="polite">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{t("Adding to Upload Queue")}</span>
                   <span>{addProgress}%</span>
                 </div>
-                <Progress value={addProgress} className="h-2" />
+                <Progress value={addProgress} className="h-2" aria-label={t("Adding to Upload Queue")} />
               </div>
             )}
           </div>

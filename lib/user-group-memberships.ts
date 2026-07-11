@@ -6,15 +6,14 @@ export interface UpdateGroupMembersRequest {
 }
 
 export function buildAddUsersToGroupsRequests(users: string[], groups: string[]): UpdateGroupMembersRequest[] {
-  const normalizedUsers = users.map((user) => user.trim()).filter(Boolean)
-  const normalizedGroups = groups.map((group) => group.trim()).filter(Boolean)
+  const normalizedUsers = Array.from(new Set(users.map((user) => user.trim()).filter(Boolean)))
+  const normalizedGroups = Array.from(new Set(groups.map((group) => group.trim()).filter(Boolean)))
+  if (!normalizedUsers.length) return []
 
-  return normalizedUsers.flatMap((user) =>
-    normalizedGroups.map((group) => ({
-      group,
-      members: [user],
-      isRemove: false,
-      groupStatus: "enabled",
-    })),
-  )
+  return normalizedGroups.map((group) => ({
+    group,
+    members: normalizedUsers,
+    isRemove: false,
+    groupStatus: "enabled",
+  }))
 }

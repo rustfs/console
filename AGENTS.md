@@ -110,6 +110,7 @@ Before committing any code changes, you MUST run and pass:
 
 ## UI Theme Overrides
 
+- For every Console UI, interaction, settings, form, dialog, table, responsive-layout, or visual-review change, read and follow `skills/rustfs-console-design-guide/SKILL.md` before editing. Use `skills/ui-audit/SKILL.md` as the audit workflow and the Console design guide as the source of design decisions.
 - Apply visual tweaks (e.g. removing shadows, altering colors) at usage sites via classes such as `class="shadow-none"`.
 - When extending shadcn components, create wrapper components (e.g. `BucketSelector.tsx`) instead of forking primitives.
 - Do not change base colors or theme variables defined in `console-new` unless explicitly required by the migration plan.

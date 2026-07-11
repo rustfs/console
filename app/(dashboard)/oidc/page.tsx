@@ -439,7 +439,7 @@ export default function OidcPage() {
           </Alert>
         ) : null}
 
-        <div className="grid gap-4 xl:grid-cols-[22rem_minmax(0,1fr)]">
+        <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
           <ProviderList
             providers={providers}
             loading={loading}

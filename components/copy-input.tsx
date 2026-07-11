@@ -14,6 +14,7 @@ interface CopyInputProps extends Omit<React.ComponentProps<typeof Input>, "value
   onChange?: (value: string) => void
   readonly?: boolean
   copyIcon?: boolean
+  copyLabel?: string
   className?: string
 }
 
@@ -22,11 +23,13 @@ export function CopyInput({
   onChange,
   readonly = false,
   copyIcon = false,
+  copyLabel,
   className,
   ...props
 }: CopyInputProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const resolvedCopyLabel = copyLabel ?? t("Copy")
 
   const handleCopy = async () => {
     try {
@@ -49,7 +52,7 @@ export function CopyInput({
       />
       {!copyIcon ? (
         <Button type="button" variant="default" onClick={handleCopy}>
-          {t("Copy")}
+          {resolvedCopyLabel}
         </Button>
       ) : (
         <Button
@@ -57,11 +60,12 @@ export function CopyInput({
           variant="ghost"
           size="sm"
           className="shrink-0 outline"
-          title={t("Copy")}
+          title={resolvedCopyLabel}
+          aria-label={resolvedCopyLabel}
           onClick={handleCopy}
         >
           <RiFileCopyLine className="size-4" aria-hidden />
-          <span className="sr-only">{t("Copy")}</span>
+          <span className="sr-only">{resolvedCopyLabel}</span>
         </Button>
       )}
     </div>

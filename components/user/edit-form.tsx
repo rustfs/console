@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
+import { RiRefreshLine } from "@remixicon/react"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -72,9 +73,14 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   const [policiesList, setPoliciesList] = React.useState<{ label: string; value: string }[]>([])
   const [activeTab, setActiveTab] = React.useState("account")
   const [loading, setLoading] = React.useState(false)
+  const [loadError, setLoadError] = React.useState("")
+  const [loadVersion, setLoadVersion] = React.useState(0)
+  const [loadedAccessKey, setLoadedAccessKey] = React.useState("")
+  const [originalStatus, setOriginalStatus] = React.useState("enabled")
   const [submitting, setSubmitting] = React.useState(false)
 
   const statusBoolean = user.status === "enabled"
+  const isCurrentUserLoaded = loadedAccessKey === user.accessKey && user.accessKey === row?.accessKey
   const availableTabs = React.useMemo(() => {
     return getAvailableUserEditTabs({
       canEditAccount,
@@ -87,35 +93,51 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   React.useEffect(() => {
     if (!open || !row?.accessKey) return
 
+    let cancelled = false
+    const targetAccessKey = row.accessKey
     const initialPolicy = Array.isArray(row.policy)
       ? row.policy
       : ((row.policyName as string | undefined)?.split(",").filter(Boolean) ?? [])
     const initialMemberOf = (row.memberOf as string[] | undefined) ?? []
+    const initialStatus = (row.status as string) ?? "enabled"
 
     setUser({
-      accessKey: row.accessKey,
+      accessKey: targetAccessKey,
       memberOf: initialMemberOf,
       policy: initialPolicy,
-      status: (row.status as string) ?? "enabled",
+      status: initialStatus,
     })
     setOriginalMemberOf(initialMemberOf)
+    setOriginalStatus(initialStatus)
     setSecretKey("")
     setErrors({ secretKey: "" })
     setActiveTab(availableTabs[0] ?? "account")
+    setGroupsList([])
+    setPoliciesList([])
+    setLoadedAccessKey("")
+    setLoadError("")
     setLoading(true)
 
-    Promise.all([getUser(row.accessKey), listGroup(), listPolicies()])
+    const needsUserDetail = canEditAccount || canAssignGroups || canEditPolicies
+    Promise.all([
+      needsUserDetail ? getUser(targetAccessKey) : Promise.resolve(null),
+      canAssignGroups ? listGroup() : Promise.resolve([]),
+      canEditPolicies ? listPolicies() : Promise.resolve({}),
+    ])
       .then(([latest, groups, policies]) => {
+        if (cancelled) return
         const latestInfo = (latest ?? {}) as UserDetail
         const latestMemberOf = latestInfo.memberOf ?? initialMemberOf
+        const latestStatus = latestInfo.status ?? initialStatus
 
-        setUser((prev) => ({
-          ...prev,
+        setUser({
+          accessKey: targetAccessKey,
           memberOf: latestMemberOf,
           policy: latestInfo.policyName?.split(",").filter(Boolean) ?? initialPolicy,
-          status: latestInfo.status ?? prev.status,
-        }))
+          status: latestStatus,
+        })
         setOriginalMemberOf(latestMemberOf)
+        setOriginalStatus(latestStatus)
         setGroupsList((groups as string[] | undefined)?.map((group) => ({ label: group, value: group })) ?? [])
         setPoliciesList(
           Object.keys((policies as Record<string, unknown> | undefined) ?? {}).map((policy) => ({
@@ -123,12 +145,35 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
             value: policy,
           })),
         )
+        setLoadedAccessKey(targetAccessKey)
       })
-      .catch(() => {
-        message.error(t("Failed to get data"))
+      .catch((error) => {
+        if (cancelled) return
+        const reason = (error as Error)?.message || t("Failed to get data")
+        setLoadError(reason)
+        message.error(reason)
       })
-      .finally(() => setLoading(false))
-  }, [availableTabs, open, row, getUser, listGroup, listPolicies, message, t])
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    availableTabs,
+    canAssignGroups,
+    canEditAccount,
+    canEditPolicies,
+    getUser,
+    listGroup,
+    listPolicies,
+    loadVersion,
+    message,
+    open,
+    row,
+    t,
+  ])
 
   const validate = () => {
     const newErrors = { secretKey: "" }
@@ -139,24 +184,13 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
     return !newErrors.secretKey
   }
 
-  const handleStatusChange = async (checked: boolean) => {
-    if (!canEditAccount) return
-    const nextStatus = checked ? "enabled" : "disabled"
-    if (!user.accessKey) return
-
-    const previousStatus = user.status
-    try {
-      await changeUserStatus(user.accessKey, { status: nextStatus })
-      setUser((prev) => ({ ...prev, status: nextStatus }))
-      onSuccess()
-    } catch {
-      setUser((prev) => ({ ...prev, status: previousStatus }))
-      message.error(t("Edit Failed"))
-    }
+  const handleStatusChange = (checked: boolean) => {
+    if (!canEditAccount || !isCurrentUserLoaded || loading || loadError || submitting) return
+    setUser((current) => ({ ...current, status: checked ? "enabled" : "disabled" }))
   }
 
   const submitForm = async () => {
-    if (!user.accessKey) return
+    if (!user.accessKey || !isCurrentUserLoaded || loading || loadError || submitting) return
     if (!validate()) {
       message.error(t("Please fill in the correct format"))
       return
@@ -173,6 +207,8 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
           },
           { suppress403Redirect: true },
         )
+      } else if (canEditAccount && user.status !== originalStatus) {
+        await changeUserStatus(user.accessKey, { status: user.status })
       }
 
       if (canEditPolicies) {
@@ -224,83 +260,116 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   }
 
   const closeModal = () => onOpenChange(false)
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!submitting || nextOpen) onOpenChange(nextOpen)
+  }
+  const isAccessKeysTab = activeTab === "access-keys"
 
   return (
-    <Dialog open={open} onOpenChange={closeModal} disablePointerDismissal>
-      <DialogContent className="overflow-x-hidden sm:max-w-5xl">
-        <DialogHeader>
-          <DialogTitle>{user.accessKey || row?.accessKey || t("Account")}</DialogTitle>
+    <Dialog open={open} onOpenChange={handleOpenChange} disablePointerDismissal>
+      <DialogContent
+        className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-5xl"
+        aria-busy={loading || submitting}
+      >
+        <DialogHeader className="border-b px-4 py-3 pe-12">
+          <DialogTitle>{row?.accessKey || t("Account")}</DialogTitle>
         </DialogHeader>
 
-        <div className="-mx-2 max-h-[80vh] space-y-4 overflow-y-auto overflow-x-hidden px-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">
-            <TabsList className="justify-start overflow-x-auto overflow-y-hidden">
-              {canEditAccount ? <TabsTrigger value="account">{t("Account")}</TabsTrigger> : null}
-              {canAssignGroups ? <TabsTrigger value="groups">{t("Groups")}</TabsTrigger> : null}
-              {canEditPolicies ? <TabsTrigger value="policy">{t("Policies")}</TabsTrigger> : null}
-              {canManageAccessKeys ? <TabsTrigger value="access-keys">{t("Access Keys")}</TabsTrigger> : null}
-            </TabsList>
+        <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+          {loading ? (
+            <div
+              className="flex min-h-72 items-center justify-center gap-2 text-sm text-muted-foreground"
+              role="status"
+            >
+              <Spinner className="size-4" />
+              {t("Loading…")}
+            </div>
+          ) : loadError ? (
+            <div
+              className="flex min-h-72 flex-col items-center justify-center gap-3 border border-dashed p-6 text-center"
+              role="alert"
+            >
+              <p className="max-w-md text-sm text-destructive">{loadError}</p>
+              <Button type="button" variant="outline" onClick={() => setLoadVersion((current) => current + 1)}>
+                <RiRefreshLine className="size-4" aria-hidden />
+                {t("Refresh")}
+              </Button>
+            </div>
+          ) : isCurrentUserLoaded ? (
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col gap-4">
+              <TabsList className="justify-start overflow-x-auto overflow-y-hidden">
+                {canEditAccount ? <TabsTrigger value="account">{t("Account")}</TabsTrigger> : null}
+                {canAssignGroups ? <TabsTrigger value="groups">{t("Groups")}</TabsTrigger> : null}
+                {canEditPolicies ? <TabsTrigger value="policy">{t("Policies")}</TabsTrigger> : null}
+                {canManageAccessKeys ? <TabsTrigger value="access-keys">{t("Access Keys")}</TabsTrigger> : null}
+              </TabsList>
 
-            {canEditAccount ? (
-              <TabsContent value="account" className="mt-0 space-y-4">
-                <div className="flex items-center justify-start gap-2 border px-3 py-2">
-                  <label htmlFor="edit-user-status" className="text-sm text-muted-foreground">
-                    {t("Status")}
-                  </label>
-                  <Switch
-                    id="edit-user-status"
-                    checked={statusBoolean}
-                    onCheckedChange={handleStatusChange}
+              {canEditAccount ? (
+                <TabsContent value="account" className="mt-0 space-y-4">
+                  <div className="flex items-center justify-start gap-2 border px-3 py-2">
+                    <label htmlFor="edit-user-status" className="text-sm text-muted-foreground">
+                      {t("Status")}
+                    </label>
+                    <Switch
+                      id="edit-user-status"
+                      checked={statusBoolean}
+                      onCheckedChange={handleStatusChange}
+                      disabled={loading || submitting}
+                    />
+                  </div>
+                  <UserEditSecretKey
+                    value={secretKey}
+                    error={errors.secretKey}
                     disabled={loading || submitting}
+                    onChange={setSecretKey}
                   />
-                </div>
-                <UserEditSecretKey
-                  value={secretKey}
-                  error={errors.secretKey}
-                  disabled={loading || submitting}
-                  onChange={setSecretKey}
-                />
-              </TabsContent>
-            ) : null}
+                </TabsContent>
+              ) : null}
 
-            {canAssignGroups ? (
-              <TabsContent value="groups" className="mt-0">
-                <UserEditGroups
-                  value={user.memberOf}
-                  options={groupsList}
-                  disabled={loading || submitting}
-                  onChange={(memberOf) => setUser((prev) => ({ ...prev, memberOf }))}
-                />
-              </TabsContent>
-            ) : null}
+              {canAssignGroups ? (
+                <TabsContent value="groups" className="mt-0">
+                  <UserEditGroups
+                    value={user.memberOf}
+                    options={groupsList}
+                    disabled={loading || submitting}
+                    onChange={(memberOf) => setUser((prev) => ({ ...prev, memberOf }))}
+                  />
+                </TabsContent>
+              ) : null}
 
-            {canEditPolicies ? (
-              <TabsContent value="policy" className="mt-0">
-                <UserEditPolicies
-                  value={user.policy}
-                  options={policiesList}
-                  disabled={loading || submitting}
-                  onChange={(policy) => setUser((prev) => ({ ...prev, policy }))}
-                />
-              </TabsContent>
-            ) : null}
+              {canEditPolicies ? (
+                <TabsContent value="policy" className="mt-0">
+                  <UserEditPolicies
+                    value={user.policy}
+                    options={policiesList}
+                    disabled={loading || submitting}
+                    onChange={(policy) => setUser((prev) => ({ ...prev, policy }))}
+                  />
+                </TabsContent>
+              ) : null}
 
-            {canManageAccessKeys ? (
-              <TabsContent value="access-keys" className="mt-0">
-                <UserEditAccessKeys userName={user.accessKey} />
-              </TabsContent>
-            ) : null}
-          </Tabs>
+              {canManageAccessKeys ? (
+                <TabsContent value="access-keys" className="mt-0">
+                  <UserEditAccessKeys userName={user.accessKey} />
+                </TabsContent>
+              ) : null}
+            </Tabs>
+          ) : null}
         </div>
 
-        <DialogFooter className="border-t pt-4">
+        <DialogFooter className="border-t bg-muted/20 px-4 py-3">
           <Button variant="outline" onClick={closeModal} disabled={submitting}>
-            {t("Cancel")}
+            {isAccessKeysTab ? t("Close") : t("Cancel")}
           </Button>
-          <Button onClick={submitForm} disabled={loading || submitting || availableTabs.length === 0}>
-            {submitting ? <Spinner className="size-4" /> : null}
-            <span>{t("Submit")}</span>
-          </Button>
+          {!isAccessKeysTab && !loadError ? (
+            <Button
+              onClick={submitForm}
+              disabled={loading || submitting || availableTabs.length === 0 || !isCurrentUserLoaded}
+            >
+              {submitting ? <Spinner className="size-4" /> : null}
+              <span>{t("Submit")}</span>
+            </Button>
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>

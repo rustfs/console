@@ -102,29 +102,31 @@ function ConfigPageContent() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-6 lg:p-20">
+    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-8 lg:p-12">
       <Image
         src={buildRoute("/backgrounds/scillate.svg")}
         alt=""
         fill
         priority
         sizes="100vw"
-        className="absolute inset-0 z-0 opacity-45 object-cover"
+        className="absolute inset-0 z-0 object-cover opacity-30"
       />
-      <div className="z-10 mx-auto flex w-full max-w-7xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[560px] lg:flex-row">
-        <div className="hidden w-1/2 lg:block">
+      <div className="z-10 mx-auto flex w-full max-w-6xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[600px] lg:flex-row">
+        <div className="hidden lg:block lg:w-5/12">
           <AuthHeroStatic />
         </div>
-        <div className="flex w-full flex-col items-center justify-center bg-card lg:w-1/2">
-          <div className="max-w-sm w-full space-y-6 p-4 sm:p-7">
-            <ThemeLogo width={112} height={24} priority />
-            <div className="py-6">
-              <h1 className="block text-2xl font-bold text-foreground">{t("Server Configuration")}</h1>
+        <div className="flex w-full flex-col items-center justify-center bg-card lg:w-7/12">
+          <div className="w-full max-w-md p-6 sm:p-8 lg:p-10">
+            <ThemeLogo width={112} height={24} className="lg:hidden" priority />
+            <div className="mt-8 lg:mt-0">
+              <h1 className="block font-heading text-2xl font-semibold tracking-tight text-foreground">
+                {t("Server Configuration")}
+              </h1>
               <p className="mt-2 text-sm text-muted-foreground">{t("Please configure your RustFS server address")}</p>
             </div>
 
-            <div className="mt-5 space-y-4">
-              <form onSubmit={validateAndSave} autoComplete="off">
+            <div className="mt-8 space-y-4">
+              <form onSubmit={validateAndSave} autoComplete="off" aria-busy={isSaving}>
                 <div className="grid gap-y-6">
                   <Field>
                     <FieldLabel htmlFor="serverHost">{t("Server Address")}</FieldLabel>
@@ -138,6 +140,7 @@ function ConfigPageContent() {
                         type="url"
                         autoComplete="off"
                         spellCheck={false}
+                        className="h-11 text-base sm:h-8 sm:text-xs"
                         placeholder={t("Please enter server address (e.g., http://localhost:9000)")}
                       />
                     </FieldContent>
@@ -147,14 +150,18 @@ function ConfigPageContent() {
                   </Field>
 
                   <div className="flex flex-col gap-3 sm:flex-row">
-                    <Button type="submit" className="w-full sm:flex-1" disabled={isSaving}>
+                    <Button
+                      type="submit"
+                      className="h-11 w-full text-sm sm:h-8 sm:flex-1 sm:text-xs"
+                      disabled={isSaving}
+                    >
                       {t("Save Configuration")}
                     </Button>
 
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full sm:w-auto"
+                      className="h-11 w-full text-sm sm:h-8 sm:w-auto sm:text-xs"
                       onClick={resetToCurrentHost}
                       disabled={isSaving}
                     >
@@ -163,8 +170,8 @@ function ConfigPageContent() {
 
                     <Button
                       type="button"
-                      variant="outline"
-                      className="w-full sm:w-auto"
+                      variant="ghost"
+                      className="h-11 w-full text-sm sm:h-8 sm:w-auto sm:text-xs"
                       onClick={skipConfig}
                       disabled={isSaving}
                     >
@@ -175,20 +182,15 @@ function ConfigPageContent() {
               </form>
             </div>
 
-            <div className="my-8">
-              <p className="text-sm text-muted-foreground">
+            <div className="mt-8 flex items-center justify-between gap-4 border-t pt-5">
+              <p className="min-w-0 text-sm text-muted-foreground">
                 {t("Need help?")}{" "}
                 <Link href={docs} className="text-foreground underline-offset-4 hover:underline">
                   {t("View Documentation")}
                 </Link>
               </p>
-            </div>
-
-            <div className="mx-auto flex w-1/2 items-center justify-around gap-4">
-              <div className="inline-flex">
+              <div className="flex shrink-0 items-center gap-1 [&_[data-slot=button]]:size-10 sm:[&_[data-slot=button]]:size-8">
                 <ThemeSwitcher />
-              </div>
-              <div className="inline-flex">
                 <LanguageSwitcher />
               </div>
             </div>

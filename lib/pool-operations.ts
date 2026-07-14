@@ -473,6 +473,10 @@ function normalizeState(value: string): string {
   return value.trim().toLowerCase()
 }
 
+export function isRebalanceNotStartedError(error: unknown): boolean {
+  return error instanceof Error && normalizeState(error.message) === "pool rebalance is not started"
+}
+
 function deriveDecommissionStatus(info: JsonRecord): string {
   if (asBoolean(info.complete || info.Complete)) return "complete"
   if (asBoolean(info.failed || info.Failed)) return "failed"

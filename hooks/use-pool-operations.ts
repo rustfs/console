@@ -5,6 +5,7 @@ import { useApi } from "@/contexts/api-context"
 import {
   deriveDecommissionDisplayState,
   deriveRebalanceDisplayState,
+  isRebalanceNotStartedError,
   normalizeDecommissionInfo,
   normalizeDecommissionStatus,
   normalizePoolsOverview,
@@ -38,8 +39,15 @@ export function usePoolOperations() {
   }, [api])
 
   const getRebalanceStatus = useCallback(async () => {
-    const response = await api.get("/rebalance/status")
-    return normalizeRebalanceStatus(response)
+    try {
+      const response = await api.get("/rebalance/status")
+      return normalizeRebalanceStatus(response)
+    } catch (error) {
+      if (isRebalanceNotStartedError(error)) {
+        return normalizeRebalanceStatus({ status: "idle" })
+      }
+      throw error
+    }
   }, [api])
 
   const startRebalance = useCallback(async () => {

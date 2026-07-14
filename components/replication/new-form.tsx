@@ -7,6 +7,7 @@ import { RiAddLine, RiDeleteBinLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
@@ -14,6 +15,7 @@ import { useBucket } from "@/hooks/use-bucket"
 import { useMessage } from "@/lib/feedback/message"
 import { getBytes, randomUUID } from "@/lib/functions"
 import { isMissingBucketConfiguration, normalizeReplicationRulesForRolelessConfig } from "@/lib/bucket-configuration"
+import { buildBucketReplicationTlsPayload, type BucketReplicationTlsMode } from "@/lib/bucket-replication-tls"
 
 interface ReplicationNewFormProps {
   open: boolean
@@ -39,6 +41,8 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
   const [level, setLevel] = useState("1")
   const [endpoint, setEndpoint] = useState("")
   const [tls, setTls] = useState(false)
+  const [tlsMode, setTlsMode] = useState<BucketReplicationTlsMode>("verify")
+  const [caCertPem, setCaCertPem] = useState("")
   const [accessKey, setAccessKey] = useState("")
   const [secretKey, setSecretKey] = useState("")
   const [bucket, setBucket] = useState("")
@@ -61,6 +65,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     accessKey?: string
     secretKey?: string
     timecheck?: string
+    caCertPem?: string
   }>({})
 
   const modeOptions = useMemo(
@@ -84,6 +89,8 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     setLevel("1")
     setEndpoint("")
     setTls(false)
+    setTlsMode("verify")
+    setCaCertPem("")
     setAccessKey("")
     setSecretKey("")
     setBucket("")
@@ -134,6 +141,9 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     if (modeType === "async" && Number(timecheck) < 1) {
       errors.timecheck = t("Please enter valid health check interval")
     }
+    if (tls && tlsMode === "custom-ca" && !caCertPem.trim()) {
+      errors.caCertPem = t("Custom CA certificate is required")
+    }
     setFieldErrors(errors)
     const firstErrorId = errors.endpoint
       ? "replication-endpoint"
@@ -145,7 +155,9 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
             ? "replication-secret-key"
             : errors.timecheck
               ? "replication-health-check-interval"
-              : null
+              : errors.caCertPem
+                ? "replication-ca-certificate"
+                : null
     if (firstErrorId) document.getElementById(firstErrorId)?.focus()
     return !firstErrorId
   }
@@ -161,6 +173,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     setSaveError("")
     let remoteTargetSaved = false
     try {
+      const tlsConfig = buildBucketReplicationTlsPayload(tls, tlsMode, caCertPem)
       const config: Record<string, unknown> = {
         sourcebucket: bucketName,
         endpoint,
@@ -171,6 +184,8 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
         },
         targetbucket: bucket,
         secure: tls,
+        skipTlsVerify: tlsConfig.skipTlsVerify,
+        caCertPem: tlsConfig.caCertPem,
         region,
         path: "auto",
         api: "s3v4",
@@ -566,8 +581,90 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                     {t("Enable secure transport when connecting to endpoint.")}
                   </p>
                 </div>
-                <Switch id="replication-use-tls" name="replication-use-tls" checked={tls} onCheckedChange={setTls} />
+                <Switch
+                  id="replication-use-tls"
+                  name="replication-use-tls"
+                  checked={tls}
+                  disabled={submitting}
+                  onCheckedChange={(checked) => {
+                    setTls(checked)
+                    if (!checked) {
+                      setTlsMode("verify")
+                      setCaCertPem("")
+                      setFieldErrors((current) => ({ ...current, caCertPem: undefined }))
+                    }
+                  }}
+                />
               </div>
+
+              {tls ? (
+                <div className="space-y-3 border-s-2 border-border ps-4">
+                  <Field>
+                    <FieldLabel htmlFor="replication-tls-verification">{t("TLS Verification")}</FieldLabel>
+                    <FieldContent>
+                      <Select
+                        value={tlsMode}
+                        onValueChange={(value) => {
+                          if (value) setTlsMode(value as BucketReplicationTlsMode)
+                          setFieldErrors((current) => ({ ...current, caCertPem: undefined }))
+                        }}
+                        disabled={submitting}
+                      >
+                        <SelectTrigger id="replication-tls-verification" className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="verify">{t("Default certificate verification")}</SelectItem>
+                          <SelectItem value="custom-ca">{t("Custom CA certificate")}</SelectItem>
+                          <SelectItem value="skip">{t("Skip TLS verification")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FieldContent>
+                  </Field>
+
+                  {tlsMode === "custom-ca" ? (
+                    <Field>
+                      <FieldLabel htmlFor="replication-ca-certificate">{t("Custom CA certificate")}</FieldLabel>
+                      <FieldContent>
+                        <Textarea
+                          id="replication-ca-certificate"
+                          name="replication-ca-certificate"
+                          value={caCertPem}
+                          onChange={(event) => {
+                            setCaCertPem(event.target.value)
+                            if (event.target.value.trim()) {
+                              setFieldErrors((current) => ({ ...current, caCertPem: undefined }))
+                            }
+                          }}
+                          aria-invalid={Boolean(fieldErrors.caCertPem)}
+                          aria-describedby={
+                            fieldErrors.caCertPem
+                              ? "replication-ca-certificate-error"
+                              : "replication-ca-certificate-description"
+                          }
+                          className="min-h-32 font-mono"
+                          placeholder="-----BEGIN CERTIFICATE-----"
+                          disabled={submitting}
+                          spellCheck={false}
+                        />
+                      </FieldContent>
+                      <p id="replication-ca-certificate-description" className="text-xs text-muted-foreground">
+                        {t("Paste the CA certificate in PEM format.")}
+                      </p>
+                      <FieldError id="replication-ca-certificate-error">{fieldErrors.caCertPem}</FieldError>
+                    </Field>
+                  ) : null}
+
+                  {tlsMode === "skip" ? (
+                    <p
+                      role="alert"
+                      className="border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive"
+                    >
+                      {t("Certificate verification is disabled. Only use this for trusted networks.")}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div className="flex items-center justify-between">
                 <div>

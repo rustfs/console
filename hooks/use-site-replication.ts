@@ -73,7 +73,28 @@ function normalizePeerInfo(value: unknown): SiteReplicationPeerInfo {
     },
     replicateIlmExpiry: asBoolean(record["replicate-ilm-expiry"]),
     objectNamingMode: asString(record.objectNamingMode),
+    skipTlsVerify: asBoolean(record.skipTlsVerify ?? record.skip_tls_verify),
+    caCertPem: asString(record.caCertPem ?? record.ca_cert_pem),
     apiVersion: asString(record.apiVersion) || undefined,
+  }
+}
+
+function buildPeerPayload(peer: SiteReplicationPeerInfo) {
+  return {
+    endpoint: peer.endpoint,
+    name: peer.name,
+    deploymentID: peer.deploymentId,
+    sync: peer.syncState,
+    defaultbandwidth: {
+      bandwidthLimitPerBucket: peer.defaultBandwidth.limit,
+      set: peer.defaultBandwidth.set,
+      updatedAt: peer.defaultBandwidth.updatedAt,
+    },
+    "replicate-ilm-expiry": peer.replicateIlmExpiry,
+    objectNamingMode: peer.objectNamingMode,
+    skipTlsVerify: peer.skipTlsVerify,
+    caCertPem: peer.caCertPem,
+    apiVersion: peer.apiVersion,
   }
 }
 
@@ -295,6 +316,8 @@ export function useSiteReplication() {
         endpoints: site.endpoint,
         accessKey: site.accessKey,
         secretKey: site.secretKey,
+        skipTlsVerify: site.skipTlsVerify,
+        caCertPem: site.caCertPem,
       }))
 
       const query = buildQuery({
@@ -317,20 +340,7 @@ export function useSiteReplication() {
         disableILMExpiryReplication: options?.disableIlmExpiryReplication ? "true" : undefined,
       })
 
-      const response = await api.put(`/site-replication/edit${query}`, {
-        endpoint: peer.endpoint,
-        name: peer.name,
-        deploymentID: peer.deploymentId,
-        sync: peer.syncState,
-        defaultbandwidth: {
-          bandwidthLimitPerBucket: peer.defaultBandwidth.limit,
-          set: peer.defaultBandwidth.set,
-          updatedAt: peer.defaultBandwidth.updatedAt,
-        },
-        "replicate-ilm-expiry": peer.replicateIlmExpiry,
-        objectNamingMode: peer.objectNamingMode,
-        apiVersion: peer.apiVersion,
-      })
+      const response = await api.put(`/site-replication/edit${query}`, buildPeerPayload(peer))
 
       return normalizeEditResponse(response)
     },
@@ -366,20 +376,7 @@ export function useSiteReplication() {
 
   const resyncSiteReplication = useCallback(
     async (operation: SiteReplicationResyncOperation, peer: SiteReplicationPeerInfo) => {
-      const response = await api.put(`/site-replication/resync/op${buildQuery({ operation })}`, {
-        endpoint: peer.endpoint,
-        name: peer.name,
-        deploymentID: peer.deploymentId,
-        sync: peer.syncState,
-        defaultbandwidth: {
-          bandwidthLimitPerBucket: peer.defaultBandwidth.limit,
-          set: peer.defaultBandwidth.set,
-          updatedAt: peer.defaultBandwidth.updatedAt,
-        },
-        "replicate-ilm-expiry": peer.replicateIlmExpiry,
-        objectNamingMode: peer.objectNamingMode,
-        apiVersion: peer.apiVersion,
-      })
+      const response = await api.put(`/site-replication/resync/op${buildQuery({ operation })}`, buildPeerPayload(peer))
 
       return normalizeResyncResponse(response)
     },

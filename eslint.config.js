@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     ".nuxt/**",
     "out/**",
     "build/**",
+    ".worktrees/**",
     "next-env.d.ts",
   ]),
   {

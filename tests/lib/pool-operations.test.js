@@ -3,10 +3,18 @@ import assert from "node:assert/strict"
 import {
   deriveDecommissionDisplayState,
   deriveRebalanceDisplayState,
+  isRebalanceNotStartedError,
   normalizeDecommissionInfo,
   normalizePoolsOverview,
   normalizeRebalanceStatus,
 } from "../../lib/pool-operations.ts"
+
+test("isRebalanceNotStartedError recognizes only the expected idle response", () => {
+  assert.equal(isRebalanceNotStartedError(new Error("pool rebalance is not started")), true)
+  assert.equal(isRebalanceNotStartedError(new Error("  Pool Rebalance Is Not Started  ")), true)
+  assert.equal(isRebalanceNotStartedError(new Error("failed to read rebalance status")), false)
+  assert.equal(isRebalanceNotStartedError("pool rebalance is not started"), false)
+})
 
 test("normalizePoolsOverview computes support and capacities", () => {
   const overview = normalizePoolsOverview({

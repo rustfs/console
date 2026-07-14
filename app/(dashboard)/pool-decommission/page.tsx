@@ -184,6 +184,7 @@ export default function PoolDecommissionPage() {
   const [submitting, setSubmitting] = useState(false)
   const [dataReady, setDataReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [rebalanceError, setRebalanceError] = useState<string | null>(null)
   const [selectedPoolId, setSelectedPoolId] = useState("")
   const [overview, setOverview] = useState<PoolsOverview>({
     pools: [] as PoolSummary[],
@@ -216,19 +217,30 @@ export default function PoolDecommissionPage() {
       if (showSpinner) setLoading(true)
       else setRefreshing(true)
       setError(null)
+      setRebalanceError(null)
       try {
-        const [nextOverview, rebalanceStatus, decommissionStatuses] = await Promise.all([
+        const [overviewResult, rebalanceResult, decommissionResult] = await Promise.allSettled([
           getPoolsOverview(),
           getRebalanceStatus(),
           getDecommissionStatuses(),
         ])
         if (!mountedRef.current || requestId !== requestVersionRef.current) return false
-        const nextRebalanceState = deriveRebalanceDisplayState(rebalanceStatus, nextOverview.supportState)
+
+        if (overviewResult.status === "rejected") throw overviewResult.reason
+        if (decommissionResult.status === "rejected") throw decommissionResult.reason
+
+        const nextOverview = overviewResult.value
+        const decommissionStatuses = decommissionResult.value
         const statusEntries = decommissionStatuses.map((status) => [status.poolId, status])
 
         setOverview(nextOverview)
         setStatuses(Object.fromEntries(statusEntries) as Record<string, DecommissionInfo | null>)
-        setRebalanceState(nextRebalanceState)
+        if (rebalanceResult.status === "fulfilled") {
+          setRebalanceState(deriveRebalanceDisplayState(rebalanceResult.value, nextOverview.supportState))
+        } else {
+          setRebalanceState("unknown")
+          setRebalanceError(rebalanceResult.reason instanceof Error ? rebalanceResult.reason.message : t("Load Failed"))
+        }
         setSelectedPoolId((current) =>
           current && nextOverview.pools.some((pool) => pool.id === current)
             ? current
@@ -283,7 +295,8 @@ export default function PoolDecommissionPage() {
   const selectionLocked = isTaskLocked(activeTask)
   const activePoolCount = poolRows.filter((row) => isActivePool(row.pool)).length
   const trackedProgress = trackedTask ? getProgressPercent(trackedTask.status, trackedTask.pool) : 0
-  const interactionLocked = loading || refreshing || submitting || Boolean(error) || !dataReady
+  const interactionLocked =
+    loading || refreshing || submitting || Boolean(error) || Boolean(rebalanceError) || !dataReady
 
   useEffect(() => {
     shouldPollRef.current = dataReady && poolRows.some((row) => shouldPoll(row.displayState))
@@ -515,6 +528,21 @@ export default function PoolDecommissionPage() {
           </Alert>
         ) : null}
 
+        {rebalanceError ? (
+          <Alert variant="destructive">
+            <AlertTitle>
+              {t("Current Rebalance Status")}: {t("Unavailable")}
+            </AlertTitle>
+            <AlertDescription className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <span className="break-words">{rebalanceError}</span>
+              <Button type="button" variant="outline" size="sm" onClick={() => void loadData()}>
+                <RiRefreshLine className="size-4" aria-hidden />
+                {t("Refresh")}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
+
         {initialLoading ? (
           <div className="flex min-h-64 items-center justify-center gap-2 text-sm text-muted-foreground" role="status">
             <Spinner className="size-5" aria-hidden />
@@ -633,7 +661,7 @@ export default function PoolDecommissionPage() {
                 </p>
               </div>
               <Badge variant={selectionLocked ? "outline" : "secondary"}>
-                {!dataReady || error ? t("Unknown") : selectionLocked ? t("Running") : t("Ready")}
+                {!dataReady || error || rebalanceError ? t("Unknown") : selectionLocked ? t("Running") : t("Ready")}
               </Badge>
             </CardHeader>
             <CardContent className="space-y-5">

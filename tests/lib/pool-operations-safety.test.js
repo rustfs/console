@@ -16,6 +16,20 @@ test("pool status reads fail closed instead of becoming idle or ready", () => {
   assert.match(decommission, /const \[dataReady, setDataReady\] = useState\(false\)/)
   assert.match(rebalance, /const interactionLocked =/)
   assert.match(decommission, /const interactionLocked =/)
+  assert.match(hook, /isRebalanceNotStartedError\(error\)/)
+  assert.match(hook, /normalizeRebalanceStatus\(\{ status: "idle" \}\)/)
+})
+
+test("decommission keeps pool data visible when only rebalance status fails", () => {
+  const source = read("app/(dashboard)/pool-decommission/page.tsx")
+
+  assert.match(source, /Promise\.allSettled\(/)
+  assert.match(source, /const \[rebalanceError, setRebalanceError\] = useState<string \| null>\(null\)/)
+  assert.match(source, /setRebalanceState\("unknown"\)/)
+  assert.match(source, /setDataReady\(true\)/)
+  assert.match(source, /Boolean\(rebalanceError\)/)
+  assert.match(source, /\{rebalanceError \? \(/)
+  assert.match(source, /t\("Unavailable"\)/)
 })
 
 test("pool operation requests reject stale responses and mutations use synchronous locks", () => {

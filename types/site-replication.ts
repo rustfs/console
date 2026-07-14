@@ -14,6 +14,8 @@ export interface SiteReplicationPeerInfo {
   defaultBandwidth: SiteReplicationBucketBandwidth
   replicateIlmExpiry: boolean
   objectNamingMode: string
+  skipTlsVerify: boolean
+  caCertPem: string
   apiVersion?: string
 }
 
@@ -106,6 +108,8 @@ export interface SiteReplicationAddSiteInput {
   endpoint: string
   accessKey: string
   secretKey: string
+  skipTlsVerify: boolean
+  caCertPem: string
 }
 
 export interface SiteReplicationAddResponse {

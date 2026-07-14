@@ -37,6 +37,7 @@ import { useSiteReplication } from "@/hooks/use-site-replication"
 import { formatDateTime, niceBytes } from "@/lib/functions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
+import { isHttpsSiteReplicationEndpoint } from "@/lib/site-replication-tls"
 import type {
   SiteReplicationInfo,
   SiteReplicationPeerInfo,
@@ -76,6 +77,22 @@ function formatBandwidth(t: (key: string) => string, peer: SiteReplicationPeerIn
   }
 
   return niceBytes(String(peer.defaultBandwidth.limit || 0))
+}
+
+function formatTlsVerification(t: (key: string) => string, peer: SiteReplicationPeerInfo) {
+  if (!isHttpsSiteReplicationEndpoint(peer.endpoint)) {
+    return <span className="text-muted-foreground">-</span>
+  }
+
+  if (peer.skipTlsVerify) {
+    return <Badge variant="destructive">{t("Skip TLS verification")}</Badge>
+  }
+
+  if (peer.caCertPem) {
+    return <Badge variant="secondary">{t("Custom CA certificate")}</Badge>
+  }
+
+  return <Badge variant="outline">{t("Default certificate verification")}</Badge>
 }
 
 function SummaryStat({ label, value }: { label: string; value: React.ReactNode }) {
@@ -307,6 +324,11 @@ export default function SiteReplicationPage() {
         header: () => t("Deployment ID"),
         accessorKey: "deploymentId",
         cell: ({ row }) => <span className="font-mono text-xs break-all">{row.original.deploymentId || "-"}</span>,
+      },
+      {
+        id: "tlsVerification",
+        header: () => t("TLS Verification"),
+        cell: ({ row }) => formatTlsVerification(t, row.original),
       },
       {
         id: "syncState",

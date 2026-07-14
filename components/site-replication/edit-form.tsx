@@ -15,8 +15,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { useSiteReplication } from "@/hooks/use-site-replication"
 import { useMessage } from "@/lib/feedback/message"
+import {
+  buildSiteReplicationTlsPayload,
+  getSiteReplicationTlsMode,
+  isHttpsSiteReplicationEndpoint,
+  type SiteReplicationTlsMode,
+} from "@/lib/site-replication-tls"
 import type { SiteReplicationPeerInfo, SiteReplicationSyncState } from "@/types/site-replication"
 
 interface SiteReplicationEditFormProps {
@@ -35,7 +42,10 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
   const [endpoint, setEndpoint] = useState("")
   const [syncState, setSyncState] = useState<SiteReplicationSyncState>("enable")
   const [objectNamingMode, setObjectNamingMode] = useState("")
+  const [tlsMode, setTlsMode] = useState<SiteReplicationTlsMode>("verify")
+  const [caCertPem, setCaCertPem] = useState("")
   const [endpointError, setEndpointError] = useState("")
+  const [caCertPemError, setCaCertPemError] = useState("")
   const [saving, setSaving] = useState(false)
 
   React.useEffect(() => {
@@ -45,7 +55,10 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
     setEndpoint(peer.endpoint)
     setSyncState(peer.syncState === "disable" ? "disable" : "enable")
     setObjectNamingMode(peer.objectNamingMode)
+    setTlsMode(getSiteReplicationTlsMode(peer))
+    setCaCertPem(peer.caCertPem)
     setEndpointError("")
+    setCaCertPemError("")
     setSaving(false)
   }, [open, peer])
 
@@ -62,14 +75,21 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
       return
     }
 
+    if (isHttpsSiteReplicationEndpoint(endpoint) && tlsMode === "custom-ca" && !caCertPem.trim()) {
+      setCaCertPemError(t("Custom CA certificate is required"))
+      return
+    }
+
     setSaving(true)
     try {
+      const tls = buildSiteReplicationTlsPayload(endpoint, tlsMode, caCertPem)
       const response = await editSiteReplication({
         ...peer,
         name: name.trim(),
         endpoint: endpoint.trim(),
         syncState,
         objectNamingMode: objectNamingMode.trim(),
+        ...tls,
       })
 
       if (!response.success) {
@@ -154,6 +174,11 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
                 if (event.target.value.trim()) {
                   setEndpointError("")
                 }
+                if (!isHttpsSiteReplicationEndpoint(event.target.value)) {
+                  setTlsMode("verify")
+                  setCaCertPem("")
+                  setCaCertPemError("")
+                }
               }}
               autoComplete="off"
               placeholder="https://remote-rustfs.example.com"
@@ -162,6 +187,65 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
             />
             {endpointError ? <p className="text-sm text-destructive">{endpointError}</p> : null}
           </div>
+
+          {isHttpsSiteReplicationEndpoint(endpoint) ? (
+            <div className="space-y-3 border-s-2 border-border ps-4">
+              <div className="space-y-2">
+                <Label htmlFor="site-edit-tls-verification">{t("TLS Verification")}</Label>
+                <Select
+                  value={tlsMode}
+                  onValueChange={(value) => {
+                    if (!value) return
+                    setTlsMode(value as SiteReplicationTlsMode)
+                    setCaCertPemError("")
+                  }}
+                  disabled={saving}
+                >
+                  <SelectTrigger id="site-edit-tls-verification" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="verify">{t("Default certificate verification")}</SelectItem>
+                    <SelectItem value="custom-ca">{t("Custom CA certificate")}</SelectItem>
+                    <SelectItem value="skip">{t("Skip TLS verification")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {tlsMode === "custom-ca" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="site-edit-ca-certificate">{t("Custom CA certificate")}</Label>
+                  <Textarea
+                    id="site-edit-ca-certificate"
+                    name="site-edit-ca-certificate"
+                    value={caCertPem}
+                    onChange={(event) => {
+                      setCaCertPem(event.target.value)
+                      if (event.target.value.trim()) setCaCertPemError("")
+                    }}
+                    aria-invalid={Boolean(caCertPemError)}
+                    aria-describedby="site-edit-ca-certificate-description"
+                    className="min-h-32 font-mono"
+                    placeholder="-----BEGIN CERTIFICATE-----"
+                    disabled={saving}
+                    spellCheck={false}
+                  />
+                  <p
+                    id="site-edit-ca-certificate-description"
+                    className={caCertPemError ? "text-sm text-destructive" : "text-xs text-muted-foreground"}
+                  >
+                    {caCertPemError || t("Paste the CA certificate in PEM format.")}
+                  </p>
+                </div>
+              ) : null}
+
+              {tlsMode === "skip" ? (
+                <p role="alert" className="border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive">
+                  {t("Certificate verification is disabled. Only use this for trusted networks.")}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="space-y-2">
             <Label htmlFor="site-edit-object-naming-mode">{t("Object Naming Mode")}</Label>

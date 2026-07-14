@@ -16,10 +16,17 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { useSiteReplication } from "@/hooks/use-site-replication"
 import { useMessage } from "@/lib/feedback/message"
+import {
+  buildSiteReplicationTlsPayload,
+  isHttpsSiteReplicationEndpoint,
+  type SiteReplicationTlsMode,
+} from "@/lib/site-replication-tls"
 import type { SiteReplicationAddSiteInput } from "@/types/site-replication"
 
 interface SiteReplicationNewFormProps {
@@ -33,6 +40,7 @@ interface SiteFormErrors {
   endpoint: string
   accessKey: string
   secretKey: string
+  caCertPem: string
 }
 
 function createRemoteSite(): SiteReplicationAddSiteInput {
@@ -41,6 +49,8 @@ function createRemoteSite(): SiteReplicationAddSiteInput {
     endpoint: "",
     accessKey: "",
     secretKey: "",
+    skipTlsVerify: false,
+    caCertPem: "",
   }
 }
 
@@ -49,6 +59,7 @@ function createErrors(): SiteFormErrors {
     endpoint: "",
     accessKey: "",
     secretKey: "",
+    caCertPem: "",
   }
 }
 
@@ -68,12 +79,14 @@ export function SiteReplicationNewForm({
 
   const [sites, setSites] = useState<SiteReplicationAddSiteInput[]>([createRemoteSite()])
   const [errors, setErrors] = useState<SiteFormErrors[]>([createErrors()])
+  const [tlsModes, setTlsModes] = useState<SiteReplicationTlsMode[]>(["verify"])
   const [replicateIlmExpiry, setReplicateIlmExpiry] = useState(false)
   const [saving, setSaving] = useState(false)
 
   const resetForm = useCallback(() => {
     setSites([createRemoteSite()])
     setErrors([createErrors()])
+    setTlsModes(["verify"])
     setReplicateIlmExpiry(false)
     setSaving(false)
   }, [])
@@ -90,12 +103,32 @@ export function SiteReplicationNewForm({
     [sites.length, t],
   )
 
-  const updateSite = (index: number, field: keyof SiteReplicationAddSiteInput, value: string) => {
-    setSites((prev) => prev.map((site, siteIndex) => (siteIndex === index ? { ...site, [field]: value } : site)))
+  const updateSite = (index: number, field: "name" | "endpoint" | "accessKey" | "secretKey", value: string) => {
+    setSites((prev) =>
+      prev.map((site, siteIndex) => {
+        if (siteIndex !== index) return site
+        if (field === "endpoint" && !isHttpsSiteReplicationEndpoint(value)) {
+          return { ...site, endpoint: value, skipTlsVerify: false, caCertPem: "" }
+        }
+        return { ...site, [field]: value }
+      }),
+    )
+
+    if (field === "endpoint" && !isHttpsSiteReplicationEndpoint(value)) {
+      setTlsModes((prev) => prev.map((mode, modeIndex) => (modeIndex === index ? "verify" : mode)))
+    }
 
     if (field === "endpoint" || field === "accessKey" || field === "secretKey") {
       setErrors((prev) =>
-        prev.map((error, errorIndex) => (errorIndex === index && value.trim() ? { ...error, [field]: "" } : error)),
+        prev.map((error, errorIndex) =>
+          errorIndex === index && value.trim()
+            ? {
+                ...error,
+                [field]: "",
+                ...(field === "endpoint" && !isHttpsSiteReplicationEndpoint(value) ? { caCertPem: "" } : {}),
+              }
+            : error,
+        ),
       )
     }
   }
@@ -103,12 +136,14 @@ export function SiteReplicationNewForm({
   const addSite = () => {
     setSites((prev) => [...prev, createRemoteSite()])
     setErrors((prev) => [...prev, createErrors()])
+    setTlsModes((prev) => [...prev, "verify"])
   }
 
   const removeSite = (index: number) => {
     if (sites.length <= 1) return
     setSites((prev) => prev.filter((_, siteIndex) => siteIndex !== index))
     setErrors((prev) => prev.filter((_, errorIndex) => errorIndex !== index))
+    setTlsModes((prev) => prev.filter((_, modeIndex) => modeIndex !== index))
   }
 
   const validate = () => {
@@ -138,6 +173,11 @@ export function SiteReplicationNewForm({
         nextErrors[index].secretKey = t("Secret Key is required")
         valid = false
       }
+
+      if (isHttpsSiteReplicationEndpoint(site.endpoint) && tlsModes[index] === "custom-ca" && !site.caCertPem.trim()) {
+        nextErrors[index].caCertPem = t("Custom CA certificate is required")
+        valid = false
+      }
     })
 
     setErrors(nextErrors)
@@ -149,7 +189,11 @@ export function SiteReplicationNewForm({
 
     setSaving(true)
     try {
-      const response = await addSiteReplication(sites, { replicateIlmExpiry })
+      const payload = sites.map((site, index) => ({
+        ...site,
+        ...buildSiteReplicationTlsPayload(site.endpoint, tlsModes[index] ?? "verify", site.caCertPem),
+      }))
+      const response = await addSiteReplication(payload, { replicateIlmExpiry })
 
       if (!response.success) {
         throw new Error(response.errorDetail || response.status || t("Save Failed"))
@@ -382,6 +426,98 @@ export function SiteReplicationNewForm({
                           </p>
                         )}
                       </div>
+
+                      {isHttpsSiteReplicationEndpoint(site.endpoint) ? (
+                        <div className="space-y-3 border-s-2 border-border ps-4 sm:col-span-2">
+                          <div className="space-y-2">
+                            <Label htmlFor={`site-tls-verification-${index}`}>{t("TLS Verification")}</Label>
+                            <Select
+                              value={tlsModes[index] ?? "verify"}
+                              onValueChange={(value) => {
+                                if (!value) return
+                                const mode = value as SiteReplicationTlsMode
+                                setTlsModes((prev) =>
+                                  prev.map((current, modeIndex) => (modeIndex === index ? mode : current)),
+                                )
+                                const tls = buildSiteReplicationTlsPayload(site.endpoint, mode, site.caCertPem)
+                                setSites((prev) =>
+                                  prev.map((current, siteIndex) =>
+                                    siteIndex === index ? { ...current, ...tls } : current,
+                                  ),
+                                )
+                                setErrors((prev) =>
+                                  prev.map((error, errorIndex) =>
+                                    errorIndex === index ? { ...error, caCertPem: "" } : error,
+                                  ),
+                                )
+                              }}
+                              disabled={saving}
+                            >
+                              <SelectTrigger id={`site-tls-verification-${index}`} className="w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="verify">{t("Default certificate verification")}</SelectItem>
+                                <SelectItem value="custom-ca">{t("Custom CA certificate")}</SelectItem>
+                                <SelectItem value="skip">{t("Skip TLS verification")}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          {tlsModes[index] === "custom-ca" ? (
+                            <div className="space-y-2">
+                              <Label htmlFor={`site-ca-certificate-${index}`}>{t("Custom CA certificate")}</Label>
+                              <Textarea
+                                id={`site-ca-certificate-${index}`}
+                                name={`site-ca-certificate-${index}`}
+                                value={site.caCertPem}
+                                onChange={(event) => {
+                                  const caCertPem = event.target.value
+                                  setSites((prev) =>
+                                    prev.map((current, siteIndex) =>
+                                      siteIndex === index ? { ...current, skipTlsVerify: false, caCertPem } : current,
+                                    ),
+                                  )
+                                  if (caCertPem.trim()) {
+                                    setErrors((prev) =>
+                                      prev.map((error, errorIndex) =>
+                                        errorIndex === index ? { ...error, caCertPem: "" } : error,
+                                      ),
+                                    )
+                                  }
+                                }}
+                                aria-invalid={Boolean(errors[index]?.caCertPem)}
+                                aria-describedby={`site-ca-certificate-description-${index}`}
+                                className="min-h-32 font-mono"
+                                placeholder="-----BEGIN CERTIFICATE-----"
+                                disabled={saving}
+                                spellCheck={false}
+                              />
+                              {errors[index]?.caCertPem ? (
+                                <p id={`site-ca-certificate-description-${index}`} className="text-sm text-destructive">
+                                  {errors[index].caCertPem}
+                                </p>
+                              ) : (
+                                <p
+                                  id={`site-ca-certificate-description-${index}`}
+                                  className="text-xs text-muted-foreground"
+                                >
+                                  {t("Paste the CA certificate in PEM format.")}
+                                </p>
+                              )}
+                            </div>
+                          ) : null}
+
+                          {tlsModes[index] === "skip" ? (
+                            <p
+                              role="alert"
+                              className="border border-destructive/40 bg-destructive/5 p-3 text-xs text-destructive"
+                            >
+                              {t("Certificate verification is disabled. Only use this for trusted networks.")}
+                            </p>
+                          ) : null}
+                        </div>
+                      ) : null}
 
                       <div className="space-y-2">
                         <Label htmlFor={`site-access-${index}`}>{t("Access Key *")}</Label>

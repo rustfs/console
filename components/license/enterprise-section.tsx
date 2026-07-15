@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
+import { withUtm } from "@/lib/utm"
 import type { ColumnDef } from "@tanstack/react-table"
 
 const hasValidLicense = false
@@ -208,7 +209,10 @@ export function LicenseEnterpriseSection() {
 
   const contactSupport = () => {
     window.open(
-      "https://ww18.53kf.com/webCompany.php?arg=11003151&kf_sign=DA4MDMTc0Ng4MjE1MjEzODAyNDkyMDAyNzMwMDMxNTE%253D&style=2",
+      withUtm(
+        "https://ww18.53kf.com/webCompany.php?arg=11003151&kf_sign=DA4MDMTc0Ng4MjE1MjEzODAyNDkyMDAyNzMwMDMxNTE%253D&style=2",
+        "license-page",
+      ),
       "_blank",
       "noopener,noreferrer",
     )

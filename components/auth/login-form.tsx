@@ -14,6 +14,7 @@ import { ThemeLogo } from "@/components/theme/logo"
 import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
 import { buildRoute } from "@/lib/routes"
 import { getThemeManifest } from "@/lib/theme/manifest"
+import { withUtm } from "@/lib/utm"
 
 import type { OidcProvider } from "@/types/config"
 
@@ -54,7 +55,7 @@ export function LoginForm({
 }: LoginFormProps) {
   const { t } = useTranslation()
   const theme = getThemeManifest()
-  const website = theme.links.website ?? "https://www.rustfs.com"
+  const website = withUtm(theme.links.website ?? "https://www.rustfs.com", "login-form")
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-8 lg:p-12">

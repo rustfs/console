@@ -32,6 +32,7 @@ import { canAccessDashboardRoute } from "@/lib/dashboard-route-meta"
 import { SidebarVersion } from "@/components/sidebars/version"
 import { useDirection } from "@/components/ui/direction"
 import { getThemeManifest } from "@/lib/theme/manifest"
+import { withUtm } from "@/lib/utm"
 import { ThemeLogo } from "@/components/theme/logo"
 
 const theme = getThemeManifest()
@@ -200,7 +201,7 @@ export function AppSidebar() {
                                           size="sm"
                                           render={
                                             <a
-                                              href={normalizedTo(child)}
+                                              href={withUtm(normalizedTo(child), "sidebar")}
                                               target="_blank"
                                               rel="noopener noreferrer"
                                               className="flex w-full items-center gap-2"
@@ -238,7 +239,7 @@ export function AppSidebar() {
                                   tooltip={getLabel(item)}
                                   render={
                                     <a
-                                      href={normalizedTo(item)}
+                                      href={withUtm(normalizedTo(item), "sidebar")}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="flex w-full items-center gap-3"

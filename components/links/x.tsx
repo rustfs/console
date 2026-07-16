@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { RiTwitterXLine } from "@remixicon/react"
 import { getThemeManifest } from "@/lib/theme/manifest"
+import { withUtm } from "@/lib/utm"
 
 export function LinksX() {
   const x = getThemeManifest().links.x
@@ -13,7 +14,7 @@ export function LinksX() {
       variant="ghost"
       size="icon"
       nativeButton={false}
-      render={<a href={x} target="_blank" rel="noopener noreferrer" aria-label="X" />}
+      render={<a href={withUtm(x, "top-nav")} target="_blank" rel="noopener noreferrer" aria-label="X" />}
     >
       <RiTwitterXLine className="size-4" aria-hidden />
     </Button>

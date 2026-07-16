@@ -18,6 +18,7 @@ import { buildRoute, getLoginRoute } from "@/lib/routes"
 import { configManager } from "@/lib/config"
 import { checkServerHealth } from "@/lib/config-helpers"
 import { getThemeManifest } from "@/lib/theme/manifest"
+import { withUtm } from "@/lib/utm"
 
 export default function ConfigPage() {
   return (
@@ -32,7 +33,7 @@ function ConfigPageContent() {
   const router = useRouter()
   const message = useMessage()
   const theme = getThemeManifest()
-  const docs = theme.links.documentation ?? "https://docs.rustfs.com/?ref=console"
+  const docs = withUtm(theme.links.documentation ?? "https://docs.rustfs.com/?ref=console", "config-page")
 
   const [serverHost, setServerHost] = useState(() =>
     typeof window !== "undefined" ? (localStorage.getItem("rustfs-server-host") ?? "") : "",

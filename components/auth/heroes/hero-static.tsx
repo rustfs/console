@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useTranslation } from "react-i18next"
 import { ThemeLogo } from "@/components/theme/logo"
 import { getThemeManifest } from "@/lib/theme/manifest"
+import { withUtm } from "@/lib/utm"
 import { buildRoute } from "@/lib/routes"
 import { RiArrowRightLongFill } from "@remixicon/react"
 import { FlipWords } from "@/components/ui/flip-words"
@@ -35,7 +36,7 @@ export function AuthHeroStatic() {
         </div>
       </div>
       <Link
-        href="https://www.rustfs.com"
+        href={withUtm(theme.links.website ?? "https://www.rustfs.com", "login-hero")}
         className="z-10 inline-flex h-10 w-max items-center gap-2 rounded-none border border-primary/30 px-5 leading-none text-primary transition-colors hover:bg-accent"
       >
         <span>{t("Visit website")}</span>

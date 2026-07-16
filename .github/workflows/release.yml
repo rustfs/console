@@ -16,6 +16,9 @@ on:
 env:
   NODE_VERSION: "22"
 
+permissions:
+  contents: write
+
 jobs:
   # ============================================================================
   # 预发布验证
@@ -125,6 +128,11 @@ jobs:
       - name: 📦 Create zip artifacts
         run: |
           set -euo pipefail
+          if [[ ! -s out/index.html ]]; then
+            echo "Console build is missing out/index.html" >&2
+            exit 1
+          fi
+
           mkdir -p artifacts
           (
             cd ./out
@@ -175,6 +183,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: 📥 Download release artifact
+        uses: actions/download-artifact@v7
+        with:
+          name: release-build-${{ needs.pre-release-validation.outputs.version }}
+          path: release-assets
+
       - name: 📝 Generate changelog
         id: changelog
         run: |
@@ -197,6 +211,8 @@ jobs:
           body_path: CHANGELOG.md
           draft: false
           prerelease: ${{ contains(needs.pre-release-validation.outputs.version, '-') }}
+          files: release-assets/**/rustfs-console-${{ needs.pre-release-validation.outputs.version }}.zip
+          fail_on_unmatched_files: true
 
   # ============================================================================
   # 发布后通知

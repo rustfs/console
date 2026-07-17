@@ -1501,5 +1501,8 @@
   "Loading more objects": "Loading more objects",
   "Scroll to load more objects": "Scroll to load more objects",
   "Back to top": "Back to top",
-  "Go to bottom": "Go to bottom"
+  "Go to bottom": "Go to bottom",
+  "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.": "La expiración de la versión actual crea un marcador de eliminación. Configura la expiración de versiones no actuales para eliminar permanentemente los datos del objeto.",
+  "2 lifecycle rules will be created.": "Se crearán 2 reglas de ciclo de vida.",
+  "Lifecycle configuration cannot contain more than 1000 rules.": "La configuración del ciclo de vida no puede contener más de 1000 reglas."
 }

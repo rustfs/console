@@ -5,8 +5,8 @@ import { useTranslation } from "react-i18next"
 import { RiAddLine, RiDeleteBinLine } from "@remixicon/react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -16,7 +16,15 @@ import { useTiers, type TierRow } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
 import { randomUUID } from "@/lib/functions"
 import { isMissingBucketConfiguration } from "@/lib/bucket-configuration"
-import { buildCurrentVersionExpiration, buildLifecycleFilter } from "@/lib/bucket-lifecycle"
+import {
+  buildCurrentVersionExpirationRules,
+  buildLifecycleFilter,
+  findIncompleteLifecycleTag,
+  getBucketVersioningMode,
+  hasCompleteLifecycleTags,
+  MAX_LIFECYCLE_RULES,
+  type BucketVersioningMode,
+} from "@/lib/bucket-lifecycle"
 
 interface LifecycleNewFormProps {
   open: boolean
@@ -47,13 +55,20 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
   const [tiersLoading, setTiersLoading] = useState(false)
   const [tiersError, setTiersError] = useState("")
   const [tiersReloadVersion, setTiersReloadVersion] = useState(0)
-  const [versioningStatus, setVersioningStatus] = useState(false)
+  const [versioningMode, setVersioningMode] = useState<BucketVersioningMode>("unversioned")
   const [versioningLoading, setVersioningLoading] = useState(false)
   const [versioningError, setVersioningError] = useState("")
   const [versioningReloadVersion, setVersioningReloadVersion] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [saveError, setSaveError] = useState("")
-  const [fieldErrors, setFieldErrors] = useState<{ days?: string; storageType?: string }>({})
+  const [fieldErrors, setFieldErrors] = useState<{
+    days?: string
+    storageType?: string
+    tags?: string
+    deleteMarker?: string
+  }>({})
+
+  const hasVersionHistory = versioningMode !== "unversioned"
 
   const versionOptions = useMemo(
     () => [
@@ -89,16 +104,16 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
 
   const loadVersioningStatus = useCallback(async () => {
     if (!bucketName) {
-      setVersioningStatus(false)
+      setVersioningMode("unversioned")
       return
     }
     setVersioningLoading(true)
     setVersioningError("")
     try {
       const resp = await getBucketVersioning(bucketName)
-      setVersioningStatus(resp.Status === "Enabled")
+      setVersioningMode(getBucketVersioningMode(resp.Status))
     } catch {
-      setVersioningStatus(false)
+      setVersioningMode("unversioned")
       setVersioningError(t("Unable to load versioning status."))
     } finally {
       setVersioningLoading(false)
@@ -113,8 +128,15 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
   }, [open, loadTiers, loadVersioningStatus, tiersReloadVersion, versioningReloadVersion])
 
   useEffect(() => {
-    if (versionType !== "current") setExpiredDeleteMark(false)
-  }, [versionType])
+    if (activeTab !== "expire" || versionType !== "current") setExpiredDeleteMark(false)
+  }, [activeTab, versionType])
+
+  useEffect(() => {
+    if (!hasVersionHistory) {
+      setVersionType("current")
+      setExpiredDeleteMark(false)
+    }
+  }, [hasVersionHistory])
 
   const resetForm = useCallback(() => {
     setActiveTab("expire")
@@ -141,20 +163,31 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
   const removeTag = (index: number) => {
     if (tags.length === 1) return
     setTags((prev) => prev.filter((_, i) => i !== index))
+    setFieldErrors((current) => ({ ...current, tags: undefined, deleteMarker: undefined }))
   }
 
   const updateTag = (index: number, field: "key" | "value", value: string) => {
     setTags((prev) => prev.map((tag, i) => (i === index ? { ...tag, [field]: value } : tag)))
+    setFieldErrors((current) => ({ ...current, tags: undefined, deleteMarker: undefined }))
   }
 
   const validate = () => {
-    const errors: { days?: string; storageType?: string } = {}
+    const errors: typeof fieldErrors = {}
     if (!days || days < 1) {
       errors.days = t("Please enter valid days")
     }
     if (activeTab === "transition" && !storageType) {
       errors.storageType = t("Please select storage type")
     }
+
+    const incompleteTagIndex = findIncompleteLifecycleTag(tags)
+    if (incompleteTagIndex >= 0) {
+      errors.tags = tags[incompleteTagIndex].key.trim() ? t("Please enter tag value") : t("Please enter key name")
+    }
+    if (activeTab === "expire" && versionType === "current" && expiredDeleteMark && hasCompleteLifecycleTags(tags)) {
+      errors.deleteMarker = `${t("Delete Marker Handling")}: ${t("Tags")} ${t("Unsupported")}`
+    }
+
     setFieldErrors(errors)
     const firstErrorId = errors.days
       ? activeTab === "transition"
@@ -162,7 +195,13 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
         : "lifecycle-expire-days"
       : errors.storageType
         ? "lifecycle-storage-type"
-        : null
+        : errors.tags && incompleteTagIndex >= 0
+          ? tags[incompleteTagIndex].key.trim()
+            ? `lifecycle-${activeTab}-tag-value-${incompleteTagIndex}`
+            : `lifecycle-${activeTab}-tag-key-${incompleteTagIndex}`
+          : errors.deleteMarker
+            ? "lifecycle-expired-delete-marker"
+            : null
     if (firstErrorId) document.getElementById(firstErrorId)?.focus()
     return !firstErrorId
   }
@@ -189,30 +228,38 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
         }
       }
 
-      const newRule: Record<string, unknown> = {
-        ID: randomUUID(),
+      const filter = buildLifecycleFilter(prefix, tags)
+      const baseId = randomUUID()
+      const baseRule: Record<string, unknown> = {
+        ID: baseId,
         Status: "Enabled",
-        Filter: buildLifecycleFilter(prefix, tags),
+        Filter: filter,
       }
 
       const daysValue = Number(days)
+      let newRules: Record<string, unknown>[]
 
       if (activeTab === "expire") {
         if (versionType === "non-current") {
-          newRule.NoncurrentVersionExpiration = { NoncurrentDays: daysValue }
+          baseRule.NoncurrentVersionExpiration = { NoncurrentDays: daysValue }
+          newRules = [baseRule]
         } else {
-          newRule.Expiration = buildCurrentVersionExpiration(daysValue, expiredDeleteMark)
+          newRules = buildCurrentVersionExpirationRules(baseId, daysValue, filter, expiredDeleteMark)
         }
       } else {
         if (versionType === "non-current") {
-          newRule.NoncurrentVersionTransitions = [{ NoncurrentDays: daysValue, StorageClass: storageType }]
+          baseRule.NoncurrentVersionTransitions = [{ NoncurrentDays: daysValue, StorageClass: storageType }]
         } else {
-          newRule.Transitions = [{ Days: daysValue, StorageClass: storageType }]
+          baseRule.Transitions = [{ Days: daysValue, StorageClass: storageType }]
         }
+        newRules = [baseRule]
       }
 
       const existingRules = currentConfig?.Rules ?? []
-      const payload = { Rules: [...existingRules, newRule] }
+      if (existingRules.length + newRules.length > MAX_LIFECYCLE_RULES) {
+        throw new Error(t("Lifecycle configuration cannot contain more than 1000 rules."))
+      }
+      const payload = { Rules: [...existingRules, ...newRules] }
 
       await putBucketLifecycleConfiguration(bucketName, payload)
       message.success(t("Create Success"))
@@ -309,7 +356,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
 
               <TabsContent value="expire" className="mt-0 space-y-6">
                 <div className="space-y-4">
-                  {versioningStatus && (
+                  {hasVersionHistory && (
                     <Field>
                       <FieldLabel>{t("Object Version")}</FieldLabel>
                       <FieldContent>
@@ -378,7 +425,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                       </FieldContent>
                     </Field>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3" aria-invalid={Boolean(fieldErrors.tags)}>
                       <div className="flex items-center justify-between">
                         <FieldLabel className="text-sm font-medium">{t("Tags")}</FieldLabel>
                         <Button type="button" variant="outline" size="sm" onClick={addTag} disabled={submitting}>
@@ -396,6 +443,10 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                                 value={tag.key}
                                 onChange={(e) => updateTag(index, "key", e.target.value)}
                                 aria-label={`${t("Tag Name")} ${index + 1}`}
+                                aria-invalid={
+                                  Boolean(fieldErrors.tags) && Boolean(tag.key.trim()) !== Boolean(tag.value.trim())
+                                }
+                                aria-describedby={fieldErrors.tags ? "lifecycle-expire-tags-error" : undefined}
                                 autoComplete="off"
                                 placeholder={t("Tag Name")}
                                 spellCheck={false}
@@ -407,6 +458,10 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                                   value={tag.value}
                                   onChange={(e) => updateTag(index, "value", e.target.value)}
                                   aria-label={`${t("Tag Value")} ${index + 1}`}
+                                  aria-invalid={
+                                    Boolean(fieldErrors.tags) && Boolean(tag.key.trim()) !== Boolean(tag.value.trim())
+                                  }
+                                  aria-describedby={fieldErrors.tags ? "lifecycle-expire-tags-error" : undefined}
                                   autoComplete="off"
                                   placeholder={t("Tag Value")}
                                   className="flex-1"
@@ -428,39 +483,68 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                           ))}
                         </div>
                       )}
+                      <FieldError id="lifecycle-expire-tags-error">{fieldErrors.tags}</FieldError>
                     </div>
                   </div>
                 </details>
 
-                {versionType === "current" && (
+                {hasVersionHistory && versionType === "current" && (
                   <details>
                     <summary className="cursor-pointer text-sm font-medium text-primary">
                       {t("Advanced Settings")}
                     </summary>
                     <Field className="mt-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <FieldLabel htmlFor="lifecycle-expired-delete-marker" className="text-sm font-medium">
-                            {t("Delete Marker Handling")}
-                          </FieldLabel>
-                          <FieldDescription>
+                      <label
+                        htmlFor="lifecycle-expired-delete-marker"
+                        className="flex cursor-pointer items-start gap-3"
+                      >
+                        <Checkbox
+                          id="lifecycle-expired-delete-marker"
+                          name="lifecycle-expired-delete-marker"
+                          checked={expiredDeleteMark}
+                          aria-invalid={Boolean(fieldErrors.deleteMarker)}
+                          aria-describedby={
+                            fieldErrors.deleteMarker
+                              ? "lifecycle-expired-delete-marker-description lifecycle-expired-delete-marker-error"
+                              : "lifecycle-expired-delete-marker-description"
+                          }
+                          onCheckedChange={(checked) => {
+                            setExpiredDeleteMark(checked === true)
+                            setFieldErrors((current) => ({ ...current, deleteMarker: undefined }))
+                          }}
+                          className="mt-1"
+                        />
+                        <span>
+                          <span className="block text-sm font-medium">{t("Delete Marker Handling")}</span>
+                          <FieldDescription id="lifecycle-expired-delete-marker-description">
                             {t("If no versions remain, delete references to this object")}
                           </FieldDescription>
-                        </div>
-                        <Switch
-                          id="lifecycle-expired-delete-marker"
-                          checked={expiredDeleteMark}
-                          onCheckedChange={setExpiredDeleteMark}
-                        />
-                      </div>
+                        </span>
+                      </label>
+                      <FieldError id="lifecycle-expired-delete-marker-error">{fieldErrors.deleteMarker}</FieldError>
                     </Field>
                   </details>
                 )}
+
+                {hasVersionHistory && versionType === "current" ? (
+                  <Alert>
+                    <AlertTitle>{t("Warning")}</AlertTitle>
+                    <AlertDescription>
+                      {t(
+                        "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.",
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+
+                {activeTab === "expire" && expiredDeleteMark ? (
+                  <p className="text-sm text-muted-foreground">{t("2 lifecycle rules will be created.")}</p>
+                ) : null}
               </TabsContent>
 
               <TabsContent value="transition" className="mt-0 space-y-6">
                 <div className="space-y-4">
-                  {versioningStatus && (
+                  {hasVersionHistory && (
                     <Field>
                       <FieldLabel>{t("Object Version")}</FieldLabel>
                       <FieldContent>
@@ -561,7 +645,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                       </FieldContent>
                     </Field>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3" aria-invalid={Boolean(fieldErrors.tags)}>
                       <div className="flex items-center justify-between">
                         <FieldLabel className="text-sm font-medium">{t("Tags")}</FieldLabel>
                         <Button type="button" variant="outline" size="sm" onClick={addTag} disabled={submitting}>
@@ -579,6 +663,10 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                                 value={tag.key}
                                 onChange={(e) => updateTag(index, "key", e.target.value)}
                                 aria-label={`${t("Tag Name")} ${index + 1}`}
+                                aria-invalid={
+                                  Boolean(fieldErrors.tags) && Boolean(tag.key.trim()) !== Boolean(tag.value.trim())
+                                }
+                                aria-describedby={fieldErrors.tags ? "lifecycle-transition-tags-error" : undefined}
                                 autoComplete="off"
                                 placeholder={t("Tag Name")}
                                 spellCheck={false}
@@ -590,6 +678,10 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                                   value={tag.value}
                                   onChange={(e) => updateTag(index, "value", e.target.value)}
                                   aria-label={`${t("Tag Value")} ${index + 1}`}
+                                  aria-invalid={
+                                    Boolean(fieldErrors.tags) && Boolean(tag.key.trim()) !== Boolean(tag.value.trim())
+                                  }
+                                  aria-describedby={fieldErrors.tags ? "lifecycle-transition-tags-error" : undefined}
                                   autoComplete="off"
                                   placeholder={t("Tag Value")}
                                   className="flex-1"
@@ -611,6 +703,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                           ))}
                         </div>
                       )}
+                      <FieldError id="lifecycle-transition-tags-error">{fieldErrors.tags}</FieldError>
                     </div>
                   </div>
                 </details>

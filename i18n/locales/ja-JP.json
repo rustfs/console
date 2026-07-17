@@ -1501,5 +1501,8 @@
   "Loading more objects": "Loading more objects",
   "Scroll to load more objects": "Scroll to load more objects",
   "Back to top": "Back to top",
-  "Go to bottom": "Go to bottom"
+  "Go to bottom": "Go to bottom",
+  "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.": "現行バージョンの有効期限切れでは削除マーカーが作成されます。オブジェクトデータを完全に削除するには、非現行バージョンの有効期限を設定してください。",
+  "2 lifecycle rules will be created.": "2 件のライフサイクルルールが作成されます。",
+  "Lifecycle configuration cannot contain more than 1000 rules.": "ライフサイクル設定に含められるルールは 1000 件までです。"
 }

@@ -1501,5 +1501,8 @@
   "Loading more objects": "正在加载更多对象",
   "Scroll to load more objects": "滚动以加载更多对象",
   "Back to top": "回到顶部",
-  "Go to bottom": "直达底部"
+  "Go to bottom": "直达底部",
+  "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.": "当前版本过期时会创建删除标记。请配置非当前版本过期规则，以永久删除对象数据。",
+  "2 lifecycle rules will be created.": "将创建 2 条生命周期规则。",
+  "Lifecycle configuration cannot contain more than 1000 rules.": "生命周期配置不能包含超过 1000 条规则。"
 }

@@ -1501,5 +1501,8 @@
   "Loading more objects": "Loading more objects",
   "Scroll to load more objects": "Scroll to load more objects",
   "Back to top": "Back to top",
-  "Go to bottom": "Go to bottom"
+  "Go to bottom": "Go to bottom",
+  "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.": "현재 버전 만료 시 삭제 마커가 생성됩니다. 객체 데이터를 영구적으로 삭제하려면 비현재 버전 만료를 구성하세요.",
+  "2 lifecycle rules will be created.": "수명 주기 규칙 2개가 생성됩니다.",
+  "Lifecycle configuration cannot contain more than 1000 rules.": "수명 주기 구성에는 1000개를 초과하는 규칙을 포함할 수 없습니다."
 }

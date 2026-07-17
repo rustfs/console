@@ -1501,5 +1501,8 @@
   "Loading more objects": "Loading more objects",
   "Scroll to load more objects": "Scroll to load more objects",
   "Back to top": "Back to top",
-  "Go to bottom": "Go to bottom"
+  "Go to bottom": "Go to bottom",
+  "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.": "Việc hết hạn phiên bản hiện tại sẽ tạo dấu xóa. Hãy cấu hình hết hạn phiên bản không hiện tại để xóa vĩnh viễn dữ liệu đối tượng.",
+  "2 lifecycle rules will be created.": "Sẽ tạo 2 quy tắc vòng đời.",
+  "Lifecycle configuration cannot contain more than 1000 rules.": "Cấu hình vòng đời không được chứa quá 1000 quy tắc."
 }

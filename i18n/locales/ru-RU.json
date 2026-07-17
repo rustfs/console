@@ -1501,5 +1501,8 @@
   "Loading more objects": "Загрузить больше объектов",
   "Scroll to load more objects": "Прокрутить для загрузки объектов",
   "Back to top": "Перейти вверх",
-  "Go to bottom": "Перейти вниз"
+  "Go to bottom": "Перейти вниз",
+  "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.": "При истечении срока действия текущей версии создается маркер удаления. Настройте удаление неактуальных версий, чтобы окончательно удалить данные объекта.",
+  "2 lifecycle rules will be created.": "Будут созданы 2 правила жизненного цикла.",
+  "Lifecycle configuration cannot contain more than 1000 rules.": "Конфигурация жизненного цикла не может содержать более 1000 правил."
 }

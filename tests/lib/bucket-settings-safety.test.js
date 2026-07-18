@@ -215,7 +215,8 @@ test("replication creation rereads rules and never removes an uncertain remote t
   assert.match(replicationFormSource, /normalizeReplicationRulesForRolelessConfig/)
   assert.match(replicationFormSource, /Role: ""/)
   assert.match(replicationTabSource, /Role: role/)
-  assert.match(replicationTabSource, /remaining\.length > 0 &&[\s\S]{0,80}!role &&/)
+  assert.match(replicationTabSource, /if \(\s*!role &&[\s\S]{0,120}!remaining\.some/)
+  assert.doesNotMatch(replicationTabSource, /remaining\.length > 0 &&[\s\S]{0,80}!role &&/)
   assert.doesNotMatch(replicationTabSource, /Replication configuration Role is missing/)
 })
 

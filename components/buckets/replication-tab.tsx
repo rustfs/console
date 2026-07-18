@@ -101,12 +101,7 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
             Rules: remaining,
           })
         }
-        if (
-          remaining.length > 0 &&
-          !role &&
-          targetArn &&
-          !remaining.some((item) => item.Destination?.Bucket === targetArn)
-        ) {
+        if (!role && targetArn && !remaining.some((item) => item.Destination?.Bucket === targetArn)) {
           try {
             await deleteRemoteReplicationTarget(bucketName, targetArn)
           } catch (cleanupError) {

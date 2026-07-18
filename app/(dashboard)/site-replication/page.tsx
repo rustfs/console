@@ -25,6 +25,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -376,25 +377,27 @@ export default function SiteReplicationPage() {
                 }
               />
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{peer.name || t("Peer site")}</DropdownMenuLabel>
-                {canManageSites ? (
-                  <DropdownMenuItem onClick={() => setEditingPeer(peer)}>
-                    <RiArrowLeftRightLine className="size-4" aria-hidden />
-                    {t("Edit Site")}
-                  </DropdownMenuItem>
-                ) : null}
-                {canResyncSites ? (
-                  <DropdownMenuItem onClick={() => void handleResync(peer, "start")}>
-                    <RiRestartLine className="size-4" aria-hidden />
-                    {t("Start Resync")}
-                  </DropdownMenuItem>
-                ) : null}
-                {canResyncSites ? (
-                  <DropdownMenuItem onClick={() => void handleResync(peer, "cancel")}>
-                    <RiRefreshLine className="size-4" aria-hidden />
-                    {t("Cancel Resync")}
-                  </DropdownMenuItem>
-                ) : null}
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>{peer.name || t("Peer site")}</DropdownMenuLabel>
+                  {canManageSites ? (
+                    <DropdownMenuItem onClick={() => setEditingPeer(peer)}>
+                      <RiArrowLeftRightLine className="size-4" aria-hidden />
+                      {t("Edit Site")}
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canResyncSites ? (
+                    <DropdownMenuItem onClick={() => void handleResync(peer, "start")}>
+                      <RiRestartLine className="size-4" aria-hidden />
+                      {t("Start Resync")}
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canResyncSites ? (
+                    <DropdownMenuItem onClick={() => void handleResync(peer, "cancel")}>
+                      <RiRefreshLine className="size-4" aria-hidden />
+                      {t("Cancel Resync")}
+                    </DropdownMenuItem>
+                  ) : null}
+                </DropdownMenuGroup>
                 {canRemoveSites ? <DropdownMenuSeparator /> : null}
                 {canRemoveSites ? (
                   <DropdownMenuItem variant="destructive" onClick={() => confirmRemoveSite(peer)}>

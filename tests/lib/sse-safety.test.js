@@ -51,6 +51,7 @@ test("default-key creation uses a safe status baseline and clears secrets after 
 
 test("Local KMS cannot be reconfigured until the backend supports safe secret rotation", () => {
   assert.match(source, /backendType: "vault-transit"/)
+  assert.match(source, /const localKmsReadOnly = hasConfiguration && formState\.backendType === "local"/)
   assert.match(
     source,
     /Local filesystem KMS configuration is read-only in Console until safe master-key rotation is available\./,
@@ -61,6 +62,7 @@ test("Local KMS cannot be reconfigured until the backend supports safe secret ro
 })
 
 test("SSE form and dialogs stay reachable on narrow screens", () => {
+  assert.match(source, /<form\s+className="space-y-6"\s+noValidate/)
   assert.match(source, /<fieldset className="space-y-4 border-t pt-4">/)
   assert.match(source, /grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
   assert.match(source, /md:hidden/)

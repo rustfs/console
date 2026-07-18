@@ -63,3 +63,10 @@ test("site replication overview reports each peer TLS trust mode", async () => {
   assert.match(source, /formatTlsVerification/)
   assert.match(source, /TLS Verification/)
 })
+
+test("site replication action labels stay inside a Base UI menu group", async () => {
+  const source = await readFile(new URL("../../app/(dashboard)/site-replication/page.tsx", import.meta.url), "utf8")
+
+  assert.match(source, /DropdownMenuGroup/)
+  assert.match(source, /<DropdownMenuGroup>[\s\S]*?<DropdownMenuLabel>[\s\S]*?<\/DropdownMenuGroup>/)
+})

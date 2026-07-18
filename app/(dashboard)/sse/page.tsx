@@ -905,7 +905,7 @@ export default function SSEPage() {
   const isPendingDefaultKey = pendingKeyAction?.key.key_id === status?.config_summary?.default_key_id
 
   const mutationLocked = Boolean(activeMutation || statusError || loadingStatus)
-  const localKmsReadOnly = formState.backendType === "local"
+  const localKmsReadOnly = hasConfiguration && formState.backendType === "local"
   const formDisabled = mutationLocked || loadingStatus || submittingConfig || localKmsReadOnly
   const mutationInFlight = Boolean(activeMutation || submittingConfig || creatingKey || processingKeyAction)
   const canSetCreatedKeyAsDefault = status?.backend_type !== "Local" && !isConfigDirty
@@ -1079,6 +1079,7 @@ export default function SSEPage() {
               ) : null}
               <form
                 className="space-y-6"
+                noValidate
                 onSubmit={(event) => {
                   event.preventDefault()
                   void submitConfiguration()

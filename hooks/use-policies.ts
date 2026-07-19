@@ -2,6 +2,7 @@
 
 import { useCallback } from "react"
 import { useApi } from "@/contexts/api-context"
+import { normalizePolicyStatements } from "@/lib/user-policy"
 
 export function usePolicies() {
   const api = useApi()
@@ -81,33 +82,8 @@ export function usePolicies() {
       if (allPolicyNames.size > 0) {
         await Promise.all(
           Array.from(allPolicyNames).map(async (policyName) => {
-            const policyInfo = (await getPolicy(policyName)) as { policy?: string }
-            const policyDocument = JSON.parse(policyInfo.policy ?? "{}") as {
-              Statement?: Record<string, unknown>[]
-            }
-
-            if (!Array.isArray(policyDocument.Statement)) return
-
-            const groupOrigins = Object.entries(groupPoliciesMap)
-              .filter(([, policies]) => policies.includes(policyName))
-              .map(([groupName]) => groupName)
-
-            policyDocument.Statement.forEach((statement) => {
-              policyStatement.push({
-                ...statement,
-                Sid: statement.Sid ?? policyName,
-                Origin: {
-                  type:
-                    directPolicyNames.includes(policyName) && groupOrigins.length > 0
-                      ? "both"
-                      : directPolicyNames.includes(policyName)
-                        ? "direct"
-                        : "group",
-                  groups: groupOrigins,
-                  policyName,
-                },
-              })
-            })
+            const policyInfo = (await getPolicy(policyName)) as { policy?: unknown }
+            policyStatement.push(...normalizePolicyStatements(policyName, policyInfo.policy ?? {}))
           }),
         )
       }

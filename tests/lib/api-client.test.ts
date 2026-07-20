@@ -60,12 +60,16 @@ test("ApiClient redacts sensitive headers and request bodies from development lo
     headers: { Authorization: "Bearer header-secret", Cookie: "session=cookie-secret" },
     body: JSON.stringify({
       password: "body-secret",
+      secretKey: "tier-secret-key",
       profile: { apiKey: "nested-secret" },
       creds: '{"private_key":"gcs-private-key"}',
     }),
   })
 
   const serialized = JSON.stringify(redacted)
-  assert.doesNotMatch(serialized, /body-secret|nested-secret|header-secret|cookie-secret|gcs-private-key/)
+  assert.doesNotMatch(
+    serialized,
+    /body-secret|tier-secret-key|nested-secret|header-secret|cookie-secret|gcs-private-key/,
+  )
   assert.match(serialized, /\[REDACTED\]/)
 })

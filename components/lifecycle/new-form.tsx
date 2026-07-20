@@ -51,7 +51,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
   const [prefix, setPrefix] = useState("")
   const [expiredDeleteMark, setExpiredDeleteMark] = useState(false)
   const [tags, setTags] = useState<Tag[]>([{ key: "", value: "" }])
-  const [tiers, setTiers] = useState<Array<{ label: string; value: string }>>([])
+  const [tiers, setTiers] = useState<Array<{ label: string; value: string; type: string }>>([])
   const [tiersLoading, setTiersLoading] = useState(false)
   const [tiersError, setTiersError] = useState("")
   const [tiersReloadVersion, setTiersReloadVersion] = useState(0)
@@ -89,10 +89,10 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
           return {
             label: config?.name ?? "",
             value: config?.name ?? "",
+            type: item.type,
           }
         })
         setTiers(tierOptions)
-        if (tierOptions.length > 0) setStorageType((current) => current || tierOptions[0].value)
       }
     } catch {
       setTiers([])
@@ -149,6 +149,8 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
     setSaveError("")
     setFieldErrors({})
   }, [])
+
+  const selectedTierType = tiers.find((tier) => tier.value === storageType)?.type
 
   useEffect(() => {
     if (open) {
@@ -623,6 +625,18 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                     {tiersLoading ? <FieldDescription>{t("Loading")}</FieldDescription> : null}
                     <FieldError id="lifecycle-storage-type-error">{fieldErrors.storageType}</FieldError>
                   </Field>
+                  {selectedTierType === "wasabi" ? (
+                    <Alert>
+                      <AlertTitle>{t("Wasabi lifecycle requirements")}</AlertTitle>
+                      <AlertDescription>
+                        <ul className="list-disc ps-4">
+                          <li>{t("The remote Wasabi bucket must never have had Versioning enabled.")}</li>
+                          <li>{t("Compliance or Object Lock retention may prevent deletion.")}</li>
+                          <li>{t("Early expiry may still incur minimum storage duration charges.")}</li>
+                        </ul>
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
                 </div>
 
                 <details className="space-y-4">

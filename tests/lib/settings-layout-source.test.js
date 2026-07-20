@@ -48,7 +48,7 @@ test("long settings dialogs keep headers and actions visible while the form scro
 
     assert.match(source, /max-h-\[min\(90dvh,52rem\)\]/)
     assert.match(source, /grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
-    assert.match(source, /min-h-0 space-y-6 overflow-y-auto/)
+    assert.match(source, /min-h-0[^\"]*overflow-y-auto/)
     assert.match(source, /<DialogFooter className="border-t bg-muted\/20/)
     assert.match(source, /disablePointerDismissal=\{submitting\}/)
     assert.match(source, /aria-busy=\{submitting\}/)

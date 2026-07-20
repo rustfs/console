@@ -14,10 +14,13 @@ import { TiersNewForm } from "@/components/tiers/new-form"
 import { TiersChangeKey } from "@/components/tiers/change-key"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
+import { TIER_PROVIDERS } from "@/lib/tier-config"
 import type { ColumnDef } from "@tanstack/react-table"
 
 function getConfig(row: TierRow): TierConfig | undefined {
   switch (row.type) {
+    case "wasabi":
+      return row.wasabi
     case "rustfs":
       return row.rustfs
     case "minio":
@@ -101,7 +104,14 @@ export default function TiersPage() {
       {
         header: () => t("Tier Type"),
         accessorKey: "type",
-        cell: ({ row }) => <span className="capitalize">{row.original.type || "-"}</span>,
+        cell: ({ row }) => {
+          const provider = TIER_PROVIDERS.find((item) => item.value === row.original.type)
+          return (
+            <span className={provider ? undefined : "capitalize"}>
+              {provider ? t(provider.labelKey) : row.original.type || "-"}
+            </span>
+          )
+        },
       },
       {
         id: "name",

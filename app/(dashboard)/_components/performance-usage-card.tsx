@@ -12,21 +12,19 @@ export interface UsageStat {
 
 export function PerformanceUsageCard({
   totalCapacity,
+  totalFreeCapacity,
   totalUsedCapacity,
   usedPercent,
   usageStats,
   t,
 }: {
   totalCapacity?: number
+  totalFreeCapacity?: number
   totalUsedCapacity?: number
   usedPercent?: number
   usageStats: UsageStat[]
   t: (key: string) => string
 }) {
-  const availableCapacity =
-    totalCapacity !== undefined && totalUsedCapacity !== undefined
-      ? Math.max(totalCapacity - totalUsedCapacity, 0)
-      : undefined
   const formatCapacity = (value?: number) => (value === undefined ? t("Unknown") : niceBytes(String(value)))
 
   return (
@@ -42,14 +40,14 @@ export function PerformanceUsageCard({
           <div className="flex items-center gap-4">
             <RiDatabase2Line className="size-6 text-primary" aria-hidden />
             <div className="min-w-0">
-              <p className="text-sm text-muted-foreground">{t("Used Capacity")}</p>
+              <p className="text-sm text-muted-foreground">{t("Usable Capacity Used")}</p>
               <p className="text-2xl font-semibold text-foreground tabular-nums">{formatCapacity(totalUsedCapacity)}</p>
             </div>
           </div>
           <div className="space-y-2">
             <Progress
               value={usedPercent ?? null}
-              aria-label={`${t("Used Capacity")}: ${usedPercent === undefined ? t("Unknown") : `${usedPercent.toFixed(0)}%`}`}
+              aria-label={`${t("Usable Capacity Used")}: ${usedPercent === undefined ? t("Unknown") : `${usedPercent.toFixed(0)}%`}`}
               className="h-2"
             />
             <p className="text-end text-xs text-muted-foreground tabular-nums">
@@ -65,7 +63,9 @@ export function PerformanceUsageCard({
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">{t("Available")}</dt>
-            <dd className="mt-1 text-sm font-medium tabular-nums">{formatCapacity(availableCapacity)}</dd>
+            <dd className="mt-1 text-sm font-medium tabular-nums">
+              {totalFreeCapacity === undefined ? "--" : formatCapacity(totalFreeCapacity)}
+            </dd>
           </div>
           <div>
             <dt className="text-xs text-muted-foreground">{t("Total Capacity")}</dt>

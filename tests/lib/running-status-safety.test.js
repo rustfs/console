@@ -64,3 +64,10 @@ test("status sections expose semantic headings and named progress", () => {
   assert.match(backendSource, /<h2/)
   assert.match(backendSource, /Storage Configuration/)
 })
+
+test("running status uses backend usable free capacity without synthesizing it", () => {
+  assert.match(pageSource, /totalFreeCapacity=\{totalFreeCapacity\}/)
+  assert.match(usageSource, /totalFreeCapacity === undefined \? "--" : formatCapacity\(totalFreeCapacity\)/)
+  assert.match(usageSource, /Usable Capacity Used/)
+  assert.doesNotMatch(usageSource, /totalCapacity\s*-\s*totalUsedCapacity/)
+})

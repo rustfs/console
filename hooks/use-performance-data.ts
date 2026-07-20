@@ -28,7 +28,11 @@ function hasSystemSnapshot(value: SystemInfo) {
 }
 
 function hasUsageSnapshot(value: DataUsageInfo) {
-  return value.total_capacity !== undefined || value.total_used_capacity !== undefined
+  return (
+    value.total_capacity !== undefined ||
+    value.total_free_capacity !== undefined ||
+    value.total_used_capacity !== undefined
+  )
 }
 
 function hasStorageSnapshot(value: StorageInfo) {

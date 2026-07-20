@@ -14,6 +14,7 @@ export interface TierConfig {
 
 export interface TierRow {
   type: string
+  wasabi?: TierConfig
   rustfs?: TierConfig
   minio?: TierConfig
   s3?: TierConfig

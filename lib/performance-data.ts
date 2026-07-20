@@ -31,6 +31,7 @@ export interface SystemInfo {
 
 export interface DataUsageInfo {
   total_capacity?: number
+  total_free_capacity?: number
   total_used_capacity?: number
 }
 
@@ -195,18 +196,18 @@ export function normalizeStorageInfo(value: unknown): StorageInfo {
 
 export function normalizeDataUsageInfo(value: unknown): DataUsageInfo {
   const source = unwrapInfoRecord(value)
+  const totalCapacity = asNonNegativeNumber(source.total_capacity ?? source.totalCapacity ?? source.TotalCapacity)
+  const totalFreeCapacity = asNonNegativeNumber(
+    source.total_free_capacity ?? source.totalFreeCapacity ?? source.TotalFreeCapacity,
+  )
+  const totalUsedCapacity = asNonNegativeNumber(
+    source.total_used_capacity ?? source.totalUsedCapacity ?? source.TotalUsedCapacity,
+  )
+
   return {
-    ...(asNonNegativeNumber(source.total_capacity ?? source.totalCapacity ?? source.TotalCapacity) !== undefined
-      ? { total_capacity: asNonNegativeNumber(source.total_capacity ?? source.totalCapacity ?? source.TotalCapacity) }
-      : {}),
-    ...(asNonNegativeNumber(source.total_used_capacity ?? source.totalUsedCapacity ?? source.TotalUsedCapacity) !==
-    undefined
-      ? {
-          total_used_capacity: asNonNegativeNumber(
-            source.total_used_capacity ?? source.totalUsedCapacity ?? source.TotalUsedCapacity,
-          ),
-        }
-      : {}),
+    ...(totalCapacity !== undefined ? { total_capacity: totalCapacity } : {}),
+    ...(totalFreeCapacity !== undefined ? { total_free_capacity: totalFreeCapacity } : {}),
+    ...(totalUsedCapacity !== undefined ? { total_used_capacity: totalUsedCapacity } : {}),
   }
 }
 

@@ -62,6 +62,7 @@ export default function PerformancePage() {
   const storageBackend = storageinfo.backend
 
   const totalCapacity = datausageinfo.total_capacity
+  const totalFreeCapacity = datausageinfo.total_free_capacity
   const totalUsedCapacity = datausageinfo.total_used_capacity
   const usedPercent = useMemo(() => {
     if (totalCapacity === undefined || totalUsedCapacity === undefined) return undefined
@@ -257,6 +258,7 @@ export default function PerformancePage() {
           <div className="order-3 xl:order-2">
             <PerformanceUsageCard
               totalCapacity={totalCapacity}
+              totalFreeCapacity={totalFreeCapacity}
               totalUsedCapacity={totalUsedCapacity}
               usedPercent={usedPercent}
               usageStats={usageStats}

@@ -122,13 +122,36 @@ test("normalizeSystemInfo preserves an unavailable server list instead of invent
 })
 
 test("normalizeDataUsageInfo keeps real zero values distinct from unavailable data", () => {
-  assert.deepEqual(normalizeDataUsageInfo({ total_capacity: "0", total_used_capacity: 0 }), {
+  assert.deepEqual(normalizeDataUsageInfo({ total_capacity: "0", total_free_capacity: 0, total_used_capacity: 0 }), {
     total_capacity: 0,
+    total_free_capacity: 0,
     total_used_capacity: 0,
   })
   assert.deepEqual(normalizeDataUsageInfo(undefined), {})
   assert.deepEqual(normalizeDataUsageInfo({ total_capacity: "invalid" }), {})
   assert.deepEqual(normalizeDataUsageInfo({ total_capacity: -1, total_used_capacity: -2 }), {})
+})
+
+test("normalizeDataUsageInfo preserves backend usable capacity fields without deriving free capacity", () => {
+  assert.deepEqual(
+    normalizeDataUsageInfo({
+      info: {
+        TotalCapacity: 100,
+        totalFreeCapacity: 30,
+        TotalUsedCapacity: 60,
+      },
+    }),
+    {
+      total_capacity: 100,
+      total_free_capacity: 30,
+      total_used_capacity: 60,
+    },
+  )
+
+  assert.deepEqual(normalizeDataUsageInfo({ total_capacity: 100, total_used_capacity: 60 }), {
+    total_capacity: 100,
+    total_used_capacity: 60,
+  })
 })
 
 test("normalizeMetricsInfo rejects missing and invalid scanner timestamps", () => {

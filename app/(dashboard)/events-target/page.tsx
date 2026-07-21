@@ -15,7 +15,13 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { useEventTarget } from "@/hooks/use-event-target"
 import { useModuleSwitches } from "@/hooks/use-module-switches"
 import { EventsTargetNewForm } from "@/components/events-target/new-form"
-import { canManageEventDestinations } from "@/lib/event-destinations-access"
+import {
+  applyEventDestinationsLoadResult,
+  canManageEventDestinations,
+  initialEventDestinationsState,
+  resolveEventDestinationsNotifyState,
+  type EventDestinationsLoadState,
+} from "@/lib/event-destinations-state"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -38,41 +44,60 @@ export default function EventsTargetPage() {
   const { getEventsTargetList, deleteEventTarget } = useEventTarget()
   const { getModuleSwitches } = useModuleSwitches()
 
-  const [data, setData] = useState<RowData[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loadState, setLoadState] = useState<EventDestinationsLoadState<RowData>>({
+    ...initialEventDestinationsState,
+  })
+  const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [newFormOpen, setNewFormOpen] = useState(false)
-  const [notifyEnabled, setNotifyEnabled] = useState<boolean | undefined>(undefined)
+  const loadingRef = React.useRef(false)
+  const requestVersionRef = React.useRef(0)
 
-  const canManageDestinations = canManageEventDestinations(notifyEnabled)
+  const { data, loadFailed, notifyEnabled, notifyFailed } = loadState
+  const canManageDestinations = canManageEventDestinations({
+    notifyEnabled,
+    loading,
+    loadFailed,
+    notifyFailed,
+  })
 
   const loadData = useCallback(async () => {
+    if (loadingRef.current) return
+    loadingRef.current = true
+    const requestVersion = ++requestVersionRef.current
     setLoading(true)
     try {
-      const [response, switches] = await Promise.allSettled([
-        getEventsTargetList(),
+      const response = await getEventsTargetList()
+      const nextNotifyEnabled = await resolveEventDestinationsNotifyState(response, () =>
         getModuleSwitches({ suppress403Redirect: true }),
-      ])
+      )
 
-      if (switches.status === "fulfilled" && switches.value) {
-        setNotifyEnabled(switches.value.notify_enabled)
-      }
-
-      if (response.status === "rejected") {
-        throw response.reason
-      }
-
-      const list = (response.value?.notification_endpoints ?? []) as RowData[]
-      setData(list)
+      if (requestVersion !== requestVersionRef.current) return
+      const list = (response.notification_endpoints ?? []) as RowData[]
+      setLoadState((current) =>
+        applyEventDestinationsLoadResult(current, {
+          ok: true,
+          data: list,
+          notifyEnabled: nextNotifyEnabled,
+        }),
+      )
     } catch {
-      setData([])
+      if (requestVersion !== requestVersionRef.current) return
+      setLoadState((current) => applyEventDestinationsLoadResult(current, { ok: false }))
     } finally {
-      setLoading(false)
+      if (requestVersion === requestVersionRef.current) {
+        loadingRef.current = false
+        setLoading(false)
+      }
     }
   }, [getEventsTargetList, getModuleSwitches])
 
   useEffect(() => {
     loadData()
+    return () => {
+      requestVersionRef.current += 1
+      loadingRef.current = false
+    }
   }, [loadData])
 
   const filteredData = useMemo(() => {
@@ -209,9 +234,9 @@ export default function EventsTargetPage() {
                 <RiAddLine className="size-4" aria-hidden />
                 <span>{t("Add Event Destination")}</span>
               </Button>
-              <Button variant="outline" className="h-11 w-full sm:h-8 sm:w-auto" onClick={loadData}>
+              <Button variant="outline" className="h-11 w-full sm:h-8 sm:w-auto" onClick={loadData} disabled={loading}>
                 <RiRefreshLine className="size-4" aria-hidden />
-                <span>{t("Refresh")}</span>
+                <span>{loading ? t("Refreshing…") : t("Refresh")}</span>
               </Button>
             </div>
           </div>
@@ -220,19 +245,40 @@ export default function EventsTargetPage() {
         <h1 className="text-2xl font-bold">{t("Event Destinations")}</h1>
       </PageHeader>
 
-      {!canManageDestinations ? (
+      {notifyEnabled === false ? (
         <Alert>
           <AlertTitle>{t("Notify is disabled")}</AlertTitle>
           <AlertDescription>{t("Enable notify in Settings before managing event destinations.")}</AlertDescription>
         </Alert>
       ) : null}
 
-      <DataTable
-        table={table}
-        isLoading={loading}
-        emptyTitle={t("No Destinations")}
-        emptyDescription={t("Create an event destination to forward notifications.")}
-      />
+      {notifyFailed ? (
+        <Alert variant="destructive">
+          <AlertTitle>{t("Notify status unavailable")}</AlertTitle>
+          <AlertDescription>
+            {t("Unable to verify whether notify is enabled. Refresh before making changes.")}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {loadFailed ? (
+        <Alert variant="destructive">
+          <AlertTitle>{t("Load Failed")}</AlertTitle>
+          <AlertDescription>
+            {data.length > 0 ? t("Previously loaded values may be stale.") : t("Refresh to try again.")}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {data.length > 0 || !loadFailed ? (
+        <DataTable
+          table={table}
+          isLoading={loading && data.length === 0}
+          emptyTitle={t("No Destinations")}
+          emptyDescription={t("Create an event destination to forward notifications.")}
+          caption={t("Event Destinations")}
+        />
+      ) : null}
 
       <EventsTargetNewForm open={newFormOpen} onOpenChange={setNewFormOpen} onSuccess={loadData} />
     </Page>

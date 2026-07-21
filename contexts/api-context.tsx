@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useRef, useState } from "react"
 import { usePathname, useRouter } from "next/navigation"
 import { ApiClient } from "@/lib/api-client"
 import { AwsClient } from "@/lib/aws4fetch"
@@ -22,6 +22,11 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
   const [isReady, setIsReady] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
+  const pathnameRef = useRef(pathname)
+
+  useEffect(() => {
+    pathnameRef.current = pathname
+  }, [pathname])
 
   useEffect(() => {
     if (!isAuthenticated || !credentials?.AccessKeyId) {
@@ -65,7 +70,7 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
             return
           }
 
-          if (pathname === "/403/") return
+          if (pathnameRef.current === "/403/") return
           router.replace("/403/")
         },
       })
@@ -89,7 +94,6 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
     credentials?.SecretAccessKey,
     credentials?.SessionToken,
     logout,
-    pathname,
     router,
   ])
 

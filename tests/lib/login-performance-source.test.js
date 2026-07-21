@@ -5,6 +5,7 @@ import fs from "node:fs"
 const rootLayout = fs.readFileSync("app/layout.tsx", "utf8")
 const dashboardLayout = fs.readFileSync("app/(dashboard)/layout.tsx", "utf8")
 const authContext = fs.readFileSync("contexts/auth-context.tsx", "utf8")
+const apiContext = fs.readFileSync("contexts/api-context.tsx", "utf8")
 const loginPage = fs.readFileSync("app/(auth)/auth/login/page.tsx", "utf8")
 const oidcCallbackPage = fs.readFileSync("app/(auth)/auth/oidc-callback/page.tsx", "utf8")
 const i18nProvider = fs.readFileSync("components/providers/i18n-provider.tsx", "utf8")
@@ -31,6 +32,17 @@ test("dashboard layout owns dashboard providers before the auth guard", () => {
   assert.ok(dashboardLayout.indexOf("<S3Provider>") < dashboardLayout.indexOf("<TaskProvider>"))
   assert.ok(dashboardLayout.indexOf("<TaskProvider>") < dashboardLayout.indexOf("<PermissionsProvider>"))
   assert.ok(dashboardLayout.indexOf("<PermissionsProvider>") < dashboardLayout.indexOf("<DashboardAuthGuard>"))
+})
+
+test("dashboard navigation does not recreate the API client", () => {
+  const apiSetupEffect = apiContext.match(
+    /useEffect\(\(\) => \{\n    if \(!isAuthenticated[\s\S]*?\n  \}, \[([\s\S]*?)\]\)/,
+  )
+
+  assert.ok(apiSetupEffect)
+  assert.doesNotMatch(apiSetupEffect[1], /pathname/)
+  assert.match(apiContext, /pathnameRef\.current = pathname/)
+  assert.match(apiContext, /pathnameRef\.current === "\/403\/"/)
 })
 
 test("auth routes do not depend on dashboard permission resolution", () => {

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useCallback, useEffect, useState } from "react"
 import { useSystem } from "@/hooks/use-system"
+import { scheduleMicrotask } from "@/lib/schedule-microtask"
 import {
   normalizeDataUsageInfo,
   normalizeMetricsInfo,
@@ -157,6 +158,7 @@ export function usePerformanceData() {
   }, [getDataUsageInfo, getStorageInfo, getSystemInfo, getSystemMetrics])
 
   useEffect(() => {
+    let cancelled = false
     mountedRef.current = true
     hasSystemDataRef.current = false
     setSystemInfo({})
@@ -169,7 +171,9 @@ export function usePerformanceData() {
     setSourceErrors({})
     setLastUpdatedAt(null)
     setMetricsUpdatedAt(null)
-    void refetch()
+    scheduleMicrotask(() => {
+      if (!cancelled) void refetch()
+    })
 
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") void refetch()
@@ -181,6 +185,7 @@ export function usePerformanceData() {
     document.addEventListener("visibilitychange", handleVisibilityChange)
 
     return () => {
+      cancelled = true
       mountedRef.current = false
       requestVersionRef.current += 1
       abortControllerRef.current?.abort()

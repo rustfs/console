@@ -4,6 +4,7 @@ import fs from "node:fs"
 
 const hookSource = fs.readFileSync("hooks/use-performance-data.ts", "utf8")
 const systemSource = fs.readFileSync("hooks/use-system.ts", "utf8")
+const permissionsSource = fs.readFileSync("hooks/use-permissions.tsx", "utf8")
 const pageSource = fs.readFileSync("app/(dashboard)/status/page.tsx", "utf8")
 const serverSource = fs.readFileSync("app/(dashboard)/_components/performance-server-list.tsx", "utf8")
 const usageSource = fs.readFileSync("app/(dashboard)/_components/performance-usage-card.tsx", "utf8")
@@ -24,6 +25,12 @@ test("performance refresh keeps partial data and rejects stale responses", () =>
   assert.match(hookSource, /hasSystemDataRef\.current = false[\s\S]*setSystemInfo\(\{\}\)/)
   assert.doesNotMatch(hookSource, /setLoading\(false\)[\s\S]*getSystemMetrics/)
   assert.ok((systemSource.match(/suppress403Redirect: true/g) ?? []).length >= 3)
+})
+
+test("running status skips Strict Mode preview requests", () => {
+  assert.match(hookSource, /scheduleMicrotask\(\(\) => \{\s*if \(!cancelled\) void refetch\(\)/)
+  assert.match(hookSource, /return \(\) => \{\s*cancelled = true/)
+  assert.match(permissionsSource, /scheduleMicrotask\(\(\) => \{\s*if \(!cancelled\) void fetchAdminStatus\(\)/)
 })
 
 test("running status distinguishes unknown values and exposes recovery feedback", () => {

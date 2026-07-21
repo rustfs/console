@@ -5,6 +5,7 @@ import { hasConsoleScopes, type ConsolePolicy } from "@/lib/console-policy-parse
 import { hasConsoleCapability, type ConsoleCapability } from "@/lib/permission-capabilities"
 import type { PermissionResourceContext } from "@/lib/permission-resources"
 import { CONSOLE_SCOPES, PAGE_PERMISSIONS } from "@/lib/console-permissions"
+import { scheduleMicrotask } from "@/lib/schedule-microtask"
 import { useAuth } from "@/contexts/auth-context"
 import { useApiOptional } from "@/contexts/api-context"
 
@@ -130,8 +131,15 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   )
 
   useEffect(() => {
+    let cancelled = false
     if (api && isAuthenticated && !hasResolvedAdmin) {
-      void fetchAdminStatus()
+      scheduleMicrotask(() => {
+        if (!cancelled) void fetchAdminStatus()
+      })
+    }
+
+    return () => {
+      cancelled = true
     }
   }, [api, isAuthenticated, hasResolvedAdmin, fetchAdminStatus])
 

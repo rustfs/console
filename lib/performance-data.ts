@@ -1,5 +1,5 @@
 export type ServerHealthState = "online" | "offline" | "degraded" | "initializing" | "unknown"
-export type OperationalStatus = "healthy" | "degraded" | "stale" | "unknown"
+export type OperationalStatus = "healthy" | "degraded" | "stale" | "not_reported" | "unknown"
 
 export interface StatusDiagnostic {
   state: OperationalStatus
@@ -7,6 +7,8 @@ export interface StatusDiagnostic {
   source?: string
   lastSuccessfulUpdate?: string
   lastError?: string
+  historicalStallTimeouts?: number
+  hint?: string
   scope?: {
     bucket?: string
     prefix?: string
@@ -25,6 +27,7 @@ export interface ClusterDiagnostics {
   storageReadiness: StatusDiagnostic
   usageFreshness: StatusDiagnostic
   listingHealth: StatusDiagnostic
+  workloadAdmission: StatusDiagnostic
   peers: PeerHealthDiagnostic[]
   membership: Array<{ nodeId: string; gridHost?: string }>
 }
@@ -124,6 +127,13 @@ function asStringOrNumber(value: unknown): string | number | undefined {
 function asTimestamp(value: unknown): string | undefined {
   const timestamp = asString(value)
   return timestamp && !Number.isNaN(Date.parse(timestamp)) ? timestamp : undefined
+}
+
+function asUnixTimestamp(value: unknown): string | undefined {
+  const seconds = asNonNegativeNumber(value)
+  if (seconds === undefined || seconds === 0) return undefined
+  const timestamp = new Date(seconds * 1000)
+  return Number.isNaN(timestamp.getTime()) ? undefined : timestamp.toISOString()
 }
 
 function asSafeText(value: unknown): string | undefined {
@@ -238,8 +248,13 @@ function normalizeOperationalStatus(value: unknown): OperationalStatus {
     return "healthy"
   }
   if (["stale", "outdated", "expired"].includes(state ?? "")) return "stale"
+  if (["not_reported", "notreported", "unsupported", "disabled", "unavailable"].includes(state ?? "")) {
+    return "not_reported"
+  }
   if (
-    ["degraded", "unhealthy", "failed", "failure", "offline", "unreachable", "error", "timeout"].includes(state ?? "")
+    ["degraded", "unhealthy", "failed", "failure", "offline", "unreachable", "unresolved", "error", "timeout"].includes(
+      state ?? "",
+    )
   ) {
     return "degraded"
   }
@@ -269,7 +284,9 @@ function normalizeDiagnostic(value: unknown): StatusDiagnostic {
   const record = asRecord(value)
   const nestedStatus = asRecord(record.status ?? record.Status)
   const state = normalizeOperationalStatus(
-    record.state ??
+    record.condition ??
+      record.Condition ??
+      record.state ??
       record.State ??
       (typeof record.status === "string" ? record.status : undefined) ??
       nestedStatus.state ??
@@ -277,18 +294,23 @@ function normalizeDiagnostic(value: unknown): StatusDiagnostic {
   )
   const reason = asSafeText(record.reason ?? record.Reason ?? nestedStatus.reason ?? nestedStatus.Reason)
   const source = asSafeText(record.source ?? record.Source ?? nestedStatus.source ?? nestedStatus.Source)
-  const lastSuccessfulUpdate = asTimestamp(
-    record.last_successful_update ??
-      record.lastSuccessfulUpdate ??
-      record.last_success ??
-      record.lastSuccess ??
-      nestedStatus.last_successful_update ??
-      nestedStatus.lastSuccessfulUpdate,
-  )
+  const lastSuccessfulUpdate =
+    asTimestamp(
+      record.last_successful_update ??
+        record.lastSuccessfulUpdate ??
+        record.last_success ??
+        record.lastSuccess ??
+        nestedStatus.last_successful_update ??
+        nestedStatus.lastSuccessfulUpdate,
+    ) ?? asUnixTimestamp(record.last_success_unix_secs ?? record.lastSuccessUnixSecs)
   const lastError = asSafeText(
     record.last_error ?? record.lastError ?? record.error ?? nestedStatus.last_error ?? nestedStatus.lastError,
   )
   const scope = normalizeScope(record.scope ?? record.context ?? nestedStatus.scope ?? nestedStatus.context)
+  const historicalStallTimeouts = asNonNegativeNumber(
+    record.internode_stall_timeouts_total ?? record.internodeStallTimeoutsTotal,
+  )
+  const hint = asSafeText(record.hint ?? record.Hint)
 
   return {
     state,
@@ -296,13 +318,21 @@ function normalizeDiagnostic(value: unknown): StatusDiagnostic {
     ...(source ? { source } : {}),
     ...(lastSuccessfulUpdate ? { lastSuccessfulUpdate } : {}),
     ...(lastError ? { lastError } : {}),
+    ...(historicalStallTimeouts !== undefined ? { historicalStallTimeouts } : {}),
+    ...(hint ? { hint } : {}),
     ...(scope ? { scope } : {}),
   }
 }
 
 function aggregateDiagnostics(diagnostics: StatusDiagnostic[], fallback?: StatusDiagnostic): StatusDiagnostic {
   if (!diagnostics.length) return fallback ?? { state: "unknown" }
-  const priority: Record<OperationalStatus, number> = { degraded: 0, stale: 1, unknown: 2, healthy: 3 }
+  const priority: Record<OperationalStatus, number> = {
+    degraded: 0,
+    stale: 1,
+    unknown: 2,
+    not_reported: 3,
+    healthy: 4,
+  }
   return diagnostics.reduce((worst, current) => (priority[current.state] < priority[worst.state] ? current : worst))
 }
 
@@ -338,8 +368,15 @@ export function normalizeClusterDiagnostics(value: unknown): ClusterDiagnostics 
     const isLocal = asBoolean(peer.is_local ?? peer.isLocal ?? peer.IsLocal)
     return [{ ...diagnostic, nodeId, ...(isLocal !== undefined ? { isLocal } : {}) }]
   })
-  const peerSummary = normalizeDiagnostic(summary.peer_health ?? summary.peerHealth)
-  const peerHealth = aggregateDiagnostics(peers, peerSummary)
+  const explicitPeerHealth = firstDiagnosticRecord(
+    components.peer_health,
+    components.peerHealth,
+    summary.peer_health,
+    summary.peerHealth,
+  )
+  const peerHealth = explicitPeerHealth
+    ? normalizeDiagnostic(explicitPeerHealth)
+    : aggregateDiagnostics(peers, { state: "not_reported" })
 
   const runtime = asRecord(snapshot.runtime_status ?? snapshot.runtimeStatus ?? snapshot.RuntimeStatus)
   const explicitStorage = firstDiagnosticRecord(
@@ -356,43 +393,51 @@ export function normalizeClusterDiagnostics(value: unknown): ClusterDiagnostics 
   const storageReadiness = explicitStorage
     ? normalizeDiagnostic(explicitStorage)
     : storageReady === undefined
-      ? { state: "unknown" as const }
+      ? { state: "not_reported" as const }
       : {
           state: storageReady ? ("healthy" as const) : ("degraded" as const),
           ...(!storageReady && degradedReasons ? { reason: degradedReasons } : {}),
         }
 
-  const usageFreshness = normalizeDiagnostic(
-    firstDiagnosticRecord(
-      snapshot.usage_freshness,
-      snapshot.usageFreshness,
-      snapshot.usage_cache,
-      snapshot.usageCache,
-      components.usage_freshness,
-      components.usageFreshness,
-      components.usage_cache,
-      components.usageCache,
-      components.usage,
-    ),
+  const explicitUsage = firstDiagnosticRecord(
+    snapshot.usage_freshness,
+    snapshot.usageFreshness,
+    snapshot.usage_cache,
+    snapshot.usageCache,
+    components.usage_freshness,
+    components.usageFreshness,
+    components.usage_cache,
+    components.usageCache,
+    components.usage,
   )
-  const listingHealth = normalizeDiagnostic(
-    firstDiagnosticRecord(
-      snapshot.listing,
-      snapshot.metacache,
-      snapshot.listing_metacache,
-      snapshot.listingMetacache,
-      components.listing,
-      components.metacache,
-      components.listing_metacache,
-      components.listingMetacache,
-    ),
+  const usageFreshness = explicitUsage ? normalizeDiagnostic(explicitUsage) : { state: "not_reported" as const }
+  const explicitListing = firstDiagnosticRecord(
+    snapshot.listing,
+    snapshot.metacache,
+    snapshot.listing_metacache,
+    snapshot.listingMetacache,
+    components.listing,
+    components.metacache,
+    components.listing_metacache,
+    components.listingMetacache,
   )
+  const listingHealth = explicitListing ? normalizeDiagnostic(explicitListing) : { state: "not_reported" as const }
+  const explicitWorkloadAdmission = firstDiagnosticRecord(
+    snapshot.workload_admission_status,
+    snapshot.workloadAdmissionStatus,
+    components.workload_admission,
+    components.workloadAdmission,
+  )
+  const workloadAdmission = explicitWorkloadAdmission
+    ? normalizeDiagnostic(explicitWorkloadAdmission)
+    : { state: "not_reported" as const }
 
   return {
     peerHealth,
     storageReadiness,
     usageFreshness,
     listingHealth,
+    workloadAdmission,
     peers,
     membership,
   }
@@ -438,7 +483,7 @@ export function resolveServerHealth(
     return { state: "degraded", ...(peer.reason ? { reason: peer.reason } : {}), source: "peer" }
   }
   if (
-    (peer.state === "unknown" || peer.state === "stale") &&
+    (peer.state === "unknown" || peer.state === "stale" || peer.state === "not_reported") &&
     legacyState === "degraded" &&
     hasOnlyHealthyDrives(server)
   ) {

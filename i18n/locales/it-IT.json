@@ -1536,5 +1536,14 @@
   "This status source was not reported by the server.": "This status source was not reported by the server.",
   "Usage Freshness": "Usage Freshness",
   "Troubleshooting": "Troubleshooting",
-  "Check listing timeout and storage latency before treating this as a disk failure.": "Check listing timeout and storage latency before treating this as a disk failure."
+  "Check listing timeout and storage latency before treating this as a disk failure.": "Check listing timeout and storage latency before treating this as a disk failure.",
+  "Not reported": "Not reported",
+  "Workload Admission": "Workload Admission",
+  "The server reported this status source with an unknown condition.": "The server reported this status source with an unknown condition.",
+  "Historical internode stall timeouts": "Historical internode stall timeouts",
+  "This lifetime counter has no sampling window and does not indicate current degradation by itself.": "This lifetime counter has no sampling window and does not indicate current degradation by itself.",
+  "Backend guidance": "Backend guidance",
+  "Open the real multi-node metrics verification guide": "Open the real multi-node metrics verification guide",
+  "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.": "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.",
+  "Review peer, storage, usage, listing, and workload admission health independently.": "Review peer, storage, usage, listing, and workload admission health independently."
 }

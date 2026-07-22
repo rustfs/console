@@ -92,9 +92,14 @@ test("status sections expose semantic headings and named progress", () => {
   assert.match(statusSourcesSource, /Storage Readiness/)
   assert.match(statusSourcesSource, /Usage Freshness/)
   assert.match(statusSourcesSource, /Listing and Metacache/)
+  assert.match(statusSourcesSource, /Workload Admission/)
+  assert.match(statusSourcesSource, /Not reported/)
+  assert.match(statusSourcesSource, /Historical internode stall timeouts/)
+  assert.match(statusSourcesSource, /issuecomment-5040442761/)
   assert.match(statusSourcesSource, /<Badge/)
   assert.match(statusSourcesSource, /<Separator/)
-  assert.match(statusSourcesSource, /Check listing timeout and storage latency/)
+  assert.match(statusSourcesSource, /Correlate time-windowed walk_dir metrics and metacache logs/)
+  assert.doesNotMatch(pageSource, /\{diagnosticsInfo \? \(/)
 })
 
 test("running status uses backend usable free capacity without synthesizing it", () => {

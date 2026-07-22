@@ -12,13 +12,15 @@ function getStatusLabel(state: OperationalStatus, t: Translate) {
   if (state === "healthy") return t("Healthy")
   if (state === "degraded") return t("Degraded")
   if (state === "stale") return t("Stale")
+  if (state === "not_reported") return t("Not reported")
   return t("Unknown")
 }
 
-function getStatusVariant(state: OperationalStatus): "secondary" | "destructive" | "default" | "outline" {
+function getStatusVariant(state: OperationalStatus): "secondary" | "destructive" | "default" | "outline" | "ghost" {
   if (state === "healthy") return "secondary"
   if (state === "degraded") return "destructive"
   if (state === "stale") return "default"
+  if (state === "not_reported") return "ghost"
   return "outline"
 }
 
@@ -26,7 +28,8 @@ function getDefaultDescription(state: OperationalStatus, t: Translate) {
   if (state === "healthy") return t("No issue was reported by this source.")
   if (state === "degraded") return t("This status source requires attention.")
   if (state === "stale") return t("Previously reported data may be out of date.")
-  return t("This status source was not reported by the server.")
+  if (state === "not_reported") return t("This status source was not reported by the server.")
+  return t("The server reported this status source with an unknown condition.")
 }
 
 function formatTimestamp(value: string, locale: string | undefined) {
@@ -39,6 +42,7 @@ function DiagnosticRow({
   label,
   diagnostic,
   troubleshooting,
+  troubleshootingHref,
   showLastSuccessfulUpdate,
   t,
   locale,
@@ -46,6 +50,7 @@ function DiagnosticRow({
   label: string
   diagnostic: StatusDiagnostic
   troubleshooting?: string
+  troubleshootingHref?: string
   showLastSuccessfulUpdate?: boolean
   t: Translate
   locale?: string
@@ -87,10 +92,35 @@ function DiagnosticRow({
             {t("Source")}: {diagnostic.source}
           </p>
         ) : null}
+        {diagnostic.historicalStallTimeouts !== undefined ? (
+          <div className="space-y-1 text-xs">
+            <p className="text-foreground">
+              {t("Historical internode stall timeouts")}: {diagnostic.historicalStallTimeouts}
+            </p>
+            <p>
+              {t("This lifetime counter has no sampling window and does not indicate current degradation by itself.")}
+            </p>
+          </div>
+        ) : null}
+        {diagnostic.hint ? (
+          <p className="break-words text-xs [overflow-wrap:anywhere]">
+            {t("Backend guidance")}: {diagnostic.hint}
+          </p>
+        ) : null}
         {troubleshooting ? (
           <p className="text-xs text-foreground">
             {t("Troubleshooting")}: {troubleshooting}
           </p>
+        ) : null}
+        {troubleshootingHref ? (
+          <a
+            className="w-fit text-xs font-medium text-foreground underline underline-offset-4"
+            href={troubleshootingHref}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t("Open the real multi-node metrics verification guide")}
+          </a>
         ) : null}
       </dd>
     </div>
@@ -103,30 +133,30 @@ export function PerformanceStatusSources({
   t,
   locale,
 }: {
-  diagnostics: ClusterDiagnostics
-  usageFreshness: StatusDiagnostic
+  diagnostics?: ClusterDiagnostics
+  usageFreshness?: StatusDiagnostic
   t: Translate
   locale?: string
 }) {
-  const listingNeedsTimeoutGuidance =
-    diagnostics.listingHealth.state === "degraded" &&
-    Boolean(
-      diagnostics.listingHealth.scope?.timeout ||
-      `${diagnostics.listingHealth.reason ?? ""} ${diagnostics.listingHealth.lastError ?? ""}`.match(
-        /timeout|latency/i,
-      ),
-    )
+  const notReported: StatusDiagnostic = { state: "not_reported" }
+  const peerHealth = diagnostics?.peerHealth ?? notReported
+  const storageReadiness = diagnostics?.storageReadiness ?? notReported
+  const resolvedUsageFreshness = usageFreshness ?? diagnostics?.usageFreshness ?? notReported
+  const listingHealth = diagnostics?.listingHealth ?? notReported
+  const workloadAdmission = diagnostics?.workloadAdmission ?? notReported
   const rows = [
-    { label: t("Peer Health"), diagnostic: diagnostics.peerHealth },
-    { label: t("Storage Readiness"), diagnostic: diagnostics.storageReadiness },
-    { label: t("Usage Freshness"), diagnostic: usageFreshness, showLastSuccessfulUpdate: true },
+    { label: t("Peer Health"), diagnostic: peerHealth },
+    { label: t("Storage Readiness"), diagnostic: storageReadiness },
+    { label: t("Usage Freshness"), diagnostic: resolvedUsageFreshness, showLastSuccessfulUpdate: true },
     {
       label: t("Listing and Metacache"),
-      diagnostic: diagnostics.listingHealth,
-      troubleshooting: listingNeedsTimeoutGuidance
-        ? t("Check listing timeout and storage latency before treating this as a disk failure.")
-        : undefined,
+      diagnostic: listingHealth,
+      troubleshooting: t(
+        "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.",
+      ),
+      troubleshootingHref: "https://github.com/rustfs/backlog/issues/1392#issuecomment-5040442761",
     },
+    { label: t("Workload Admission"), diagnostic: workloadAdmission },
   ]
 
   return (
@@ -135,7 +165,9 @@ export function PerformanceStatusSources({
         <h2 id="status-sources-title" className="text-base font-semibold">
           {t("Status Sources")}
         </h2>
-        <CardDescription>{t("Review peer, storage, usage, and listing health independently.")}</CardDescription>
+        <CardDescription>
+          {t("Review peer, storage, usage, listing, and workload admission health independently.")}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <dl aria-labelledby="status-sources-title">
@@ -146,6 +178,7 @@ export function PerformanceStatusSources({
                 label={row.label}
                 diagnostic={row.diagnostic}
                 troubleshooting={row.troubleshooting}
+                troubleshootingHref={row.troubleshootingHref}
                 showLastSuccessfulUpdate={row.showLastSuccessfulUpdate}
                 t={t}
                 locale={locale}

@@ -257,14 +257,12 @@ export default function PerformancePage() {
           </div>
         ) : null}
 
-        {diagnosticsInfo ? (
-          <PerformanceStatusSources
-            diagnostics={diagnosticsInfo}
-            usageFreshness={usageFreshness}
-            t={t}
-            locale={i18n.resolvedLanguage}
-          />
-        ) : null}
+        <PerformanceStatusSources
+          diagnostics={diagnosticsInfo}
+          usageFreshness={diagnosticsInfo ? usageFreshness : undefined}
+          t={t}
+          locale={i18n.resolvedLanguage}
+        />
 
         <div className="grid gap-4 xl:grid-cols-2">
           <div className="order-1">

@@ -259,6 +259,64 @@ test("normalizeClusterDiagnostics separates peer, storage, usage, and listing st
   })
 })
 
+test("normalizeClusterDiagnostics follows the backend component condition contract", () => {
+  const diagnostics = normalizeClusterDiagnostics({
+    snapshot: {
+      components: {
+        storage: {
+          source: "runtime",
+          condition: "degraded",
+          status: { state: "unknown", reason: "one storage set is unavailable" },
+        },
+        peer_health: {
+          source: "peer-health",
+          condition: "not_reported",
+          status: { state: "disabled", reason: "peer telemetry is disabled" },
+        },
+        listing: {
+          source: "metacache",
+          condition: "healthy",
+          status: { state: "supported", reason: "foreground read admission is open" },
+          internode_stall_timeouts_total: 2,
+          hint: "inspect operation-labelled walk_dir metrics",
+        },
+        usage: {
+          source: "usage-cache",
+          condition: "stale",
+          status: { state: "unknown", reason: "usage refresh is overdue" },
+          last_success_unix_secs: 1_700_000_000,
+          last_error: "refresh timed out",
+        },
+        workload_admission: {
+          source: "admission",
+          condition: "unknown",
+          status: { state: "unknown", reason: "admission telemetry unavailable" },
+        },
+      },
+    },
+  })
+
+  assert.equal(diagnostics?.storageReadiness.state, "degraded")
+  assert.equal(diagnostics?.peerHealth.state, "not_reported")
+  assert.equal(diagnostics?.listingHealth.state, "healthy")
+  assert.equal(diagnostics?.listingHealth.historicalStallTimeouts, 2)
+  assert.equal(diagnostics?.listingHealth.hint, "inspect operation-labelled walk_dir metrics")
+  assert.equal(diagnostics?.usageFreshness.state, "stale")
+  assert.equal(diagnostics?.usageFreshness.lastSuccessfulUpdate, "2023-11-14T22:13:20.000Z")
+  assert.equal(diagnostics?.usageFreshness.lastError, "refresh timed out")
+  assert.equal(diagnostics?.workloadAdmission.state, "unknown")
+})
+
+test("old snapshots report omitted diagnostic components as not reported", () => {
+  const diagnostics = normalizeClusterDiagnostics({ snapshot: { runtime_status: {} } })
+
+  assert.equal(diagnostics?.peerHealth.state, "not_reported")
+  assert.equal(diagnostics?.storageReadiness.state, "not_reported")
+  assert.equal(diagnostics?.usageFreshness.state, "not_reported")
+  assert.equal(diagnostics?.listingHealth.state, "not_reported")
+  assert.equal(diagnostics?.workloadAdmission.state, "not_reported")
+})
+
 test("normalizeClusterDiagnostics preserves a fully healthy component combination", () => {
   const diagnostics = normalizeClusterDiagnostics({
     snapshot: {
@@ -388,6 +446,6 @@ test("the #5070 compatibility shape preserves 3 online servers and 48 online dis
   })
   assert.equal(
     resolveUsageFreshness(diagnostics?.usageFreshness, { hasData: false, error: "usage unavailable" }).state,
-    "unknown",
+    "not_reported",
   )
 })

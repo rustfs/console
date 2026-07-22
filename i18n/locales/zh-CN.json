@@ -1536,5 +1536,14 @@
   "This status source was not reported by the server.": "服务器未上报此状态来源。",
   "Usage Freshness": "用量数据新鲜度",
   "Troubleshooting": "排查建议",
-  "Check listing timeout and storage latency before treating this as a disk failure.": "在判断为磁盘故障前，请先检查列表超时和存储延迟。"
+  "Check listing timeout and storage latency before treating this as a disk failure.": "在判断为磁盘故障前，请先检查列表超时和存储延迟。",
+  "Not reported": "未报告",
+  "Workload Admission": "工作负载准入",
+  "The server reported this status source with an unknown condition.": "服务器报告了此状态来源，但状态条件未知。",
+  "Historical internode stall timeouts": "历史节点间停顿超时",
+  "This lifetime counter has no sampling window and does not indicate current degradation by itself.": "此生命周期累计计数没有采样窗口，不能单独说明当前处于降级状态。",
+  "Backend guidance": "后端提示",
+  "Open the real multi-node metrics verification guide": "打开真实多节点指标确认指南",
+  "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.": "在将列表症状判断为磁盘故障前，请关联时间窗口内的 walk_dir 指标和元数据缓存日志。",
+  "Review peer, storage, usage, listing, and workload admission health independently.": "分别检查节点、存储、用量、列表服务和工作负载准入状态。"
 }

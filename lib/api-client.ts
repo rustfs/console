@@ -57,7 +57,7 @@ export class ApiClient {
   }
 
   async request(url: string, options: RequestOptions = {}, parseJson: boolean = true) {
-    url = this.config?.baseUrl ? joinURL(this.config?.baseUrl, url) : url
+    url = this.config?.baseUrl && !/^https?:\/\//i.test(url) ? joinURL(this.config.baseUrl, url) : url
     const { params, ...providedOptions } = options
     const requestOptions: RequestOptions = {
       ...providedOptions,

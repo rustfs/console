@@ -60,6 +60,20 @@ export function useSystem() {
     [api],
   )
 
+  const getClusterSnapshot = useCallback(
+    async (path: string, signal?: AbortSignal) => {
+      if (!path.startsWith("/") || path.startsWith("//")) {
+        throw new Error("Invalid cluster snapshot path")
+      }
+      return api.get(api.resolveUrl(path), {
+        suppress403Redirect: true,
+        signal,
+        dedupe: signal ? false : undefined,
+      })
+    },
+    [api],
+  )
+
   const getLicense = useCallback(async () => {
     return api.get("/license")
   }, [api])
@@ -69,6 +83,7 @@ export function useSystem() {
     getStorageInfo,
     getDataUsageInfo,
     getSystemMetrics,
+    getClusterSnapshot,
     getLicense,
   }
 }

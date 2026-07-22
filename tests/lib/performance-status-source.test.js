@@ -5,7 +5,7 @@ import fs from "node:fs"
 test("status page passes every normalized admin info state into infrastructure health", () => {
   const source = fs.readFileSync("app/(dashboard)/status/page.tsx", "utf8")
 
-  assert.match(source, /summarizeServerStates\(systemInfo\.servers\)/)
+  assert.match(source, /summarizeServerStates\(systemInfo\.servers, diagnosticsInfo\)/)
   assert.match(source, /unknownServers=\{serverSummary\?\.unknown\}/)
   assert.match(source, /degradedServers=\{serverSummary\?\.degraded\}/)
   assert.match(source, /initializingServers=\{serverSummary\?\.initializing\}/)
@@ -33,9 +33,11 @@ test("performance server list treats every health state as a first-class filter"
     source,
     /const filterOrder: ServerHealthState\[\] = \["offline", "degraded", "initializing", "unknown", "online"\]/,
   )
-  assert.match(source, /normalizeServerHealthState\(server\.state\) === filterBy/)
-  assert.match(source, /getStatePriority\(normalizeServerHealthState\(left\.server\.state\)\)/)
+  assert.match(source, /resolveServerHealth\(server, diagnostics\)/)
+  assert.match(source, /health\.state === filterBy/)
+  assert.match(source, /getStatePriority\(left\.health\.state\)/)
   assert.match(source, /<Badge variant=\{getStateVariant\(state\)\}>\{getStateLabel\(state, t\)\}<\/Badge>/)
+  assert.match(source, /health\.reason/)
   assert.match(source, /aria-pressed=\{selected\}/)
   assert.doesNotMatch(source, /!isOnlineServer\(server\)/)
 })

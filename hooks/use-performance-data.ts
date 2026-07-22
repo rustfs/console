@@ -5,19 +5,28 @@ import { useCallback, useEffect, useState } from "react"
 import { useSystem } from "@/hooks/use-system"
 import { scheduleMicrotask } from "@/lib/schedule-microtask"
 import {
+  normalizeClusterDiagnostics,
   normalizeDataUsageInfo,
   normalizeMetricsInfo,
   normalizeStorageInfo,
   normalizeSystemInfo,
+  type ClusterDiagnostics,
   type DataUsageInfo,
   type MetricsInfo,
   type StorageInfo,
   type SystemInfo,
 } from "@/lib/performance-data"
 
-export type { DataUsageInfo, MetricsInfo, ServerInfo, StorageInfo, SystemInfo } from "@/lib/performance-data"
+export type {
+  ClusterDiagnostics,
+  DataUsageInfo,
+  MetricsInfo,
+  ServerInfo,
+  StorageInfo,
+  SystemInfo,
+} from "@/lib/performance-data"
 
-export type PerformanceDataSource = "system" | "usage" | "storage" | "metrics"
+export type PerformanceDataSource = "system" | "usage" | "storage" | "metrics" | "diagnostics"
 export type PerformanceSourceErrors = Partial<Record<PerformanceDataSource, string>>
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -45,23 +54,65 @@ function hasMetricsSnapshot(value: MetricsInfo) {
 }
 
 export function usePerformanceData() {
-  const { getSystemInfo, getDataUsageInfo, getStorageInfo, getSystemMetrics } = useSystem()
+  const { getSystemInfo, getDataUsageInfo, getStorageInfo, getSystemMetrics, getClusterSnapshot } = useSystem()
 
   const [metricsInfo, setMetricsInfo] = useState<MetricsInfo>({})
   const [systemInfo, setSystemInfo] = useState<SystemInfo>({})
   const [datausageinfo, setDatausageinfo] = useState<DataUsageInfo>({})
   const [storageinfo, setStorageinfo] = useState<StorageInfo>({})
+  const [diagnosticsInfo, setDiagnosticsInfo] = useState<ClusterDiagnostics | undefined>()
   const [hasLoaded, setHasLoaded] = useState(false)
   const [refreshing, setRefreshing] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [sourceErrors, setSourceErrors] = useState<PerformanceSourceErrors>({})
+  const [diagnosticsError, setDiagnosticsError] = useState<string | null>(null)
   const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null)
   const [metricsUpdatedAt, setMetricsUpdatedAt] = useState<Date | null>(null)
+  const [usageUpdatedAt, setUsageUpdatedAt] = useState<Date | null>(null)
   const mountedRef = React.useRef(false)
   const refetchingRef = React.useRef(false)
   const requestVersionRef = React.useRef(0)
   const hasSystemDataRef = React.useRef(false)
   const abortControllerRef = React.useRef<AbortController | null>(null)
+  const diagnosticsAbortControllerRef = React.useRef<AbortController | null>(null)
+
+  const refreshDiagnostics = useCallback(
+    (path: string, requestVersion: number) => {
+      diagnosticsAbortControllerRef.current?.abort()
+      const controller = new AbortController()
+      let timedOut = false
+      const timeout = window.setTimeout(() => {
+        timedOut = true
+        controller.abort()
+      }, 5_000)
+      diagnosticsAbortControllerRef.current = controller
+      setDiagnosticsError(null)
+
+      void (async () => {
+        try {
+          const diagnostics = normalizeClusterDiagnostics(await getClusterSnapshot(path, controller.signal))
+          if (!mountedRef.current || requestVersion !== requestVersionRef.current) return
+          if (diagnostics) {
+            setDiagnosticsInfo(diagnostics)
+            setDiagnosticsError(null)
+          } else {
+            setDiagnosticsError("Cluster diagnostics are unavailable.")
+          }
+        } catch (diagnosticsRequestError) {
+          if (!mountedRef.current || requestVersion !== requestVersionRef.current) return
+          setDiagnosticsError(
+            timedOut ? "Cluster diagnostics timed out." : getErrorMessage(diagnosticsRequestError, "Get Data Failed"),
+          )
+        } finally {
+          window.clearTimeout(timeout)
+          if (diagnosticsAbortControllerRef.current === controller) {
+            diagnosticsAbortControllerRef.current = null
+          }
+        }
+      })()
+    },
+    [getClusterSnapshot],
+  )
 
   const refetch = useCallback(async () => {
     if (!mountedRef.current || refetchingRef.current) return
@@ -83,6 +134,7 @@ export function usePerformanceData() {
       const nextSourceErrors: PerformanceSourceErrors = {}
       let systemRefreshed = false
       let optionalSourceRefreshed = false
+      let diagnosticsPath: string | undefined
 
       if (systemResult.status === "fulfilled") {
         const normalized = normalizeSystemInfo(systemResult.value)
@@ -90,6 +142,7 @@ export function usePerformanceData() {
           setSystemInfo(normalized)
           hasSystemDataRef.current = true
           systemRefreshed = true
+          diagnosticsPath = normalized.adminDiscovery?.clusterSnapshot
         } else {
           nextSourceErrors.system = "Get Data Failed"
         }
@@ -101,6 +154,7 @@ export function usePerformanceData() {
         const normalized = normalizeDataUsageInfo(usageResult.value)
         if (hasUsageSnapshot(normalized)) {
           setDatausageinfo(normalized)
+          setUsageUpdatedAt(new Date())
           optionalSourceRefreshed = true
         } else {
           nextSourceErrors.usage = "Get Data Failed"
@@ -144,6 +198,14 @@ export function usePerformanceData() {
           : null,
       )
       if (systemRefreshed) setLastUpdatedAt(new Date())
+      if (systemRefreshed && diagnosticsPath) {
+        refreshDiagnostics(diagnosticsPath, requestVersion)
+      } else if (systemRefreshed) {
+        diagnosticsAbortControllerRef.current?.abort()
+        diagnosticsAbortControllerRef.current = null
+        setDiagnosticsInfo(undefined)
+        setDiagnosticsError(null)
+      }
     } finally {
       window.clearTimeout(timeout)
       if (abortControllerRef.current === controller) abortControllerRef.current = null
@@ -155,7 +217,7 @@ export function usePerformanceData() {
         }
       }
     }
-  }, [getDataUsageInfo, getStorageInfo, getSystemInfo, getSystemMetrics])
+  }, [getDataUsageInfo, getStorageInfo, getSystemInfo, getSystemMetrics, refreshDiagnostics])
 
   useEffect(() => {
     let cancelled = false
@@ -165,12 +227,15 @@ export function usePerformanceData() {
     setMetricsInfo({})
     setDatausageinfo({})
     setStorageinfo({})
+    setDiagnosticsInfo(undefined)
     setHasLoaded(false)
     setRefreshing(true)
     setError(null)
     setSourceErrors({})
+    setDiagnosticsError(null)
     setLastUpdatedAt(null)
     setMetricsUpdatedAt(null)
+    setUsageUpdatedAt(null)
     scheduleMicrotask(() => {
       if (!cancelled) void refetch()
     })
@@ -190,6 +255,8 @@ export function usePerformanceData() {
       requestVersionRef.current += 1
       abortControllerRef.current?.abort()
       abortControllerRef.current = null
+      diagnosticsAbortControllerRef.current?.abort()
+      diagnosticsAbortControllerRef.current = null
       refetchingRef.current = false
       window.clearInterval(interval)
       document.removeEventListener("visibilitychange", handleVisibilityChange)
@@ -201,13 +268,15 @@ export function usePerformanceData() {
     metricsInfo,
     datausageinfo,
     storageinfo,
+    diagnosticsInfo,
     loading: refreshing && !hasLoaded,
     refreshing,
     hasLoaded,
     error,
-    sourceErrors,
+    sourceErrors: diagnosticsError ? { ...sourceErrors, diagnostics: diagnosticsError } : sourceErrors,
     lastUpdatedAt,
     metricsUpdatedAt,
+    usageUpdatedAt,
     refetch,
   }
 }

@@ -6,9 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { niceBytes } from "@/lib/functions"
-import { normalizeServerHealthState, type ServerHealthState } from "@/lib/performance-data"
+import { resolveServerHealth, type ClusterDiagnostics, type ServerHealthState } from "@/lib/performance-data"
 import { cn } from "@/lib/utils"
 import type { ServerInfo } from "@/hooks/use-performance-data"
 
@@ -114,7 +114,15 @@ function compareUptime(left: ServerInfo, right: ServerInfo, direction: "asc" | "
 
 const filterOrder: ServerHealthState[] = ["offline", "degraded", "initializing", "unknown", "online"]
 
-export function PerformanceServerList({ servers, t }: { servers?: ServerInfo[]; t: Translate }) {
+export function PerformanceServerList({
+  servers,
+  diagnostics,
+  t,
+}: {
+  servers?: ServerInfo[]
+  diagnostics?: ClusterDiagnostics
+  t: Translate
+}) {
   const [sortBy, setSortBy] = React.useState<PerformanceServerSort>("attention")
   const [filterBy, setFilterBy] = React.useState<PerformanceServerFilter>("all")
   const reportedServers = React.useMemo(() => servers ?? [], [servers])
@@ -127,14 +135,14 @@ export function PerformanceServerList({ servers, t }: { servers?: ServerInfo[]; 
       initializing: 0,
       unknown: 0,
     }
-    for (const server of reportedServers) counts[normalizeServerHealthState(server.state)] += 1
+    for (const server of reportedServers) counts[resolveServerHealth(server, diagnostics).state] += 1
     return counts
-  }, [reportedServers])
+  }, [diagnostics, reportedServers])
 
   const visibleServers = React.useMemo(() => {
     const rows = reportedServers
-      .map((server, originalIndex) => ({ server, originalIndex }))
-      .filter(({ server }) => filterBy === "all" || normalizeServerHealthState(server.state) === filterBy)
+      .map((server, originalIndex) => ({ server, originalIndex, health: resolveServerHealth(server, diagnostics) }))
+      .filter(({ health }) => filterBy === "all" || health.state === filterBy)
 
     return rows.sort((left, right) => {
       switch (sortBy) {
@@ -149,14 +157,13 @@ export function PerformanceServerList({ servers, t }: { servers?: ServerInfo[]; 
         case "attention":
         default:
           return (
-            getStatePriority(normalizeServerHealthState(left.server.state)) -
-              getStatePriority(normalizeServerHealthState(right.server.state)) ||
+            getStatePriority(left.health.state) - getStatePriority(right.health.state) ||
             compareEndpoint(left.server, right.server, "asc") ||
             left.originalIndex - right.originalIndex
           )
       }
     })
-  }, [filterBy, reportedServers, sortBy])
+  }, [diagnostics, filterBy, reportedServers, sortBy])
 
   const filters: PerformanceServerFilter[] = [
     "all",
@@ -228,11 +235,13 @@ export function PerformanceServerList({ servers, t }: { servers?: ServerInfo[]; 
                   <SelectValue>{sortLabels[sortBy]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(sortLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value} className="min-h-11">
-                      {label}
-                    </SelectItem>
-                  ))}
+                  <SelectGroup>
+                    {Object.entries(sortLabels).map(([value, label]) => (
+                      <SelectItem key={value} value={value} className="min-h-11">
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
@@ -247,8 +256,8 @@ export function PerformanceServerList({ servers, t }: { servers?: ServerInfo[]; 
           </div>
         ) : visibleServers.length ? (
           <Accordion id="performance-server-list" className="space-y-2" aria-labelledby="server-list-title">
-            {visibleServers.map(({ server, originalIndex }) => {
-              const state = normalizeServerHealthState(server.state)
+            {visibleServers.map(({ server, originalIndex, health }) => {
+              const state = health.state
               return (
                 <AccordionItem
                   key={server.endpoint ?? `server-${originalIndex}`}
@@ -256,11 +265,18 @@ export function PerformanceServerList({ servers, t }: { servers?: ServerInfo[]; 
                 >
                   <AccordionTrigger className="min-h-11 py-3">
                     <div className="grid min-w-0 flex-1 gap-2 pe-3 text-start lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
-                      <div className="flex min-w-0 items-center gap-2">
+                      <div className="flex min-w-0 items-start gap-2">
                         <Badge variant={getStateVariant(state)}>{getStateLabel(state, t)}</Badge>
-                        <span className="min-w-0 break-words font-semibold [overflow-wrap:anywhere]">
-                          {server.endpoint ?? t("Unknown")}
-                        </span>
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span className="break-words font-semibold [overflow-wrap:anywhere]">
+                            {server.endpoint ?? t("Unknown")}
+                          </span>
+                          {health.reason ? (
+                            <span className="break-words text-xs font-normal text-muted-foreground [overflow-wrap:anywhere]">
+                              {health.reason}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground sm:flex sm:flex-wrap">
                         <span>

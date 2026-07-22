@@ -10,6 +10,7 @@ const serverSource = fs.readFileSync("app/(dashboard)/_components/performance-se
 const usageSource = fs.readFileSync("app/(dashboard)/_components/performance-usage-card.tsx", "utf8")
 const healthSource = fs.readFileSync("app/(dashboard)/_components/performance-infrastructure-card.tsx", "utf8")
 const backendSource = fs.readFileSync("app/(dashboard)/_components/performance-backend-card.tsx", "utf8")
+const statusSourcesSource = fs.readFileSync("app/(dashboard)/_components/performance-status-sources.tsx", "utf8")
 
 test("performance refresh keeps partial data and rejects stale responses", () => {
   assert.match(hookSource, /Promise\.allSettled/)
@@ -17,6 +18,13 @@ test("performance refresh keeps partial data and rejects stale responses", () =>
   assert.match(hookSource, /sourceErrors/)
   assert.match(hookSource, /lastUpdatedAt/)
   assert.match(hookSource, /metricsUpdatedAt/)
+  assert.match(hookSource, /diagnosticsInfo/)
+  assert.match(hookSource, /usageUpdatedAt/)
+  assert.match(hookSource, /getClusterSnapshot/)
+  assert.match(hookSource, /adminDiscovery\?\.clusterSnapshot/)
+  assert.match(hookSource, /diagnosticsError/)
+  assert.match(hookSource, /refreshDiagnostics\(diagnosticsPath, requestVersion\)/)
+  assert.match(hookSource, /Cluster diagnostics timed out\./)
   assert.match(hookSource, /setMetricsUpdatedAt\(new Date\(\)\)/)
   assert.match(hookSource, /refreshing/)
   assert.match(hookSource, /new AbortController/)
@@ -25,6 +33,15 @@ test("performance refresh keeps partial data and rejects stale responses", () =>
   assert.match(hookSource, /hasSystemDataRef\.current = false[\s\S]*setSystemInfo\(\{\}\)/)
   assert.doesNotMatch(hookSource, /setLoading\(false\)[\s\S]*getSystemMetrics/)
   assert.ok((systemSource.match(/suppress403Redirect: true/g) ?? []).length >= 3)
+})
+
+test("cluster diagnostics are optional and use only the discovered admin path", () => {
+  assert.match(systemSource, /getClusterSnapshot/)
+  assert.match(systemSource, /api\.get\(api\.resolveUrl\(path\)/)
+  assert.match(systemSource, /suppress403Redirect: true/)
+  assert.doesNotMatch(systemSource, /getClusterSnapshot[\s\S]*?https?:\/\//)
+  assert.doesNotMatch(hookSource, /Promise\.allSettled\(\[[\s\S]*getClusterSnapshot[\s\S]*\]\)/)
+  assert.doesNotMatch(hookSource, /InvalidAccessKeyId|BrokenPipe/)
 })
 
 test("running status skips Strict Mode preview requests", () => {
@@ -70,6 +87,19 @@ test("status sections expose semantic headings and named progress", () => {
   assert.match(healthSource, /unavailableLabel/)
   assert.match(backendSource, /<h2/)
   assert.match(backendSource, /Storage Configuration/)
+  assert.match(statusSourcesSource, /<h2/)
+  assert.match(statusSourcesSource, /Peer Health/)
+  assert.match(statusSourcesSource, /Storage Readiness/)
+  assert.match(statusSourcesSource, /Usage Freshness/)
+  assert.match(statusSourcesSource, /Listing and Metacache/)
+  assert.match(statusSourcesSource, /Workload Admission/)
+  assert.match(statusSourcesSource, /Not reported/)
+  assert.match(statusSourcesSource, /Historical internode stall timeouts/)
+  assert.match(statusSourcesSource, /issuecomment-5040442761/)
+  assert.match(statusSourcesSource, /<Badge/)
+  assert.match(statusSourcesSource, /<Separator/)
+  assert.match(statusSourcesSource, /Correlate time-windowed walk_dir metrics and metacache logs/)
+  assert.doesNotMatch(pageSource, /\{diagnosticsInfo \? \(/)
 })
 
 test("running status uses backend usable free capacity without synthesizing it", () => {

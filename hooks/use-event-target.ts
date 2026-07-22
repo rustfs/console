@@ -8,6 +8,7 @@ export function useEventTarget() {
 
   const getEventsTargetList = useCallback(async () => {
     return api.get("/target/list") as Promise<{
+      notify_enabled?: unknown
       notification_endpoints?: Array<{
         account_id: string
         service: string

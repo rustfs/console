@@ -74,6 +74,11 @@ test("normalizeSystemInfo rejects unsafe cluster snapshot discovery paths", () =
       .adminDiscovery,
     undefined,
   )
+  assert.equal(
+    normalizeSystemInfo({ info: { servers: [] }, admin_discovery: { clusterSnapshot: "/\\evil.example/snapshot" } })
+      .adminDiscovery,
+    undefined,
+  )
 })
 
 test("normalizeStorageInfo unwraps RustFS admin discovery storage responses", () => {

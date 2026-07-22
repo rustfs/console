@@ -143,7 +143,7 @@ function asSafeText(value: unknown): string | undefined {
 
 function asSafeAdminPath(value: unknown): string | undefined {
   const path = asString(value)
-  return path?.startsWith("/") && !path.startsWith("//") ? path : undefined
+  return path?.startsWith("/") && !path.startsWith("//") && !path.includes("\\") ? path : undefined
 }
 
 export function normalizeServerHealthState(value: unknown): ServerHealthState {

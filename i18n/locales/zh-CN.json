@@ -1519,5 +1519,22 @@
   "Go to bottom": "直达底部",
   "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.": "当前版本过期时会创建删除标记。请配置非当前版本过期规则，以永久删除对象数据。",
   "2 lifecycle rules will be created.": "将创建 2 条生命周期规则。",
-  "Lifecycle configuration cannot contain more than 1000 rules.": "生命周期配置不能包含超过 1000 条规则。"
+  "Lifecycle configuration cannot contain more than 1000 rules.": "生命周期配置不能包含超过 1000 条规则。",
+  "Cluster diagnostics": "集群诊断",
+  "Last error": "最近错误",
+  "Last successful update": "最近成功更新时间",
+  "Listing and Metacache": "列表与元数据缓存",
+  "No issue was reported by this source.": "此状态来源未报告问题。",
+  "Peer Health": "节点健康",
+  "Previously reported data may be out of date.": "此前上报的数据可能已经过期。",
+  "Review peer, storage, usage, and listing health independently.": "分别检查节点、存储、用量和列表服务的健康状态。",
+  "Set": "纠删码组",
+  "Stale": "已过期",
+  "Status Sources": "状态来源",
+  "Storage Readiness": "存储就绪状态",
+  "This status source requires attention.": "此状态来源需要处理。",
+  "This status source was not reported by the server.": "服务器未上报此状态来源。",
+  "Usage Freshness": "用量数据新鲜度",
+  "Troubleshooting": "排查建议",
+  "Check listing timeout and storage latency before treating this as a disk failure.": "在判断为磁盘故障前，请先检查列表超时和存储延迟。"
 }

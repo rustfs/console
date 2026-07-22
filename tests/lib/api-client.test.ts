@@ -55,6 +55,24 @@ test("ApiClient rejects 401 and 403 responses after invoking global handlers", a
   assert.deepEqual(handled, [401, 403])
 })
 
+test("ApiClient preserves an explicitly resolved same-origin admin path", async () => {
+  const { ApiClient } = await loadApiClient()
+  const urls: string[] = []
+  const client = new ApiClient(
+    {
+      fetch: async (input: string | Request) => {
+        urls.push(String(input))
+        return Response.json({ ok: true })
+      },
+    },
+    { baseUrl: "https://console.test/rustfs/admin/v3" },
+  )
+
+  await client.get(client.resolveUrl("/rustfs/admin/v4/cluster/snapshot"))
+
+  assert.deepEqual(urls, ["https://console.test/rustfs/admin/v4/cluster/snapshot"])
+})
+
 test("ApiClient redacts sensitive headers and request bodies from development logs", () => {
   const redacted = redactRequestOptionsForLog({
     headers: { Authorization: "Bearer header-secret", Cookie: "session=cookie-secret" },

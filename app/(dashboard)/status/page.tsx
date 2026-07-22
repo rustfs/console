@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { usePerformanceData, type PerformanceDataSource } from "@/hooks/use-performance-data"
 import { usePermissions } from "@/hooks/use-permissions"
-import { formatRelativeTime, summarizeServerStates } from "@/lib/performance-data"
+import { formatRelativeTime, resolveUsageFreshness, summarizeServerStates } from "@/lib/performance-data"
 import { cn } from "@/lib/utils"
 import {
   RiArchiveDrawerFill,
@@ -23,6 +23,7 @@ import { PerformanceBackendCard } from "../_components/performance-backend-card"
 import { PerformanceInfrastructureCard } from "../_components/performance-infrastructure-card"
 import { PerformanceServerList } from "../_components/performance-server-list"
 import { PerformanceSummaryCards } from "../_components/performance-summary-cards"
+import { PerformanceStatusSources } from "../_components/performance-status-sources"
 import { PerformanceUsageCard } from "../_components/performance-usage-card"
 
 function formatDuration(seconds: number | undefined, t: (key: string) => string) {
@@ -47,6 +48,7 @@ export default function PerformancePage() {
     metricsInfo,
     datausageinfo,
     storageinfo,
+    diagnosticsInfo,
     loading,
     refreshing,
     hasLoaded,
@@ -54,6 +56,7 @@ export default function PerformancePage() {
     sourceErrors,
     lastUpdatedAt,
     metricsUpdatedAt,
+    usageUpdatedAt,
     refetch,
   } = usePerformanceData()
   const browserHref = canAccessPath("/browser") ? "/browser" : undefined
@@ -128,8 +131,21 @@ export default function PerformancePage() {
   )
 
   const serverSummary = useMemo(
-    () => (systemInfo.servers ? summarizeServerStates(systemInfo.servers) : undefined),
-    [systemInfo.servers],
+    () => (systemInfo.servers ? summarizeServerStates(systemInfo.servers, diagnosticsInfo) : undefined),
+    [diagnosticsInfo, systemInfo.servers],
+  )
+
+  const usageFreshness = useMemo(
+    () =>
+      resolveUsageFreshness(diagnosticsInfo?.usageFreshness, {
+        hasData:
+          datausageinfo.total_capacity !== undefined ||
+          datausageinfo.total_free_capacity !== undefined ||
+          datausageinfo.total_used_capacity !== undefined,
+        error: sourceErrors.usage,
+        lastUpdatedAt: usageUpdatedAt,
+      }),
+    [datausageinfo, diagnosticsInfo?.usageFreshness, sourceErrors.usage, usageUpdatedAt],
   )
 
   const backendInfo = useMemo(
@@ -159,6 +175,7 @@ export default function PerformancePage() {
     usage: t("Storage Usage Statistics"),
     storage: t("Storage Configuration"),
     metrics: t("Scanner metrics"),
+    diagnostics: t("Cluster diagnostics"),
   }
 
   const refreshAction = (
@@ -240,6 +257,15 @@ export default function PerformancePage() {
           </div>
         ) : null}
 
+        {diagnosticsInfo ? (
+          <PerformanceStatusSources
+            diagnostics={diagnosticsInfo}
+            usageFreshness={usageFreshness}
+            t={t}
+            locale={i18n.resolvedLanguage}
+          />
+        ) : null}
+
         <div className="grid gap-4 xl:grid-cols-2">
           <div className="order-1">
             <PerformanceInfrastructureCard
@@ -267,7 +293,7 @@ export default function PerformancePage() {
           </div>
 
           <div className="order-2 xl:order-3 xl:col-span-2">
-            <PerformanceServerList servers={systemInfo.servers} t={t} />
+            <PerformanceServerList servers={systemInfo.servers} diagnostics={diagnosticsInfo} t={t} />
           </div>
         </div>
 

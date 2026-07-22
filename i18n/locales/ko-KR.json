@@ -1519,5 +1519,22 @@
   "Go to bottom": "Go to bottom",
   "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.": "현재 버전 만료 시 삭제 마커가 생성됩니다. 객체 데이터를 영구적으로 삭제하려면 비현재 버전 만료를 구성하세요.",
   "2 lifecycle rules will be created.": "수명 주기 규칙 2개가 생성됩니다.",
-  "Lifecycle configuration cannot contain more than 1000 rules.": "수명 주기 구성에는 1000개를 초과하는 규칙을 포함할 수 없습니다."
+  "Lifecycle configuration cannot contain more than 1000 rules.": "수명 주기 구성에는 1000개를 초과하는 규칙을 포함할 수 없습니다.",
+  "Cluster diagnostics": "Cluster diagnostics",
+  "Last error": "Last error",
+  "Last successful update": "Last successful update",
+  "Listing and Metacache": "Listing and Metacache",
+  "No issue was reported by this source.": "No issue was reported by this source.",
+  "Peer Health": "Peer Health",
+  "Previously reported data may be out of date.": "Previously reported data may be out of date.",
+  "Review peer, storage, usage, and listing health independently.": "Review peer, storage, usage, and listing health independently.",
+  "Set": "Set",
+  "Stale": "Stale",
+  "Status Sources": "Status Sources",
+  "Storage Readiness": "Storage Readiness",
+  "This status source requires attention.": "This status source requires attention.",
+  "This status source was not reported by the server.": "This status source was not reported by the server.",
+  "Usage Freshness": "Usage Freshness",
+  "Troubleshooting": "Troubleshooting",
+  "Check listing timeout and storage latency before treating this as a disk failure.": "Check listing timeout and storage latency before treating this as a disk failure."
 }

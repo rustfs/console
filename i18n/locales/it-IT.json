@@ -1519,5 +1519,22 @@
   "Go to bottom": "Go to bottom",
   "Current version expiration creates a delete marker. Configure non-current version expiration to permanently remove object data.": "La scadenza della versione corrente crea un indicatore di eliminazione. Configura la scadenza delle versioni non correnti per rimuovere definitivamente i dati dell’oggetto.",
   "2 lifecycle rules will be created.": "Verranno create 2 regole del ciclo di vita.",
-  "Lifecycle configuration cannot contain more than 1000 rules.": "La configurazione del ciclo di vita non può contenere più di 1000 regole."
+  "Lifecycle configuration cannot contain more than 1000 rules.": "La configurazione del ciclo di vita non può contenere più di 1000 regole.",
+  "Cluster diagnostics": "Cluster diagnostics",
+  "Last error": "Last error",
+  "Last successful update": "Last successful update",
+  "Listing and Metacache": "Listing and Metacache",
+  "No issue was reported by this source.": "No issue was reported by this source.",
+  "Peer Health": "Peer Health",
+  "Previously reported data may be out of date.": "Previously reported data may be out of date.",
+  "Review peer, storage, usage, and listing health independently.": "Review peer, storage, usage, and listing health independently.",
+  "Set": "Set",
+  "Stale": "Stale",
+  "Status Sources": "Status Sources",
+  "Storage Readiness": "Storage Readiness",
+  "This status source requires attention.": "This status source requires attention.",
+  "This status source was not reported by the server.": "This status source was not reported by the server.",
+  "Usage Freshness": "Usage Freshness",
+  "Troubleshooting": "Troubleshooting",
+  "Check listing timeout and storage latency before treating this as a disk failure.": "Check listing timeout and storage latency before treating this as a disk failure."
 }

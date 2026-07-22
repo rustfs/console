@@ -3,10 +3,13 @@ import assert from "node:assert/strict"
 
 import {
   formatRelativeTime,
+  normalizeClusterDiagnostics,
   normalizeDataUsageInfo,
   normalizeMetricsInfo,
   normalizeStorageInfo,
   normalizeSystemInfo,
+  resolveServerHealth,
+  resolveUsageFreshness,
   summarizeServerStates,
 } from "../../lib/performance-data.ts"
 
@@ -57,6 +60,20 @@ test("normalizeSystemInfo unwraps RustFS admin discovery info responses", () => 
   assert.equal(info.backend?.onlineDisks, 12)
   assert.equal(info.backend?.offlineDisks, 0)
   assert.equal(info.servers?.length, 2)
+  assert.equal(info.adminDiscovery?.clusterSnapshot, "/rustfs/admin/v4/cluster/snapshot")
+})
+
+test("normalizeSystemInfo rejects unsafe cluster snapshot discovery paths", () => {
+  assert.equal(
+    normalizeSystemInfo({ info: { servers: [] }, admin_discovery: { clusterSnapshot: "https://example.com/snapshot" } })
+      .adminDiscovery,
+    undefined,
+  )
+  assert.equal(
+    normalizeSystemInfo({ info: { servers: [] }, admin_discovery: { clusterSnapshot: "//example.com/snapshot" } })
+      .adminDiscovery,
+    undefined,
+  )
 })
 
 test("normalizeStorageInfo unwraps RustFS admin discovery storage responses", () => {
@@ -193,4 +210,184 @@ test("formatRelativeTime follows the active locale and advances with the clock",
   assert.equal(formatRelativeTime(timestamp, "en-US", Date.parse("2026-07-10T10:00:00Z")), "2 hours ago")
   assert.equal(formatRelativeTime(timestamp, "en-US", Date.parse("2026-07-10T11:00:00Z")), "3 hours ago")
   assert.equal(formatRelativeTime("invalid", "en-US"), undefined)
+})
+
+test("normalizeClusterDiagnostics separates peer, storage, usage, and listing status", () => {
+  const diagnostics = normalizeClusterDiagnostics({
+    snapshot: {
+      membership: {
+        nodes: [
+          { node_id: "node-a", grid_host: "10.0.0.1:9000" },
+          { node_id: "node-b", grid_host: "10.0.0.2:9000" },
+        ],
+      },
+      peer_health: {
+        peers: [
+          { node_id: "node-a", status: { state: "supported" } },
+          { node_id: "node-b", status: { state: "unknown", reason: "peer health not reported" } },
+        ],
+      },
+      runtime_status: {
+        state: "degraded",
+        storage_ready: true,
+        degraded_reasons: ["peer_health_unavailable"],
+      },
+      usage_freshness: {
+        state: "stale",
+        reason: "refresh timed out",
+        last_successful_update: "2026-07-21T08:00:00Z",
+      },
+      listing: {
+        state: "degraded",
+        reason: "metacache quorum timeout",
+        last_error: "timeout",
+        scope: { bucket: "archive", prefix: "2026/", set: 2, timeout_ms: 5000 },
+      },
+    },
+  })
+
+  assert.equal(diagnostics?.peerHealth.state, "unknown")
+  assert.equal(diagnostics?.storageReadiness.state, "healthy")
+  assert.equal(diagnostics?.usageFreshness.state, "stale")
+  assert.equal(diagnostics?.usageFreshness.lastSuccessfulUpdate, "2026-07-21T08:00:00Z")
+  assert.equal(diagnostics?.listingHealth.state, "degraded")
+  assert.deepEqual(diagnostics?.listingHealth.scope, {
+    bucket: "archive",
+    prefix: "2026/",
+    set: "2",
+    timeout: "5000 ms",
+  })
+})
+
+test("normalizeClusterDiagnostics preserves a fully healthy component combination", () => {
+  const diagnostics = normalizeClusterDiagnostics({
+    snapshot: {
+      peer_health: { peers: [{ node_id: "node-a", status: { state: "online" } }] },
+      runtime_status: { storage_ready: true },
+      usage_cache: { state: "fresh" },
+      metacache: { state: "healthy" },
+    },
+  })
+
+  assert.equal(diagnostics?.peerHealth.state, "healthy")
+  assert.equal(diagnostics?.storageReadiness.state, "healthy")
+  assert.equal(diagnostics?.usageFreshness.state, "healthy")
+  assert.equal(diagnostics?.listingHealth.state, "healthy")
+})
+
+test("peer health unknown replaces only a false legacy degraded node", () => {
+  const diagnostics = normalizeClusterDiagnostics({
+    snapshot: {
+      membership: {
+        nodes: [
+          { node_id: "node-a", grid_host: "10.0.0.1:9000" },
+          { node_id: "node-b", grid_host: "10.0.0.2:9000" },
+        ],
+      },
+      peer_health: {
+        peers: [
+          { node_id: "node-a", status: { state: "unknown", reason: "not reported" } },
+          { node_id: "node-b", status: { state: "unknown", reason: "not reported" } },
+        ],
+      },
+      runtime_status: { storage_ready: true },
+    },
+  })
+
+  const healthyLegacyNode = {
+    endpoint: "10.0.0.1:9000",
+    state: "online",
+    drives: [{ state: "ok" }],
+  }
+  const falseDegradedNode = {
+    endpoint: "http://10.0.0.2:9000",
+    state: "degraded",
+    drives: [{ state: "ok" }],
+  }
+
+  assert.equal(resolveServerHealth(healthyLegacyNode, diagnostics).state, "online")
+  assert.equal(resolveServerHealth(falseDegradedNode, diagnostics).state, "unknown")
+  assert.equal(resolveServerHealth(falseDegradedNode, diagnostics).reason, "not reported")
+  assert.deepEqual(summarizeServerStates([healthyLegacyNode, falseDegradedNode], diagnostics), {
+    online: 1,
+    offline: 0,
+    degraded: 0,
+    initializing: 0,
+    unknown: 1,
+  })
+})
+
+test("a real peer failure remains an exact degraded node while usage timeout stays separate", () => {
+  const diagnostics = normalizeClusterDiagnostics({
+    snapshot: {
+      membership: { nodes: [{ node_id: "node-b", grid_host: "10.0.0.2:9000" }] },
+      peer_health: {
+        peers: [{ node_id: "node-b", status: { state: "failed", reason: "peer unreachable" } }],
+      },
+      runtime_status: { storage_ready: true },
+      usage_cache: { state: "stale", reason: "refresh timeout" },
+    },
+  })
+
+  const node = { endpoint: "10.0.0.2:9000", state: "online", drives: [{ state: "ok" }] }
+  assert.deepEqual(resolveServerHealth(node, diagnostics), {
+    state: "degraded",
+    reason: "peer unreachable",
+    source: "peer",
+  })
+  assert.equal(diagnostics?.usageFreshness.state, "stale")
+})
+
+test("usage refresh failures mark retained data stale without changing cluster diagnostics", () => {
+  const lastUpdatedAt = new Date("2026-07-21T08:00:00Z")
+  assert.deepEqual(
+    resolveUsageFreshness(undefined, {
+      hasData: true,
+      error: "request timeout",
+      lastUpdatedAt,
+    }),
+    {
+      state: "stale",
+      reason: "request timeout",
+      lastSuccessfulUpdate: "2026-07-21T08:00:00.000Z",
+    },
+  )
+  assert.equal(resolveUsageFreshness(undefined, { hasData: true }).state, "unknown")
+})
+
+test("the #5070 compatibility shape preserves 3 online servers and 48 online disks without a false degraded node", () => {
+  const system = normalizeSystemInfo({
+    info: {
+      backend: { onlineDisks: 48, offlineDisks: 0 },
+      servers: [
+        { endpoint: "node-1:9000", state: "online", drives: [{ state: "ok" }] },
+        { endpoint: "node-2:9000", state: "online", drives: [{ state: "ok" }] },
+        { endpoint: "node-3:9000", state: "online", drives: [{ state: "ok" }] },
+        { endpoint: "node-4:9000", state: "degraded", drives: [{ state: "ok" }] },
+      ],
+    },
+  })
+  const diagnostics = normalizeClusterDiagnostics({
+    snapshot: {
+      membership: { nodes: [{ node_id: "node-4", grid_host: "node-4:9000" }] },
+      peer_health: {
+        peers: [{ node_id: "node-4", status: { state: "unknown", reason: "peer health not reported" } }],
+      },
+      runtime_status: { storage_ready: true },
+    },
+  })
+
+  assert.equal(system.backend?.onlineDisks, 48)
+  assert.equal(system.backend?.offlineDisks, 0)
+  assert.deepEqual(summarizeServerStates(system.servers, diagnostics), {
+    online: 3,
+    offline: 0,
+    degraded: 0,
+    initializing: 0,
+    unknown: 1,
+  })
+  assert.equal(
+    resolveUsageFreshness(diagnostics?.usageFreshness, { hasData: false, error: "usage unavailable" }).state,
+    "unknown",
+  )
 })

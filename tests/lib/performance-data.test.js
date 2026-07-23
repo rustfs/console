@@ -2,6 +2,7 @@ import test from "node:test"
 import assert from "node:assert/strict"
 
 import {
+  buildRunningStatusView,
   formatRelativeTime,
   normalizeClusterDiagnostics,
   normalizeDataUsageInfo,
@@ -12,6 +13,52 @@ import {
   resolveUsageFreshness,
   summarizeServerStates,
 } from "../../lib/performance-data.ts"
+
+const reporterV3Payload = {
+  info: {
+    backend: {
+      backendType: "Erasure",
+      onlineDisks: 3,
+      offlineDisks: 0,
+      unknownDisks: 0,
+      totalDrivesPerSet: [4],
+    },
+    servers: [1, 2, 3].map((index) => ({
+      endpoint: `rustfs-${index}.storage.swarm.private`,
+      state: "online",
+      drives: [{ state: "ok" }],
+    })),
+  },
+  admin_discovery: {
+    clusterSnapshot: "/rustfs/admin/v4/cluster/snapshot",
+  },
+}
+
+const reporterV4Payload = {
+  snapshot: {
+    membership: {
+      nodes: [1, 2, 3, 4].map((index) => ({
+        node_id: `rustfs-${index}.storage.swarm.private:9000`,
+        grid_host: `http://rustfs-${index}.storage.swarm.private:9000`,
+      })),
+      drives: [1, 2, 3, 4].map((index) => ({
+        pool_index: 0,
+        set_index: 0,
+        disk_index: index - 1,
+        node_id: `rustfs-${index}.storage.swarm.private:9000`,
+      })),
+    },
+    pool_state: {
+      pools: [{ pool_index: 0, set_count: 1, drives_per_set: 4, endpoint_count: 4 }],
+    },
+    peer_health: {
+      peers: [1, 2, 3, 4].map((index) => ({
+        node_id: `rustfs-${index}.storage.swarm.private:9000`,
+        status: { state: "unknown", reason: "peer health not reported by endpoints" },
+      })),
+    },
+  },
+}
 
 test("normalizeSystemInfo preserves legacy unwrapped info responses", () => {
   const info = normalizeSystemInfo({
@@ -453,4 +500,87 @@ test("the #5070 compatibility shape preserves 3 online servers and 48 online dis
     resolveUsageFreshness(diagnostics?.usageFreshness, { hasData: false, error: "usage unavailable" }).state,
     "not_reported",
   )
+})
+
+test("the #1429 reporter payload uses v4 membership without duplicating v3 rows", () => {
+  const system = normalizeSystemInfo(reporterV3Payload)
+  const diagnostics = normalizeClusterDiagnostics(reporterV4Payload)
+  const view = buildRunningStatusView(system, diagnostics)
+
+  assert.equal(system.backend?.totalDrivesPerSet?.[0], 4)
+  assert.equal(diagnostics?.topologyDrives.length, 4)
+  assert.equal(view.servers?.length, 4)
+  assert.deepEqual(
+    view.servers?.map((server) => server.endpoint),
+    [
+      "rustfs-1.storage.swarm.private",
+      "rustfs-2.storage.swarm.private",
+      "rustfs-3.storage.swarm.private",
+      "http://rustfs-4.storage.swarm.private:9000",
+    ],
+  )
+  assert.deepEqual(view.serverSummary, {
+    online: 3,
+    offline: 0,
+    degraded: 0,
+    initializing: 0,
+    unknown: 1,
+  })
+  assert.deepEqual(view.topology, {
+    source: "v4",
+    expectedServers: 4,
+    reportedServers: 3,
+    expectedDrives: 4,
+    reportedDrives: 3,
+    unreportedServers: 1,
+    unreportedDrives: 1,
+    incomplete: true,
+  })
+})
+
+test("a v3-only incomplete drive denominator is unknown without inventing a server denominator", () => {
+  const view = buildRunningStatusView(normalizeSystemInfo(reporterV3Payload))
+
+  assert.equal(view.servers?.length, 3)
+  assert.equal(view.topology.source, "v3")
+  assert.equal(view.topology.expectedServers, undefined)
+  assert.equal(view.topology.reportedServers, 3)
+  assert.equal(view.topology.expectedDrives, 4)
+  assert.equal(view.topology.reportedDrives, 3)
+  assert.equal(view.topology.unreportedDrives, 1)
+  assert.equal(view.topology.incomplete, true)
+})
+
+test("a fixed v3 unknown row remains visible without uptime, version, drives, or network", () => {
+  const payload = structuredClone(reporterV3Payload)
+  payload.info.servers.push({ endpoint: "rustfs-4.storage.swarm.private", state: "unknown" })
+  payload.info.backend.unknownDisks = 1
+
+  const view = buildRunningStatusView(normalizeSystemInfo(payload))
+
+  assert.equal(view.servers?.length, 4)
+  assert.deepEqual(view.serverSummary, {
+    online: 3,
+    offline: 0,
+    degraded: 0,
+    initializing: 0,
+    unknown: 1,
+  })
+  assert.equal(view.topology.reportedDrives, 4)
+  assert.equal(view.topology.unreportedDrives, 0)
+  assert.equal(view.topology.incomplete, false)
+})
+
+test("older v3 responses without topology or unknown disks keep an indeterminate denominator", () => {
+  const view = buildRunningStatusView(
+    normalizeSystemInfo({
+      backend: { onlineDisks: 2, offlineDisks: 0 },
+      servers: [{ endpoint: "node-a", state: "online" }],
+    }),
+  )
+
+  assert.equal(view.topology.source, "reported")
+  assert.equal(view.topology.expectedDrives, undefined)
+  assert.equal(view.topology.reportedDrives, 2)
+  assert.equal(view.topology.incomplete, false)
 })

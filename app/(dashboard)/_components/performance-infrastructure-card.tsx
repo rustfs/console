@@ -2,6 +2,7 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
+import type { RunningStatusTopology } from "@/lib/performance-data"
 
 function HealthMetric({ label, value, unavailableLabel }: { label: string; value?: number; unavailableLabel: string }) {
   return (
@@ -21,6 +22,7 @@ export function PerformanceInfrastructureCard({
   onlineDisks,
   offlineDisks,
   unknownDisks,
+  topology,
   t,
 }: {
   onlineServers?: number
@@ -31,6 +33,7 @@ export function PerformanceInfrastructureCard({
   onlineDisks?: number
   offlineDisks?: number
   unknownDisks?: number
+  topology: RunningStatusTopology
   t: (key: string) => string
 }) {
   const needsAttention = Boolean((offlineServers ?? 0) + (degradedServers ?? 0) + (offlineDisks ?? 0))
@@ -42,16 +45,19 @@ export function PerformanceInfrastructureCard({
     diskCounts.some((value) => value === undefined) ||
     serverCounts.reduce<number>((total, value) => total + (value ?? 0), 0) === 0 ||
     diskCounts.reduce<number>((total, value) => total + (value ?? 0), 0) === 0
+  const hasIncompleteTopology = topology.incomplete
   const status = needsAttention
     ? t("Needs attention")
-    : hasUnknownState || dataUnavailable
+    : hasUnknownState || dataUnavailable || hasIncompleteTopology
       ? t("Unknown")
       : t("Healthy")
   const description = needsAttention
     ? t("Offline or degraded resources require attention.")
-    : hasUnknownState || dataUnavailable
-      ? t("Some resource health data is unavailable or still initializing.")
-      : t("All reported servers and disks are online.")
+    : hasIncompleteTopology
+      ? t("The reported health rows do not cover the full cluster topology.")
+      : hasUnknownState || dataUnavailable
+        ? t("Some resource health data is unavailable or still initializing.")
+        : t("All reported servers and disks are online.")
 
   return (
     <Card className="h-full shadow-none">
@@ -64,7 +70,13 @@ export function PerformanceInfrastructureCard({
             <CardDescription>{description}</CardDescription>
           </div>
           <Badge
-            variant={needsAttention ? "destructive" : hasUnknownState || dataUnavailable ? "outline" : "secondary"}
+            variant={
+              needsAttention
+                ? "destructive"
+                : hasUnknownState || dataUnavailable || hasIncompleteTopology
+                  ? "outline"
+                  : "secondary"
+            }
             aria-live="polite"
           >
             {status}
@@ -94,6 +106,12 @@ export function PerformanceInfrastructureCard({
                 <HealthMetric label={t("Unknown")} value={unknownServers} unavailableLabel={t("Unavailable")} />
               ) : null}
             </dl>
+            {topology.expectedServers !== undefined ? (
+              <p className="mt-3 text-xs text-muted-foreground tabular-nums">
+                {t("Reported")}: {topology.reportedServers ?? t("Unavailable")} · {t("Expected")}:{" "}
+                {topology.expectedServers}
+              </p>
+            ) : null}
           </section>
           <section aria-labelledby="disk-health-title">
             <h3 id="disk-health-title" className="text-sm font-medium text-muted-foreground">
@@ -105,7 +123,20 @@ export function PerformanceInfrastructureCard({
               {unknownDisks ? (
                 <HealthMetric label={t("Unknown")} value={unknownDisks} unavailableLabel={t("Unavailable")} />
               ) : null}
+              {topology.unreportedDrives ? (
+                <HealthMetric
+                  label={t("Unreported")}
+                  value={topology.unreportedDrives}
+                  unavailableLabel={t("Unavailable")}
+                />
+              ) : null}
             </dl>
+            {topology.expectedDrives !== undefined ? (
+              <p className="mt-3 text-xs text-muted-foreground tabular-nums">
+                {t("Reported")}: {topology.reportedDrives ?? t("Unavailable")} · {t("Expected")}:{" "}
+                {topology.expectedDrives}
+              </p>
+            ) : null}
           </section>
         </div>
       </CardContent>

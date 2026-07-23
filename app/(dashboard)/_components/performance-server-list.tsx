@@ -8,7 +8,12 @@ import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { niceBytes } from "@/lib/functions"
-import { resolveServerHealth, type ClusterDiagnostics, type ServerHealthState } from "@/lib/performance-data"
+import {
+  resolveServerHealth,
+  type ClusterDiagnostics,
+  type RunningStatusTopology,
+  type ServerHealthState,
+} from "@/lib/performance-data"
 import { cn } from "@/lib/utils"
 import type { ServerInfo } from "@/hooks/use-performance-data"
 
@@ -117,10 +122,12 @@ const filterOrder: ServerHealthState[] = ["offline", "degraded", "initializing",
 export function PerformanceServerList({
   servers,
   diagnostics,
+  topology,
   t,
 }: {
   servers?: ServerInfo[]
   diagnostics?: ClusterDiagnostics
+  topology: RunningStatusTopology
   t: Translate
 }) {
   const [sortBy, setSortBy] = React.useState<PerformanceServerSort>("attention")
@@ -191,7 +198,20 @@ export function PerformanceServerList({
           </div>
           {servers !== undefined ? (
             <span className="text-sm text-muted-foreground" role="status" aria-live="polite">
-              {t("Total")}: {visibleServers.length}/{reportedServers.length}
+              {topology.expectedServers !== undefined ? (
+                <>
+                  {t("Total")}: {visibleServers.length}/{topology.expectedServers} · {t("Reported")}:{" "}
+                  {topology.reportedServers ?? t("Unavailable")}
+                </>
+              ) : topology.incomplete ? (
+                <>
+                  {t("Reported")}: {topology.reportedServers ?? reportedServers.length}
+                </>
+              ) : (
+                <>
+                  {t("Total")}: {visibleServers.length}/{reportedServers.length}
+                </>
+              )}
             </span>
           ) : null}
         </div>

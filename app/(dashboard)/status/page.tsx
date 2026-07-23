@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { usePerformanceData, type PerformanceDataSource } from "@/hooks/use-performance-data"
 import { usePermissions } from "@/hooks/use-permissions"
-import { formatRelativeTime, resolveUsageFreshness, summarizeServerStates } from "@/lib/performance-data"
+import { buildRunningStatusView, formatRelativeTime, resolveUsageFreshness } from "@/lib/performance-data"
 import { cn } from "@/lib/utils"
 import {
   RiArchiveDrawerFill,
@@ -130,10 +130,11 @@ export default function PerformancePage() {
     [i18n.resolvedLanguage, metricsUpdatedAt, scannerCompletedAt, scannerDuration, scannerStatus, t],
   )
 
-  const serverSummary = useMemo(
-    () => (systemInfo.servers ? summarizeServerStates(systemInfo.servers, diagnosticsInfo) : undefined),
-    [diagnosticsInfo, systemInfo.servers],
+  const runningStatus = useMemo(
+    () => buildRunningStatusView(systemInfo, diagnosticsInfo),
+    [diagnosticsInfo, systemInfo],
   )
+  const serverSummary = runningStatus.serverSummary
 
   const usageFreshness = useMemo(
     () =>
@@ -275,6 +276,7 @@ export default function PerformancePage() {
               onlineDisks={systemInfo.backend?.onlineDisks}
               offlineDisks={systemInfo.backend?.offlineDisks}
               unknownDisks={systemInfo.backend?.unknownDisks}
+              topology={runningStatus.topology}
               t={t}
             />
           </div>
@@ -291,7 +293,12 @@ export default function PerformancePage() {
           </div>
 
           <div className="order-2 xl:order-3 xl:col-span-2">
-            <PerformanceServerList servers={systemInfo.servers} diagnostics={diagnosticsInfo} t={t} />
+            <PerformanceServerList
+              servers={runningStatus.servers}
+              diagnostics={diagnosticsInfo}
+              topology={runningStatus.topology}
+              t={t}
+            />
           </div>
         </div>
 

@@ -29,7 +29,18 @@ export interface ClusterDiagnostics {
   listingHealth: StatusDiagnostic
   workloadAdmission: StatusDiagnostic
   peers: PeerHealthDiagnostic[]
-  membership: Array<{ nodeId: string; gridHost?: string }>
+  membership: Array<{ nodeId: string; gridHost?: string; isLocal?: boolean }>
+  topologyDrives: Array<{
+    nodeId: string
+    poolIndex?: number
+    setIndex?: number
+    diskIndex?: number
+  }>
+  pools: Array<{
+    poolIndex?: number
+    drivesPerSet?: number
+    endpointCount?: number
+  }>
 }
 
 export interface ServerInfo {
@@ -58,10 +69,28 @@ export interface SystemInfo {
     onlineDisks?: number
     offlineDisks?: number
     unknownDisks?: number
+    totalDrivesPerSet?: number[]
   }
   adminDiscovery?: {
     clusterSnapshot: string
   }
+}
+
+export interface RunningStatusTopology {
+  source: "v4" | "v3" | "reported"
+  expectedServers?: number
+  reportedServers?: number
+  expectedDrives?: number
+  reportedDrives?: number
+  unreportedServers?: number
+  unreportedDrives?: number
+  incomplete: boolean
+}
+
+export interface RunningStatusView {
+  servers?: ServerInfo[]
+  serverSummary?: Record<ServerHealthState, number>
+  topology: RunningStatusTopology
 }
 
 export interface DataUsageInfo {
@@ -223,6 +252,12 @@ export function normalizeSystemInfo(value: unknown): SystemInfo {
         return normalized ? [normalized] : []
       })
     : undefined
+  const totalDrivesPerSet = asArray<unknown>(backend.totalDrivesPerSet ?? backend.TotalDrivesPerSet).flatMap(
+    (value) => {
+      const count = asNonNegativeNumber(value)
+      return count === undefined ? [] : [count]
+    },
+  )
 
   return {
     ...(buckets ? { buckets } : {}),
@@ -235,6 +270,7 @@ export function normalizeSystemInfo(value: unknown): SystemInfo {
             onlineDisks: asNonNegativeNumber(backend.onlineDisks ?? backend.OnlineDisks),
             offlineDisks: asNonNegativeNumber(backend.offlineDisks ?? backend.OfflineDisks),
             unknownDisks: asNonNegativeNumber(backend.unknownDisks ?? backend.UnknownDisks),
+            ...(totalDrivesPerSet.length ? { totalDrivesPerSet } : {}),
           },
         }
       : {}),
@@ -356,7 +392,39 @@ export function normalizeClusterDiagnostics(value: unknown): ClusterDiagnostics 
     const nodeId = asSafeText(node.node_id ?? node.nodeId ?? node.NodeId)
     if (!nodeId) return []
     const gridHost = asSafeText(node.grid_host ?? node.gridHost ?? node.GridHost)
-    return [{ nodeId, ...(gridHost ? { gridHost } : {}) }]
+    const isLocal = asBoolean(node.is_local ?? node.isLocal ?? node.IsLocal)
+    return [{ nodeId, ...(gridHost ? { gridHost } : {}), ...(isLocal !== undefined ? { isLocal } : {}) }]
+  })
+  const topologyDrives = asArray<unknown>(membershipRecord.drives ?? membershipRecord.Drives).flatMap((value) => {
+    const drive = asRecord(value)
+    const nodeId = asSafeText(drive.node_id ?? drive.nodeId ?? drive.NodeId)
+    if (!nodeId) return []
+    const poolIndex = asNonNegativeNumber(drive.pool_index ?? drive.poolIndex ?? drive.PoolIndex)
+    const setIndex = asNonNegativeNumber(drive.set_index ?? drive.setIndex ?? drive.SetIndex)
+    const diskIndex = asNonNegativeNumber(drive.disk_index ?? drive.diskIndex ?? drive.DiskIndex)
+    return [
+      {
+        nodeId,
+        ...(poolIndex !== undefined ? { poolIndex } : {}),
+        ...(setIndex !== undefined ? { setIndex } : {}),
+        ...(diskIndex !== undefined ? { diskIndex } : {}),
+      },
+    ]
+  })
+  const poolState = asRecord(snapshot.pool_state ?? snapshot.poolState ?? snapshot.PoolState)
+  const pools = asArray<unknown>(poolState.pools ?? poolState.Pools).flatMap((value) => {
+    const pool = asRecord(value)
+    if (!Object.keys(pool).length) return []
+    const poolIndex = asNonNegativeNumber(pool.pool_index ?? pool.poolIndex ?? pool.PoolIndex)
+    const drivesPerSet = asNonNegativeNumber(pool.drives_per_set ?? pool.drivesPerSet ?? pool.DrivesPerSet)
+    const endpointCount = asNonNegativeNumber(pool.endpoint_count ?? pool.endpointCount ?? pool.EndpointCount)
+    return [
+      {
+        ...(poolIndex !== undefined ? { poolIndex } : {}),
+        ...(drivesPerSet !== undefined ? { drivesPerSet } : {}),
+        ...(endpointCount !== undefined ? { endpointCount } : {}),
+      },
+    ]
   })
 
   const peerRecord = asRecord(snapshot.peer_health ?? snapshot.peerHealth ?? snapshot.PeerHealth)
@@ -440,27 +508,46 @@ export function normalizeClusterDiagnostics(value: unknown): ClusterDiagnostics 
     workloadAdmission,
     peers,
     membership,
+    topologyDrives,
+    pools,
   }
 }
 
-function normalizeEndpointIdentity(value: string | undefined) {
+function getEndpointIdentity(value: string | undefined) {
   if (!value) return undefined
   const trimmed = value.trim().toLowerCase().replace(/\/$/, "")
   try {
     const url = new URL(trimmed.includes("://") ? trimmed : `http://${trimmed}`)
-    return url.host
+    return { host: url.host, hostname: url.hostname }
   } catch {
-    return trimmed.replace(/^https?:\/\//, "")
+    const host = trimmed.replace(/^https?:\/\//, "")
+    return { host, hostname: host.split(":")[0] }
   }
 }
 
-function findPeerDiagnostic(server: ServerInfo, diagnostics: ClusterDiagnostics) {
-  const serverIdentity = normalizeEndpointIdentity(server.endpoint)
+function getMemberIdentities(member: ClusterDiagnostics["membership"][number]) {
+  return [getEndpointIdentity(member.nodeId), getEndpointIdentity(member.gridHost)].filter(
+    (identity): identity is NonNullable<ReturnType<typeof getEndpointIdentity>> => Boolean(identity),
+  )
+}
+
+function findMatchingMember(server: ServerInfo, diagnostics: ClusterDiagnostics) {
+  const serverIdentity = getEndpointIdentity(server.endpoint)
   if (!serverIdentity) return undefined
-  return diagnostics.peers.find((peer) => {
-    const member = diagnostics.membership.find((item) => item.nodeId === peer.nodeId)
-    return [peer.nodeId, member?.gridHost].some((candidate) => normalizeEndpointIdentity(candidate) === serverIdentity)
-  })
+  const exactMatches = diagnostics.membership.filter((member) =>
+    getMemberIdentities(member).some((identity) => identity.host === serverIdentity.host),
+  )
+  if (exactMatches.length === 1) return exactMatches[0]
+
+  const hostnameMatches = diagnostics.membership.filter((member) =>
+    getMemberIdentities(member).some((identity) => identity.hostname === serverIdentity.hostname),
+  )
+  return hostnameMatches.length === 1 ? hostnameMatches[0] : undefined
+}
+
+function findPeerDiagnostic(server: ServerInfo, diagnostics: ClusterDiagnostics) {
+  const member = findMatchingMember(server, diagnostics)
+  return member ? diagnostics.peers.find((peer) => peer.nodeId === member.nodeId) : undefined
 }
 
 function hasOnlyHealthyDrives(server: ServerInfo) {
@@ -484,8 +571,7 @@ export function resolveServerHealth(
   }
   if (
     (peer.state === "unknown" || peer.state === "stale" || peer.state === "not_reported") &&
-    legacyState === "degraded" &&
-    hasOnlyHealthyDrives(server)
+    (legacyState === "unknown" || (legacyState === "degraded" && hasOnlyHealthyDrives(server)))
   ) {
     return { state: "unknown", ...(peer.reason ? { reason: peer.reason } : {}), source: "peer" }
   }
@@ -582,6 +668,136 @@ export function summarizeServerStates(
   }
 
   return summary
+}
+
+function getUniqueMembership(diagnostics: ClusterDiagnostics | undefined) {
+  const members = diagnostics?.membership ?? []
+  return Array.from(new Map(members.map((member) => [member.nodeId, member])).values())
+}
+
+function findServerIndexForMember(
+  member: ClusterDiagnostics["membership"][number],
+  members: ClusterDiagnostics["membership"],
+  servers: ServerInfo[],
+  usedIndexes: Set<number>,
+) {
+  const memberIdentities = getMemberIdentities(member)
+  const available = servers.flatMap((server, index) => {
+    if (usedIndexes.has(index)) return []
+    const identity = getEndpointIdentity(server.endpoint)
+    return identity ? [{ identity, index }] : []
+  })
+  const exactMatches = available.filter(({ identity }) =>
+    memberIdentities.some((memberIdentity) => memberIdentity.host === identity.host),
+  )
+  if (exactMatches.length) return exactMatches[0].index
+
+  const memberHostnames = new Set(memberIdentities.map((identity) => identity.hostname))
+  const hostnameMatches = available.filter(({ identity }) => memberHostnames.has(identity.hostname))
+  if (hostnameMatches.length !== 1) return undefined
+
+  const sharedMemberHostname = members.some(
+    (candidate) =>
+      candidate !== member && getMemberIdentities(candidate).some((identity) => memberHostnames.has(identity.hostname)),
+  )
+  const sharedServerHostname = servers.some((server, index) => {
+    if (index === hostnameMatches[0].index) return false
+    const identity = getEndpointIdentity(server.endpoint)
+    return identity ? memberHostnames.has(identity.hostname) : false
+  })
+  return sharedMemberHostname || sharedServerHostname ? undefined : hostnameMatches[0].index
+}
+
+function reconcileTopologyServers(system: SystemInfo, diagnostics: ClusterDiagnostics | undefined) {
+  const reportedServers = system.servers ?? []
+  const membership = getUniqueMembership(diagnostics)
+  if (!membership.length) {
+    return {
+      servers: system.servers,
+      reportedServers: system.servers?.length,
+      expectedServers: undefined,
+    }
+  }
+
+  const usedIndexes = new Set<number>()
+  let matchedServers = 0
+  const servers = membership.map((member): ServerInfo => {
+    const serverIndex = findServerIndexForMember(member, membership, reportedServers, usedIndexes)
+    if (serverIndex !== undefined) {
+      usedIndexes.add(serverIndex)
+      matchedServers += 1
+      return reportedServers[serverIndex]
+    }
+    return {
+      endpoint: member.gridHost ?? member.nodeId,
+      state: "unknown",
+      drives: [],
+      network: {},
+    }
+  })
+
+  reportedServers.forEach((server, index) => {
+    if (!usedIndexes.has(index)) servers.push(server)
+  })
+
+  return {
+    servers,
+    reportedServers: matchedServers,
+    expectedServers: membership.length,
+  }
+}
+
+function sumDefined(values: Array<number | undefined>) {
+  return values.some((value) => value !== undefined)
+    ? values.reduce<number>((total, value) => total + (value ?? 0), 0)
+    : undefined
+}
+
+export function buildRunningStatusView(system: SystemInfo, diagnostics?: ClusterDiagnostics): RunningStatusView {
+  const reconciled = reconcileTopologyServers(system, diagnostics)
+  const v4ExpectedDrives = diagnostics?.topologyDrives.length
+    ? new Set(
+        diagnostics.topologyDrives.map(
+          (drive) => `${drive.poolIndex ?? ""}:${drive.setIndex ?? ""}:${drive.diskIndex ?? ""}:${drive.nodeId}`,
+        ),
+      ).size
+    : sumDefined(diagnostics?.pools.map((pool) => pool.endpointCount) ?? [])
+  const v3ExpectedDrives = system.backend?.totalDrivesPerSet?.reduce((total, count) => total + count, 0)
+  const reportedDrives = sumDefined([
+    system.backend?.onlineDisks,
+    system.backend?.offlineDisks,
+    system.backend?.unknownDisks,
+  ])
+  const hasV4Topology = reconciled.expectedServers !== undefined || v4ExpectedDrives !== undefined
+  const expectedDrives = v4ExpectedDrives ?? v3ExpectedDrives
+  const source = hasV4Topology ? "v4" : v3ExpectedDrives !== undefined ? "v3" : "reported"
+  const unreportedServers =
+    reconciled.expectedServers !== undefined && reconciled.reportedServers !== undefined
+      ? Math.max(0, reconciled.expectedServers - reconciled.reportedServers)
+      : undefined
+  const unreportedDrives =
+    expectedDrives !== undefined && reportedDrives !== undefined
+      ? Math.max(0, expectedDrives - reportedDrives)
+      : undefined
+  const incomplete = Boolean(
+    (reconciled.expectedServers !== undefined && reconciled.reportedServers !== reconciled.expectedServers) ||
+    (expectedDrives !== undefined && reportedDrives !== expectedDrives),
+  )
+
+  return {
+    servers: reconciled.servers,
+    serverSummary: reconciled.servers ? summarizeServerStates(reconciled.servers, diagnostics) : undefined,
+    topology: {
+      source,
+      ...(reconciled.expectedServers !== undefined ? { expectedServers: reconciled.expectedServers } : {}),
+      ...(reconciled.reportedServers !== undefined ? { reportedServers: reconciled.reportedServers } : {}),
+      ...(expectedDrives !== undefined ? { expectedDrives } : {}),
+      ...(reportedDrives !== undefined ? { reportedDrives } : {}),
+      ...(unreportedServers !== undefined ? { unreportedServers } : {}),
+      ...(unreportedDrives !== undefined ? { unreportedDrives } : {}),
+      incomplete,
+    },
+  }
 }
 
 export function formatRelativeTime(timestamp: string | Date, locale: string | undefined, now = Date.now()) {

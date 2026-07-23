@@ -5,11 +5,12 @@ import fs from "node:fs"
 test("status page passes every normalized admin info state into infrastructure health", () => {
   const source = fs.readFileSync("app/(dashboard)/status/page.tsx", "utf8")
 
-  assert.match(source, /summarizeServerStates\(systemInfo\.servers, diagnosticsInfo\)/)
+  assert.match(source, /buildRunningStatusView\(systemInfo, diagnosticsInfo\)/)
   assert.match(source, /unknownServers=\{serverSummary\?\.unknown\}/)
   assert.match(source, /degradedServers=\{serverSummary\?\.degraded\}/)
   assert.match(source, /initializingServers=\{serverSummary\?\.initializing\}/)
   assert.match(source, /unknownDisks=\{systemInfo\.backend\?\.unknownDisks\}/)
+  assert.match(source, /topology=\{runningStatus\.topology\}/)
   assert.doesNotMatch(source, /unknownDisks=.*\?\? 0/)
 })
 
@@ -20,6 +21,9 @@ test("performance infrastructure card renders unknown, degraded, and initializin
   assert.match(source, /degradedServers\?: number/)
   assert.match(source, /initializingServers\?: number/)
   assert.match(source, /unknownDisks\?: number/)
+  assert.match(source, /topology: RunningStatusTopology/)
+  assert.match(source, /hasIncompleteTopology/)
+  assert.match(source, /t\("Unreported"\)/)
   assert.match(source, /\{t\("Unknown"\)\}/)
   assert.match(source, /\{t\("Degraded"\)\}/)
   assert.match(source, /\{t\("Initializing"\)\}/)

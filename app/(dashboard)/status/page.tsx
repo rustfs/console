@@ -24,6 +24,7 @@ import { PerformanceInfrastructureCard } from "../_components/performance-infras
 import { PerformanceServerList } from "../_components/performance-server-list"
 import { PerformanceSummaryCards } from "../_components/performance-summary-cards"
 import { PerformanceStatusSources } from "../_components/performance-status-sources"
+import { PerformanceStatusSummary } from "../_components/performance-status-summary"
 import { PerformanceUsageCard } from "../_components/performance-usage-card"
 
 function formatDuration(seconds: number | undefined, t: (key: string) => string) {
@@ -258,11 +259,19 @@ export default function PerformancePage() {
           </div>
         ) : null}
 
-        <PerformanceStatusSources
-          diagnostics={diagnosticsInfo}
-          usageFreshness={diagnosticsInfo ? usageFreshness : undefined}
+        <PerformanceStatusSummary
+          onlineServers={serverSummary?.online}
+          offlineServers={serverSummary?.offline}
+          degradedServers={serverSummary?.degraded}
+          initializingServers={serverSummary?.initializing}
+          unknownServers={serverSummary?.unknown}
+          onlineDisks={systemInfo.backend?.onlineDisks}
+          offlineDisks={systemInfo.backend?.offlineDisks}
+          unknownDisks={systemInfo.backend?.unknownDisks}
+          topology={runningStatus.topology}
+          peerHealth={diagnosticsInfo?.peerHealth}
+          storageReadiness={diagnosticsInfo?.storageReadiness}
           t={t}
-          locale={i18n.resolvedLanguage}
         />
 
         <div className="grid gap-4 xl:grid-cols-2">
@@ -277,6 +286,8 @@ export default function PerformancePage() {
               offlineDisks={systemInfo.backend?.offlineDisks}
               unknownDisks={systemInfo.backend?.unknownDisks}
               topology={runningStatus.topology}
+              peerHealth={diagnosticsInfo?.peerHealth}
+              storageReadiness={diagnosticsInfo?.storageReadiness}
               t={t}
             />
           </div>
@@ -288,6 +299,7 @@ export default function PerformancePage() {
               totalUsedCapacity={totalUsedCapacity}
               usedPercent={usedPercent}
               usageStats={usageStats}
+              usageFreshness={diagnosticsInfo ? usageFreshness : undefined}
               t={t}
             />
           </div>
@@ -305,6 +317,13 @@ export default function PerformancePage() {
         <PerformanceSummaryCards metrics={summaryMetrics} title={t("Inventory")} />
 
         <PerformanceBackendCard items={backendInfo} t={t} />
+
+        <PerformanceStatusSources
+          diagnostics={diagnosticsInfo}
+          usageFreshness={diagnosticsInfo ? usageFreshness : undefined}
+          t={t}
+          locale={i18n.resolvedLanguage}
+        />
       </div>
     </Page>
   )

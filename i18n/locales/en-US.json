@@ -1554,5 +1554,14 @@
   "Backend guidance": "Backend guidance",
   "Open the real multi-node metrics verification guide": "Open the real multi-node metrics verification guide",
   "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.": "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.",
-  "Review peer, storage, usage, listing, and workload admission health independently.": "Review peer, storage, usage, listing, and workload admission health independently."
+  "Review peer, storage, usage, listing, and workload admission health independently.": "Review peer, storage, usage, listing, and workload admission health independently.",
+  "Diagnostic Details": "Diagnostic Details",
+  "Diagnostic items need confirmation": "diagnostic items need confirmation",
+  "All reported diagnostics are healthy.": "All reported diagnostics are healthy.",
+  "No diagnostic sources were reported by the server.": "No diagnostic sources were reported by the server.",
+  "Expand": "Expand",
+  "Collapse": "Collapse",
+  "Cluster is healthy": "Cluster is healthy",
+  "Cluster needs attention": "Cluster needs attention",
+  "Cluster status is incomplete": "Cluster status is incomplete"
 }

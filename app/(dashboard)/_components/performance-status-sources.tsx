@@ -1,8 +1,11 @@
 "use client"
 
 import * as React from "react"
+import { RiArrowDownSLine } from "@remixicon/react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator"
 import type { ClusterDiagnostics, OperationalStatus, StatusDiagnostic } from "@/lib/performance-data"
 
@@ -62,68 +65,191 @@ function DiagnosticRow({
     scope?.set ? `${t("Set")}: ${scope.set}` : undefined,
     scope?.timeout ? `${t("Timeout")}: ${scope.timeout}` : undefined,
   ].filter(Boolean)
+  const hasSupportingDetail = Boolean(
+    diagnostic.lastSuccessfulUpdate ||
+    showLastSuccessfulUpdate ||
+    diagnostic.lastError ||
+    scopeParts.length ||
+    diagnostic.source ||
+    diagnostic.historicalStallTimeouts !== undefined ||
+    diagnostic.hint ||
+    troubleshooting ||
+    troubleshootingHref,
+  )
 
   return (
-    <div className="grid gap-2 py-4 sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:gap-6">
-      <dt className="flex min-w-0 items-center justify-between gap-3 sm:flex-col sm:items-start sm:justify-start">
-        <span className="font-medium text-foreground">{label}</span>
+    <div className="grid gap-2 py-3 sm:grid-cols-[minmax(0,12rem)_minmax(0,7rem)_minmax(0,1fr)] sm:items-start sm:gap-4">
+      <dt className="min-w-0 font-medium text-foreground">{label}</dt>
+      <dd>
         <Badge variant={getStatusVariant(diagnostic.state)}>{getStatusLabel(diagnostic.state, t)}</Badge>
-      </dt>
-      <dd className="flex min-w-0 flex-col gap-2 text-muted-foreground">
+      </dd>
+      <dd className="flex min-w-0 flex-col gap-1.5 text-muted-foreground">
         <p className="break-words text-foreground [overflow-wrap:anywhere]">
           {diagnostic.reason ?? getDefaultDescription(diagnostic.state, t)}
         </p>
-        {diagnostic.lastSuccessfulUpdate || showLastSuccessfulUpdate ? (
-          <p className="text-xs">
-            {t("Last successful update")}:{" "}
-            {diagnostic.lastSuccessfulUpdate ? formatTimestamp(diagnostic.lastSuccessfulUpdate, locale) : t("Unknown")}
-          </p>
-        ) : null}
-        {diagnostic.lastError ? (
-          <p className="break-words text-xs [overflow-wrap:anywhere]">
-            {t("Last error")}: {diagnostic.lastError}
-          </p>
-        ) : null}
-        {scopeParts.length ? (
-          <p className="break-words text-xs [overflow-wrap:anywhere]">{scopeParts.join(" · ")}</p>
-        ) : null}
-        {diagnostic.source ? (
-          <p className="break-words text-xs [overflow-wrap:anywhere]">
-            {t("Source")}: {diagnostic.source}
-          </p>
-        ) : null}
-        {diagnostic.historicalStallTimeouts !== undefined ? (
-          <div className="space-y-1 text-xs">
-            <p className="text-foreground">
-              {t("Historical internode stall timeouts")}: {diagnostic.historicalStallTimeouts}
-            </p>
-            <p>
-              {t("This lifetime counter has no sampling window and does not indicate current degradation by itself.")}
-            </p>
+        {hasSupportingDetail ? (
+          <div className="flex flex-col gap-1 text-xs">
+            {diagnostic.lastSuccessfulUpdate || showLastSuccessfulUpdate ? (
+              <p>
+                {t("Last successful update")}:{" "}
+                {diagnostic.lastSuccessfulUpdate
+                  ? formatTimestamp(diagnostic.lastSuccessfulUpdate, locale)
+                  : t("Unknown")}
+              </p>
+            ) : null}
+            {diagnostic.lastError ? (
+              <p className="break-words [overflow-wrap:anywhere]">
+                {t("Last error")}: {diagnostic.lastError}
+              </p>
+            ) : null}
+            {scopeParts.length ? (
+              <p className="break-words [overflow-wrap:anywhere]">{scopeParts.join(" · ")}</p>
+            ) : null}
+            {diagnostic.source ? (
+              <p className="break-words [overflow-wrap:anywhere]">
+                {t("Source")}: <code>{diagnostic.source}</code>
+              </p>
+            ) : null}
+            {diagnostic.historicalStallTimeouts !== undefined ? (
+              <>
+                <p className="text-foreground">
+                  {t("Historical internode stall timeouts")}: {diagnostic.historicalStallTimeouts}
+                </p>
+                <p>
+                  {t(
+                    "This lifetime counter has no sampling window and does not indicate current degradation by itself.",
+                  )}
+                </p>
+              </>
+            ) : null}
+            {diagnostic.hint ? (
+              <p className="break-words [overflow-wrap:anywhere]">
+                {t("Backend guidance")}: {diagnostic.hint}
+              </p>
+            ) : null}
+            {troubleshooting ? (
+              <p className="text-foreground">
+                {t("Troubleshooting")}: {troubleshooting}
+              </p>
+            ) : null}
+            {troubleshootingHref ? (
+              <a
+                className="w-fit font-medium text-foreground underline underline-offset-4"
+                href={troubleshootingHref}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {t("Open the real multi-node metrics verification guide")}
+              </a>
+            ) : null}
           </div>
-        ) : null}
-        {diagnostic.hint ? (
-          <p className="break-words text-xs [overflow-wrap:anywhere]">
-            {t("Backend guidance")}: {diagnostic.hint}
-          </p>
-        ) : null}
-        {troubleshooting ? (
-          <p className="text-xs text-foreground">
-            {t("Troubleshooting")}: {troubleshooting}
-          </p>
-        ) : null}
-        {troubleshootingHref ? (
-          <a
-            className="w-fit text-xs font-medium text-foreground underline underline-offset-4"
-            href={troubleshootingHref}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {t("Open the real multi-node metrics verification guide")}
-          </a>
         ) : null}
       </dd>
     </div>
+  )
+}
+
+function PerformanceStatusSourcesContent({
+  diagnostics,
+  usageFreshness,
+  t,
+  locale,
+}: {
+  diagnostics: ClusterDiagnostics
+  usageFreshness?: StatusDiagnostic
+  t: Translate
+  locale?: string
+}) {
+  const rows = [
+    { label: t("Peer Health"), diagnostic: diagnostics.peerHealth },
+    { label: t("Storage Readiness"), diagnostic: diagnostics.storageReadiness },
+    {
+      label: t("Usage Freshness"),
+      diagnostic: usageFreshness ?? diagnostics.usageFreshness,
+      showLastSuccessfulUpdate: true,
+    },
+    {
+      label: t("Listing and Metacache"),
+      diagnostic: diagnostics.listingHealth,
+      troubleshooting: t(
+        "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.",
+      ),
+      troubleshootingHref: "https://github.com/rustfs/backlog/issues/1392#issuecomment-5040442761",
+    },
+    { label: t("Workload Admission"), diagnostic: diagnostics.workloadAdmission },
+  ]
+  const hasAttention = rows.some(({ diagnostic }) => ["degraded", "stale", "unknown"].includes(diagnostic.state))
+  const reportedRows = rows.filter(({ diagnostic }) => diagnostic.state !== "not_reported")
+  const attentionCount = rows.filter(({ diagnostic }) =>
+    ["degraded", "stale", "unknown"].includes(diagnostic.state),
+  ).length
+  const [open, setOpen] = React.useState(hasAttention)
+  const previousHasAttention = React.useRef(hasAttention)
+
+  React.useEffect(() => {
+    if (hasAttention && !previousHasAttention.current) setOpen(true)
+    previousHasAttention.current = hasAttention
+  }, [hasAttention])
+
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className="group/diagnostics">
+      <Card className="gap-0 py-0 shadow-none">
+        <CardHeader className="grid-cols-[minmax(0,1fr)_auto] gap-4 py-4">
+          <div className="min-w-0">
+            <h2 id="diagnostic-details-title" className="text-base font-semibold">
+              {t("Diagnostic Details")}
+            </h2>
+            <CardDescription>
+              {hasAttention
+                ? `${attentionCount} ${t("Diagnostic items need confirmation")}`
+                : reportedRows.length
+                  ? t("All reported diagnostics are healthy.")
+                  : t("No diagnostic sources were reported by the server.")}
+            </CardDescription>
+          </div>
+          <CollapsibleTrigger
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="min-h-11 self-start sm:min-h-0"
+                aria-controls="diagnostic-details-content"
+              >
+                <span className="group-data-[state=open]/diagnostics:hidden">{t("Expand")}</span>
+                <span className="hidden group-data-[state=open]/diagnostics:inline">{t("Collapse")}</span>
+                <RiArrowDownSLine
+                  data-icon="inline-end"
+                  className="transition-transform duration-200 group-data-[state=open]/diagnostics:rotate-180"
+                  aria-hidden
+                />
+              </Button>
+            }
+          />
+        </CardHeader>
+        <CollapsibleContent id="diagnostic-details-content">
+          <Separator />
+          <CardContent className="py-1">
+            <dl aria-labelledby="diagnostic-details-title">
+              {rows.map((row, index) => (
+                <React.Fragment key={row.label}>
+                  {index ? <Separator /> : null}
+                  <DiagnosticRow
+                    label={row.label}
+                    diagnostic={row.diagnostic}
+                    troubleshooting={row.troubleshooting}
+                    troubleshootingHref={row.troubleshootingHref}
+                    showLastSuccessfulUpdate={row.showLastSuccessfulUpdate}
+                    t={t}
+                    locale={locale}
+                  />
+                </React.Fragment>
+              ))}
+            </dl>
+          </CardContent>
+        </CollapsibleContent>
+      </Card>
+    </Collapsible>
   )
 }
 
@@ -138,55 +264,9 @@ export function PerformanceStatusSources({
   t: Translate
   locale?: string
 }) {
-  const notReported: StatusDiagnostic = { state: "not_reported" }
-  const peerHealth = diagnostics?.peerHealth ?? notReported
-  const storageReadiness = diagnostics?.storageReadiness ?? notReported
-  const resolvedUsageFreshness = usageFreshness ?? diagnostics?.usageFreshness ?? notReported
-  const listingHealth = diagnostics?.listingHealth ?? notReported
-  const workloadAdmission = diagnostics?.workloadAdmission ?? notReported
-  const rows = [
-    { label: t("Peer Health"), diagnostic: peerHealth },
-    { label: t("Storage Readiness"), diagnostic: storageReadiness },
-    { label: t("Usage Freshness"), diagnostic: resolvedUsageFreshness, showLastSuccessfulUpdate: true },
-    {
-      label: t("Listing and Metacache"),
-      diagnostic: listingHealth,
-      troubleshooting: t(
-        "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.",
-      ),
-      troubleshootingHref: "https://github.com/rustfs/backlog/issues/1392#issuecomment-5040442761",
-    },
-    { label: t("Workload Admission"), diagnostic: workloadAdmission },
-  ]
+  if (!diagnostics) return null
 
   return (
-    <Card className="shadow-none">
-      <CardHeader>
-        <h2 id="status-sources-title" className="text-base font-semibold">
-          {t("Status Sources")}
-        </h2>
-        <CardDescription>
-          {t("Review peer, storage, usage, listing, and workload admission health independently.")}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <dl aria-labelledby="status-sources-title">
-          {rows.map((row, index) => (
-            <React.Fragment key={row.label}>
-              {index ? <Separator /> : null}
-              <DiagnosticRow
-                label={row.label}
-                diagnostic={row.diagnostic}
-                troubleshooting={row.troubleshooting}
-                troubleshootingHref={row.troubleshootingHref}
-                showLastSuccessfulUpdate={row.showLastSuccessfulUpdate}
-                t={t}
-                locale={locale}
-              />
-            </React.Fragment>
-          ))}
-        </dl>
-      </CardContent>
-    </Card>
+    <PerformanceStatusSourcesContent diagnostics={diagnostics} usageFreshness={usageFreshness} t={t} locale={locale} />
   )
 }

@@ -2,7 +2,53 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
-import type { RunningStatusTopology } from "@/lib/performance-data"
+import type { RunningStatusTopology, StatusDiagnostic } from "@/lib/performance-data"
+
+export type InfrastructureHealthState = "healthy" | "attention" | "unknown"
+
+export function getInfrastructureHealthState({
+  onlineServers,
+  offlineServers,
+  degradedServers,
+  initializingServers,
+  unknownServers,
+  onlineDisks,
+  offlineDisks,
+  unknownDisks,
+  topology,
+  peerHealth,
+  storageReadiness,
+}: {
+  onlineServers?: number
+  offlineServers?: number
+  degradedServers?: number
+  initializingServers?: number
+  unknownServers?: number
+  onlineDisks?: number
+  offlineDisks?: number
+  unknownDisks?: number
+  topology: RunningStatusTopology
+  peerHealth?: StatusDiagnostic
+  storageReadiness?: StatusDiagnostic
+}): InfrastructureHealthState {
+  const resourceNeedsAttention = Boolean((offlineServers ?? 0) + (degradedServers ?? 0) + (offlineDisks ?? 0))
+  const diagnosticNeedsAttention = [peerHealth, storageReadiness].some((diagnostic) => diagnostic?.state === "degraded")
+  if (resourceNeedsAttention || diagnosticNeedsAttention) return "attention"
+
+  const resourceUncertain = Boolean((initializingServers ?? 0) + (unknownServers ?? 0) + (unknownDisks ?? 0))
+  const diagnosticUncertain = [peerHealth, storageReadiness].some(
+    (diagnostic) => diagnostic?.state === "stale" || diagnostic?.state === "unknown",
+  )
+  const serverCounts = [onlineServers, offlineServers, degradedServers, initializingServers, unknownServers]
+  const diskCounts = [onlineDisks, offlineDisks, unknownDisks]
+  const dataUnavailable =
+    serverCounts.some((value) => value === undefined) ||
+    diskCounts.some((value) => value === undefined) ||
+    serverCounts.reduce<number>((total, value) => total + (value ?? 0), 0) === 0 ||
+    diskCounts.reduce<number>((total, value) => total + (value ?? 0), 0) === 0
+
+  return resourceUncertain || diagnosticUncertain || dataUnavailable || topology.incomplete ? "unknown" : "healthy"
+}
 
 function HealthMetric({ label, value, unavailableLabel }: { label: string; value?: number; unavailableLabel: string }) {
   return (
@@ -23,6 +69,8 @@ export function PerformanceInfrastructureCard({
   offlineDisks,
   unknownDisks,
   topology,
+  peerHealth,
+  storageReadiness,
   t,
 }: {
   onlineServers?: number
@@ -34,30 +82,34 @@ export function PerformanceInfrastructureCard({
   offlineDisks?: number
   unknownDisks?: number
   topology: RunningStatusTopology
+  peerHealth?: StatusDiagnostic
+  storageReadiness?: StatusDiagnostic
   t: (key: string) => string
 }) {
-  const needsAttention = Boolean((offlineServers ?? 0) + (degradedServers ?? 0) + (offlineDisks ?? 0))
-  const hasUnknownState = Boolean((initializingServers ?? 0) + (unknownServers ?? 0) + (unknownDisks ?? 0))
-  const serverCounts = [onlineServers, offlineServers, degradedServers, initializingServers, unknownServers]
-  const diskCounts = [onlineDisks, offlineDisks, unknownDisks]
-  const dataUnavailable =
-    serverCounts.some((value) => value === undefined) ||
-    diskCounts.some((value) => value === undefined) ||
-    serverCounts.reduce<number>((total, value) => total + (value ?? 0), 0) === 0 ||
-    diskCounts.reduce<number>((total, value) => total + (value ?? 0), 0) === 0
   const hasIncompleteTopology = topology.incomplete
-  const status = needsAttention
-    ? t("Needs attention")
-    : hasUnknownState || dataUnavailable || hasIncompleteTopology
-      ? t("Unknown")
-      : t("Healthy")
-  const description = needsAttention
-    ? t("Offline or degraded resources require attention.")
-    : hasIncompleteTopology
-      ? t("The reported health rows do not cover the full cluster topology.")
-      : hasUnknownState || dataUnavailable
-        ? t("Some resource health data is unavailable or still initializing.")
-        : t("All reported servers and disks are online.")
+  const healthState = getInfrastructureHealthState({
+    onlineServers,
+    offlineServers,
+    degradedServers,
+    initializingServers,
+    unknownServers,
+    onlineDisks,
+    offlineDisks,
+    unknownDisks,
+    topology,
+    peerHealth,
+    storageReadiness,
+  })
+  const status =
+    healthState === "attention" ? t("Needs attention") : healthState === "unknown" ? t("Unknown") : t("Healthy")
+  const description =
+    healthState === "attention"
+      ? t("Offline or degraded resources require attention.")
+      : hasIncompleteTopology
+        ? t("The reported health rows do not cover the full cluster topology.")
+        : healthState === "unknown"
+          ? t("Some resource health data is unavailable or still initializing.")
+          : t("All reported servers and disks are online.")
 
   return (
     <Card className="h-full shadow-none">
@@ -70,13 +122,7 @@ export function PerformanceInfrastructureCard({
             <CardDescription>{description}</CardDescription>
           </div>
           <Badge
-            variant={
-              needsAttention
-                ? "destructive"
-                : hasUnknownState || dataUnavailable || hasIncompleteTopology
-                  ? "outline"
-                  : "secondary"
-            }
+            variant={healthState === "attention" ? "destructive" : healthState === "unknown" ? "outline" : "secondary"}
             aria-live="polite"
           >
             {status}

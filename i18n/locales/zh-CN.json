@@ -1549,5 +1549,14 @@
   "Backend guidance": "后端提示",
   "Open the real multi-node metrics verification guide": "打开真实多节点指标确认指南",
   "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.": "在将列表症状判断为磁盘故障前，请关联时间窗口内的 walk_dir 指标和元数据缓存日志。",
-  "Review peer, storage, usage, listing, and workload admission health independently.": "分别检查节点、存储、用量、列表服务和工作负载准入状态。"
+  "Review peer, storage, usage, listing, and workload admission health independently.": "分别检查节点、存储、用量、列表服务和工作负载准入状态。",
+  "Diagnostic Details": "诊断详情",
+  "Diagnostic items need confirmation": "项诊断状态需要确认",
+  "All reported diagnostics are healthy.": "所有已报告的诊断均正常。",
+  "No diagnostic sources were reported by the server.": "服务器未报告诊断来源。",
+  "Expand": "展开",
+  "Collapse": "收起",
+  "Cluster is healthy": "集群运行正常",
+  "Cluster needs attention": "集群需要关注",
+  "Cluster status is incomplete": "集群状态信息不完整"
 }

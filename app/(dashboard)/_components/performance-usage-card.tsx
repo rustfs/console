@@ -2,8 +2,10 @@
 
 import { RiDatabase2Line } from "@remixicon/react"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { niceBytes } from "@/lib/functions"
+import type { StatusDiagnostic } from "@/lib/performance-data"
 
 export interface UsageStat {
   label: string
@@ -16,6 +18,7 @@ export function PerformanceUsageCard({
   totalUsedCapacity,
   usedPercent,
   usageStats,
+  usageFreshness,
   t,
 }: {
   totalCapacity?: number
@@ -23,9 +26,11 @@ export function PerformanceUsageCard({
   totalUsedCapacity?: number
   usedPercent?: number
   usageStats: UsageStat[]
+  usageFreshness?: StatusDiagnostic
   t: (key: string) => string
 }) {
   const formatCapacity = (value?: number) => (value === undefined ? t("Unknown") : niceBytes(String(value)))
+  const freshnessNeedsAttention = usageFreshness?.state === "degraded" || usageFreshness?.state === "stale"
 
   return (
     <Card className="h-full shadow-none">
@@ -72,6 +77,17 @@ export function PerformanceUsageCard({
             <dd className="mt-1 text-sm font-medium tabular-nums">{formatCapacity(totalCapacity)}</dd>
           </div>
         </dl>
+
+        {freshnessNeedsAttention ? (
+          <div className="flex flex-col gap-2 border-s-2 border-current ps-3 text-muted-foreground">
+            <Badge variant={usageFreshness.state === "degraded" ? "destructive" : "default"}>
+              {usageFreshness.state === "degraded" ? t("Degraded") : t("Stale")}
+            </Badge>
+            <p className="break-words text-xs [overflow-wrap:anywhere]">
+              {usageFreshness.reason ?? t("Previously reported data may be out of date.")}
+            </p>
+          </div>
+        ) : null}
 
         <dl className="grid gap-4 sm:grid-cols-3">
           {usageStats.map((item) => (

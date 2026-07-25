@@ -22,12 +22,28 @@ test("performance infrastructure card renders unknown, degraded, and initializin
   assert.match(source, /initializingServers\?: number/)
   assert.match(source, /unknownDisks\?: number/)
   assert.match(source, /topology: RunningStatusTopology/)
+  assert.match(source, /peerHealth\?: StatusDiagnostic/)
+  assert.match(source, /storageReadiness\?: StatusDiagnostic/)
+  assert.match(source, /diagnosticNeedsAttention/)
+  assert.match(source, /diagnosticUncertain/)
   assert.match(source, /hasIncompleteTopology/)
   assert.match(source, /t\("Unreported"\)/)
   assert.match(source, /\{t\("Unknown"\)\}/)
   assert.match(source, /\{t\("Degraded"\)\}/)
   assert.match(source, /\{t\("Initializing"\)\}/)
   assert.match(source, /value \?\? unavailableLabel/)
+})
+
+test("status page routes diagnostics into the relevant operational surfaces", () => {
+  const source = fs.readFileSync("app/(dashboard)/status/page.tsx", "utf8")
+  const usageSource = fs.readFileSync("app/(dashboard)/_components/performance-usage-card.tsx", "utf8")
+
+  assert.match(source, /peerHealth=\{diagnosticsInfo\?\.peerHealth\}/)
+  assert.match(source, /storageReadiness=\{diagnosticsInfo\?\.storageReadiness\}/)
+  assert.match(source, /usageFreshness=\{diagnosticsInfo \? usageFreshness : undefined\}/)
+  assert.match(usageSource, /usageFreshness\?: StatusDiagnostic/)
+  assert.match(usageSource, /usageFreshness\?\.state === "degraded"/)
+  assert.match(usageSource, /usageFreshness\?\.state === "stale"/)
 })
 
 test("performance server list treats every health state as a first-class filter", () => {

@@ -64,7 +64,7 @@ const ADVANCED_CONFIG_FIELDS = new Set([
 ])
 
 type ConfigFormState = {
-  backendType: "local" | "vault-kv2" | "vault-transit"
+  backendType: "local" | "vault-kv2" | "vault-transit" | "static"
   keyDir: string
   filePermissions: string
   defaultKeyId: string
@@ -80,6 +80,8 @@ type ConfigFormState = {
   kvMount: string
   keyPathPrefix: string
   skipTlsVerify: boolean
+  secretKey: string
+  staticKeyId: string
 }
 
 type KeyActionState = {
@@ -109,6 +111,8 @@ const INITIAL_FORM_STATE: ConfigFormState = {
   kvMount: "secret",
   keyPathPrefix: "rustfs/kms/keys",
   skipTlsVerify: false,
+  secretKey: "",
+  staticKeyId: "",
 }
 
 function getStatusKind(status: KmsServiceStatusResponse | null): "NotConfigured" | "Configured" | "Running" | "Error" {
@@ -154,6 +158,8 @@ function normalizeBackendType(value?: string | null): ConfigFormState["backendTy
       return "vault-kv2"
     case "VaultTransit":
       return "vault-transit"
+    case "Static":
+      return "static"
     default:
       return "local"
   }
@@ -183,6 +189,8 @@ function buildFormStateFromStatus(status: KmsServiceStatusResponse | null): Conf
     mountPath: backendSummary?.mount_path ?? "transit",
     kvMount: backendSummary?.kv_mount ?? "secret",
     keyPathPrefix: backendSummary?.key_path_prefix ?? "rustfs/kms/keys",
+    secretKey: "",
+    staticKeyId: backendSummary?.key_id ?? "",
     skipTlsVerify: backendSummary?.skip_tls_verify ?? false,
   }
 }
@@ -531,6 +539,30 @@ export default function SSEPage() {
           error: t(
             "Local filesystem KMS configuration is read-only in Console until safe master-key rotation is available.",
           ),
+        }
+      }
+
+      if (values.backendType === "static") {
+        if (!values.secretKey.trim()) {
+          return {
+            error: t(
+              "Please enter the static KMS secret key (base64-encoded 32-byte AES-256 key).",
+            ),
+            field: "secretKey",
+          }
+        }
+        return {
+          payload: {
+            backend_type: "Static",
+            key_id: values.defaultKeyId.trim() || values.staticKeyId || "static-key",
+            secret_key: values.secretKey.trim(),
+            default_key_id: defaultKeyId || undefined,
+            timeout_seconds: timeoutSeconds ?? 30,
+            retry_attempts: retryAttempts ?? 3,
+            enable_cache: values.enableCache,
+            max_cached_keys: values.enableCache ? (maxCachedKeys ?? 1000) : undefined,
+            cache_ttl_seconds: values.enableCache ? (cacheTtlSeconds ?? 3600) : undefined,
+          },
         }
       }
 
@@ -906,9 +938,11 @@ export default function SSEPage() {
 
   const mutationLocked = Boolean(activeMutation || statusError || loadingStatus)
   const localKmsReadOnly = hasConfiguration && formState.backendType === "local"
-  const formDisabled = mutationLocked || loadingStatus || submittingConfig || localKmsReadOnly
+  const staticKmsReadOnly = hasConfiguration && formState.backendType === "static"
+  const formDisabled = mutationLocked || loadingStatus || submittingConfig || localKmsReadOnly || staticKmsReadOnly
   const mutationInFlight = Boolean(activeMutation || submittingConfig || creatingKey || processingKeyAction)
-  const canSetCreatedKeyAsDefault = status?.backend_type !== "Local" && !isConfigDirty
+  const canSetCreatedKeyAsDefault =
+    status?.backend_type !== "Local" && status?.backend_type !== "Static" && !isConfigDirty
 
   return (
     <>
@@ -1107,6 +1141,7 @@ export default function SSEPage() {
                             </SelectItem>
                             <SelectItem value="vault-kv2">{t("HashiCorp Vault KV2")}</SelectItem>
                             <SelectItem value="vault-transit">{t("HashiCorp Vault Transit Engine")}</SelectItem>
+                            <SelectItem value="static">{t("Static single-key (built-in)")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </FieldContent>
@@ -1136,9 +1171,39 @@ export default function SSEPage() {
 
                 <fieldset className="space-y-4 border-t pt-4">
                   <legend className="pe-2 text-sm font-semibold">
-                    {formState.backendType === "local" ? t("Local filesystem") : t("Vault connection")}
+                    {formState.backendType === "local"
+                      ? t("Local filesystem")
+                      : formState.backendType === "static"
+                        ? t("Static key configuration")
+                        : t("Vault connection")}
                   </legend>
-                  {formState.backendType === "local" ? (
+                  {formState.backendType === "static" ? (
+                    <FieldGroup className="grid gap-4 lg:grid-cols-2">
+                      <Field>
+                        <FieldLabel htmlFor="secretKey">{t("Secret Key")}</FieldLabel>
+                        <FieldContent>
+                          <Input
+                            id="secretKey"
+                            name="secretKey"
+                            type="password"
+                            value={formState.secretKey}
+                            onChange={(event) => updateFormState("secretKey", event.target.value)}
+                            autoComplete="off"
+                            placeholder={t("Base64-encoded 32-byte AES-256 key")}
+                            spellCheck={false}
+                            disabled={formDisabled}
+                            required
+                            aria-required="true"
+                            aria-invalid={configFormErrorField === "secretKey"}
+                            aria-describedby={configFormErrorField === "secretKey" ? "kms-config-error" : undefined}
+                          />
+                        </FieldContent>
+                        <FieldDescription>
+                          {t("The base64-encoded 32-byte AES-256 key used to derive data encryption keys.")}
+                        </FieldDescription>
+                      </Field>
+                    </FieldGroup>
+                  ) : formState.backendType === "local" ? (
                     <FieldGroup className="grid gap-4 lg:grid-cols-2">
                       <Field>
                         <FieldLabel htmlFor="keyDir">{t("Local Key Directory")}</FieldLabel>
@@ -1483,7 +1548,7 @@ export default function SSEPage() {
                     <Button
                       size="sm"
                       onClick={() => setCreateKeyOpen(true)}
-                      disabled={Boolean(activeMutation) || loadingKeys || loadingStatus || Boolean(keysError)}
+                      disabled={Boolean(activeMutation) || loadingKeys || loadingStatus || Boolean(keysError) || staticKmsReadOnly}
                     >
                       <RiAddLine className="size-4" aria-hidden />
                       {t("Create Key")}
@@ -1577,7 +1642,7 @@ export default function SSEPage() {
                                   variant="outline"
                                   className="min-h-11 flex-1 sm:flex-none"
                                   disabled={
-                                    isDefaultKey || Boolean(activeMutation) || loadingStatus || Boolean(keysError)
+                                    isDefaultKey || Boolean(activeMutation) || loadingStatus || Boolean(keysError) || staticKmsReadOnly
                                   }
                                   onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}
                                 >
@@ -1589,7 +1654,7 @@ export default function SSEPage() {
                                 variant="destructive"
                                 className="min-h-11 flex-1 sm:flex-none"
                                 disabled={
-                                  isDefaultKey || Boolean(activeMutation) || loadingStatus || Boolean(keysError)
+                                  isDefaultKey || Boolean(activeMutation) || loadingStatus || Boolean(keysError) || staticKmsReadOnly
                                 }
                                 onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
                               >
@@ -1657,7 +1722,8 @@ export default function SSEPage() {
                                               isDefaultKey ||
                                               Boolean(activeMutation) ||
                                               loadingStatus ||
-                                              Boolean(keysError)
+                                              Boolean(keysError) ||
+                                              staticKmsReadOnly
                                             }
                                           >
                                             {t("Schedule Deletion")}
@@ -1678,7 +1744,8 @@ export default function SSEPage() {
                                             isDefaultKey ||
                                             Boolean(activeMutation) ||
                                             loadingStatus ||
-                                            Boolean(keysError)
+                                            Boolean(keysError) ||
+                                            staticKmsReadOnly
                                           }
                                           className="text-destructive focus:text-destructive"
                                         >

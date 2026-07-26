@@ -2,6 +2,7 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   createObjectListScope,
+  resolveObjectListDisplayState,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
 } from "../../lib/object-list-state"
@@ -117,5 +118,83 @@ test("shouldApplyObjectListResponse accepts the latest response for the current 
       activeScope: scope,
     }),
     true,
+  )
+})
+
+test("resolveObjectListDisplayState treats an unfiltered empty response as an empty bucket", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "",
+      filteredCount: 0,
+      loadedCount: 0,
+      hasMore: false,
+      loading: false,
+    }),
+    "empty",
+  )
+})
+
+test("resolveObjectListDisplayState keeps a filtered append request in loading state", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "backup",
+      filteredCount: 0,
+      loadedCount: 25,
+      hasMore: true,
+      loading: true,
+    }),
+    "filtered-loading",
+  )
+})
+
+test("resolveObjectListDisplayState reports when unsearched objects remain", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "backup",
+      filteredCount: 0,
+      loadedCount: 25,
+      hasMore: true,
+      loading: false,
+    }),
+    "filtered-partial",
+  )
+})
+
+test("resolveObjectListDisplayState reports a final filtered-empty state after all objects load", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "missing",
+      filteredCount: 0,
+      loadedCount: 50,
+      hasMore: false,
+      loading: false,
+    }),
+    "filtered-empty",
+  )
+})
+
+test("resolveObjectListDisplayState shows matching rows while more objects load", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "backup",
+      filteredCount: 1,
+      loadedCount: 25,
+      hasMore: true,
+      loading: true,
+    }),
+    "content",
+  )
+})
+
+test("resolveObjectListDisplayState ignores whitespace around the filter term", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "   ",
+      filteredCount: 0,
+      loadedCount: 0,
+      hasMore: false,
+      loading: false,
+    }),
+    "empty",
   )
 })

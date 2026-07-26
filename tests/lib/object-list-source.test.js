@@ -28,6 +28,16 @@ test("object list lazy loads additional object batches instead of showing a pagi
   assert.equal(source.includes('t("Next Page")'), false)
 })
 
+test("object list distinguishes filtered-empty states from an empty bucket", () => {
+  const source = fs.readFileSync("components/object/list.tsx", "utf8")
+
+  assert.equal(source.includes("resolveObjectListDisplayState"), true)
+  assert.equal(source.includes('displayState === "filtered-partial"'), true)
+  assert.equal(source.includes('displayState === "filtered-loading"'), true)
+  assert.equal(source.includes("emptyTitle={emptyTitle}"), true)
+  assert.equal(source.includes("emptyDescription={emptyDescription}"), true)
+})
+
 test("object list shows fixed scroll shortcut buttons only when content overflows", () => {
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 

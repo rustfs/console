@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { RiAddLine, RiRefreshLine, RiKey2Line, RiDeleteBin5Line } from "@remixicon/react"
+import { RiAddLine, RiRefreshLine, RiKey2Line, RiDeleteBin5Line, RiPlayCircleLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
@@ -12,6 +12,7 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { useTiers, type TierRow, type TierConfig } from "@/hooks/use-tiers"
 import { TiersNewForm } from "@/components/tiers/new-form"
 import { TiersChangeKey } from "@/components/tiers/change-key"
+import { TiersTransitionJob } from "@/components/tiers/transition-job"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { TIER_PROVIDERS } from "@/lib/tier-config"
@@ -54,6 +55,7 @@ export default function TiersPage() {
   const [loading, setLoading] = useState(false)
   const [newFormOpen, setNewFormOpen] = useState(false)
   const [changeKeyOpen, setChangeKeyOpen] = useState(false)
+  const [transitionJobOpen, setTransitionJobOpen] = useState(false)
   const [selectedTierName, setSelectedTierName] = useState("")
 
   const loadTiers = useCallback(async () => {
@@ -156,6 +158,18 @@ export default function TiersPage() {
               <RiKey2Line className="size-4" aria-hidden />
               <span>{t("Update Key")}</span>
             </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const cfg = getConfig(row.original)
+                setSelectedTierName(cfg?.name || "")
+                setTransitionJobOpen(true)
+              }}
+            >
+              <RiPlayCircleLine className="size-4" aria-hidden />
+              <span>{t("Manual Transition")}</span>
+            </Button>
             <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
               <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
@@ -206,6 +220,7 @@ export default function TiersPage() {
         tierName={selectedTierName}
         onSuccess={loadTiers}
       />
+      <TiersTransitionJob open={transitionJobOpen} onOpenChange={setTransitionJobOpen} tierName={selectedTierName} />
     </Page>
   )
 }

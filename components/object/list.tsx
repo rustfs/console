@@ -54,6 +54,7 @@ import { normalizeDateToIso } from "@/lib/safe-date"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
   createObjectListScope,
+  resolveObjectListDisplayState,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
 } from "@/lib/object-list-state"
@@ -358,7 +359,7 @@ export function ObjectList({
   )
 
   const filteredData = React.useMemo(() => {
-    const term = searchTerm.toLowerCase()
+    const term = searchTerm.trim().toLowerCase()
     return data.filter((item) => {
       if (term) {
         const key = displayKey(item.Key).toLowerCase()
@@ -367,6 +368,24 @@ export function ObjectList({
       return item.Key !== prefix
     })
   }, [data, searchTerm, prefix, displayKey])
+  const displayState = resolveObjectListDisplayState({
+    searchTerm,
+    filteredCount: filteredData.length,
+    loadedCount: data.length,
+    hasMore: Boolean(nextToken),
+    loading,
+  })
+  const filteredEmptyState = displayState === "filtered-partial" || displayState === "filtered-empty"
+  const emptyTitle = filteredEmptyState
+    ? t(displayState === "filtered-partial" ? "No matches in loaded objects" : "No matching objects")
+    : t("No Objects")
+  const emptyDescription = filteredEmptyState
+    ? t(
+        displayState === "filtered-partial"
+          ? "More objects have not been searched yet."
+          : "No loaded objects match this filter.",
+      )
+    : t("Upload files or create folders to populate this bucket.")
 
   const downloadFile = React.useCallback(
     async (key: string) => {
@@ -830,9 +849,9 @@ export function ObjectList({
 
       <DataTable
         table={table}
-        isLoading={loading && data.length === 0}
-        emptyTitle={t("No Objects")}
-        emptyDescription={t("Upload files or create folders to populate this bucket.")}
+        isLoading={displayState === "loading" || displayState === "filtered-loading"}
+        emptyTitle={emptyTitle}
+        emptyDescription={emptyDescription}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">

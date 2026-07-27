@@ -19,7 +19,16 @@ test("unknown bucket versioning state never enables force delete", () => {
 test("object deletion stays blocked until versioning state is known", () => {
   assert.match(objectListSource, /setBucketVersioningState\("unknown"\)/)
   assert.match(objectListSource, /versioningError/)
+  assert.match(
+    objectListSource,
+    /if \(isAccessDeniedError\(error\)\) \{\s+setBucketVersioningState\("unknown"\)\s+setVersioningError\(t\("Unable to load versioning status\."\)\)/,
+  )
+  assert.match(objectListSource, /const shouldLoadBucketVersioning = hasPermission\("s3:DeleteObject"\)/)
+  assert.match(objectListSource, /if \(!shouldLoadBucketVersioning\) \{[\s\S]{0,160}return/)
   assert.match(objectListSource, /bucketVersioningState === "unknown"/)
   assert.match(objectListSource, /role=\{versioningError \? "alert" : "status"\}/)
-  assert.doesNotMatch(objectListSource, /catch\s*\{[\s\S]{0,120}setBucketVersioningState\("disabled"\)/)
+  assert.doesNotMatch(
+    objectListSource,
+    /if \(isAccessDeniedError\(error\)\) \{[\s\S]{0,160}setBucketVersioningState\("disabled"\)/,
+  )
 })

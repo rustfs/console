@@ -22,6 +22,7 @@
   "AWS S3": "AWS S3",
   "Access Control": "Kontrol Akses",
   "Access Denied": "Akses Ditolak",
+  "Ask your administrator to grant permission to list objects in this bucket.": "Minta administrator Anda memberikan izin untuk mencantumkan objek dalam bucket ini.",
   "Access Key": "Access Key",
   "Access Key *": "Access Key *",
   "Access Key is required": "Access Key wajib diisi",

@@ -22,6 +22,7 @@
   "AWS S3": "AWS S3",
   "Access Control": "Control de Acceso",
   "Access Denied": "Acceso Denegado",
+  "Ask your administrator to grant permission to list objects in this bucket.": "Pida a su administrador que conceda permiso para enumerar los objetos de este bucket.",
   "Access Key": "Clave de Acceso",
   "Access Key *": "Clave de Acceso *",
   "Access Key is required": "La clave de acceso es obligatoria",

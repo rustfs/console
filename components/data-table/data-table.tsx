@@ -14,6 +14,7 @@ interface DataTableProps<TData> {
   isLoading?: boolean
   emptyTitle?: string
   emptyDescription?: string
+  emptyAction?: React.ReactNode
   caption?: string
   className?: string
   tableClass?: string
@@ -69,6 +70,7 @@ export function DataTable<TData>({
   isLoading = false,
   emptyTitle = "No data",
   emptyDescription = "There is nothing to display yet.",
+  emptyAction,
   caption,
   className,
   tableClass,
@@ -153,7 +155,9 @@ export function DataTable<TData>({
         ) : (
           <TableRow>
             <TableCell colSpan={visibleColumnCount} className="h-48">
-              <EmptyState title={emptyTitle} description={emptyDescription} />
+              <EmptyState title={emptyTitle} description={emptyDescription}>
+                {emptyAction}
+              </EmptyState>
             </TableCell>
           </TableRow>
         )}

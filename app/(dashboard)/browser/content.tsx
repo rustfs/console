@@ -11,7 +11,6 @@ import { ObjectList } from "@/components/object/list"
 import { ObjectView } from "@/components/object/view"
 import { ObjectInfo } from "@/components/object/info"
 import { ObjectUploadPicker } from "@/components/object/upload-picker"
-import { useBucket } from "@/hooks/use-bucket"
 import { useMessage } from "@/lib/feedback/message"
 import { buildBucketPath } from "@/lib/bucket-path"
 import { useTasks } from "@/contexts/task-context"
@@ -32,7 +31,6 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   const searchParams = useSearchParams()
   const message = useMessage()
   const { canCapability } = usePermissions()
-  const { headBucket } = useBucket()
 
   const isObjectList = keyPath.endsWith("/") || keyPath === ""
   const prefix = keyPath.endsWith("/") ? keyPath : keyPath ? `${keyPath}/` : ""
@@ -45,30 +43,6 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   const [previewObject, setPreviewObject] = React.useState<Record<string, unknown> | null>(null)
   const objectApi = useObject(bucketName)
   const canUploadObjects = canCapability("objects.upload", { bucket: bucketName, prefix })
-
-  React.useEffect(() => {
-    if (!bucketName) return
-    headBucket(bucketName)
-      .then(() => {})
-      .catch((error: unknown) => {
-        const err = error as { $metadata?: { httpStatusCode?: number }; Code?: string; message?: string }
-        const status = err?.$metadata?.httpStatusCode
-        const code = (err?.Code ?? (error as Error)?.message ?? "").toLowerCase()
-        const isAccessDenied =
-          status === 403 ||
-          code === "accessdenied" ||
-          code === "forbidden" ||
-          (typeof code === "string" && (code.includes("access denied") || code.includes("forbidden")))
-        message.error(isAccessDenied ? t("Access Denied") : t("Bucket not found"))
-        const params = new URLSearchParams(searchParams.toString())
-        params.delete("bucket")
-        params.delete("prefix")
-        params.delete("preview")
-        params.delete("previewKey")
-        const query = params.toString()
-        router.push(query ? `/browser?${query}` : "/browser")
-      })
-  }, [bucketName, headBucket, message, router, t, searchParams])
 
   const bucketPath = React.useCallback((path?: string | string[]) => buildBucketPath(bucketName, path), [bucketName])
 

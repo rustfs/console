@@ -22,6 +22,7 @@
   "AWS S3": "AWS S3",
   "Access Control": "访问控制",
   "Access Denied": "无权限访问",
+  "Ask your administrator to grant permission to list objects in this bucket.": "请联系管理员授予列出此存储桶中对象的权限。",
   "Access Key": "访问密钥",
   "Access Key *": "访问密钥 *",
   "Access Key is required": "访问密钥为必填项",

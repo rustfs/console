@@ -13,6 +13,8 @@ interface ObjectListResponseGuardParams {
 }
 
 export type ObjectListDisplayState =
+  | "access-denied"
+  | "error"
   | "loading"
   | "empty"
   | "filtered-loading"
@@ -20,12 +22,15 @@ export type ObjectListDisplayState =
   | "filtered-empty"
   | "content"
 
+export type ObjectListErrorState = Extract<ObjectListDisplayState, "access-denied" | "error"> | null
+
 interface ObjectListDisplayStateParams {
   searchTerm: string
   filteredCount: number
   loadedCount: number
   hasMore: boolean
   loading: boolean
+  error: ObjectListErrorState
 }
 
 export function createObjectListScope(scope: ObjectListScope): ObjectListScope {
@@ -60,7 +65,9 @@ export function resolveObjectListDisplayState({
   loadedCount,
   hasMore,
   loading,
+  error,
 }: ObjectListDisplayStateParams): ObjectListDisplayState {
+  if (error) return error
   if (filteredCount > 0) return "content"
 
   const isFiltering = searchTerm.trim().length > 0

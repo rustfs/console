@@ -53,3 +53,12 @@ test("getXmlErrorMessage prefers detailed XML messages over generic error codes"
     "Object is under COMPLIANCE retention and cannot be deleted until 2026-05-13T00:00:00Z",
   )
 })
+
+test("isAccessDeniedError recognizes S3 access denied responses", async () => {
+  const { isAccessDeniedError } = await loadErrorHandler()
+
+  assert.equal(isAccessDeniedError({ name: "AccessDenied" }), true)
+  assert.equal(isAccessDeniedError({ Code: "Forbidden" }), true)
+  assert.equal(isAccessDeniedError({ $metadata: { httpStatusCode: 403 } }), true)
+  assert.equal(isAccessDeniedError({ name: "NoSuchBucket", $metadata: { httpStatusCode: 404 } }), false)
+})

@@ -22,6 +22,7 @@
   "AWS S3": "AWS S3",
   "Access Control": "アクセス制御",
   "Access Denied": "アクセス拒否",
+  "Ask your administrator to grant permission to list objects in this bucket.": "このバケット内のオブジェクトを一覧表示する権限を管理者に付与してもらってください。",
   "Access Key": "アクセスキー",
   "Access Key *": "アクセスキー *",
   "Access Key is required": "アクセスキーは必須です",

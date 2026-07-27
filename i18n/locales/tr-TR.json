@@ -22,6 +22,7 @@
   "AWS S3": "AWS S3",
   "Access Control": "Erişim Kontrolü",
   "Access Denied": "Erişim Reddedildi",
+  "Ask your administrator to grant permission to list objects in this bucket.": "Yöneticinizden bu bucket içindeki nesneleri listeleme izni vermesini isteyin.",
   "Access Key": "Erişim Anahtarı",
   "Access Key *": "Erişim Anahtarı *",
   "Access Key is required": "Erişim Anahtarı gerekli",

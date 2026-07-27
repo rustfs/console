@@ -129,6 +129,7 @@ test("resolveObjectListDisplayState treats an unfiltered empty response as an em
       loadedCount: 0,
       hasMore: false,
       loading: false,
+      error: null,
     }),
     "empty",
   )
@@ -142,6 +143,7 @@ test("resolveObjectListDisplayState keeps a filtered append request in loading s
       loadedCount: 25,
       hasMore: true,
       loading: true,
+      error: null,
     }),
     "filtered-loading",
   )
@@ -155,6 +157,7 @@ test("resolveObjectListDisplayState reports when unsearched objects remain", () 
       loadedCount: 25,
       hasMore: true,
       loading: false,
+      error: null,
     }),
     "filtered-partial",
   )
@@ -168,6 +171,7 @@ test("resolveObjectListDisplayState reports a final filtered-empty state after a
       loadedCount: 50,
       hasMore: false,
       loading: false,
+      error: null,
     }),
     "filtered-empty",
   )
@@ -181,6 +185,7 @@ test("resolveObjectListDisplayState shows matching rows while more objects load"
       loadedCount: 25,
       hasMore: true,
       loading: true,
+      error: null,
     }),
     "content",
   )
@@ -194,7 +199,36 @@ test("resolveObjectListDisplayState ignores whitespace around the filter term", 
       loadedCount: 0,
       hasMore: false,
       loading: false,
+      error: null,
     }),
     "empty",
+  )
+})
+
+test("resolveObjectListDisplayState prioritizes access denied over previously loaded rows", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "",
+      filteredCount: 25,
+      loadedCount: 25,
+      hasMore: false,
+      loading: false,
+      error: "access-denied",
+    }),
+    "access-denied",
+  )
+})
+
+test("resolveObjectListDisplayState keeps read failures distinct from an empty bucket", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "",
+      filteredCount: 0,
+      loadedCount: 0,
+      hasMore: false,
+      loading: false,
+      error: "error",
+    }),
+    "error",
   )
 })

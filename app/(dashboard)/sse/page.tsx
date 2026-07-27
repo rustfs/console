@@ -545,9 +545,7 @@ export default function SSEPage() {
       if (values.backendType === "static") {
         if (!values.secretKey.trim()) {
           return {
-            error: t(
-              "Please enter the static KMS secret key (base64-encoded 32-byte AES-256 key).",
-            ),
+            error: t("Please enter the static KMS secret key (base64-encoded 32-byte AES-256 key)."),
             field: "secretKey",
           }
         }
@@ -1548,7 +1546,13 @@ export default function SSEPage() {
                     <Button
                       size="sm"
                       onClick={() => setCreateKeyOpen(true)}
-                      disabled={Boolean(activeMutation) || loadingKeys || loadingStatus || Boolean(keysError) || staticKmsReadOnly}
+                      disabled={
+                        Boolean(activeMutation) ||
+                        loadingKeys ||
+                        loadingStatus ||
+                        Boolean(keysError) ||
+                        staticKmsReadOnly
+                      }
                     >
                       <RiAddLine className="size-4" aria-hidden />
                       {t("Create Key")}
@@ -1642,7 +1646,11 @@ export default function SSEPage() {
                                   variant="outline"
                                   className="min-h-11 flex-1 sm:flex-none"
                                   disabled={
-                                    isDefaultKey || Boolean(activeMutation) || loadingStatus || Boolean(keysError) || staticKmsReadOnly
+                                    isDefaultKey ||
+                                    Boolean(activeMutation) ||
+                                    loadingStatus ||
+                                    Boolean(keysError) ||
+                                    staticKmsReadOnly
                                   }
                                   onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}
                                 >
@@ -1654,7 +1662,11 @@ export default function SSEPage() {
                                 variant="destructive"
                                 className="min-h-11 flex-1 sm:flex-none"
                                 disabled={
-                                  isDefaultKey || Boolean(activeMutation) || loadingStatus || Boolean(keysError) || staticKmsReadOnly
+                                  isDefaultKey ||
+                                  Boolean(activeMutation) ||
+                                  loadingStatus ||
+                                  Boolean(keysError) ||
+                                  staticKmsReadOnly
                                 }
                                 onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
                               >

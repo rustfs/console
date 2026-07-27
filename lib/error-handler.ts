@@ -155,6 +155,30 @@ export const getServiceErrorMessage = (error: unknown): string | null => {
   return codeCandidates.find(Boolean) ?? messageCandidates.find(Boolean) ?? null
 }
 
+export const isAccessDeniedError = (error: unknown): boolean => {
+  if (!error || typeof error !== "object") {
+    return false
+  }
+
+  const candidate = error as {
+    name?: unknown
+    code?: unknown
+    Code?: unknown
+    Error?: { Code?: unknown }
+    status?: unknown
+    statusCode?: unknown
+    $metadata?: { httpStatusCode?: unknown }
+  }
+  const statuses = [candidate.status, candidate.statusCode, candidate.$metadata?.httpStatusCode]
+  if (statuses.some((status) => status === 403)) {
+    return true
+  }
+
+  const accessDeniedCodes = new Set(["accessdenied", "forbidden"])
+  const codes = [candidate.name, candidate.code, candidate.Code, candidate.Error?.Code]
+  return codes.some((code) => typeof code === "string" && accessDeniedCodes.has(code.toLowerCase()))
+}
+
 export class ConfigLoadError extends Error {
   code: "INVALID_URL" | "STORAGE_ERROR" | "NETWORK_ERROR" | "UNKNOWN_ERROR"
   originalError?: Error

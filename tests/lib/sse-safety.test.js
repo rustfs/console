@@ -18,7 +18,7 @@ test("SSE status and key reads fail closed with persistent recovery states", () 
   assert.match(source, /statusError \|\| keysError \|\| loadingKeys \|\| loadingStatus/)
   assert.match(
     source,
-    /disabled=\{Boolean\(activeMutation\) \|\| loadingKeys \|\| loadingStatus \|\| Boolean\(keysError\)/,
+    /disabled=\{\s*Boolean\(activeMutation\)\s*\|\|\s*loadingKeys\s*\|\|\s*loadingStatus\s*\|\|\s*Boolean\(keysError\)/,
   )
 })
 

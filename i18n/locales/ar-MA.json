@@ -22,6 +22,7 @@
   "AWS S3": "AWS S3",
   "Access Control": "التحكم في الوصول",
   "Access Denied": "تم رفض الوصول",
+  "Ask your administrator to grant permission to list objects in this bucket.": "اطلب من المسؤول منحك إذن عرض الكائنات في هذه الحاوية.",
   "Access Key": "مفتاح الوصول",
   "Access Key *": "مفتاح الوصول *",
   "Access Key is required": "مفتاح الوصول مطلوب",

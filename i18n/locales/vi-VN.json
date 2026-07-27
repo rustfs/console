@@ -22,6 +22,7 @@
   "AWS S3": "AWS S3",
   "Access Control": "Kiểm soát truy cập",
   "Access Denied": "Truy cập bị từ chối",
+  "Ask your administrator to grant permission to list objects in this bucket.": "Hãy yêu cầu quản trị viên cấp quyền liệt kê các đối tượng trong bucket này.",
   "Access Key": "Khóa truy cập",
   "Access Key *": "Khóa truy cập *",
   "Access Key is required": "Yêu cầu nhập Khóa truy cập",

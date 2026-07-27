@@ -14,8 +14,37 @@ test("object list falls back to an empty table instead of crashing the page on f
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 
   assert.equal(source.includes('console.error("Failed to fetch objects:", error)'), true)
-  assert.equal(source.includes('message.error((error as Error)?.message ?? t("Failed to load objects"))'), true)
+  assert.equal(source.includes('message.error(accessDenied ? t("Access Denied")'), true)
+  assert.equal(source.includes('t("Failed to load objects")'), true)
   assert.equal(source.includes("setData([])"), true)
+})
+
+test("object browser keeps the bucket open and explains missing list permission", () => {
+  const browserSource = fs.readFileSync("app/(dashboard)/browser/content.tsx", "utf8")
+  const listSource = fs.readFileSync("components/object/list.tsx", "utf8")
+
+  assert.equal(browserSource.includes("headBucket(bucketName)"), false)
+  assert.equal(
+    listSource.includes("const [listError, setListError] = React.useState<ObjectListErrorState>(null)"),
+    true,
+  )
+  assert.match(
+    listSource,
+    /if \(accessDenied\) \{\s+setData\(\[\]\)\s+setListError\("access-denied"\)\s+\} else if \(!shouldAppend\)/,
+  )
+  assert.equal(
+    listSource.includes('t("Ask your administrator to grant permission to list objects in this bucket.")'),
+    true,
+  )
+})
+
+test("object list keeps read failures distinct from an empty bucket and offers retry", () => {
+  const source = fs.readFileSync("components/object/list.tsx", "utf8")
+
+  assert.equal(source.includes('setListError("error")'), true)
+  assert.equal(source.includes('displayState === "error"'), true)
+  assert.equal(source.includes("emptyAction={"), true)
+  assert.equal(source.includes("onClick={resetAndFetchObjects}"), true)
 })
 
 test("object list lazy loads additional object batches instead of showing a paginator", () => {

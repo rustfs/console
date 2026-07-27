@@ -47,6 +47,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useApi } from "@/contexts/api-context"
 import { useMessage } from "@/lib/feedback/message"
+import { isAccessDeniedError } from "@/lib/error-handler"
 import { exportFile } from "@/lib/export-file"
 import { getContentType } from "@/lib/mime-types"
 import { formatBytes, formatDateTime } from "@/lib/functions"
@@ -57,6 +58,7 @@ import {
   resolveObjectListDisplayState,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
+  type ObjectListErrorState,
 } from "@/lib/object-list-state"
 import { OBJECT_LIST_DEFAULT_PAGE_SIZE, resolveObjectListPageSize } from "@/lib/object-list-pagination"
 import {
@@ -115,7 +117,7 @@ export function ObjectList({
   const api = useApi()
   const { listObject, getSignedUrl, renameObject } = useObject(bucket)
   const { getBucketVersioning } = useBucket()
-  const { canCapability } = usePermissions()
+  const { canCapability, hasPermission } = usePermissions()
   const addDeleteKeys = useAddDeleteKeys()
   const addDeleteFolder = useAddDeleteFolder()
   const tasks = useTasks()
@@ -129,6 +131,7 @@ export function ObjectList({
   const [bucketVersioningState, setBucketVersioningState] = React.useState<BucketVersioningState>("unknown")
   const [versioningError, setVersioningError] = React.useState("")
   const [versioningReload, setVersioningReload] = React.useState(0)
+  const [listError, setListError] = React.useState<ObjectListErrorState>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [deleteDialogKeys, setDeleteDialogKeys] = React.useState<string[]>([])
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
@@ -151,6 +154,7 @@ export function ObjectList({
   )
   const canBulkDelete = canCapability("objects.bulkDelete", { bucket, prefix })
   const canBulkDownload = canCapability("objects.download", { bucket, prefix })
+  const shouldLoadBucketVersioning = hasPermission("s3:DeleteObject")
 
   const bucketPath = React.useCallback((p?: string | string[]) => buildBucketPath(bucket, p), [bucket])
   const requestIdRef = React.useRef(0)
@@ -203,6 +207,9 @@ export function ObjectList({
       const requestScope = activeScopeRef.current
       loadingRef.current = true
       setLoading(true)
+      if (!shouldAppend) {
+        setListError(null)
+      }
       try {
         const response = await listObject(bucket, prefix || undefined, resolvedPageSize, token, {
           includeDeleted: showDeleted,
@@ -249,7 +256,6 @@ export function ObjectList({
         }
       } catch (error) {
         console.error("Failed to fetch objects:", error)
-        message.error((error as Error)?.message ?? t("Failed to load objects"))
         if (
           shouldApplyObjectListResponse({
             requestId,
@@ -258,9 +264,15 @@ export function ObjectList({
             activeScope: activeScopeRef.current,
           })
         ) {
+          const accessDenied = isAccessDeniedError(error)
+          message.error(accessDenied ? t("Access Denied") : ((error as Error)?.message ?? t("Failed to load objects")))
           setNextToken(undefined)
-          if (!shouldAppend) {
+          if (accessDenied) {
             setData([])
+            setListError("access-denied")
+          } else if (!shouldAppend) {
+            setData([])
+            setListError("error")
           }
         }
       } finally {
@@ -323,6 +335,12 @@ export function ObjectList({
   }, [tasks, resetAndFetchObjects])
 
   React.useEffect(() => {
+    if (!shouldLoadBucketVersioning) {
+      setBucketVersioningState("unknown")
+      setVersioningError("")
+      return
+    }
+
     let cancelled = false
 
     const loadBucketVersioningStatus = async () => {
@@ -337,8 +355,13 @@ export function ObjectList({
       } catch (error) {
         console.error("Failed to load bucket versioning status:", error)
         if (!cancelled) {
-          setBucketVersioningState("unknown")
-          setVersioningError(t("Failed to get data"))
+          if (isAccessDeniedError(error)) {
+            setBucketVersioningState("unknown")
+            setVersioningError(t("Unable to load versioning status."))
+          } else {
+            setBucketVersioningState("unknown")
+            setVersioningError(t("Failed to get data"))
+          }
         }
       }
     }
@@ -348,7 +371,7 @@ export function ObjectList({
     return () => {
       cancelled = true
     }
-  }, [bucket, getBucketVersioning, t, versioningReload])
+  }, [bucket, getBucketVersioning, shouldLoadBucketVersioning, t, versioningReload])
 
   const displayKey = React.useCallback(
     (key: string) => {
@@ -374,18 +397,29 @@ export function ObjectList({
     loadedCount: data.length,
     hasMore: Boolean(nextToken),
     loading,
+    error: listError,
   })
   const filteredEmptyState = displayState === "filtered-partial" || displayState === "filtered-empty"
-  const emptyTitle = filteredEmptyState
-    ? t(displayState === "filtered-partial" ? "No matches in loaded objects" : "No matching objects")
-    : t("No Objects")
-  const emptyDescription = filteredEmptyState
-    ? t(
-        displayState === "filtered-partial"
-          ? "More objects have not been searched yet."
-          : "No loaded objects match this filter.",
-      )
-    : t("Upload files or create folders to populate this bucket.")
+  const emptyTitle =
+    displayState === "access-denied"
+      ? t("Access Denied")
+      : displayState === "error"
+        ? t("Failed to load objects")
+        : filteredEmptyState
+          ? t(displayState === "filtered-partial" ? "No matches in loaded objects" : "No matching objects")
+          : t("No Objects")
+  const emptyDescription =
+    displayState === "access-denied"
+      ? t("Ask your administrator to grant permission to list objects in this bucket.")
+      : displayState === "error"
+        ? t("Refresh to try again.")
+        : filteredEmptyState
+          ? t(
+              displayState === "filtered-partial"
+                ? "More objects have not been searched yet."
+                : "No loaded objects match this filter.",
+            )
+          : t("Upload files or create folders to populate this bucket.")
 
   const downloadFile = React.useCallback(
     async (key: string) => {
@@ -824,7 +858,7 @@ export function ObjectList({
         </div>
       </PageHeader>
 
-      {bucketVersioningState === "unknown" ? (
+      {shouldLoadBucketVersioning && !listError && bucketVersioningState === "unknown" ? (
         <div
           id="object-versioning-status"
           role={versioningError ? "alert" : "status"}
@@ -852,16 +886,26 @@ export function ObjectList({
         isLoading={displayState === "loading" || displayState === "filtered-loading"}
         emptyTitle={emptyTitle}
         emptyDescription={emptyDescription}
+        emptyAction={
+          displayState === "error" ? (
+            <Button type="button" variant="outline" onClick={resetAndFetchObjects}>
+              <RiRefreshLine className="size-4" aria-hidden />
+              {t("Refresh")}
+            </Button>
+          ) : undefined
+        }
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <span>
-          {t("Loaded {count} objects", {
-            count: data.length,
-          })}
-        </span>
-        <span>{t("Filtering and sorting apply to loaded objects")}</span>
-      </div>
+      {!listError ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+          <span>
+            {t("Loaded {count} objects", {
+              count: data.length,
+            })}
+          </span>
+          <span>{t("Filtering and sorting apply to loaded objects")}</span>
+        </div>
+      ) : null}
 
       {nextToken ? (
         <div ref={loadMoreRef} className="flex min-h-10 items-center justify-center text-sm text-muted-foreground">

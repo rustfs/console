@@ -174,7 +174,7 @@ function PerformanceStatusSourcesContent({
       troubleshooting: t(
         "Correlate time-windowed walk_dir metrics and metacache logs before treating listing symptoms as a disk failure.",
       ),
-      troubleshootingHref: "https://github.com/rustfs/backlog/issues/1392#issuecomment-5040442761",
+      troubleshootingHref: "https://docs.rustfs.com/operations/monitoring",
     },
     { label: t("Workload Admission"), diagnostic: diagnostics.workloadAdmission },
   ]

@@ -105,7 +105,7 @@ test("status sections expose semantic headings and named progress", () => {
   assert.match(statusSourcesSource, /Workload Admission/)
   assert.match(statusSourcesSource, /Not reported/)
   assert.match(statusSourcesSource, /Historical internode stall timeouts/)
-  assert.match(statusSourcesSource, /issuecomment-5040442761/)
+  assert.match(statusSourcesSource, /https:\/\/docs\.rustfs\.com\/operations\/monitoring/)
   assert.match(statusSourcesSource, /<Badge/)
   assert.match(statusSourcesSource, /<Separator/)
   assert.match(statusSourcesSource, /Correlate time-windowed walk_dir metrics and metacache logs/)

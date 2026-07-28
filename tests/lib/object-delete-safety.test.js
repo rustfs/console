@@ -18,8 +18,7 @@ test("unknown bucket versioning state never enables force delete", () => {
 
 test("object deletion stays blocked until versioning state is known", () => {
   assert.match(objectListSource, /setBucketVersioningState\("unknown"\)/)
-  assert.match(objectListSource, /versioningError/)
   assert.match(objectListSource, /bucketVersioningState === "unknown"/)
-  assert.match(objectListSource, /role=\{versioningError \? "alert" : "status"\}/)
+  assert.doesNotMatch(objectListSource, /object-versioning-status/)
   assert.doesNotMatch(objectListSource, /catch\s*\{[\s\S]{0,120}setBucketVersioningState\("disabled"\)/)
 })

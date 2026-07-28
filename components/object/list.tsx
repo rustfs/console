@@ -87,6 +87,21 @@ interface ObjectRow {
   LastModified: string
 }
 
+type ObjectListError = "accessDenied" | "loadFailed"
+
+function isAccessDeniedError(error: unknown): boolean {
+  const serviceError = error as {
+    $metadata?: { httpStatusCode?: number }
+    Code?: string
+    name?: string
+    message?: string
+  }
+  if (serviceError?.$metadata?.httpStatusCode === 403) return true
+
+  const code = (serviceError?.Code ?? serviceError?.name ?? serviceError?.message ?? "").toLowerCase()
+  return code === "accessdenied" || code === "forbidden" || code.includes("access denied")
+}
+
 interface ObjectListProps {
   bucket: string
   path: string
@@ -123,12 +138,11 @@ export function ObjectList({
   const [searchTerm, setSearchTerm] = React.useState("")
   const [showDeleted, setShowDeleted] = useLocalStorage("object-list-show-deleted", false)
   const [loading, setLoading] = React.useState(false)
+  const [listError, setListError] = React.useState<ObjectListError | null>(null)
   const [data, setData] = React.useState<ObjectRow[]>([])
   const [nextToken, setNextToken] = React.useState<string | undefined>()
   const [showScrollShortcuts, setShowScrollShortcuts] = React.useState(false)
   const [bucketVersioningState, setBucketVersioningState] = React.useState<BucketVersioningState>("unknown")
-  const [versioningError, setVersioningError] = React.useState("")
-  const [versioningReload, setVersioningReload] = React.useState(0)
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [deleteDialogKeys, setDeleteDialogKeys] = React.useState<string[]>([])
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
@@ -203,6 +217,7 @@ export function ObjectList({
       const requestScope = activeScopeRef.current
       loadingRef.current = true
       setLoading(true)
+      if (!shouldAppend) setListError(null)
       try {
         const response = await listObject(bucket, prefix || undefined, resolvedPageSize, token, {
           includeDeleted: showDeleted,
@@ -226,6 +241,7 @@ export function ObjectList({
         }
 
         setNextToken(r.NextContinuationToken)
+        setListError(null)
 
         const prefixItems: ObjectRow[] = (r.CommonPrefixes ?? []).map((item) => ({
           Key: item.Prefix ?? "",
@@ -261,6 +277,7 @@ export function ObjectList({
           setNextToken(undefined)
           if (!shouldAppend) {
             setData([])
+            setListError(isAccessDeniedError(error) ? "accessDenied" : "loadFailed")
           }
         }
       } finally {
@@ -327,7 +344,6 @@ export function ObjectList({
 
     const loadBucketVersioningStatus = async () => {
       setBucketVersioningState("unknown")
-      setVersioningError("")
 
       try {
         const resp = await getBucketVersioning(bucket)
@@ -338,7 +354,6 @@ export function ObjectList({
         console.error("Failed to load bucket versioning status:", error)
         if (!cancelled) {
           setBucketVersioningState("unknown")
-          setVersioningError(t("Failed to get data"))
         }
       }
     }
@@ -348,7 +363,7 @@ export function ObjectList({
     return () => {
       cancelled = true
     }
-  }, [bucket, getBucketVersioning, t, versioningReload])
+  }, [bucket, getBucketVersioning])
 
   const displayKey = React.useCallback(
     (key: string) => {
@@ -531,7 +546,6 @@ export function ObjectList({
                 size="sm"
                 onClick={() => openDeleteDialog([row.original.Key])}
                 disabled={bucketVersioningState === "unknown"}
-                aria-describedby={bucketVersioningState === "unknown" ? "object-versioning-status" : undefined}
               >
                 <RiDeleteBin5Line className="size-4" aria-hidden />
                 <span>{t("Delete")}</span>
@@ -781,7 +795,6 @@ export function ObjectList({
                     className="border-destructive text-destructive"
                     onClick={handleBatchDelete}
                     disabled={bucketVersioningState === "unknown"}
-                    aria-describedby={bucketVersioningState === "unknown" ? "object-versioning-status" : undefined}
                   >
                     <RiDeleteBin5Line className="size-4" aria-hidden />
                     <span>{t("Delete Selected")}</span>
@@ -824,44 +837,30 @@ export function ObjectList({
         </div>
       </PageHeader>
 
-      {bucketVersioningState === "unknown" ? (
-        <div
-          id="object-versioning-status"
-          role={versioningError ? "alert" : "status"}
-          className="flex flex-col gap-3 border border-border bg-muted/30 p-3 text-sm sm:flex-row sm:items-center sm:justify-between"
-        >
-          <span className={versioningError ? "text-destructive" : "text-muted-foreground"}>
-            {versioningError || t("Loading…")}
-          </span>
-          {versioningError ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full sm:w-auto"
-              onClick={() => setVersioningReload((value) => value + 1)}
-            >
-              <RiRefreshLine className="size-4" aria-hidden />
-              {t("Refresh")}
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-
       <DataTable
         table={table}
         isLoading={displayState === "loading" || displayState === "filtered-loading"}
+        errorTitle={
+          listError === "accessDenied"
+            ? t("Access Denied")
+            : listError === "loadFailed"
+              ? t("Failed to load objects")
+              : undefined
+        }
         emptyTitle={emptyTitle}
         emptyDescription={emptyDescription}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-        <span>
-          {t("Loaded {count} objects", {
-            count: data.length,
-          })}
-        </span>
-        <span>{t("Filtering and sorting apply to loaded objects")}</span>
-      </div>
+      {!listError ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+          <span>
+            {t("Loaded {count} objects", {
+              count: data.length,
+            })}
+          </span>
+          <span>{t("Filtering and sorting apply to loaded objects")}</span>
+        </div>
+      ) : null}
 
       {nextToken ? (
         <div ref={loadMoreRef} className="flex min-h-10 items-center justify-center text-sm text-muted-foreground">

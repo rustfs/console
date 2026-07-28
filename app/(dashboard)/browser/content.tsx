@@ -18,6 +18,7 @@ import { useTasks } from "@/contexts/task-context"
 import { ObjectPreviewModal } from "@/components/object/preview-modal"
 import { useObject } from "@/hooks/use-object"
 import { usePermissions } from "@/hooks/use-permissions"
+import { isMissingBucketError } from "@/lib/bucket-access"
 
 interface BrowserContentProps {
   bucketName: string
@@ -51,15 +52,9 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
     headBucket(bucketName)
       .then(() => {})
       .catch((error: unknown) => {
-        const err = error as { $metadata?: { httpStatusCode?: number }; Code?: string; message?: string }
-        const status = err?.$metadata?.httpStatusCode
-        const code = (err?.Code ?? (error as Error)?.message ?? "").toLowerCase()
-        const isAccessDenied =
-          status === 403 ||
-          code === "accessdenied" ||
-          code === "forbidden" ||
-          (typeof code === "string" && (code.includes("access denied") || code.includes("forbidden")))
-        message.error(isAccessDenied ? t("Access Denied") : t("Bucket not found"))
+        if (!isMissingBucketError(error)) return
+
+        message.error(t("Bucket not found"))
         const params = new URLSearchParams(searchParams.toString())
         params.delete("bucket")
         params.delete("prefix")

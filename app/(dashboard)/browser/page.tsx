@@ -21,6 +21,7 @@ import { useMessage } from "@/lib/feedback/message"
 import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { getAccountBucketUsage } from "@/lib/account-bucket-usage"
+import { loadBucketPolicyStatuses } from "@/lib/bucket-policy-status"
 import { BrowserContent } from "./content"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -58,26 +59,13 @@ function BrowserBucketsPage() {
       }
 
       try {
-        const results = await Promise.all(
-          bucketNames.map(async (name) => {
-            try {
-              const resp = (await getBucketPolicyStatus(name)) as {
-                PolicyStatus?: { IsPublic?: boolean }
-              }
-              return { name, isPublic: resp?.PolicyStatus?.IsPublic === true }
-            } catch {
-              return { name, isPublic: false }
-            }
-          }),
-        )
+        const policyMap = await loadBucketPolicyStatuses(bucketNames, getBucketPolicyStatus)
         if (fetchId !== fetchIdRef.current) return
-
-        const policyMap = Object.fromEntries(results.map((r) => [r.name, r.isPublic]))
 
         setData((prev) =>
           prev.map((row) => ({
             ...row,
-            IsPublic: policyMap[row.Name] ?? false,
+            IsPublic: policyMap[row.Name],
           })),
         )
       } catch {
@@ -226,7 +214,7 @@ function BrowserBucketsPage() {
           <span className="text-muted-foreground">{t("Private")}</span>
         )
       }
-      return policyLoading ? <Spinner className="size-3 text-muted-foreground" /> : "--"
+      return policyLoading ? <Spinner className="size-3 text-muted-foreground" /> : "-"
     },
   })
 

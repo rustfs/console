@@ -10,12 +10,16 @@ test("object list normalizes LastModified through the safe date helper", () => {
   assert.equal(source.includes('item.LastModified ? item.LastModified.toISOString() : ""'), false)
 })
 
-test("object list falls back to an empty table instead of crashing the page on fetch errors", () => {
+test("object list distinguishes access errors from a confirmed empty bucket", () => {
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 
   assert.equal(source.includes('console.error("Failed to fetch objects:", error)'), true)
   assert.equal(source.includes('message.error((error as Error)?.message ?? t("Failed to load objects"))'), true)
   assert.equal(source.includes("setData([])"), true)
+  assert.equal(source.includes('setListError(isAccessDeniedError(error) ? "accessDenied" : "loadFailed")'), true)
+  assert.equal(source.includes('listError === "accessDenied"'), true)
+  assert.equal(source.includes('t("Access Denied")'), true)
+  assert.equal(source.includes("{!listError ? ("), true)
 })
 
 test("object list lazy loads additional object batches instead of showing a paginator", () => {

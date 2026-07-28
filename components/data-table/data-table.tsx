@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils"
 interface DataTableProps<TData> {
   table: Table<TData>
   isLoading?: boolean
+  errorTitle?: string
+  errorDescription?: string
   emptyTitle?: string
   emptyDescription?: string
   caption?: string
@@ -67,6 +69,8 @@ function getAriaSort<TData>(column: Column<TData, unknown>): React.AriaAttribute
 export function DataTable<TData>({
   table,
   isLoading = false,
+  errorTitle,
+  errorDescription,
   emptyTitle = "No data",
   emptyDescription = "There is nothing to display yet.",
   caption,
@@ -129,6 +133,14 @@ export function DataTable<TData>({
               <div className="flex flex-col items-center gap-2">
                 <Spinner className="size-6" />
                 <span className="text-sm text-muted-foreground">Loading…</span>
+              </div>
+            </TableCell>
+          </TableRow>
+        ) : errorTitle ? (
+          <TableRow>
+            <TableCell colSpan={visibleColumnCount} className="h-48">
+              <div role="alert">
+                <EmptyState title={errorTitle} description={errorDescription} />
               </div>
             </TableCell>
           </TableRow>

@@ -1592,5 +1592,7 @@
   "Transition job started": "Transition job started",
   "Transitioned": "Transitioned",
   "Unable to cancel transition job": "Unable to cancel transition job",
-  "Unable to load transition job": "Unable to load transition job"
+  "Unable to load transition job": "Unable to load transition job",
+  "Local KMS is intended for evaluation only. Keys created without a server-managed master key are stored using plaintext development mode. Do not use this backend for production data.": "Local KMS hanya ditujukan untuk evaluasi. Kunci yang dibuat tanpa kunci utama yang dikelola server disimpan dalam mode pengembangan teks biasa. Jangan gunakan backend ini untuk data produksi.",
+  "Local KMS is intended for evaluation only. The key directory and file permissions are locked after configuration; changing or rotating the local master key is not supported.": "Local KMS hanya ditujukan untuk evaluasi. Direktori kunci dan izin file dikunci setelah konfigurasi; perubahan atau rotasi kunci utama lokal tidak didukung."
 }

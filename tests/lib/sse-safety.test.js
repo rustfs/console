@@ -18,7 +18,7 @@ test("SSE status and key reads fail closed with persistent recovery states", () 
   assert.match(source, /statusError \|\| keysError \|\| loadingKeys \|\| loadingStatus/)
   assert.match(
     source,
-    /disabled=\{Boolean\(activeMutation\) \|\| loadingKeys \|\| loadingStatus \|\| Boolean\(keysError\)/,
+    /disabled=\{\s*Boolean\(activeMutation\) \|\|\s*loadingKeys \|\|\s*loadingStatus \|\|\s*Boolean\(keysError\)/,
   )
 })
 
@@ -49,14 +49,19 @@ test("default-key creation uses a safe status baseline and clears secrets after 
   assert.doesNotMatch(source, /if \(current\.vaultToken && next\.backendType !== "local"\)/)
 })
 
-test("Local KMS cannot be reconfigured until the backend supports safe secret rotation", () => {
+test("Local KMS remains evaluation-only while safe fields can be reconfigured", () => {
   assert.match(source, /backendType: "vault-transit"/)
-  assert.match(source, /const localKmsReadOnly = hasConfiguration && formState\.backendType === "local"/)
+  assert.match(source, /const localKmsConfigured = hasConfiguration && status\?\.backend_type === "Local"/)
+  assert.match(source, /backend_type: "Local"/)
+  assert.match(source, /allow_insecure_dev_defaults: !hasStoredLocalMasterKey/)
+  assert.match(source, /localKmsConfigured && !hasStoredLocalFilePermissions \? undefined/)
+  assert.match(source, /disabled=\{formDisabled \|\| localKmsConfigured\}/)
   assert.match(
     source,
-    /Local filesystem KMS configuration is read-only in Console until safe master-key rotation is available\./,
+    /Local KMS is intended for evaluation only\. Keys created without a server-managed master key are stored using plaintext development mode\. Do not use this backend for production data\./,
   )
-  assert.match(source, /<SelectItem value="local" disabled>/)
+  assert.match(source, /<SelectItem value="local">/)
+  assert.doesNotMatch(source, /const localKmsReadOnly/)
   assert.doesNotMatch(source, /master_key: values\./)
   assert.doesNotMatch(source, /id="localMasterKey"/)
 })

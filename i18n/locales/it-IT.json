@@ -1592,5 +1592,7 @@
   "Transition job started": "Transition job started",
   "Transitioned": "Transitioned",
   "Unable to cancel transition job": "Unable to cancel transition job",
-  "Unable to load transition job": "Unable to load transition job"
+  "Unable to load transition job": "Unable to load transition job",
+  "Local KMS is intended for evaluation only. Keys created without a server-managed master key are stored using plaintext development mode. Do not use this backend for production data.": "Local KMS è destinato esclusivamente alla valutazione. Le chiavi create senza una chiave master gestita dal server vengono archiviate in modalità di sviluppo in chiaro. Non utilizzare questo backend per dati di produzione.",
+  "Local KMS is intended for evaluation only. The key directory and file permissions are locked after configuration; changing or rotating the local master key is not supported.": "Local KMS è destinato esclusivamente alla valutazione. La directory delle chiavi e i permessi dei file vengono bloccati dopo la configurazione; la modifica o rotazione della chiave master locale non è supportata."
 }

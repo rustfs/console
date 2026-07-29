@@ -1592,5 +1592,7 @@
   "Transition job started": "迁移任务已启动",
   "Transitioned": "已迁移",
   "Unable to cancel transition job": "无法取消迁移任务",
-  "Unable to load transition job": "无法加载迁移任务"
+  "Unable to load transition job": "无法加载迁移任务",
+  "Local KMS is intended for evaluation only. Keys created without a server-managed master key are stored using plaintext development mode. Do not use this backend for production data.": "Local KMS 仅用于体验。未由服务端主密钥保护的密钥会以明文开发模式存储，请勿将此后端用于生产数据。",
+  "Local KMS is intended for evaluation only. The key directory and file permissions are locked after configuration; changing or rotating the local master key is not supported.": "Local KMS 仅用于体验。配置后密钥目录和文件权限将被锁定；当前不支持更改或轮换本地主密钥。"
 }

@@ -1594,5 +1594,12 @@
   "Unable to cancel transition job": "Unable to cancel transition job",
   "Unable to load transition job": "Unable to load transition job",
   "Local KMS is intended for evaluation only. Keys created without a server-managed master key are stored using plaintext development mode. Do not use this backend for production data.": "Local KMS chỉ dành cho mục đích đánh giá. Các khóa được tạo mà không có khóa chính do máy chủ quản lý sẽ được lưu ở dạng văn bản thuần trong chế độ phát triển. Không sử dụng backend này cho dữ liệu sản xuất.",
-  "Local KMS is intended for evaluation only. The key directory and file permissions are locked after configuration; changing or rotating the local master key is not supported.": "Local KMS chỉ dành cho mục đích đánh giá. Thư mục khóa và quyền tệp sẽ bị khóa sau khi cấu hình; việc thay đổi hoặc xoay vòng khóa chính cục bộ không được hỗ trợ."
+  "Local KMS is intended for evaluation only. The key directory and file permissions are locked after configuration; changing or rotating the local master key is not supported.": "Local KMS chỉ dành cho mục đích đánh giá. Thư mục khóa và quyền tệp sẽ bị khóa sau khi cấu hình; việc thay đổi hoặc xoay vòng khóa chính cục bộ không được hỗ trợ.",
+  "KMS configuration changed": "KMS configuration changed",
+  "KMS configuration changed on the server. Reset the form to the current status before saving.": "KMS configuration changed on the server. Reset the form to the current status before saving.",
+  "Unsupported KMS backend": "Unsupported KMS backend",
+  "This KMS backend is not supported by this Console version. Upgrade Console before reconfiguring KMS.": "This KMS backend is not supported by this Console version. Upgrade Console before reconfiguring KMS.",
+  "Console cannot safely edit a newer or unknown KMS backend type.": "Console cannot safely edit a newer or unknown KMS backend type.",
+  "Local KMS key files must use owner-only permissions such as 384 for 0o600.": "Local KMS key files must use owner-only permissions such as 384 for 0o600.",
+  "Key created but could not update the default SSE key. The new key ID has been placed in the default key field so you can retry saving the configuration.": "Key created but could not update the default SSE key. The new key ID has been placed in the default key field so you can retry saving the configuration."
 }

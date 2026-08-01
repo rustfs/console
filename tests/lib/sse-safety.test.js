@@ -27,7 +27,8 @@ test("SSE mutations use one synchronous lock and block unresolved configuration 
   assert.match(source, /beginMutation/)
   assert.match(source, /if \(statusError \|\| loadingStatus\)/)
   assert.match(source, /const mutationLocked = Boolean\(activeMutation \|\| statusError \|\| loadingStatus\)/)
-  assert.match(source, /const formDisabled = mutationLocked \|\| loadingStatus \|\| submittingConfig/)
+  assert.match(source, /const formDisabled =\s+mutationLocked/)
+  assert.match(source, /Boolean\(configBaselineConflict\)/)
   assert.match(source, /disabled=\{formDisabled\}/)
 })
 
@@ -43,18 +44,20 @@ test("default key protection rechecks current status before destructive actions"
 
 test("default-key creation uses a safe status baseline and clears secrets after status sync", () => {
   assert.match(source, /submitConfiguration\(createdKeyId, "defaultKey", buildFormStateFromStatus\(status\)\)/)
-  assert.match(source, /const nextFormState = buildFormStateFromStatus\(res\)/)
+  assert.match(source, /const nextFormState = buildFormStateFromStatus\(nextStatus\)/)
   assert.match(source, /setFormState\(nextFormState\)/)
   assert.match(source, /setFormState\(\(current\) => \(\{ \.\.\.current, vaultToken: "" \}\)\)/)
   assert.doesNotMatch(source, /if \(current\.vaultToken && next\.backendType !== "local"\)/)
 })
 
 test("Local KMS remains evaluation-only while safe fields can be reconfigured", () => {
-  assert.match(source, /backendType: "vault-transit"/)
+  assert.match(source, /INITIAL_FORM_STATE/)
   assert.match(source, /const localKmsConfigured = hasConfiguration && status\?\.backend_type === "Local"/)
   assert.match(source, /backend_type: "Local"/)
   assert.match(source, /allow_insecure_dev_defaults: !hasStoredLocalMasterKey/)
   assert.match(source, /localKmsConfigured && !hasStoredLocalFilePermissions \? undefined/)
+  assert.match(source, /isSafeLocalFilePermissions\(filePermissions\)/)
+  assert.match(source, /Local KMS key files must use owner-only permissions such as 384 for 0o600\./)
   assert.match(source, /disabled=\{formDisabled \|\| localKmsConfigured\}/)
   assert.match(
     source,
@@ -64,6 +67,22 @@ test("Local KMS remains evaluation-only while safe fields can be reconfigured", 
   assert.doesNotMatch(source, /const localKmsReadOnly/)
   assert.doesNotMatch(source, /master_key: values\./)
   assert.doesNotMatch(source, /id="localMasterKey"/)
+})
+
+test("created default-key recovery keeps the key id visible after reconfigure failure", () => {
+  assert.match(source, /const recoveryMessage = t\(/)
+  assert.match(source, /setFormState\(\(current\) => \(\{ \.\.\.current, defaultKeyId: createdKeyId \}\)\)/)
+  assert.match(source, /setConfigFormErrorField\("defaultKeyId"\)/)
+  assert.match(source, /The new key ID has been placed in the default key field/)
+})
+
+test("unsupported KMS backends fail closed and require a current baseline before saving", () => {
+  assert.match(source, /formState\.backendType === "unsupported"/)
+  assert.match(source, /<SelectItem value="unsupported" disabled>/)
+  assert.match(source, /This KMS backend is not supported by this Console version/)
+  assert.match(source, /getFormSyncDecision/)
+  assert.match(source, /KMS configuration changed on the server\. Reset the form to the current status before saving\./)
+  assert.match(source, /setConfigBaselineConflict\(null\)/)
 })
 
 test("SSE form and dialogs stay reachable on narrow screens", () => {

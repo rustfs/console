@@ -41,6 +41,13 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { useSSE } from "@/hooks/use-sse"
 import { useMessage } from "@/lib/feedback/message"
 import { formatDateTime } from "@/lib/functions"
+import {
+  INITIAL_FORM_STATE,
+  buildFormStateFromStatus,
+  getFormSyncDecision,
+  isSafeLocalFilePermissions,
+  type ConfigFormState,
+} from "@/lib/sse/config"
 import type { KmsConfigPayload, KmsKeyInfo, KmsKeyMetadata, KmsServiceStatusResponse } from "@/types/kms"
 import {
   AlertDialog,
@@ -63,27 +70,6 @@ const ADVANCED_CONFIG_FIELDS = new Set([
   "cacheTtlSeconds",
 ])
 
-type ConfigFormState = {
-  backendType: "local" | "vault-kv2" | "vault-transit" | "static"
-  keyDir: string
-  filePermissions: string
-  defaultKeyId: string
-  timeoutSeconds: string
-  retryAttempts: string
-  enableCache: boolean
-  maxCachedKeys: string
-  cacheTtlSeconds: string
-  address: string
-  vaultToken: string
-  namespace: string
-  mountPath: string
-  kvMount: string
-  keyPathPrefix: string
-  skipTlsVerify: boolean
-  secretKey: string
-  staticKeyId: string
-}
-
 type KeyActionState = {
   type: "scheduleDelete" | "forceDelete" | "cancelDeletion"
   key: KmsKeyInfo
@@ -93,27 +79,6 @@ type PendingNavigation = {
   destination?: string
   historyDelta?: number
 } | null
-
-const INITIAL_FORM_STATE: ConfigFormState = {
-  backendType: "vault-transit",
-  keyDir: "",
-  filePermissions: "384",
-  defaultKeyId: "",
-  timeoutSeconds: "30",
-  retryAttempts: "3",
-  enableCache: true,
-  maxCachedKeys: "1000",
-  cacheTtlSeconds: "3600",
-  address: "",
-  vaultToken: "",
-  namespace: "",
-  mountPath: "transit",
-  kvMount: "secret",
-  keyPathPrefix: "rustfs/kms/keys",
-  skipTlsVerify: false,
-  secretKey: "",
-  staticKeyId: "",
-}
 
 function getStatusKind(status: KmsServiceStatusResponse | null): "NotConfigured" | "Configured" | "Running" | "Error" {
   if (!status?.status) return "NotConfigured"
@@ -151,50 +116,6 @@ function parseOptionalInteger(value: string) {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
-function normalizeBackendType(value?: string | null): ConfigFormState["backendType"] {
-  switch (value) {
-    case "Vault":
-    case "VaultKV2":
-      return "vault-kv2"
-    case "VaultTransit":
-      return "vault-transit"
-    case "Static":
-      return "static"
-    default:
-      return "local"
-  }
-}
-
-function buildFormStateFromStatus(status: KmsServiceStatusResponse | null): ConfigFormState {
-  if (!status) return INITIAL_FORM_STATE
-
-  const summary = status.config_summary
-  const backendSummary = summary?.backend_summary
-  const cacheSummary = summary?.cache_summary
-  const backendType = normalizeBackendType(status.backend_type ?? summary?.backend_type)
-
-  return {
-    backendType,
-    keyDir: backendSummary?.key_dir ?? "",
-    filePermissions: String(backendSummary?.file_permissions ?? 384),
-    defaultKeyId: summary?.default_key_id ?? "",
-    timeoutSeconds: String(summary?.timeout_seconds ?? 30),
-    retryAttempts: String(summary?.retry_attempts ?? 3),
-    enableCache: summary?.enable_cache ?? cacheSummary?.enabled ?? true,
-    maxCachedKeys: String(summary?.max_cached_keys ?? cacheSummary?.max_keys ?? 1000),
-    cacheTtlSeconds: String(summary?.cache_ttl_seconds ?? cacheSummary?.ttl_seconds ?? 3600),
-    address: backendSummary?.address ?? "",
-    vaultToken: "",
-    namespace: backendSummary?.namespace ?? "",
-    mountPath: backendSummary?.mount_path ?? "transit",
-    kvMount: backendSummary?.kv_mount ?? "secret",
-    keyPathPrefix: backendSummary?.key_path_prefix ?? "rustfs/kms/keys",
-    secretKey: "",
-    staticKeyId: backendSummary?.key_id ?? "",
-    skipTlsVerify: backendSummary?.skip_tls_verify ?? false,
-  }
-}
-
 export default function SSEPage() {
   const { t } = useTranslation()
   const message = useMessage()
@@ -220,6 +141,9 @@ export default function SSEPage() {
   const [baselineFormState, setBaselineFormState] = React.useState<ConfigFormState>(INITIAL_FORM_STATE)
   const [configFormError, setConfigFormError] = React.useState<string | null>(null)
   const [configFormErrorField, setConfigFormErrorField] = React.useState<string | null>(null)
+  const [configBaselineConflict, setConfigBaselineConflict] = React.useState<string | null>(null)
+  const formStateRef = React.useRef(formState)
+  const baselineFormStateRef = React.useRef(baselineFormState)
   const advancedSettingsRef = React.useRef<HTMLDetailsElement>(null)
   const [loadingStatus, setLoadingStatus] = React.useState(false)
   const [refreshingStatus, setRefreshingStatus] = React.useState(false)
@@ -273,9 +197,43 @@ export default function SSEPage() {
   const statusKind = React.useMemo(() => (statusError ? "Error" : getStatusKind(status)), [status, statusError])
   const isRunning = statusKind === "Running"
   const hasConfiguration = !statusError && statusKind !== "NotConfigured"
+  const localKmsConfigured = hasConfiguration && status?.backend_type === "Local"
   const hasStoredVaultCredentials = status?.config_summary?.backend_summary?.has_stored_credentials === true
+  const hasStoredLocalMasterKey = status?.config_summary?.backend_summary?.has_master_key === true
+  const hasStoredLocalFilePermissions = status?.config_summary?.backend_summary?.file_permissions != null
   const statusBadgeValue =
     statusKind === "Error" ? "Error" : typeof status?.status === "string" ? status.status : statusKind
+
+  React.useEffect(() => {
+    formStateRef.current = formState
+  }, [formState])
+
+  React.useEffect(() => {
+    baselineFormStateRef.current = baselineFormState
+  }, [baselineFormState])
+
+  const applyStatusToForm = React.useCallback(
+    (nextStatus: KmsServiceStatusResponse | null, force = false) => {
+      const nextFormState = buildFormStateFromStatus(nextStatus)
+      const decision = force
+        ? "sync"
+        : getFormSyncDecision(formStateRef.current, baselineFormStateRef.current, nextFormState)
+
+      if (decision === "sync") {
+        setFormState(nextFormState)
+        setBaselineFormState(nextFormState)
+        setConfigBaselineConflict(null)
+        return
+      }
+
+      if (decision === "conflict") {
+        setConfigBaselineConflict(
+          t("KMS configuration changed on the server. Reset the form to the current status before saving."),
+        )
+      }
+    },
+    [t],
+  )
 
   const loadStatus = React.useCallback(
     async (syncForm = false) => {
@@ -287,11 +245,7 @@ export default function SSEPage() {
         if (requestId !== statusRequestRef.current) return res
         setStatus(res)
         setStatusError(null)
-        if (syncForm) {
-          const nextFormState = buildFormStateFromStatus(res)
-          setFormState(nextFormState)
-          setBaselineFormState(nextFormState)
-        }
+        applyStatusToForm(res, syncForm)
         return res
       } catch (error) {
         if (requestId !== statusRequestRef.current) throw error
@@ -302,7 +256,7 @@ export default function SSEPage() {
         if (requestId === statusRequestRef.current) setLoadingStatus(false)
       }
     },
-    [getKMSStatus, t],
+    [applyStatusToForm, getKMSStatus, t],
   )
 
   const loadKeys = React.useCallback(
@@ -447,6 +401,7 @@ export default function SSEPage() {
     setBaselineFormState(nextFormState)
     setConfigFormError(null)
     setConfigFormErrorField(null)
+    setConfigBaselineConflict(null)
   }
 
   const discardConfigChangesAndNavigate = () => {
@@ -534,20 +489,47 @@ export default function SSEPage() {
       const maxCachedKeys = parseOptionalInteger(values.maxCachedKeys)
       const cacheTtlSeconds = parseOptionalInteger(values.cacheTtlSeconds)
 
-      if (values.backendType === "local") {
+      if (values.backendType === "unsupported") {
         return {
           error: t(
-            "Local filesystem KMS configuration is read-only in Console until safe master-key rotation is available.",
+            "This KMS backend is not supported by this Console version. Upgrade Console before reconfiguring KMS.",
           ),
+          field: "kmsBackend",
+        }
+      }
+
+      if (values.backendType === "local") {
+        if (!values.keyDir.trim()) {
+          return { error: t("Please enter an absolute local key directory path"), field: "keyDir" }
+        }
+        const filePermissions = parseOptionalInteger(values.filePermissions)
+        if (filePermissions != null && !isSafeLocalFilePermissions(filePermissions)) {
+          return {
+            error: t("Local KMS key files must use owner-only permissions such as 384 for 0o600."),
+            field: "filePermissions",
+          }
+        }
+        return {
+          payload: {
+            backend_type: "Local",
+            key_dir: values.keyDir.trim(),
+            file_permissions:
+              localKmsConfigured && !hasStoredLocalFilePermissions ? undefined : (filePermissions ?? 384),
+            allow_insecure_dev_defaults: !hasStoredLocalMasterKey,
+            default_key_id: defaultKeyId || undefined,
+            timeout_seconds: timeoutSeconds ?? 30,
+            retry_attempts: retryAttempts ?? 3,
+            enable_cache: values.enableCache,
+            max_cached_keys: values.enableCache ? (maxCachedKeys ?? 1000) : undefined,
+            cache_ttl_seconds: values.enableCache ? (cacheTtlSeconds ?? 3600) : undefined,
+          },
         }
       }
 
       if (values.backendType === "static") {
         if (!values.secretKey.trim()) {
           return {
-            error: t(
-              "Please enter the static KMS secret key (base64-encoded 32-byte AES-256 key).",
-            ),
+            error: t("Please enter the static KMS secret key (base64-encoded 32-byte AES-256 key)."),
             field: "secretKey",
           }
         }
@@ -603,7 +585,14 @@ export default function SSEPage() {
         },
       }
     },
-    [formState, hasStoredVaultCredentials, t],
+    [
+      formState,
+      hasStoredLocalFilePermissions,
+      hasStoredLocalMasterKey,
+      hasStoredVaultCredentials,
+      localKmsConfigured,
+      t,
+    ],
   )
 
   const submitConfiguration = React.useCallback(
@@ -614,6 +603,12 @@ export default function SSEPage() {
     ) => {
       if (statusError || loadingStatus) {
         if (source === "manual") message.error(t("Failed to load KMS status"))
+        return false
+      }
+      if (configBaselineConflict) {
+        setConfigFormError(configBaselineConflict)
+        setConfigFormErrorField(null)
+        if (source === "manual") message.error(configBaselineConflict)
         return false
       }
       const nestedCreateMutation = source === "defaultKey" && mutationRef.current === "create-key"
@@ -680,6 +675,7 @@ export default function SSEPage() {
     [
       beginMutation,
       buildConfigPayload,
+      configBaselineConflict,
       configureKMS,
       endMutation,
       loadStatus,
@@ -830,9 +826,13 @@ export default function SSEPage() {
       if (createKeySetAsDefault && createdKeyId) {
         const updated = await submitConfiguration(createdKeyId, "defaultKey", buildFormStateFromStatus(status))
         if (!updated) {
-          message.warning(
-            t("Key created but could not update the default SSE key. Save the configuration form and try again."),
+          const recoveryMessage = t(
+            "Key created but could not update the default SSE key. The new key ID has been placed in the default key field so you can retry saving the configuration.",
           )
+          setFormState((current) => ({ ...current, defaultKeyId: createdKeyId }))
+          setConfigFormError(recoveryMessage)
+          setConfigFormErrorField("defaultKeyId")
+          message.warning(recoveryMessage)
         }
       }
 
@@ -937,12 +937,19 @@ export default function SSEPage() {
   const isPendingDefaultKey = pendingKeyAction?.key.key_id === status?.config_summary?.default_key_id
 
   const mutationLocked = Boolean(activeMutation || statusError || loadingStatus)
-  const localKmsReadOnly = hasConfiguration && formState.backendType === "local"
+  const unsupportedKmsReadOnly = formState.backendType === "unsupported"
   const staticKmsReadOnly = hasConfiguration && formState.backendType === "static"
-  const formDisabled = mutationLocked || loadingStatus || submittingConfig || localKmsReadOnly || staticKmsReadOnly
+  const formDisabled =
+    mutationLocked ||
+    loadingStatus ||
+    submittingConfig ||
+    Boolean(configBaselineConflict) ||
+    unsupportedKmsReadOnly ||
+    staticKmsReadOnly
   const mutationInFlight = Boolean(activeMutation || submittingConfig || creatingKey || processingKeyAction)
-  const canSetCreatedKeyAsDefault =
-    status?.backend_type !== "Local" && status?.backend_type !== "Static" && !isConfigDirty
+  const canSetCreatedKeyAsDefault = status?.backend_type !== "Static" && !isConfigDirty && !configBaselineConflict
+  const resetDisabled =
+    mutationLocked || loadingStatus || submittingConfig || (!isConfigDirty && !configBaselineConflict)
 
   return (
     <>
@@ -1101,12 +1108,32 @@ export default function SSEPage() {
                   <AlertDescription id="kms-config-error">{configFormError}</AlertDescription>
                 </Alert>
               ) : null}
-              {localKmsReadOnly ? (
+              {configBaselineConflict ? (
+                <Alert variant="destructive" role="alert">
+                  <AlertTitle>{t("KMS configuration changed")}</AlertTitle>
+                  <AlertDescription>{configBaselineConflict}</AlertDescription>
+                </Alert>
+              ) : null}
+              {formState.backendType === "local" ? (
                 <Alert>
-                  <AlertTitle>{t("Local filesystem")}</AlertTitle>
+                  <AlertTitle>{t("Warning")}</AlertTitle>
+                  <AlertDescription>
+                    {localKmsConfigured
+                      ? t(
+                          "Local KMS is intended for evaluation only. The key directory and file permissions are locked after configuration; changing or rotating the local master key is not supported.",
+                        )
+                      : t(
+                          "Local KMS is intended for evaluation only. Keys created without a server-managed master key are stored using plaintext development mode. Do not use this backend for production data.",
+                        )}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+              {unsupportedKmsReadOnly ? (
+                <Alert variant="destructive">
+                  <AlertTitle>{t("Unsupported KMS backend")}</AlertTitle>
                   <AlertDescription>
                     {t(
-                      "Local filesystem KMS configuration is read-only in Console until safe master-key rotation is available.",
+                      "This KMS backend is not supported by this Console version. Upgrade Console before reconfiguring KMS.",
                     )}
                   </AlertDescription>
                 </Alert>
@@ -1130,15 +1157,18 @@ export default function SSEPage() {
                           onValueChange={(value) =>
                             updateFormState("backendType", value as ConfigFormState["backendType"])
                           }
-                          disabled={formDisabled}
+                          disabled={formDisabled || localKmsConfigured}
                         >
                           <SelectTrigger id="kmsBackend" className="w-full" aria-label={t("KMS Backend")}>
                             <SelectValue placeholder={t("Select backend type")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="local" disabled>
-                              {t("Local filesystem")}
-                            </SelectItem>
+                            {formState.backendType === "unsupported" ? (
+                              <SelectItem value="unsupported" disabled>
+                                {t("Unsupported KMS backend")}
+                              </SelectItem>
+                            ) : null}
+                            <SelectItem value="local">{t("Local filesystem")}</SelectItem>
                             <SelectItem value="vault-kv2">{t("HashiCorp Vault KV2")}</SelectItem>
                             <SelectItem value="vault-transit">{t("HashiCorp Vault Transit Engine")}</SelectItem>
                             <SelectItem value="static">{t("Static single-key (built-in)")}</SelectItem>
@@ -1173,11 +1203,20 @@ export default function SSEPage() {
                   <legend className="pe-2 text-sm font-semibold">
                     {formState.backendType === "local"
                       ? t("Local filesystem")
-                      : formState.backendType === "static"
-                        ? t("Static key configuration")
-                        : t("Vault connection")}
+                      : formState.backendType === "unsupported"
+                        ? t("Unsupported KMS backend")
+                        : formState.backendType === "static"
+                          ? t("Static key configuration")
+                          : t("Vault connection")}
                   </legend>
-                  {formState.backendType === "static" ? (
+                  {formState.backendType === "unsupported" ? (
+                    <Alert variant="destructive">
+                      <AlertTitle>{t("Unsupported KMS backend")}</AlertTitle>
+                      <AlertDescription>
+                        {t("Console cannot safely edit a newer or unknown KMS backend type.")}
+                      </AlertDescription>
+                    </Alert>
+                  ) : formState.backendType === "static" ? (
                     <FieldGroup className="grid gap-4 lg:grid-cols-2">
                       <Field>
                         <FieldLabel htmlFor="secretKey">{t("Secret Key")}</FieldLabel>
@@ -1216,7 +1255,7 @@ export default function SSEPage() {
                             autoComplete="off"
                             placeholder={t("Enter an absolute path such as D:/data/kms-keys")}
                             spellCheck={false}
-                            disabled={formDisabled}
+                            disabled={formDisabled || localKmsConfigured}
                             required
                             aria-required="true"
                             aria-invalid={configFormErrorField === "keyDir"}
@@ -1241,7 +1280,7 @@ export default function SSEPage() {
                             value={formState.filePermissions}
                             onChange={(event) => updateFormState("filePermissions", event.target.value)}
                             placeholder="384"
-                            disabled={formDisabled}
+                            disabled={formDisabled || localKmsConfigured}
                           />
                         </FieldContent>
                         <FieldDescription>{t("Use decimal values such as 384 for 0o600.")}</FieldDescription>
@@ -1508,12 +1547,7 @@ export default function SSEPage() {
                 </details>
 
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={resetFormToCurrentStatus}
-                    disabled={formDisabled || !isConfigDirty}
-                  >
+                  <Button type="button" variant="outline" onClick={resetFormToCurrentStatus} disabled={resetDisabled}>
                     {t("Reset to Current Status")}
                   </Button>
                   <Button type="submit" disabled={formDisabled || !isConfigDirty}>
@@ -1532,7 +1566,7 @@ export default function SSEPage() {
                   <div className="space-y-1">
                     <h2 className="text-base font-semibold sm:text-lg">{t("KMS Keys Management")}</h2>
                     <CardDescription>
-                      {t("Create, rotate, and inspect the keys managed by your KMS backend.")}
+                      {t("Create a new KMS key and optionally make it the default SSE key.")}
                     </CardDescription>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -1548,7 +1582,13 @@ export default function SSEPage() {
                     <Button
                       size="sm"
                       onClick={() => setCreateKeyOpen(true)}
-                      disabled={Boolean(activeMutation) || loadingKeys || loadingStatus || Boolean(keysError) || staticKmsReadOnly}
+                      disabled={
+                        Boolean(activeMutation) ||
+                        loadingKeys ||
+                        loadingStatus ||
+                        Boolean(keysError) ||
+                        staticKmsReadOnly
+                      }
                     >
                       <RiAddLine className="size-4" aria-hidden />
                       {t("Create Key")}
@@ -1642,7 +1682,11 @@ export default function SSEPage() {
                                   variant="outline"
                                   className="min-h-11 flex-1 sm:flex-none"
                                   disabled={
-                                    isDefaultKey || Boolean(activeMutation) || loadingStatus || Boolean(keysError) || staticKmsReadOnly
+                                    isDefaultKey ||
+                                    Boolean(activeMutation) ||
+                                    loadingStatus ||
+                                    Boolean(keysError) ||
+                                    staticKmsReadOnly
                                   }
                                   onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}
                                 >
@@ -1654,7 +1698,11 @@ export default function SSEPage() {
                                 variant="destructive"
                                 className="min-h-11 flex-1 sm:flex-none"
                                 disabled={
-                                  isDefaultKey || Boolean(activeMutation) || loadingStatus || Boolean(keysError) || staticKmsReadOnly
+                                  isDefaultKey ||
+                                  Boolean(activeMutation) ||
+                                  loadingStatus ||
+                                  Boolean(keysError) ||
+                                  staticKmsReadOnly
                                 }
                                 onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
                               >
@@ -1878,10 +1926,10 @@ export default function SSEPage() {
               <label htmlFor="setAsDefaultKey" className="space-y-1 text-sm">
                 <span className="block font-medium">{t("Set as default SSE key")}</span>
                 <span className="block text-xs text-muted-foreground">
-                  {status?.backend_type === "Local"
-                    ? t("Set a default key for Local KMS in server configuration.")
-                    : isConfigDirty
-                      ? t("Save or discard KMS configuration changes before setting a newly created default key.")
+                  {isConfigDirty
+                    ? t("Save or discard KMS configuration changes before setting a newly created default key.")
+                    : status?.backend_type === "Local"
+                      ? t("This will update the current KMS configuration after key creation.")
                       : t("This will update the current KMS configuration after key creation.")}
                 </span>
               </label>

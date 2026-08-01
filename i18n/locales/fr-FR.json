@@ -1592,5 +1592,14 @@
   "Transition job started": "Transition job started",
   "Transitioned": "Transitioned",
   "Unable to cancel transition job": "Unable to cancel transition job",
-  "Unable to load transition job": "Unable to load transition job"
+  "Unable to load transition job": "Unable to load transition job",
+  "Local KMS is intended for evaluation only. Keys created without a server-managed master key are stored using plaintext development mode. Do not use this backend for production data.": "Local KMS est réservé à l’évaluation. Les clés créées sans clé principale gérée par le serveur sont stockées en clair en mode développement. N’utilisez pas ce backend pour des données de production.",
+  "Local KMS is intended for evaluation only. The key directory and file permissions are locked after configuration; changing or rotating the local master key is not supported.": "Local KMS est réservé à l’évaluation. Le répertoire des clés et les permissions de fichiers sont verrouillés après la configuration ; la modification ou la rotation de la clé principale locale n’est pas prise en charge.",
+  "KMS configuration changed": "KMS configuration changed",
+  "KMS configuration changed on the server. Reset the form to the current status before saving.": "KMS configuration changed on the server. Reset the form to the current status before saving.",
+  "Unsupported KMS backend": "Unsupported KMS backend",
+  "This KMS backend is not supported by this Console version. Upgrade Console before reconfiguring KMS.": "This KMS backend is not supported by this Console version. Upgrade Console before reconfiguring KMS.",
+  "Console cannot safely edit a newer or unknown KMS backend type.": "Console cannot safely edit a newer or unknown KMS backend type.",
+  "Local KMS key files must use owner-only permissions such as 384 for 0o600.": "Local KMS key files must use owner-only permissions such as 384 for 0o600.",
+  "Key created but could not update the default SSE key. The new key ID has been placed in the default key field so you can retry saving the configuration.": "Key created but could not update the default SSE key. The new key ID has been placed in the default key field so you can retry saving the configuration."
 }

@@ -58,6 +58,7 @@ export interface KmsLocalConfigPayload {
   backend_type: "Local"
   key_dir: string
   file_permissions?: number
+  allow_insecure_dev_defaults?: boolean
   default_key_id?: string
   timeout_seconds?: number
   retry_attempts?: number

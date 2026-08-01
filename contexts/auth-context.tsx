@@ -137,16 +137,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutWithOidcRedirect = useCallback(async () => {
     const oidcSession = isValidOidcLogoutSession(oidcSessionStore) ? oidcSessionStore : undefined
-    logout()
 
-    if (!oidcSession) return false
+    if (!oidcSession) {
+      logout()
+      return false
+    }
 
     try {
+      // Build the URL before logout(), or DashboardAuthGuard redirects to login before this navigation runs.
       const { configManager } = await import("@/lib/config")
       const config = await configManager.loadConfig()
-      window.location.href = buildOidcLogoutUrl(config.serverHost, oidcSession.logoutToken)
+      const logoutUrl = buildOidcLogoutUrl(config.serverHost, oidcSession.logoutToken)
+
+      logout()
+      window.location.href = logoutUrl
       return true
     } catch {
+      logout()
       return false
     }
   }, [oidcSessionStore, logout])

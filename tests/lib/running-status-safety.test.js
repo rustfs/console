@@ -56,7 +56,7 @@ test("running status distinguishes unknown values and exposes recovery feedback"
   assert.match(pageSource, /lastUpdatedAt/)
   assert.match(pageSource, /sourceErrors/)
   assert.match(pageSource, /order-2 xl:order-3 xl:col-span-2/)
-  assert.match(pageSource, /scannerCycle/)
+  assert.match(pageSource, /isScannerCycleActive\(metricsInfo\)/)
   assert.match(pageSource, /t\("Scanner Status"\)/)
   assert.doesNotMatch(pageSource, /dayjs\(last\)/)
   assert.doesNotMatch(pageSource, /t\("Uptime"\)/)

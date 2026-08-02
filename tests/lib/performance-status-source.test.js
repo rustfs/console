@@ -11,6 +11,7 @@ test("status page passes every normalized admin info state into infrastructure h
   assert.match(source, /initializingServers=\{serverSummary\?\.initializing\}/)
   assert.match(source, /unknownDisks=\{systemInfo\.backend\?\.unknownDisks\}/)
   assert.match(source, /topology=\{runningStatus\.topology\}/)
+  assert.match(source, /isScannerCycleActive\(metricsInfo\)/)
   assert.doesNotMatch(source, /unknownDisks=.*\?\? 0/)
 })
 

@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { usePerformanceData, type PerformanceDataSource } from "@/hooks/use-performance-data"
 import { usePermissions } from "@/hooks/use-permissions"
-import { buildRunningStatusView, formatRelativeTime, resolveUsageFreshness } from "@/lib/performance-data"
+import {
+  buildRunningStatusView,
+  formatRelativeTime,
+  isScannerCycleActive,
+  resolveUsageFreshness,
+} from "@/lib/performance-data"
 import { cn } from "@/lib/utils"
 import {
   RiArchiveDrawerFill,
@@ -97,10 +102,9 @@ export default function PerformancePage() {
   )
 
   const scannerStartedAt = metricsInfo.aggregated?.scanner?.current_started
-  const scannerCycle = metricsInfo.aggregated?.scanner?.current_cycle
   const scannerCompleteTimes = metricsInfo.aggregated?.scanner?.cycle_complete_times ?? []
   const scannerCompletedAt = scannerCompleteTimes.at(-1)
-  const scannerActive = (scannerCycle ?? 0) > 0
+  const scannerActive = isScannerCycleActive(metricsInfo)
   const scannerStatus = scannerActive ? t("Scanning") : scannerCompletedAt ? t("Idle") : t("Never run")
   const scannerDuration = useMemo(() => {
     if (!scannerStartedAt) return undefined

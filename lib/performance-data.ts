@@ -111,6 +111,7 @@ export interface MetricsInfo {
   aggregated?: {
     scanner?: {
       current_cycle?: number
+      current_cycle_active?: boolean
       current_started?: string
       cycle_complete_times?: string[]
     }
@@ -630,6 +631,7 @@ export function normalizeMetricsInfo(value: unknown): MetricsInfo {
   const aggregated = asRecord(source.aggregated ?? source.Aggregated)
   const scanner = asRecord(aggregated.scanner ?? aggregated.Scanner)
   const currentCycle = asNonNegativeNumber(scanner.current_cycle ?? scanner.currentCycle)
+  const currentCycleActive = asBoolean(scanner.current_cycle_active ?? scanner.currentCycleActive)
   const currentStarted = asTimestamp(scanner.current_started ?? scanner.currentStarted)
   const cycleCompleteTimes = asArray<unknown>(scanner.cycle_complete_times ?? scanner.cycleCompleteTimes).flatMap(
     (item) => {
@@ -638,17 +640,25 @@ export function normalizeMetricsInfo(value: unknown): MetricsInfo {
     },
   )
 
-  if (currentCycle === undefined && !currentStarted && !cycleCompleteTimes.length) return {}
+  if (currentCycle === undefined && currentCycleActive === undefined && !currentStarted && !cycleCompleteTimes.length) {
+    return {}
+  }
 
   return {
     aggregated: {
       scanner: {
         ...(currentCycle !== undefined ? { current_cycle: currentCycle } : {}),
+        ...(currentCycleActive !== undefined ? { current_cycle_active: currentCycleActive } : {}),
         ...(currentStarted ? { current_started: currentStarted } : {}),
         ...(cycleCompleteTimes.length ? { cycle_complete_times: cycleCompleteTimes } : {}),
       },
     },
   }
+}
+
+export function isScannerCycleActive(metricsInfo: MetricsInfo): boolean {
+  const scanner = metricsInfo.aggregated?.scanner
+  return scanner?.current_cycle_active ?? (scanner?.current_cycle ?? 0) > 0
 }
 
 export function summarizeServerStates(

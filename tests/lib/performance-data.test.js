@@ -4,6 +4,7 @@ import assert from "node:assert/strict"
 import {
   buildRunningStatusView,
   formatRelativeTime,
+  isScannerCycleActive,
   normalizeClusterDiagnostics,
   normalizeDataUsageInfo,
   normalizeMetricsInfo,
@@ -246,15 +247,31 @@ test("normalizeMetricsInfo rejects missing and invalid scanner timestamps", () =
   )
 })
 
-test("normalizeMetricsInfo keeps the scanner cycle state for active and idle displays", () => {
-  assert.equal(
-    normalizeMetricsInfo({ aggregated: { scanner: { current_cycle: 3 } } }).aggregated?.scanner?.current_cycle,
-    3,
-  )
-  assert.equal(
-    normalizeMetricsInfo({ aggregated: { scanner: { current_cycle: 0 } } }).aggregated?.scanner?.current_cycle,
-    0,
-  )
+test("normalizeMetricsInfo keeps explicit scanner activity and legacy cycle fallback", () => {
+  const activeFirstCycle = normalizeMetricsInfo({
+    aggregated: { scanner: { current_cycle: 0, current_cycle_active: true } },
+  })
+  assert.equal(activeFirstCycle.aggregated?.scanner?.current_cycle, 0)
+  assert.equal(activeFirstCycle.aggregated?.scanner?.current_cycle_active, true)
+  assert.equal(isScannerCycleActive(activeFirstCycle), true)
+
+  const explicitIdle = normalizeMetricsInfo({
+    aggregated: { scanner: { current_cycle: 3, current_cycle_active: false } },
+  })
+  assert.equal(explicitIdle.aggregated?.scanner?.current_cycle_active, false)
+  assert.equal(isScannerCycleActive(explicitIdle), false)
+
+  const activityOnly = normalizeMetricsInfo({ aggregated: { scanner: { current_cycle_active: false } } })
+  assert.equal(activityOnly.aggregated?.scanner?.current_cycle_active, false)
+
+  const camelCaseActivity = normalizeMetricsInfo({
+    aggregated: { scanner: { currentCycle: 0, currentCycleActive: true } },
+  })
+  assert.equal(camelCaseActivity.aggregated?.scanner?.current_cycle_active, true)
+  assert.equal(isScannerCycleActive(camelCaseActivity), true)
+
+  assert.equal(isScannerCycleActive(normalizeMetricsInfo({ aggregated: { scanner: { current_cycle: 3 } } })), true)
+  assert.equal(isScannerCycleActive(normalizeMetricsInfo({ aggregated: { scanner: { current_cycle: 0 } } })), false)
 })
 
 test("formatRelativeTime follows the active locale and advances with the clock", () => {

@@ -10,6 +10,7 @@ import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useBucket } from "@/hooks/use-bucket"
 import { usePermissions } from "@/hooks/use-permissions"
+import { useRuntimeCapabilities } from "@/hooks/use-runtime-capabilities"
 import { ReplicationNewForm } from "@/components/replication/new-form"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
@@ -35,10 +36,19 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
   const message = useMessage()
   const dialog = useDialog()
   const { canCapability } = usePermissions()
+  const { capabilities, error: capabilitiesError } = useRuntimeCapabilities()
   const { getBucketReplication, putBucketReplication, deleteBucketReplication, deleteRemoteReplicationTarget } =
     useBucket()
   const replicationContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
-  const canEditReplication = canCapability("bucket.replication.edit", replicationContext)
+  const replicationSupported = capabilities?.replication.bucketReplication.status.state === "supported"
+  const remoteTargetsSupported = capabilities?.replication.remoteTargets.status.state === "supported"
+  const replicationSupportMessage =
+    capabilities?.replication.bucketReplication.status.reason ??
+    capabilities?.replication.remoteTargets.status.reason ??
+    capabilitiesError ??
+    t("Unable to load replication rules. Refresh before making changes.")
+  const canEditReplication = canCapability("bucket.replication.edit", replicationContext) && replicationSupported
+  const canAddReplication = canEditReplication && remoteTargetsSupported
 
   const [data, setData] = React.useState<ReplicationRule[]>([])
   const [loading, setLoading] = React.useState(false)
@@ -195,18 +205,16 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            {canEditReplication ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => confirmDelete(row.original)}
-                disabled={Boolean(loadError) || loading || mutatingRuleId !== null}
-                aria-label={`${t("Delete Rule")} ${row.original.ID ?? t("Unnamed rule")}`}
-              >
-                <RiDeleteBin7Line className="size-4" aria-hidden />
-                <span>{t("Delete")}</span>
-              </Button>
-            ) : null}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => confirmDelete(row.original)}
+              disabled={Boolean(loadError) || loading || mutatingRuleId !== null || !canEditReplication}
+              aria-label={`${t("Delete Rule")} ${row.original.ID ?? t("Unnamed rule")}`}
+            >
+              <RiDeleteBin7Line className="size-4" aria-hidden />
+              <span>{t("Delete")}</span>
+            </Button>
           </div>
         ),
       },
@@ -222,15 +230,13 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
 
   const actions = (
     <>
-      {canEditReplication ? (
-        <Button
-          onClick={() => setNewFormOpen(true)}
-          disabled={Boolean(loadError) || loading || mutatingRuleId !== null}
-        >
-          <RiAddLine className="size-4" aria-hidden />
-          <span>{t("Add Replication Rule")}</span>
-        </Button>
-      ) : null}
+      <Button
+        onClick={() => setNewFormOpen(true)}
+        disabled={Boolean(loadError) || loading || mutatingRuleId !== null || !canAddReplication}
+      >
+        <RiAddLine className="size-4" aria-hidden />
+        <span>{t("Add Replication Rule")}</span>
+      </Button>
       <Button variant="outline" onClick={loadData} disabled={loading || mutatingRuleId !== null}>
         <RiRefreshLine className="size-4" aria-hidden />
         <span>{t("Refresh")}</span>
@@ -253,6 +259,13 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
         <Alert variant="destructive">
           <AlertTitle>{t("Replication rules unavailable")}</AlertTitle>
           <AlertDescription>{loadError}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {(capabilitiesError && !capabilities) || (capabilities && (!replicationSupported || !remoteTargetsSupported)) ? (
+        <Alert variant="destructive">
+          <AlertTitle>{t("Replication rules unavailable")}</AlertTitle>
+          <AlertDescription>{replicationSupportMessage}</AlertDescription>
         </Alert>
       ) : null}
 

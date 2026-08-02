@@ -355,6 +355,13 @@ export function useBucket() {
     [api],
   )
 
+  const listRemoteReplicationTargets = useCallback(
+    async (bucket: string) => {
+      return api.get(`/list-remote-targets?bucket=${encodeURIComponent(bucket)}`)
+    },
+    [api],
+  )
+
   const setRemoteReplicationTarget = useCallback(
     async (bucket: string, data: unknown) => {
       return api.put(`/set-remote-target?bucket=${encodeURIComponent(bucket)}`, data)
@@ -421,6 +428,7 @@ export function useBucket() {
     putBucketReplication,
     deleteBucketReplication,
     deleteRemoteReplicationTarget,
+    listRemoteReplicationTargets,
     setRemoteReplicationTarget,
     listBucketNotifications,
     putBucketNotifications,

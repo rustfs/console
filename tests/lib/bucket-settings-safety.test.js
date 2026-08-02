@@ -33,6 +33,10 @@ const replicationFormSource = await readFile(
   new URL("../../components/replication/new-form.tsx", import.meta.url),
   "utf8",
 )
+const runtimeCapabilitiesHookSource = await readFile(
+  new URL("../../hooks/use-runtime-capabilities.ts", import.meta.url),
+  "utf8",
+)
 const lifecycleFormSource = await readFile(new URL("../../components/lifecycle/new-form.tsx", import.meta.url), "utf8")
 const eventsFormSource = await readFile(new URL("../../components/events/new-form.tsx", import.meta.url), "utf8")
 const bucketHookSource = await readFile(new URL("../../hooks/use-bucket.ts", import.meta.url), "utf8")
@@ -218,6 +222,26 @@ test("replication creation rereads rules and never removes an uncertain remote t
   assert.match(replicationTabSource, /if \(\s*!role &&[\s\S]{0,120}!remaining\.some/)
   assert.doesNotMatch(replicationTabSource, /remaining\.length > 0 &&[\s\S]{0,80}!role &&/)
   assert.doesNotMatch(replicationTabSource, /Replication configuration Role is missing/)
+})
+
+test("replication controls fail closed on missing capabilities and preserve target identity", () => {
+  assert.match(runtimeCapabilitiesHookSource, /api\.resolveUrl\("\/rustfs\/admin\/v4\/runtime\/capabilities"\)/)
+  assert.match(replicationFormSource, /useRuntimeCapabilities/)
+  assert.match(replicationFormSource, /credentials: \{[\s\S]{0,100}accessKey,[\s\S]{0,100}secretKey,[\s\S]{0,100}\}/)
+  assert.match(replicationFormSource, /listRemoteReplicationTargets/)
+  assert.match(replicationFormSource, /controlsLocked/)
+  assert.match(replicationFormSource, /requiredBucketFieldsSupported/)
+  assert.match(replicationFormSource, /requiredTargetFieldsSupported/)
+  assert.match(replicationFormSource, /canEditTargetField\("healthCheckDuration"\)/)
+  assert.match(replicationFormSource, /canEditBucketField\("Rule\.DeleteReplication\.Status"\)/)
+  assert.match(replicationFormSource, /canEditBucketField\("Rule\.Filter\.Prefix"\)/)
+  assert.match(replicationFormSource, /Advanced Settings/)
+  assert.match(replicationFormSource, /currentTarget\.arn/)
+  assert.doesNotMatch(replicationFormSource, /expiration: "0001-01-01T00:00:00Z"/)
+  assert.doesNotMatch(replicationFormSource, /SseKmsEncryptedObjects/)
+  assert.match(replicationTabSource, /useRuntimeCapabilities/)
+  assert.match(replicationTabSource, /!canEditReplication/)
+  assert.match(replicationTabSource, /Replication rules unavailable/)
 })
 
 test("bucket setting controls expose names, field errors, and unresolved dependency states", () => {

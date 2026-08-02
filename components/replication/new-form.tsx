@@ -12,10 +12,12 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { useBucket } from "@/hooks/use-bucket"
+import { useRuntimeCapabilities } from "@/hooks/use-runtime-capabilities"
 import { useMessage } from "@/lib/feedback/message"
 import { getBytes, randomUUID } from "@/lib/functions"
 import { isMissingBucketConfiguration, normalizeReplicationRulesForRolelessConfig } from "@/lib/bucket-configuration"
 import { buildBucketReplicationTlsPayload, type BucketReplicationTlsMode } from "@/lib/bucket-replication-tls"
+import { getRuntimeCapabilityFieldState } from "@/lib/runtime-capabilities"
 
 interface ReplicationNewFormProps {
   open: boolean
@@ -36,7 +38,9 @@ interface ReplicationRulePayload extends Record<string, unknown> {
 export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }: ReplicationNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const { setRemoteReplicationTarget, putBucketReplication, getBucketReplication } = useBucket()
+  const { setRemoteReplicationTarget, listRemoteReplicationTargets, putBucketReplication, getBucketReplication } =
+    useBucket()
+  const { capabilities, isLoading: capabilitiesLoading, error: capabilitiesError } = useRuntimeCapabilities()
 
   const [level, setLevel] = useState("1")
   const [endpoint, setEndpoint] = useState("")
@@ -84,6 +88,77 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     ],
     [],
   )
+
+  const canEditBucketField = useCallback(
+    (fieldName: string) => getRuntimeCapabilityFieldState(capabilities, "bucketReplication", fieldName) === "supported",
+    [capabilities],
+  )
+
+  const canEditTargetField = useCallback(
+    (fieldName: string) => getRuntimeCapabilityFieldState(capabilities, "remoteTargets", fieldName) === "supported",
+    [capabilities],
+  )
+
+  const canEditCurrentTagFilter =
+    tags.length > 1 ? canEditBucketField("Rule.Filter.And") : canEditBucketField("Rule.Filter.Tag")
+  const canAddTag = canEditBucketField("Rule.Filter.And")
+
+  const storageClassOptions = useMemo(() => {
+    const supported = capabilities?.storageClasses.supportedWriteClasses ?? []
+    const current = storageType.trim() || "STANDARD"
+    const values = [...supported]
+    if (!values.includes(current)) {
+      values.push(current)
+    }
+    return values
+  }, [capabilities, storageType])
+
+  const bucketHistoricalFields = useMemo(
+    () =>
+      (capabilities?.replication.bucketReplication.fields ?? []).filter(
+        (field) => field.state === "read_only_historical",
+      ),
+    [capabilities],
+  )
+
+  const remoteTargetUnsupportedFields = useMemo(
+    () => (capabilities?.replication.remoteTargets.fields ?? []).filter((field) => field.state === "unsupported"),
+    [capabilities],
+  )
+
+  const replicationFeaturesSupported =
+    capabilities?.replication.bucketReplication.status.state === "supported" &&
+    capabilities.replication.remoteTargets.status.state === "supported"
+  const requiredBucketFieldsSupported = [
+    "Role",
+    "Rule.ID",
+    "Rule.Status",
+    "Rule.Priority",
+    "Rule.Destination.Bucket",
+  ].every(canEditBucketField)
+  const requiredTargetFieldsSupported = [
+    "sourcebucket",
+    "endpoint",
+    "credentials.accessKey",
+    "credentials.secretKey",
+    "targetbucket",
+    "secure",
+    "path",
+    "api",
+    "type",
+    "region",
+    "bandwidth",
+    "replicationSync",
+    "skipTlsVerify",
+    "caCertPem",
+  ].every(canEditTargetField)
+  const controlsLocked =
+    submitting ||
+    capabilitiesLoading ||
+    !capabilities ||
+    !replicationFeaturesSupported ||
+    !requiredBucketFieldsSupported ||
+    !requiredTargetFieldsSupported
 
   const resetForm = useCallback(() => {
     setLevel("1")
@@ -163,7 +238,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
   }
 
   const handleSave = async () => {
-    if (submitting) return
+    if (submitting || controlsLocked) return
     if (!validate()) return
     if (!bucketName) {
       message.error(t("Bucket name is required"))
@@ -174,13 +249,18 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     let remoteTargetSaved = false
     try {
       const tlsConfig = buildBucketReplicationTlsPayload(tls, tlsMode, caCertPem)
+      const currentTargets = (await listRemoteReplicationTargets(bucketName)) as Record<string, unknown>[]
+      const currentTarget = currentTargets.find((target) => {
+        const targetBucket = typeof target.targetbucket === "string" ? target.targetbucket : ""
+        const targetEndpoint = typeof target.endpoint === "string" ? target.endpoint : ""
+        return targetBucket === bucket || targetEndpoint === endpoint
+      })
       const config: Record<string, unknown> = {
         sourcebucket: bucketName,
         endpoint,
         credentials: {
           accessKey,
           secretKey,
-          expiration: "0001-01-01T00:00:00Z",
         },
         targetbucket: bucket,
         secure: tls,
@@ -191,21 +271,23 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
         api: "s3v4",
         type: "replication",
         replicationSync: modeType === "sync",
-        healthCheckDuration: Number(timecheck) || 60,
-        disableProxy: false,
-        resetBeforeDate: "0001-01-01T00:00:00Z",
-        totalDowntime: 0,
-        lastOnline: "0001-01-01T00:00:00Z",
-        isOnline: false,
-        latency: { curr: 0, avg: 0, max: 0 },
-        edge: false,
-        edgeSyncBeforeExpiry: false,
+        ...(canEditTargetField("healthCheckDuration") ? { healthCheckDuration: Number(timecheck) || 60 } : {}),
+        ...(canEditTargetField("disableProxy") ? { disableProxy: false } : {}),
+        ...(canEditTargetField("resetBeforeDate") ? { resetBeforeDate: "0001-01-01T00:00:00Z" } : {}),
+        ...(canEditTargetField("totalDowntime") ? { totalDowntime: 0 } : {}),
+        ...(canEditTargetField("lastOnline") ? { lastOnline: "0001-01-01T00:00:00Z" } : {}),
+        ...(canEditTargetField("isOnline") ? { isOnline: false } : {}),
+        ...(canEditTargetField("latency") ? { latency: { curr: 0, avg: 0, max: 0 } } : {}),
+        ...(canEditTargetField("edge") ? { edge: false } : {}),
+        ...(canEditTargetField("edgeSyncBeforeExpiry") ? { edgeSyncBeforeExpiry: false } : {}),
+        ...(typeof currentTarget?.arn === "string" && currentTarget.arn && canEditTargetField("arn")
+          ? { arn: currentTarget.arn }
+          : {}),
       }
 
       if (modeType === "async") {
         config.bandwidth = Number(getBytes(String(bandwidth), unit, true)) || 0
       }
-
       let oldConfig: {
         ReplicationConfiguration?: { Role?: string; Rules?: ReplicationRulePayload[] }
       } | null = null
@@ -226,42 +308,38 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
       remoteTargetSaved = true
 
       const newRule: ReplicationRulePayload = {
-        ID: randomUUID(),
-        Status: "Enabled",
-        Priority: parseInt(level) || 1,
-        SourceSelectionCriteria: {
-          SseKmsEncryptedObjects: { Status: "Enabled" },
-        },
-        ExistingObjectReplication: {
-          Status: existingObject ? "Enabled" : "Disabled",
-        },
-        DeleteMarkerReplication: {
-          Status: expiredDeleteMark ? "Enabled" : "Disabled",
-        },
-        DeleteReplication: {
-          Status: replicateDelete ? "Enabled" : "Disabled",
-        },
-        Destination: {
-          Bucket: targetResponse,
-          StorageClass: storageType || "STANDARD",
-        },
+        ...(canEditBucketField("Rule.ID") ? { ID: randomUUID() } : {}),
+        ...(canEditBucketField("Rule.Status") ? { Status: "Enabled" } : {}),
+        ...(canEditBucketField("Rule.Priority") ? { Priority: parseInt(level) || 1 } : {}),
+        ...(canEditBucketField("Rule.ExistingObjectReplication.Status")
+          ? { ExistingObjectReplication: { Status: existingObject ? "Enabled" : "Disabled" } }
+          : {}),
+        ...(canEditBucketField("Rule.DeleteMarkerReplication.Status")
+          ? { DeleteMarkerReplication: { Status: expiredDeleteMark ? "Enabled" : "Disabled" } }
+          : {}),
+        ...(canEditBucketField("Rule.DeleteReplication.Status")
+          ? { DeleteReplication: { Status: replicateDelete ? "Enabled" : "Disabled" } }
+          : {}),
+        ...(canEditBucketField("Rule.Destination.Bucket")
+          ? { Destination: { Bucket: targetResponse, StorageClass: storageType || "STANDARD" } }
+          : {}),
       }
 
       const validTags = tags.filter((tag) => tag.key && tag.value)
       const filter: Record<string, unknown> = {}
 
-      if (prefix) {
+      if (prefix && canEditBucketField("Rule.Filter.Prefix")) {
         filter.Prefix = prefix
       }
 
       if (validTags.length === 1) {
         const [singleTag] = validTags
-        if (singleTag) {
+        if (singleTag && canEditBucketField("Rule.Filter.Tag")) {
           filter.Tag = { Key: singleTag.key, Value: singleTag.value }
         }
-      } else if (validTags.length > 1) {
+      } else if (validTags.length > 1 && canEditBucketField("Rule.Filter.And")) {
         filter.And = {
-          ...(prefix ? { Prefix: prefix } : {}),
+          ...(prefix && canEditBucketField("Rule.Filter.Prefix") ? { Prefix: prefix } : {}),
           Tags: validTags.map((tag) => ({ Key: tag.key, Value: tag.value })),
         }
         delete filter.Prefix
@@ -352,6 +430,11 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                 {saveError}
               </div>
             ) : null}
+            {capabilitiesError ? (
+              <p role="alert" className="border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                {capabilitiesError}
+              </p>
+            ) : null}
             <div className="space-y-4">
               <div className="grid gap-3 md:grid-cols-2">
                 <Field>
@@ -366,13 +449,18 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                       autoComplete="off"
                       value={level}
                       onChange={(e) => setLevel(e.target.value)}
+                      disabled={controlsLocked || !canEditBucketField("Rule.Priority")}
                     />
                   </FieldContent>
                 </Field>
                 <Field>
                   <FieldLabel>{t("Mode")}</FieldLabel>
                   <FieldContent>
-                    <Select value={modeType} onValueChange={(value) => setModeType(value ?? "")}>
+                    <Select
+                      value={modeType}
+                      onValueChange={(value) => setModeType(value ?? "")}
+                      disabled={controlsLocked || !canEditTargetField("replicationSync")}
+                    >
                       <SelectTrigger className="w-full" aria-label={t("Mode")}>
                         <SelectValue />
                       </SelectTrigger>
@@ -407,6 +495,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                         autoComplete="off"
                         placeholder={t("Please enter endpoint")}
                         spellCheck={false}
+                        disabled={controlsLocked || !canEditTargetField("endpoint")}
                       />
                     </div>
                   </FieldContent>
@@ -428,6 +517,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                       autoComplete="off"
                       placeholder={t("Please enter bucket")}
                       spellCheck={false}
+                      disabled={controlsLocked || !canEditTargetField("targetbucket")}
                     />
                   </FieldContent>
                   <FieldError id="replication-bucket-error">{fieldErrors.bucket}</FieldError>
@@ -448,6 +538,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                       placeholder={t("Please enter Access Key")}
                       autoComplete="off"
                       spellCheck={false}
+                      disabled={controlsLocked || !canEditTargetField("credentials.accessKey")}
                     />
                   </FieldContent>
                   <FieldError id="replication-access-key-error">{fieldErrors.accessKey}</FieldError>
@@ -469,6 +560,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                       placeholder={t("Please enter Secret Key")}
                       autoComplete="off"
                       spellCheck={false}
+                      disabled={controlsLocked || !canEditTargetField("credentials.secretKey")}
                     />
                   </FieldContent>
                   <FieldError id="replication-secret-key-error">{fieldErrors.secretKey}</FieldError>
@@ -484,21 +576,33 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                       autoComplete="off"
                       placeholder={t("Please enter region")}
                       spellCheck={false}
+                      disabled={controlsLocked || !canEditTargetField("region")}
                     />
                   </FieldContent>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="replication-storage-class">{t("Storage Class")}</FieldLabel>
                   <FieldContent>
-                    <Input
-                      id="replication-storage-class"
-                      name="replication-storage-class"
+                    <Select
                       value={storageType}
-                      onChange={(e) => setStorageType(e.target.value)}
-                      autoComplete="off"
-                      placeholder={t("Please enter storage class")}
-                      spellCheck={false}
-                    />
+                      onValueChange={(value) => setStorageType(value ?? "")}
+                      disabled={controlsLocked}
+                    >
+                      <SelectTrigger id="replication-storage-class" className="w-full" aria-label={t("Storage Class")}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {storageClassOptions.map((option) => (
+                          <SelectItem
+                            key={option}
+                            value={option}
+                            disabled={!(capabilities?.storageClasses.supportedWriteClasses ?? []).includes(option)}
+                          >
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FieldContent>
                 </Field>
               </div>
@@ -514,6 +618,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                     autoComplete="off"
                     placeholder={t("Please enter prefix")}
                     spellCheck={false}
+                    disabled={controlsLocked || !canEditBucketField("Rule.Filter.Prefix")}
                   />
                 </FieldContent>
               </Field>
@@ -521,7 +626,13 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <FieldLabel className="text-sm font-medium">{t("Tags")}</FieldLabel>
-                  <Button type="button" variant="outline" size="sm" onClick={addTag} disabled={submitting}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addTag}
+                    disabled={controlsLocked || !canAddTag}
+                  >
                     <RiAddLine className="size-4" aria-hidden />
                     {t("Add Tag")}
                   </Button>
@@ -539,6 +650,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                           autoComplete="off"
                           placeholder={t("Tag Name")}
                           spellCheck={false}
+                          disabled={controlsLocked || !canEditCurrentTagFilter}
                         />
                         <div className="flex items-center gap-2">
                           <Input
@@ -551,6 +663,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                             placeholder={t("Tag Value")}
                             className="flex-1"
                             spellCheck={false}
+                            disabled={controlsLocked || !canEditCurrentTagFilter}
                           />
                           <Button
                             type="button"
@@ -558,7 +671,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                             size="sm"
                             className="text-destructive"
                             aria-label={`${t("Delete")} ${t("Tag Name")} ${index + 1}`}
-                            disabled={tags.length === 1 || submitting}
+                            disabled={tags.length === 1 || controlsLocked || !canEditCurrentTagFilter}
                             onClick={() => removeTag(index)}
                           >
                             <RiDeleteBinLine className="size-4" aria-hidden />
@@ -585,7 +698,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                   id="replication-use-tls"
                   name="replication-use-tls"
                   checked={tls}
-                  disabled={submitting}
+                  disabled={controlsLocked || !canEditTargetField("secure")}
                   onCheckedChange={(checked) => {
                     setTls(checked)
                     if (!checked) {
@@ -608,7 +721,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                           if (value) setTlsMode(value as BucketReplicationTlsMode)
                           setFieldErrors((current) => ({ ...current, caCertPem: undefined }))
                         }}
-                        disabled={submitting}
+                        disabled={controlsLocked || !canEditTargetField("skipTlsVerify")}
                       >
                         <SelectTrigger id="replication-tls-verification" className="w-full">
                           <SelectValue />
@@ -644,7 +757,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                           }
                           className="min-h-32 font-mono"
                           placeholder="-----BEGIN CERTIFICATE-----"
-                          disabled={submitting}
+                          disabled={controlsLocked || !canEditTargetField("caCertPem")}
                           spellCheck={false}
                         />
                       </FieldContent>
@@ -680,6 +793,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                   name="replication-existing-object"
                   checked={existingObject}
                   onCheckedChange={setExistingObject}
+                  disabled={controlsLocked || !canEditBucketField("Rule.ExistingObjectReplication.Status")}
                 />
               </div>
 
@@ -695,6 +809,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                   name="replication-expired-delete-marker"
                   checked={expiredDeleteMark}
                   onCheckedChange={setExpiredDeleteMark}
+                  disabled={controlsLocked || !canEditBucketField("Rule.DeleteMarkerReplication.Status")}
                 />
               </div>
 
@@ -710,6 +825,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                   name="replication-delete"
                   checked={replicateDelete}
                   onCheckedChange={setReplicateDelete}
+                  disabled={controlsLocked || !canEditBucketField("Rule.DeleteReplication.Status")}
                 />
               </div>
 
@@ -735,6 +851,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                         aria-invalid={Boolean(fieldErrors.timecheck)}
                         aria-describedby={fieldErrors.timecheck ? "replication-health-check-interval-error" : undefined}
                         className="w-32"
+                        disabled={controlsLocked || !canEditTargetField("healthCheckDuration")}
                       />
                     </FieldContent>
                     <FieldError id="replication-health-check-interval-error">{fieldErrors.timecheck}</FieldError>
@@ -753,8 +870,13 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                           value={bandwidth}
                           onChange={(e) => setBandwidth(Number(e.target.value))}
                           className="w-32"
+                          disabled={controlsLocked || !canEditTargetField("bandwidth")}
                         />
-                        <Select value={unit} onValueChange={(value) => setUnit(value ?? "")}>
+                        <Select
+                          value={unit}
+                          onValueChange={(value) => setUnit(value ?? "")}
+                          disabled={controlsLocked || !canEditTargetField("bandwidth")}
+                        >
                           <SelectTrigger className="w-28" aria-label={t("Bandwidth Unit")}>
                             <SelectValue />
                           </SelectTrigger>
@@ -771,6 +893,34 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                   </Field>
                 </div>
               )}
+
+              {bucketHistoricalFields.length || remoteTargetUnsupportedFields.length ? (
+                <fieldset className="space-y-3 border-t pt-4">
+                  <legend className="text-sm font-medium">{t("Advanced Settings")}</legend>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {bucketHistoricalFields.map((field) => (
+                      <div key={field.name} className="space-y-1">
+                        <p className="text-xs text-muted-foreground">{field.name}</p>
+                        <p className="text-sm">
+                          <span className="inline-flex items-center rounded-none border border-dashed px-2 py-1 text-xs text-muted-foreground">
+                            {t("Read-only settings")}
+                          </span>
+                        </p>
+                      </div>
+                    ))}
+                    {remoteTargetUnsupportedFields.map((field) => (
+                      <div key={field.name} className="space-y-1">
+                        <p className="text-xs text-muted-foreground">{field.name}</p>
+                        <p className="text-sm">
+                          <span className="inline-flex items-center rounded-none border border-dashed px-2 py-1 text-xs text-muted-foreground">
+                            {t("Unsupported")}
+                          </span>
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : null}
             </div>
           </div>
 
@@ -784,8 +934,8 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
             >
               {t("Cancel")}
             </Button>
-            <Button type="submit" className="w-full sm:w-auto" disabled={submitting}>
-              {submitting ? t("Saving…") : t("Save")}
+            <Button type="submit" className="w-full sm:w-auto" disabled={controlsLocked}>
+              {submitting ? t("Saving…") : capabilitiesLoading ? t("Loading") : t("Save")}
             </Button>
           </DialogFooter>
         </form>

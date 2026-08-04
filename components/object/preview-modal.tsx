@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react"
 import { PdfViewer } from "@/components/object/pdf-viewer"
 import { ParquetViewer } from "@/components/object/parquet-viewer"
+import { TiffViewer } from "@/components/object/tiff-viewer"
 import Image from "next/image"
 
 const SAFE_TEXT_MIMES = [
@@ -26,7 +27,7 @@ const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".jsonl", ".ndjson", ".xml", ".cs
 const SAFE_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".tif", ".tiff"]
 const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
 
-type PreviewMode = "text" | "image" | "pdf" | "parquet" | "sandbox" | "download"
+type PreviewMode = "text" | "image" | "pdf" | "parquet" | "sandbox" | "download" | "tiff"
 
 const PARQUET_MIMES = ["application/vnd.apache.parquet", "application/x-parquet", "application/parquet"]
 const PARQUET_EXTENSIONS = [".parquet", ".pq"]
@@ -86,6 +87,11 @@ function isParquetPreview(contentType: string, objectKey: string) {
   return PARQUET_EXTENSIONS.some((ext) => keyLower.endsWith(ext))
 }
 
+function isTiffPreview(objectKey: string) {
+  const keyLower = objectKey.toLowerCase()
+  return keyLower.endsWith(".tif") || keyLower.endsWith(".tiff")
+}
+
 function getFullscreenElement(doc: FullscreenDocument): Element | null {
   return doc.fullscreenElement ?? doc.webkitFullscreenElement ?? null
 }
@@ -140,13 +146,16 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const canRenderImage = hasPreviewUrl && isImagePreview(normalizedContentType, objectKey)
   const canRenderPdf = hasPreviewUrl && isPdfPreview(normalizedContentType)
   const canRenderParquet = hasPreviewUrl && isParquetPreview(normalizedContentType, objectKey)
+  const canRenderTiff = hasPreviewUrl && isTiffPreview(objectKey)
   const previewMode: PreviewMode = canRenderParquet
     ? "parquet"
     : canRenderPdf
       ? "pdf"
-      : getPreviewMode(hasPreviewUrl, canRenderText, canRenderImage)
+      : canRenderTiff
+        ? "tiff"
+        : getPreviewMode(hasPreviewUrl, canRenderText, canRenderImage)
   const isImageMode = previewMode === "image"
-  const isSelfScrollMode = isImageMode || previewMode === "parquet"
+  const isSelfScrollMode = isImageMode || previewMode === "parquet" || previewMode === "tiff"
 
   const getFormattedContent = () => {
     if (!isJson || !isFormatted) return textContent
@@ -374,6 +383,8 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
         return <PdfViewer url={previewUrl} />
       case "parquet":
         return <ParquetViewer url={previewUrl} sizeBytes={objectSize} />
+      case "tiff":
+        return <TiffViewer url={previewUrl} objectKey={objectKey} />
       case "download":
       default:
         return (

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import { RiAddLine, RiRefreshLine, RiDeleteBin7Line } from "@remixicon/react"
+import { RiAddLine, RiRefreshLine, RiDeleteBin7Line, RiEditLine } from "@remixicon/react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,6 +12,11 @@ import { useBucket } from "@/hooks/use-bucket"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useRuntimeCapabilities } from "@/hooks/use-runtime-capabilities"
 import { ReplicationNewForm } from "@/components/replication/new-form"
+import {
+  ReplicationEditForm,
+  type EditableReplicationRule,
+  type RemoteReplicationTarget,
+} from "@/components/replication/edit-form"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { isMissingBucketConfiguration, removeMatchingBucketRule } from "@/lib/bucket-configuration"
@@ -37,8 +42,13 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
   const dialog = useDialog()
   const { canCapability } = usePermissions()
   const { capabilities, error: capabilitiesError } = useRuntimeCapabilities()
-  const { getBucketReplication, putBucketReplication, deleteBucketReplication, deleteRemoteReplicationTarget } =
-    useBucket()
+  const {
+    getBucketReplication,
+    putBucketReplication,
+    deleteBucketReplication,
+    deleteRemoteReplicationTarget,
+    listRemoteReplicationTargets,
+  } = useBucket()
   const replicationContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
   const replicationSupported = capabilities?.replication.bucketReplication.status.state === "supported"
   const remoteTargetsSupported = capabilities?.replication.remoteTargets.status.state === "supported"
@@ -51,10 +61,15 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
   const canAddReplication = canEditReplication && remoteTargetsSupported
 
   const [data, setData] = React.useState<ReplicationRule[]>([])
+  const [targets, setTargets] = React.useState<RemoteReplicationTarget[]>([])
   const [loading, setLoading] = React.useState(false)
   const [loadError, setLoadError] = React.useState("")
   const [mutatingRuleId, setMutatingRuleId] = React.useState<string | null>(null)
   const [newFormOpen, setNewFormOpen] = React.useState(false)
+  const [editing, setEditing] = React.useState<{
+    rule: EditableReplicationRule
+    target: RemoteReplicationTarget
+  } | null>(null)
   const requestVersionRef = React.useRef(0)
 
   const loadData = React.useCallback(async () => {
@@ -62,13 +77,18 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
     setLoading(true)
     try {
       const res = await getBucketReplication(bucketName)
+      // Target details (sync mode, bandwidth) are optional context: a listing
+      // failure must not block the rules table, it only disables per-row edit.
+      const targetList = await listRemoteReplicationTargets(bucketName).catch(() => [])
       if (requestVersion !== requestVersionRef.current) return
       setData(res?.ReplicationConfiguration?.Rules ?? [])
+      setTargets(Array.isArray(targetList) ? (targetList as RemoteReplicationTarget[]) : [])
       setLoadError("")
     } catch (error) {
       if (requestVersion !== requestVersionRef.current) return
       if (isMissingBucketConfiguration(error, "replication")) {
         setData([])
+        setTargets([])
         setLoadError("")
       } else {
         setLoadError(t("Unable to load replication rules. Refresh before making changes."))
@@ -76,7 +96,12 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
     } finally {
       if (requestVersion === requestVersionRef.current) setLoading(false)
     }
-  }, [bucketName, getBucketReplication, t])
+  }, [bucketName, getBucketReplication, listRemoteReplicationTargets, t])
+
+  const targetForRule = React.useCallback(
+    (rule: ReplicationRule) => targets.find((target) => target.arn && target.arn === rule.Destination?.Bucket) ?? null,
+    [targets],
+  )
 
   React.useEffect(() => {
     loadData()
@@ -200,26 +225,55 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
         cell: ({ row }) => <span>{row.original.Destination?.StorageClass || "-"}</span>,
       },
       {
+        id: "replication-mode",
+        header: () => t("Mode"),
+        cell: ({ row }) => {
+          const target = targetForRule(row.original)
+          if (!target) return <span>-</span>
+          return <Badge variant="outline">{target.replicationSync ? t("Synchronous") : t("Asynchronous")}</Badge>
+        },
+      },
+      {
         id: "actions",
         header: () => t("Actions"),
         enableSorting: false,
-        cell: ({ row }) => (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => confirmDelete(row.original)}
-              disabled={Boolean(loadError) || loading || mutatingRuleId !== null || !canEditReplication}
-              aria-label={`${t("Delete Rule")} ${row.original.ID ?? t("Unnamed rule")}`}
-            >
-              <RiDeleteBin7Line className="size-4" aria-hidden />
-              <span>{t("Delete")}</span>
-            </Button>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const target = targetForRule(row.original)
+          return (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => target && setEditing({ rule: row.original, target })}
+                disabled={
+                  Boolean(loadError) ||
+                  loading ||
+                  mutatingRuleId !== null ||
+                  !canEditReplication ||
+                  !remoteTargetsSupported ||
+                  !target
+                }
+                aria-label={`${t("Edit")} ${row.original.ID ?? t("Unnamed rule")}`}
+              >
+                <RiEditLine className="size-4" aria-hidden />
+                <span>{t("Edit")}</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => confirmDelete(row.original)}
+                disabled={Boolean(loadError) || loading || mutatingRuleId !== null || !canEditReplication}
+                aria-label={`${t("Delete Rule")} ${row.original.ID ?? t("Unnamed rule")}`}
+              >
+                <RiDeleteBin7Line className="size-4" aria-hidden />
+                <span>{t("Delete")}</span>
+              </Button>
+            </div>
+          )
+        },
       },
     ],
-    [canEditReplication, confirmDelete, loadError, loading, mutatingRuleId, t],
+    [canEditReplication, confirmDelete, loadError, loading, mutatingRuleId, remoteTargetsSupported, t, targetForRule],
   )
 
   const { table } = useDataTable<ReplicationRule>({
@@ -314,15 +368,35 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
                   </div>
                 </dl>
                 {canEditReplication ? (
-                  <Button
-                    variant="outline"
-                    className="min-h-11 w-full whitespace-normal break-all"
-                    onClick={() => confirmDelete(rule)}
-                    disabled={Boolean(loadError) || loading || mutatingRuleId !== null}
-                  >
-                    <RiDeleteBin7Line className="size-4" aria-hidden />
-                    {`${t("Delete Rule")}: ${rule.ID ?? t("Unnamed rule")}`}
-                  </Button>
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      className="min-h-11 w-full whitespace-normal break-all"
+                      onClick={() => {
+                        const target = targetForRule(rule)
+                        if (target) setEditing({ rule, target })
+                      }}
+                      disabled={
+                        Boolean(loadError) ||
+                        loading ||
+                        mutatingRuleId !== null ||
+                        !remoteTargetsSupported ||
+                        !targetForRule(rule)
+                      }
+                    >
+                      <RiEditLine className="size-4" aria-hidden />
+                      {`${t("Edit")}: ${rule.ID ?? t("Unnamed rule")}`}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="min-h-11 w-full whitespace-normal break-all"
+                      onClick={() => confirmDelete(rule)}
+                      disabled={Boolean(loadError) || loading || mutatingRuleId !== null}
+                    >
+                      <RiDeleteBin7Line className="size-4" aria-hidden />
+                      {`${t("Delete Rule")}: ${rule.ID ?? t("Unnamed rule")}`}
+                    </Button>
+                  </div>
                 ) : null}
               </article>
             )
@@ -334,6 +408,17 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
         open={newFormOpen}
         onOpenChange={setNewFormOpen}
         bucketName={bucketName}
+        onSuccess={loadData}
+      />
+
+      <ReplicationEditForm
+        open={editing !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setEditing(null)
+        }}
+        bucketName={bucketName}
+        rule={editing?.rule ?? null}
+        target={editing?.target ?? null}
         onSuccess={loadData}
       />
     </div>

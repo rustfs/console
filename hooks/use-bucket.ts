@@ -363,8 +363,15 @@ export function useBucket() {
   )
 
   const setRemoteReplicationTarget = useCallback(
-    async (bucket: string, data: unknown) => {
-      return api.put(`/set-remote-target?bucket=${encodeURIComponent(bucket)}`, data)
+    // `ops` names the field groups an update should touch (MinIO TargetUpdateType
+    // contract: "creds" | "sync" | "bandwidth" | "path"); groups not listed keep
+    // their stored values, so e.g. a sync-mode flip needs no credentials.
+    async (bucket: string, data: unknown, update = false, ops: string[] = []) => {
+      let query = update ? "&update=true" : ""
+      for (const op of ops) {
+        query += `&${encodeURIComponent(op)}=true`
+      }
+      return api.put(`/set-remote-target?bucket=${encodeURIComponent(bucket)}${query}`, data)
     },
     [api],
   )

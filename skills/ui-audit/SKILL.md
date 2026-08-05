@@ -97,7 +97,7 @@ Keep each patch small and tied to one audit issue.
 
 ## Browser Validation
 
-Use the preferred local browser automation surface when available for local targets. Validate after meaningful UI edits:
+Use the available browser automation tools (in-app Browser pane, Chrome MCP, or Playwright — whichever the session provides) against the local dev server. Validate after meaningful UI edits:
 
 1. Page identity: URL and title match the target.
 2. Not blank: DOM snapshot or screenshot contains meaningful content.
@@ -117,17 +117,18 @@ Save screenshots outside the repo, usually under `/tmp`, and include them in the
 
 ## Quality Gates
 
-Run the narrow checks for touched files first, then broader checks using the project's package manager:
+Run the narrow checks for touched files first, then the project's mandated checks. In this repository (run `nvm use v22` first):
 
 ```bash
 pnpm prettier --check <touched files>
 pnpm type-check
 pnpm lint
+pnpm test:run
 git diff --check
-pnpm exec prettier --check $(rg --files -g '*.{ts,tsx,js,jsx,json,css,md,yml,yaml}' -g '!node_modules' -g '!pnpm-lock.yaml')
+pnpm format:check
 ```
 
-Adapt command names to the repo: `npm`, `yarn`, `bun`, `cargo`, `swift`, or platform-specific test/build commands when appropriate.
+In other repositories, adapt command names to the local stack: `npm`, `yarn`, `bun`, `cargo`, `swift`, or platform-specific test/build commands.
 
 Also run project-mandated commands when present. If a mandated command fails because the repository is already misconfigured, report the exact blocker and continue validating what can be validated.
 
@@ -138,5 +139,5 @@ Respond in the user's language. Keep it concise:
 - Summarize main UI fixes by category.
 - List validation commands and pass/fail status.
 - Call out known blockers separately.
-- Include before/after or current-state screenshots using absolute local paths.
+- Include before/after or current-state screenshots using absolute local paths; reuse these captures as the PR screenshot diff required by AGENTS.md.
 - Mention untested areas only when they materially affect confidence.

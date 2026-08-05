@@ -5,6 +5,8 @@ description: Design and review RustFS Console interfaces with a consistent visua
 
 # RustFS Console Design Guide
 
+This guide is the source of design decisions; use `skills/ui-audit/SKILL.md` as the companion workflow for audit execution, browser validation, and evidence capture.
+
 Use this guide while shaping the interface, before implementation details harden. Treat Console as an operational tool: the design should help people understand system state, make a deliberate change, and recover when reality is uncertain.
 
 ## Design objectives
@@ -179,7 +181,7 @@ For broad UI work, inspect the whole task flow before polishing individual compo
 5. Implement the smallest coherent design change.
 6. Recapture the exact state and compare it with the original.
 
-Record each concrete finding in `docs/ui-review/register.md` and map screenshots in the Console UI review manifest. Label static fixtures as illustrative evidence; do not present them as runtime proof.
+Record each concrete finding in `docs/ui-review/register.md` and map screenshots in the Console UI review manifest. Label static fixtures as illustrative evidence; do not present them as runtime proof. The before/after captures from steps 1 and 6 double as the screenshot diff required in the PR description (see AGENTS.md).
 
 ## 10. Common failure patterns
 

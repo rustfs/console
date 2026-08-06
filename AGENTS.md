@@ -18,16 +18,16 @@ Run `nvm use v22` before any `pnpm` command in this repository.
 
 - `pnpm dev` – start the dev server (applies theme overrides first).
 - `pnpm build` – production build (also type-checks); `pnpm start` – run it locally.
-- `pnpm lint` / `pnpm lint:fix` – run / auto-fix ESLint.
+- `pnpm lint` / `pnpm lint:fix` – run / auto-fix Oxlint.
 - `pnpm type-check` – strict TypeScript check (applies theme overrides, then `tsc --noEmit`).
-- `pnpm format` / `pnpm format:check` – Prettier write / check.
+- `pnpm format` / `pnpm format:check` – Oxfmt write / check.
 - `pnpm test:run` – run the test suite.
 
 ## Quality Gates — must pass before every commit
 
 1. `pnpm install --frozen-lockfile` – lockfile in sync. After changing `package.json`, run `pnpm install` and commit the updated `pnpm-lock.yaml`; CI fails otherwise.
 2. `pnpm type-check` – zero type errors.
-3. `pnpm lint` – zero ESLint errors.
+3. `pnpm lint` – zero Oxlint errors.
 4. `pnpm format:check` – consistent formatting (fix with `pnpm format` or `pnpm lint:fix`).
 5. `pnpm test:run` – all tests pass, and tests are updated to match the change (see Testing Guidelines).
 
@@ -46,7 +46,7 @@ Never bypass hooks with `--no-verify`, never disable a failing test instead of f
 
 ## Coding Style & Naming Conventions
 
-- Use Prettier defaults; run `pnpm lint:fix` or `pnpm format` after making changes.
+- Use Oxfmt defaults; run `pnpm lint:fix` or `pnpm format` after making changes.
 - React components are functional components with TypeScript; prefer hooks and custom hooks for shared logic.
 - Component files use **kebab-case** (`bucket-selector.tsx`); reference them with **PascalCase** in JSX (`<BucketSelector />`).
 - Override shadcn primitives **outside** `components/ui/`; never edit files in that directory directly. Extend via wrapper components instead of forking primitives.

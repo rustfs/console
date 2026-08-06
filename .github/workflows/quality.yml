@@ -37,8 +37,8 @@ jobs:
       - name: 📥 Install dependencies
         run: pnpm ci
 
-      - name: 💅 Check Prettier formatting
-        run: pnpm run lint
+      - name: 💅 Check Oxfmt formatting
+        run: pnpm run format:check
 
       - name: 🔧 Auto-fix formatting (PR only)
         if: github.event_name == 'pull_request'
@@ -183,9 +183,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 📥 Install dependencies
-        run: |
-          pnpm ci
-          pnpm add -D eslint-plugin-complexity
+        run: pnpm ci
 
       - name: 🧮 Analyze code complexity
         run: |

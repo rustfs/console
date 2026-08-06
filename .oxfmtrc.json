@@ -1,13 +1,13 @@
 {
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": ["pnpm-lock.yaml", ".agents/skills/shadcn/**"],
   "semi": false,
+  "printWidth": 120,
   "singleQuote": false,
   "jsxSingleQuote": false,
   "trailingComma": "all",
-  "printWidth": 120,
-  "tabWidth": 2,
   "arrowParens": "always",
   "bracketSpacing": true,
   "quoteProps": "as-needed",
-  "bracketSameLine": false,
-  "endOfLine": "lf"
+  "bracketSameLine": false
 }

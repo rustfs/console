@@ -148,7 +148,7 @@ pnpm type-check
 pnpm build
 ```
 
-#### 3. ESLint Check
+#### 3. Oxlint Check
 
 ```bash
 pnpm lint

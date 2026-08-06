@@ -120,7 +120,7 @@ Save screenshots outside the repo, usually under `/tmp`, and include them in the
 Run the narrow checks for touched files first, then the project's mandated checks. In this repository (run `nvm use v22` first):
 
 ```bash
-pnpm prettier --check <touched files>
+pnpm oxfmt --check <touched files>
 pnpm type-check
 pnpm lint
 pnpm test:run

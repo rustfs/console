@@ -17,6 +17,7 @@ import { usePoolOperations } from "@/hooks/use-pool-operations"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
+import { loadPoolDecommissionData } from "@/lib/pool-decommission-load"
 import {
   deriveDecommissionDisplayState,
   deriveRebalanceDisplayState,
@@ -219,18 +220,17 @@ export default function PoolDecommissionPage() {
       setError(null)
       setRebalanceError(null)
       try {
-        const [overviewResult, rebalanceResult, decommissionResult] = await Promise.allSettled([
-          getPoolsOverview(),
-          getRebalanceStatus(),
-          getDecommissionStatuses(),
-        ])
+        const {
+          overview: nextOverview,
+          rebalanceResult,
+          decommissionStatuses,
+        } = await loadPoolDecommissionData({
+          getPoolsOverview,
+          getRebalanceStatus,
+          getDecommissionStatuses,
+        })
         if (!mountedRef.current || requestId !== requestVersionRef.current) return false
 
-        if (overviewResult.status === "rejected") throw overviewResult.reason
-        if (decommissionResult.status === "rejected") throw decommissionResult.reason
-
-        const nextOverview = overviewResult.value
-        const decommissionStatuses = decommissionResult.value
         const statusEntries = decommissionStatuses.map((status) => [status.poolId, status])
 
         setOverview(nextOverview)
@@ -661,7 +661,13 @@ export default function PoolDecommissionPage() {
                 </p>
               </div>
               <Badge variant={selectionLocked ? "outline" : "secondary"}>
-                {!dataReady || error || rebalanceError ? t("Unknown") : selectionLocked ? t("Running") : t("Ready")}
+                {!dataReady || error || rebalanceError
+                  ? t("Unknown")
+                  : overview.supportState === "unsupported"
+                    ? t("Unsupported")
+                    : selectionLocked
+                      ? t("Running")
+                      : t("Ready")}
               </Badge>
             </CardHeader>
             <CardContent className="space-y-5">

@@ -12,7 +12,7 @@ test("new user dialog distinguishes assignment loading errors and keeps actions 
   assert.match(source, /let cancelled = false/)
   assert.match(source, /grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
   assert.match(source, /<form\s+className="contents"\s+onSubmit=/)
-  assert.match(source, /min-h-0[^\"]*overflow-y-auto overscroll-contain/)
+  assert.match(source, /min-h-0[^"]*overflow-y-auto overscroll-contain/)
   assert.match(source, /className="min-h-10 w-full min-w-0 justify-between gap-2"/)
   assert.match(source, /<FieldError id="new-user-access-key-error">/)
   assert.doesNotMatch(source, /max-h-\[80vh\]/)

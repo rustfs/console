@@ -494,7 +494,7 @@ export default function SSEPage() {
       setPendingNavigation({ destination: destination.href })
     }
     const previousHistoryState = window.history.state
-    const guardState = { ...(previousHistoryState ?? {}), __kmsDirtyGuard: true }
+    const guardState = { ...previousHistoryState, __kmsDirtyGuard: true }
     window.history.pushState(guardState, "", window.location.href)
     const handlePopState = () => {
       if (allowNavigationRef.current) return

@@ -56,13 +56,13 @@ test("catalog configuration failures remain visible with a retry path", () => {
 })
 
 test("namespace create and update permissions remain distinct", () => {
-  assert.match(namespaceDialogSource, /canCreate\?\: boolean/)
+  assert.match(namespaceDialogSource, /canCreate\?: boolean/)
   assert.match(namespaceDialogSource, /const canSubmit = editing \? canUpdate : canCreate/)
   assert.match(pageSource, /canCreate=\{canCreateNamespace\}/)
 })
 
 test("table creation fails closed when the create permission is missing", () => {
-  assert.match(tableDialogSource, /canCreate\?\: boolean/)
+  assert.match(tableDialogSource, /canCreate\?: boolean/)
   assert.match(tableDialogSource, /if \(submittingRef\.current \|\| !canCreate\) return/)
   assert.match(pageSource, /canCreate=\{canCreateTable\}/)
 })

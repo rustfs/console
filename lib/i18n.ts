@@ -58,6 +58,7 @@ export async function ensureLocaleResources(localeInput: string | null | undefin
 
 export async function changeLocale(localeInput: string | null | undefined): Promise<void> {
   const locale = await ensureLocaleResources(localeInput)
+  // oxlint-disable-next-line import/no-named-as-default-member
   await i18n.changeLanguage(locale)
 }
 
@@ -108,6 +109,7 @@ export async function initI18n() {
 
     const languageDetector = createLanguageDetector()
 
+    // oxlint-disable-next-line import/no-named-as-default-member
     await i18n
       .use(languageDetector)
       .use(initReactI18next)

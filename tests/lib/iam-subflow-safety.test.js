@@ -12,7 +12,7 @@ test("add-to-group dialog exposes loading failures and retries only failed group
   assert.match(source, /Promise\.allSettled/)
   assert.match(source, /setGroups\(failedGroups\)/)
   assert.match(source, /grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
-  assert.match(source, /min-h-0[^\"]*overflow-y-auto overscroll-contain/)
+  assert.match(source, /min-h-0[^"]*overflow-y-auto overscroll-contain/)
   assert.match(source, /!groups\.length/)
 })
 

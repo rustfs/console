@@ -308,7 +308,7 @@ export function ViewDialog({
         const currentSchema = currentViewSchema(metadata, currentVersion)
         const versionId = nextVersionId(metadata)
         const viewVersion: Record<string, unknown> = {
-          ...(currentVersion ?? {}),
+          ...currentVersion,
           "version-id": versionId,
           "timestamp-ms": Date.now(),
           "schema-id": sameJson(parsedSchema, currentSchema) ? (currentVersion?.["schema-id"] ?? 0) : -1,

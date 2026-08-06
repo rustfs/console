@@ -54,7 +54,7 @@ import { displayNamespace, resolveTableCatalogPrefix, TABLE_CATALOG_PREFIX } fro
 
 type CatalogTab = "tables" | "views" | "namespaces"
 
-const NAMESPACE_KEY_SEPARATOR = "\u001f"
+const NAMESPACE_KEY_SEPARATOR = "\u001F"
 
 function namespaceKey(namespace: readonly string[]) {
   return namespace.join(NAMESPACE_KEY_SEPARATOR)

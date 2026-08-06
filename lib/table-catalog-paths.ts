@@ -1,5 +1,5 @@
 export const TABLE_CATALOG_PREFIX = "/iceberg/v1"
-export const TABLE_CATALOG_NAMESPACE_SEPARATOR = "\u001f"
+export const TABLE_CATALOG_NAMESPACE_SEPARATOR = "\u001F"
 
 const CATALOG_IDENTIFIER_PATTERN = /^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$/
 
@@ -11,7 +11,8 @@ const CATALOG_IDENTIFIER_PATTERN = /^[a-z0-9](?:[a-z0-9_-]*[a-z0-9])?$/
 export function normalizeTableCatalogPrefix(value: unknown) {
   if (typeof value !== "string") return TABLE_CATALOG_PREFIX
   const candidate = value.trim()
-  if (!candidate || candidate.includes("://") || /[\u0000-\u001f\u007f?#]/.test(candidate)) {
+  // oxlint-disable-next-line no-control-regex
+  if (!candidate || candidate.includes("://") || /[\u0000-\u001F\u007F?#]/.test(candidate)) {
     return TABLE_CATALOG_PREFIX
   }
   const normalized = `/${candidate.replace(/^\/+/, "").replace(/\/+$/, "")}`

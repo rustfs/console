@@ -1,5 +1,5 @@
 import { access } from "node:fs/promises"
-import { extname } from "node:path"
+import path from "node:path"
 import { fileURLToPath } from "node:url"
 
 const projectRoot = new URL("../", import.meta.url)
@@ -26,7 +26,7 @@ export async function resolve(specifier, context, nextResolve) {
 
   if ((specifier.startsWith("./") || specifier.startsWith("../")) && context.parentURL) {
     const baseUrl = new URL(specifier, context.parentURL)
-    if (!extname(baseUrl.pathname)) {
+    if (!path.extname(baseUrl.pathname)) {
       const resolved = await resolveExistingModule(baseUrl, context, nextResolve)
       if (resolved) return resolved
     }

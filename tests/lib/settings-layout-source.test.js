@@ -20,7 +20,7 @@ test("OIDC settings use a bounded provider rail before desktop-wide layouts", ()
   assert.match(page, /lg:grid-cols-\[18rem_minmax\(0,1fr\)\]/)
   assert.match(providerList, /max-h-80/)
   assert.match(providerList, /lg:min-h-\[28rem\]/)
-  assert.match(providerList, /min-h-0[^\"]*overflow-y-auto/)
+  assert.match(providerList, /min-h-0[^"]*overflow-y-auto/)
 })
 
 test("OIDC forms progressively disclose claim mapping without hiding connection fields", () => {
@@ -48,7 +48,7 @@ test("long settings dialogs keep headers and actions visible while the form scro
 
     assert.match(source, /max-h-\[min\(90dvh,52rem\)\]/)
     assert.match(source, /grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
-    assert.match(source, /min-h-0[^\"]*overflow-y-auto/)
+    assert.match(source, /min-h-0[^"]*overflow-y-auto/)
     assert.match(source, /<DialogFooter className="border-t bg-muted\/20/)
     assert.match(source, /disablePointerDismissal=\{submitting\}/)
     assert.match(source, /aria-busy=\{submitting\}/)
@@ -118,7 +118,7 @@ test("license text uses a bounded readable surface without preserving mobile ind
   assert.match(source, /<Page className="max-w-5xl">/)
   assert.match(source, /h-\[min\(70dvh,48rem\)\]/)
   assert.match(source, /whitespace-pre-line/)
-  assert.match(source, /p-4[^\"]*sm:p-6/)
+  assert.match(source, /p-4[^"]*sm:p-6/)
 })
 
 test("KMS key details keep a fixed header and one scrolling body", () => {
@@ -127,7 +127,7 @@ test("KMS key details keep a fixed header and one scrolling body", () => {
   assert.match(source, /DrawerClose/)
   assert.match(source, /h-dvh overflow-hidden/)
   assert.match(source, /<DrawerHeader className="relative shrink-0 border-b pe-14">/)
-  assert.match(source, /min-h-0 flex-1[^\"]*overflow-y-auto overscroll-contain/)
+  assert.match(source, /min-h-0 flex-1[^"]*overflow-y-auto overscroll-contain/)
   assert.match(source, /<DrawerDescription className="break-all">/)
   assert.match(source, /h-auto max-w-full whitespace-normal break-all text-start/)
   assert.doesNotMatch(source, /max-h-\[95vh\] overflow-y-auto/)

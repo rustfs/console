@@ -13,7 +13,7 @@ test("access key dialogs keep fixed headers and actions around one scrolling bod
     assert.match(source, /gap-0 overflow-hidden p-0/)
     assert.match(source, /<DialogHeader className="border-b px-4 py-3 pe-12">/)
     assert.match(source, /<form\s+className="contents"\s+onSubmit=/)
-    assert.match(source, /min-h-0[^\"]*overflow-y-auto overscroll-contain p-4/)
+    assert.match(source, /min-h-0[^"]*overflow-y-auto overscroll-contain p-4/)
     assert.match(source, /<DialogFooter className="border-t bg-muted\/20 px-4 py-3">/)
     assert.doesNotMatch(source, /max-h-\[(?:80|60)vh\]/)
   }

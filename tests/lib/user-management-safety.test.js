@@ -15,7 +15,7 @@ test("group editor clears stale records and blocks writes until the current grou
   assert.match(source, /const isCurrentGroup = loadedName === group\.name && group\.name === row\?\.name/)
   assert.match(source, /disabled=\{loading \|\| Boolean\(loadError\) \|\| statusUpdating/)
   assert.match(source, /grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
-  assert.match(source, /min-h-0[^\"]*overflow-y-auto overscroll-contain/)
+  assert.match(source, /min-h-0[^"]*overflow-y-auto overscroll-contain/)
 })
 
 test("user editor rejects stale loads and stages status until Save", () => {
@@ -41,7 +41,7 @@ test("nested user access key dialogs use one scroll container and fail closed wh
 
   assert.equal((source.match(/grid-rows-\[auto_minmax\(0,1fr\)_auto\]/g) ?? []).length, 2)
   assert.equal((source.match(/<form\s+className="contents"\s+onSubmit=/g) ?? []).length, 2)
-  assert.equal((source.match(/min-h-0[^\"]*overflow-y-auto overscroll-contain p-4/g) ?? []).length, 2)
+  assert.equal((source.match(/min-h-0[^"]*overflow-y-auto overscroll-contain p-4/g) ?? []).length, 2)
   assert.match(source, /const \[parentPolicyError, setParentPolicyError\] = React\.useState\(""\)/)
   assert.match(source, /const \[formOwner, setFormOwner\] = React\.useState\(""\)/)
   assert.match(source, /accessKey !== row\?\.accessKey/)

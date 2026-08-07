@@ -10,6 +10,7 @@ import { RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react"
 import { PdfViewer } from "@/components/object/pdf-viewer"
 import { ParquetViewer } from "@/components/object/parquet-viewer"
 import { TiffViewer } from "@/components/object/tiff-viewer"
+import { getObjectPreviewMode, normalizePreviewContentType } from "@/lib/object-preview"
 import Image from "next/image"
 
 const SAFE_TEXT_MIMES = [
@@ -26,8 +27,6 @@ const SAFE_TEXT_MIMES = [
 const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".jsonl", ".ndjson", ".xml", ".csv", ".md", ".yml", ".yaml"]
 const SAFE_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".tif", ".tiff"]
 const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
-
-type PreviewMode = "text" | "image" | "pdf" | "parquet" | "sandbox" | "download" | "tiff"
 
 const PARQUET_MIMES = ["application/vnd.apache.parquet", "application/x-parquet", "application/parquet"]
 const PARQUET_EXTENSIONS = [".parquet", ".pq"]
@@ -52,10 +51,6 @@ type FullscreenElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void
 }
 
-function normalizeContentType(contentType: string) {
-  return contentType.split(";")[0]?.trim().toLowerCase() ?? ""
-}
-
 function isSafeTextPreview(contentType: string, objectKey: string, objectSize: number) {
   if (objectSize > ALLOWED_SIZE) return false
   if (SAFE_TEXT_MIMES.includes(contentType)) return true
@@ -69,12 +64,6 @@ function isImagePreview(contentType: string, objectKey: string) {
   if (isSvg) return false
   if (contentType.startsWith("image/")) return true
   return SAFE_IMAGE_EXTENSIONS.some((ext) => keyLower.endsWith(ext))
-}
-
-function getPreviewMode(hasPreviewUrl: boolean, canRenderText: boolean, canRenderImage: boolean): PreviewMode {
-  if (!hasPreviewUrl) return "download"
-  if (canRenderImage) return "image"
-  return canRenderText ? "text" : "sandbox"
 }
 
 function isPdfPreview(contentType: string) {
@@ -124,6 +113,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const { t } = useTranslation()
   const [textContent, setTextContent] = React.useState("")
   const [loading, setLoading] = React.useState(false)
+  const [audioLoadError, setAudioLoadError] = React.useState(false)
   const [isFormatted, setIsFormatted] = React.useState(true)
   const [imageNaturalSize, setImageNaturalSize] = React.useState<{ width: number; height: number } | null>(null)
   const [imageFitScale, setImageFitScale] = React.useState(1)
@@ -139,7 +129,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const objectSize = Number(object?.ContentLength ?? 0)
   const objectKey = object?.Key ?? ""
   const objectKeyLower = objectKey.toLowerCase()
-  const normalizedContentType = normalizeContentType(contentType)
+  const normalizedContentType = normalizePreviewContentType(contentType)
 
   const isJson = normalizedContentType === "application/json" || objectKeyLower.endsWith(".json")
   const canRenderText = hasPreviewUrl && isSafeTextPreview(normalizedContentType, objectKey, objectSize)
@@ -147,13 +137,15 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const canRenderPdf = hasPreviewUrl && isPdfPreview(normalizedContentType)
   const canRenderParquet = hasPreviewUrl && isParquetPreview(normalizedContentType, objectKey)
   const canRenderTiff = hasPreviewUrl && isTiffPreview(objectKey)
-  const previewMode: PreviewMode = canRenderParquet
-    ? "parquet"
-    : canRenderPdf
-      ? "pdf"
-      : canRenderTiff
-        ? "tiff"
-        : getPreviewMode(hasPreviewUrl, canRenderText, canRenderImage)
+  const previewMode = getObjectPreviewMode({
+    hasPreviewUrl,
+    contentType,
+    canRenderText,
+    canRenderImage,
+    canRenderPdf,
+    canRenderParquet,
+    canRenderTiff,
+  })
   const isImageMode = previewMode === "image"
   const isSelfScrollMode = isImageMode || previewMode === "parquet" || previewMode === "tiff"
 
@@ -192,6 +184,10 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
       setLoading(false)
     }
   }, [show, previewMode, previewUrl, t])
+
+  React.useEffect(() => {
+    setAudioLoadError(false)
+  }, [show, previewUrl])
 
   React.useEffect(() => {
     const cachedSize = previewUrl ? imageSizeCacheRef.current[previewUrl] : undefined
@@ -374,6 +370,20 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
               </div>
             </div>
           </div>
+        )
+      case "audio":
+        return audioLoadError ? (
+          <div className="my-auto text-center text-sm text-destructive" role="alert">
+            {t("Preview unavailable")}
+          </div>
+        ) : (
+          <audio
+            controls
+            src={previewUrl}
+            className="my-auto w-full"
+            aria-label={objectKey || t("Preview")}
+            onError={() => setAudioLoadError(true)}
+          />
         )
       case "sandbox":
         return (

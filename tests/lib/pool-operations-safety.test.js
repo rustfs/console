@@ -22,8 +22,10 @@ test("pool status reads fail closed instead of becoming idle or ready", () => {
 
 test("decommission keeps pool data visible when only rebalance status fails", () => {
   const source = read("app/(dashboard)/pool-decommission/page.tsx")
+  const loader = read("lib/pool-decommission-load.ts")
 
-  assert.match(source, /Promise\.allSettled\(/)
+  assert.match(source, /loadPoolDecommissionData\(/)
+  assert.match(loader, /Promise\.allSettled\(/)
   assert.match(source, /const \[rebalanceError, setRebalanceError\] = useState<string \| null>\(null\)/)
   assert.match(source, /setRebalanceState\("unknown"\)/)
   assert.match(source, /setDataReady\(true\)/)

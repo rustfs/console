@@ -1,6 +1,9 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import fs from "node:fs"
+import React from "react"
+import { renderToStaticMarkup } from "react-dom/server"
+import { DayPicker } from "react-day-picker"
 
 import {
   applyDateTimeBounds,
@@ -92,4 +95,23 @@ test("DateTimePicker keeps the calendar date selected when clicked again", () =>
 
   assert.equal(source.includes('mode="single"'), true)
   assert.equal(source.includes("required"), true)
+})
+
+test("DateTimePicker does not cap navigation at the current year", () => {
+  const source = fs.readFileSync("components/datetime-picker.tsx", "utf8")
+  const captionLayout = source.match(/captionLayout="([^"]+)"/)?.[1]
+
+  assert.equal(captionLayout, "dropdown-months")
+
+  const markup = renderToStaticMarkup(
+    React.createElement(DayPicker, {
+      captionLayout,
+      month: new Date(2026, 11, 1),
+      today: new Date(2026, 7, 9),
+    }),
+  )
+  const nextMonthButton = markup.match(/<button[^>]+aria-label="Go to the Next Month"[^>]*>/)?.[0]
+
+  assert.ok(nextMonthButton)
+  assert.doesNotMatch(nextMonthButton, /aria-disabled="true"/)
 })

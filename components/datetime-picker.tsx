@@ -155,7 +155,7 @@ export function DateTimePicker({
           onSelect={updateDate}
           disabled={disabledDays}
           locale={calendarLocale}
-          captionLayout="dropdown"
+          captionLayout="dropdown-months"
         />
         <div className="flex items-center gap-2 border-t p-2.5">
           <div className="flex min-w-0 flex-1 items-center gap-2">

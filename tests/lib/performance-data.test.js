@@ -555,6 +555,105 @@ test("the #1429 reporter payload uses v4 membership without duplicating v3 rows"
   })
 })
 
+test("a single local path member reuses the only reported SNSD server", () => {
+  const system = normalizeSystemInfo({
+    info: {
+      backend: { onlineDisks: 1, offlineDisks: 0, unknownDisks: 0, totalDrivesPerSet: [1] },
+      servers: [
+        {
+          endpoint: ":::9000",
+          state: "online",
+          uptime: 42,
+          drives: [{ state: "ok" }],
+          network: { "::": "online" },
+        },
+      ],
+    },
+  })
+  const diagnostics = normalizeClusterDiagnostics({
+    snapshot: {
+      membership: {
+        nodes: [{ node_id: "local", grid_host: "", is_local: true }],
+        drives: [{ pool_index: 0, set_index: 0, disk_index: 0, node_id: "local" }],
+      },
+      pool_state: { pools: [{ pool_index: 0, set_count: 1, drives_per_set: 1, endpoint_count: 1 }] },
+    },
+  })
+
+  const view = buildRunningStatusView(system, diagnostics)
+
+  assert.deepEqual(
+    view.servers?.map((server) => server.endpoint),
+    [":::9000"],
+  )
+  assert.deepEqual(view.serverSummary, {
+    online: 1,
+    offline: 0,
+    degraded: 0,
+    initializing: 0,
+    unknown: 0,
+  })
+  assert.equal(view.topology.reportedServers, 1)
+  assert.equal(view.topology.expectedServers, 1)
+  assert.equal(view.topology.incomplete, false)
+})
+
+test("a local server-info identity matches without guessing among multiple members", () => {
+  const system = normalizeSystemInfo({
+    info: {
+      backend: { onlineDisks: 2, offlineDisks: 0, unknownDisks: 0 },
+      servers: [
+        { endpoint: ":::9000", state: "online", drives: [{ state: "ok" }] },
+        { endpoint: "node-b:9000", state: "online", drives: [{ state: "ok" }] },
+      ],
+    },
+  })
+  const diagnostics = normalizeClusterDiagnostics({
+    snapshot: {
+      membership: {
+        nodes: [
+          { node_id: "local", is_local: true, server_info_endpoint: ":::9000" },
+          { node_id: "node-b:9000", grid_host: "http://node-b:9000", is_local: false },
+        ],
+      },
+    },
+  })
+
+  const view = buildRunningStatusView(system, diagnostics)
+
+  assert.deepEqual(
+    view.servers?.map((server) => server.endpoint),
+    [":::9000", "node-b:9000"],
+  )
+  assert.equal(view.topology.reportedServers, 2)
+  assert.equal(view.topology.expectedServers, 2)
+  assert.equal(view.topology.incomplete, false)
+})
+
+test("a local member stays unresolved when multiple reported servers are ambiguous", () => {
+  const system = normalizeSystemInfo({
+    info: {
+      servers: [
+        { endpoint: "node-a:9000", state: "online" },
+        { endpoint: "node-b:9000", state: "online" },
+      ],
+    },
+  })
+  const diagnostics = normalizeClusterDiagnostics({
+    snapshot: { membership: { nodes: [{ node_id: "local", is_local: true }] } },
+  })
+
+  const view = buildRunningStatusView(system, diagnostics)
+
+  assert.deepEqual(
+    view.servers?.map((server) => server.endpoint),
+    ["local", "node-a:9000", "node-b:9000"],
+  )
+  assert.equal(view.topology.reportedServers, 0)
+  assert.equal(view.topology.expectedServers, 1)
+  assert.equal(view.topology.incomplete, true)
+})
+
 test("a v3-only incomplete drive denominator is unknown without inventing a server denominator", () => {
   const view = buildRunningStatusView(normalizeSystemInfo(reporterV3Payload))
 

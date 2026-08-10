@@ -29,7 +29,7 @@ export interface ClusterDiagnostics {
   listingHealth: StatusDiagnostic
   workloadAdmission: StatusDiagnostic
   peers: PeerHealthDiagnostic[]
-  membership: Array<{ nodeId: string; gridHost?: string; isLocal?: boolean }>
+  membership: Array<{ nodeId: string; gridHost?: string; serverInfoEndpoint?: string; isLocal?: boolean }>
   topologyDrives: Array<{
     nodeId: string
     poolIndex?: number
@@ -393,8 +393,18 @@ export function normalizeClusterDiagnostics(value: unknown): ClusterDiagnostics 
     const nodeId = asSafeText(node.node_id ?? node.nodeId ?? node.NodeId)
     if (!nodeId) return []
     const gridHost = asSafeText(node.grid_host ?? node.gridHost ?? node.GridHost)
+    const serverInfoEndpoint = asSafeText(
+      node.server_info_endpoint ?? node.serverInfoEndpoint ?? node.ServerInfoEndpoint,
+    )
     const isLocal = asBoolean(node.is_local ?? node.isLocal ?? node.IsLocal)
-    return [{ nodeId, ...(gridHost ? { gridHost } : {}), ...(isLocal !== undefined ? { isLocal } : {}) }]
+    return [
+      {
+        nodeId,
+        ...(gridHost ? { gridHost } : {}),
+        ...(serverInfoEndpoint ? { serverInfoEndpoint } : {}),
+        ...(isLocal !== undefined ? { isLocal } : {}),
+      },
+    ]
   })
   const topologyDrives = asArray<unknown>(membershipRecord.drives ?? membershipRecord.Drives).flatMap((value) => {
     const drive = asRecord(value)
@@ -527,9 +537,11 @@ function getEndpointIdentity(value: string | undefined) {
 }
 
 function getMemberIdentities(member: ClusterDiagnostics["membership"][number]) {
-  return [getEndpointIdentity(member.nodeId), getEndpointIdentity(member.gridHost)].filter(
-    (identity): identity is NonNullable<ReturnType<typeof getEndpointIdentity>> => Boolean(identity),
-  )
+  return [
+    getEndpointIdentity(member.serverInfoEndpoint),
+    getEndpointIdentity(member.nodeId),
+    getEndpointIdentity(member.gridHost),
+  ].filter((identity): identity is NonNullable<ReturnType<typeof getEndpointIdentity>> => Boolean(identity))
 }
 
 function findMatchingMember(server: ServerInfo, diagnostics: ClusterDiagnostics) {
@@ -726,6 +738,14 @@ function reconcileTopologyServers(system: SystemInfo, diagnostics: ClusterDiagno
       servers: system.servers,
       reportedServers: system.servers?.length,
       expectedServers: undefined,
+    }
+  }
+
+  if (membership.length === 1 && membership[0].isLocal && reportedServers.length === 1) {
+    return {
+      servers: reportedServers,
+      reportedServers: 1,
+      expectedServers: 1,
     }
   }
 

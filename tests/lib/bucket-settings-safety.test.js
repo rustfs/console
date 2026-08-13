@@ -11,6 +11,7 @@ import {
 import {
   buildCurrentVersionExpirationRules,
   buildLifecycleFilter,
+  buildNoncurrentVersionExpirationRule,
   findIncompleteLifecycleTag,
   getBucketVersioningMode,
   hasCompleteLifecycleTags,
@@ -155,6 +156,39 @@ test("AWS SDK serializes expiration days and delete-marker cleanup as two valid 
   assert.deepEqual(expirations, ["<Days>30</Days>", "<ExpiredObjectDeleteMarker>true</ExpiredObjectDeleteMarker>"])
 })
 
+test("noncurrent expiration and delete-marker cleanup serialize as one rule without current expiry", async () => {
+  let requestBody = ""
+  const client = new S3Client({
+    region: "us-east-1",
+    endpoint: "http://127.0.0.1:9000",
+    credentials: { accessKeyId: "test", secretAccessKey: "test" },
+    requestHandler: {
+      async handle(request) {
+        requestBody = typeof request.body === "string" ? request.body : new TextDecoder().decode(request.body)
+        return { response: { statusCode: 200, headers: {}, body: new Uint8Array() } }
+      },
+    },
+  })
+
+  await client.send(
+    new PutBucketLifecycleConfigurationCommand({
+      Bucket: "test-bucket",
+      LifecycleConfiguration: {
+        Rules: [buildNoncurrentVersionExpirationRule("rule", 1, { Prefix: "" }, true)],
+      },
+    }),
+  )
+  client.destroy()
+
+  assert.equal((requestBody.match(/<Rule>/g) ?? []).length, 1)
+  assert.match(
+    requestBody,
+    /<NoncurrentVersionExpiration><NoncurrentDays>1<\/NoncurrentDays><\/NoncurrentVersionExpiration>/,
+  )
+  assert.match(requestBody, /<Expiration><ExpiredObjectDeleteMarker>true<\/ExpiredObjectDeleteMarker><\/Expiration>/)
+  assert.doesNotMatch(requestBody, /<Expiration><(?:Days|Date)>/)
+})
+
 test("lifecycle helpers preserve suspended versioning and reject partial tag pairs", () => {
   assert.equal(MAX_LIFECYCLE_RULES, 1000)
   assert.equal(getBucketVersioningMode("Enabled"), "enabled")
@@ -171,11 +205,19 @@ test("lifecycle helpers preserve suspended versioning and reject partial tag pai
     lifecycleFormSource,
     /buildCurrentVersionExpirationRules\(baseId, daysValue, filter, expiredDeleteMark\)/,
   )
+  assert.match(
+    lifecycleFormSource,
+    /buildNoncurrentVersionExpirationRule\(baseId, daysValue, filter, expiredDeleteMark\)/,
+  )
   assert.match(lifecycleFormSource, /Rules: \[\.\.\.existingRules, \.\.\.newRules\]/)
   assert.match(lifecycleFormSource, /existingRules\.length \+ newRules\.length > MAX_LIFECYCLE_RULES/)
   assert.match(lifecycleFormSource, /const hasVersionHistory = versioningMode !== "unversioned"/)
-  assert.match(lifecycleFormSource, /expiredDeleteMark && hasCompleteLifecycleTags\(tags\)/)
+  assert.match(lifecycleFormSource, /activeTab === "expire" && expiredDeleteMark && hasCompleteLifecycleTags\(tags\)/)
   assert.match(lifecycleFormSource, /setExpiredDeleteMark\(checked === true\)/)
+  assert.doesNotMatch(
+    lifecycleFormSource,
+    /activeTab !== "expire" \|\| versionType !== "current"\) setExpiredDeleteMark\(false\)/,
+  )
 })
 
 test("bucket reads fail closed and stale responses cannot update the active bucket", () => {

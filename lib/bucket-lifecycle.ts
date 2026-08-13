@@ -68,3 +68,18 @@ export function buildCurrentVersionExpirationRules(
 
   return rules
 }
+
+export function buildNoncurrentVersionExpirationRule(
+  id: string,
+  days: number,
+  filter: Record<string, unknown>,
+  cleanupExpiredDeleteMarkers: boolean,
+): Record<string, unknown> {
+  return {
+    ID: id,
+    Status: "Enabled",
+    Filter: filter,
+    NoncurrentVersionExpiration: { NoncurrentDays: days },
+    ...(cleanupExpiredDeleteMarkers ? { Expiration: { ExpiredObjectDeleteMarker: true } } : {}),
+  }
+}

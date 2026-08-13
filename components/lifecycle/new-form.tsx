@@ -19,6 +19,7 @@ import { isMissingBucketConfiguration } from "@/lib/bucket-configuration"
 import {
   buildCurrentVersionExpirationRules,
   buildLifecycleFilter,
+  buildNoncurrentVersionExpirationRule,
   findIncompleteLifecycleTag,
   getBucketVersioningMode,
   hasCompleteLifecycleTags,
@@ -128,10 +129,6 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
   }, [open, loadTiers, loadVersioningStatus, tiersReloadVersion, versioningReloadVersion])
 
   useEffect(() => {
-    if (activeTab !== "expire" || versionType !== "current") setExpiredDeleteMark(false)
-  }, [activeTab, versionType])
-
-  useEffect(() => {
     if (!hasVersionHistory) {
       setVersionType("current")
       setExpiredDeleteMark(false)
@@ -186,7 +183,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
     if (incompleteTagIndex >= 0) {
       errors.tags = tags[incompleteTagIndex].key.trim() ? t("Please enter tag value") : t("Please enter key name")
     }
-    if (activeTab === "expire" && versionType === "current" && expiredDeleteMark && hasCompleteLifecycleTags(tags)) {
+    if (activeTab === "expire" && expiredDeleteMark && hasCompleteLifecycleTags(tags)) {
       errors.deleteMarker = `${t("Delete Marker Handling")}: ${t("Tags")} ${t("Unsupported")}`
     }
 
@@ -243,8 +240,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
 
       if (activeTab === "expire") {
         if (versionType === "non-current") {
-          baseRule.NoncurrentVersionExpiration = { NoncurrentDays: daysValue }
-          newRules = [baseRule]
+          newRules = [buildNoncurrentVersionExpirationRule(baseId, daysValue, filter, expiredDeleteMark)]
         } else {
           newRules = buildCurrentVersionExpirationRules(baseId, daysValue, filter, expiredDeleteMark)
         }
@@ -490,7 +486,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                   </div>
                 </details>
 
-                {hasVersionHistory && versionType === "current" && (
+                {hasVersionHistory && (
                   <details>
                     <summary className="cursor-pointer text-sm font-medium text-primary">
                       {t("Advanced Settings")}
@@ -539,7 +535,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                   </Alert>
                 ) : null}
 
-                {activeTab === "expire" && expiredDeleteMark ? (
+                {activeTab === "expire" && versionType === "current" && expiredDeleteMark ? (
                   <p className="text-sm text-muted-foreground">{t("2 lifecycle rules will be created.")}</p>
                 ) : null}
               </TabsContent>

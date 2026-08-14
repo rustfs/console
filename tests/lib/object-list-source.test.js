@@ -32,6 +32,18 @@ test("object list lazy loads additional object batches instead of showing a pagi
   assert.equal(source.includes('t("Next Page")'), false)
 })
 
+test("last modified sorting discloses partial results and keeps continuation visible", () => {
+  const source = fs.readFileSync("components/object/list.tsx", "utf8")
+
+  assert.match(source, /\{nextToken \? \(\s+<span[^>]*>\{t\("Loaded objects only"\)\}/)
+  assert.match(source, /\{data\.length > 0 \? \(\s+<Button[\s\S]*?onClick=\{loadNextBatch\}/)
+  assert.equal(source.includes('t("Load next objects")'), true)
+  assert.equal(source.includes('t("All objects loaded")'), true)
+  assert.match(source, /if \(shouldAppend\) \{\s+setLoadMoreError\(true\)\s+\} else \{\s+message\.error/)
+  assert.equal(source.includes('role={loadMoreError ? "alert" : undefined}'), true)
+  assert.match(source, /onClick=\{loadNextBatch\}[\s\S]*?\{loadMoreError[\s\S]*?t\("Retry"\)/)
+})
+
 test("object list distinguishes filtered-empty states from an empty bucket", () => {
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 

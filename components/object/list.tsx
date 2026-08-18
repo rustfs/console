@@ -139,6 +139,7 @@ export function ObjectList({
   const [showDeleted, setShowDeleted] = useLocalStorage("object-list-show-deleted", false)
   const [loading, setLoading] = React.useState(false)
   const [listError, setListError] = React.useState<ObjectListError | null>(null)
+  const [loadMoreError, setLoadMoreError] = React.useState(false)
   const [data, setData] = React.useState<ObjectRow[]>([])
   const [nextToken, setNextToken] = React.useState<string | undefined>()
   const [showScrollShortcuts, setShowScrollShortcuts] = React.useState(false)
@@ -218,6 +219,7 @@ export function ObjectList({
       loadingRef.current = true
       setLoading(true)
       if (!shouldAppend) setListError(null)
+      setLoadMoreError(false)
       try {
         const response = await listObject(bucket, prefix || undefined, resolvedPageSize, token, {
           includeDeleted: showDeleted,
@@ -265,7 +267,6 @@ export function ObjectList({
         }
       } catch (error) {
         console.error("Failed to fetch objects:", error)
-        message.error((error as Error)?.message ?? t("Failed to load objects"))
         if (
           shouldApplyObjectListResponse({
             requestId,
@@ -274,8 +275,11 @@ export function ObjectList({
             activeScope: activeScopeRef.current,
           })
         ) {
-          setNextToken(undefined)
-          if (!shouldAppend) {
+          if (shouldAppend) {
+            setLoadMoreError(true)
+          } else {
+            message.error((error as Error)?.message ?? t("Failed to load objects"))
+            setNextToken(undefined)
             setData([])
             setListError(isAccessDeniedError(error) ? "accessDenied" : "loadFailed")
           }
@@ -502,7 +506,14 @@ export function ObjectList({
       },
       {
         id: "lastModified",
-        header: () => t("Last Modified"),
+        header: () => (
+          <span className="flex flex-col items-start">
+            <span>{t("Last Modified")}</span>
+            {nextToken ? (
+              <span className="text-xs font-normal text-muted-foreground">{t("Loaded objects only")}</span>
+            ) : null}
+          </span>
+        ),
         accessorFn: (row) => (row.type === "prefix" || !row.LastModified ? "" : new Date(row.LastModified).getTime()),
         cell: ({ row }) => (row.original.LastModified ? formatDateTime(row.original.LastModified) : "-"),
       },
@@ -567,6 +578,7 @@ export function ObjectList({
       prefix,
       bucketVersioningState,
       openDeleteDialog,
+      nextToken,
     ],
   )
 
@@ -808,6 +820,20 @@ export function ObjectList({
                 ) : null}
               </>
             ) : null}
+            {data.length > 0 ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={loadNextBatch}
+                aria-disabled={!nextToken || loading}
+                className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+              >
+                {loading ? <Spinner className="size-4" aria-hidden /> : null}
+                <span>
+                  {loading ? t("Loading more objects") : nextToken ? t("Load next objects") : t("All objects loaded")}
+                </span>
+              </Button>
+            ) : null}
             <Button variant="outline" onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}>
               <RiRefreshLine className="size-4" aria-hidden />
               <span>{t("Refresh")}</span>
@@ -862,16 +888,34 @@ export function ObjectList({
         </div>
       ) : null}
 
-      {nextToken ? (
-        <div ref={loadMoreRef} className="flex min-h-10 items-center justify-center text-sm text-muted-foreground">
-          {loading && data.length > 0 ? (
+      {data.length > 0 ? (
+        <div
+          ref={loadMoreRef}
+          role={loadMoreError ? "alert" : undefined}
+          className="flex min-h-10 flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground"
+        >
+          {loadMoreError ? (
+            <span className="text-destructive">
+              {t("Failed to load more objects. Loaded objects remain available.")}
+            </span>
+          ) : loading && nextToken ? (
             <span className="inline-flex items-center gap-2">
               <Spinner className="size-4" />
               {t("Loading more objects")}
             </span>
-          ) : (
+          ) : nextToken ? (
             <span>{t("Scroll to load more objects")}</span>
-          )}
+          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={loadNextBatch}
+            aria-disabled={!nextToken || loading}
+            className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
+          >
+            {loadMoreError ? t("Retry") : nextToken ? t("Load next objects") : t("All objects loaded")}
+          </Button>
         </div>
       ) : null}
 

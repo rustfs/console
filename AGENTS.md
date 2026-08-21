@@ -35,6 +35,7 @@ Never bypass hooks with `--no-verify`, never disable a failing test instead of f
 
 ## Engineering Principles
 
+- **Think from first principles**: do not assume the user fully understands what they want or how to achieve it. Start from the underlying need and problem, stay critical, and stop to discuss when the motivation or goal is unclear. If the goal is clear but the proposed path is not the shortest, say so and recommend a better approach.
 - **Code must be as concise and elegant as possible**: the smallest change that solves the problem; reuse existing utilities/components instead of duplicating logic; remove dead code as you go. Single responsibility per function/component; no premature abstraction, clever tricks, or gratuitous indirection — prefer the boring, obvious solution.
 - No TODO comments without an issue number.
 - Composition over inheritance; explicit data flow over implicit coupling; interfaces over singletons.

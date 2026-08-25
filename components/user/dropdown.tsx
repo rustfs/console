@@ -2,16 +2,23 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { useTheme } from "next-themes"
-import { RiUserLine, RiLockPasswordLine, RiLogoutBoxRLine, RiMore2Line } from "@remixicon/react"
+import { RiLogoutBoxRLine, RiMore2Line, RiShieldKeyholeLine, RiUserSettingsLine } from "@remixicon/react"
 import { buildRoute, getLoginRoute } from "@/lib/routes"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/auth-context"
 import { usePermissions } from "@/hooks/use-permissions"
-import { ChangePassword } from "./change-password"
 import { useSidebar } from "@/components/ui/sidebar"
 import { getThemeManifest } from "@/lib/theme/manifest"
 
@@ -49,15 +56,9 @@ export function UserDropdown() {
   const preferredAvatarPath = resolvedTheme === "dark" ? withDarkVariant(baseAvatarPath) : baseAvatarPath
   const [avatar, setAvatar] = useState(() => resolveAvatarPath(preferredAvatarPath))
 
-  const [changePasswordVisible, setChangePasswordVisible] = useState(false)
-
   useEffect(() => {
     setAvatar(resolveAvatarPath(preferredAvatarPath))
   }, [preferredAvatarPath])
-
-  const handleChangePassword = () => {
-    setChangePasswordVisible(true)
-  }
 
   const handleLogout = async () => {
     const redirected = await logoutWithOidcRedirect()
@@ -66,54 +67,70 @@ export function UserDropdown() {
     }
   }
 
+  const accountName = (userInfo as { account_name?: string })?.account_name ?? ""
+  const roleLabel = isAdmin ? t("Administrator") : t("User")
+
   return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="ghost" size={isCollapsed ? "icon" : "default"} aria-label={t("User menu")}>
+            <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted">
+              <Image
+                src={avatar}
+                alt=""
+                width={24}
+                height={24}
+                className="size-6 rounded-full object-cover"
+                onError={() => {
+                  const fallback = resolveAvatarPath(baseAvatarPath)
+                  setAvatar((current) => (current === fallback ? current : fallback))
+                }}
+              />
+            </span>
+            {!isCollapsed && (
+              <>
+                {/* The name belongs on the trigger too: the menu should confirm
+                    the identity, not be the only place to discover it. */}
+                <span className="hidden min-w-0 max-w-32 truncate text-sm md:inline">{accountName}</span>
+                <RiMore2Line className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+              </>
+            )}
+          </Button>
+        }
+      />
+      <DropdownMenuContent className="w-56" align="end" side="top">
+        {/* Identity first: who am I, and with what authority. A menu that opens
+            on an avatar with no name leaves both unanswered. */}
+        <DropdownMenuLabel className="font-normal">
+          <span className="block truncate font-medium" title={accountName || undefined}>
+            {accountName || t("Unknown user")}
+          </span>
+          <span className="block text-xs text-muted-foreground">{roleLabel}</span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
           render={
-            <Button variant="ghost" size={isCollapsed ? "icon" : "default"} aria-label={t("User menu")}>
-              <div className="flex items-center gap-3">
-                <span className="flex size-6 items-center justify-center overflow-hidden rounded-full border bg-muted">
-                  <Image
-                    src={avatar}
-                    alt={theme.brand.name}
-                    width={24}
-                    height={24}
-                    className="size-6 rounded-full object-cover"
-                    onError={() => {
-                      const fallback = resolveAvatarPath(baseAvatarPath)
-                      setAvatar((current) => (current === fallback ? current : fallback))
-                    }}
-                  />
-                </span>
-              </div>
-              {!isCollapsed && <RiMore2Line className="size-4 text-muted-foreground" aria-hidden />}
-            </Button>
+            <Link href={buildRoute("/account")} className="flex w-full items-center gap-2">
+              <RiUserSettingsLine className="size-4" aria-hidden />
+              <span>{t("Profile")}</span>
+            </Link>
           }
         />
-        <DropdownMenuContent className="w-48" align="end" side="top">
-          <DropdownMenuItem
-            render={
-              <div className="flex cursor-default items-center gap-2">
-                <RiUserLine className="size-4" aria-hidden />
-                <span>{(userInfo as { account_name?: string })?.account_name ?? ""}</span>
-              </div>
-            }
-          />
-          {!isAdmin && (
-            <DropdownMenuItem onClick={handleChangePassword}>
-              <RiLockPasswordLine className="size-4" aria-hidden />
-              <span>{t("Change Password")}</span>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem onClick={handleLogout}>
-            <RiLogoutBoxRLine className="size-4" aria-hidden />
-            <span>{t("Logout")}</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <ChangePassword visible={changePasswordVisible} onVisibleChange={setChangePasswordVisible} />
-    </>
+        <DropdownMenuItem
+          render={
+            <Link href={buildRoute("/account/security")} className="flex w-full items-center gap-2">
+              <RiShieldKeyholeLine className="size-4" aria-hidden />
+              <span>{t("Security")}</span>
+            </Link>
+          }
+        />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleLogout}>
+          <RiLogoutBoxRLine className="size-4" aria-hidden />
+          <span>{t("Logout")}</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }

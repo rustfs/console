@@ -87,6 +87,15 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
     "s3:DeleteBucketPolicy",
     "s3:*",
   ],
+  [CONSOLE_SCOPES.VIEW_TABLE_CATALOG]: [
+    "s3:ListAllMyBuckets",
+    "s3:GetBucketLocation",
+    "admin:GetTableCatalog",
+    "admin:GetTableBucket",
+    "admin:GetTableNamespace",
+    "admin:GetTable",
+    "admin:GetTableMetadata",
+  ],
   [CONSOLE_SCOPES.VIEW_ACCESS_KEYS]: [
     "admin:ListServiceAccounts",
     "admin:CreateServiceAccount",

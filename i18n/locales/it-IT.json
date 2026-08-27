@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "Annulla scansione",
   "Start Rekey Sweep": "Avvia scansione di rekey",
   "No rekey sweep has run yet": "Nessuna scansione di rekey è stata ancora eseguita",
-  "Cancelled": "Annullato",
   "Scanning bucket {bucket}": "Scansione del bucket {bucket} in corso",
   "Rewrapped": "Ri-wrappati",
   "Already current": "Già aggiornati",
   "Not applicable": "Non applicabile",
   "Some object versions failed to rewrap": "Il re-wrapping di alcune versioni degli oggetti non è riuscito",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "La scansione è idempotente: eseguila di nuovo per ritentare solo le versioni non riuscite. I dettagli sono nel log del server.",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Questa operazione scansiona i metadati di ogni versione di oggetto selezionata ed emette chiamate KMS per ri-wrappare gli envelope obsoleti. Su bucket di grandi dimensioni può richiedere molto tempo."
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Questa operazione scansiona i metadati di ogni versione di oggetto selezionata ed emette chiamate KMS per ri-wrappare gli envelope obsoleti. Su bucket di grandi dimensioni può richiedere molto tempo.",
+  "Sweep completed": "Scansione completata",
+  "Sweep cancelled": "Scansione annullata",
+  "Versions scanned": "Versioni scansionate",
+  "Versions failed": "Versioni non riuscite"
 }

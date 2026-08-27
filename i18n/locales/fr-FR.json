@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "Annuler le balayage",
   "Start Rekey Sweep": "Démarrer le balayage de rechiffrement",
   "No rekey sweep has run yet": "Aucun balayage de rechiffrement n'a encore été exécuté",
-  "Cancelled": "Annulé",
   "Scanning bucket {bucket}": "Balayage du compartiment {bucket}",
   "Rewrapped": "Rechiffrés",
   "Already current": "Déjà à jour",
   "Not applicable": "Non applicable",
   "Some object versions failed to rewrap": "Le rechiffrement de certaines versions d'objets a échoué",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "Le balayage est idempotent : relancez-le pour ne réessayer que les versions en échec. Les détails figurent dans le journal du serveur.",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Cette opération analyse les métadonnées de chaque version d'objet sélectionnée et émet des appels KMS pour rechiffrer les enveloppes obsolètes. Sur de grands compartiments, cela peut prendre beaucoup de temps."
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Cette opération analyse les métadonnées de chaque version d'objet sélectionnée et émet des appels KMS pour rechiffrer les enveloppes obsolètes. Sur de grands compartiments, cela peut prendre beaucoup de temps.",
+  "Sweep completed": "Balayage terminé",
+  "Sweep cancelled": "Balayage annulé",
+  "Versions scanned": "Versions balayées",
+  "Versions failed": "Versions en échec"
 }

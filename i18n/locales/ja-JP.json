@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "スイープをキャンセル",
   "Start Rekey Sweep": "リキースイープを開始",
   "No rekey sweep has run yet": "リキースイープはまだ実行されていません",
-  "Cancelled": "キャンセル済み",
   "Scanning bucket {bucket}": "バケット {bucket} をスキャン中",
   "Rewrapped": "再ラップ済み",
   "Already current": "最新の状態",
   "Not applicable": "対象外",
   "Some object versions failed to rewrap": "一部のオブジェクトバージョンの再ラップに失敗しました",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "スイープは冪等です。再度実行すると失敗したバージョンのみが再試行されます。詳細はサーバーログを参照してください。",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "選択したすべてのオブジェクトバージョンのメタデータをスキャンし、古いエンベロープを再ラップするためにKMS呼び出しを発行します。大きなバケットでは長時間かかる場合があります。"
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "選択したすべてのオブジェクトバージョンのメタデータをスキャンし、古いエンベロープを再ラップするためにKMS呼び出しを発行します。大きなバケットでは長時間かかる場合があります。",
+  "Sweep completed": "スイープが完了しました",
+  "Sweep cancelled": "スイープがキャンセルされました",
+  "Versions scanned": "スキャン済みバージョン",
+  "Versions failed": "失敗したバージョン"
 }

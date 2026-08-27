@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "스윕 취소",
   "Start Rekey Sweep": "리키 스윕 시작",
   "No rekey sweep has run yet": "아직 실행된 리키 스윕이 없습니다",
-  "Cancelled": "취소됨",
   "Scanning bucket {bucket}": "버킷 {bucket} 스캔 중",
   "Rewrapped": "재래핑됨",
   "Already current": "이미 최신 상태",
   "Not applicable": "해당 없음",
   "Some object versions failed to rewrap": "일부 객체 버전의 재래핑에 실패했습니다",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "이 스윕은 멱등입니다. 다시 실행하면 실패한 버전만 재시도됩니다. 자세한 내용은 서버 로그를 확인하세요.",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "선택한 모든 객체 버전의 메타데이터를 스캔하고 오래된 봉투를 재래핑하기 위해 KMS 호출을 실행합니다. 큰 버킷에서는 오래 걸릴 수 있습니다."
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "선택한 모든 객체 버전의 메타데이터를 스캔하고 오래된 봉투를 재래핑하기 위해 KMS 호출을 실행합니다. 큰 버킷에서는 오래 걸릴 수 있습니다.",
+  "Sweep completed": "스윕 완료됨",
+  "Sweep cancelled": "스윕 취소됨",
+  "Versions scanned": "스캔된 버전",
+  "Versions failed": "실패한 버전"
 }

@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "Отменить обход",
   "Start Rekey Sweep": "Запустить обход перешифрования",
   "No rekey sweep has run yet": "Обход перешифрования ещё не выполнялся",
-  "Cancelled": "Отменено",
   "Scanning bucket {bucket}": "Сканирование бакета {bucket}",
   "Rewrapped": "Переупаковано",
   "Already current": "Уже актуальны",
   "Not applicable": "Неприменимо",
   "Some object versions failed to rewrap": "Не удалось переупаковать некоторые версии объектов",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "Обход идемпотентен: запустите его снова, чтобы повторить только неудавшиеся версии. Подробности в журнале сервера.",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Эта операция сканирует метаданные каждой выбранной версии объекта и выполняет вызовы KMS для переупаковки устаревших конвертов. Для больших бакетов это может занять много времени."
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Эта операция сканирует метаданные каждой выбранной версии объекта и выполняет вызовы KMS для переупаковки устаревших конвертов. Для больших бакетов это может занять много времени.",
+  "Sweep completed": "Обход завершён",
+  "Sweep cancelled": "Обход отменён",
+  "Versions scanned": "Просканировано версий",
+  "Versions failed": "Версий с ошибкой"
 }

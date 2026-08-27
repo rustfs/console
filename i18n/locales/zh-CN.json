@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "取消扫描",
   "Start Rekey Sweep": "启动重加密扫描",
   "No rekey sweep has run yet": "尚未执行过重加密扫描",
-  "Cancelled": "已取消",
   "Scanning bucket {bucket}": "正在扫描存储桶 {bucket}",
   "Rewrapped": "已重新封装",
   "Already current": "已是最新",
   "Not applicable": "不适用",
   "Some object versions failed to rewrap": "部分对象版本重新封装失败",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "该扫描是幂等的：再次运行即可仅重试失败的版本。详情见服务器日志。",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "此操作将扫描所有选定对象版本的元数据，并发起 KMS 调用以重新封装过期的信封。存储桶规模较大时可能耗时很长。"
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "此操作将扫描所有选定对象版本的元数据，并发起 KMS 调用以重新封装过期的信封。存储桶规模较大时可能耗时很长。",
+  "Sweep completed": "扫描已完成",
+  "Sweep cancelled": "扫描已取消",
+  "Versions scanned": "已扫描版本",
+  "Versions failed": "失败版本"
 }

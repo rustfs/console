@@ -248,8 +248,8 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
                       {snapshot.state === "running"
                         ? t("Running")
                         : snapshot.state === "cancelled"
-                          ? t("Cancelled")
-                          : t("Completed")}
+                          ? t("Sweep cancelled")
+                          : t("Sweep completed")}
                     </Badge>
                     {isSweepRunning && snapshot.current_bucket ? (
                       <span className="break-all text-sm text-muted-foreground">
@@ -259,7 +259,7 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                     <div className="border bg-muted/40 p-3">
-                      <p className="text-xs text-muted-foreground">{t("Scanned")}</p>
+                      <p className="text-xs text-muted-foreground">{t("Versions scanned")}</p>
                       <p className="text-sm font-medium text-foreground">{snapshot.scanned}</p>
                     </div>
                     <div className="border bg-muted/40 p-3">
@@ -282,7 +282,7 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
                       }
                     >
                       <p className={snapshot.failed > 0 ? "text-xs text-destructive" : "text-xs text-muted-foreground"}>
-                        {t("Failed")}
+                        {t("Versions failed")}
                       </p>
                       <p
                         className={

@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "Cancelar barrido",
   "Start Rekey Sweep": "Iniciar barrido de recifrado",
   "No rekey sweep has run yet": "Aún no se ha ejecutado ningún barrido de recifrado",
-  "Cancelled": "Cancelado",
   "Scanning bucket {bucket}": "Barriendo el cubo {bucket}",
   "Rewrapped": "Reenvueltos",
   "Already current": "Ya actualizados",
   "Not applicable": "No aplicable",
   "Some object versions failed to rewrap": "Algunas versiones de objetos no se pudieron reenvolver",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "El barrido es idempotente: ejecútelo de nuevo para reintentar solo las versiones fallidas. Los detalles están en el registro del servidor.",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Esto escanea los metadatos de cada versión de objeto seleccionada y emite llamadas KMS para reenvolver los sobres obsoletos. En cubos grandes puede tardar mucho tiempo."
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Esto escanea los metadatos de cada versión de objeto seleccionada y emite llamadas KMS para reenvolver los sobres obsoletos. En cubos grandes puede tardar mucho tiempo.",
+  "Sweep completed": "Barrido completado",
+  "Sweep cancelled": "Barrido cancelado",
+  "Versions scanned": "Versiones barridas",
+  "Versions failed": "Versiones fallidas"
 }

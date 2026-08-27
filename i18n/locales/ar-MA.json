@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "إلغاء المسح",
   "Start Rekey Sweep": "بدء مسح إعادة التشفير",
   "No rekey sweep has run yet": "لم يتم تشغيل أي مسح لإعادة التشفير بعد",
-  "Cancelled": "أُلغي",
   "Scanning bucket {bucket}": "جارٍ مسح الحاوية {bucket}",
   "Rewrapped": "أُعيد تغليفها",
   "Already current": "محدَّثة بالفعل",
   "Not applicable": "غير قابل للتطبيق",
   "Some object versions failed to rewrap": "فشلت إعادة تغليف بعض إصدارات الكائنات",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "المسح غير متأثر بالتكرار: شغِّله مرة أخرى لإعادة محاولة الإصدارات الفاشلة فقط. التفاصيل في سجل الخادم.",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "يمسح هذا البيانات الوصفية لكل إصدار كائن محدد ويُصدر استدعاءات KMS لإعادة تغليف المظاريف القديمة. قد يستغرق ذلك وقتًا طويلًا في الحاويات الكبيرة."
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "يمسح هذا البيانات الوصفية لكل إصدار كائن محدد ويُصدر استدعاءات KMS لإعادة تغليف المظاريف القديمة. قد يستغرق ذلك وقتًا طويلًا في الحاويات الكبيرة.",
+  "Sweep completed": "اكتمل المسح",
+  "Sweep cancelled": "أُلغي المسح",
+  "Versions scanned": "الإصدارات الممسوحة",
+  "Versions failed": "الإصدارات الفاشلة"
 }

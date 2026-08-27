@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "Batalkan Penyapuan",
   "Start Rekey Sweep": "Mulai Penyapuan Rekey",
   "No rekey sweep has run yet": "Belum ada penyapuan rekey yang dijalankan",
-  "Cancelled": "Dibatalkan",
   "Scanning bucket {bucket}": "Memindai bucket {bucket}",
   "Rewrapped": "Dibungkus ulang",
   "Already current": "Sudah terkini",
   "Not applicable": "Tidak berlaku",
   "Some object versions failed to rewrap": "Beberapa versi objek gagal dibungkus ulang",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "Penyapuan ini idempoten: jalankan lagi untuk mencoba ulang hanya versi yang gagal. Detail ada di log server.",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Ini memindai metadata setiap versi objek yang dipilih dan mengeluarkan panggilan KMS untuk membungkus ulang amplop yang kedaluwarsa. Pada bucket besar ini bisa memakan waktu lama."
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Ini memindai metadata setiap versi objek yang dipilih dan mengeluarkan panggilan KMS untuk membungkus ulang amplop yang kedaluwarsa. Pada bucket besar ini bisa memakan waktu lama.",
+  "Sweep completed": "Penyapuan selesai",
+  "Sweep cancelled": "Penyapuan dibatalkan",
+  "Versions scanned": "Versi dipindai",
+  "Versions failed": "Versi gagal"
 }

@@ -1644,12 +1644,15 @@
   "Cancel Sweep": "Taramayı İptal Et",
   "Start Rekey Sweep": "Rekey Taramasını Başlat",
   "No rekey sweep has run yet": "Henüz bir rekey taraması çalıştırılmadı",
-  "Cancelled": "İptal edildi",
   "Scanning bucket {bucket}": "{bucket} bucket'ı taranıyor",
   "Rewrapped": "Yeniden sarıldı",
   "Already current": "Zaten güncel",
   "Not applicable": "Uygulanamaz",
   "Some object versions failed to rewrap": "Bazı nesne sürümleri yeniden sarılamadı",
   "The sweep is idempotent: run it again to retry only the failed versions. Details are in the server log.": "Tarama idempotenttir: yalnızca başarısız sürümleri yeniden denemek için tekrar çalıştırın. Ayrıntılar sunucu günlüğündedir.",
-  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Bu işlem, seçilen her nesne sürümünün meta verilerini tarar ve güncel olmayan zarfları yeniden sarmak için KMS çağrıları yapar. Büyük bucket'larda bu uzun sürebilir."
+  "This scans the metadata of every selected object version and issues KMS calls to rewrap outdated envelopes. On large buckets this can take a long time.": "Bu işlem, seçilen her nesne sürümünün meta verilerini tarar ve güncel olmayan zarfları yeniden sarmak için KMS çağrıları yapar. Büyük bucket'larda bu uzun sürebilir.",
+  "Sweep completed": "Tarama tamamlandı",
+  "Sweep cancelled": "Tarama iptal edildi",
+  "Versions scanned": "Taranan sürümler",
+  "Versions failed": "Başarısız sürümler"
 }

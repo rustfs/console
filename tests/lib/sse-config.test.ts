@@ -44,6 +44,19 @@ test("buildFormStateFromStatus does not coerce NotConfigured or future backends 
   assert.equal(buildFormStateFromStatus(statusWithBackend("FutureBackend")).backendType, "unsupported")
 })
 
+test("buildFormStateFromStatus never refills TLS paths because status only reports booleans", () => {
+  const status = statusWithBackend("VaultTransit")
+  const backendSummary = status.config_summary?.backend_summary
+  assert.ok(backendSummary)
+  backendSummary.has_custom_ca = true
+  backendSummary.has_client_identity = true
+
+  const formState = buildFormStateFromStatus(status)
+  assert.equal(formState.caCertPath, "")
+  assert.equal(formState.clientCertPath, "")
+  assert.equal(formState.clientKeyPath, "")
+})
+
 test("getFormSyncDecision refreshes clean forms when the server baseline changes", () => {
   const nextBaseline = {
     ...INITIAL_FORM_STATE,

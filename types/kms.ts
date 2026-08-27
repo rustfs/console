@@ -22,7 +22,35 @@ export interface KmsBackendSummary {
   kv_mount?: string | null
   key_path_prefix?: string | null
   skip_tls_verify?: boolean | null
+  has_custom_ca?: boolean | null
+  has_client_identity?: boolean | null
   key_id?: string | null
+}
+
+// Capability matrix reported by newer servers. Older servers omit the whole
+// object and individual flags, so every field must stay optional and absence
+// must render as "unknown", never as false.
+export interface KmsBackendCapabilities {
+  encrypt?: boolean
+  decrypt?: boolean
+  generate_data_key?: boolean
+  rotate?: boolean
+  enable_disable?: boolean
+  schedule_deletion?: boolean
+  versioning?: boolean
+  physical_delete?: boolean
+  update_key_metadata?: boolean
+  rewrap?: boolean
+  production_supported?: boolean
+}
+
+// Response of GET /kms/status (only available while KMS is running).
+export interface KmsDetailedStatusResponse {
+  backend_type?: string | null
+  backend_status?: string | null
+  cache_enabled?: boolean | null
+  default_key_id?: string | null
+  capabilities?: KmsBackendCapabilities | null
 }
 
 export interface KmsConfigSummary {
@@ -99,6 +127,11 @@ export interface KmsVaultKV2ConfigPayload {
   kv_mount?: string | null
   key_path_prefix?: string | null
   skip_tls_verify?: boolean
+  // Server-local PEM file paths. Older servers reject unknown fields, so only
+  // include these keys when the user actually filled them in.
+  ca_cert_path?: string
+  client_cert_path?: string
+  client_key_path?: string
   default_key_id?: string
   timeout_seconds?: number
   retry_attempts?: number
@@ -114,6 +147,11 @@ export interface KmsVaultTransitConfigPayload {
   namespace?: string | null
   mount_path: string
   skip_tls_verify?: boolean
+  // Server-local PEM file paths. Older servers reject unknown fields, so only
+  // include these keys when the user actually filled them in.
+  ca_cert_path?: string
+  client_cert_path?: string
+  client_key_path?: string
   default_key_id?: string
   timeout_seconds?: number
   retry_attempts?: number
@@ -198,4 +236,26 @@ export interface KmsDeleteKeyOptions {
 
 export interface KmsCancelDeletionRequest {
   key_id: string
+}
+
+export interface KmsRekeyStartRequest {
+  // Empty or missing means every bucket.
+  buckets?: string[]
+  prefix?: string
+}
+
+export type KmsRekeyJobState = "running" | "completed" | "cancelled"
+
+// Wire shape of POST /kms/keys/rekey and GET /kms/keys/rekey/status.
+// Counts are per object version.
+export interface KmsRekeyJobSnapshot {
+  job_id: string
+  state: KmsRekeyJobState
+  buckets: string[]
+  current_bucket: string | null
+  scanned: number
+  rewrapped: number
+  already_current: number
+  not_applicable: number
+  failed: number
 }

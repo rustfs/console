@@ -936,6 +936,14 @@ export default function SSEPage() {
       : t("Changing KMS service state may briefly interrupt SSE requests.")
   const isPendingDefaultKey = pendingKeyAction?.key.key_id === status?.config_summary?.default_key_id
 
+  const backendTypeLabels: Record<ConfigFormState["backendType"], string> = {
+    local: t("Local filesystem"),
+    "vault-kv2": t("HashiCorp Vault KV2"),
+    "vault-transit": t("HashiCorp Vault Transit Engine"),
+    static: t("Static single-key (built-in)"),
+    unsupported: t("Unsupported KMS backend"),
+  }
+
   const mutationLocked = Boolean(activeMutation || statusError || loadingStatus)
   const unsupportedKmsReadOnly = formState.backendType === "unsupported"
   const staticKmsReadOnly = hasConfiguration && formState.backendType === "static"
@@ -1160,18 +1168,20 @@ export default function SSEPage() {
                           disabled={formDisabled || localKmsConfigured}
                         >
                           <SelectTrigger id="kmsBackend" className="w-full" aria-label={t("KMS Backend")}>
-                            <SelectValue placeholder={t("Select backend type")} />
+                            <SelectValue placeholder={t("Select backend type")}>
+                              {backendTypeLabels[formState.backendType]}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {formState.backendType === "unsupported" ? (
                               <SelectItem value="unsupported" disabled>
-                                {t("Unsupported KMS backend")}
+                                {backendTypeLabels.unsupported}
                               </SelectItem>
                             ) : null}
-                            <SelectItem value="local">{t("Local filesystem")}</SelectItem>
-                            <SelectItem value="vault-kv2">{t("HashiCorp Vault KV2")}</SelectItem>
-                            <SelectItem value="vault-transit">{t("HashiCorp Vault Transit Engine")}</SelectItem>
-                            <SelectItem value="static">{t("Static single-key (built-in)")}</SelectItem>
+                            <SelectItem value="local">{backendTypeLabels.local}</SelectItem>
+                            <SelectItem value="vault-kv2">{backendTypeLabels["vault-kv2"]}</SelectItem>
+                            <SelectItem value="vault-transit">{backendTypeLabels["vault-transit"]}</SelectItem>
+                            <SelectItem value="static">{backendTypeLabels.static}</SelectItem>
                           </SelectContent>
                         </Select>
                       </FieldContent>

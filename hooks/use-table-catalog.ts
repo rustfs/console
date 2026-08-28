@@ -335,7 +335,11 @@ export function useTableCatalog(catalogPrefix: string = TABLE_CATALOG_PREFIX) {
     catalogPrefixRef.current = normalizedCatalogPrefix
   }, [normalizedCatalogPrefix])
 
-  const requestUrl = useCallback((path: string) => api.resolveUrl(path), [api])
+  const requestUrl = useCallback(
+    (path: string) =>
+      api.resolveUrl(path.startsWith("/") ? path : buildTableCatalogPath(path, catalogPrefixRef.current)),
+    [api],
+  )
 
   const getCatalogConfig = useCallback(async () => {
     // The canonical config route is the discovery bootstrap. Operational

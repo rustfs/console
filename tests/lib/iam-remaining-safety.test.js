@@ -18,16 +18,37 @@ test("new user dialog distinguishes assignment loading errors and keeps actions 
   assert.doesNotMatch(source, /max-h-\[80vh\]/)
 })
 
-test("change password asks only for values the request actually uses", () => {
-  const source = read("components/user/change-password.tsx")
+test("change password proves knowledge of the current secret before rotating it", () => {
+  const source = read("components/account/change-password-dialog.tsx")
 
-  assert.doesNotMatch(source, /currentSecretKey/)
-  assert.doesNotMatch(source, /password-current/)
+  // The request is already signed, but the console signs with a short-lived
+  // session: a signature proves the session is live, not that the person at the
+  // keyboard knows the password. Dropping this field would let a borrowed tab
+  // change the account's credentials.
+  assert.match(source, /changePassword\(current, next\)/)
+  assert.match(source, /autoComplete="current-password"/)
   assert.match(source, /PASSWORD_MIN_LENGTH = 8/)
-  assert.match(source, /PASSWORD_MAX_LENGTH = 40/)
   assert.match(source, /<form\s+className="contents"\s+onSubmit=/)
-  assert.match(source, /aria-describedby=\{errors\.new \? "password-new-error" : undefined\}/)
   assert.match(source, /type="submit"/)
+
+  // Failures stay next to the form and preserve what was typed.
+  assert.match(source, /aria-describedby=\{errors\.current \? "account-password-current-error" : undefined\}/)
+  assert.match(source, /setSubmitError/)
+
+  // The old flow re-POSTed the whole user through add-user, which rewrote
+  // status and dropped the policy field. It must not come back.
+  assert.doesNotMatch(source, /add-user/)
+  assert.doesNotMatch(source, /createUser/)
+})
+
+test("the self-service password endpoint sends both secrets and nothing else", () => {
+  const source = read("hooks/use-account.ts")
+
+  assert.match(source, /"\/account\/password"/)
+  assert.match(source, /current_secret_key: currentSecretKey, new_secret_key: newSecretKey/)
+  // Self-service only: no target parameter, so this cannot act on another
+  // identity even if a caller tried.
+  assert.doesNotMatch(source, /accessKey=\$\{/)
 })
 
 test("credential result prevents accidental dismissal and names copy actions", () => {

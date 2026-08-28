@@ -6,6 +6,8 @@ import type { SiteConfig } from "@/types/config"
 import { getLoginRoute } from "@/lib/routes"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { buildOidcLogoutUrl, type OidcLogoutSession } from "@/lib/oidc"
+import { isMfaRequiredError } from "@/lib/mfa"
+import { fetchMfaChallenge } from "@/lib/mfa-challenge"
 
 interface Credentials {
   AccessKeyId?: string
@@ -14,11 +16,26 @@ interface Credentials {
   Expiration?: string
 }
 
+/**
+ * Result of a first login attempt.
+ *
+ * A demand for a second factor is an expected branch of a successful password
+ * check, not an error, so it is modelled as an outcome rather than thrown. The
+ * long-term credentials stay in the caller's state for the second call and are
+ * never persisted.
+ */
+export type LoginOutcome = { status: "authenticated" } | { status: "mfa-required"; challenge?: string }
+
 interface AuthContextValue {
   login: (
     credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
     customConfig?: SiteConfig,
-  ) => Promise<unknown>
+  ) => Promise<LoginOutcome>
+  completeLoginWithSecondFactor: (
+    credentials: AwsCredentialIdentity,
+    secondFactor: { code: string; challenge?: string },
+    customConfig?: SiteConfig,
+  ) => Promise<void>
   loginWithStsCredentials: (credentials: Credentials, oidcSession?: OidcLogoutSession) => Promise<void>
   logout: () => void
   logoutAndRedirect: () => void
@@ -43,6 +60,19 @@ function isValidCredentials(credentials: Credentials | undefined): boolean {
   }
   const isExpired = (exp: string) => (exp ? new Date(exp) < new Date() : false)
   return !isExpired(credentials.Expiration)
+}
+
+/**
+ * Whether these credentials are a static key pair we can sign a probe with.
+ *
+ * A `AwsCredentialIdentityProvider` is a function; resolving it here to read the
+ * secret would duplicate what the SDK does during signing, so those callers skip
+ * the probe and rely on AssumeRole's error instead.
+ */
+function isStaticCredentials(
+  credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
+): credentials is AwsCredentialIdentity {
+  return typeof credentials !== "function" && typeof credentials?.accessKeyId === "string"
 }
 
 function isValidOidcLogoutSession(session: OidcLogoutSession | undefined): session is OidcLogoutSession {
@@ -87,28 +117,83 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return !!isAdminStore
   }, [isAdminStore])
 
-  const login = useCallback(
-    async (credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider, customConfig?: SiteConfig) => {
-      if (!customConfig) {
-        const { configManager } = await import("@/lib/config")
-        customConfig = await configManager.loadConfig()
-      }
+  const resolveConfig = useCallback(async (customConfig?: SiteConfig) => {
+    if (customConfig) return customConfig
+    const { configManager } = await import("@/lib/config")
+    return configManager.loadConfig()
+  }, [])
 
-      const { getStsToken } = await import("@/lib/sts")
-      const credentialsResponse = await getStsToken(credentials, "arn:aws:iam::*:role/Admin", customConfig)
-
+  const storeStsCredentials = useCallback(
+    (credentialsResponse: {
+      AccessKeyId?: string
+      SecretAccessKey?: string
+      SessionToken?: string
+      Expiration?: Date
+    }) => {
       setCredentials({
-        ...credentialsResponse,
         AccessKeyId: credentialsResponse.AccessKeyId,
         SecretAccessKey: credentialsResponse.SecretAccessKey,
         SessionToken: credentialsResponse.SessionToken,
         Expiration: credentialsResponse.Expiration?.toISOString(),
       })
       setOidcSession(undefined)
-
-      return credentialsResponse
     },
     [setCredentials, setOidcSession],
+  )
+
+  const login = useCallback(
+    async (
+      credentials: AwsCredentialIdentity | AwsCredentialIdentityProvider,
+      customConfig?: SiteConfig,
+    ): Promise<LoginOutcome> => {
+      const config = await resolveConfig(customConfig)
+      const { getStsToken } = await import("@/lib/sts")
+
+      // Ask before attempting, when the credentials are a static pair we can
+      // sign with. A credential *provider* cannot be probed this way, so those
+      // fall through to the AssumeRole error below.
+      const staticCredentials = isStaticCredentials(credentials) ? credentials : undefined
+      if (staticCredentials) {
+        const challenge = await fetchMfaChallenge(
+          {
+            accessKeyId: staticCredentials.accessKeyId,
+            secretAccessKey: staticCredentials.secretAccessKey,
+          },
+          config,
+        )
+        if (challenge.required) {
+          return { status: "mfa-required", challenge: challenge.challenge }
+        }
+      }
+
+      try {
+        storeStsCredentials(await getStsToken(credentials, "arn:aws:iam::*:role/Admin", config))
+        return { status: "authenticated" }
+      } catch (error) {
+        // Backstop for the cases the probe could not cover: a credential
+        // provider, or a server that has no challenge endpoint but does enforce
+        // the factor. AssumeRole fails closed and says so.
+        if (isMfaRequiredError(error)) {
+          return { status: "mfa-required" }
+        }
+        throw error
+      }
+    },
+    [resolveConfig, storeStsCredentials],
+  )
+
+  const completeLoginWithSecondFactor = useCallback(
+    async (
+      credentials: AwsCredentialIdentity,
+      secondFactor: { code: string; challenge?: string },
+      customConfig?: SiteConfig,
+    ) => {
+      const config = await resolveConfig(customConfig)
+      const { getStsToken } = await import("@/lib/sts")
+
+      storeStsCredentials(await getStsToken(credentials, "arn:aws:iam::*:role/Admin", config, secondFactor))
+    },
+    [resolveConfig, storeStsCredentials],
   )
 
   const loginWithStsCredentials = useCallback(
@@ -164,6 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       login,
+      completeLoginWithSecondFactor,
       loginWithStsCredentials,
       logout,
       logoutAndRedirect,
@@ -176,6 +262,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }),
     [
       login,
+      completeLoginWithSecondFactor,
       loginWithStsCredentials,
       logout,
       logoutAndRedirect,

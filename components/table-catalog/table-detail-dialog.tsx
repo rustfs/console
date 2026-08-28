@@ -24,6 +24,7 @@ import { displayNamespace } from "@/lib/table-catalog-paths"
 interface TableDetailDialogProps {
   open: boolean
   bucket: string
+  catalogPrefix?: string
   identifier: TableIdentifier | null
   canCommit?: boolean
   canDelete?: boolean
@@ -87,6 +88,7 @@ function metadataValue(table: LoadedTable | null, key: string) {
 export function TableDetailDialog({
   open,
   bucket,
+  catalogPrefix,
   identifier,
   canCommit = false,
   canDelete = false,
@@ -95,7 +97,7 @@ export function TableDetailDialog({
   onRequestDelete,
 }: TableDetailDialogProps) {
   const { t } = useTranslation()
-  const { loadTable, getTableRefs } = useTableCatalog()
+  const { loadTable, getTableRefs } = useTableCatalog(catalogPrefix)
   const [table, setTable] = React.useState<LoadedTable | null>(null)
   const [refs, setRefs] = React.useState<TableRefs | null>(null)
   const [refsError, setRefsError] = React.useState("")

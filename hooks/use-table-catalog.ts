@@ -1,12 +1,14 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useEffect, useRef } from "react"
 import { useApi } from "@/contexts/api-context"
 import {
   buildTableCatalogPath,
   encodeCatalogSegment,
+  normalizeTableCatalogPrefix,
   namespaceCatalogPath,
   TABLE_CATALOG_NAMESPACE_SEPARATOR,
+  TABLE_CATALOG_PREFIX,
   tableBucketCatalogPath,
   tableCatalogPath,
   tablesCatalogPath,
@@ -323,22 +325,30 @@ function appendQuery(path: string, params: Record<string, string>) {
   return `${path}?${query.toString()}`
 }
 
-export function useTableCatalog() {
+export function useTableCatalog(catalogPrefix: string = TABLE_CATALOG_PREFIX) {
   const api = useApi()
+  const normalizedCatalogPrefix = normalizeTableCatalogPrefix(catalogPrefix)
+  const catalogPrefixRef = useRef(normalizedCatalogPrefix)
+  // Keep request callbacks stable while allowing the page to swap to the
+  // prefix discovered from the catalog config response.
+  useEffect(() => {
+    catalogPrefixRef.current = normalizedCatalogPrefix
+  }, [normalizedCatalogPrefix])
 
-  const requestUrl = useCallback(
-    (path: string) => api.resolveUrl(path.startsWith("/") ? path : buildTableCatalogPath(path)),
-    [api],
-  )
+  const requestUrl = useCallback((path: string) => api.resolveUrl(path), [api])
 
   const getCatalogConfig = useCallback(async () => {
-    const response = await api.get(requestUrl("config"), { suppress403Redirect: true })
+    // The canonical config route is the discovery bootstrap. Operational
+    // requests switch to the prefix advertised by this response.
+    const response = await api.get(requestUrl(buildTableCatalogPath("config")), { suppress403Redirect: true })
     return normalizeCatalogConfig(response)
   }, [api, requestUrl])
 
   const getTableBucket = useCallback(
-    async (bucket: string) => {
-      const response = await api.get(requestUrl(tableBucketCatalogPath(bucket)), { suppress403Redirect: true })
+    async (bucket: string, requestPrefix = catalogPrefixRef.current) => {
+      const response = await api.get(requestUrl(tableBucketCatalogPath(bucket, requestPrefix)), {
+        suppress403Redirect: true,
+      })
       return normalizeTableBucket(response, bucket)
     },
     [api, requestUrl],
@@ -346,7 +356,7 @@ export function useTableCatalog() {
 
   const enableTableBucket = useCallback(
     async (bucket: string) => {
-      const response = await api.put(requestUrl(tableBucketCatalogPath(bucket)), null, {
+      const response = await api.put(requestUrl(tableBucketCatalogPath(bucket, catalogPrefixRef.current)), null, {
         suppress403Redirect: true,
       })
       return normalizeTableBucket(response, bucket)
@@ -363,7 +373,7 @@ export function useTableCatalog() {
         const children: NamespaceSummary[] = []
         let nextPageToken: string | undefined
         do {
-          const path = buildTableCatalogPath(`${encodeCatalogSegment(bucket)}/namespaces`)
+          const path = buildTableCatalogPath(`${encodeCatalogSegment(bucket)}/namespaces`, catalogPrefixRef.current)
           const params: Record<string, string> = { pageSize: "1000" }
           if (parent?.length) params.parent = parent.join(TABLE_CATALOG_NAMESPACE_SEPARATOR)
           if (nextPageToken) params.pageToken = nextPageToken
@@ -395,9 +405,13 @@ export function useTableCatalog() {
     async (bucket: string, namespace: string[], properties: StringMap = {}) => {
       const body: JsonObject = { namespace }
       if (Object.keys(properties).length > 0) body.properties = properties
-      const response = await api.post(requestUrl(`${encodeCatalogSegment(bucket)}/namespaces`), body, {
-        suppress403Redirect: true,
-      })
+      const response = await api.post(
+        requestUrl(buildTableCatalogPath(`${encodeCatalogSegment(bucket)}/namespaces`, catalogPrefixRef.current)),
+        body,
+        {
+          suppress403Redirect: true,
+        },
+      )
       const object = asObject(response)
       return {
         namespace: namespaceSegments(object.namespace).length ? namespaceSegments(object.namespace) : namespace,
@@ -410,7 +424,7 @@ export function useTableCatalog() {
 
   const getNamespace = useCallback(
     async (bucket: string, namespace: string[]) => {
-      const response = await api.get(requestUrl(namespaceCatalogPath(bucket, namespace)), {
+      const response = await api.get(requestUrl(namespaceCatalogPath(bucket, namespace, catalogPrefixRef.current)), {
         suppress403Redirect: true,
       })
       return normalizeNamespace(response, namespace)
@@ -424,9 +438,13 @@ export function useTableCatalog() {
         removals: payload.removals ?? [],
         updates: payload.updates ?? {},
       }
-      const response = await api.post(requestUrl(`${namespaceCatalogPath(bucket, namespace)}/properties`), body, {
-        suppress403Redirect: true,
-      })
+      const response = await api.post(
+        requestUrl(`${namespaceCatalogPath(bucket, namespace, catalogPrefixRef.current)}/properties`),
+        body,
+        {
+          suppress403Redirect: true,
+        },
+      )
       return asObject(response)
     },
     [api, requestUrl],
@@ -434,7 +452,9 @@ export function useTableCatalog() {
 
   const dropNamespace = useCallback(
     async (bucket: string, namespace: string[]) => {
-      await api.delete(requestUrl(namespaceCatalogPath(bucket, namespace)), { suppress403Redirect: true })
+      await api.delete(requestUrl(namespaceCatalogPath(bucket, namespace, catalogPrefixRef.current)), {
+        suppress403Redirect: true,
+      })
     },
     [api, requestUrl],
   )
@@ -444,7 +464,7 @@ export function useTableCatalog() {
       const items: TableIdentifier[] = []
       let nextPageToken: string | undefined
       do {
-        const path = tablesCatalogPath(bucket, namespace)
+        const path = tablesCatalogPath(bucket, namespace, catalogPrefixRef.current)
         const response = await api.get(
           requestUrl(
             nextPageToken
@@ -474,9 +494,13 @@ export function useTableCatalog() {
       if (payload.stageCreate) body["stage-create"] = true
       if (payload.properties && Object.keys(payload.properties).length > 0) body.properties = payload.properties
 
-      const response = await api.post(requestUrl(`${tablesCatalogPath(bucket, namespace)}`), body, {
-        suppress403Redirect: true,
-      })
+      const response = await api.post(
+        requestUrl(tablesCatalogPath(bucket, namespace, catalogPrefixRef.current)),
+        body,
+        {
+          suppress403Redirect: true,
+        },
+      )
       return normalizeLoadedTable(response)
     },
     [api, requestUrl],
@@ -484,7 +508,7 @@ export function useTableCatalog() {
 
   const loadTable = useCallback(
     async (bucket: string, namespace: string[], table: string) => {
-      const response = await api.get(requestUrl(tableCatalogPath(bucket, namespace, table)), {
+      const response = await api.get(requestUrl(tableCatalogPath(bucket, namespace, table, catalogPrefixRef.current)), {
         suppress403Redirect: true,
       })
       return normalizeLoadedTable(response)
@@ -494,7 +518,9 @@ export function useTableCatalog() {
 
   const dropTable = useCallback(
     async (bucket: string, namespace: string[], table: string) => {
-      await api.delete(requestUrl(tableCatalogPath(bucket, namespace, table)), { suppress403Redirect: true })
+      await api.delete(requestUrl(tableCatalogPath(bucket, namespace, table, catalogPrefixRef.current)), {
+        suppress403Redirect: true,
+      })
     },
     [api, requestUrl],
   )
@@ -513,9 +539,13 @@ export function useTableCatalog() {
       if (payload.expectedMetadataLocation) body["expected-metadata-location"] = payload.expectedMetadataLocation
       if (payload.writer) body.writer = payload.writer
 
-      const response = await api.post(requestUrl(tableCatalogPath(bucket, namespace, table)), body, {
-        suppress403Redirect: true,
-      })
+      const response = await api.post(
+        requestUrl(tableCatalogPath(bucket, namespace, table, catalogPrefixRef.current)),
+        body,
+        {
+          suppress403Redirect: true,
+        },
+      )
       return normalizeCommitTableResponse(response)
     },
     [api, requestUrl],
@@ -526,7 +556,7 @@ export function useTableCatalog() {
       const items: ViewIdentifier[] = []
       let nextPageToken: string | undefined
       do {
-        const path = viewsCatalogPath(bucket, namespace)
+        const path = viewsCatalogPath(bucket, namespace, catalogPrefixRef.current)
         const response = await api.get(
           requestUrl(
             nextPageToken
@@ -553,7 +583,7 @@ export function useTableCatalog() {
       }
       if (payload.location) body.location = payload.location
       if (payload.properties && Object.keys(payload.properties).length > 0) body.properties = payload.properties
-      const response = await api.post(requestUrl(viewsCatalogPath(bucket, namespace)), body, {
+      const response = await api.post(requestUrl(viewsCatalogPath(bucket, namespace, catalogPrefixRef.current)), body, {
         suppress403Redirect: true,
       })
       return normalizeLoadedView(response)
@@ -563,7 +593,7 @@ export function useTableCatalog() {
 
   const loadView = useCallback(
     async (bucket: string, namespace: string[], view: string) => {
-      const response = await api.get(requestUrl(viewCatalogPath(bucket, namespace, view)), {
+      const response = await api.get(requestUrl(viewCatalogPath(bucket, namespace, view, catalogPrefixRef.current)), {
         suppress403Redirect: true,
       })
       return normalizeLoadedView(response)
@@ -580,9 +610,13 @@ export function useTableCatalog() {
       if (payload.identifier) body.identifier = payload.identifier
       if (payload.expectedVersionToken) body["expected-version-token"] = payload.expectedVersionToken
       if (payload.expectedMetadataLocation) body["expected-metadata-location"] = payload.expectedMetadataLocation
-      const response = await api.post(requestUrl(viewCatalogPath(bucket, namespace, view)), body, {
-        suppress403Redirect: true,
-      })
+      const response = await api.post(
+        requestUrl(viewCatalogPath(bucket, namespace, view, catalogPrefixRef.current)),
+        body,
+        {
+          suppress403Redirect: true,
+        },
+      )
       return normalizeLoadedView(response)
     },
     [api, requestUrl],
@@ -590,16 +624,21 @@ export function useTableCatalog() {
 
   const dropView = useCallback(
     async (bucket: string, namespace: string[], view: string) => {
-      await api.delete(requestUrl(viewCatalogPath(bucket, namespace, view)), { suppress403Redirect: true })
+      await api.delete(requestUrl(viewCatalogPath(bucket, namespace, view, catalogPrefixRef.current)), {
+        suppress403Redirect: true,
+      })
     },
     [api, requestUrl],
   )
 
   const getTableRefs = useCallback(
     async (bucket: string, namespace: string[], table: string) => {
-      const response = await api.get(requestUrl(`${tableCatalogPath(bucket, namespace, table)}/refs`), {
-        suppress403Redirect: true,
-      })
+      const response = await api.get(
+        requestUrl(`${tableCatalogPath(bucket, namespace, table, catalogPrefixRef.current)}/refs`),
+        {
+          suppress403Redirect: true,
+        },
+      )
       return normalizeTableRefs(response)
     },
     [api, requestUrl],

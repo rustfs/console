@@ -23,6 +23,7 @@ import { displayNamespace, isCatalogIdentifierValid } from "@/lib/table-catalog-
 interface NamespaceDialogProps {
   open: boolean
   bucket: string
+  catalogPrefix?: string
   initialNamespace?: NamespaceSummary | null
   canCreate?: boolean
   canUpdate?: boolean
@@ -50,6 +51,7 @@ function parseProperties(value: string): Record<string, string> {
 export function NamespaceDialog({
   open,
   bucket,
+  catalogPrefix,
   initialNamespace = null,
   canCreate = false,
   canUpdate = false,
@@ -58,7 +60,7 @@ export function NamespaceDialog({
 }: NamespaceDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const { createNamespace, getNamespace, updateNamespaceProperties } = useTableCatalog()
+  const { createNamespace, getNamespace, updateNamespaceProperties } = useTableCatalog(catalogPrefix)
   const [namespace, setNamespace] = React.useState("")
   const [properties, setProperties] = React.useState("")
   const [originalProperties, setOriginalProperties] = React.useState<Record<string, string>>({})

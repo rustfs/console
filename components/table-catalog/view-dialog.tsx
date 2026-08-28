@@ -30,6 +30,7 @@ export type ViewDialogMode = "create" | "edit"
 interface ViewDialogProps {
   open: boolean
   bucket: string
+  catalogPrefix?: string
   namespace: string[]
   mode: ViewDialogMode
   identifier?: ViewIdentifier | null
@@ -119,6 +120,7 @@ function stringProperty(value: unknown, key: string, fallback = "") {
 export function ViewDialog({
   open,
   bucket,
+  catalogPrefix,
   namespace,
   mode,
   identifier = null,
@@ -128,7 +130,7 @@ export function ViewDialog({
 }: ViewDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const { createView, loadView, replaceView } = useTableCatalog()
+  const { createView, loadView, replaceView } = useTableCatalog(catalogPrefix)
   const [name, setName] = React.useState("")
   const [schema, setSchema] = React.useState(DEFAULT_SCHEMA)
   const [sql, setSql] = React.useState(DEFAULT_SQL)

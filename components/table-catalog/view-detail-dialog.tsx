@@ -23,6 +23,7 @@ import { displayNamespace } from "@/lib/table-catalog-paths"
 interface ViewDetailDialogProps {
   open: boolean
   bucket: string
+  catalogPrefix?: string
   identifier: ViewIdentifier | null
   canReplace?: boolean
   canDelete?: boolean
@@ -82,6 +83,7 @@ function versionRepresentations(version: Record<string, unknown> | null) {
 export function ViewDetailDialog({
   open,
   bucket,
+  catalogPrefix,
   identifier,
   canReplace = false,
   canDelete = false,
@@ -90,7 +92,7 @@ export function ViewDetailDialog({
   onRequestDelete,
 }: ViewDetailDialogProps) {
   const { t } = useTranslation()
-  const { loadView } = useTableCatalog()
+  const { loadView } = useTableCatalog(catalogPrefix)
   const [view, setView] = React.useState<LoadedView | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState("")

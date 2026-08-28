@@ -5,6 +5,8 @@ import {
   displayNamespace,
   encodeNamespaceSegments,
   isCatalogIdentifierValid,
+  normalizeTableCatalogPrefix,
+  resolveTableCatalogPrefix,
   tableBucketCatalogPath,
   tableCatalogBasePath,
   tableCatalogPath,
@@ -43,6 +45,23 @@ test("table catalog paths preserve a configured reverse-proxy prefix", () => {
     if (previous === undefined) delete process.env.NEXT_PUBLIC_API_PREFIX
     else process.env.NEXT_PUBLIC_API_PREFIX = previous
   }
+})
+
+test("table catalog paths follow the server-advertised catalog prefix", () => {
+  assert.equal(normalizeTableCatalogPrefix("custom/catalog/v1"), "/custom/catalog/v1")
+  assert.equal(normalizeTableCatalogPrefix("https://catalog.example/iceberg/v1"), "/iceberg/v1")
+  assert.equal(
+    resolveTableCatalogPrefix({
+      defaults: { "rustfs.catalog-endpoint-prefix": "/iceberg/v1" },
+      overrides: { "rustfs.catalog-endpoint-prefix": "/_iceberg/v1" },
+    }),
+    "/_iceberg/v1",
+  )
+  assert.equal(buildTableCatalogPath("config", "/custom/catalog/v1"), "/custom/catalog/v1/config")
+  assert.equal(
+    tableCatalogPath("warehouse", ["analytics"], "events", "/custom/catalog/v1"),
+    "/custom/catalog/v1/warehouse/namespaces/analytics/tables/events",
+  )
 })
 
 test("table catalog base path removes only the REST version suffix", () => {

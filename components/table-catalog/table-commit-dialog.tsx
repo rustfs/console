@@ -27,6 +27,7 @@ import { displayNamespace } from "@/lib/table-catalog-paths"
 interface TableCommitDialogProps {
   open: boolean
   bucket: string
+  catalogPrefix?: string
   identifier: TableIdentifier | null
   canCommit: boolean
   onOpenChange: (open: boolean) => void
@@ -66,6 +67,7 @@ function newCommitId() {
 export function TableCommitDialog({
   open,
   bucket,
+  catalogPrefix,
   identifier,
   canCommit,
   onOpenChange,
@@ -73,7 +75,7 @@ export function TableCommitDialog({
 }: TableCommitDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const { loadTable, commitTable } = useTableCatalog()
+  const { loadTable, commitTable } = useTableCatalog(catalogPrefix)
   const [table, setTable] = React.useState<LoadedTable | null>(null)
   const [updates, setUpdates] = React.useState(DEFAULT_UPDATES)
   const [requirements, setRequirements] = React.useState("[]")

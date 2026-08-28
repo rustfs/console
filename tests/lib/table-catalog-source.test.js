@@ -40,6 +40,21 @@ test("table catalog hook exposes the first-phase namespace, table, and view oper
   assert.doesNotMatch(hookSource, /exportTableCatalog|importTableCatalog|catalog\/export|catalog\/import/)
 })
 
+test("table catalog operations use the discovered endpoint prefix", () => {
+  assert.match(hookSource, /useTableCatalog\(catalogPrefix/)
+  assert.match(hookSource, /catalogPrefixRef\.current/)
+  assert.match(hookSource, /buildTableCatalogPath\("config"\)/)
+  assert.match(pageSource, /resolveTableCatalogPrefix\(configResult\.value\)/)
+  assert.match(pageSource, /catalogPrefix=\{catalogRequestPrefix\}/)
+})
+
+test("catalog configuration failures remain visible with a retry path", () => {
+  assert.match(pageSource, /const \[configError, setConfigError\]/)
+  assert.match(pageSource, /setConfigError\(text\)/)
+  assert.match(pageSource, /The table catalog could not be loaded\./)
+  assert.match(pageSource, /onClick=\{\(\) => void loadPage\(true\)\}/)
+})
+
 test("namespace create and update permissions remain distinct", () => {
   assert.match(namespaceDialogSource, /canCreate\?\: boolean/)
   assert.match(namespaceDialogSource, /const canSubmit = editing \? canUpdate : canCreate/)

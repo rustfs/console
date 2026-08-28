@@ -23,6 +23,7 @@ import { isCatalogIdentifierValid } from "@/lib/table-catalog-paths"
 interface TableDialogProps {
   open: boolean
   bucket: string
+  catalogPrefix?: string
   namespace: string[]
   canCreate?: boolean
   onOpenChange: (open: boolean) => void
@@ -46,10 +47,18 @@ function parseJsonObject(value: string, label: string): Record<string, unknown> 
   return parsed as Record<string, unknown>
 }
 
-export function TableDialog({ open, bucket, namespace, canCreate = false, onOpenChange, onSuccess }: TableDialogProps) {
+export function TableDialog({
+  open,
+  bucket,
+  catalogPrefix,
+  namespace,
+  canCreate = false,
+  onOpenChange,
+  onSuccess,
+}: TableDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const { createTable } = useTableCatalog()
+  const { createTable } = useTableCatalog(catalogPrefix)
   const [name, setName] = React.useState("")
   const [schema, setSchema] = React.useState(DEFAULT_SCHEMA)
   const [location, setLocation] = React.useState("")

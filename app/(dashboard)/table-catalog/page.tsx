@@ -50,7 +50,7 @@ import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { copyToClipboard } from "@/lib/clipboard"
 import { cn } from "@/lib/utils"
-import { displayNamespace } from "@/lib/table-catalog-paths"
+import { displayNamespace, resolveTableCatalogPrefix, TABLE_CATALOG_PREFIX } from "@/lib/table-catalog-paths"
 
 type CatalogTab = "tables" | "views" | "namespaces"
 
@@ -95,6 +95,8 @@ export default function TableCatalogPage() {
   const message = useMessage()
   const dialog = useDialog()
   const { listBuckets } = useBucket()
+  const [config, setConfig] = React.useState<CatalogConfig | null>(null)
+  const [catalogRequestPrefix, setCatalogRequestPrefix] = React.useState(TABLE_CATALOG_PREFIX)
   const {
     getCatalogConfig,
     getTableBucket,
@@ -105,7 +107,7 @@ export default function TableCatalogPage() {
     dropTable,
     listViews,
     dropView,
-  } = useTableCatalog()
+  } = useTableCatalog(catalogRequestPrefix)
   const { isAdmin, hasPermission } = usePermissions()
 
   const [bucketNames, setBucketNames] = React.useState<string[]>([])
@@ -114,10 +116,10 @@ export default function TableCatalogPage() {
   const [bucketErrors, setBucketErrors] = React.useState<Record<string, string>>({})
   const [bucketStatusLoading, setBucketStatusLoading] = React.useState<Record<string, boolean>>({})
   const [selectedBucket, setSelectedBucket] = React.useState("")
-  const [config, setConfig] = React.useState<CatalogConfig | null>(null)
   const [initializing, setInitializing] = React.useState(true)
   const [refreshing, setRefreshing] = React.useState(false)
   const [pageError, setPageError] = React.useState("")
+  const [configError, setConfigError] = React.useState("")
   const [namespaceError, setNamespaceError] = React.useState("")
   const [tableError, setTableError] = React.useState("")
   const [viewError, setViewError] = React.useState("")
@@ -149,7 +151,10 @@ export default function TableCatalogPage() {
   const workspaceStatusRequestId = React.useRef(0)
   const hasLoadedRef = React.useRef(false)
   const bucketNamesRef = React.useRef<string[]>([])
-  const configRef = React.useRef<CatalogConfig | null>(null)
+  const catalogRequestPrefixRef = React.useRef(catalogRequestPrefix)
+  React.useEffect(() => {
+    catalogRequestPrefixRef.current = catalogRequestPrefix
+  }, [catalogRequestPrefix])
 
   const canEnableBucket = isAdmin || hasPermission("admin:SetTableBucket")
   const canCreateNamespace = isAdmin || hasPermission("admin:SetTableNamespace")
@@ -170,7 +175,12 @@ export default function TableCatalogPage() {
   }, [namespaces, selectedNamespace])
 
   const loadBucketStatuses = React.useCallback(
-    async (names: string[], requestId: number, refreshChildren: boolean) => {
+    async (
+      names: string[],
+      requestId: number,
+      refreshChildren: boolean,
+      requestPrefix = catalogRequestPrefixRef.current,
+    ) => {
       if (!names.length) return
       setBucketStatusLoading((current) => {
         const next = { ...current }
@@ -186,7 +196,7 @@ export default function TableCatalogPage() {
         return next
       })
 
-      const results = await Promise.allSettled(names.map((name) => getTableBucket(name)))
+      const results = await Promise.allSettled(names.map((name) => getTableBucket(name, requestPrefix)))
       if (requestId !== pageRequestId.current) return
 
       setBucketInfo((current) => {
@@ -233,6 +243,7 @@ export default function TableCatalogPage() {
       setInitializing(isInitial)
       setRefreshing(!isInitial)
       setPageError("")
+      setConfigError("")
       setBucketStatusLoading({})
 
       const [bucketResult, configResult] = await Promise.allSettled([
@@ -265,17 +276,23 @@ export default function TableCatalogPage() {
         setPageError(errorText(bucketResult.reason, t("Unable to list S3 buckets.")))
       }
 
+      let nextCatalogPrefix = catalogRequestPrefixRef.current
       if (configResult.status === "fulfilled") {
-        configRef.current = configResult.value
+        nextCatalogPrefix = resolveTableCatalogPrefix(configResult.value)
+        catalogRequestPrefixRef.current = nextCatalogPrefix
+        setCatalogRequestPrefix(nextCatalogPrefix)
         setConfig(configResult.value)
-      } else if (!configRef.current && isInitial && bucketResult.status !== "fulfilled") {
-        setPageError(errorText(configResult.reason, t("The table catalog is unavailable.")))
+      } else {
+        const text = errorText(configResult.reason, t("The table catalog is unavailable."))
+        setConfigError(text)
       }
 
       hasLoadedRef.current = true
       setInitializing(false)
       setRefreshing(false)
-      if (bucketResult.status === "fulfilled") void loadBucketStatuses(names, requestId, !isInitial)
+      if (bucketResult.status === "fulfilled") {
+        void loadBucketStatuses(names, requestId, !isInitial, nextCatalogPrefix)
+      }
     },
     [getCatalogConfig, listBuckets, loadBucketStatuses, t],
   )
@@ -746,7 +763,7 @@ export default function TableCatalogPage() {
     getRowId: (row) => `${namespaceKey(row.namespace)}:${row.name}`,
   })
 
-  const catalogPrefix = config?.defaults["rustfs.catalog-endpoint-prefix"] ?? "/iceberg/v1"
+  const catalogPrefixLabel = config ? resolveTableCatalogPrefix(config) : "--"
   const backing = humanizeBacking(
     config?.overrides["rustfs.catalog-backing"] ?? config?.defaults["rustfs.catalog-backing"],
     t("Unknown"),
@@ -756,6 +773,8 @@ export default function TableCatalogPage() {
       ? t("Catalog-vended temporary credentials")
       : t("Client-provided S3 credentials")
   const renderWorkspace = () => {
+    const selectedCatalogUri = selectedInfo?.catalogUri || (config ? `${catalogRequestPrefix}/${selectedBucket}` : "")
+
     if (initializing) {
       return (
         <div className="flex min-h-96 items-center justify-center gap-3 text-sm text-muted-foreground" role="status">
@@ -1001,7 +1020,7 @@ export default function TableCatalogPage() {
                 <span className="inline-flex min-w-0 items-center gap-1.5">
                   <span>{t("Catalog URI")}</span>
                   <code className="max-w-[20rem] truncate font-mono text-foreground" title={selectedInfo.catalogUri}>
-                    {selectedInfo.catalogUri || `${catalogPrefix}/${selectedBucket}`}
+                    {selectedCatalogUri || "--"}
                   </code>
                   <Button
                     type="button"
@@ -1009,7 +1028,8 @@ export default function TableCatalogPage() {
                     size="icon-xs"
                     aria-label={t("Copy catalog URI")}
                     title={t("Copy catalog URI")}
-                    onClick={() => void copyValue(selectedInfo.catalogUri || `${catalogPrefix}/${selectedBucket}`)}
+                    onClick={() => void copyValue(selectedCatalogUri)}
+                    disabled={!selectedCatalogUri}
                   >
                     <RiClipboardLine className="size-3.5" aria-hidden />
                   </Button>
@@ -1231,6 +1251,26 @@ export default function TableCatalogPage() {
         </div>
       </PageHeader>
 
+      {configError ? (
+        <Alert variant="destructive">
+          <RiAlertLine className="size-4" aria-hidden />
+          <AlertTitle>{t("The table catalog could not be loaded.")}</AlertTitle>
+          <AlertDescription>
+            <span className="break-words">{configError}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={() => void loadPage(true)}
+              disabled={refreshing}
+            >
+              <RiRefreshLine className="size-4" aria-hidden />
+              {t("Retry")}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       {pageError && bucketNames.length ? (
         <div className="border border-destructive/50 bg-destructive/10 p-4" role="alert">
           <div className="flex items-start gap-2">
@@ -1260,7 +1300,7 @@ export default function TableCatalogPage() {
         <div className="grid divide-y sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
           <div className="space-y-1 p-4">
             <p className="text-xs text-muted-foreground">{t("Catalog endpoint")}</p>
-            <p className="break-all font-mono text-sm">{catalogPrefix}</p>
+            <p className="break-all font-mono text-sm">{catalogPrefixLabel}</p>
           </div>
           <div className="space-y-1 p-4">
             <p className="text-xs text-muted-foreground">{t("Catalog backing")}</p>
@@ -1282,6 +1322,7 @@ export default function TableCatalogPage() {
       <NamespaceDialog
         open={namespaceDialogOpen}
         bucket={selectedBucket}
+        catalogPrefix={catalogRequestPrefix}
         initialNamespace={namespaceDialogNamespace}
         canCreate={canCreateNamespace}
         canUpdate={canUpdateNamespace}
@@ -1291,6 +1332,7 @@ export default function TableCatalogPage() {
       <TableDialog
         open={tableDialogOpen}
         bucket={selectedBucket}
+        catalogPrefix={catalogRequestPrefix}
         namespace={selectedNamespaceSegments}
         canCreate={canCreateTable}
         onOpenChange={setTableDialogOpen}
@@ -1299,6 +1341,7 @@ export default function TableCatalogPage() {
       <TableDetailDialog
         open={Boolean(detailIdentifier)}
         bucket={selectedBucket}
+        catalogPrefix={catalogRequestPrefix}
         identifier={detailIdentifier}
         onOpenChange={(open) => {
           if (!open) setDetailIdentifier(null)
@@ -1311,6 +1354,7 @@ export default function TableCatalogPage() {
       <TableCommitDialog
         open={Boolean(commitIdentifier)}
         bucket={selectedBucket}
+        catalogPrefix={catalogRequestPrefix}
         identifier={commitIdentifier}
         canCommit={canCommitTable}
         onOpenChange={(open) => {
@@ -1324,6 +1368,7 @@ export default function TableCatalogPage() {
       <ViewDialog
         open={viewDialogOpen}
         bucket={selectedBucket}
+        catalogPrefix={catalogRequestPrefix}
         namespace={viewDialogIdentifier?.namespace ?? selectedNamespaceSegments}
         mode={viewDialogMode}
         identifier={viewDialogIdentifier}
@@ -1334,6 +1379,7 @@ export default function TableCatalogPage() {
       <ViewDetailDialog
         open={Boolean(viewDetailIdentifier)}
         bucket={selectedBucket}
+        catalogPrefix={catalogRequestPrefix}
         identifier={viewDetailIdentifier}
         canReplace={canReplaceView}
         canDelete={canDeleteView}

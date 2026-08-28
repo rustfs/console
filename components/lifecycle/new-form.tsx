@@ -360,7 +360,9 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                       <FieldContent>
                         <Select value={versionType} onValueChange={(value) => setVersionType(value ?? "")}>
                           <SelectTrigger className="w-full" aria-label={t("Object Version")}>
-                            <SelectValue />
+                            <SelectValue>
+                              {versionOptions.find((opt) => opt.value === versionType)?.label ?? null}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {versionOptions.map((opt) => (
@@ -548,7 +550,9 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                       <FieldContent>
                         <Select value={versionType} onValueChange={(value) => setVersionType(value ?? "")}>
                           <SelectTrigger className="w-full" aria-label={t("Object Version")}>
-                            <SelectValue />
+                            <SelectValue>
+                              {versionOptions.find((opt) => opt.value === versionType)?.label ?? null}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {versionOptions.map((opt) => (

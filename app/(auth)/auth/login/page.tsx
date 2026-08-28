@@ -4,7 +4,7 @@ import { useEffect, Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { LoginForm, type LoginMethod } from "@/components/auth/login-form"
+import { LoginForm, type LoginMethod, type SecondFactorStep } from "@/components/auth/login-form"
 import { AppLoadingShell } from "@/components/app-loading-shell"
 import { useAuth } from "@/contexts/auth-context"
 import { useMessage } from "@/lib/feedback/message"
@@ -24,7 +24,7 @@ function LoginPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const message = useMessage()
-  const { login, isAuthenticated } = useAuth()
+  const { login, completeLoginWithSecondFactor, isAuthenticated } = useAuth()
   const { t } = useTranslation()
 
   const [method, setMethod] = useState<LoginMethod>("accessKeyAndSecretKey")
@@ -38,6 +38,12 @@ function LoginPageContent() {
     sessionToken: "",
   })
   const [oidcProviders, setOidcProviders] = useState<OidcProvider[]>([])
+  // The pending second-factor exchange. The long-term credentials it needs stay
+  // in this component's state for the duration and are never persisted.
+  const [pendingMfa, setPendingMfa] = useState<{ challenge?: string } | null>(null)
+  const [mfaCode, setMfaCode] = useState("")
+  const [mfaError, setMfaError] = useState("")
+  const [mfaSubmitting, setMfaSubmitting] = useState(false)
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -92,13 +98,66 @@ function LoginPageContent() {
 
     try {
       const currentConfig = await configManager.loadConfig()
-      await login(credentials, currentConfig)
+      const outcome = await login(credentials, currentConfig)
+
+      if (outcome.status === "mfa-required") {
+        // Not a failure: the password was accepted and the account simply has a
+        // second factor. Saying "login failed" here would send the user to reset
+        // a password that is working.
+        setPendingMfa({ challenge: outcome.challenge })
+        setMfaCode("")
+        setMfaError("")
+        return
+      }
 
       message.success(t("Login Success"))
     } catch {
       message.error(t("Login Failed"))
     }
   }
+
+  const handleSecondFactor = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!pendingMfa || mfaSubmitting) return
+
+    setMfaSubmitting(true)
+    setMfaError("")
+    try {
+      const currentConfig = await configManager.loadConfig()
+      await completeLoginWithSecondFactor(
+        method === "accessKeyAndSecretKey" ? accessKeyAndSecretKey : sts,
+        { code: mfaCode, challenge: pendingMfa.challenge },
+        currentConfig,
+      )
+      message.success(t("Login Success"))
+    } catch (error) {
+      // Inline, next to the input: a toast alone leaves no durable explanation
+      // of why the code was refused.
+      setMfaError((error as Error)?.message || t("Invalid verification code"))
+      setMfaCode("")
+    } finally {
+      setMfaSubmitting(false)
+    }
+  }
+
+  const secondFactor: SecondFactorStep | undefined = pendingMfa
+    ? {
+        code: mfaCode,
+        setCode: (value) => {
+          setMfaCode(value)
+          setMfaError("")
+        },
+        error: mfaError,
+        submitting: mfaSubmitting,
+        onSubmit: handleSecondFactor,
+        onCancel: () => {
+          setPendingMfa(null)
+          setMfaCode("")
+          setMfaError("")
+        },
+        accountName: method === "accessKeyAndSecretKey" ? accessKeyAndSecretKey.accessKeyId : sts.accessKeyId,
+      }
+    : undefined
 
   const handleOidcLogin = async (providerId: string) => {
     const config = await configManager.loadConfig()
@@ -116,6 +175,7 @@ function LoginPageContent() {
       handleLogin={handleLogin}
       oidcProviders={oidcProviders}
       onOidcLogin={handleOidcLogin}
+      secondFactor={secondFactor}
     />
   )
 }

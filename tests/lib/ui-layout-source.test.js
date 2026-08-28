@@ -35,11 +35,27 @@ test("top navigation keeps the account avatar inside its trigger with visible in
   assert.match(source, /<Button variant="ghost" size=\{isCollapsed \? "icon" : "default"\}/)
   assert.match(
     source,
-    /className="flex size-6 items-center justify-center overflow-hidden rounded-full border bg-muted"/,
+    /className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full border bg-muted"/,
   )
   assert.match(source, /width=\{24\}/)
   assert.match(source, /height=\{24\}/)
   assert.doesNotMatch(source, /className="flex h-8 w-8 items-center justify-center overflow-hidden/)
+})
+
+test("the account menu names the signed-in identity and its authority", () => {
+  const source = fs.readFileSync("components/user/dropdown.tsx", "utf8")
+
+  // A menu that opens on an avatar with no name answers neither "who am I" nor
+  // "with what authority", which is the gap this menu existed with before.
+  assert.match(source, /const accountName = \(userInfo as \{ account_name\?: string \}\)\?\.account_name \?\? ""/)
+  assert.match(source, /const roleLabel = isAdmin \? t\("Administrator"\) : t\("User"\)/)
+  assert.match(source, /\{accountName \|\| t\("Unknown user"\)\}/)
+  assert.match(source, /t\("Profile"\)/)
+  assert.match(source, /t\("Security"\)/)
+
+  // Password management used to be hidden from administrators because the
+  // backend rejected the call it made. Both are fixed, so the gate must be gone.
+  assert.doesNotMatch(source, /!isAdmin &&/)
 })
 
 test("bucket rule actions share the page header with bucket navigation", () => {

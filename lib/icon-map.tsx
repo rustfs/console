@@ -23,6 +23,7 @@ import {
   RiUploadCloud2Line,
   RiRefreshLine,
   RiDeleteBin5Line,
+  RiTableLine,
 } from "@remixicon/react"
 import type { ComponentType } from "react"
 
@@ -49,6 +50,7 @@ const iconMap: Record<string, ComponentType<{ className?: string }>> = {
   "ri:upload-cloud-2-line": RiUploadCloud2Line,
   "ri:refresh-line": RiRefreshLine,
   "ri:delete-bin-5-line": RiDeleteBin5Line,
+  "ri:table-line": RiTableLine,
 }
 
 export function getIconComponent(name?: string): ComponentType<{ className?: string }> | null {

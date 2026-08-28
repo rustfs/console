@@ -11,6 +11,7 @@ export const DASHBOARD_ROUTE_FALLBACK = "/403/"
  */
 export const MENU_CONTROLLED_DASHBOARD_ROUTES: readonly string[] = [
   "/browser",
+  "/table-catalog",
   "/access-keys",
   "/policies",
   "/users",

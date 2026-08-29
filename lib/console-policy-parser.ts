@@ -228,6 +228,54 @@ function matchesRequestedAction(policyActions: string[] | undefined, action: str
   return !!impliedActions && impliedActions.some((implied) => matchAction(policyActions, implied))
 }
 
+function matchesDeniedAction(policyActions: string[] | undefined, action: string): boolean {
+  if (IMPLIED_SCOPES[action]) {
+    // A page scope aggregates independent backend capabilities. Denying one
+    // capability must not hide the page; concrete capability checks still
+    // enforce that deny.
+    return matchAction(policyActions, action) || matchAction(policyActions, CONSOLE_SCOPES.CONSOLE_ADMIN)
+  }
+
+  return matchesRequestedAction(policyActions, action)
+}
+
+function getImpliedCapabilities(scope: string): string[] {
+  const impliedActions = IMPLIED_SCOPES[scope] ?? []
+  const concreteServices = new Set(
+    impliedActions.filter((action) => !action.includes("*")).map((action) => normalizeAction(action).split(":")[0]),
+  )
+
+  // Service wildcards are aliases when concrete actions for that service are
+  // known, but remain capabilities for services represented only by a wildcard.
+  return impliedActions.filter(
+    (action) => !action.includes("*") || !concreteServices.has(normalizeAction(action).split(":")[0]),
+  )
+}
+
+function statementDeniesActionGlobally(statement: ConsoleStatement, action: string): boolean {
+  if (statement.Effect !== "Deny") return false
+
+  const actionDenied =
+    statement.NotAction && statement.NotAction.length > 0
+      ? !matchNotAction(statement.NotAction, action)
+      : matchAction(statement.Action, action)
+
+  if (!actionDenied || isAdminAction(action)) return actionDenied
+  if (statement.NotResource && statement.NotResource.length > 0) return false
+  if (!statement.Resource || statement.Resource.length === 0) return true
+  if (statement.Resource.includes("*")) return true
+
+  return normalizeAction(action).startsWith("s3:") && statement.Resource.includes("arn:aws:s3:::*")
+}
+
+function deniesAllImpliedCapabilities(statements: ConsoleStatement[], scope: string): boolean {
+  const capabilities = getImpliedCapabilities(scope)
+  return (
+    capabilities.length > 0 &&
+    capabilities.every((action) => statements.some((statement) => statementDeniesActionGlobally(statement, action)))
+  )
+}
+
 /**
  * Check if an action is a console scope (starts with "console:" or is "consoleAdmin")
  */
@@ -259,14 +307,14 @@ export function hasConsolePermission(
     }
 
     // If Action is present (or empty array), deny applies to matching actions
-    if (matchesRequestedAction(s.Action, action)) {
+    if (matchesDeniedAction(s.Action, action)) {
       return matchStatementResource(s, resource, action)
     }
 
     return false
   })
 
-  if (denied) return false
+  if (denied || deniesAllImpliedCapabilities(statements, action)) return false
 
   // Check Allow statements
   const allowed = statements.some((s) => {

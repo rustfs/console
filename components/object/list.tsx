@@ -54,11 +54,17 @@ import { normalizeDateToIso } from "@/lib/safe-date"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
   createObjectListScope,
+  resolveObjectListAutoSearchState,
   resolveObjectListDisplayState,
+  resolveObjectListLoadButtonMode,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
 } from "@/lib/object-list-state"
-import { OBJECT_LIST_DEFAULT_PAGE_SIZE, resolveObjectListPageSize } from "@/lib/object-list-pagination"
+import {
+  OBJECT_LIST_AUTO_SEARCH_DEBOUNCE_MS,
+  OBJECT_LIST_DEFAULT_PAGE_SIZE,
+  resolveObjectListPageSize,
+} from "@/lib/object-list-pagination"
 import {
   resolveBucketVersioningState,
   shouldForceDeleteObjects,
@@ -136,6 +142,7 @@ export function ObjectList({
   const tasks = useTasks()
 
   const [searchTerm, setSearchTerm] = React.useState("")
+  const [autoSearchStopped, setAutoSearchStopped] = React.useState(false)
   const [showDeleted, setShowDeleted] = useLocalStorage("object-list-show-deleted", false)
   const [loading, setLoading] = React.useState(false)
   const [listError, setListError] = React.useState<ObjectListError | null>(null)
@@ -387,23 +394,24 @@ export function ObjectList({
       return item.Key !== prefix
     })
   }, [data, searchTerm, prefix, displayKey])
+  const hasSearchTerm = Boolean(searchTerm.trim())
+  const hasMore = Boolean(nextToken)
+  const { isAutoSearching, canResumeSearch } = resolveObjectListAutoSearchState(
+    hasSearchTerm,
+    hasMore,
+    autoSearchStopped,
+  )
   const displayState = resolveObjectListDisplayState({
     searchTerm,
     filteredCount: filteredData.length,
     loadedCount: data.length,
-    hasMore: Boolean(nextToken),
+    hasMore: hasMore && !autoSearchStopped,
     loading,
   })
-  const filteredEmptyState = displayState === "filtered-partial" || displayState === "filtered-empty"
-  const emptyTitle = filteredEmptyState
-    ? t(displayState === "filtered-partial" ? "No matches in loaded objects" : "No matching objects")
-    : t("No Objects")
+  const filteredEmptyState = displayState === "filtered-empty"
+  const emptyTitle = filteredEmptyState ? t("No matching objects") : t("No Objects")
   const emptyDescription = filteredEmptyState
-    ? t(
-        displayState === "filtered-partial"
-          ? "More objects have not been searched yet."
-          : "No loaded objects match this filter.",
-      )
+    ? t("No loaded objects match this filter.")
     : t("Upload files or create folders to populate this bucket.")
 
   const downloadFile = React.useCallback(
@@ -766,6 +774,24 @@ export function ObjectList({
   }, [fetchObjects, nextToken])
 
   React.useEffect(() => {
+    setAutoSearchStopped(false)
+  }, [searchTerm])
+
+  React.useEffect(() => {
+    const term = searchTerm.trim()
+    if (!term) return
+    if (autoSearchStopped) return
+    if (!nextToken || loading) return
+
+    const timer = window.setTimeout(() => {
+      if (searchTerm.trim() !== term || autoSearchStopped || loadingRef.current || !nextToken) return
+      loadNextBatch()
+    }, OBJECT_LIST_AUTO_SEARCH_DEBOUNCE_MS)
+
+    return () => window.clearTimeout(timer)
+  }, [searchTerm, nextToken, loadNextBatch, loading, autoSearchStopped])
+
+  React.useEffect(() => {
     const node = loadMoreRef.current
     if (!node || !nextToken || typeof IntersectionObserver === "undefined") return
 
@@ -784,6 +810,22 @@ export function ObjectList({
       observer.disconnect()
     }
   }, [loadNextBatch, nextToken])
+
+  const loadButtonMode = resolveObjectListLoadButtonMode({ isAutoSearching, canResumeSearch, loading, hasMore })
+  const loadButtonLabel = {
+    stop: t("Stop search"),
+    resume: t("Resume search"),
+    loading: t("Loading more objects"),
+    load: t("Load next objects"),
+    done: t("All objects loaded"),
+  }[loadButtonMode]
+  const loadButtonAction =
+    loadButtonMode === "stop"
+      ? () => setAutoSearchStopped(true)
+      : loadButtonMode === "resume"
+        ? () => setAutoSearchStopped(false)
+        : loadNextBatch
+  const loadButtonDisabled = loadButtonMode === "loading" || loadButtonMode === "done"
 
   return (
     <div className="space-y-6">
@@ -824,14 +866,12 @@ export function ObjectList({
               <Button
                 type="button"
                 variant="outline"
-                onClick={loadNextBatch}
-                aria-disabled={!nextToken || loading}
+                onClick={loadButtonAction}
+                aria-disabled={loadButtonDisabled}
                 className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
               >
-                {loading ? <Spinner className="size-4" aria-hidden /> : null}
-                <span>
-                  {loading ? t("Loading more objects") : nextToken ? t("Load next objects") : t("All objects loaded")}
-                </span>
+                {loading || isAutoSearching ? <Spinner className="size-4" aria-hidden /> : null}
+                <span>{loadButtonLabel}</span>
               </Button>
             ) : null}
             <Button variant="outline" onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}>
@@ -845,7 +885,7 @@ export function ObjectList({
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
-            placeholder={t("Filter loaded objects")}
+            placeholder={t("Search objects")}
             clearable
             className="lg:max-w-sm"
           />
@@ -898,7 +938,7 @@ export function ObjectList({
             <span className="text-destructive">
               {t("Failed to load more objects. Loaded objects remain available.")}
             </span>
-          ) : loading && nextToken ? (
+          ) : (loading || isAutoSearching) && nextToken ? (
             <span className="inline-flex items-center gap-2">
               <Spinner className="size-4" />
               {t("Loading more objects")}
@@ -910,11 +950,11 @@ export function ObjectList({
             type="button"
             variant="outline"
             size="sm"
-            onClick={loadNextBatch}
-            aria-disabled={!nextToken || loading}
+            onClick={loadMoreError ? loadNextBatch : loadButtonAction}
+            aria-disabled={!loadMoreError && loadButtonDisabled}
             className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
           >
-            {loadMoreError ? t("Retry") : nextToken ? t("Load next objects") : t("All objects loaded")}
+            {loadMoreError ? t("Retry") : loadButtonLabel}
           </Button>
         </div>
       ) : null}

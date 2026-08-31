@@ -36,19 +36,24 @@ test("last modified sorting discloses partial results and keeps continuation vis
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 
   assert.match(source, /\{nextToken \? \(\s+<span[^>]*>\{t\("Loaded objects only"\)\}/)
-  assert.match(source, /\{data\.length > 0 \? \(\s+<Button[\s\S]*?onClick=\{loadNextBatch\}/)
+  assert.match(source, /\{data\.length > 0 \? \(\s+<Button[\s\S]*?onClick=\{loadButtonAction\}/)
   assert.equal(source.includes('t("Load next objects")'), true)
   assert.equal(source.includes('t("All objects loaded")'), true)
+  assert.equal(source.includes('t("Stop search")'), true)
+  assert.equal(source.includes('t("Resume search")'), true)
   assert.match(source, /if \(shouldAppend\) \{\s+setLoadMoreError\(true\)\s+\} else \{\s+message\.error/)
   assert.equal(source.includes('role={loadMoreError ? "alert" : undefined}'), true)
-  assert.match(source, /onClick=\{loadNextBatch\}[\s\S]*?\{loadMoreError[\s\S]*?t\("Retry"\)/)
+  assert.match(
+    source,
+    /onClick=\{loadMoreError \? loadNextBatch : loadButtonAction\}[\s\S]*?\{loadMoreError \? t\("Retry"\) : loadButtonLabel\}/,
+  )
 })
 
 test("object list distinguishes filtered-empty states from an empty bucket", () => {
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 
   assert.equal(source.includes("resolveObjectListDisplayState"), true)
-  assert.equal(source.includes('displayState === "filtered-partial"'), true)
+  assert.equal(source.includes('displayState === "filtered-empty"'), true)
   assert.equal(source.includes('displayState === "filtered-loading"'), true)
   assert.equal(source.includes("emptyTitle={emptyTitle}"), true)
   assert.equal(source.includes("emptyDescription={emptyDescription}"), true)

@@ -12,13 +12,7 @@ interface ObjectListResponseGuardParams {
   activeScope: ObjectListScope
 }
 
-export type ObjectListDisplayState =
-  | "loading"
-  | "empty"
-  | "filtered-loading"
-  | "filtered-partial"
-  | "filtered-empty"
-  | "content"
+export type ObjectListDisplayState = "loading" | "empty" | "filtered-loading" | "filtered-empty" | "content"
 
 interface ObjectListDisplayStateParams {
   searchTerm: string
@@ -68,7 +62,45 @@ export function resolveObjectListDisplayState({
     return loading && loadedCount === 0 ? "loading" : "empty"
   }
 
-  if (loading) return "filtered-loading"
-  if (hasMore) return "filtered-partial"
+  if (loading || hasMore) return "filtered-loading"
   return "filtered-empty"
+}
+
+export interface ObjectListAutoSearchState {
+  isAutoSearching: boolean
+  canResumeSearch: boolean
+}
+
+export function resolveObjectListAutoSearchState(
+  hasSearchTerm: boolean,
+  hasMore: boolean,
+  stopped: boolean,
+): ObjectListAutoSearchState {
+  const isSearchable = hasSearchTerm && hasMore
+  return {
+    isAutoSearching: isSearchable && !stopped,
+    canResumeSearch: isSearchable && stopped,
+  }
+}
+
+export type ObjectListLoadButtonMode = "stop" | "resume" | "loading" | "load" | "done"
+
+interface ObjectListLoadButtonModeParams {
+  isAutoSearching: boolean
+  canResumeSearch: boolean
+  loading: boolean
+  hasMore: boolean
+}
+
+export function resolveObjectListLoadButtonMode({
+  isAutoSearching,
+  canResumeSearch,
+  loading,
+  hasMore,
+}: ObjectListLoadButtonModeParams): ObjectListLoadButtonMode {
+  if (isAutoSearching) return "stop"
+  if (canResumeSearch) return "resume"
+  if (loading) return "loading"
+  if (hasMore) return "load"
+  return "done"
 }

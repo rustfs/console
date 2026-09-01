@@ -4,6 +4,21 @@ import fs from "node:fs"
 
 const read = (file) => fs.readFileSync(file, "utf8")
 
+test("the user menu keeps its label and items inside Base UI menu groups", () => {
+  const source = read("components/user/dropdown.tsx")
+  const content = source.match(/<DropdownMenuContent[\s\S]*<\/DropdownMenuContent>/)?.[0]
+
+  assert.ok(content)
+
+  const groups = [...content.matchAll(/<DropdownMenuGroup>([\s\S]*?)<\/DropdownMenuGroup>/g)].map((match) => match[1])
+
+  assert.equal(groups.length, 2)
+  assert.match(groups[0], /<DropdownMenuLabel/)
+  assert.match(groups[0], /t\("Profile"\)/)
+  assert.match(groups[0], /t\("Security"\)/)
+  assert.match(groups[1], /t\("Logout"\)/)
+})
+
 test("the profile page distinguishes a failed read from an empty profile", () => {
   const source = read("app/(dashboard)/account/page.tsx")
 

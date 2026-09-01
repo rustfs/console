@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -100,36 +101,40 @@ export function UserDropdown() {
         }
       />
       <DropdownMenuContent className="w-56" align="end" side="top">
-        {/* Identity first: who am I, and with what authority. A menu that opens
-            on an avatar with no name leaves both unanswered. */}
-        <DropdownMenuLabel className="font-normal">
-          <span className="block truncate font-medium" title={accountName || undefined}>
-            {accountName || t("Unknown user")}
-          </span>
-          <span className="block text-xs text-muted-foreground">{roleLabel}</span>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          {/* Identity first: who am I, and with what authority. A menu that opens
+              on an avatar with no name leaves both unanswered. */}
+          <DropdownMenuLabel className="font-normal">
+            <span className="block truncate font-medium" title={accountName || undefined}>
+              {accountName || t("Unknown user")}
+            </span>
+            <span className="block text-xs text-muted-foreground">{roleLabel}</span>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            render={
+              <Link href={buildRoute("/account")} className="flex w-full items-center gap-2">
+                <RiUserSettingsLine className="size-4" aria-hidden />
+                <span>{t("Profile")}</span>
+              </Link>
+            }
+          />
+          <DropdownMenuItem
+            render={
+              <Link href={buildRoute("/account/security")} className="flex w-full items-center gap-2">
+                <RiShieldKeyholeLine className="size-4" aria-hidden />
+                <span>{t("Security")}</span>
+              </Link>
+            }
+          />
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          render={
-            <Link href={buildRoute("/account")} className="flex w-full items-center gap-2">
-              <RiUserSettingsLine className="size-4" aria-hidden />
-              <span>{t("Profile")}</span>
-            </Link>
-          }
-        />
-        <DropdownMenuItem
-          render={
-            <Link href={buildRoute("/account/security")} className="flex w-full items-center gap-2">
-              <RiShieldKeyholeLine className="size-4" aria-hidden />
-              <span>{t("Security")}</span>
-            </Link>
-          }
-        />
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          <RiLogoutBoxRLine className="size-4" aria-hidden />
-          <span>{t("Logout")}</span>
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={handleLogout}>
+            <RiLogoutBoxRLine className="size-4" aria-hidden />
+            <span>{t("Logout")}</span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   )

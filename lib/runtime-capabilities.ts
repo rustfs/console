@@ -85,11 +85,26 @@ function normalizeFields(value: unknown): RuntimeCapabilityField[] {
   })
 }
 
+/**
+ * The contract version only describes the shape of a capability block, which
+ * has been stable since v1. Servers bump it whenever the *semantics* of a
+ * field change (remote targets are already on v4), so gating on an exact
+ * version makes every server-side bump break the console. Semantics are read
+ * from `status` and the self-describing `fields` list instead, which keeps the
+ * fail-closed behaviour where it belongs: an unsupported capability or an
+ * unknown field is still treated as unsupported.
+ */
+const MINIMUM_CONTRACT_VERSION = 1
+
+function isSupportedContractVersion(contractVersion: number): boolean {
+  return Number.isInteger(contractVersion) && contractVersion >= MINIMUM_CONTRACT_VERSION
+}
+
 function normalizeFeature(value: unknown): RuntimeCapabilityFeature | null {
   const record = asRecord(value)
   const contractVersion = asNumber(record.contract_version)
 
-  if (contractVersion !== 1) {
+  if (!isSupportedContractVersion(contractVersion)) {
     return null
   }
 
@@ -113,7 +128,7 @@ export function normalizeRuntimeCapabilities(value: unknown): RuntimeCapabilitie
   }
 
   const storageClassesVersion = asNumber(storageClasses.contract_version)
-  if (storageClassesVersion !== 1) {
+  if (!isSupportedContractVersion(storageClassesVersion)) {
     return {
       capabilities: null,
       error: "Storage-class capabilities are unavailable on this server.",

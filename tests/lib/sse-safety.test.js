@@ -85,6 +85,16 @@ test("unsupported KMS backends fail closed and require a current baseline before
   assert.match(source, /setConfigBaselineConflict\(null\)/)
 })
 
+test("KMS backend select renders translated labels before its popup opens", () => {
+  assert.match(source, /"vault-transit": t\("HashiCorp Vault Transit Engine"\)/)
+  assert.match(source, /static: t\("Static single-key \(built-in, dev\/testing only\)"\)/)
+  assert.match(
+    source,
+    /<SelectValue placeholder=\{t\("Select backend type"\)\}>\s*\{backendTypeLabels\[formState\.backendType\] \?\? null\}\s*<\/SelectValue>/,
+  )
+  assert.match(source, /<SelectContent>\s*<SelectGroup>[\s\S]*<SelectItem value="vault-transit">/)
+})
+
 test("SSE form and dialogs stay reachable on narrow screens", () => {
   assert.match(source, /<form\s+className="space-y-6"\s+noValidate/)
   assert.match(source, /<fieldset className="space-y-4 border-t pt-4">/)

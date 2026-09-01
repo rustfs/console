@@ -71,11 +71,7 @@ export function TiffViewer({ url, objectKey }: TiffViewerProps) {
       } catch (err: unknown) {
         if (cancelled) return
         const message =
-          err instanceof Error && err.name === "AbortError"
-            ? ""
-            : err instanceof Error
-              ? err.message
-              : String(err)
+          err instanceof Error && err.name === "AbortError" ? "" : err instanceof Error ? err.message : String(err)
         setError(message || t("Preview unavailable"))
         setLoading(false)
       }
@@ -116,21 +112,12 @@ export function TiffViewer({ url, objectKey }: TiffViewerProps) {
   }
 
   if (error) {
-    return (
-      <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
-        {error}
-      </div>
-    )
+    return <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">{error}</div>
   }
 
   return (
     <div className="flex flex-1 items-center justify-center overflow-auto">
-      <canvas
-        ref={canvasRef}
-        className="max-h-full max-w-full object-contain"
-        role="img"
-        aria-label={objectKey}
-      />
+      <canvas ref={canvasRef} className="max-h-full max-w-full object-contain" role="img" aria-label={objectKey} />
     </div>
   )
 }

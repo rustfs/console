@@ -3,6 +3,7 @@ export type ConsoleScope = string
 export const CONSOLE_SCOPES = {
   CONSOLE_ADMIN: "consoleAdmin",
   VIEW_BROWSER: "console:Browser",
+  VIEW_TABLE_CATALOG: "console:TableCatalog",
   VIEW_ACCESS_KEYS: "console:AccessKeys",
   VIEW_POLICIES: "console:Policies",
   VIEW_USERS: "console:Users",
@@ -26,6 +27,7 @@ export const CONSOLE_SCOPES = {
 export const PAGE_PERMISSIONS: Record<string, ConsoleScope[]> = {
   "/browser": [CONSOLE_SCOPES.VIEW_BROWSER],
   "/buckets": [CONSOLE_SCOPES.VIEW_BROWSER],
+  "/table-catalog": [CONSOLE_SCOPES.VIEW_TABLE_CATALOG],
   "/access-keys": [CONSOLE_SCOPES.VIEW_ACCESS_KEYS],
   "/policies": [CONSOLE_SCOPES.VIEW_POLICIES],
   "/users": [CONSOLE_SCOPES.VIEW_USERS],

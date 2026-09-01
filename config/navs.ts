@@ -16,6 +16,11 @@ export default [
     icon: "ri:box-3-line",
   },
   {
+    label: "S3 Tables",
+    to: "/table-catalog",
+    icon: "ri:table-line",
+  },
+  {
     label: "Access Keys",
     to: "/access-keys",
     icon: "ri:door-lock-line",

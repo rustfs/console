@@ -7,7 +7,10 @@ import { RiSettings3Line } from "@remixicon/react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
+import { Spinner } from "@/components/ui/spinner"
+import { TOTP_CODE_LENGTH } from "@/lib/mfa"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { ThemeLogo } from "@/components/theme/logo"
@@ -19,6 +22,18 @@ import { withUtm } from "@/lib/utm"
 import type { OidcProvider } from "@/types/config"
 
 export type LoginMethod = "accessKeyAndSecretKey" | "sts"
+
+/** The second-factor step of the login flow, when the server demands one. */
+export interface SecondFactorStep {
+  code: string
+  setCode: (code: string) => void
+  error: string
+  submitting: boolean
+  onSubmit: (event: React.FormEvent) => void
+  onCancel: () => void
+  /** The identity being authenticated, so the user knows which account this is. */
+  accountName: string
+}
 
 export interface LoginFormProps {
   method: LoginMethod
@@ -40,6 +55,8 @@ export interface LoginFormProps {
   handleLogin: (e: React.FormEvent) => void
   oidcProviders?: OidcProvider[]
   onOidcLogin?: (providerId: string) => void
+  /** Present only while the server is waiting for a second factor. */
+  secondFactor?: SecondFactorStep
 }
 
 export function LoginForm({
@@ -52,6 +69,7 @@ export function LoginForm({
   handleLogin,
   oidcProviders,
   onOidcLogin,
+  secondFactor,
 }: LoginFormProps) {
   const { t } = useTranslation()
   const theme = getThemeManifest()
@@ -87,150 +105,228 @@ export function LoginForm({
             <ThemeLogo width={112} height={24} className="lg:hidden" priority />
             <h1 className="sr-only">{t("Login")}</h1>
 
-            <div className="space-y-4">
-              <Tabs value={method} onValueChange={(v) => setMethod(v as LoginMethod)} className="flex flex-col gap-4">
-                <TabsList className="h-11 w-full border bg-muted/60 sm:h-9">
-                  <TabsTrigger className="w-1/2 text-sm sm:text-xs" value="accessKeyAndSecretKey">
-                    {t("Key Login")}
-                  </TabsTrigger>
-                  <TabsTrigger className="w-1/2 text-sm sm:text-xs" value="sts">
-                    {t("STS Login")}
-                  </TabsTrigger>
-                </TabsList>
+            {secondFactor ? (
+              // A separate step, not an extra field: the password has already
+              // been accepted, and mixing the two would invite the user to
+              // re-enter credentials that are no longer in question.
+              <form className="space-y-5" onSubmit={secondFactor.onSubmit} autoComplete="off">
+                <div className="space-y-1">
+                  <h2 className="font-heading font-semibold tracking-tight">{t("Two-factor authentication")}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {t("Enter the code from your authenticator app for {account}.", {
+                      account: secondFactor.accountName,
+                    })}
+                  </p>
+                </div>
 
-                <form onSubmit={handleLogin} autoComplete="off">
-                  <div className="grid gap-y-5">
-                    {method === "accessKeyAndSecretKey" ? (
-                      <>
-                        <Field>
-                          <FieldLabel htmlFor="accessKey">{t("Account")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="accessKey"
-                              name="accessKey"
-                              value={accessKeyAndSecretKey.accessKeyId}
-                              onChange={(e) =>
-                                setAccessKeyAndSecretKey((prev) => ({
-                                  ...prev,
-                                  accessKeyId: e.target.value,
-                                }))
-                              }
-                              autoComplete="username"
-                              type="text"
-                              spellCheck={false}
-                              required
-                              className="h-11 text-base sm:h-8 sm:text-xs"
-                              placeholder={t("Please enter account")}
-                            />
-                          </FieldContent>
-                        </Field>
-                        <Field>
-                          <FieldLabel htmlFor="secretKey">{t("Key")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="secretKey"
-                              name="secretKey"
-                              value={accessKeyAndSecretKey.secretAccessKey}
-                              onChange={(e) =>
-                                setAccessKeyAndSecretKey((prev) => ({
-                                  ...prev,
-                                  secretAccessKey: e.target.value,
-                                }))
-                              }
-                              autoComplete="current-password"
-                              type="password"
-                              spellCheck={false}
-                              required
-                              className="h-11 text-base sm:h-8 sm:text-xs"
-                              placeholder={t("Please enter key")}
-                            />
-                          </FieldContent>
-                        </Field>
-                      </>
-                    ) : (
-                      <>
-                        <Field>
-                          <FieldLabel htmlFor="stsAccessKey">{t("STS Username")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="stsAccessKey"
-                              name="stsAccessKey"
-                              value={sts.accessKeyId}
-                              onChange={(e) =>
-                                setSts((prev) => ({
-                                  ...prev,
-                                  accessKeyId: e.target.value,
-                                }))
-                              }
-                              autoComplete="new-password"
-                              type="text"
-                              spellCheck={false}
-                              required
-                              className="h-11 text-base sm:h-8 sm:text-xs"
-                              placeholder={t("Please enter STS username")}
-                            />
-                          </FieldContent>
-                        </Field>
-                        <Field>
-                          <FieldLabel htmlFor="stsSecretKey">{t("STS Key")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="stsSecretKey"
-                              name="stsSecretKey"
-                              value={sts.secretAccessKey}
-                              onChange={(e) =>
-                                setSts((prev) => ({
-                                  ...prev,
-                                  secretAccessKey: e.target.value,
-                                }))
-                              }
-                              autoComplete="new-password"
-                              type="password"
-                              spellCheck={false}
-                              required
-                              className="h-11 text-base sm:h-8 sm:text-xs"
-                              placeholder={t("Please enter STS key")}
-                            />
-                          </FieldContent>
-                        </Field>
-                        <Field>
-                          <FieldLabel htmlFor="sessionToken">{t("STS Session Token")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="sessionToken"
-                              name="sessionToken"
-                              value={sts.sessionToken}
-                              onChange={(e) =>
-                                setSts((prev) => ({
-                                  ...prev,
-                                  sessionToken: e.target.value,
-                                }))
-                              }
-                              autoComplete="new-password"
-                              type="text"
-                              spellCheck={false}
-                              required
-                              className="h-11 text-base sm:h-8 sm:text-xs"
-                              placeholder={t("Please enter STS session token")}
-                            />
-                          </FieldContent>
-                        </Field>
-                      </>
-                    )}
-
-                    <Button
-                      type="submit"
-                      variant="default"
-                      className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
+                <Field>
+                  <FieldLabel htmlFor="login-mfa-code">{t("Authentication code")}</FieldLabel>
+                  <FieldContent>
+                    <InputOTP
+                      id="login-mfa-code"
+                      maxLength={TOTP_CODE_LENGTH}
+                      value={secondFactor.code}
+                      onChange={secondFactor.setCode}
+                      disabled={secondFactor.submitting}
+                      autoFocus
+                      dir="ltr"
+                      aria-invalid={Boolean(secondFactor.error)}
+                      aria-describedby={secondFactor.error ? "login-mfa-code-error" : undefined}
                     >
-                      {t("Login")}
-                    </Button>
-                  </div>
-                </form>
-              </Tabs>
-            </div>
+                      <InputOTPGroup>
+                        {Array.from({ length: TOTP_CODE_LENGTH }, (_, index) => (
+                          <InputOTPSlot key={index} index={index} />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </FieldContent>
+                  <FieldError id="login-mfa-code-error">{secondFactor.error}</FieldError>
+                </Field>
 
-            {oidcProviders && oidcProviders.length > 0 && onOidcLogin && (
+                <Field>
+                  <FieldLabel htmlFor="login-mfa-recovery">{t("Or use a recovery code")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="login-mfa-recovery"
+                      name="recoveryCode"
+                      value={secondFactor.code.length > TOTP_CODE_LENGTH ? secondFactor.code : ""}
+                      onChange={(e) => secondFactor.setCode(e.target.value)}
+                      autoComplete="one-time-code"
+                      spellCheck={false}
+                      dir="ltr"
+                      disabled={secondFactor.submitting}
+                      className="h-11 font-mono text-base sm:h-8 sm:text-xs"
+                      placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
+                    />
+                  </FieldContent>
+                </Field>
+
+                <div className="grid gap-2">
+                  <Button
+                    type="submit"
+                    className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
+                    disabled={secondFactor.submitting}
+                  >
+                    {secondFactor.submitting ? <Spinner className="size-4" /> : null}
+                    <span>{t("Verify")}</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
+                    onClick={secondFactor.onCancel}
+                    disabled={secondFactor.submitting}
+                  >
+                    {t("Back")}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <Tabs value={method} onValueChange={(v) => setMethod(v as LoginMethod)} className="flex flex-col gap-4">
+                  <TabsList className="h-11 w-full border bg-muted/60 sm:h-9">
+                    <TabsTrigger className="w-1/2 text-sm sm:text-xs" value="accessKeyAndSecretKey">
+                      {t("Key Login")}
+                    </TabsTrigger>
+                    <TabsTrigger className="w-1/2 text-sm sm:text-xs" value="sts">
+                      {t("STS Login")}
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <form onSubmit={handleLogin} autoComplete="off">
+                    <div className="grid gap-y-5">
+                      {method === "accessKeyAndSecretKey" ? (
+                        <>
+                          <Field>
+                            <FieldLabel htmlFor="accessKey">{t("Account")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="accessKey"
+                                name="accessKey"
+                                value={accessKeyAndSecretKey.accessKeyId}
+                                onChange={(e) =>
+                                  setAccessKeyAndSecretKey((prev) => ({
+                                    ...prev,
+                                    accessKeyId: e.target.value,
+                                  }))
+                                }
+                                autoComplete="username"
+                                type="text"
+                                spellCheck={false}
+                                required
+                                className="h-11 text-base sm:h-8 sm:text-xs"
+                                placeholder={t("Please enter account")}
+                              />
+                            </FieldContent>
+                          </Field>
+                          <Field>
+                            <FieldLabel htmlFor="secretKey">{t("Key")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="secretKey"
+                                name="secretKey"
+                                value={accessKeyAndSecretKey.secretAccessKey}
+                                onChange={(e) =>
+                                  setAccessKeyAndSecretKey((prev) => ({
+                                    ...prev,
+                                    secretAccessKey: e.target.value,
+                                  }))
+                                }
+                                autoComplete="current-password"
+                                type="password"
+                                spellCheck={false}
+                                required
+                                className="h-11 text-base sm:h-8 sm:text-xs"
+                                placeholder={t("Please enter key")}
+                              />
+                            </FieldContent>
+                          </Field>
+                        </>
+                      ) : (
+                        <>
+                          <Field>
+                            <FieldLabel htmlFor="stsAccessKey">{t("STS Username")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="stsAccessKey"
+                                name="stsAccessKey"
+                                value={sts.accessKeyId}
+                                onChange={(e) =>
+                                  setSts((prev) => ({
+                                    ...prev,
+                                    accessKeyId: e.target.value,
+                                  }))
+                                }
+                                autoComplete="new-password"
+                                type="text"
+                                spellCheck={false}
+                                required
+                                className="h-11 text-base sm:h-8 sm:text-xs"
+                                placeholder={t("Please enter STS username")}
+                              />
+                            </FieldContent>
+                          </Field>
+                          <Field>
+                            <FieldLabel htmlFor="stsSecretKey">{t("STS Key")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="stsSecretKey"
+                                name="stsSecretKey"
+                                value={sts.secretAccessKey}
+                                onChange={(e) =>
+                                  setSts((prev) => ({
+                                    ...prev,
+                                    secretAccessKey: e.target.value,
+                                  }))
+                                }
+                                autoComplete="new-password"
+                                type="password"
+                                spellCheck={false}
+                                required
+                                className="h-11 text-base sm:h-8 sm:text-xs"
+                                placeholder={t("Please enter STS key")}
+                              />
+                            </FieldContent>
+                          </Field>
+                          <Field>
+                            <FieldLabel htmlFor="sessionToken">{t("STS Session Token")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="sessionToken"
+                                name="sessionToken"
+                                value={sts.sessionToken}
+                                onChange={(e) =>
+                                  setSts((prev) => ({
+                                    ...prev,
+                                    sessionToken: e.target.value,
+                                  }))
+                                }
+                                autoComplete="new-password"
+                                type="text"
+                                spellCheck={false}
+                                required
+                                className="h-11 text-base sm:h-8 sm:text-xs"
+                                placeholder={t("Please enter STS session token")}
+                              />
+                            </FieldContent>
+                          </Field>
+                        </>
+                      )}
+
+                      <Button
+                        type="submit"
+                        variant="default"
+                        className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
+                      >
+                        {t("Login")}
+                      </Button>
+                    </div>
+                  </form>
+                </Tabs>
+              </div>
+            )}
+
+            {!secondFactor && oidcProviders && oidcProviders.length > 0 && onOidcLogin && (
               <div className="space-y-3">
                 <div className="relative flex items-center">
                   <div className="flex-grow border-t" />

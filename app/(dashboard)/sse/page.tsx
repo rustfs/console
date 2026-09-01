@@ -35,7 +35,7 @@ import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@
 import { Input } from "@/components/ui/input"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Spinner } from "@/components/ui/spinner"
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useSSE } from "@/hooks/use-sse"
@@ -1173,15 +1173,17 @@ export default function SSEPage() {
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            {formState.backendType === "unsupported" ? (
-                              <SelectItem value="unsupported" disabled>
-                                {backendTypeLabels.unsupported}
-                              </SelectItem>
-                            ) : null}
-                            <SelectItem value="local">{backendTypeLabels.local}</SelectItem>
-                            <SelectItem value="vault-kv2">{backendTypeLabels["vault-kv2"]}</SelectItem>
-                            <SelectItem value="vault-transit">{backendTypeLabels["vault-transit"]}</SelectItem>
-                            <SelectItem value="static">{backendTypeLabels.static}</SelectItem>
+                            <SelectGroup>
+                              {formState.backendType === "unsupported" ? (
+                                <SelectItem value="unsupported" disabled>
+                                  {backendTypeLabels.unsupported}
+                                </SelectItem>
+                              ) : null}
+                              <SelectItem value="local">{backendTypeLabels.local}</SelectItem>
+                              <SelectItem value="vault-kv2">{backendTypeLabels["vault-kv2"]}</SelectItem>
+                              <SelectItem value="vault-transit">{backendTypeLabels["vault-transit"]}</SelectItem>
+                              <SelectItem value="static">{backendTypeLabels.static}</SelectItem>
+                            </SelectGroup>
                           </SelectContent>
                         </Select>
                       </FieldContent>

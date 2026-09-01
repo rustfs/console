@@ -105,7 +105,7 @@ function FileListVirtualized({
   formatBytes: (bytes: number) => string
 }) {
   const parentRef = React.useRef<HTMLDivElement>(null)
-  // eslint-disable-next-line react-hooks/incompatible-library -- tanstack virtualizer hooks are intentionally used here
+  // oxlint-disable-next-line react/incompatible-library -- tanstack virtualizer hooks are intentionally used here
   const virtualizer = useVirtualizer({
     count: items.length,
     getScrollElement: () => parentRef.current,

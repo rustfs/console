@@ -43,7 +43,7 @@ function NavIcon({ name }: { name?: string }) {
   if (!Icon) return null
   // Icon from static map lookup; rule flags dynamic lookup as "component during render"
   return (
-    // eslint-disable-next-line react-hooks/static-components -- icon from static map
+    // oxlint-disable-next-line react/static-components -- icon from static map
     <Icon className="size-4 shrink-0" aria-hidden />
   )
 }

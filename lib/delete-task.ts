@@ -74,7 +74,7 @@ function assertDeleteObjectsSucceeded(errors: { Key?: string; Code?: string; Mes
 }
 
 function attachForceDeleteHeader(command: DeleteObjectCommand | DeleteObjectsCommand) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line typescript/no-explicit-any
   ;(command.middlewareStack.add as any)(
     (next: (args: unknown) => Promise<unknown>) => async (args: { request?: { headers?: Record<string, string> } }) => {
       if (args?.request?.headers) {

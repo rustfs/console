@@ -69,7 +69,7 @@ export default function AccessKeysPage() {
 
   useEffect(() => {
     listUserAccounts()
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
   }, [])
 
   const filteredData = React.useMemo(() => {

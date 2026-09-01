@@ -108,7 +108,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
 
       addApiPrefixMiddleware(client)
 
-      /* eslint-disable @typescript-eslint/no-explicit-any -- AWS SDK middleware types are complex */
+      /* oxlint-disable @typescript-eslint/no-explicit-any -- AWS SDK middleware types are complex */
       client.middlewareStack.add(
         ((next: any) => async (args: any) => {
           const input = args?.input
@@ -211,7 +211,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
         }) as any,
         { step: "deserialize", name: "handleXmlResponse" },
       )
-      /* eslint-enable @typescript-eslint/no-explicit-any */
+      /* oxlint-enable @typescript-eslint/no-explicit-any */
 
       setS3Client(client)
       setIsReady(true)

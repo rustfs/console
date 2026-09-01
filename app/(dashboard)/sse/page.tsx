@@ -48,7 +48,14 @@ import {
   isSafeLocalFilePermissions,
   type ConfigFormState,
 } from "@/lib/sse/config"
-import type { KmsConfigPayload, KmsKeyInfo, KmsKeyMetadata, KmsServiceStatusResponse } from "@/types/kms"
+import { RekeyCard } from "@/components/sse/rekey-card"
+import type {
+  KmsBackendCapabilities,
+  KmsConfigPayload,
+  KmsKeyInfo,
+  KmsKeyMetadata,
+  KmsServiceStatusResponse,
+} from "@/types/kms"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,6 +76,7 @@ const ADVANCED_CONFIG_FIELDS = new Set([
   "maxCachedKeys",
   "cacheTtlSeconds",
 ])
+const TLS_CONFIG_FIELDS = new Set(["caCertPath", "clientCertPath", "clientKeyPath"])
 
 type KeyActionState = {
   type: "scheduleDelete" | "forceDelete" | "cancelDeletion"
@@ -121,6 +129,7 @@ export default function SSEPage() {
   const message = useMessage()
   const {
     getKMSStatus,
+    getDetailedStatus,
     configureKMS,
     reconfigureKMS,
     clearCache,
@@ -136,6 +145,7 @@ export default function SSEPage() {
 
   const [status, setStatus] = React.useState<KmsServiceStatusResponse | null>(null)
   const [statusError, setStatusError] = React.useState<string | null>(null)
+  const [capabilities, setCapabilities] = React.useState<KmsBackendCapabilities | null>(null)
   const statusRequestRef = React.useRef(0)
   const [formState, setFormState] = React.useState<ConfigFormState>(INITIAL_FORM_STATE)
   const [baselineFormState, setBaselineFormState] = React.useState<ConfigFormState>(INITIAL_FORM_STATE)
@@ -145,6 +155,7 @@ export default function SSEPage() {
   const formStateRef = React.useRef(formState)
   const baselineFormStateRef = React.useRef(baselineFormState)
   const advancedSettingsRef = React.useRef<HTMLDetailsElement>(null)
+  const advancedTlsRef = React.useRef<HTMLDetailsElement>(null)
   const [loadingStatus, setLoadingStatus] = React.useState(false)
   const [refreshingStatus, setRefreshingStatus] = React.useState(false)
   const [submittingConfig, setSubmittingConfig] = React.useState(false)
@@ -199,6 +210,8 @@ export default function SSEPage() {
   const hasConfiguration = !statusError && statusKind !== "NotConfigured"
   const localKmsConfigured = hasConfiguration && status?.backend_type === "Local"
   const hasStoredVaultCredentials = status?.config_summary?.backend_summary?.has_stored_credentials === true
+  const hasStoredCustomCa = status?.config_summary?.backend_summary?.has_custom_ca === true
+  const hasStoredClientIdentity = status?.config_summary?.backend_summary?.has_client_identity === true
   const hasStoredLocalMasterKey = status?.config_summary?.backend_summary?.has_master_key === true
   const hasStoredLocalFilePermissions = status?.config_summary?.backend_summary?.file_permissions != null
   const statusBadgeValue =
@@ -330,9 +343,35 @@ export default function SSEPage() {
     loadKeys("", false).catch(() => undefined)
   }, [isRunning, loadKeys])
 
+  // The capability matrix is only served while KMS is running, and only by
+  // newer servers. Absence means "unknown": no positioning badge, no rekey UI.
+  // status?.backend_type is a dependency because a reconfigure can swap the
+  // backend (and its capabilities) without ever leaving the Running state.
+  const runningBackendType = isRunning ? status?.backend_type : null
+  React.useEffect(() => {
+    if (!isRunning) {
+      setCapabilities(null)
+      return
+    }
+    let cancelled = false
+    getDetailedStatus()
+      .then((detailedStatus) => {
+        if (!cancelled) setCapabilities(detailedStatus.capabilities ?? null)
+      })
+      .catch(() => {
+        if (!cancelled) setCapabilities(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [getDetailedStatus, isRunning, runningBackendType])
+
   React.useEffect(() => {
     if (configFormErrorField && ADVANCED_CONFIG_FIELDS.has(configFormErrorField)) {
       advancedSettingsRef.current?.setAttribute("open", "")
+    }
+    if (configFormErrorField && TLS_CONFIG_FIELDS.has(configFormErrorField)) {
+      advancedTlsRef.current?.setAttribute("open", "")
     }
   }, [configFormErrorField])
 
@@ -557,6 +596,15 @@ export default function SSEPage() {
       if (!values.mountPath.trim()) {
         return { error: t("Please enter Vault transit mount path"), field: "transitMountPath" }
       }
+      const caCertPath = values.caCertPath.trim()
+      const clientCertPath = values.clientCertPath.trim()
+      const clientKeyPath = values.clientKeyPath.trim()
+      if (Boolean(clientCertPath) !== Boolean(clientKeyPath)) {
+        return {
+          error: t("The mTLS client certificate and private key paths must be provided together."),
+          field: clientCertPath ? "clientKeyPath" : "clientCertPath",
+        }
+      }
 
       return {
         payload: {
@@ -576,6 +624,10 @@ export default function SSEPage() {
               }
             : {}),
           skip_tls_verify: values.skipTlsVerify,
+          // Older servers reject unknown fields, so blank TLS inputs must be
+          // omitted from the payload entirely instead of sent as empty values.
+          ...(caCertPath ? { ca_cert_path: caCertPath } : {}),
+          ...(clientCertPath ? { client_cert_path: clientCertPath, client_key_path: clientKeyPath } : {}),
           default_key_id: defaultKeyId || undefined,
           timeout_seconds: timeoutSeconds ?? 30,
           retry_attempts: retryAttempts ?? 3,
@@ -937,13 +989,12 @@ export default function SSEPage() {
   const isPendingDefaultKey = pendingKeyAction?.key.key_id === status?.config_summary?.default_key_id
 
   const backendTypeLabels: Record<ConfigFormState["backendType"], string> = {
+    unsupported: t("Unsupported KMS backend"),
     local: t("Local filesystem"),
     "vault-kv2": t("HashiCorp Vault KV2"),
     "vault-transit": t("HashiCorp Vault Transit Engine"),
-    static: t("Static single-key (built-in)"),
-    unsupported: t("Unsupported KMS backend"),
+    static: t("Static single-key (built-in, dev/testing only)"),
   }
-
   const mutationLocked = Boolean(activeMutation || statusError || loadingStatus)
   const unsupportedKmsReadOnly = formState.backendType === "unsupported"
   const staticKmsReadOnly = hasConfiguration && formState.backendType === "static"
@@ -996,6 +1047,11 @@ export default function SSEPage() {
                 <Badge variant={getStateBadgeVariant(statusBadgeValue)} className="text-sm uppercase">
                   {loadingStatus ? t("Loading…") : getKmsStatusText()}
                 </Badge>
+                {capabilities?.production_supported === false ? (
+                  <Badge variant="destructive" className="text-sm">
+                    {t("Development / testing backend — not supported for production")}
+                  </Badge>
+                ) : null}
               </div>
               <CardDescription>{getKmsStatusDescription()}</CardDescription>
               {!statusError && status?.backend_type && (
@@ -1169,20 +1225,22 @@ export default function SSEPage() {
                         >
                           <SelectTrigger id="kmsBackend" className="w-full" aria-label={t("KMS Backend")}>
                             <SelectValue placeholder={t("Select backend type")}>
-                              {backendTypeLabels[formState.backendType]}
+                              {backendTypeLabels[formState.backendType] ?? null}
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectGroup>
                               {formState.backendType === "unsupported" ? (
                                 <SelectItem value="unsupported" disabled>
-                                  {backendTypeLabels.unsupported}
+                                  {t("Unsupported KMS backend")}
                                 </SelectItem>
                               ) : null}
-                              <SelectItem value="local">{backendTypeLabels.local}</SelectItem>
-                              <SelectItem value="vault-kv2">{backendTypeLabels["vault-kv2"]}</SelectItem>
-                              <SelectItem value="vault-transit">{backendTypeLabels["vault-transit"]}</SelectItem>
-                              <SelectItem value="static">{backendTypeLabels.static}</SelectItem>
+                              <SelectItem value="local">{t("Local filesystem (dev/testing only)")}</SelectItem>
+                              <SelectItem value="vault-kv2">{t("HashiCorp Vault KV2")}</SelectItem>
+                              <SelectItem value="vault-transit">{t("HashiCorp Vault Transit Engine")}</SelectItem>
+                              <SelectItem value="static">
+                                {t("Static single-key (built-in, dev/testing only)")}
+                              </SelectItem>
                             </SelectGroup>
                           </SelectContent>
                         </Select>
@@ -1450,6 +1508,105 @@ export default function SSEPage() {
                           {t("Skip TLS verification")}
                         </label>
                       </div>
+
+                      <details ref={advancedTlsRef} className="space-y-4">
+                        <summary className="cursor-pointer text-sm font-semibold">
+                          {t("Advanced TLS")}
+                          <span className="ml-2 font-normal text-muted-foreground">
+                            {t("Custom CA")} · {t("mTLS client identity")}
+                          </span>
+                        </summary>
+
+                        {hasStoredCustomCa || hasStoredClientIdentity ? (
+                          <Alert>
+                            <AlertTitle>
+                              {[
+                                hasStoredCustomCa ? t("Custom CA: configured") : null,
+                                hasStoredClientIdentity ? t("mTLS client identity: configured") : null,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </AlertTitle>
+                            <AlertDescription>
+                              {t(
+                                "Stored TLS paths are never displayed. Re-enter the paths to keep them; saving with blank fields removes the stored TLS settings.",
+                              )}
+                            </AlertDescription>
+                          </Alert>
+                        ) : null}
+
+                        <FieldGroup className="grid gap-4 lg:grid-cols-2">
+                          <Field>
+                            <FieldLabel htmlFor="caCertPath">{t("CA Certificate Path")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="caCertPath"
+                                name="caCertPath"
+                                value={formState.caCertPath}
+                                onChange={(event) => updateFormState("caCertPath", event.target.value)}
+                                autoComplete="off"
+                                placeholder="/etc/rustfs/certs/vault-ca.pem"
+                                spellCheck={false}
+                                disabled={formDisabled}
+                                aria-invalid={configFormErrorField === "caCertPath"}
+                                aria-describedby={
+                                  configFormErrorField === "caCertPath" ? "kms-config-error" : undefined
+                                }
+                              />
+                            </FieldContent>
+                            <FieldDescription>{t("PEM CA bundle trusted for the Vault connection.")}</FieldDescription>
+                          </Field>
+
+                          <Field>
+                            <FieldLabel htmlFor="clientCertPath">{t("Client Certificate Path")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="clientCertPath"
+                                name="clientCertPath"
+                                value={formState.clientCertPath}
+                                onChange={(event) => updateFormState("clientCertPath", event.target.value)}
+                                autoComplete="off"
+                                placeholder="/etc/rustfs/certs/vault-client.pem"
+                                spellCheck={false}
+                                disabled={formDisabled}
+                                aria-invalid={configFormErrorField === "clientCertPath"}
+                                aria-describedby={
+                                  configFormErrorField === "clientCertPath" ? "kms-config-error" : undefined
+                                }
+                              />
+                            </FieldContent>
+                            <FieldDescription>
+                              {t("PEM client certificate presented to Vault for mTLS.")}
+                            </FieldDescription>
+                          </Field>
+
+                          <Field>
+                            <FieldLabel htmlFor="clientKeyPath">{t("Client Key Path")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="clientKeyPath"
+                                name="clientKeyPath"
+                                value={formState.clientKeyPath}
+                                onChange={(event) => updateFormState("clientKeyPath", event.target.value)}
+                                autoComplete="off"
+                                placeholder="/etc/rustfs/certs/vault-client.key"
+                                spellCheck={false}
+                                disabled={formDisabled}
+                                aria-invalid={configFormErrorField === "clientKeyPath"}
+                                aria-describedby={
+                                  configFormErrorField === "clientKeyPath" ? "kms-config-error" : undefined
+                                }
+                              />
+                            </FieldContent>
+                            <FieldDescription>{t("PEM private key matching the client certificate.")}</FieldDescription>
+                          </Field>
+                        </FieldGroup>
+                        <p className="text-xs text-muted-foreground">
+                          {t(
+                            "Paths refer to PEM files on the RustFS server node. In a multi-node cluster the same path must exist on every node.",
+                          )}
+                        </p>
+                      </details>
                     </div>
                   )}
                 </fieldset>
@@ -1868,6 +2025,8 @@ export default function SSEPage() {
               </CardContent>
             </Card>
           )}
+
+          {isRunning && capabilities ? <RekeyCard rewrapSupported={capabilities.rewrap === true} /> : null}
         </div>
       </Page>
 

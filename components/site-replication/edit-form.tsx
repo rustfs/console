@@ -110,6 +110,16 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
     return null
   }
 
+  const syncStateLabels: Partial<Record<SiteReplicationSyncState, string>> = {
+    enable: t("Enabled"),
+    disable: t("Disabled"),
+  }
+  const tlsModeLabels: Record<SiteReplicationTlsMode, string> = {
+    verify: t("Default certificate verification"),
+    "custom-ca": t("Custom CA certificate"),
+    skip: t("Skip TLS verification"),
+  }
+
   return (
     <Dialog
       open={open}
@@ -152,7 +162,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
               <Label htmlFor="site-edit-sync">{t("Sync")}</Label>
               <Select value={syncState} onValueChange={(value) => setSyncState(value as SiteReplicationSyncState)}>
                 <SelectTrigger id="site-edit-sync" className="w-full" aria-label={t("Sync")} disabled={saving}>
-                  <SelectValue placeholder={t("Select")} />
+                  <SelectValue placeholder={t("Select")}>{syncStateLabels[syncState] ?? null}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="enable">{t("Enabled")}</SelectItem>
@@ -202,7 +212,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
                   disabled={saving}
                 >
                   <SelectTrigger id="site-edit-tls-verification" className="w-full">
-                    <SelectValue />
+                    <SelectValue>{tlsModeLabels[tlsMode]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="verify">{t("Default certificate verification")}</SelectItem>

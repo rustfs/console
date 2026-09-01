@@ -397,6 +397,12 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     resetForm()
   }
 
+  const tlsModeLabels: Record<BucketReplicationTlsMode, string> = {
+    verify: t("Default certificate verification"),
+    "custom-ca": t("Custom CA certificate"),
+    skip: t("Skip TLS verification"),
+  }
+
   return (
     <Dialog
       open={open}
@@ -462,7 +468,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                       disabled={controlsLocked || !canEditTargetField("replicationSync")}
                     >
                       <SelectTrigger className="w-full" aria-label={t("Mode")}>
-                        <SelectValue />
+                        <SelectValue>{modeOptions.find((opt) => opt.value === modeType)?.label ?? null}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {modeOptions.map((opt) => (
@@ -724,7 +730,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                         disabled={controlsLocked || !canEditTargetField("skipTlsVerify")}
                       >
                         <SelectTrigger id="replication-tls-verification" className="w-full">
-                          <SelectValue />
+                          <SelectValue>{tlsModeLabels[tlsMode]}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="verify">{t("Default certificate verification")}</SelectItem>
@@ -878,7 +884,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
                           disabled={controlsLocked || !canEditTargetField("bandwidth")}
                         >
                           <SelectTrigger className="w-28" aria-label={t("Bandwidth Unit")}>
-                            <SelectValue />
+                            <SelectValue>{unitOptions.find((opt) => opt.value === unit)?.label ?? null}</SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {unitOptions.map((opt) => (

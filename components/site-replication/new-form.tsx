@@ -216,6 +216,12 @@ export function SiteReplicationNewForm({
     resetForm()
   }
 
+  const tlsModeLabels: Record<SiteReplicationTlsMode, string> = {
+    verify: t("Default certificate verification"),
+    "custom-ca": t("Custom CA certificate"),
+    skip: t("Skip TLS verification"),
+  }
+
   return (
     <Dialog
       open={open}
@@ -454,7 +460,7 @@ export function SiteReplicationNewForm({
                               disabled={saving}
                             >
                               <SelectTrigger id={`site-tls-verification-${index}`} className="w-full">
-                                <SelectValue />
+                                <SelectValue>{tlsModeLabels[tlsModes[index] ?? "verify"]}</SelectValue>
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="verify">{t("Default certificate verification")}</SelectItem>

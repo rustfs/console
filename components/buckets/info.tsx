@@ -714,6 +714,17 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     { href: "#automation", label: t("Automation") },
   ]
 
+  const policyLabels: Partial<Record<BucketPolicyType | "custom", string>> = {
+    public: t("Public"),
+    private: t("Private"),
+    custom: t("Custom"),
+  }
+  const encryptionTypeLabels: Record<string, string> = {
+    disabled: t("Disabled"),
+    "SSE-KMS": "SSE-KMS",
+    "SSE-S3": "SSE-S3",
+  }
+
   if (initialLoading) {
     return (
       <div className="flex items-center justify-center py-16" role="status" aria-live="polite">
@@ -1074,7 +1085,9 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                   }}
                 >
                   <SelectTrigger id="bucket-policy-type" className="w-full" aria-label={t("Policy")}>
-                    <SelectValue placeholder={t("Please select policy")} />
+                    <SelectValue placeholder={t("Please select policy")}>
+                      {policyLabels[policyFormPolicy] ?? policyFormPolicy}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="public">{t("Public")}</SelectItem>
@@ -1150,7 +1163,9 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               <FieldContent>
                 <Select value={encryptFormType} onValueChange={(value) => setEncryptFormType(value ?? "")}>
                   <SelectTrigger id="bucket-encryption-type" className="w-full" aria-label={t("Encryption Type")}>
-                    <SelectValue placeholder={t("Please select encryption type")} />
+                    <SelectValue placeholder={t("Please select encryption type")}>
+                      {encryptionTypeLabels[encryptFormType] ?? null}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="disabled">{t("Disabled")}</SelectItem>
@@ -1186,7 +1201,12 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                       aria-label="KMS Key ID"
                       disabled={kmsKeyLoading || Boolean(kmsKeyError)}
                     >
-                      <SelectValue placeholder={t("Please select KMS key")} />
+                      <SelectValue placeholder={t("Please select KMS key")}>
+                        {encryptFormKmsKeyId
+                          ? (kmsKeyOptions.find((opt) => opt.value === encryptFormKmsKeyId)?.label ??
+                            encryptFormKmsKeyId)
+                          : null}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {kmsKeyOptions.map((opt) => (

@@ -8,9 +8,12 @@ import type {
   KmsCreateKeyRequest,
   KmsCreateKeyResponse,
   KmsDeleteKeyOptions,
+  KmsDetailedStatusResponse,
   KmsKeyDetailResponse,
   KmsKeyListResponse,
   KmsMutationResponse,
+  KmsRekeyJobSnapshot,
+  KmsRekeyStartRequest,
   KmsServiceStatusResponse,
   KmsStartRequest,
 } from "@/types/kms"
@@ -55,8 +58,23 @@ export function useSSE() {
     return (await api.post("/kms/clear-cache", {})) as KmsMutationResponse
   }, [api])
 
-  const getDetailedStatus = useCallback(async () => {
-    return api.get("/kms/status")
+  const getDetailedStatus = useCallback(async (): Promise<KmsDetailedStatusResponse> => {
+    return (await api.get("/kms/status")) as KmsDetailedStatusResponse
+  }, [api])
+
+  const startRekey = useCallback(
+    async (data: KmsRekeyStartRequest = {}): Promise<KmsRekeyJobSnapshot> => {
+      return (await api.post("/kms/keys/rekey", data)) as KmsRekeyJobSnapshot
+    },
+    [api],
+  )
+
+  const getRekeyStatus = useCallback(async (): Promise<KmsRekeyJobSnapshot> => {
+    return (await api.get("/kms/keys/rekey/status", { dedupe: false })) as KmsRekeyJobSnapshot
+  }, [api])
+
+  const cancelRekey = useCallback(async (): Promise<KmsRekeyJobSnapshot> => {
+    return (await api.post("/kms/keys/rekey/cancel", {})) as KmsRekeyJobSnapshot
   }, [api])
 
   const createKey = useCallback(
@@ -129,6 +147,9 @@ export function useSSE() {
     getConfiguration,
     clearCache,
     getDetailedStatus,
+    startRekey,
+    getRekeyStatus,
+    cancelRekey,
     createKey,
     getKeyDetails,
     getKeyList,

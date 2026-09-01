@@ -19,6 +19,9 @@ export type ConfigFormState = {
   kvMount: string
   keyPathPrefix: string
   skipTlsVerify: boolean
+  caCertPath: string
+  clientCertPath: string
+  clientKeyPath: string
   secretKey: string
   staticKeyId: string
 }
@@ -40,6 +43,9 @@ export const INITIAL_FORM_STATE: ConfigFormState = {
   kvMount: "secret",
   keyPathPrefix: "rustfs/kms/keys",
   skipTlsVerify: false,
+  caCertPath: "",
+  clientCertPath: "",
+  clientKeyPath: "",
   secretKey: "",
   staticKeyId: "",
 }
@@ -91,6 +97,11 @@ export function buildFormStateFromStatus(status: KmsServiceStatusResponse | null
     secretKey: "",
     staticKeyId: backendSummary?.key_id ?? "",
     skipTlsVerify: backendSummary?.skip_tls_verify ?? false,
+    // The status API only reports has_custom_ca / has_client_identity booleans
+    // and never echoes paths back, so these cannot be refilled from status.
+    caCertPath: "",
+    clientCertPath: "",
+    clientKeyPath: "",
   }
 }
 

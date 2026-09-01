@@ -988,6 +988,13 @@ export default function SSEPage() {
       : t("Changing KMS service state may briefly interrupt SSE requests.")
   const isPendingDefaultKey = pendingKeyAction?.key.key_id === status?.config_summary?.default_key_id
 
+  const backendTypeLabels: Record<ConfigFormState["backendType"], string> = {
+    unsupported: t("Unsupported KMS backend"),
+    local: t("Local filesystem"),
+    "vault-kv2": t("HashiCorp Vault KV2"),
+    "vault-transit": t("HashiCorp Vault Transit Engine"),
+    static: t("Static single-key (built-in)"),
+  }
   const mutationLocked = Boolean(activeMutation || statusError || loadingStatus)
   const unsupportedKmsReadOnly = formState.backendType === "unsupported"
   const staticKmsReadOnly = hasConfiguration && formState.backendType === "static"
@@ -1217,7 +1224,9 @@ export default function SSEPage() {
                           disabled={formDisabled || localKmsConfigured}
                         >
                           <SelectTrigger id="kmsBackend" className="w-full" aria-label={t("KMS Backend")}>
-                            <SelectValue placeholder={t("Select backend type")} />
+                            <SelectValue placeholder={t("Select backend type")}>
+                              {backendTypeLabels[formState.backendType] ?? null}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {formState.backendType === "unsupported" ? (

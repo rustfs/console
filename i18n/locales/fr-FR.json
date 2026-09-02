@@ -1163,6 +1163,8 @@
   "The exported file contains sensitive information. Please keep it secure.": "Le fichier exporté contient des informations sensibles. Veuillez le conserver en sécurité.",
   "The secret key is shown only once. Copy or export it before closing.": "La clé secrète n’est affichée qu’une seule fois. Copiez-la ou exportez-la avant de fermer.",
   "The server detects the local site identity from the active RustFS deployment.": "Le serveur détecte l'identité du site local à partir du déploiement RustFS actif.",
+  "Multiple peers share the local site name, so the current site cannot be identified.": "Plusieurs pairs partagent le nom du site local, le site actuel ne peut donc pas être identifié.",
+  "The current site could not be identified because the server did not report its deployment ID.": "Le site actuel n'a pas pu être identifié car le serveur n'a pas signalé son ID de déploiement.",
   "The two passwords are inconsistent": "Les deux mots de passe sont différents",
   "The value is used only for the initial join request.": "Cette valeur est utilisée uniquement pour la demande de jonction initiale.",
   "This action cannot be undone and will bypass the normal deletion process.": "Cette action ne peut pas être annulée et contournera le processus de suppression normal.",

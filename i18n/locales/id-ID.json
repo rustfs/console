@@ -1163,6 +1163,8 @@
   "The exported file contains sensitive information. Please keep it secure.": "File yang diekspor berisi informasi sensitif. Harap jaga keamanannya.",
   "The secret key is shown only once. Copy or export it before closing.": "Kunci rahasia hanya ditampilkan sekali. Salin atau ekspor sebelum menutup.",
   "The server detects the local site identity from the active RustFS deployment.": "Server mendeteksi identitas situs lokal dari deployment RustFS yang aktif.",
+  "Multiple peers share the local site name, so the current site cannot be identified.": "Beberapa peer menggunakan nama situs lokal yang sama, sehingga situs saat ini tidak dapat diidentifikasi.",
+  "The current site could not be identified because the server did not report its deployment ID.": "Situs saat ini tidak dapat diidentifikasi karena server tidak melaporkan deployment ID-nya.",
   "The two passwords are inconsistent": "Kedua kata sandi tidak cocok",
   "The value is used only for the initial join request.": "Nilai ini hanya digunakan untuk permintaan bergabung awal.",
   "This action cannot be undone and will bypass the normal deletion process.": "Tindakan ini tidak dapat dibatalkan dan akan melewati proses penghapusan normal.",

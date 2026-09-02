@@ -38,21 +38,7 @@ jobs:
         run: pnpm ci
 
       - name: 💅 Check Prettier formatting
-        run: pnpm run lint
-
-      - name: 🔧 Auto-fix formatting (PR only)
-        if: github.event_name == 'pull_request'
-        run: |
-          pnpm run lint:fix
-          if [[ -n $(git status --porcelain) ]]; then
-            echo "## 💅 Formatting Changes Applied" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "The following files were auto-formatted:" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            git diff --name-only >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          fi
+        run: pnpm run format:check
 
   # ============================================================================
   # TypeScript 类型检查

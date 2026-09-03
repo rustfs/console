@@ -1163,6 +1163,8 @@
   "The exported file contains sensitive information. Please keep it secure.": "エクスポートされたファイルには機密情報が含まれています。安全に保管してください。",
   "The secret key is shown only once. Copy or export it before closing.": "シークレットキーが表示されるのは一度だけです。閉じる前にコピーまたはエクスポートしてください。",
   "The server detects the local site identity from the active RustFS deployment.": "サーバーはアクティブな RustFS デプロイメントからローカルサイトの識別情報を検出します。",
+  "Multiple peers share the local site name, so the current site cannot be identified.": "複数のピアが同じローカルサイト名を共有しているため、現在のサイトを特定できません。",
+  "The current site could not be identified because the server did not report its deployment ID.": "サーバーが deployment ID を報告しなかったため、現在のサイトを特定できません。",
   "The two passwords are inconsistent": "2つのパスワードが一致しません",
   "The value is used only for the initial join request.": "この値は初回参加リクエストでのみ使用されます。",
   "This action cannot be undone and will bypass the normal deletion process.": "この操作は元に戻せず、通常の削除プロセスをバイパスします。",

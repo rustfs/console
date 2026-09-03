@@ -7,8 +7,11 @@ export function useSystem() {
   const api = useApi()
 
   const getSystemInfo = useCallback(
-    async (signal?: AbortSignal) => {
-      return api.get("/info", signal ? { signal, dedupe: false } : undefined)
+    async (signal?: AbortSignal, options?: { suppress403Redirect?: boolean }) => {
+      return api.get("/info", {
+        ...(signal ? { signal, dedupe: false } : {}),
+        ...(options?.suppress403Redirect ? { suppress403Redirect: true } : {}),
+      })
     },
     [api],
   )

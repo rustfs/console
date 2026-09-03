@@ -1163,6 +1163,8 @@
   "The exported file contains sensitive information. Please keep it secure.": "Tệp được xuất chứa thông tin nhạy cảm. Vui lòng bảo mật tệp này.",
   "The secret key is shown only once. Copy or export it before closing.": "Khóa bí mật chỉ được hiển thị một lần. Hãy sao chép hoặc xuất khóa trước khi đóng.",
   "The server detects the local site identity from the active RustFS deployment.": "Máy chủ phát hiện danh tính site cục bộ từ bản triển khai RustFS đang hoạt động.",
+  "Multiple peers share the local site name, so the current site cannot be identified.": "Nhiều peer dùng chung tên site cục bộ nên không thể xác định site hiện tại.",
+  "The current site could not be identified because the server did not report its deployment ID.": "Không thể xác định site hiện tại vì máy chủ không báo cáo deployment ID của nó.",
   "The two passwords are inconsistent": "Hai mật khẩu không khớp nhau",
   "The value is used only for the initial join request.": "Giá trị này chỉ được dùng cho yêu cầu tham gia ban đầu.",
   "This action cannot be undone and will bypass the normal deletion process.": "Hành động này không thể hoàn tác và sẽ bỏ qua quy trình xóa thông thường.",

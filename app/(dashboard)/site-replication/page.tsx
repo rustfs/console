@@ -35,9 +35,11 @@ import { Spinner } from "@/components/ui/spinner"
 import { useDataTable } from "@/hooks/use-data-table"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useSiteReplication } from "@/hooks/use-site-replication"
+import { useSystem } from "@/hooks/use-system"
 import { formatDateTime, niceBytes } from "@/lib/functions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
+import { extractServerDeploymentId, resolveSiteReplicationLocalSite } from "@/lib/site-replication-local-site"
 import { isHttpsSiteReplicationEndpoint } from "@/lib/site-replication-tls"
 import type {
   SiteReplicationInfo,
@@ -117,9 +119,11 @@ export default function SiteReplicationPage() {
     resyncSiteReplication,
     setSiteReplicationIlmExpiry,
   } = useSiteReplication()
+  const { getSystemInfo } = useSystem()
 
   const [info, setInfo] = useState<SiteReplicationInfo | null>(null)
   const [status, setStatus] = useState<SiteReplicationStatus | null>(null)
+  const [serverDeploymentId, setServerDeploymentId] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [featureUnavailable, setFeatureUnavailable] = useState(false)
@@ -139,6 +143,14 @@ export default function SiteReplicationPage() {
     setError(null)
     setFeatureUnavailable(false)
     setStatusUnavailable(false)
+
+    // The local deployment ID is the only stable way to tell which entry of
+    // the shared, deployment-ID-sorted site list belongs to this server. Fetch
+    // it alongside the replication data; a failure here only degrades the
+    // "current site" identification, so it must not fail the whole page.
+    const serverDeploymentIdPromise = getSystemInfo(undefined, { suppress403Redirect: true })
+      .then(extractServerDeploymentId)
+      .catch(() => "")
 
     try {
       let nextInfo: SiteReplicationInfo | null = null
@@ -168,6 +180,7 @@ export default function SiteReplicationPage() {
         }
       }
 
+      setServerDeploymentId(await serverDeploymentIdPromise)
       setInfo(nextInfo)
       setStatus(nextStatus)
     } catch (loadError) {
@@ -175,7 +188,7 @@ export default function SiteReplicationPage() {
     } finally {
       setLoading(false)
     }
-  }, [getSiteReplicationInfo, getSiteReplicationStatus, t])
+  }, [getSiteReplicationInfo, getSiteReplicationStatus, getSystemInfo, t])
 
   useEffect(() => {
     void loadData()
@@ -183,10 +196,14 @@ export default function SiteReplicationPage() {
 
   const peers = info?.sites ?? []
   const ilmExpiryEnabled = peers.some((peer) => peer.replicateIlmExpiry)
-  const localDeploymentId =
-    Object.keys(status?.metrics.metrics ?? {})[0] ??
-    peers.find((peer) => peer.name && peer.name === info?.name)?.deploymentId ??
-    ""
+  // Never pick the local site by array or key position: every site returns
+  // the same list in the same order (issue rustfs/rustfs#7072).
+  const localSite = resolveSiteReplicationLocalSite({
+    serverDeploymentId,
+    localName: info?.name,
+    peers,
+  })
+  const localDeploymentId = localSite.deploymentId
   const localPeer = peers.find((peer) => peer.deploymentId === localDeploymentId) ?? null
   const localSummary = (localDeploymentId && status?.statsSummary[localDeploymentId]) || null
   const localMetric = (localDeploymentId && status?.metrics.metrics[localDeploymentId]) || null
@@ -586,6 +603,13 @@ export default function SiteReplicationPage() {
               label={t("Deployment ID")}
               value={<span className="font-mono text-xs break-all">{localDeploymentId || "--"}</span>}
             />
+            {info?.enabled && !localDeploymentId ? (
+              <p className="text-xs text-muted-foreground" role="note">
+                {localSite.ambiguousName
+                  ? t("Multiple peers share the local site name, so the current site cannot be identified.")
+                  : t("The current site could not be identified because the server did not report its deployment ID.")}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
 

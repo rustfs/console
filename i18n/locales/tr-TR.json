@@ -1163,6 +1163,8 @@
   "The exported file contains sensitive information. Please keep it secure.": "Dışa aktarılan dosya hassas bilgiler içerir. Lütfen güvende tutun.",
   "The secret key is shown only once. Copy or export it before closing.": "Gizli anahtar yalnızca bir kez gösterilir. Kapatmadan önce kopyalayın veya dışa aktarın.",
   "The server detects the local site identity from the active RustFS deployment.": "Sunucu, yerel site kimliğini etkin RustFS dağıtımından algılar.",
+  "Multiple peers share the local site name, so the current site cannot be identified.": "Birden fazla eş aynı yerel site adını paylaştığından geçerli site belirlenemiyor.",
+  "The current site could not be identified because the server did not report its deployment ID.": "Sunucu deployment ID'sini bildirmediğinden geçerli site belirlenemedi.",
   "The two passwords are inconsistent": "İki şifre tutarsız",
   "The value is used only for the initial join request.": "Bu değer yalnızca ilk katılım isteği için kullanılır.",
   "This action cannot be undone and will bypass the normal deletion process.": "Bu işlem geri alınamaz ve normal silme işlemini atlayacaktır.",

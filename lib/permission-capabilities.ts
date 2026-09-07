@@ -22,6 +22,8 @@ export type ConsoleCapability =
   | "bucket.lifecycle.edit"
   | "bucket.replication.edit"
   | "bucket.events.edit"
+  | "bucket.onDemandMigration.view"
+  | "bucket.onDemandMigration.edit"
   | "objects.upload"
   | "objects.view"
   | "objects.preview"
@@ -77,6 +79,8 @@ const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]
   "bucket.lifecycle.edit": [{ actions: ["s3:PutBucketLifecycle"], resource: "bucket" }],
   "bucket.replication.edit": [{ actions: ["s3:PutReplicationConfiguration"], resource: "bucket" }],
   "bucket.events.edit": [{ actions: ["s3:PutBucketNotification"], resource: "bucket" }],
+  "bucket.onDemandMigration.view": [{ actions: ["admin:GetBucketOnDemandMigration"], resource: "none" }],
+  "bucket.onDemandMigration.edit": [{ actions: ["admin:SetBucketOnDemandMigration"], resource: "none" }],
   "objects.upload": [{ actions: ["s3:PutObject"], resource: "objectPattern" }],
   "objects.view": [{ actions: ["s3:GetObject"], resource: "object" }],
   "objects.preview": [{ actions: ["s3:GetObject"], resource: "object" }],

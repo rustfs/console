@@ -1,5 +1,5 @@
 const SENSITIVE_LOG_KEY =
-  /(?:token|secret|password|authorization|cookie|credential|creds|api[_-]?key|master[_-]?key|private[_-]?key)/i
+  /(?:token|secret|password|authorization|cookie|credential|creds|api[_-]?key|master[_-]?key|private[_-]?key|account[_-]?key|service[_-]?account[_-]?json)/i
 
 function redactLogValue(value: unknown, key?: string): unknown {
   if (key && SENSITIVE_LOG_KEY.test(key)) return "[REDACTED]"

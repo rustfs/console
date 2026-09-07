@@ -20,7 +20,9 @@ function getLabelByPath(pathSegment: string, t: (k: string) => string): string {
   const nav = navs.find(
     (n) => n.type !== "divider" && n.to && (n.to === path || n.to.replace(/^\//, "") === pathSegment),
   )
-  return nav?.label ? t(nav.label) : pathSegment
+  if (nav?.label) return t(nav.label)
+  if (path === "/on-demand-migration") return t("On-demand migration")
+  return pathSegment
 }
 
 export function TopNavBreadcrumb() {

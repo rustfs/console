@@ -13,3 +13,10 @@ test("buildModuleBucketPath encodes bucket names in query params", () => {
 test("buildModuleBucketPath returns module root when bucket is empty", () => {
   assert.equal(buildModuleBucketPath("/replication", ""), "/replication")
 })
+
+test("buildModuleBucketPath supports on-demand migration bucket routes", () => {
+  assert.equal(
+    buildModuleBucketPath("/on-demand-migration", "photos archive"),
+    "/on-demand-migration?bucket=photos+archive",
+  )
+})

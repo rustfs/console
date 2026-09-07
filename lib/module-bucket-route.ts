@@ -1,4 +1,4 @@
-export type BucketModuleRoute = "/events" | "/lifecycle" | "/replication"
+export type BucketModuleRoute = "/events" | "/lifecycle" | "/replication" | "/on-demand-migration"
 
 export function buildModuleBucketPath(route: BucketModuleRoute, bucketName: string): string {
   if (!bucketName) return route

@@ -19,6 +19,16 @@ test("auth surfaces use dynamic viewport height and mobile touch targets", () =>
   assert.doesNotMatch(login, /lg:w-7\/12/)
 })
 
+test("login secret fields provide accessible reveal controls", () => {
+  const login = fs.readFileSync("components/auth/login-form.tsx", "utf8")
+  const secretFields = login.match(/<SecretKeyInput/g) ?? []
+
+  assert.equal(secretFields.length, 2)
+  assert.match(login, /type=\{visible \? "text" : "password"\}/)
+  assert.match(login, /const visibilityLabel = visible \? t\("Hide key"\) : t\("Show key"\)/)
+  assert.match(login, /<InputGroupButton[\s\S]*?type="button"[\s\S]*?aria-label=\{visibilityLabel\}/)
+})
+
 test("status toolbars keep mobile touch targets without stretching desktop controls", () => {
   const page = fs.readFileSync("app/(dashboard)/status/page.tsx", "utf8")
   const servers = fs.readFileSync("app/(dashboard)/_components/performance-server-list.tsx", "utf8")

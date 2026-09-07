@@ -1,13 +1,15 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useTranslation } from "react-i18next"
-import { RiSettings3Line } from "@remixicon/react"
+import { RiEyeLine, RiEyeOffLine, RiSettings3Line } from "@remixicon/react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
+import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
 import { Spinner } from "@/components/ui/spinner"
 import { TOTP_CODE_LENGTH } from "@/lib/mfa"
@@ -57,6 +59,38 @@ export interface LoginFormProps {
   onOidcLogin?: (providerId: string) => void
   /** Present only while the server is waiting for a second factor. */
   secondFactor?: SecondFactorStep
+}
+
+type SecretKeyInputProps = Omit<React.ComponentProps<typeof InputGroupInput>, "className" | "type">
+
+function SecretKeyInput({ id, ...props }: SecretKeyInputProps) {
+  const { t } = useTranslation()
+  const [visible, setVisible] = useState(false)
+  const visibilityLabel = visible ? t("Hide key") : t("Show key")
+
+  return (
+    <InputGroup className="h-11 sm:h-8">
+      <InputGroupInput
+        {...props}
+        id={id}
+        type={visible ? "text" : "password"}
+        className="h-11 text-base sm:h-8 sm:text-xs"
+      />
+      <InputGroupAddon align="inline-end">
+        <InputGroupButton
+          type="button"
+          size="icon-xs"
+          className="size-11 sm:size-6"
+          aria-label={visibilityLabel}
+          aria-controls={id}
+          title={visibilityLabel}
+          onClick={() => setVisible((current) => !current)}
+        >
+          {visible ? <RiEyeOffLine aria-hidden /> : <RiEyeLine aria-hidden />}
+        </InputGroupButton>
+      </InputGroupAddon>
+    </InputGroup>
+  )
 }
 
 export function LoginForm({
@@ -222,7 +256,8 @@ export function LoginForm({
                           <Field>
                             <FieldLabel htmlFor="secretKey">{t("Key")}</FieldLabel>
                             <FieldContent>
-                              <Input
+                              <SecretKeyInput
+                                key="access-key-secret"
                                 id="secretKey"
                                 name="secretKey"
                                 value={accessKeyAndSecretKey.secretAccessKey}
@@ -233,10 +268,8 @@ export function LoginForm({
                                   }))
                                 }
                                 autoComplete="current-password"
-                                type="password"
                                 spellCheck={false}
                                 required
-                                className="h-11 text-base sm:h-8 sm:text-xs"
                                 placeholder={t("Please enter key")}
                               />
                             </FieldContent>
@@ -269,7 +302,8 @@ export function LoginForm({
                           <Field>
                             <FieldLabel htmlFor="stsSecretKey">{t("STS Key")}</FieldLabel>
                             <FieldContent>
-                              <Input
+                              <SecretKeyInput
+                                key="sts-secret"
                                 id="stsSecretKey"
                                 name="stsSecretKey"
                                 value={sts.secretAccessKey}
@@ -280,10 +314,8 @@ export function LoginForm({
                                   }))
                                 }
                                 autoComplete="new-password"
-                                type="password"
                                 spellCheck={false}
                                 required
-                                className="h-11 text-base sm:h-8 sm:text-xs"
                                 placeholder={t("Please enter STS key")}
                               />
                             </FieldContent>

@@ -1964,5 +1964,7 @@
   "The source changed after copying.": "Đối tượng nguồn đã thay đổi sau khi sao chép.",
   "Source deletion could not be confirmed.": "Không thể xác nhận việc xóa đối tượng nguồn.",
   "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.": "Đã sao chép đối tượng đến đích nhưng không thể xác nhận việc xóa đối tượng nguồn. Hãy kiểm tra cả hai vị trí trước khi thử lại.",
-  "The source changed or the destination already exists. Refresh and choose a different destination.": "Đối tượng nguồn đã thay đổi hoặc đích đã tồn tại. Hãy làm mới và chọn đích khác."
+  "The source changed or the destination already exists. Refresh and choose a different destination.": "Đối tượng nguồn đã thay đổi hoặc đích đã tồn tại. Hãy làm mới và chọn đích khác.",
+  "Show key": "Hiện khóa",
+  "Hide key": "Ẩn khóa"
 }

@@ -1964,5 +1964,7 @@
   "The source changed after copying.": "The source changed after copying.",
   "Source deletion could not be confirmed.": "Source deletion could not be confirmed.",
   "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.": "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.",
-  "The source changed or the destination already exists. Refresh and choose a different destination.": "The source changed or the destination already exists. Refresh and choose a different destination."
+  "The source changed or the destination already exists. Refresh and choose a different destination.": "The source changed or the destination already exists. Refresh and choose a different destination.",
+  "Show key": "Show key",
+  "Hide key": "Hide key"
 }

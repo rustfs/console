@@ -1964,5 +1964,7 @@
   "The source changed after copying.": "Исходный объект изменился после копирования.",
   "Source deletion could not be confirmed.": "Не удалось подтвердить удаление исходного объекта.",
   "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.": "Объект скопирован в место назначения, но удаление исходного объекта не подтверждено. Проверьте оба места перед повторной попыткой.",
-  "The source changed or the destination already exists. Refresh and choose a different destination.": "Исходный объект изменился или целевой объект уже существует. Обновите данные и выберите другое место назначения."
+  "The source changed or the destination already exists. Refresh and choose a different destination.": "Исходный объект изменился или целевой объект уже существует. Обновите данные и выберите другое место назначения.",
+  "Show key": "Показать ключ",
+  "Hide key": "Скрыть ключ"
 }

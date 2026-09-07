@@ -27,6 +27,9 @@ export type ConsoleCapability =
   | "objects.preview"
   | "objects.download"
   | "objects.rename"
+  | "objects.copy"
+  | "objects.move"
+  | "objects.transferDestination"
   | "objects.delete"
   | "objects.bulkDelete"
   | "objects.tag.view"
@@ -50,7 +53,7 @@ export type ConsoleCapability =
   | "policies.edit"
   | "policies.delete"
 
-type ResourceTarget = "none" | "bucket" | "object" | "objectPattern" | "allBuckets"
+type ResourceTarget = "none" | "bucket" | "object" | "exactObject" | "objectPattern" | "allBuckets"
 type RequirementMode = "all" | "any"
 
 interface CapabilityRequirement {
@@ -78,6 +81,9 @@ const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]
   "objects.view": [{ actions: ["s3:GetObject"], resource: "object" }],
   "objects.preview": [{ actions: ["s3:GetObject"], resource: "object" }],
   "objects.download": [{ actions: ["s3:GetObject"], resource: "object" }],
+  "objects.copy": [{ actions: ["s3:GetObject"], resource: "exactObject" }],
+  "objects.move": [{ actions: ["s3:GetObject", "s3:DeleteObject"], resource: "exactObject" }],
+  "objects.transferDestination": [{ actions: ["s3:PutObject"], resource: "exactObject" }],
   "objects.rename": [
     { actions: ["s3:GetObject", "s3:DeleteObject"], resource: "object" },
     { actions: ["s3:PutObject"], resource: "objectPattern" },
@@ -120,8 +126,11 @@ function resolveResource(resource: ResourceTarget, context: PermissionResourceCo
     case "bucket":
       return context.bucket ? toBucketArn(context.bucket) : toAllBucketsArn()
     case "object":
+    case "exactObject":
       if (context.bucket && context.objectKey) {
-        return toObjectArn(context.bucket, context.objectKey)
+        return resource === "exactObject"
+          ? `${toBucketArn(context.bucket)}/${context.objectKey}`
+          : toObjectArn(context.bucket, context.objectKey)
       }
       return toObjectPatternArn(context.bucket, context.prefix)
     case "objectPattern":

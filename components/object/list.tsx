@@ -12,6 +12,8 @@ import {
   RiFileLine,
   RiEyeLine,
   RiEdit2Line,
+  RiFileCopyLine,
+  RiFolderTransferLine,
   RiArrowUpSLine,
   RiArrowDownSLine,
 } from "@remixicon/react"
@@ -77,6 +79,7 @@ import {
   type ObjectRenameValidation,
 } from "@/lib/object-rename"
 import { TaskStatsButton } from "@/components/tasks/stats-button"
+import { ObjectTransferDialog } from "@/components/object/transfer-dialog"
 import { useAddDeleteKeys, useAddDeleteFolder, useTasks } from "@/contexts/task-context"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -151,6 +154,12 @@ export function ObjectList({
   const [renameSourceKey, setRenameSourceKey] = React.useState("")
   const [renameName, setRenameName] = React.useState("")
   const [renameSubmitting, setRenameSubmitting] = React.useState(false)
+  const [transfer, setTransfer] = React.useState<{
+    mode: "copy" | "move"
+    key: string
+    trigger: HTMLElement
+  } | null>(null)
+  const refreshButtonRef = React.useRef<HTMLButtonElement>(null)
 
   const prefix = decodeURIComponent(path)
   const resolvedPageSize = resolveObjectListPageSize(pageSize)
@@ -522,7 +531,7 @@ export function ObjectList({
         header: () => t("Actions"),
         enableSorting: false,
         cell: ({ row }) => (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 [&_button]:min-h-11 sm:[&_button]:min-h-0">
             {row.original.type === "object" ? (
               <>
                 {canCapability("objects.preview", { bucket, objectKey: row.original.Key }) ? (
@@ -547,6 +556,30 @@ export function ObjectList({
                   <Button variant="outline" size="sm" onClick={() => openRenameDialog(row.original.Key)}>
                     <RiEdit2Line className="size-4" aria-hidden />
                     <span>{t("Rename")}</span>
+                  </Button>
+                ) : null}
+                {canCapability("objects.copy", { bucket, objectKey: row.original.Key }) ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(event) =>
+                      setTransfer({ mode: "copy", key: row.original.Key, trigger: event.currentTarget })
+                    }
+                  >
+                    <RiFileCopyLine data-icon="inline-start" aria-hidden />
+                    <span>{t("Copy")}</span>
+                  </Button>
+                ) : null}
+                {canCapability("objects.move", { bucket, objectKey: row.original.Key }) ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(event) =>
+                      setTransfer({ mode: "move", key: row.original.Key, trigger: event.currentTarget })
+                    }
+                  >
+                    <RiFolderTransferLine data-icon="inline-start" aria-hidden />
+                    <span>{t("Move")}</span>
                   </Button>
                 ) : null}
               </>
@@ -834,7 +867,11 @@ export function ObjectList({
                 </span>
               </Button>
             ) : null}
-            <Button variant="outline" onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}>
+            <Button
+              ref={refreshButtonRef}
+              variant="outline"
+              onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}
+            >
               <RiRefreshLine className="size-4" aria-hidden />
               <span>{t("Refresh")}</span>
             </Button>
@@ -987,6 +1024,17 @@ export function ObjectList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {transfer ? (
+        <ObjectTransferDialog
+          mode={transfer.mode}
+          bucket={bucket}
+          objectKey={transfer.key}
+          returnFocus={() => (transfer.trigger.isConnected ? transfer.trigger : refreshButtonRef.current)}
+          onClose={() => setTransfer(null)}
+          onRefresh={resetAndFetchObjects}
+        />
+      ) : null}
 
       <Dialog open={renameDialogOpen} onOpenChange={handleRenameOpenChange} disablePointerDismissal>
         <DialogContent className="sm:max-w-md">

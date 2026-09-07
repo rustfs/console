@@ -20,21 +20,21 @@ export function PdfViewer({ url }: PdfViewerProps) {
 
   if (!url) {
     return (
-      <div className="flex h-[70vh] items-center justify-center text-sm text-muted-foreground">
+      <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-muted-foreground">
         {t("Preview unavailable")}
       </div>
     )
   }
 
   return (
-    <div className="relative h-[70vh] w-full overflow-hidden bg-muted/20 p-3">
+    <div className="relative flex min-h-0 w-full flex-1 overflow-hidden bg-muted/20 p-3">
       {loading && !loadError ? (
         <div className="absolute inset-0 z-10 flex items-center justify-center">
           <Spinner className="size-8 text-muted-foreground" />
         </div>
       ) : null}
       {loadError ? (
-        <div className="flex h-full items-center justify-center p-4 text-sm text-destructive">{loadError}</div>
+        <div className="flex h-full w-full items-center justify-center p-4 text-sm text-destructive">{loadError}</div>
       ) : (
         <iframe
           key={url}

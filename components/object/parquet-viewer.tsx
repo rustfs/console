@@ -105,7 +105,7 @@ export function ParquetViewer({ url, sizeBytes }: ParquetViewerProps) {
 
   if (!url) {
     return (
-      <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">
+      <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-muted-foreground">
         {t("Preview unavailable")}
       </div>
     )
@@ -113,19 +113,19 @@ export function ParquetViewer({ url, sizeBytes }: ParquetViewerProps) {
 
   if (loading) {
     return (
-      <div className="flex h-[60vh] items-center justify-center">
+      <div className="flex min-h-0 flex-1 items-center justify-center">
         <Spinner className="size-8 text-muted-foreground" />
       </div>
     )
   }
 
   if (error) {
-    return <div className="flex h-[60vh] items-center justify-center p-4 text-sm text-destructive">{error}</div>
+    return <div className="flex min-h-0 flex-1 items-center justify-center p-4 text-sm text-destructive">{error}</div>
   }
 
   if (!data || data.rows.length === 0) {
     return (
-      <div className="flex h-[60vh] items-center justify-center text-sm text-muted-foreground">
+      <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-muted-foreground">
         {t("No data to display")}
       </div>
     )
@@ -134,8 +134,13 @@ export function ParquetViewer({ url, sizeBytes }: ParquetViewerProps) {
   const truncated = data.totalRows > data.rows.length
 
   return (
-    <div className="flex w-full min-w-0 max-h-[70vh] flex-1 flex-col gap-2">
-      <div className="min-h-0 w-full min-w-0 flex-1 overflow-auto border">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-2">
+      <div
+        className="min-h-0 w-full min-w-0 flex-1 overflow-auto overscroll-contain border focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset [&_[data-slot=table-container]]:overflow-visible"
+        role="region"
+        tabIndex={0}
+        aria-label={t("Preview")}
+      >
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
             <TableRow>

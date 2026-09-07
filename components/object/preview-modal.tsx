@@ -2,11 +2,11 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react"
+import { RiCloseLine, RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/react"
 import { PdfViewer } from "@/components/object/pdf-viewer"
 import { ParquetViewer } from "@/components/object/parquet-viewer"
 import { TiffViewer } from "@/components/object/tiff-viewer"
@@ -119,6 +119,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const [imageFitScale, setImageFitScale] = React.useState(1)
   const [imageLayoutReady, setImageLayoutReady] = React.useState(false)
   const [isImageFullscreen, setIsImageFullscreen] = React.useState(false)
+  const [isDialogExpanded, setIsDialogExpanded] = React.useState(false)
   const imagePreviewRef = React.useRef<HTMLDivElement | null>(null)
   const imageViewportRef = React.useRef<HTMLDivElement | null>(null)
   const imageSizeCacheRef = React.useRef<Record<string, { width: number; height: number }>>({})
@@ -147,7 +148,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
     canRenderTiff,
   })
   const isImageMode = previewMode === "image"
-  const isSelfScrollMode = isImageMode || previewMode === "parquet" || previewMode === "tiff"
+  const isCompactPreview = previewMode === "audio" || previewMode === "download"
 
   const getFormattedContent = () => {
     if (!isJson || !isFormatted) return textContent
@@ -188,6 +189,10 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   React.useEffect(() => {
     setAudioLoadError(false)
   }, [show, previewUrl])
+
+  React.useEffect(() => {
+    if (!show) setIsDialogExpanded(false)
+  }, [show])
 
   React.useEffect(() => {
     const cachedSize = previewUrl ? imageSizeCacheRef.current[previewUrl] : undefined
@@ -268,11 +273,21 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   React.useEffect(() => {
     if (!show || !isImageMode || !imageNaturalSize) return
 
-    window.addEventListener("resize", updateImageFitScale)
-    return () => {
-      window.removeEventListener("resize", updateImageFitScale)
+    const imageViewport = imageViewportRef.current
+    if (!imageViewport || typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateImageFitScale)
+      return () => {
+        window.removeEventListener("resize", updateImageFitScale)
+      }
     }
-  }, [show, isImageMode, imageNaturalSize, updateImageFitScale])
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateImageFitScale()
+      centerImageViewport()
+    })
+    resizeObserver.observe(imageViewport)
+    return () => resizeObserver.disconnect()
+  }, [show, isImageMode, imageNaturalSize, updateImageFitScale, centerImageViewport])
 
   const renderPreview = () => {
     if (loading) {
@@ -286,7 +301,12 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
     switch (previewMode) {
       case "text":
         return (
-          <div className="relative flex-1 overflow-auto">
+          <div
+            className="relative min-h-0 flex-1 overflow-auto overscroll-contain focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+            role="region"
+            tabIndex={0}
+            aria-label={objectKey || t("Preview")}
+          >
             <pre className="whitespace-pre-wrap break-words pe-16">{getFormattedContent()}</pre>
             <div className="absolute end-0 top-0">
               {isJson && (
@@ -303,25 +323,32 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
         return (
           <div
             ref={imagePreviewRef}
-            className={`relative flex overflow-hidden ${isImageFullscreen ? "h-screen w-screen bg-black" : "flex-1 min-h-0 bg-muted/20"}`}
+            className={cn(
+              "relative flex overflow-hidden",
+              isImageFullscreen ? "h-screen w-screen bg-black" : "min-h-0 flex-1 bg-muted/20",
+            )}
           >
             <div className="absolute end-2 top-2 z-10 flex items-center gap-1 border bg-background/90 p-1 backdrop-blur-xs">
               <Button
                 variant="outline"
                 size="icon-xs"
                 type="button"
+                className="size-11 [@media(hover:hover)_and_(pointer:fine)]:size-6"
                 onClick={toggleImageFullscreen}
                 aria-label={isImageFullscreen ? t("Exit Fullscreen") : t("Fullscreen")}
                 title={isImageFullscreen ? t("Exit Fullscreen") : t("Fullscreen")}
               >
-                {isImageFullscreen ? (
-                  <RiFullscreenExitLine className="size-3" aria-hidden />
-                ) : (
-                  <RiFullscreenLine className="size-3" aria-hidden />
-                )}
+                {isImageFullscreen ? <RiFullscreenExitLine aria-hidden /> : <RiFullscreenLine aria-hidden />}
               </Button>
             </div>
-            <div ref={imageViewportRef} className="h-full w-full overflow-auto p-2">
+            <div
+              ref={imageViewportRef}
+              className="h-full w-full overflow-auto overscroll-contain p-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+              role="region"
+              tabIndex={0}
+              aria-label={objectKey || t("Preview")}
+              dir="ltr"
+            >
               <div className="flex min-h-full min-w-full items-center justify-center">
                 <div
                   className={cn(
@@ -387,7 +414,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
         )
       case "sandbox":
         return (
-          <iframe src={previewUrl} className="h-[70vh] w-full" frameBorder={0} title="Sandbox preview" sandbox="" />
+          <iframe src={previewUrl} className="min-h-0 w-full flex-1" frameBorder={0} title={t("Preview")} sandbox="" />
         )
       case "pdf":
         return <PdfViewer url={previewUrl} />
@@ -410,19 +437,50 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   return (
     <Dialog open={show} onOpenChange={onShowChange}>
       <DialogContent
-        className={cn("z-[1000] max-h-[85vh] sm:max-w-4xl", isSelfScrollMode ? "overflow-hidden" : "overflow-auto")}
+        showCloseButton={false}
+        className={cn(
+          "start-[var(--preview-dialog-inline-start)] top-[var(--preview-dialog-block-start)] h-[var(--preview-dialog-height)] w-[var(--preview-dialog-width)] max-h-[calc(100dvh_-_var(--preview-dialog-block-start)_-_1rem)] max-w-[calc(100vw_-_var(--preview-dialog-inline-start)_-_1rem)] translate-x-0 translate-y-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rtl:translate-x-0 sm:max-w-[calc(100vw_-_var(--preview-dialog-inline-start)_-_1rem)] sm:min-h-[min(20rem,calc(100dvh-var(--preview-dialog-block-start)-1rem))] sm:min-w-[min(32rem,calc(100vw-2rem))] resize-none [@media(min-width:40rem)_and_(hover:hover)_and_(pointer:fine)]:resize",
+          isDialogExpanded &&
+            "!start-4 !top-4 !h-[calc(100dvh-2rem)] !max-h-[calc(100dvh-2rem)] !w-[calc(100vw-2rem)] !max-w-[calc(100vw-2rem)] !resize-none",
+        )}
+        style={
+          {
+            "--preview-dialog-width": "min(56rem, calc(100vw - 2rem))",
+            "--preview-dialog-height": isCompactPreview ? "min(24rem, calc(100dvh - 2rem))" : "min(85dvh, 48rem)",
+            "--preview-dialog-inline-start": "max(1rem, calc((100vw - var(--preview-dialog-width)) / 2))",
+            "--preview-dialog-block-start": "max(1rem, calc((100dvh - var(--preview-dialog-height)) / 2))",
+          } as React.CSSProperties
+        }
       >
-        <DialogHeader>
-          <DialogTitle className="flex items-start justify-between me-6">{t("Preview")}</DialogTitle>
+        <DialogHeader className="flex-row items-start justify-between gap-2 pe-12 [@media(hover:hover)_and_(pointer:fine)]:pe-8">
+          <DialogTitle>{t("Preview")}</DialogTitle>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            className="size-11 shrink-0 [@media(hover:hover)_and_(pointer:fine)]:size-7"
+            aria-label={isDialogExpanded ? t("Collapse") : t("Expand")}
+            title={isDialogExpanded ? t("Collapse") : t("Expand")}
+            onClick={() => setIsDialogExpanded((expanded) => !expanded)}
+          >
+            {isDialogExpanded ? <RiFullscreenExitLine aria-hidden /> : <RiFullscreenLine aria-hidden />}
+          </Button>
         </DialogHeader>
-        <div
-          className={cn(
-            "min-h-[300px] min-w-0 border p-4",
-            isSelfScrollMode ? "flex max-h-[70vh] flex-col overflow-hidden" : "flex flex-col",
-          )}
+        <DialogClose
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              className="absolute end-2 top-2 size-11 [@media(hover:hover)_and_(pointer:fine)]:size-7"
+              aria-label={t("Close")}
+              title={t("Close")}
+            />
+          }
         >
-          {renderPreview()}
-        </div>
+          <RiCloseLine aria-hidden />
+        </DialogClose>
+        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden border p-4">{renderPreview()}</div>
       </DialogContent>
     </Dialog>
   )

@@ -116,7 +116,12 @@ export function TiffViewer({ url, objectKey }: TiffViewerProps) {
   }
 
   return (
-    <div className="flex flex-1 items-center justify-center overflow-auto">
+    <div
+      className="flex min-h-0 flex-1 items-center justify-center overflow-auto overscroll-contain focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-inset"
+      role="region"
+      tabIndex={0}
+      aria-label={objectKey || t("Preview")}
+    >
       <canvas ref={canvasRef} className="max-h-full max-w-full object-contain" role="img" aria-label={objectKey} />
     </div>
   )

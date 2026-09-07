@@ -1964,5 +1964,7 @@
   "The source changed after copying.": "تغيّر المصدر بعد النسخ.",
   "Source deletion could not be confirmed.": "تعذّر تأكيد حذف المصدر.",
   "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.": "تم نسخ الكائن إلى الوجهة، لكن تعذّر تأكيد حذف المصدر. تحقّق من الموقعين قبل إعادة المحاولة.",
-  "The source changed or the destination already exists. Refresh and choose a different destination.": "تغيّر المصدر أو أن الوجهة موجودة بالفعل. حدّث الصفحة واختر وجهة أخرى."
+  "The source changed or the destination already exists. Refresh and choose a different destination.": "تغيّر المصدر أو أن الوجهة موجودة بالفعل. حدّث الصفحة واختر وجهة أخرى.",
+  "Show key": "إظهار المفتاح",
+  "Hide key": "إخفاء المفتاح"
 }

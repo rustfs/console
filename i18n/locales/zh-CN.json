@@ -1964,5 +1964,7 @@
   "The source changed after copying.": "源对象在复制后发生了变化。",
   "Source deletion could not be confirmed.": "无法确认源对象是否已删除。",
   "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.": "对象已复制到目标位置，但无法确认源对象是否已删除。请检查源位置和目标位置后再重试。",
-  "The source changed or the destination already exists. Refresh and choose a different destination.": "源对象已发生变化，或目标对象已存在。请刷新后选择其他目标位置。"
+  "The source changed or the destination already exists. Refresh and choose a different destination.": "源对象已发生变化，或目标对象已存在。请刷新后选择其他目标位置。",
+  "Show key": "显示密钥",
+  "Hide key": "隐藏密钥"
 }

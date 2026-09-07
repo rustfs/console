@@ -1964,5 +1964,7 @@
   "The source changed after copying.": "Kaynak, kopyalamadan sonra değişti.",
   "Source deletion could not be confirmed.": "Kaynağın silindiği doğrulanamadı.",
   "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.": "Nesne hedefe kopyalandı ancak kaynağın silindiği doğrulanamadı. Yeniden denemeden önce her iki konumu da kontrol edin.",
-  "The source changed or the destination already exists. Refresh and choose a different destination.": "Kaynak değişti veya hedef zaten mevcut. Yenileyin ve farklı bir hedef seçin."
+  "The source changed or the destination already exists. Refresh and choose a different destination.": "Kaynak değişti veya hedef zaten mevcut. Yenileyin ve farklı bir hedef seçin.",
+  "Show key": "Anahtarı göster",
+  "Hide key": "Anahtarı gizle"
 }

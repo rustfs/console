@@ -1964,5 +1964,7 @@
   "The source changed after copying.": "La source a été modifiée après la copie.",
   "Source deletion could not be confirmed.": "La suppression de la source n’a pas pu être confirmée.",
   "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.": "L’objet a été copié vers la destination, mais la suppression de la source n’a pas pu être confirmée. Vérifiez les deux emplacements avant de réessayer.",
-  "The source changed or the destination already exists. Refresh and choose a different destination.": "La source a changé ou la destination existe déjà. Actualisez et choisissez une autre destination."
+  "The source changed or the destination already exists. Refresh and choose a different destination.": "La source a changé ou la destination existe déjà. Actualisez et choisissez une autre destination.",
+  "Show key": "Afficher la clé",
+  "Hide key": "Masquer la clé"
 }

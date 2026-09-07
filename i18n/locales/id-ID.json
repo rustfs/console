@@ -1964,5 +1964,7 @@
   "The source changed after copying.": "Sumber berubah setelah disalin.",
   "Source deletion could not be confirmed.": "Penghapusan sumber tidak dapat dikonfirmasi.",
   "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.": "Objek telah disalin ke tujuan, tetapi penghapusan sumber tidak dapat dikonfirmasi. Periksa kedua lokasi sebelum mencoba lagi.",
-  "The source changed or the destination already exists. Refresh and choose a different destination.": "Sumber berubah atau tujuan sudah ada. Muat ulang dan pilih tujuan lain."
+  "The source changed or the destination already exists. Refresh and choose a different destination.": "Sumber berubah atau tujuan sudah ada. Muat ulang dan pilih tujuan lain.",
+  "Show key": "Tampilkan kunci",
+  "Hide key": "Sembunyikan kunci"
 }

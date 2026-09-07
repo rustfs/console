@@ -1964,5 +1964,7 @@
   "The source changed after copying.": "コピー後に元のオブジェクトが変更されました。",
   "Source deletion could not be confirmed.": "元のオブジェクトの削除を確認できませんでした。",
   "The destination was copied, but source deletion could not be confirmed. Check both locations before retrying.": "宛先へのコピーは完了しましたが、元のオブジェクトの削除を確認できませんでした。再試行する前に両方の場所を確認してください。",
-  "The source changed or the destination already exists. Refresh and choose a different destination.": "元のオブジェクトが変更されたか、宛先にオブジェクトが既に存在します。更新して別の宛先を選択してください。"
+  "The source changed or the destination already exists. Refresh and choose a different destination.": "元のオブジェクトが変更されたか、宛先にオブジェクトが既に存在します。更新して別の宛先を選択してください。",
+  "Show key": "キーを表示",
+  "Hide key": "キーを隠す"
 }

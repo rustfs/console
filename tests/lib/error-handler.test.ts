@@ -53,3 +53,16 @@ test("getXmlErrorMessage prefers detailed XML messages over generic error codes"
     "Object is under COMPLIANCE retention and cannot be deleted until 2026-05-13T00:00:00Z",
   )
 })
+
+test("parseApiErrorDetails preserves RustFS XML error codes", async () => {
+  const { parseApiErrorDetails } = await loadErrorHandler()
+  const response = new Response(
+    "<Error><Code>OnDemandMigrationSourceUnreachable</Code><Message>source bucket probe failed: timeout</Message></Error>",
+    { status: 400, headers: { "content-type": "application/xml" } },
+  )
+
+  assert.deepEqual(await parseApiErrorDetails(response), {
+    code: "OnDemandMigrationSourceUnreachable",
+    message: "source bucket probe failed: timeout",
+  })
+})

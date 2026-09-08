@@ -5,6 +5,11 @@ export interface ApiError {
   originalError?: Error
 }
 
+export interface ParsedApiError {
+  message: string
+  code?: string
+}
+
 const GENERIC_ERROR_MESSAGES = new Set(["error", "unknown", "unknownerror"])
 
 const normalizeErrorText = (value: unknown): string | null => {
@@ -167,25 +172,50 @@ export class ConfigLoadError extends Error {
   }
 }
 
-export const parseApiError = async (response: Response): Promise<string> => {
+export const parseApiErrorDetails = async (response: Response): Promise<ParsedApiError> => {
   try {
-    const errorData = await response.clone().json()
-    return (errorData as { message?: string }).message || JSON.stringify(errorData) || response.statusText
+    const errorData = (await response.clone().json()) as {
+      code?: unknown
+      Code?: unknown
+      message?: unknown
+      Message?: unknown
+      error?: { code?: unknown; Code?: unknown; message?: unknown; Message?: unknown }
+    }
+    const code =
+      normalizeErrorText(errorData.code) ??
+      normalizeErrorText(errorData.Code) ??
+      normalizeErrorText(errorData.error?.code) ??
+      normalizeErrorText(errorData.error?.Code) ??
+      undefined
+    const message =
+      normalizeErrorText(errorData.message) ??
+      normalizeErrorText(errorData.Message) ??
+      normalizeErrorText(errorData.error?.message) ??
+      normalizeErrorText(errorData.error?.Message) ??
+      JSON.stringify(errorData) ??
+      response.statusText
+    return { message, code }
   } catch {
     try {
       const text = await response.clone().text()
       if (text) {
         if (text.trim().startsWith("<")) {
-          return getXmlErrorMessage(text) ?? text
+          return {
+            message: getXmlErrorMessage(text) ?? text,
+            code: getXmlErrorCode(text) ?? undefined,
+          }
         }
-        return text
+        return { message: text }
       }
     } catch {
       // keep statusText
     }
   }
-  return response.statusText
+  return { message: response.statusText }
 }
+
+export const parseApiError = async (response: Response): Promise<string> =>
+  (await parseApiErrorDetails(response)).message
 
 export const handleConfigError = (error: unknown, context: string): ConfigLoadError => {
   if (error instanceof ConfigLoadError) {

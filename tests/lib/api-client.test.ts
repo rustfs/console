@@ -81,13 +81,32 @@ test("ApiClient redacts sensitive headers and request bodies from development lo
       secretKey: "tier-secret-key",
       profile: { apiKey: "nested-secret" },
       creds: '{"private_key":"gcs-private-key"}',
+      account_key: "azure-account-key",
+      service_account_json: '{"private_key":"native-gcs-private-key"}',
     }),
   })
 
   const serialized = JSON.stringify(redacted)
   assert.doesNotMatch(
     serialized,
-    /body-secret|tier-secret-key|nested-secret|header-secret|cookie-secret|gcs-private-key/,
+    /body-secret|tier-secret-key|nested-secret|header-secret|cookie-secret|gcs-private-key|azure-account-key|native-gcs-private-key/,
   )
   assert.match(serialized, /\[REDACTED\]/)
+})
+
+test("ApiClient exposes structured service codes without losing the safe message", async () => {
+  const { ApiClient } = await loadApiClient()
+  const client = new ApiClient({
+    fetch: async () =>
+      new Response(
+        "<Error><Code>NoSuchConfiguration</Code><Message>on-demand migration is not configured</Message></Error>",
+        { status: 404 },
+      ),
+  })
+
+  await assert.rejects(client.get("https://console.test/on-demand-migration/photos"), {
+    code: "NoSuchConfiguration",
+    message: "on-demand migration is not configured",
+    status: 404,
+  })
 })

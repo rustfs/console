@@ -8,6 +8,7 @@ import { useBucket } from "@/hooks/use-bucket"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useSSE } from "@/hooks/use-sse"
 import { BucketSettingRow, BucketSettingsSection } from "@/components/buckets/settings-layout"
+import { OnDemandMigrationSettingsRow } from "@/components/on-demand-migration/settings-row"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Switch } from "@/components/ui/switch"
@@ -1061,6 +1062,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               }
             />
           ))}
+          <OnDemandMigrationSettingsRow bucketName={bucketName} />
         </BucketSettingsSection>
       </div>
 

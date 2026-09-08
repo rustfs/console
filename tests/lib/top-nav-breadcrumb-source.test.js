@@ -11,3 +11,10 @@ test("top nav breadcrumb handles clicks on the rendered breadcrumb link", () => 
   assert.equal(source.includes("router.push(item.href!)"), false)
   assert.equal(source.includes("render={"), true)
 })
+
+test("top nav breadcrumb gives the bucket migration route a human label", () => {
+  const source = fs.readFileSync("components/top-nav-breadcrumb.tsx", "utf8")
+
+  assert.match(source, /path === "\/on-demand-migration"/)
+  assert.match(source, /t\("On-demand migration"\)/)
+})

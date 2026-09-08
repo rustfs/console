@@ -1,7 +1,7 @@
 import { joinURL } from "ufo"
 import type { IApiErrorHandler } from "@/types/api"
 import { redactRequestOptionsForLog } from "./api-request-log"
-import { parseApiError } from "./error-handler"
+import { parseApiErrorDetails } from "./error-handler"
 import { logger } from "./logger"
 
 type ApiRequestInit = RequestInit & { body?: BodyInit | null; aws?: Record<string, unknown> }
@@ -30,9 +30,16 @@ interface RequestOptions {
   signal?: AbortSignal
 }
 
-async function createHttpError(response: Response) {
-  const error = new Error(await parseApiError(response)) as Error & { status: number }
+interface HttpError extends Error {
+  status: number
+  code?: string
+}
+
+async function createHttpError(response: Response): Promise<HttpError> {
+  const details = await parseApiErrorDetails(response)
+  const error = new Error(details.message) as HttpError
   error.status = response.status
+  error.code = details.code
   return error
 }
 

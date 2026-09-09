@@ -290,9 +290,7 @@ export default function TableCatalogPage() {
       hasLoadedRef.current = true
       setInitializing(false)
       setRefreshing(false)
-      if (bucketResult.status === "fulfilled") {
-        void loadBucketStatuses(names, requestId, !isInitial, nextCatalogPrefix)
-      }
+      void loadBucketStatuses(names, requestId, !isInitial, nextCatalogPrefix)
     },
     [getCatalogConfig, listBuckets, loadBucketStatuses, t],
   )
@@ -927,15 +925,6 @@ export default function TableCatalogPage() {
               ) : selectedInfo ? (
                 <Badge variant="outline">{t("Not enabled")}</Badge>
               ) : null}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void refreshWorkspace()}
-                disabled={!selectedBucket || bucketStatusLoading[selectedBucket]}
-              >
-                <RiRefreshLine className="size-4" aria-hidden />
-                {t("Refresh")}
-              </Button>
               {selectedInfo?.enabled && activeTab === "tables" ? (
                 <Button
                   variant="default"

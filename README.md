@@ -76,7 +76,7 @@ console/
 ### Prerequisites
 
 - **Node.js** >= 22
-- **pnpm** >= 11.0.0 (recommended to use the version specified in the project)
+- **pnpm** >= 12.0.0 (recommended to use the version specified in the project)
 - **Docker** - For running RustFS service
 
 ### Start RustFS Service
@@ -98,7 +98,27 @@ The service will start on the following ports:
 
 ### Install Dependencies
 
+The pnpm version is pinned in `package.json` under `devEngines.packageManager`.
+
+If you use Corepack, upgrade to **Corepack >= 0.34.5** before running pnpm 12:
+
 ```bash
+npm install --global corepack@0.34.5
+corepack enable pnpm
+```
+
+Older Corepack versions look for `bin/pnpm.cjs`, which pnpm 12 no longer provides. If a previous attempt failed with `Cannot find module .../bin/pnpm.cjs`, run `corepack cache clean` after upgrading to clear the stale package-manager cache, then retry.
+
+Alternatively, install pnpm directly through npm. If Corepack manages your `pnpm` command, first run `corepack disable pnpm`.
+
+```bash
+npm install --global pnpm@12.3.4
+```
+
+From the project directory, verify the pinned version and install dependencies:
+
+```bash
+pnpm --version # Expected: 12.3.4
 pnpm install
 ```
 

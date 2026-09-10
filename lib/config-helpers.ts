@@ -34,10 +34,11 @@ const CREDENTIALS_KEY = "auth.credentials"
 const PERMANENT_CREDENTIALS_KEY = "auth.permanent"
 const DEFAULT_REGION = "us-east-1"
 const API_PATH = "/rustfs/admin/v3"
-const VERSION_PATH = "/rustfs/console/version"
+const CONSOLE_BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "/rustfs/console"
+const VERSION_PATH = `${CONSOLE_BASE_PATH}/version`
 const REQUEST_TIMEOUT = 5000
 const HEALTH_REQUEST_TIMEOUT = 5000
-const HEALTH_PATHS = ["/rustfs/console/health", "/health"] as const
+const HEALTH_PATHS = [`${CONSOLE_BASE_PATH}/health`, "/health"] as const
 
 const getApiPrefix = (): string => (process.env.NEXT_PUBLIC_API_PREFIX || "").replace(/\/$/, "")
 

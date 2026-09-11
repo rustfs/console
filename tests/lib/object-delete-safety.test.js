@@ -13,7 +13,7 @@ test("unknown bucket versioning state never enables force delete", () => {
   assert.equal(resolveBucketVersioningState("Enabled"), "enabled")
   assert.equal(shouldShowDeleteAllVersions("unknown"), false)
   assert.equal(shouldForceDeleteObjects("unknown", false), false)
-  assert.equal(shouldForceDeleteObjects("disabled", false), true)
+  assert.equal(shouldForceDeleteObjects("disabled", false), false)
 })
 
 test("object deletion stays blocked until versioning state is known", () => {

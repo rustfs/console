@@ -19,8 +19,17 @@ test("shouldShowDeleteAllVersions only shows the option for enabled buckets", ()
 })
 
 test("shouldForceDeleteObjects never force deletes while versioning state is unknown", () => {
-  assert.equal(shouldForceDeleteObjects("enabled", true), true)
-  assert.equal(shouldForceDeleteObjects("enabled", false), false)
-  assert.equal(shouldForceDeleteObjects("disabled", false), true)
   assert.equal(shouldForceDeleteObjects("unknown", false), false)
+  assert.equal(shouldForceDeleteObjects("unknown", true), false)
+})
+
+test("ordinary object deletion never requests recursive force delete", () => {
+  for (const status of [undefined, "Suspended", "Enabled"]) {
+    assert.equal(shouldForceDeleteObjects(resolveBucketVersioningState(status), false), false)
+  }
+})
+
+test("force delete requires an explicit all-versions selection in an enabled bucket", () => {
+  assert.equal(shouldForceDeleteObjects("enabled", true), true)
+  assert.equal(shouldForceDeleteObjects("disabled", true), false)
 })

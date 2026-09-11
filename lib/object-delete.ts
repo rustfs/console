@@ -8,6 +8,6 @@ export function shouldShowDeleteAllVersions(state: BucketVersioningState): boole
   return state === "enabled"
 }
 
-export function shouldForceDeleteObjects(state: BucketVersioningState, deleteAllVersions: boolean): boolean {
+export function shouldDeleteAllVersions(state: BucketVersioningState, deleteAllVersions: boolean): boolean {
   return state === "enabled" && deleteAllVersions
 }

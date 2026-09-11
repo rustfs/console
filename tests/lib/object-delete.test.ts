@@ -2,7 +2,7 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   resolveBucketVersioningState,
-  shouldForceDeleteObjects,
+  shouldDeleteAllVersions,
   shouldShowDeleteAllVersions,
 } from "../../lib/object-delete"
 
@@ -18,18 +18,18 @@ test("shouldShowDeleteAllVersions only shows the option for enabled buckets", ()
   assert.equal(shouldShowDeleteAllVersions("unknown"), false)
 })
 
-test("shouldForceDeleteObjects never force deletes while versioning state is unknown", () => {
-  assert.equal(shouldForceDeleteObjects("unknown", false), false)
-  assert.equal(shouldForceDeleteObjects("unknown", true), false)
+test("shouldDeleteAllVersions stays disabled while versioning state is unknown", () => {
+  assert.equal(shouldDeleteAllVersions("unknown", false), false)
+  assert.equal(shouldDeleteAllVersions("unknown", true), false)
 })
 
 test("ordinary object deletion never requests recursive force delete", () => {
   for (const status of [undefined, "Suspended", "Enabled"]) {
-    assert.equal(shouldForceDeleteObjects(resolveBucketVersioningState(status), false), false)
+    assert.equal(shouldDeleteAllVersions(resolveBucketVersioningState(status), false), false)
   }
 })
 
-test("force delete requires an explicit all-versions selection in an enabled bucket", () => {
-  assert.equal(shouldForceDeleteObjects("enabled", true), true)
-  assert.equal(shouldForceDeleteObjects("disabled", true), false)
+test("all-version deletion requires an explicit selection in an enabled bucket", () => {
+  assert.equal(shouldDeleteAllVersions("enabled", true), true)
+  assert.equal(shouldDeleteAllVersions("disabled", true), false)
 })

@@ -63,7 +63,7 @@ import {
 import { OBJECT_LIST_DEFAULT_PAGE_SIZE, resolveObjectListPageSize } from "@/lib/object-list-pagination"
 import {
   resolveBucketVersioningState,
-  shouldForceDeleteObjects,
+  shouldDeleteAllVersions,
   shouldShowDeleteAllVersions,
   type BucketVersioningState,
 } from "@/lib/object-delete"
@@ -715,7 +715,7 @@ export function ObjectList({
     setDeleteDialogOpen(false)
     if (!keys.length) return
 
-    if (shouldForceDeleteObjects(bucketVersioningState, deleteAllVersions)) {
+    if (shouldDeleteAllVersions(bucketVersioningState, deleteAllVersions)) {
       await handleDeleteAllVersions(keys)
     } else {
       await handleDelete(keys)
@@ -767,7 +767,7 @@ export function ObjectList({
       }
 
       if (objectKeys.length > 0) {
-        addDeleteKeys(objectKeys, bucket, undefined, { forceDelete: true })
+        addDeleteKeys(objectKeys, bucket, undefined, { deleteAllVersions: true })
       }
       for (const prefix of folderPrefixes) {
         addDeleteFolder(prefix, bucket, { forceDelete: true })

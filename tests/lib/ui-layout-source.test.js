@@ -57,7 +57,8 @@ test("the account menu names the signed-in identity and its authority", () => {
 
   // A menu that opens on an avatar with no name answers neither "who am I" nor
   // "with what authority", which is the gap this menu existed with before.
-  assert.match(source, /const accountName = \(userInfo as \{ account_name\?: string \}\)\?\.account_name \?\? ""/)
+  assert.match(source, /const accountName = resolveAccountDisplayName\(\{/)
+  assert.match(source, /access_key: accountIdentity\?\.account_name \?\? ""/)
   assert.match(source, /const roleLabel = isAdmin \? t\("Administrator"\) : t\("User"\)/)
   assert.match(source, /\{accountName \|\| t\("Unknown user"\)\}/)
   assert.match(source, /t\("Profile"\)/)

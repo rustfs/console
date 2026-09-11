@@ -24,7 +24,12 @@ const emptyManager: TaskManagerApi<AnyTask> = {
 const TaskContext = React.createContext<{
   taskManager: TaskManagerApi<AnyTask>
   addUploadFiles: (items: { file: File; key: string }[], bucketName: string) => void
-  addDeleteKeys: (keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) => void
+  addDeleteKeys: (
+    keys: string[],
+    bucketName: string,
+    prefix?: string,
+    options?: { deleteAllVersions?: boolean },
+  ) => void
   addDeleteFolder: (prefix: string, bucketName: string, options?: { forceDelete?: boolean }) => void
   isTaskPanelOpen: boolean
   setTaskPanelOpen: (open: boolean) => void
@@ -101,7 +106,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   )
 
   const addDeleteKeys = React.useCallback(
-    (keys: string[], bucketName: string, prefix?: string, options?: { forceDelete?: boolean }) => {
+    (keys: string[], bucketName: string, prefix?: string, options?: { deleteAllVersions?: boolean }) => {
       if (!managerState) return
       const { manager, deleteHelpers } = managerState
       const newTasks = deleteHelpers.createTasks(keys, bucketName, prefix, options)

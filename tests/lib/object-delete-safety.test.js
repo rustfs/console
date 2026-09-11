@@ -3,17 +3,17 @@ import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
 import {
   resolveBucketVersioningState,
-  shouldForceDeleteObjects,
+  shouldDeleteAllVersions,
   shouldShowDeleteAllVersions,
 } from "../../lib/object-delete.ts"
 
 const objectListSource = await readFile(new URL("../../components/object/list.tsx", import.meta.url), "utf8")
 
-test("unknown bucket versioning state never enables force delete", () => {
+test("unknown bucket versioning state never enables all-version deletion", () => {
   assert.equal(resolveBucketVersioningState("Enabled"), "enabled")
   assert.equal(shouldShowDeleteAllVersions("unknown"), false)
-  assert.equal(shouldForceDeleteObjects("unknown", false), false)
-  assert.equal(shouldForceDeleteObjects("disabled", false), true)
+  assert.equal(shouldDeleteAllVersions("unknown", false), false)
+  assert.equal(shouldDeleteAllVersions("disabled", false), false)
 })
 
 test("object deletion stays blocked until versioning state is known", () => {

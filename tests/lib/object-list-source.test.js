@@ -36,7 +36,7 @@ test("last modified sorting discloses partial results and keeps continuation vis
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 
   assert.match(source, /\{nextToken \? \(\s+<span[^>]*>\{t\("Loaded objects only"\)\}/)
-  assert.match(source, /\{data\.length > 0 \? \(\s+<Button[\s\S]*?onClick=\{loadNextBatch\}/)
+  assert.match(source, /\{data\.length > 0 \? \(\s+<div[\s\S]*?ref=\{loadMoreRef\}[\s\S]*?<Button[\s\S]*?onClick=\{loadNextBatch\}/)
   assert.equal(source.includes('t("Load next objects")'), true)
   assert.equal(source.includes('t("All objects loaded")'), true)
   assert.match(source, /if \(shouldAppend\) \{\s+setLoadMoreError\(true\)\s+\} else \{\s+message\.error/)

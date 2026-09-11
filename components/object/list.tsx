@@ -16,6 +16,7 @@ import {
   RiFolderTransferLine,
   RiArrowUpSLine,
   RiArrowDownSLine,
+  RiMore2Line,
 } from "@remixicon/react"
 import {
   AlertDialog,
@@ -38,6 +39,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { SearchInput } from "@/components/search-input"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
@@ -530,73 +537,66 @@ export function ObjectList({
         id: "actions",
         header: () => t("Actions"),
         enableSorting: false,
-        cell: ({ row }) => (
-          <div className="flex flex-wrap items-center gap-2 [&_button]:min-h-11 sm:[&_button]:min-h-0">
-            {row.original.type === "object" ? (
-              <>
-                {canCapability("objects.preview", { bucket, objectKey: row.original.Key }) ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      onPreview({ key: row.original.Key })
-                    }}
-                  >
+        cell: ({ row }) => {
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button type="button" variant="ghost" size="icon" className="size-8">
+                    <RiMore2Line className="size-4" aria-hidden />
+                    <span className="sr-only">{t("Actions")}</span>
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end">
+                {row.original.type === "object" && canCapability("objects.preview", { bucket, objectKey: row.original.Key }) ? (
+                  <DropdownMenuItem onClick={() => onPreview({ key: row.original.Key })}>
                     <RiEyeLine className="size-4" aria-hidden />
-                    <span>{t("Preview")}</span>
-                  </Button>
+                    {t("Preview")}
+                  </DropdownMenuItem>
                 ) : null}
-                {canCapability("objects.download", { bucket, objectKey: row.original.Key }) ? (
-                  <Button variant="outline" size="sm" onClick={() => downloadFile(row.original.Key)}>
+                {row.original.type === "object" && canCapability("objects.download", { bucket, objectKey: row.original.Key }) ? (
+                  <DropdownMenuItem onClick={() => downloadFile(row.original.Key)}>
                     <RiDownloadCloud2Line className="size-4" aria-hidden />
-                    <span>{t("Download")}</span>
-                  </Button>
+                    {t("Download")}
+                  </DropdownMenuItem>
                 ) : null}
-                {canCapability("objects.rename", { bucket, objectKey: row.original.Key, prefix }) ? (
-                  <Button variant="outline" size="sm" onClick={() => openRenameDialog(row.original.Key)}>
+                {row.original.type === "object" && canCapability("objects.rename", { bucket, objectKey: row.original.Key, prefix }) ? (
+                  <DropdownMenuItem onClick={() => openRenameDialog(row.original.Key)}>
                     <RiEdit2Line className="size-4" aria-hidden />
-                    <span>{t("Rename")}</span>
-                  </Button>
+                    {t("Rename")}
+                  </DropdownMenuItem>
                 ) : null}
-                {canCapability("objects.copy", { bucket, objectKey: row.original.Key }) ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(event) =>
-                      setTransfer({ mode: "copy", key: row.original.Key, trigger: event.currentTarget })
-                    }
+                {row.original.type === "object" && canCapability("objects.copy", { bucket, objectKey: row.original.Key }) ? (
+                  <DropdownMenuItem
+                    onClick={(event) => setTransfer({ mode: "copy", key: row.original.Key, trigger: event.currentTarget })}
                   >
-                    <RiFileCopyLine data-icon="inline-start" aria-hidden />
-                    <span>{t("Copy")}</span>
-                  </Button>
+                    <RiFileCopyLine className="size-4" aria-hidden />
+                    {t("Copy")}
+                  </DropdownMenuItem>
                 ) : null}
-                {canCapability("objects.move", { bucket, objectKey: row.original.Key }) ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(event) =>
-                      setTransfer({ mode: "move", key: row.original.Key, trigger: event.currentTarget })
-                    }
+                {row.original.type === "object" && canCapability("objects.move", { bucket, objectKey: row.original.Key }) ? (
+                  <DropdownMenuItem
+                    onClick={(event) => setTransfer({ mode: "move", key: row.original.Key, trigger: event.currentTarget })}
                   >
-                    <RiFolderTransferLine data-icon="inline-start" aria-hidden />
-                    <span>{t("Move")}</span>
-                  </Button>
+                    <RiFolderTransferLine className="size-4" aria-hidden />
+                    {t("Move")}
+                  </DropdownMenuItem>
                 ) : null}
-              </>
-            ) : null}
-            {canCapability("objects.delete", { bucket, objectKey: row.original.Key }) ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openDeleteDialog([row.original.Key])}
-                disabled={bucketVersioningState === "unknown"}
-              >
-                <RiDeleteBin5Line className="size-4" aria-hidden />
-                <span>{t("Delete")}</span>
-              </Button>
-            ) : null}
-          </div>
-        ),
+                {canCapability("objects.delete", { bucket, objectKey: row.original.Key }) ? (
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={() => openDeleteDialog([row.original.Key])}
+                    disabled={bucketVersioningState === "unknown"}
+                  >
+                    <RiDeleteBin5Line className="size-4" aria-hidden />
+                    {t("Delete")}
+                  </DropdownMenuItem>
+                ) : null}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )
+        },
       },
     ],
     [
@@ -822,7 +822,7 @@ export function ObjectList({
     <div className="space-y-6">
       <PageHeader
         actions={
-          <>
+          <div className="flex flex-nowrap items-center gap-2">
             <TaskStatsButton />
             {canUpload ? (
               <Button variant="outline" onClick={onUploadClick}>
@@ -853,32 +853,34 @@ export function ObjectList({
                 ) : null}
               </>
             ) : null}
-            {data.length > 0 ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={loadNextBatch}
-                aria-disabled={!nextToken || loading}
-                className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
-              >
-                {loading ? <Spinner className="size-4" aria-hidden /> : null}
-                <span>
-                  {loading ? t("Loading more objects") : nextToken ? t("Load next objects") : t("All objects loaded")}
-                </span>
-              </Button>
-            ) : null}
-            <Button
-              ref={refreshButtonRef}
-              variant="outline"
-              onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}
-            >
-              <RiRefreshLine className="size-4" aria-hidden />
-              <span>{t("Refresh")}</span>
-            </Button>
-          </>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button ref={refreshButtonRef} type="button" variant="outline" size="icon">
+                    <RiMore2Line className="size-4" aria-hidden />
+                    <span className="sr-only">{t("Actions")}</span>
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end">
+                {data.length > 0 ? (
+                  <DropdownMenuItem onClick={loadNextBatch} disabled={!nextToken || loading}>
+                    {loading ? <Spinner className="size-4" aria-hidden /> : <RiArrowDownSLine className="size-4" aria-hidden />}
+                    <span>
+                      {loading ? t("Loading more objects") : nextToken ? t("Load next objects") : t("All objects loaded")}
+                    </span>
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuItem onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}>
+                  <RiRefreshLine className="size-4" aria-hidden />
+                  <span>{t("Refresh")}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         }
       >
-        <div className="flex flex-wrap items-center gap-4 min-w-[40vw]">
+        <div className="flex flex-wrap items-center gap-4">
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}

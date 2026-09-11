@@ -31,6 +31,15 @@ test("the profile page distinguishes a failed read from an empty profile", () =>
   assert.match(source, /<dl /)
   assert.match(source, /<dt /)
   assert.match(source, /<dd /)
+  assert.match(source, /resolveAccountDisplayName\(info\)/)
+})
+
+test("the user menu prefers OIDC profile metadata without adding another account request", () => {
+  const source = read("components/user/dropdown.tsx")
+
+  assert.match(source, /account_name\?: string; username\?: string; email\?: string/)
+  assert.match(source, /resolveAccountDisplayName\(\{/)
+  assert.doesNotMatch(source, /getAccountInfo\(\)/)
 })
 
 test("the profile page explains why a root identity cannot be edited here", () => {

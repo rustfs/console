@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/contexts/auth-context"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useSidebar } from "@/components/ui/sidebar"
+import { resolveAccountDisplayName } from "@/lib/account-display"
 import { getThemeManifest } from "@/lib/theme/manifest"
 
 function resolveAvatarPath(path: string): string {
@@ -68,7 +69,12 @@ export function UserDropdown() {
     }
   }
 
-  const accountName = (userInfo as { account_name?: string })?.account_name ?? ""
+  const accountIdentity = userInfo as { account_name?: string; username?: string; email?: string } | null
+  const accountName = resolveAccountDisplayName({
+    access_key: accountIdentity?.account_name ?? "",
+    username: accountIdentity?.username,
+    email: accountIdentity?.email,
+  })
   const roleLabel = isAdmin ? t("Administrator") : t("User")
 
   return (

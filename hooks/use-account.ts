@@ -36,6 +36,8 @@ export interface AccountMfaSummary {
  */
 export interface AccountInfo {
   access_key: string
+  username?: string
+  email?: string
   identity_type: IdentityType
   session_access_key?: string
   is_admin: boolean

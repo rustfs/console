@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { useAccount, type AccountInfo } from "@/hooks/use-account"
+import { resolveAccountDisplayName } from "@/lib/account-display"
 import { buildRoute } from "@/lib/routes"
 
 export default function AccountPage() {
@@ -104,7 +105,7 @@ export default function AccountPage() {
               are facts to read, not objects to select. */}
           <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-[max-content_1fr]">
             <dt className="text-sm text-muted-foreground">{t("Username")}</dt>
-            <dd className="font-mono break-all">{info.access_key}</dd>
+            <dd className="font-mono break-all">{resolveAccountDisplayName(info)}</dd>
 
             <dt className="text-sm text-muted-foreground">{t("Role")}</dt>
             <dd className="flex flex-wrap items-center gap-2">

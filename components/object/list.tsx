@@ -831,12 +831,12 @@ export function ObjectList({
     }
   }
 
-  const handleBatchDelete = () => {
+  const handleBatchDelete = (trigger: HTMLElement | null = null) => {
     if (!checkedKeys.length) {
       message.warning(t("Please select at least one item"))
       return
     }
-    openDeleteDialog([...checkedKeys])
+    openDeleteDialog([...checkedKeys], trigger)
   }
 
   React.useEffect(() => {
@@ -873,7 +873,7 @@ export function ObjectList({
     <div className="space-y-6">
       <PageHeader
         actions={
-          <div className="flex flex-nowrap items-center gap-2 lg:flex-wrap lg:justify-end">
+          <>
             <TaskStatsButton />
             {canUpload ? (
               <Button variant="outline" onClick={onUploadClick}>
@@ -889,7 +889,7 @@ export function ObjectList({
                   <Button
                     variant="outline"
                     className="border-destructive text-destructive"
-                    onClick={handleBatchDelete}
+                    onClick={(event) => handleBatchDelete(event.currentTarget)}
                     disabled={bucketVersioningState === "unknown"}
                   >
                     <RiDeleteBin5Line className="size-4" aria-hidden />
@@ -913,31 +913,25 @@ export function ObjectList({
                     variant="outline"
                     size="icon"
                     className="size-11 lg:size-8"
-                    aria-label={t("Actions")}
+                    aria-label={t("More actions")}
                   >
                     <RiMore2Line className="size-4" aria-hidden />
                   </Button>
                 }
               />
               <DropdownMenuContent align="end" className="w-max min-w-40 max-w-[calc(100vw-2rem)]">
-                {data.length > 0 ? (
+                {nextToken ? (
                   <DropdownMenuItem
                     className={OBJECT_ACTION_MENU_ITEM_CLASS}
                     onClick={loadNextBatch}
-                    disabled={!nextToken || loading}
+                    disabled={loading}
                   >
                     {loading ? (
                       <Spinner className="size-4" aria-hidden />
                     ) : (
                       <RiArrowDownSLine className="size-4" aria-hidden />
                     )}
-                    <span>
-                      {loading
-                        ? t("Loading more objects")
-                        : nextToken
-                          ? t("Load next objects")
-                          : t("All objects loaded")}
-                    </span>
+                    <span>{loading ? t("Loading more objects") : t("Load next objects")}</span>
                   </DropdownMenuItem>
                 ) : null}
                 <DropdownMenuItem
@@ -949,7 +943,7 @@ export function ObjectList({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </>
         }
       >
         <div className="flex flex-wrap items-center gap-4">

@@ -16,6 +16,7 @@ import {
   RiFolderTransferLine,
   RiArrowUpSLine,
   RiArrowDownSLine,
+  RiMore2Line,
 } from "@remixicon/react"
 import {
   AlertDialog,
@@ -38,6 +39,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { SearchInput } from "@/components/search-input"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
@@ -91,6 +99,8 @@ interface ObjectRow {
 }
 
 type ObjectListError = "accessDenied" | "loadFailed"
+
+const OBJECT_ACTION_MENU_ITEM_CLASS = "min-h-11 lg:min-h-8"
 
 function isAccessDeniedError(error: unknown): boolean {
   const serviceError = error as {
@@ -154,12 +164,22 @@ export function ObjectList({
   const [renameSourceKey, setRenameSourceKey] = React.useState("")
   const [renameName, setRenameName] = React.useState("")
   const [renameSubmitting, setRenameSubmitting] = React.useState(false)
-  const [transfer, setTransfer] = React.useState<{
-    mode: "copy" | "move"
-    key: string
-    trigger: HTMLElement
-  } | null>(null)
+  const [transfer, setTransfer] = React.useState<{ mode: "copy" | "move"; key: string } | null>(null)
   const refreshButtonRef = React.useRef<HTMLButtonElement>(null)
+  const actionTriggerRef = React.useRef<HTMLElement | null>(null)
+  const rowActionTriggerRefs = React.useRef(new Map<string, HTMLButtonElement>())
+  const setRowActionTrigger = React.useCallback((rowId: string, node: HTMLButtonElement | null) => {
+    if (node) {
+      rowActionTriggerRefs.current.set(rowId, node)
+    } else {
+      rowActionTriggerRefs.current.delete(rowId)
+    }
+  }, [])
+  const getRowActionTrigger = React.useCallback((rowId: string) => rowActionTriggerRefs.current.get(rowId) ?? null, [])
+  const returnFocusToAction = React.useCallback(
+    () => (actionTriggerRef.current?.isConnected ? actionTriggerRef.current : refreshButtonRef.current),
+    [],
+  )
 
   const prefix = decodeURIComponent(path)
   const resolvedPageSize = resolveObjectListPageSize(pageSize)
@@ -456,12 +476,13 @@ export function ObjectList({
   const renameValidation = renameSourceKey ? validateObjectRename(renameSourceKey, renameName) : "empty"
 
   const openDeleteDialog = React.useCallback(
-    (keys: string[]) => {
+    (keys: string[], trigger: HTMLElement | null = null) => {
       if (bucketVersioningState === "unknown") {
         message.error(t("Failed to get data"))
         return
       }
 
+      actionTriggerRef.current = trigger
       setDeleteDialogKeys(keys)
       setDeleteAllVersions(false)
       setDeleteDialogOpen(true)
@@ -530,73 +551,100 @@ export function ObjectList({
         id: "actions",
         header: () => t("Actions"),
         enableSorting: false,
-        cell: ({ row }) => (
-          <div className="flex flex-wrap items-center gap-2 [&_button]:min-h-11 sm:[&_button]:min-h-0">
-            {row.original.type === "object" ? (
-              <>
-                {canCapability("objects.preview", { bucket, objectKey: row.original.Key }) ? (
+        cell: ({ row }) => {
+          const key = row.original.Key
+          const isObject = row.original.type === "object"
+          const canPreview = isObject && canCapability("objects.preview", { bucket, objectKey: key })
+          const canDownload = isObject && canCapability("objects.download", { bucket, objectKey: key })
+          const canRename = isObject && canCapability("objects.rename", { bucket, objectKey: key, prefix })
+          const canCopy = isObject && canCapability("objects.copy", { bucket, objectKey: key })
+          const canMove = isObject && canCapability("objects.move", { bucket, objectKey: key })
+          const canDelete = canCapability("objects.delete", { bucket, objectKey: key })
+
+          if (!canPreview && !canDownload && !canRename && !canCopy && !canMove && !canDelete) {
+            return null
+          }
+
+          return (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
                   <Button
-                    variant="outline"
-                    size="sm"
+                    ref={(node) => setRowActionTrigger(row.id, node)}
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-11 lg:size-8"
+                    aria-label={`${t("Actions")}: ${displayKey(key)}`}
+                  >
+                    <RiMore2Line className="size-4" aria-hidden />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-max min-w-40 max-w-[calc(100vw-2rem)]">
+                {canPreview ? (
+                  <DropdownMenuItem className={OBJECT_ACTION_MENU_ITEM_CLASS} onClick={() => onPreview({ key })}>
+                    <RiEyeLine className="size-4" aria-hidden />
+                    {t("Preview")}
+                  </DropdownMenuItem>
+                ) : null}
+                {canDownload ? (
+                  <DropdownMenuItem className={OBJECT_ACTION_MENU_ITEM_CLASS} onClick={() => downloadFile(key)}>
+                    <RiDownloadCloud2Line className="size-4" aria-hidden />
+                    {t("Download")}
+                  </DropdownMenuItem>
+                ) : null}
+                {canRename ? (
+                  <DropdownMenuItem
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                    onClick={() => openRenameDialog(key, getRowActionTrigger(row.id))}
+                  >
+                    <RiEdit2Line className="size-4" aria-hidden />
+                    {t("Rename")}
+                  </DropdownMenuItem>
+                ) : null}
+                {canCopy ? (
+                  <DropdownMenuItem
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
                     onClick={() => {
-                      onPreview({ key: row.original.Key })
+                      actionTriggerRef.current = getRowActionTrigger(row.id)
+                      setTransfer({ mode: "copy", key })
                     }}
                   >
-                    <RiEyeLine className="size-4" aria-hidden />
-                    <span>{t("Preview")}</span>
-                  </Button>
+                    <RiFileCopyLine className="size-4" aria-hidden />
+                    {t("Copy")}
+                  </DropdownMenuItem>
                 ) : null}
-                {canCapability("objects.download", { bucket, objectKey: row.original.Key }) ? (
-                  <Button variant="outline" size="sm" onClick={() => downloadFile(row.original.Key)}>
-                    <RiDownloadCloud2Line className="size-4" aria-hidden />
-                    <span>{t("Download")}</span>
-                  </Button>
-                ) : null}
-                {canCapability("objects.rename", { bucket, objectKey: row.original.Key, prefix }) ? (
-                  <Button variant="outline" size="sm" onClick={() => openRenameDialog(row.original.Key)}>
-                    <RiEdit2Line className="size-4" aria-hidden />
-                    <span>{t("Rename")}</span>
-                  </Button>
-                ) : null}
-                {canCapability("objects.copy", { bucket, objectKey: row.original.Key }) ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(event) =>
-                      setTransfer({ mode: "copy", key: row.original.Key, trigger: event.currentTarget })
-                    }
+                {canMove ? (
+                  <DropdownMenuItem
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                    onClick={() => {
+                      actionTriggerRef.current = getRowActionTrigger(row.id)
+                      setTransfer({ mode: "move", key })
+                    }}
                   >
-                    <RiFileCopyLine data-icon="inline-start" aria-hidden />
-                    <span>{t("Copy")}</span>
-                  </Button>
+                    <RiFolderTransferLine className="size-4" aria-hidden />
+                    {t("Move")}
+                  </DropdownMenuItem>
                 ) : null}
-                {canCapability("objects.move", { bucket, objectKey: row.original.Key }) ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(event) =>
-                      setTransfer({ mode: "move", key: row.original.Key, trigger: event.currentTarget })
-                    }
+                {canDelete && (canPreview || canDownload || canRename || canCopy || canMove) ? (
+                  <DropdownMenuSeparator />
+                ) : null}
+                {canDelete ? (
+                  <DropdownMenuItem
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                    variant="destructive"
+                    onClick={() => openDeleteDialog([key], getRowActionTrigger(row.id))}
+                    disabled={bucketVersioningState === "unknown"}
                   >
-                    <RiFolderTransferLine data-icon="inline-start" aria-hidden />
-                    <span>{t("Move")}</span>
-                  </Button>
+                    <RiDeleteBin5Line className="size-4" aria-hidden />
+                    {t("Delete")}
+                  </DropdownMenuItem>
                 ) : null}
-              </>
-            ) : null}
-            {canCapability("objects.delete", { bucket, objectKey: row.original.Key }) ? (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openDeleteDialog([row.original.Key])}
-                disabled={bucketVersioningState === "unknown"}
-              >
-                <RiDeleteBin5Line className="size-4" aria-hidden />
-                <span>{t("Delete")}</span>
-              </Button>
-            ) : null}
-          </div>
-        ),
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )
+        },
       },
     ],
     [
@@ -612,6 +660,8 @@ export function ObjectList({
       bucketVersioningState,
       openDeleteDialog,
       nextToken,
+      setRowActionTrigger,
+      getRowActionTrigger,
     ],
   )
 
@@ -661,7 +711,8 @@ export function ObjectList({
     }
   }
 
-  const openRenameDialog = (key: string) => {
+  const openRenameDialog = (key: string, trigger: HTMLElement | null = null) => {
+    actionTriggerRef.current = trigger
     setRenameSourceKey(key)
     setRenameName(getObjectBaseName(key))
     setRenameDialogOpen(true)
@@ -780,12 +831,12 @@ export function ObjectList({
     }
   }
 
-  const handleBatchDelete = () => {
+  const handleBatchDelete = (trigger: HTMLElement | null = null) => {
     if (!checkedKeys.length) {
       message.warning(t("Please select at least one item"))
       return
     }
-    openDeleteDialog([...checkedKeys])
+    openDeleteDialog([...checkedKeys], trigger)
   }
 
   React.useEffect(() => {
@@ -838,7 +889,7 @@ export function ObjectList({
                   <Button
                     variant="outline"
                     className="border-destructive text-destructive"
-                    onClick={handleBatchDelete}
+                    onClick={(event) => handleBatchDelete(event.currentTarget)}
                     disabled={bucketVersioningState === "unknown"}
                   >
                     <RiDeleteBin5Line className="size-4" aria-hidden />
@@ -853,32 +904,49 @@ export function ObjectList({
                 ) : null}
               </>
             ) : null}
-            {data.length > 0 ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={loadNextBatch}
-                aria-disabled={!nextToken || loading}
-                className="aria-disabled:pointer-events-none aria-disabled:opacity-50"
-              >
-                {loading ? <Spinner className="size-4" aria-hidden /> : null}
-                <span>
-                  {loading ? t("Loading more objects") : nextToken ? t("Load next objects") : t("All objects loaded")}
-                </span>
-              </Button>
-            ) : null}
-            <Button
-              ref={refreshButtonRef}
-              variant="outline"
-              onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}
-            >
-              <RiRefreshLine className="size-4" aria-hidden />
-              <span>{t("Refresh")}</span>
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    ref={refreshButtonRef}
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="size-11 lg:size-8"
+                    aria-label={t("More actions")}
+                  >
+                    <RiMore2Line className="size-4" aria-hidden />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-max min-w-40 max-w-[calc(100vw-2rem)]">
+                {nextToken ? (
+                  <DropdownMenuItem
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                    onClick={loadNextBatch}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <Spinner className="size-4" aria-hidden />
+                    ) : (
+                      <RiArrowDownSLine className="size-4" aria-hidden />
+                    )}
+                    <span>{loading ? t("Loading more objects") : t("Load next objects")}</span>
+                  </DropdownMenuItem>
+                ) : null}
+                <DropdownMenuItem
+                  className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                  onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}
+                >
+                  <RiRefreshLine className="size-4" aria-hidden />
+                  <span>{t("Refresh")}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </>
         }
       >
-        <div className="flex flex-wrap items-center gap-4 min-w-[40vw]">
+        <div className="flex flex-wrap items-center gap-4">
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
@@ -984,11 +1052,16 @@ export function ObjectList({
       ) : null}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogContent className="sm:max-w-md" finalFocus={returnFocusToAction}>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Warning")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("Are you sure you want to delete the selected objects?")}
+              {deleteDialogKeys.length === 1 && deleteDialogKeys[0] ? (
+                <span className="mt-1 block break-all">
+                  <bdi>{deleteDialogKeys[0]}</bdi>
+                </span>
+              ) : null}
               {shouldShowDeleteAllVersions(bucketVersioningState) && (
                 <label htmlFor="object-list-delete-all-versions" className="mt-4 flex items-center gap-2">
                   <Checkbox
@@ -1030,14 +1103,14 @@ export function ObjectList({
           mode={transfer.mode}
           bucket={bucket}
           objectKey={transfer.key}
-          returnFocus={() => (transfer.trigger.isConnected ? transfer.trigger : refreshButtonRef.current)}
+          returnFocus={returnFocusToAction}
           onClose={() => setTransfer(null)}
           onRefresh={resetAndFetchObjects}
         />
       ) : null}
 
       <Dialog open={renameDialogOpen} onOpenChange={handleRenameOpenChange} disablePointerDismissal>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" finalFocus={returnFocusToAction}>
           <DialogHeader>
             <DialogTitle>{t("Rename Object")}</DialogTitle>
             <DialogDescription className="break-all">{renameSourceKey}</DialogDescription>

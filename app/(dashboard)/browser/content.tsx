@@ -156,7 +156,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   return (
     <Page>
       <PageHeader>
-        <div className="flex items-center gap-4 min-w-[40vw]">
+        <div className="flex items-center gap-4">
           <h1 className="min-w-0 text-2xl font-bold text-pretty">
             <Link
               href={bucketPath()}

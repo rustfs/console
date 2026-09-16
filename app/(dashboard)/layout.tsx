@@ -16,7 +16,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <DashboardAuthGuard>
               <SidebarProvider defaultOpen>
                 <AppSidebar />
-                <SidebarInset>
+                <SidebarInset className="min-w-0">
                   <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-0 sm:px-6">
                     <AppTopNav />
                     <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 scroll-mt-16">

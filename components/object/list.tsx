@@ -43,6 +43,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SearchInput } from "@/components/search-input"
@@ -98,6 +99,8 @@ interface ObjectRow {
 }
 
 type ObjectListError = "accessDenied" | "loadFailed"
+
+const OBJECT_ACTION_MENU_ITEM_CLASS = "min-h-11 lg:min-h-8"
 
 function isAccessDeniedError(error: unknown): boolean {
   const serviceError = error as {
@@ -161,12 +164,22 @@ export function ObjectList({
   const [renameSourceKey, setRenameSourceKey] = React.useState("")
   const [renameName, setRenameName] = React.useState("")
   const [renameSubmitting, setRenameSubmitting] = React.useState(false)
-  const [transfer, setTransfer] = React.useState<{
-    mode: "copy" | "move"
-    key: string
-    trigger: HTMLElement
-  } | null>(null)
+  const [transfer, setTransfer] = React.useState<{ mode: "copy" | "move"; key: string } | null>(null)
   const refreshButtonRef = React.useRef<HTMLButtonElement>(null)
+  const actionTriggerRef = React.useRef<HTMLElement | null>(null)
+  const rowActionTriggerRefs = React.useRef(new Map<string, HTMLButtonElement>())
+  const setRowActionTrigger = React.useCallback((rowId: string, node: HTMLButtonElement | null) => {
+    if (node) {
+      rowActionTriggerRefs.current.set(rowId, node)
+    } else {
+      rowActionTriggerRefs.current.delete(rowId)
+    }
+  }, [])
+  const getRowActionTrigger = React.useCallback((rowId: string) => rowActionTriggerRefs.current.get(rowId) ?? null, [])
+  const returnFocusToAction = React.useCallback(
+    () => (actionTriggerRef.current?.isConnected ? actionTriggerRef.current : refreshButtonRef.current),
+    [],
+  )
 
   const prefix = decodeURIComponent(path)
   const resolvedPageSize = resolveObjectListPageSize(pageSize)
@@ -463,12 +476,13 @@ export function ObjectList({
   const renameValidation = renameSourceKey ? validateObjectRename(renameSourceKey, renameName) : "empty"
 
   const openDeleteDialog = React.useCallback(
-    (keys: string[]) => {
+    (keys: string[], trigger: HTMLElement | null = null) => {
       if (bucketVersioningState === "unknown") {
         message.error(t("Failed to get data"))
         return
       }
 
+      actionTriggerRef.current = trigger
       setDeleteDialogKeys(keys)
       setDeleteAllVersions(false)
       setDeleteDialogOpen(true)
@@ -538,55 +552,89 @@ export function ObjectList({
         header: () => t("Actions"),
         enableSorting: false,
         cell: ({ row }) => {
+          const key = row.original.Key
+          const isObject = row.original.type === "object"
+          const canPreview = isObject && canCapability("objects.preview", { bucket, objectKey: key })
+          const canDownload = isObject && canCapability("objects.download", { bucket, objectKey: key })
+          const canRename = isObject && canCapability("objects.rename", { bucket, objectKey: key, prefix })
+          const canCopy = isObject && canCapability("objects.copy", { bucket, objectKey: key })
+          const canMove = isObject && canCapability("objects.move", { bucket, objectKey: key })
+          const canDelete = canCapability("objects.delete", { bucket, objectKey: key })
+
+          if (!canPreview && !canDownload && !canRename && !canCopy && !canMove && !canDelete) {
+            return null
+          }
+
           return (
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button type="button" variant="ghost" size="icon" className="size-8">
+                  <Button
+                    ref={(node) => setRowActionTrigger(row.id, node)}
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-11 lg:size-8"
+                    aria-label={`${t("Actions")}: ${displayKey(key)}`}
+                  >
                     <RiMore2Line className="size-4" aria-hidden />
-                    <span className="sr-only">{t("Actions")}</span>
                   </Button>
                 }
               />
-              <DropdownMenuContent align="end">
-                {row.original.type === "object" && canCapability("objects.preview", { bucket, objectKey: row.original.Key }) ? (
-                  <DropdownMenuItem onClick={() => onPreview({ key: row.original.Key })}>
+              <DropdownMenuContent align="end" className="w-max min-w-40 max-w-[calc(100vw-2rem)]">
+                {canPreview ? (
+                  <DropdownMenuItem className={OBJECT_ACTION_MENU_ITEM_CLASS} onClick={() => onPreview({ key })}>
                     <RiEyeLine className="size-4" aria-hidden />
                     {t("Preview")}
                   </DropdownMenuItem>
                 ) : null}
-                {row.original.type === "object" && canCapability("objects.download", { bucket, objectKey: row.original.Key }) ? (
-                  <DropdownMenuItem onClick={() => downloadFile(row.original.Key)}>
+                {canDownload ? (
+                  <DropdownMenuItem className={OBJECT_ACTION_MENU_ITEM_CLASS} onClick={() => downloadFile(key)}>
                     <RiDownloadCloud2Line className="size-4" aria-hidden />
                     {t("Download")}
                   </DropdownMenuItem>
                 ) : null}
-                {row.original.type === "object" && canCapability("objects.rename", { bucket, objectKey: row.original.Key, prefix }) ? (
-                  <DropdownMenuItem onClick={() => openRenameDialog(row.original.Key)}>
+                {canRename ? (
+                  <DropdownMenuItem
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                    onClick={() => openRenameDialog(key, getRowActionTrigger(row.id))}
+                  >
                     <RiEdit2Line className="size-4" aria-hidden />
                     {t("Rename")}
                   </DropdownMenuItem>
                 ) : null}
-                {row.original.type === "object" && canCapability("objects.copy", { bucket, objectKey: row.original.Key }) ? (
+                {canCopy ? (
                   <DropdownMenuItem
-                    onClick={(event) => setTransfer({ mode: "copy", key: row.original.Key, trigger: event.currentTarget })}
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                    onClick={() => {
+                      actionTriggerRef.current = getRowActionTrigger(row.id)
+                      setTransfer({ mode: "copy", key })
+                    }}
                   >
                     <RiFileCopyLine className="size-4" aria-hidden />
                     {t("Copy")}
                   </DropdownMenuItem>
                 ) : null}
-                {row.original.type === "object" && canCapability("objects.move", { bucket, objectKey: row.original.Key }) ? (
+                {canMove ? (
                   <DropdownMenuItem
-                    onClick={(event) => setTransfer({ mode: "move", key: row.original.Key, trigger: event.currentTarget })}
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                    onClick={() => {
+                      actionTriggerRef.current = getRowActionTrigger(row.id)
+                      setTransfer({ mode: "move", key })
+                    }}
                   >
                     <RiFolderTransferLine className="size-4" aria-hidden />
                     {t("Move")}
                   </DropdownMenuItem>
                 ) : null}
-                {canCapability("objects.delete", { bucket, objectKey: row.original.Key }) ? (
+                {canDelete && (canPreview || canDownload || canRename || canCopy || canMove) ? (
+                  <DropdownMenuSeparator />
+                ) : null}
+                {canDelete ? (
                   <DropdownMenuItem
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
                     variant="destructive"
-                    onClick={() => openDeleteDialog([row.original.Key])}
+                    onClick={() => openDeleteDialog([key], getRowActionTrigger(row.id))}
                     disabled={bucketVersioningState === "unknown"}
                   >
                     <RiDeleteBin5Line className="size-4" aria-hidden />
@@ -612,6 +660,8 @@ export function ObjectList({
       bucketVersioningState,
       openDeleteDialog,
       nextToken,
+      setRowActionTrigger,
+      getRowActionTrigger,
     ],
   )
 
@@ -661,7 +711,8 @@ export function ObjectList({
     }
   }
 
-  const openRenameDialog = (key: string) => {
+  const openRenameDialog = (key: string, trigger: HTMLElement | null = null) => {
+    actionTriggerRef.current = trigger
     setRenameSourceKey(key)
     setRenameName(getObjectBaseName(key))
     setRenameDialogOpen(true)
@@ -822,7 +873,7 @@ export function ObjectList({
     <div className="space-y-6">
       <PageHeader
         actions={
-          <div className="flex flex-nowrap items-center gap-2">
+          <div className="flex flex-nowrap items-center gap-2 lg:flex-wrap lg:justify-end">
             <TaskStatsButton />
             {canUpload ? (
               <Button variant="outline" onClick={onUploadClick}>
@@ -856,22 +907,43 @@ export function ObjectList({
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
-                  <Button ref={refreshButtonRef} type="button" variant="outline" size="icon">
+                  <Button
+                    ref={refreshButtonRef}
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="size-11 lg:size-8"
+                    aria-label={t("Actions")}
+                  >
                     <RiMore2Line className="size-4" aria-hidden />
-                    <span className="sr-only">{t("Actions")}</span>
                   </Button>
                 }
               />
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-max min-w-40 max-w-[calc(100vw-2rem)]">
                 {data.length > 0 ? (
-                  <DropdownMenuItem onClick={loadNextBatch} disabled={!nextToken || loading}>
-                    {loading ? <Spinner className="size-4" aria-hidden /> : <RiArrowDownSLine className="size-4" aria-hidden />}
+                  <DropdownMenuItem
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                    onClick={loadNextBatch}
+                    disabled={!nextToken || loading}
+                  >
+                    {loading ? (
+                      <Spinner className="size-4" aria-hidden />
+                    ) : (
+                      <RiArrowDownSLine className="size-4" aria-hidden />
+                    )}
                     <span>
-                      {loading ? t("Loading more objects") : nextToken ? t("Load next objects") : t("All objects loaded")}
+                      {loading
+                        ? t("Loading more objects")
+                        : nextToken
+                          ? t("Load next objects")
+                          : t("All objects loaded")}
                     </span>
                   </DropdownMenuItem>
                 ) : null}
-                <DropdownMenuItem onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}>
+                <DropdownMenuItem
+                  className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                  onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}
+                >
                   <RiRefreshLine className="size-4" aria-hidden />
                   <span>{t("Refresh")}</span>
                 </DropdownMenuItem>
@@ -986,11 +1058,16 @@ export function ObjectList({
       ) : null}
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="sm:max-w-md">
+        <AlertDialogContent className="sm:max-w-md" finalFocus={returnFocusToAction}>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Warning")}</AlertDialogTitle>
             <AlertDialogDescription>
               {t("Are you sure you want to delete the selected objects?")}
+              {deleteDialogKeys.length === 1 && deleteDialogKeys[0] ? (
+                <span className="mt-1 block break-all">
+                  <bdi>{deleteDialogKeys[0]}</bdi>
+                </span>
+              ) : null}
               {shouldShowDeleteAllVersions(bucketVersioningState) && (
                 <label htmlFor="object-list-delete-all-versions" className="mt-4 flex items-center gap-2">
                   <Checkbox
@@ -1032,14 +1109,14 @@ export function ObjectList({
           mode={transfer.mode}
           bucket={bucket}
           objectKey={transfer.key}
-          returnFocus={() => (transfer.trigger.isConnected ? transfer.trigger : refreshButtonRef.current)}
+          returnFocus={returnFocusToAction}
           onClose={() => setTransfer(null)}
           onRefresh={resetAndFetchObjects}
         />
       ) : null}
 
       <Dialog open={renameDialogOpen} onOpenChange={handleRenameOpenChange} disablePointerDismissal>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" finalFocus={returnFocusToAction}>
           <DialogHeader>
             <DialogTitle>{t("Rename Object")}</DialogTitle>
             <DialogDescription className="break-all">{renameSourceKey}</DialogDescription>

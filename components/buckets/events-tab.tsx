@@ -2,13 +2,14 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import { RiAddLine, RiRefreshLine } from "@remixicon/react"
+import { RiAddLine, RiEditLine, RiRefreshLine } from "@remixicon/react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { EventsNewForm } from "@/components/events/new-form"
+import { EventsEditForm } from "@/components/events/edit-form"
 import { getEventsColumns } from "@/components/events/columns"
 import { useBucket } from "@/hooks/use-bucket"
 import { useModuleSwitches } from "@/hooks/use-module-switches"
@@ -17,7 +18,7 @@ import { canManageNotifyBackedFeature } from "@/lib/notify-module-access"
 import { createLatestRequestGate } from "@/lib/bucket-configuration"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
-import { getDisplayEvents, TYPE_BADGE_CLASSES, type NotificationItem } from "@/lib/events"
+import { getDisplayEvents, getNotificationConfigKey, TYPE_BADGE_CLASSES, type NotificationItem } from "@/lib/events"
 
 interface BucketEventsTabProps {
   bucketName: string
@@ -41,6 +42,7 @@ export function BucketEventsTab({ bucketName, hideTitle = false, renderHeader }:
   const [notifyError, setNotifyError] = React.useState("")
   const [mutatingId, setMutatingId] = React.useState<string | null>(null)
   const [newFormOpen, setNewFormOpen] = React.useState(false)
+  const [editing, setEditing] = React.useState<NotificationItem | null>(null)
   const [notifyEnabled, setNotifyEnabled] = React.useState<boolean | undefined>(undefined)
   const [requestGate] = React.useState(createLatestRequestGate)
 
@@ -164,23 +166,14 @@ export function BucketEventsTab({ bucketName, hideTitle = false, renderHeader }:
           try {
             const currentResponse = await listBucketNotifications(bucketName)
             const currentNotifications = (currentResponse ?? {}) as unknown as Record<string, unknown[]>
-            const configKey =
-              row.type === "Lambda"
-                ? "LambdaFunctionConfigurations"
-                : row.type === "SQS"
-                  ? "QueueConfigurations"
-                  : "TopicConfigurations"
+            const configKey = getNotificationConfigKey(row.type)
             const configs = (currentNotifications as Record<string, Array<{ Id?: string }>>)[configKey] ?? []
             const matches = configs.filter((config) => config.Id === row.sourceId)
             if (matches.length !== 1) throw new Error(t("Configuration changed. Refresh and try again."))
             const updated = configs.filter((config) => config.Id !== row.sourceId)
             const newConfig = {
               ...currentNotifications,
-              ...(row.type === "Lambda"
-                ? { LambdaFunctionConfigurations: updated }
-                : row.type === "SQS"
-                  ? { QueueConfigurations: updated }
-                  : { TopicConfigurations: updated }),
+              [configKey]: updated,
             }
 
             await putBucketNotifications(bucketName, newConfig)
@@ -208,9 +201,26 @@ export function BucketEventsTab({ bucketName, hideTitle = false, renderHeader }:
     ],
   )
 
+  const handleRowEdit = React.useCallback(
+    (row: NotificationItem) => {
+      if (!canEditEvents) return
+      if (!canManageBucketEvents) {
+        message.warning(t("Notify is disabled. Enable notify before managing bucket event subscriptions."))
+        return
+      }
+      if (!row.sourceId) {
+        message.error(t("Configuration changed. Refresh and try again."))
+        return
+      }
+
+      setEditing(row)
+    },
+    [canEditEvents, canManageBucketEvents, message, t],
+  )
+
   const columns = React.useMemo(
-    () => getEventsColumns(t, handleRowDelete, canManageBucketEvents),
-    [canManageBucketEvents, t, handleRowDelete],
+    () => getEventsColumns(t, handleRowEdit, handleRowDelete, canManageBucketEvents),
+    [canManageBucketEvents, handleRowDelete, handleRowEdit, t],
   )
 
   const { table } = useDataTable<NotificationItem>({
@@ -315,14 +325,25 @@ export function BucketEventsTab({ bucketName, hideTitle = false, renderHeader }:
                 </dl>
               ) : null}
               {canEditEvents ? (
-                <Button
-                  variant="outline"
-                  className="min-h-11 w-full whitespace-normal break-all"
-                  onClick={() => handleRowDelete(item)}
-                  disabled={!canManageBucketEvents || !item.sourceId}
-                >
-                  {`${t("Delete Event Subscription")}: ${item.sourceId ?? t("Unnamed subscription")}`}
-                </Button>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    className="min-h-11 w-full whitespace-normal break-all"
+                    onClick={() => handleRowEdit(item)}
+                    disabled={!canManageBucketEvents || !item.sourceId}
+                  >
+                    <RiEditLine className="size-4" aria-hidden />
+                    {`${t("Edit")}: ${item.sourceId ?? t("Unnamed subscription")}`}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="min-h-11 w-full whitespace-normal break-all"
+                    onClick={() => handleRowDelete(item)}
+                    disabled={!canManageBucketEvents || !item.sourceId}
+                  >
+                    {`${t("Delete Event Subscription")}: ${item.sourceId ?? t("Unnamed subscription")}`}
+                  </Button>
+                </div>
               ) : null}
             </article>
           ))
@@ -333,6 +354,17 @@ export function BucketEventsTab({ bucketName, hideTitle = false, renderHeader }:
         open={newFormOpen}
         onOpenChange={setNewFormOpen}
         bucketName={bucketName}
+        onSuccess={loadData}
+        disabled={!canManageBucketEvents}
+      />
+
+      <EventsEditForm
+        open={editing !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setEditing(null)
+        }}
+        bucketName={bucketName}
+        subscription={editing}
         onSuccess={loadData}
         disabled={!canManageBucketEvents}
       />

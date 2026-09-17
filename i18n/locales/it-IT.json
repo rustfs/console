@@ -335,6 +335,7 @@
   "Each remote site uses its administrator credentials to complete the initial replication handshake.": "Ogni sito remoto usa le proprie credenziali amministrative per completare l’handshake iniziale di replica.",
   "Edit": "Modifica",
   "Edit Configuration": "Modifica configurazione",
+  "Edit Event Subscription": "Modifica sottoscrizione evento",
   "Edit Failed": "Modifica non riuscita",
   "Edit Group": "Modifica gruppo",
   "Edit Key": "Modifica chiave",

@@ -335,6 +335,7 @@
   "Each remote site uses its administrator credentials to complete the initial replication handshake.": "各リモートサイトは管理者認証情報を使用して初期レプリケーションハンドシェイクを完了します。",
   "Edit": "編集",
   "Edit Configuration": "設定を編集",
+  "Edit Event Subscription": "イベント購読を編集",
   "Edit Failed": "編集に失敗しました",
   "Edit Group": "グループを編集",
   "Edit Key": "キーを編集",

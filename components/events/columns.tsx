@@ -1,6 +1,6 @@
 "use client"
 
-import { RiDeleteBin7Line } from "@remixicon/react"
+import { RiDeleteBin7Line, RiEditLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TYPE_BADGE_CLASSES, getDisplayEvents, type NotificationItem } from "@/lib/events"
@@ -9,8 +9,9 @@ import type { TFunction } from "i18next"
 
 export function getEventsColumns(
   t: TFunction,
+  onEdit: (row: NotificationItem) => void,
   onDelete: (row: NotificationItem) => void,
-  canDelete: boolean,
+  canManage: boolean,
 ): ColumnDef<NotificationItem>[] {
   return [
     {
@@ -55,25 +56,42 @@ export function getEventsColumns(
       id: "actions",
       header: () => t("Actions"),
       enableSorting: false,
-      meta: { maxWidth: "6rem" },
+      meta: { maxWidth: "12rem" },
       cell: ({ row }) => (
-        <div className="flex justify-center">
-          {canDelete ? (
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="gap-2"
-              disabled={!row.original.sourceId}
-              aria-label={`${t("Delete Event Subscription")} ${row.original.sourceId ?? t("Unnamed subscription")}`}
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(row.original)
-              }}
-            >
-              <RiDeleteBin7Line className="size-4" aria-hidden />
-              <span>{t("Delete")}</span>
-            </Button>
+        <div className="flex items-center justify-center gap-2">
+          {canManage ? (
+            <>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                disabled={!row.original.sourceId}
+                aria-label={`${t("Edit Event Subscription")} ${row.original.sourceId ?? t("Unnamed subscription")}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit(row.original)
+                }}
+              >
+                <RiEditLine className="size-4" aria-hidden />
+                <span>{t("Edit")}</span>
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="gap-2"
+                disabled={!row.original.sourceId}
+                aria-label={`${t("Delete Event Subscription")} ${row.original.sourceId ?? t("Unnamed subscription")}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onDelete(row.original)
+                }}
+              >
+                <RiDeleteBin7Line className="size-4" aria-hidden />
+                <span>{t("Delete")}</span>
+              </Button>
+            </>
           ) : null}
         </div>
       ),

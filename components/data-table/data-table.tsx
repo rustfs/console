@@ -21,6 +21,8 @@ interface DataTableProps<TData> {
   tableClass?: string
   stickyHeader?: boolean
   bodyHeight?: string
+  expandedRowId?: string
+  renderExpandedRow?: (row: import("@tanstack/react-table").Row<TData>) => React.ReactNode
 }
 
 function getColumnStyles<TData>(column: Column<TData, unknown>) {
@@ -78,6 +80,8 @@ export function DataTable<TData>({
   tableClass,
   stickyHeader = false,
   bodyHeight,
+  expandedRowId,
+  renderExpandedRow,
 }: DataTableProps<TData>) {
   const visibleColumnCount = table.getVisibleLeafColumns().length
   const hasRows = table.getRowModel().rows.length > 0
@@ -146,21 +150,23 @@ export function DataTable<TData>({
           </TableRow>
         ) : hasRows ? (
           table.getRowModel().rows.map((row) => (
-            <TableRow
-              key={row.id}
-              data-state={row.getIsSelected() ? "selected" : undefined}
-              className="transition-colors hover:bg-muted/40"
-            >
-              {row.getVisibleCells().map((cell) => (
-                <TableCell
-                  key={cell.id}
-                  className={bodyHeight ? undefined : "py-2"}
-                  style={getColumnStyles(cell.column)}
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
+            <React.Fragment key={row.id}>
+              <TableRow
+                data-state={row.getIsSelected() ? "selected" : undefined}
+                className="transition-colors hover:bg-muted/40"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell
+                    key={cell.id}
+                    className={bodyHeight ? undefined : "py-2"}
+                    style={getColumnStyles(cell.column)}
+                  >
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+              {expandedRowId === row.id && renderExpandedRow ? renderExpandedRow(row) : null}
+            </React.Fragment>
           ))
         ) : (
           <TableRow>

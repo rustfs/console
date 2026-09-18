@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import { RiAddLine, RiRefreshLine, RiDeleteBin5Line } from "@remixicon/react"
+import { RiAddLine, RiRefreshLine, RiDeleteBin5Line, RiArrowRightSLine, RiArrowDownSLine } from "@remixicon/react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -25,12 +25,22 @@ import {
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import type { ColumnDef } from "@tanstack/react-table"
+import { TableCell, TableRow } from "@/components/ui/table"
+import { Spinner } from "@/components/ui/spinner"
 
 interface RowData {
   account_id: string
   service: string
   status: string
   source?: string
+}
+
+interface SubscriptionData {
+  bucket: string
+  id?: string
+  events: string[]
+  prefix?: string
+  suffix?: string
 }
 
 function isConfigSource(source: string | undefined) {
@@ -41,7 +51,7 @@ export default function EventsTargetPage() {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
-  const { getEventsTargetList, deleteEventTarget } = useEventTarget()
+  const { getEventsTargetList, deleteEventTarget, getEventTargetSubscriptions } = useEventTarget()
   const { getModuleSwitches } = useModuleSwitches()
 
   const [loadState, setLoadState] = useState<EventDestinationsLoadState<RowData>>({
@@ -50,6 +60,10 @@ export default function EventsTargetPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [newFormOpen, setNewFormOpen] = useState(false)
+  const [expandedRowId, setExpandedRowId] = useState<string>()
+  const [subscriptions, setSubscriptions] = useState<Record<string, SubscriptionData[]>>({})
+  const [subscriptionLoading, setSubscriptionLoading] = useState<Record<string, boolean>>({})
+  const [subscriptionErrors, setSubscriptionErrors] = useState<Record<string, boolean>>({})
   const loadingRef = React.useRef(false)
   const requestVersionRef = React.useRef(0)
 
@@ -147,12 +161,53 @@ export default function EventsTargetPage() {
     [canManageDestinations, deleteItem, dialog, t],
   )
 
+  const toggleSubscriptions = useCallback(
+    async (row: RowData) => {
+      const rowId = `${row.service}-${row.account_id}`
+      if (expandedRowId === rowId) {
+        setExpandedRowId(undefined)
+        return
+      }
+      setExpandedRowId(rowId)
+      if (subscriptions[rowId] || subscriptionLoading[rowId]) return
+      setSubscriptionLoading((current) => ({ ...current, [rowId]: true }))
+      setSubscriptionErrors((current) => ({ ...current, [rowId]: false }))
+      try {
+        const result = await getEventTargetSubscriptions(row.service, row.account_id)
+        setSubscriptions((current) => ({ ...current, [rowId]: result }))
+      } catch {
+        setSubscriptionErrors((current) => ({ ...current, [rowId]: true }))
+      } finally {
+        setSubscriptionLoading((current) => ({ ...current, [rowId]: false }))
+      }
+    },
+    [expandedRowId, getEventTargetSubscriptions, subscriptionLoading, subscriptions],
+  )
+
   const columns: ColumnDef<RowData>[] = useMemo(
     () => [
       {
         accessorKey: "account_id",
         header: () => t("Event Destinations"),
-        cell: ({ row }) => <span className="font-mono text-sm">{row.original.account_id}</span>,
+        cell: ({ row }) => {
+          const rowId = row.id
+          const expanded = expandedRowId === rowId
+          return (
+            <button
+              type="button"
+              className="flex max-w-full items-center gap-1 rounded-none text-start font-mono text-sm outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring/50"
+              aria-expanded={expanded}
+              onClick={() => toggleSubscriptions(row.original)}
+            >
+              {expanded ? (
+                <RiArrowDownSLine className="size-4 shrink-0" aria-hidden />
+              ) : (
+                <RiArrowRightSLine className="size-4 shrink-0" aria-hidden />
+              )}
+              <span className="truncate">{row.original.account_id}</span>
+            </button>
+          )
+        },
       },
       {
         accessorKey: "service",
@@ -203,7 +258,7 @@ export default function EventsTargetPage() {
           ),
       },
     ],
-    [canManageDestinations, confirmDelete, t],
+    [canManageDestinations, confirmDelete, expandedRowId, t, toggleSubscriptions],
   )
 
   const { table } = useDataTable<RowData>({
@@ -211,6 +266,54 @@ export default function EventsTargetPage() {
     columns,
     getRowId: (row) => `${row.service}-${row.account_id}`,
   })
+
+  const renderExpandedRow = useCallback(
+    (row: { id: string }) => {
+      const rowId = row.id
+      const items = subscriptions[rowId] ?? []
+      const loadingSubscriptions = subscriptionLoading[rowId]
+      const failed = subscriptionErrors[rowId]
+      return (
+        <TableRow>
+          <TableCell colSpan={columns.length} className="bg-muted/20 px-6 py-4">
+            {loadingSubscriptions ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Spinner className="size-4" />
+                {t("Loading subscriptions…")}
+              </div>
+            ) : failed ? (
+              <p role="alert" className="text-sm text-destructive">
+                {t("Unable to load subscriptions. Expand again to retry.")}
+              </p>
+            ) : items.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                {t("This destination is not used by any event subscription.")}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">{t("Event subscriptions using this destination")}</h3>
+                <div className="grid gap-2 text-sm sm:grid-cols-[minmax(8rem,1fr)_minmax(10rem,1fr)_minmax(12rem,2fr)]">
+                  {items.map((item) => (
+                    <React.Fragment key={`${item.bucket}-${item.id ?? "subscription"}`}>
+                      <span className="font-mono break-all">{item.bucket}</span>
+                      <span className="break-all">{item.id ?? "-"}</span>
+                      <span className="text-muted-foreground break-words">
+                        {item.events.join(", ") || "-"}
+                        {item.prefix || item.suffix
+                          ? ` · ${item.prefix ? `prefix=${item.prefix}` : ""}${item.suffix ? ` ${item.suffix ? `suffix=${item.suffix}` : ""}` : ""}`
+                          : ""}
+                      </span>
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            )}
+          </TableCell>
+        </TableRow>
+      )
+    },
+    [columns.length, subscriptionErrors, subscriptionLoading, subscriptions, t],
+  )
 
   return (
     <Page>
@@ -277,6 +380,8 @@ export default function EventsTargetPage() {
           emptyTitle={t("No Destinations")}
           emptyDescription={t("Create an event destination to forward notifications.")}
           caption={t("Event Destinations")}
+          expandedRowId={expandedRowId}
+          renderExpandedRow={renderExpandedRow}
         />
       ) : null}
 

@@ -36,10 +36,28 @@ export function useEventTarget() {
     return api.get("/target/arns")
   }, [api])
 
+  const getEventTargetSubscriptions = useCallback(
+    async (targetType: string, targetName: string) => {
+      return api.get(
+        `/target/${encodeURIComponent(targetType)}/${encodeURIComponent(targetName)}/subscriptions`,
+      ) as Promise<
+        Array<{
+          bucket: string
+          id?: string
+          events: string[]
+          prefix?: string
+          suffix?: string
+        }>
+      >
+    },
+    [api],
+  )
+
   return {
     getEventsTargetList,
     updateEventTarget,
     deleteEventTarget,
     getEventTargetArnList,
+    getEventTargetSubscriptions,
   }
 }

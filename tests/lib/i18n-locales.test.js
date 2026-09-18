@@ -87,6 +87,34 @@ test("translated locale values preserve interpolation placeholders", () => {
   }
 })
 
+test("task warnings contain actionable guidance in every locale", () => {
+  const expectedEnglish = {
+    "Browser Warning": "Refreshing or closing the browser will cancel all current tasks.",
+    "Cache Warning":
+      "Clearing the browser cache or allowing the session to expire can interrupt tasks or cause them to be lost. Proceed with caution.",
+  }
+  const localeFiles = fs
+    .readdirSync(localeDir)
+    .filter((file) => file.endsWith(".json"))
+    .sort()
+
+  assert.deepEqual(
+    {
+      "Browser Warning": readLocale("en-US.json")["Browser Warning"],
+      "Cache Warning": readLocale("en-US.json")["Cache Warning"],
+    },
+    expectedEnglish,
+  )
+
+  for (const file of localeFiles) {
+    const locale = readLocale(file)
+
+    for (const key of Object.keys(expectedEnglish)) {
+      assert.ok(locale[key].length > key.length, `${file}: ${key} should include guidance, not only a label`)
+    }
+  }
+})
+
 test("default SSE key description is translated for every locale", () => {
   const key = "This key is used as the platform default SSE key for SSE-KMS and SSE-S3."
   const enUS = readLocale("en-US.json")

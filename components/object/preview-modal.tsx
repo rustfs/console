@@ -114,6 +114,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const [textContent, setTextContent] = React.useState("")
   const [loading, setLoading] = React.useState(false)
   const [audioLoadError, setAudioLoadError] = React.useState(false)
+  const [videoLoadError, setVideoLoadError] = React.useState(false)
   const [isFormatted, setIsFormatted] = React.useState(true)
   const [imageNaturalSize, setImageNaturalSize] = React.useState<{ width: number; height: number } | null>(null)
   const [imageFitScale, setImageFitScale] = React.useState(1)
@@ -188,6 +189,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
 
   React.useEffect(() => {
     setAudioLoadError(false)
+    setVideoLoadError(false)
   }, [show, previewUrl])
 
   React.useEffect(() => {
@@ -410,6 +412,22 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
             className="my-auto w-full"
             aria-label={objectKey || t("Preview")}
             onError={() => setAudioLoadError(true)}
+          />
+        )
+      case "video":
+        return videoLoadError ? (
+          <div className="my-auto text-center text-sm text-destructive" role="alert">
+            {t("Preview unavailable")}
+          </div>
+        ) : (
+          <video
+            controls
+            playsInline
+            preload="metadata"
+            src={previewUrl}
+            className="min-h-0 w-full flex-1 bg-black object-contain"
+            aria-label={objectKey || t("Preview")}
+            onError={() => setVideoLoadError(true)}
           />
         )
       case "sandbox":

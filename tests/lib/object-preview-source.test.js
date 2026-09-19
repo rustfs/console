@@ -23,20 +23,34 @@ test("object preview dispatches normalized audio MIME types to the native audio 
   )
 })
 
-test("object preview preserves non-audio dispatch behavior", () => {
+test("object preview dispatches normalized video MIME types to the native video mode", () => {
+  assert.equal(getObjectPreviewMode({ ...previewOptions, contentType: "video/mp4" }), "video")
+  assert.equal(getObjectPreviewMode({ ...previewOptions, contentType: "video/webm" }), "video")
+  assert.equal(getObjectPreviewMode({ ...previewOptions, contentType: " Video/MP4; codecs=avc1 " }), "video")
+  assert.equal(
+    getObjectPreviewMode({ ...previewOptions, contentType: "video/mp4", canRenderParquet: true, canRenderTiff: true }),
+    "video",
+  )
+})
+
+test("object preview preserves non-media dispatch behavior", () => {
   assert.equal(getObjectPreviewMode(previewOptions), "sandbox")
   assert.equal(getObjectPreviewMode({ ...previewOptions, canRenderPdf: true }), "pdf")
   assert.equal(getObjectPreviewMode({ ...previewOptions, canRenderImage: true }), "image")
   assert.equal(getObjectPreviewMode({ ...previewOptions, canRenderText: true }), "text")
 })
 
-test("object preview renders native audio controls without relaxing the fallback sandbox", () => {
+test("object preview renders native media controls without relaxing the fallback sandbox", () => {
   const source = fs.readFileSync("components/object/preview-modal.tsx", "utf8")
 
   assert.match(source, /const previewMode = getObjectPreviewMode\(\{/)
   assert.match(source, /switch \(previewMode\)/)
   assert.match(source, /case "audio":[\s\S]*<audio[\s\S]*controls[\s\S]*src=\{previewUrl\}/)
   assert.match(source, /onError=\{\(\) => setAudioLoadError\(true\)\}/)
+  assert.match(source, /case "video":[\s\S]*<video[\s\S]*controls[\s\S]*src=\{previewUrl\}/)
+  assert.match(source, /<video[^>]*playsInline[^>]*preload="metadata"/)
+  assert.match(source, /onError=\{\(\) => setVideoLoadError\(true\)\}/)
+  assert.doesNotMatch(source, /<video[^>]*crossOrigin/)
   assert.match(source, /role="alert"[\s\S]*\{t\("Preview unavailable"\)\}/)
   assert.match(source, /<iframe[^>]*sandbox=""/)
   assert.doesNotMatch(source, /allow-same-origin/)
@@ -113,6 +127,7 @@ test("object preview renderers fill the resizable dialog body", () => {
   const parquetSource = fs.readFileSync("components/object/parquet-viewer.tsx", "utf8")
 
   assert.match(previewSource, /<iframe[^>]*className="min-h-0 w-full flex-1"/)
+  assert.match(previewSource, /<video[^>]*className="min-h-0 w-full flex-1 bg-black object-contain"/)
   assert.doesNotMatch(previewSource, /h-\[70vh\]/)
   assert.match(pdfSource, /relative flex min-h-0 w-full flex-1/)
   assert.doesNotMatch(pdfSource, /h-\[70vh\]/)

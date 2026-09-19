@@ -1,4 +1,4 @@
-type ObjectPreviewMode = "text" | "image" | "audio" | "pdf" | "parquet" | "sandbox" | "download" | "tiff"
+type ObjectPreviewMode = "text" | "image" | "audio" | "video" | "pdf" | "parquet" | "sandbox" | "download" | "tiff"
 
 interface ObjectPreviewOptions {
   hasPreviewUrl: boolean
@@ -24,7 +24,9 @@ export function getObjectPreviewMode({
   canRenderTiff,
 }: ObjectPreviewOptions): ObjectPreviewMode {
   if (!hasPreviewUrl) return "download"
-  if (normalizePreviewContentType(contentType).startsWith("audio/")) return "audio"
+  const normalizedContentType = normalizePreviewContentType(contentType)
+  if (normalizedContentType.startsWith("audio/")) return "audio"
+  if (normalizedContentType.startsWith("video/")) return "video"
   if (canRenderParquet) return "parquet"
   if (canRenderPdf) return "pdf"
   if (canRenderTiff) return "tiff"

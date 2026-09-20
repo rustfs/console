@@ -15,3 +15,10 @@ test("getAttachmentContentDisposition encodes Unicode and unsafe fallback charac
     "attachment; filename=\"__ _final_.zip\"; filename*=UTF-8''%E6%8A%A5%E5%91%8A%20%22final%22.zip",
   )
 })
+
+test("getAttachmentContentDisposition percent-encodes RFC 8187 delimiters", () => {
+  assert.equal(
+    getAttachmentContentDisposition("报告(O'Reilly)*.zip"),
+    "attachment; filename=\"__(O'Reilly)*.zip\"; filename*=UTF-8''%E6%8A%A5%E5%91%8A%28O%27Reilly%29%2A.zip",
+  )
+})

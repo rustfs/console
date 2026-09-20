@@ -1,3 +1,5 @@
+import { getMimeTypeFromFilename } from "./mime-types"
+
 const EXTENSION_MIME_TYPES: Record<string, string> = {
   txt: "text/plain",
   md: "text/markdown",
@@ -17,9 +19,19 @@ const EXTENSION_MIME_TYPES: Record<string, string> = {
   yaml: "application/yaml",
 }
 
+const GENERIC_CONTENT_TYPES = new Set([
+  "",
+  "application/octet-stream",
+  "binary/octet-stream",
+  "application/x-compressed",
+])
+
 function inferMimeTypeFromObjectKey(objectKey: string): string {
+  const inferred = getMimeTypeFromFilename(objectKey)
+  if (inferred !== "application/octet-stream") return inferred
+
   const ext = objectKey.split(".").pop()?.toLowerCase() ?? ""
-  return EXTENSION_MIME_TYPES[ext] ?? "application/octet-stream"
+  return EXTENSION_MIME_TYPES[ext] ?? inferred
 }
 
 function hasCharset(contentType: string): boolean {
@@ -64,7 +76,12 @@ async function isValidUtf8(file: Blob): Promise<boolean> {
 }
 
 export async function getUploadContentType(file: File, objectKey: string): Promise<string> {
-  const baseContentType = file.type || inferMimeTypeFromObjectKey(objectKey)
+  const filenameContentType = inferMimeTypeFromObjectKey(objectKey)
+  const browserContentType = file.type.toLowerCase()
+  const baseContentType =
+    GENERIC_CONTENT_TYPES.has(browserContentType) && filenameContentType !== "application/octet-stream"
+      ? filenameContentType
+      : file.type || filenameContentType
   if (!isTextualContentType(baseContentType) || hasCharset(baseContentType)) {
     return baseContentType
   }

@@ -58,6 +58,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { useApi } from "@/contexts/api-context"
 import { useMessage } from "@/lib/feedback/message"
 import { exportFile } from "@/lib/export-file"
+import { getAttachmentContentDisposition } from "@/lib/content-disposition"
 import { getContentType } from "@/lib/mime-types"
 import { formatBytes, formatDateTime } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
@@ -440,10 +441,10 @@ export function ObjectList({
       if (!key) return
       const loadingMsg = message.loading(t("Getting URL"), { duration: 0 })
       try {
-        const url = await getSignedUrl(key)
+        const filename = key.split("/").pop() ?? ""
+        const url = await getSignedUrl(key, 3600, getAttachmentContentDisposition(filename))
         const response = await fetch(url)
         if (!response.ok) throw new Error(t("Download Failed"))
-        const filename = key.split("/").pop() ?? ""
         const headers: Record<string, string> = {
           "content-type": getContentType(response.headers, filename),
           filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",

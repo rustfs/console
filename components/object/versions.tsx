@@ -15,6 +15,7 @@ import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { copyToClipboard } from "@/lib/clipboard"
 import { exportFile } from "@/lib/export-file"
+import { getAttachmentContentDisposition } from "@/lib/content-disposition"
 import { getContentType } from "@/lib/mime-types"
 import { formatBytes, formatDateTime } from "@/lib/functions"
 import { GetObjectCommand } from "@aws-sdk/client-s3"
@@ -90,11 +91,12 @@ export function ObjectVersions({
   )
 
   const getSignedUrlWithVersion = React.useCallback(
-    async (key: string, versionId: string, expiresIn = 3600) => {
+    async (key: string, versionId: string, expiresIn = 3600, responseContentDisposition?: string) => {
       const command = new GetObjectCommand({
         Bucket: bucketName,
         Key: key,
         VersionId: versionId === "00000000-0000-0000-0000-000000000000" ? undefined : versionId,
+        ResponseContentDisposition: responseContentDisposition,
       })
       return getSignedUrl(client, command, { expiresIn })
     },
@@ -105,9 +107,9 @@ export function ObjectVersions({
     async (row: VersionRow) => {
       const versionId = row.VersionId ?? ""
       try {
-        const url = await getSignedUrlWithVersion(objectKey, versionId)
-        const response = await fetch(url)
         const filename = objectKey.split("/").pop() ?? ""
+        const url = await getSignedUrlWithVersion(objectKey, versionId, 3600, getAttachmentContentDisposition(filename))
+        const response = await fetch(url)
         const headers: Record<string, string> = {
           "content-type": getContentType(response.headers, filename),
           filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",

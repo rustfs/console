@@ -41,6 +41,24 @@ test("getUploadContentType keeps binary content types unchanged", async () => {
   assert.equal(await getUploadContentType(file, "image.png"), "image/png")
 })
 
+test("getUploadContentType corrects generic browser MIME types from compound archive names", async () => {
+  const file = uploadBlob([new Uint8Array([0xfd, 0x37, 0x7a])], "release.tar.xz", "application/x-compressed")
+
+  assert.equal(await getUploadContentType(file, "release.tar.xz"), "application/x-xz")
+})
+
+test("getUploadContentType corrects generic MIME types for standard archive extensions", async () => {
+  const file = uploadBlob([new Uint8Array([0x50, 0x4b, 0x03, 0x04])], "release.zip", "application/octet-stream")
+
+  assert.equal(await getUploadContentType(file, "release.zip"), "application/zip")
+})
+
+test("getUploadContentType preserves a specific browser MIME type when it disagrees with the filename", async () => {
+  const file = uploadBlob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], "image.bin", "image/png")
+
+  assert.equal(await getUploadContentType(file, "image.bin"), "image/png")
+})
+
 test("getUploadContentType infers markdown MIME type and charset when browser type is empty", async () => {
   const file = uploadBlob(["# 标题"], "readme.md")
 

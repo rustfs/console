@@ -49,8 +49,12 @@ export function useObject(bucket: string) {
   )
 
   const getSignedUrlFn = useCallback(
-    async (key: string, expiresIn = 3600) => {
-      const command = new GetObjectCommand({ Bucket: bucket, Key: key })
+    async (key: string, expiresIn = 3600, responseContentDisposition?: string) => {
+      const command = new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        ResponseContentDisposition: responseContentDisposition,
+      })
       return getSignedUrl(client, command, { expiresIn })
     },
     [client, bucket],

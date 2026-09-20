@@ -8,6 +8,7 @@ import { Item, ItemContent, ItemHeader, ItemTitle } from "@/components/ui/item"
 import { useObject } from "@/hooks/use-object"
 import { useMessage } from "@/lib/feedback/message"
 import { exportFile } from "@/lib/export-file"
+import { getAttachmentContentDisposition } from "@/lib/content-disposition"
 import { getContentType } from "@/lib/mime-types"
 import { normalizeDateToIso } from "@/lib/safe-date"
 
@@ -36,9 +37,9 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
   const download = async () => {
     if (!object?.Key) return
     try {
-      const url = await objectApi.getSignedUrl(object.Key as string)
-      const response = await fetch(url)
       const filename = (object.Key as string).split("/").pop() ?? ""
+      const url = await objectApi.getSignedUrl(object.Key as string, 3600, getAttachmentContentDisposition(filename))
+      const response = await fetch(url)
       const headers: Record<string, string> = {
         "content-type": getContentType(response.headers, filename),
         filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",

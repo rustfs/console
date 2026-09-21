@@ -32,6 +32,8 @@ test("performance refresh keeps partial data and rejects stale responses", () =>
   assert.match(hookSource, /document\.visibilityState/)
   assert.match(hookSource, /hasSystemDataRef\.current = false[\s\S]*setSystemInfo\(\{\}\)/)
   assert.doesNotMatch(hookSource, /setLoading\(false\)[\s\S]*getSystemMetrics/)
+  assert.match(systemSource, /api\.get\("\/realtime"/)
+  assert.doesNotMatch(systemSource, /api\.get\("\/metrics"/)
   assert.ok((systemSource.match(/suppress403Redirect: true/g) ?? []).length >= 3)
 })
 

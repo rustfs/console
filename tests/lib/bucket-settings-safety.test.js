@@ -12,6 +12,7 @@ import {
   buildCurrentVersionExpirationRules,
   buildLifecycleFilter,
   buildNoncurrentVersionExpirationRule,
+  getLifecycleActions,
   findIncompleteLifecycleTag,
   getBucketVersioningMode,
   hasCompleteLifecycleTags,
@@ -217,6 +218,42 @@ test("lifecycle helpers preserve suspended versioning and reject partial tag pai
   assert.doesNotMatch(
     lifecycleFormSource,
     /activeTab !== "expire" \|\| versionType !== "current"\) setExpiredDeleteMark\(false\)/,
+  )
+})
+
+test("lifecycle action projection preserves current and non-current actions", () => {
+  assert.deepEqual(
+    getLifecycleActions({
+      Expiration: { Days: 30 },
+      NoncurrentVersionExpiration: { NoncurrentDays: 40 },
+    }),
+    [
+      { type: "expiration", version: "current", days: 30 },
+      { type: "expiration", version: "noncurrent", days: 40 },
+    ],
+  )
+})
+
+test("empty lifecycle action containers do not create fake actions", () => {
+  assert.deepEqual(getLifecycleActions({ Expiration: {} }), [])
+  assert.deepEqual(getLifecycleActions({ NoncurrentVersionExpiration: {} }), [])
+  assert.deepEqual(getLifecycleActions({ Transitions: [{}], NoncurrentVersionTransitions: [{}] }), [])
+})
+
+test("lifecycle action projection preserves every transition", () => {
+  assert.deepEqual(
+    getLifecycleActions({
+      Transitions: [
+        { Days: 30, StorageClass: "STANDARD_IA" },
+        { Date: "2030-01-01T00:00:00.000Z", StorageClass: "GLACIER" },
+      ],
+      NoncurrentVersionTransitions: [{ NoncurrentDays: 10, StorageClass: "STANDARD_IA" }],
+    }),
+    [
+      { type: "transition", version: "current", days: 30, storageClass: "STANDARD_IA" },
+      { type: "transition", version: "current", date: "2030-01-01T00:00:00.000Z", storageClass: "GLACIER" },
+      { type: "transition", version: "noncurrent", days: 10, storageClass: "STANDARD_IA" },
+    ],
   )
 })
 

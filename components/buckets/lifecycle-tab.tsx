@@ -14,6 +14,7 @@ import { LifecycleNewForm } from "@/components/lifecycle/new-form"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { isMissingBucketConfiguration, removeMatchingBucketRule } from "@/lib/bucket-configuration"
+import { getLifecycleActions } from "@/lib/bucket-lifecycle"
 import type { ColumnDef } from "@tanstack/react-table"
 
 interface LifecycleRule {
@@ -31,7 +32,7 @@ interface LifecycleRule {
     ExpiredObjectDeleteMarker?: boolean
   }
   NoncurrentVersionExpiration?: { NoncurrentDays?: number }
-  Transitions?: Array<{ Days?: number; StorageClass?: string }>
+  Transitions?: Array<{ Days?: number; Date?: string; StorageClass?: string }>
   NoncurrentVersionTransitions?: Array<{
     NoncurrentDays?: number
     StorageClass?: string
@@ -157,9 +158,18 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
         id: "version",
         header: () => t("Version"),
         accessorFn: (row) =>
-          row.NoncurrentVersionExpiration || row.NoncurrentVersionTransitions
-            ? t("Non-current Version")
-            : t("Current Version"),
+          getLifecycleActions(row)
+            .map((action) => (action.version === "noncurrent" ? t("Non-current Version") : t("Current Version")))
+            .join(" / "),
+        cell: ({ row }) => (
+          <div className="space-y-1">
+            {getLifecycleActions(row.original).map((action, index) => (
+              <div key={`${action.type}-${action.version}-${index}`}>
+                {action.version === "noncurrent" ? t("Non-current Version") : t("Current Version")}
+              </div>
+            ))}
+          </div>
+        ),
       },
       {
         id: "deleteMarker",
@@ -170,7 +180,17 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
         id: "tier",
         header: () => t("Tier"),
         accessorFn: (row) =>
-          row.Transitions?.[0]?.StorageClass || row.NoncurrentVersionTransitions?.[0]?.StorageClass || "--",
+          getLifecycleActions(row)
+            .map((action) => action.storageClass)
+            .filter(Boolean)
+            .join(" / ") || "--",
+        cell: ({ row }) => (
+          <div className="space-y-1">
+            {getLifecycleActions(row.original).map((action, index) => (
+              <div key={`${action.type}-${action.version}-${index}`}>{action.storageClass || "--"}</div>
+            ))}
+          </div>
+        ),
       },
       {
         id: "prefix",
@@ -181,11 +201,18 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
         id: "timeCycle",
         header: () => `${t("Time Cycle")} (${t("Days")})`,
         accessorFn: (row) =>
-          row.Expiration?.Days ??
-          row.NoncurrentVersionExpiration?.NoncurrentDays ??
-          row.Transitions?.[0]?.Days ??
-          row.NoncurrentVersionTransitions?.[0]?.NoncurrentDays ??
-          "",
+          getLifecycleActions(row)
+            .map((action) => action.days ?? action.date ?? "")
+            .join(" / "),
+        cell: ({ row }) => (
+          <div className="space-y-1">
+            {getLifecycleActions(row.original).map((action, index) => (
+              <div key={`${action.type}-${action.version}-${index}`}>
+                {action.days !== undefined ? `${action.days} ${t("Days")}` : action.date || "--"}
+              </div>
+            ))}
+          </div>
+        ),
       },
       {
         id: "status",
@@ -286,12 +313,8 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
         ) : (
           data.map((rule) => {
             const identity = rule.ID ?? JSON.stringify(rule)
-            const type = rule.Transitions || rule.NoncurrentVersionTransitions ? t("Transition") : t("Expire")
-            const cycle =
-              rule.Expiration?.Days ??
-              rule.NoncurrentVersionExpiration?.NoncurrentDays ??
-              rule.Transitions?.[0]?.Days ??
-              rule.NoncurrentVersionTransitions?.[0]?.NoncurrentDays
+            const actions = getLifecycleActions(rule)
+            const type = actions.some((action) => action.type === "transition") ? t("Transition") : t("Expire")
             return (
               <article key={identity} className="space-y-4 border p-4">
                 <div className="flex items-start justify-between gap-3">
@@ -310,7 +333,16 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
                   </div>
                   <div>
                     <dt className="text-xs text-muted-foreground">{t("Time Cycle")}</dt>
-                    <dd className="tabular-nums">{cycle ? `${cycle} ${t("Days")}` : "-"}</dd>
+                    <dd className="space-y-1 tabular-nums">
+                      {actions.length > 0
+                        ? actions.map((action, index) => (
+                            <div key={`${action.type}-${action.version}-${index}`}>
+                              {action.version === "noncurrent" ? t("Non-current Version") : t("Current Version")}:{" "}
+                              {action.days !== undefined ? `${action.days} ${t("Days")}` : action.date || "--"}
+                            </div>
+                          ))
+                        : "-"}
+                    </dd>
                   </div>
                 </dl>
                 {canEditLifecycle ? (

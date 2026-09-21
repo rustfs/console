@@ -7,6 +7,86 @@ export type BucketVersioningMode = "unversioned" | "enabled" | "suspended"
 
 export const MAX_LIFECYCLE_RULES = 1000
 
+export type LifecycleAction = {
+  type: "expiration" | "transition"
+  version: "current" | "noncurrent"
+  days?: number
+  date?: string
+  storageClass?: string
+  expiredObjectDeleteMarker?: boolean
+}
+
+type LifecycleRuleActionInput = {
+  Expiration?: {
+    Days?: number
+    Date?: string
+    StorageClass?: string
+    ExpiredObjectDeleteMarker?: boolean
+  }
+  NoncurrentVersionExpiration?: { NoncurrentDays?: number }
+  Transitions?: Array<{ Days?: number; Date?: string; StorageClass?: string }>
+  NoncurrentVersionTransitions?: Array<{ NoncurrentDays?: number; StorageClass?: string }>
+}
+
+export function getLifecycleActions(rule: LifecycleRuleActionInput): LifecycleAction[] {
+  const actions: LifecycleAction[] = []
+
+  const addAction = (action: LifecycleAction) => {
+    actions.push(
+      Object.fromEntries(Object.entries(action).filter(([, value]) => value !== undefined)) as LifecycleAction,
+    )
+  }
+
+  if (rule.Expiration) {
+    const { Days, Date, StorageClass, ExpiredObjectDeleteMarker } = rule.Expiration
+    if (Days !== undefined || Date !== undefined || ExpiredObjectDeleteMarker !== undefined) {
+      addAction({
+        type: "expiration",
+        version: "current",
+        days: Days,
+        date: Date,
+        storageClass: StorageClass,
+        expiredObjectDeleteMarker: ExpiredObjectDeleteMarker,
+      })
+    }
+  }
+
+  if (rule.NoncurrentVersionExpiration?.NoncurrentDays !== undefined) {
+    addAction({
+      type: "expiration",
+      version: "noncurrent",
+      days: rule.NoncurrentVersionExpiration.NoncurrentDays,
+    })
+  }
+
+  for (const transition of rule.Transitions ?? []) {
+    if (transition.Days === undefined && transition.Date === undefined && transition.StorageClass === undefined) {
+      continue
+    }
+    addAction({
+      type: "transition",
+      version: "current",
+      days: transition.Days,
+      date: transition.Date,
+      storageClass: transition.StorageClass,
+    })
+  }
+
+  for (const transition of rule.NoncurrentVersionTransitions ?? []) {
+    if (transition.NoncurrentDays === undefined && transition.StorageClass === undefined) {
+      continue
+    }
+    addAction({
+      type: "transition",
+      version: "noncurrent",
+      days: transition.NoncurrentDays,
+      storageClass: transition.StorageClass,
+    })
+  }
+
+  return actions
+}
+
 export function getBucketVersioningMode(status?: string): BucketVersioningMode {
   if (status === "Enabled") return "enabled"
   if (status === "Suspended") return "suspended"

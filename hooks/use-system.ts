@@ -50,7 +50,7 @@ export function useSystem() {
 
   const getSystemMetrics = useCallback(
     async (signal?: AbortSignal) => {
-      return api.get("/metrics", {
+      return api.get("/realtime", {
         params: {
           n: "1",
           types: "1",

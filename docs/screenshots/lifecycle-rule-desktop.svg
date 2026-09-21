@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="520" viewBox="0 0 1280 520">
+<rect width="1280" height="520" fill="#f8fafc"/><rect x="32" y="28" width="1216" height="464" rx="12" fill="white" stroke="#e2e8f0"/>
+<text x="64" y="72" font-family="Arial,sans-serif" font-size="24" font-weight="700" fill="#0f172a">Lifecycle</text>
+<rect x="64" y="100" width="1152" height="58" fill="#f1f5f9"/>
+<g font-family="Arial,sans-serif" font-size="15" fill="#475569"><text x="88" y="136">Type</text><text x="190" y="136">Version</text><text x="420" y="136">Prefix</text><text x="650" y="136">Time Cycle (Days)</text><text x="900" y="136">Status</text></g>
+<g font-family="Arial,sans-serif" font-size="15" fill="#0f172a"><text x="88" y="204">Expire</text><text x="190" y="190">Current Version</text><text x="190" y="222">Non-current Version</text><text x="420" y="204">path1/</text><text x="650" y="190">30 days</text><text x="650" y="222">40 days</text><text x="900" y="204">Enabled</text></g>
+<line x1="64" y1="250" x2="1216" y2="250" stroke="#e2e8f0"/>
+<g font-family="Arial,sans-serif" font-size="15" fill="#0f172a"><text x="88" y="304">Expire</text><text x="190" y="290">Current Version</text><text x="190" y="322">Non-current Version</text><text x="420" y="304">(empty)</text><text x="650" y="290">10 days</text><text x="650" y="322">20 days</text><text x="900" y="304">Enabled</text></g>
+<text x="64" y="450" font-family="Arial,sans-serif" font-size="13" fill="#64748b">Rendered from the issue #8036 lifecycle payload</text>
+</svg>

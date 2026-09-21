@@ -1,15 +1,7 @@
 export interface LifecycleRule {
-  ID?: string
-  Status?: string
-  Filter?: {
-    Prefix?: string
-    Tag?: { Key: string; Value: string }
-    And?: { Prefix?: string; Tags?: Array<{ Key: string; Value: string }> }
-  }
   Expiration?: {
     Days?: number
     Date?: string | Date
-    StorageClass?: string
     ExpiredObjectDeleteMarker?: boolean
   }
   NoncurrentVersionExpiration?: {
@@ -17,10 +9,7 @@ export interface LifecycleRule {
     NewerNoncurrentVersions?: number
   }
   Transitions?: Array<{ Days?: number; Date?: string | Date; StorageClass?: string }>
-  NoncurrentVersionTransitions?: Array<{
-    NoncurrentDays?: number
-    StorageClass?: string
-  }>
+  NoncurrentVersionTransitions?: Array<{ NoncurrentDays?: number; StorageClass?: string }>
 }
 
 export interface LifecycleAction {
@@ -68,7 +57,8 @@ export function getLifecycleActions(rule: LifecycleRule): LifecycleAction[] {
     })
   }
   for (const transition of rule.Transitions ?? []) {
-    if (transition.Days === undefined && transition.Date === undefined && transition.StorageClass === undefined) continue
+    if (transition.Days === undefined && transition.Date === undefined && transition.StorageClass === undefined)
+      continue
     actions.push({
       type: "Transition",
       version: "Current Version",

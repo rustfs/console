@@ -9,15 +9,14 @@ export interface LifecycleRule {
   Expiration?: {
     Days?: number
     Date?: string | Date
-    StorageClass?: string
     ExpiredObjectDeleteMarker?: boolean
   }
-  NoncurrentVersionExpiration?: { NoncurrentDays?: number }
-  Transitions?: Array<{ Days?: number; Date?: string | Date; StorageClass?: string }>
-  NoncurrentVersionTransitions?: Array<{
+  NoncurrentVersionExpiration?: {
     NoncurrentDays?: number
-    StorageClass?: string
-  }>
+    NewerNoncurrentVersions?: number
+  }
+  Transitions?: Array<{ Days?: number; Date?: string | Date; StorageClass?: string }>
+  NoncurrentVersionTransitions?: Array<{ NoncurrentDays?: number; StorageClass?: string }>
 }
 
 export interface LifecycleAction {
@@ -27,27 +26,46 @@ export interface LifecycleAction {
   date?: string | Date
   tier?: string
   deleteMarker?: boolean
+  newerNoncurrentVersions?: number
+}
+
+function hasExpirationAction(expiration?: LifecycleRule["Expiration"]) {
+  return (
+    expiration?.Days !== undefined ||
+    expiration?.Date !== undefined ||
+    expiration?.ExpiredObjectDeleteMarker !== undefined
+  )
+}
+
+function hasNoncurrentExpirationAction(expiration?: LifecycleRule["NoncurrentVersionExpiration"]) {
+  return (
+    expiration?.NoncurrentDays !== undefined ||
+    (expiration?.NewerNoncurrentVersions !== undefined && expiration.NewerNoncurrentVersions > 0)
+  )
 }
 
 export function getLifecycleActions(rule: LifecycleRule): LifecycleAction[] {
   const actions: LifecycleAction[] = []
-  if (rule.Expiration) {
+  if (hasExpirationAction(rule.Expiration)) {
     actions.push({
       type: "Expire",
       version: "Current Version",
-      days: rule.Expiration.Days,
-      date: rule.Expiration.Date,
-      deleteMarker: rule.Expiration.ExpiredObjectDeleteMarker,
+      days: rule.Expiration?.Days,
+      date: rule.Expiration?.Date,
+      deleteMarker: rule.Expiration?.ExpiredObjectDeleteMarker,
     })
   }
-  if (rule.NoncurrentVersionExpiration) {
+  if (hasNoncurrentExpirationAction(rule.NoncurrentVersionExpiration)) {
     actions.push({
       type: "Expire",
       version: "Non-current Version",
-      days: rule.NoncurrentVersionExpiration.NoncurrentDays,
+      days: rule.NoncurrentVersionExpiration?.NoncurrentDays,
+      newerNoncurrentVersions: rule.NoncurrentVersionExpiration?.NewerNoncurrentVersions,
     })
   }
   for (const transition of rule.Transitions ?? []) {
+    if (transition.Days === undefined && transition.Date === undefined && transition.StorageClass === undefined)
+      continue
     actions.push({
       type: "Transition",
       version: "Current Version",
@@ -57,6 +75,7 @@ export function getLifecycleActions(rule: LifecycleRule): LifecycleAction[] {
     })
   }
   for (const transition of rule.NoncurrentVersionTransitions ?? []) {
+    if (transition.NoncurrentDays === undefined && transition.StorageClass === undefined) continue
     actions.push({
       type: "Transition",
       version: "Non-current Version",

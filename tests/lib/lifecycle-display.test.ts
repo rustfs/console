@@ -21,6 +21,24 @@ test("mixed expiration rules retain both version labels and their own days (rust
   }
 })
 
+test("empty expiration containers do not create fake actions", () => {
+  assert.deepEqual(getLifecycleActions({ Expiration: {} }), [])
+  assert.deepEqual(getLifecycleActions({ NoncurrentVersionExpiration: {} }), [])
+  assert.deepEqual(getLifecycleActions({ Transitions: [{}], NoncurrentVersionTransitions: [{}] }), [])
+})
+
+test("explicit delete-marker false remains an explicit action setting", () => {
+  assert.deepEqual(getLifecycleActions({ Expiration: { ExpiredObjectDeleteMarker: false } }), [
+    {
+      type: "Expire",
+      version: "Current Version",
+      days: undefined,
+      date: undefined,
+      deleteMarker: false,
+    },
+  ])
+})
+
 test("each transition keeps its version, tier and zero-day schedule", () => {
   assert.deepEqual(
     getLifecycleActions({

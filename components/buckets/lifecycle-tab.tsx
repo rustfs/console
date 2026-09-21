@@ -14,29 +14,8 @@ import { LifecycleNewForm } from "@/components/lifecycle/new-form"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { isMissingBucketConfiguration, removeMatchingBucketRule } from "@/lib/bucket-configuration"
+import { getLifecycleActions, type LifecycleRule, type LifecycleAction } from "@/lib/lifecycle-display"
 import type { ColumnDef } from "@tanstack/react-table"
-
-interface LifecycleRule {
-  ID?: string
-  Status?: string
-  Filter?: {
-    Prefix?: string
-    Tag?: { Key: string; Value: string }
-    And?: { Prefix?: string; Tags?: Array<{ Key: string; Value: string }> }
-  }
-  Expiration?: {
-    Days?: number
-    Date?: string
-    StorageClass?: string
-    ExpiredObjectDeleteMarker?: boolean
-  }
-  NoncurrentVersionExpiration?: { NoncurrentDays?: number }
-  Transitions?: Array<{ Days?: number; StorageClass?: string }>
-  NoncurrentVersionTransitions?: Array<{
-    NoncurrentDays?: number
-    StorageClass?: string
-  }>
-}
 
 interface BucketLifecycleTabProps {
   bucketName: string
@@ -146,32 +125,46 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
     [bucketName, dialog, t, handleRowDelete],
   )
 
+  const actionValue = React.useCallback(
+    (action: LifecycleAction, field: "type" | "version" | "deleteMarker" | "tier" | "timeCycle") => {
+      switch (field) {
+        case "type":
+          return t(action.type)
+        case "version":
+          return t(action.version)
+        case "deleteMarker":
+          return action.deleteMarker ? t("On") : t("Off")
+        case "tier":
+          return action.tier ?? "--"
+        default:
+          return action.days != null
+            ? `${action.days} ${t("Days")}`
+            : ((action.date instanceof Date ? action.date.toISOString() : action.date) ?? "--")
+      }
+    },
+    [t],
+  )
+
   const columns: ColumnDef<LifecycleRule>[] = React.useMemo(
     () => [
-      {
-        id: "type",
-        header: () => t("Type"),
-        accessorFn: (row) => (row.Transitions || row.NoncurrentVersionTransitions ? "Transition" : "Expire"),
-      },
-      {
-        id: "version",
-        header: () => t("Version"),
-        accessorFn: (row) =>
-          row.NoncurrentVersionExpiration || row.NoncurrentVersionTransitions
-            ? t("Non-current Version")
-            : t("Current Version"),
-      },
-      {
-        id: "deleteMarker",
-        header: () => t("Expiration Delete Mark"),
-        accessorFn: (row) => (row.Expiration?.ExpiredObjectDeleteMarker ? t("On") : t("Off")),
-      },
-      {
-        id: "tier",
-        header: () => t("Tier"),
-        accessorFn: (row) =>
-          row.Transitions?.[0]?.StorageClass || row.NoncurrentVersionTransitions?.[0]?.StorageClass || "--",
-      },
+      ...(["type", "version", "deleteMarker", "tier"] as const).map((field) => ({
+        id: field,
+        header: () =>
+          t({ type: "Type", version: "Version", deleteMarker: "Expiration Delete Mark", tier: "Tier" }[field]),
+        accessorFn: (row: LifecycleRule) =>
+          getLifecycleActions(row)
+            .map((action) => actionValue(action, field))
+            .join(" · "),
+        cell: ({ row }: { row: { original: LifecycleRule } }) => (
+          <div className="space-y-2">
+            {getLifecycleActions(row.original).map((action, index) => (
+              <div key={index} className="whitespace-nowrap">
+                {actionValue(action, field)}
+              </div>
+            ))}
+          </div>
+        ),
+      })),
       {
         id: "prefix",
         header: () => t("Prefix"),
@@ -179,13 +172,20 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
       },
       {
         id: "timeCycle",
-        header: () => `${t("Time Cycle")} (${t("Days")})`,
+        header: () => t("Time Cycle"),
         accessorFn: (row) =>
-          row.Expiration?.Days ??
-          row.NoncurrentVersionExpiration?.NoncurrentDays ??
-          row.Transitions?.[0]?.Days ??
-          row.NoncurrentVersionTransitions?.[0]?.NoncurrentDays ??
-          "",
+          getLifecycleActions(row)
+            .map((action) => actionValue(action, "timeCycle"))
+            .join(" · "),
+        cell: ({ row }) => (
+          <div className="space-y-2">
+            {getLifecycleActions(row.original).map((action, index) => (
+              <div key={index} className="whitespace-nowrap tabular-nums">
+                {actionValue(action, "timeCycle")}
+              </div>
+            ))}
+          </div>
+        ),
       },
       {
         id: "status",
@@ -219,7 +219,7 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
         ),
       },
     ],
-    [canEditLifecycle, confirmDelete, loadError, loading, mutatingRuleId, t],
+    [actionValue, canEditLifecycle, confirmDelete, loadError, loading, mutatingRuleId, t],
   )
 
   const { table } = useDataTable<LifecycleRule>({
@@ -286,18 +286,11 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
         ) : (
           data.map((rule) => {
             const identity = rule.ID ?? JSON.stringify(rule)
-            const type = rule.Transitions || rule.NoncurrentVersionTransitions ? t("Transition") : t("Expire")
-            const cycle =
-              rule.Expiration?.Days ??
-              rule.NoncurrentVersionExpiration?.NoncurrentDays ??
-              rule.Transitions?.[0]?.Days ??
-              rule.NoncurrentVersionTransitions?.[0]?.NoncurrentDays
             return (
               <article key={identity} className="space-y-4 border p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="break-all text-sm font-medium">{rule.ID ?? t("Unnamed rule")}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">{type}</p>
                   </div>
                   <Badge variant={rule.Status === "Enabled" ? "secondary" : "outline"}>
                     {rule.Status === "Enabled" ? t("Enabled") : t("Disabled")}
@@ -308,11 +301,27 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
                     <dt className="text-xs text-muted-foreground">{t("Prefix")}</dt>
                     <dd className="break-all">{rule.Filter?.Prefix || rule.Filter?.And?.Prefix || "-"}</dd>
                   </div>
-                  <div>
-                    <dt className="text-xs text-muted-foreground">{t("Time Cycle")}</dt>
-                    <dd className="tabular-nums">{cycle ? `${cycle} ${t("Days")}` : "-"}</dd>
-                  </div>
                 </dl>
+                {getLifecycleActions(rule).map((action, index) => (
+                  <dl key={index} className="grid grid-cols-2 gap-3 text-sm">
+                    {(["type", "version", "deleteMarker", "tier", "timeCycle"] as const).map((field) => (
+                      <div key={field}>
+                        <dt className="text-xs text-muted-foreground">
+                          {t(
+                            {
+                              type: "Type",
+                              version: "Version",
+                              deleteMarker: "Expiration Delete Mark",
+                              tier: "Tier",
+                              timeCycle: "Time Cycle",
+                            }[field],
+                          )}
+                        </dt>
+                        <dd className="break-all">{actionValue(action, field)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                ))}
                 {canEditLifecycle ? (
                   <Button
                     variant="outline"

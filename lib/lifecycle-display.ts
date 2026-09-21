@@ -1,4 +1,11 @@
 export interface LifecycleRule {
+  ID?: string
+  Status?: string
+  Filter?: {
+    Prefix?: string
+    Tag?: { Key: string; Value: string }
+    And?: { Prefix?: string; Tags?: Array<{ Key: string; Value: string }> }
+  }
   Expiration?: {
     Days?: number
     Date?: string | Date

@@ -17,9 +17,10 @@ import { useDialogController } from "@/lib/feedback/dialog"
 import type { DialogInstance } from "@/lib/feedback/dialog"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
+import { DANGER_BUTTON_CLASS } from "@/components/danger-button"
 
 function positiveButtonVariant(dialog: DialogInstance) {
-  return dialog.tone === "destructive" ? "destructive" : dialog.tone === "warning" ? "secondary" : "default"
+  return dialog.tone === "warning" ? "secondary" : "default"
 }
 
 export function DialogHost() {
@@ -79,7 +80,7 @@ export function DialogHost() {
                       className={cn(
                         buttonVariants({ variant: positiveButtonVariant(dialog) }),
                         "w-full sm:w-auto",
-                        positiveButtonVariant(dialog) === "destructive" && "text-white",
+                        dialog.tone === "destructive" && DANGER_BUTTON_CLASS,
                       )}
                       onClick={(e) => {
                         e.preventDefault()

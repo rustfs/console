@@ -57,6 +57,12 @@ test("object list distinguishes filtered-empty states from an empty bucket", () 
   assert.equal(source.includes("emptyDescription={emptyDescription}"), true)
 })
 
+test("object list clears its search when the active bucket or prefix changes", () => {
+  const source = fs.readFileSync("components/object/list.tsx", "utf8")
+
+  assert.match(source, /if \(shouldResetObjectListSearch\(previousScope, listScope\)\) \{\s+setSearchTerm\(""\)\s+\}/)
+})
+
 test("object list shows fixed scroll shortcut buttons only when content overflows", () => {
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 

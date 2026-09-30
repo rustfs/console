@@ -25,7 +25,7 @@ jobs:
   # ============================================================================
   pre-release-validation:
     name: 🔍 Pre-Release Validation
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     timeout-minutes: 20
 
     outputs:
@@ -94,7 +94,7 @@ jobs:
   # ============================================================================
   build-release:
     name: 🏗️ Build Release
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     needs: pre-release-validation
     if: needs.pre-release-validation.outputs.should-deploy == 'true'
 
@@ -173,7 +173,7 @@ jobs:
   # ============================================================================
   create-release:
     name: 📝 Create GitHub Release
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     needs: [pre-release-validation, build-release]
     if: needs.pre-release-validation.outputs.should-deploy == 'true' && github.event_name == 'push'
 
@@ -219,7 +219,7 @@ jobs:
   # ============================================================================
   post-release:
     name: 📢 Post-Release Notifications
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     needs: [pre-release-validation, create-release]
     if: always() && needs.pre-release-validation.outputs.should-deploy == 'true'
 

@@ -26,7 +26,7 @@ jobs:
   # ============================================================================
   security-audit:
     name: 🔒 Security Audit
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
 
     steps:
       - name: 📥 Checkout code
@@ -147,7 +147,7 @@ jobs:
   # ============================================================================
   check-updates:
     name: 📋 Check for Updates
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     needs: security-audit
 
     outputs:
@@ -228,7 +228,7 @@ jobs:
   # ============================================================================
   auto-update:
     name: 🔄 Auto Update Dependencies
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     needs: [security-audit, check-updates]
     if: needs.check-updates.outputs.has-updates == 'true'
 
@@ -401,7 +401,7 @@ jobs:
   # ============================================================================
   dependency-analysis:
     name: 📊 Dependency Analysis
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     needs: [security-audit, check-updates]
 
     steps:

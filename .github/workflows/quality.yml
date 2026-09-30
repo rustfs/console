@@ -18,7 +18,7 @@ jobs:
   # ============================================================================
   formatting:
     name: 💅 Code Formatting
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
 
     steps:
       - name: 📥 Checkout code
@@ -45,7 +45,7 @@ jobs:
   # ============================================================================
   typescript:
     name: 📘 TypeScript Check
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
 
     steps:
       - name: 📥 Checkout code
@@ -78,7 +78,7 @@ jobs:
   # ============================================================================
   dependencies:
     name: 📦 Dependencies Check
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
 
     steps:
       - name: 📥 Checkout code
@@ -152,7 +152,7 @@ jobs:
   # ============================================================================
   complexity:
     name: 🧮 Code Complexity
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
 
     steps:
       - name: 📥 Checkout code
@@ -217,7 +217,7 @@ jobs:
   # ============================================================================
   documentation:
     name: 📚 Documentation Check
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
 
     steps:
       - name: 📥 Checkout code
@@ -268,7 +268,7 @@ jobs:
   # ============================================================================
   quality-summary:
     name: 📋 Quality Summary
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     needs: [formatting, typescript, dependencies, complexity, documentation]
     if: always()
 

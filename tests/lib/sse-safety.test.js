@@ -133,7 +133,7 @@ test("SSE confirmations name the risk and cannot close while an action is proces
   assert.match(source, /if \(!open && creatingKey\) return/)
   assert.match(source, /if \(!open && !processingKeyAction\) setPendingKeyAction\(null\)/)
   assert.match(source, /pendingKeyAction\?\.type === "forceDelete"\n\s+\? t\("Delete Key Immediately"\)/)
-  assert.match(source, /bg-destructive text-destructive-foreground/)
+  assert.match(source, /DANGER_BUTTON_CLASS/)
   assert.match(source, /KMS will be stopped\. SSE and key management will be unavailable until you start KMS again\./)
   assert.match(source, /pendingServiceAction === "stop" \? t\("Stop KMS"\) : t\("Confirm"\)/)
 })

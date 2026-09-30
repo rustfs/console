@@ -49,6 +49,7 @@ import {
   type ConfigFormState,
 } from "@/lib/sse/config"
 import { RekeyCard } from "@/components/sse/rekey-card"
+import { DANGER_BUTTON_CLASS } from "@/components/danger-button"
 import type {
   KmsBackendCapabilities,
   KmsConfigPayload,
@@ -2263,7 +2264,7 @@ export default function SSEPage() {
             <AlertDialogAction
               onClick={confirmServiceAction}
               disabled={startingKMS || stoppingKMS || Boolean(activeMutation) || Boolean(statusError)}
-              className={pendingServiceAction === "stop" ? "bg-destructive text-destructive-foreground" : undefined}
+              className={pendingServiceAction === "stop" ? DANGER_BUTTON_CLASS : undefined}
             >
               {startingKMS || stoppingKMS ? <Spinner className="size-4" /> : null}
               {pendingServiceAction === "stop" ? t("Stop KMS") : t("Confirm")}
@@ -2290,7 +2291,7 @@ export default function SSEPage() {
             <AlertDialogAction
               onClick={discardConfigChangesAndNavigate}
               disabled={mutationInFlight}
-              className="bg-destructive text-destructive-foreground"
+              className={DANGER_BUTTON_CLASS}
             >
               {t("Discard")}
             </AlertDialogAction>
@@ -2329,9 +2330,7 @@ export default function SSEPage() {
                 Boolean(statusError) ||
                 Boolean(isPendingDefaultKey && pendingKeyAction?.type !== "cancelDeletion")
               }
-              className={
-                pendingKeyAction?.type === "forceDelete" ? "bg-destructive text-destructive-foreground" : undefined
-              }
+              className={pendingKeyAction?.type === "forceDelete" ? DANGER_BUTTON_CLASS : undefined}
             >
               {processingKeyAction ? <Spinner className="size-4" /> : null}
               {pendingKeyAction?.type === "cancelDeletion"

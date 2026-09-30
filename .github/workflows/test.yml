@@ -20,7 +20,7 @@ jobs:
   # ============================================================================
   lint:
     name: 🔍 Code Quality
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     timeout-minutes: 10
 
     steps:
@@ -51,7 +51,7 @@ jobs:
   # ============================================================================
   unit-tests:
     name: 🧪 Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     timeout-minutes: 15
     needs: lint
 
@@ -91,7 +91,7 @@ jobs:
   # ============================================================================
   build-test:
     name: 🏗️ Build Test
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     timeout-minutes: 15
     needs: lint
 
@@ -130,7 +130,7 @@ jobs:
   # ============================================================================
   test-summary:
     name: 📋 Test Summary
-    runs-on: ubuntu-latest
+    runs-on: sm-standard-2
     needs: [unit-tests, build-test]
     if: always()
 

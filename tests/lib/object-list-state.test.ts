@@ -2,10 +2,62 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   createObjectListScope,
+  shouldResetObjectListSearch,
   resolveObjectListDisplayState,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
 } from "../../lib/object-list-state"
+
+test("shouldResetObjectListSearch returns true when the prefix changes", () => {
+  const previousScope = createObjectListScope({
+    bucket: "bucket-a",
+    prefix: "",
+    pageSize: 25,
+    showDeleted: false,
+  })
+  const nextScope = createObjectListScope({
+    bucket: "bucket-a",
+    prefix: "folder-a/",
+    pageSize: 25,
+    showDeleted: false,
+  })
+
+  assert.equal(shouldResetObjectListSearch(previousScope, nextScope), true)
+})
+
+test("shouldResetObjectListSearch returns true when the bucket changes", () => {
+  const previousScope = createObjectListScope({
+    bucket: "bucket-a",
+    prefix: "",
+    pageSize: 25,
+    showDeleted: false,
+  })
+  const nextScope = createObjectListScope({
+    bucket: "bucket-b",
+    prefix: "",
+    pageSize: 25,
+    showDeleted: false,
+  })
+
+  assert.equal(shouldResetObjectListSearch(previousScope, nextScope), true)
+})
+
+test("shouldResetObjectListSearch ignores non-location scope changes", () => {
+  const previousScope = createObjectListScope({
+    bucket: "bucket-a",
+    prefix: "folder-a/",
+    pageSize: 25,
+    showDeleted: false,
+  })
+  const nextScope = createObjectListScope({
+    bucket: "bucket-a",
+    prefix: "folder-a/",
+    pageSize: 50,
+    showDeleted: true,
+  })
+
+  assert.equal(shouldResetObjectListSearch(previousScope, nextScope), false)
+})
 
 test("shouldResetObjectListPagination returns false for the same listing scope", () => {
   const previousScope = createObjectListScope({

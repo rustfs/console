@@ -68,6 +68,7 @@ import {
   resolveObjectListDisplayState,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
+  shouldResetObjectListSearch,
 } from "@/lib/object-list-state"
 import { OBJECT_LIST_DEFAULT_PAGE_SIZE, resolveObjectListPageSize } from "@/lib/object-list-pagination"
 import {
@@ -342,7 +343,11 @@ export function ObjectList({
   const prevRefreshTriggerRef = React.useRef(refreshTrigger)
 
   React.useEffect(() => {
-    const shouldResetPagination = shouldResetObjectListPagination(previousScopeRef.current, listScope)
+    const previousScope = previousScopeRef.current
+    const shouldResetPagination = shouldResetObjectListPagination(previousScope, listScope)
+    if (shouldResetObjectListSearch(previousScope, listScope)) {
+      setSearchTerm("")
+    }
     previousScopeRef.current = listScope
     const isRefresh = prevRefreshTriggerRef.current !== refreshTrigger
     prevRefreshTriggerRef.current = refreshTrigger

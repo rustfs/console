@@ -20,9 +20,8 @@ import { useObject } from "@/hooks/use-object"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useMessage } from "@/lib/feedback/message"
 import { useDialog } from "@/lib/feedback/dialog"
-import { exportFile } from "@/lib/export-file"
+import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
-import { getContentType } from "@/lib/mime-types"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import {
   getDefaultObjectRetentionDate,
@@ -258,13 +257,8 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     try {
       const filename = (object.Key as string).split("/").pop() ?? ""
       const url = await objectApi.getSignedUrl(object.Key as string, 3600, getAttachmentContentDisposition(filename))
-      const response = await fetch(url)
-      const headers: Record<string, string> = {
-        "content-type": getContentType(response.headers, filename),
-        filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
-      }
-      const blob = await response.blob()
-      exportFile({ headers, data: blob }, filename)
+      downloadUrl(url, filename)
+      message.success(t("Download ready"))
     } catch (err) {
       message.error((err as Error)?.message ?? t("Download Failed"))
     }

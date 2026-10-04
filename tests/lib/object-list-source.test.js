@@ -79,9 +79,20 @@ test("object list shows fixed scroll shortcut buttons only when content overflow
   )
 })
 
-test("object download rejects non-success responses before exporting a blob", () => {
-  const source = fs.readFileSync("components/object/list.tsx", "utf8")
+test("object download delegates the signed URL to the browser", () => {
+  for (const path of [
+    "components/object/list.tsx",
+    "components/object/info.tsx",
+    "components/object/view.tsx",
+    "components/object/versions.tsx",
+  ]) {
+    const source = fs.readFileSync(path, "utf8")
 
-  assert.match(source, /const response = await fetch\(url\)\s+if \(!response\.ok\) throw new Error/)
-  assert.match(source, /finally \{\s+loadingMsg\.destroy\(\)/)
+    assert.match(source, /downloadUrl\(url, filename\)/, path)
+    assert.doesNotMatch(source, /await fetch\(url\)/, path)
+    assert.doesNotMatch(source, /await response\.blob\(\)/, path)
+  }
+
+  const listSource = fs.readFileSync("components/object/list.tsx", "utf8")
+  assert.match(listSource, /finally \{\s+loadingMsg\.destroy\(\)/)
 })

@@ -14,9 +14,8 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { copyToClipboard } from "@/lib/clipboard"
-import { exportFile } from "@/lib/export-file"
+import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
-import { getContentType } from "@/lib/mime-types"
 import { formatBytes, formatDateTime } from "@/lib/functions"
 import { GetObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
@@ -109,13 +108,8 @@ export function ObjectVersions({
       try {
         const filename = objectKey.split("/").pop() ?? ""
         const url = await getSignedUrlWithVersion(objectKey, versionId, 3600, getAttachmentContentDisposition(filename))
-        const response = await fetch(url)
-        const headers: Record<string, string> = {
-          "content-type": getContentType(response.headers, filename),
-          filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
-        }
-        const blob = await response.blob()
-        exportFile({ headers, data: blob }, filename)
+        downloadUrl(url, filename)
+        message.success(t("Download ready"))
       } catch (err) {
         message.error((err as Error)?.message ?? t("Download Failed"))
       }

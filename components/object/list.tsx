@@ -58,9 +58,8 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useApi } from "@/contexts/api-context"
 import { useMessage } from "@/lib/feedback/message"
-import { exportFile } from "@/lib/export-file"
+import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
-import { getContentType } from "@/lib/mime-types"
 import { formatBytes, formatDateTime } from "@/lib/functions"
 import { cn } from "@/lib/utils"
 import { normalizeDateToIso } from "@/lib/safe-date"
@@ -450,14 +449,8 @@ export function ObjectList({
       try {
         const filename = key.split("/").pop() ?? ""
         const url = await getSignedUrl(key, 3600, getAttachmentContentDisposition(filename))
-        const response = await fetch(url)
-        if (!response.ok) throw new Error(t("Download Failed"))
-        const headers: Record<string, string> = {
-          "content-type": getContentType(response.headers, filename),
-          filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
-        }
-        const blob = await response.blob()
-        exportFile({ headers, data: blob }, filename)
+        downloadUrl(url, filename)
+        message.success(t("Download ready"))
       } catch (err) {
         message.error((err as Error)?.message ?? t("Download Failed"))
       } finally {

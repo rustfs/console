@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@/components/ui/item"
 import { useObject } from "@/hooks/use-object"
 import { useMessage } from "@/lib/feedback/message"
-import { exportFile } from "@/lib/export-file"
+import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
-import { getContentType } from "@/lib/mime-types"
 import { normalizeDateToIso } from "@/lib/safe-date"
 
 interface ObjectViewProps {
@@ -39,13 +38,8 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
     try {
       const filename = (object.Key as string).split("/").pop() ?? ""
       const url = await objectApi.getSignedUrl(object.Key as string, 3600, getAttachmentContentDisposition(filename))
-      const response = await fetch(url)
-      const headers: Record<string, string> = {
-        "content-type": getContentType(response.headers, filename),
-        filename: response.headers.get("content-disposition")?.split("filename=")[1] ?? "",
-      }
-      const blob = await response.blob()
-      exportFile({ headers, data: blob }, filename)
+      downloadUrl(url, filename)
+      message.success(t("Download ready"))
     } catch (err) {
       message.error((err as Error)?.message ?? t("Download Failed"))
     }

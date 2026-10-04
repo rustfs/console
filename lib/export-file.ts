@@ -13,6 +13,18 @@ export interface ExportFileRes {
   data: Blob
 }
 
+/** Start a browser-managed download from a URL. */
+export function downloadUrl(url: string, fileName?: string) {
+  const link = document.createElement("a")
+  link.href = url
+  if (fileName) link.download = fileName
+  link.rel = "noopener"
+  link.style.display = "none"
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+}
+
 /**
  * Export blob file with content-type headers
  */

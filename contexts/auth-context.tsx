@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useMemo, type ReactNode } from 
 import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@aws-sdk/types"
 import type { SiteConfig } from "@/types/config"
 import { getLoginRoute } from "@/lib/routes"
+import { configManager } from "@/lib/config"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { buildOidcLogoutUrl, type OidcLogoutSession } from "@/lib/oidc"
 import { isMfaRequiredError } from "@/lib/mfa"
@@ -136,6 +137,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         SessionToken: credentialsResponse.SessionToken,
         Expiration: credentialsResponse.Expiration?.toISOString(),
       })
+      // The login page may have cached a config before credentials existed.
+      // Clear that unauthenticated snapshot so the next console load fetches
+      // the server release information with the new session credentials.
+      configManager.clearCache()
       setOidcSession(undefined)
     },
     [setCredentials, setOidcSession],
@@ -204,6 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         SessionToken: creds.SessionToken,
         Expiration: creds.Expiration,
       })
+      configManager.clearCache()
       setOidcSession(oidcSession)
     },
     [setCredentials, setOidcSession],

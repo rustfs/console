@@ -11,4 +11,4 @@
  * themes. Override the fill or the label, never the two independently.
  */
 export const DANGER_BUTTON_CLASS =
-  "bg-destructive text-destructive-foreground hover:bg-destructive/85 focus-visible:border-destructive/40 focus-visible:ring-destructive/30"
+  "bg-destructive text-destructive-foreground hover:bg-destructive/95 focus-visible:border-destructive/40 focus-visible:ring-destructive/30"

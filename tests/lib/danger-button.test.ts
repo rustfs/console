@@ -46,6 +46,8 @@ test("destructive label is a light neutral on the light-theme fill and a dark on
 
 test("every filled danger button reads its label from the destructive-foreground token", () => {
   assert.match(dangerButton, /bg-destructive text-destructive-foreground/)
+  assert.match(dangerButton, /hover:bg-destructive\/95/)
+  assert.doesNotMatch(dangerButton, /hover:bg-destructive\/85/)
   assert.doesNotMatch(dangerButton, /\btext-white\b/)
 
   for (const [file, source] of DANGER_USAGES) {

@@ -49,6 +49,7 @@ import {
 import { SearchInput } from "@/components/search-input"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
+import { DANGER_BUTTON_CLASS } from "@/components/danger-button"
 import { Spinner } from "@/components/ui/spinner"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
@@ -61,6 +62,7 @@ import { exportFile } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
 import { getContentType } from "@/lib/mime-types"
 import { formatBytes, formatDateTime } from "@/lib/functions"
+import { cn } from "@/lib/utils"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
@@ -1091,8 +1093,7 @@ export function ObjectList({
             <AlertDialogAction
               render={
                 <Button
-                  variant="destructive"
-                  className="w-full text-white sm:w-auto"
+                  className={cn("w-full sm:w-auto", DANGER_BUTTON_CLASS)}
                   onClick={handleConfirmDelete}
                   disabled={bucketVersioningState === "unknown"}
                 >

@@ -24,6 +24,7 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -43,12 +44,22 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-heading: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", var(--font-fallback), sans-serif;
+  --font-heading: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, var(--font-fallback), monospace;
+  --font-mono:
+    ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    var(--font-fallback), monospace;
 }
 
 :root {
   color-scheme: light;
+  --font-latin: "Noto Sans", "DejaVu Sans", "Liberation Sans";
+  --font-han:
+    "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Micro Hei";
+  --font-kana: "Hiragino Sans", "Yu Gothic", "Meiryo", "Noto Sans JP", "Noto Sans CJK JP";
+  --font-hangul: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", "Noto Sans CJK KR";
+  --font-arabic: "Noto Sans Arabic", "Noto Naskh Arabic", "Geeza Pro", "Tahoma";
+  --font-fallback: var(--font-latin), var(--font-han), var(--font-kana), var(--font-hangul), var(--font-arabic);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -62,6 +73,7 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
@@ -83,6 +95,14 @@
   --foreground: oklch(0.145 0 0);
 }
 
+:root:lang(ja) {
+  --font-fallback: var(--font-latin), var(--font-kana), var(--font-han), var(--font-hangul), var(--font-arabic);
+}
+
+:root:lang(ko) {
+  --font-fallback: var(--font-latin), var(--font-hangul), var(--font-kana), var(--font-han), var(--font-arabic);
+}
+
 .dark {
   color-scheme: dark;
   --background: oklch(0.145 0 0);
@@ -100,6 +120,8 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
+  /* Dark-theme destructive is lightened for tinted text, so its solid fills need a dark label. */
+  --destructive-foreground: oklch(0.145 0 0);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);

@@ -10,6 +10,9 @@ for (const file of bucketPages) {
 
     assert.match(source, /getAccountBucketUsage\(userInfo\)/)
     assert.match(source, /fetchUserPolicy\(\)/)
+    if (file.includes("app/(dashboard)/browser/page.tsx")) {
+      assert.match(source, /useEffect\(\(\) => \{\s*fetchBuckets\(\{ force: true \}\)/)
+    }
     assert.doesNotMatch(source, /getDataUsageInfo/)
   })
 }

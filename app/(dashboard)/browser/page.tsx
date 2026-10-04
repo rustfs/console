@@ -129,7 +129,7 @@ function BrowserBucketsPage() {
   )
 
   useEffect(() => {
-    fetchBuckets()
+    fetchBuckets({ force: true })
   }, [fetchBuckets])
 
   const usageLoading = accountInfoLoading || !hasFetchedPolicy

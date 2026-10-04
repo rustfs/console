@@ -45,6 +45,10 @@ export function shouldResetObjectListPagination(previousScope: ObjectListScope, 
   return !isSameObjectListScope(previousScope, nextScope)
 }
 
+export function shouldResetObjectListSearch(previousScope: ObjectListScope, nextScope: ObjectListScope): boolean {
+  return previousScope.bucket !== nextScope.bucket || previousScope.prefix !== nextScope.prefix
+}
+
 export function shouldApplyObjectListResponse({
   requestId,
   activeRequestId,

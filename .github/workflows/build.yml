@@ -68,6 +68,33 @@ jobs:
         with:
           path: ./artifacts/rustfs-console-latest.zip
 
+      - name: Setup AWS CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if command -v aws >/dev/null 2>&1; then
+            aws --version
+            exit 0
+          fi
+
+          case "$(uname -m)" in
+            x86_64) aws_arch="x86_64" ;;
+            aarch64|arm64) aws_arch="aarch64" ;;
+            *) echo "Unsupported runner architecture: $(uname -m)" >&2; exit 1 ;;
+          esac
+
+          install_dir="$RUNNER_TEMP/aws-cli"
+          bin_dir="$RUNNER_TEMP/aws-bin"
+          archive="$RUNNER_TEMP/awscliv2.zip"
+          curl --fail --silent --show-error --location \
+            "https://awscli.amazonaws.com/awscli-exe-linux-${aws_arch}.zip" \
+            --output "$archive"
+          unzip -q "$archive" -d "$RUNNER_TEMP"
+          "$RUNNER_TEMP/aws/install" --install-dir "$install_dir" --bin-dir "$bin_dir" --update
+          echo "$bin_dir" >> "$GITHUB_PATH"
+          "$bin_dir/aws" --version
+
       - name: Upload to Cloudflare R2
         env:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}

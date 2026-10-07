@@ -38,7 +38,7 @@ test("last modified sorting discloses partial results and keeps continuation vis
   assert.match(source, /\{nextToken \? \(\s+<span[^>]*>\{t\("Loaded objects only"\)\}/)
   assert.match(
     source,
-    /\{data\.length > 0 \? \(\s+<div[\s\S]*?ref=\{loadMoreRef\}[\s\S]*?<Button[\s\S]*?onClick=\{loadNextBatch\}/,
+    /\{data\.length > 0 \|\| nextToken \? \(\s+<div[\s\S]*?ref=\{loadMoreRef\}[\s\S]*?<Button[\s\S]*?onClick=\{loadNextBatch\}/,
   )
   assert.equal(source.includes('t("Load next objects")'), true)
   assert.equal(source.includes('t("All objects loaded")'), true)

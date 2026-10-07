@@ -250,3 +250,29 @@ test("resolveObjectListDisplayState ignores whitespace around the filter term", 
     "empty",
   )
 })
+
+test("an empty protected-list page with a continuation token is partial", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "",
+      filteredCount: 0,
+      loadedCount: 0,
+      hasMore: true,
+      loading: false,
+    }),
+    "partial",
+  )
+})
+
+test("continuing an empty protected-list page displays loading", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "",
+      filteredCount: 0,
+      loadedCount: 0,
+      hasMore: true,
+      loading: true,
+    }),
+    "loading",
+  )
+})

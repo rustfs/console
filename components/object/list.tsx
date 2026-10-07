@@ -433,14 +433,18 @@ export function ObjectList({
   const filteredEmptyState = displayState === "filtered-partial" || displayState === "filtered-empty"
   const emptyTitle = filteredEmptyState
     ? t(displayState === "filtered-partial" ? "No matches in loaded objects" : "No matching objects")
-    : t("No Objects")
+    : displayState === "partial"
+      ? t("Load next objects")
+      : t("No Objects")
   const emptyDescription = filteredEmptyState
     ? t(
         displayState === "filtered-partial"
           ? "More objects have not been searched yet."
           : "No loaded objects match this filter.",
       )
-    : t("Upload files or create folders to populate this bucket.")
+    : displayState === "partial"
+      ? t("More objects have not been searched yet.")
+      : t("Upload files or create folders to populate this bucket.")
 
   const downloadFile = React.useCallback(
     async (key: string) => {
@@ -852,7 +856,7 @@ export function ObjectList({
 
   React.useEffect(() => {
     const node = loadMoreRef.current
-    if (!node || !nextToken || typeof IntersectionObserver === "undefined") return
+    if (!node || !nextToken || loading || loadMoreError || typeof IntersectionObserver === "undefined") return
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -868,7 +872,7 @@ export function ObjectList({
     return () => {
       observer.disconnect()
     }
-  }, [loadNextBatch, nextToken])
+  }, [loadNextBatch, nextToken, loading, loadMoreError])
 
   return (
     <div className="space-y-6">
@@ -994,7 +998,7 @@ export function ObjectList({
         </div>
       ) : null}
 
-      {data.length > 0 ? (
+      {data.length > 0 || nextToken ? (
         <div
           ref={loadMoreRef}
           role={loadMoreError ? "alert" : undefined}

@@ -2,6 +2,7 @@
 
 import { useCallback } from "react"
 import { useApi } from "@/contexts/api-context"
+import { buildEventTargetSubscriptionsPath } from "@/lib/event-target-api"
 
 export function useEventTarget() {
   const api = useApi()
@@ -37,10 +38,8 @@ export function useEventTarget() {
   }, [api])
 
   const getEventTargetSubscriptions = useCallback(
-    async (targetType: string, targetName: string) => {
-      return api.get(
-        `/target/${encodeURIComponent(targetType)}/${encodeURIComponent(targetName)}/subscriptions`,
-      ) as Promise<
+    async (service: string, targetName: string) => {
+      return api.get(buildEventTargetSubscriptionsPath(service, targetName)) as Promise<
         Array<{
           bucket: string
           id?: string

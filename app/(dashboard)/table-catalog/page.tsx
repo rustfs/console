@@ -101,6 +101,7 @@ export default function TableCatalogPage() {
     getCatalogConfig,
     getTableBucket,
     enableTableBucket,
+    disableTableBucket,
     listNamespaces,
     dropNamespace,
     listTables,
@@ -466,6 +467,27 @@ export default function TableCatalogPage() {
         } catch (error) {
           const text = errorText(error, t("Unable to enable table bucket."))
           message.error(text)
+          throw error
+        }
+      },
+    })
+  }
+
+  const handleDisableBucket = () => {
+    if (!selectedBucket || !canEnableBucket || !selectedInfo?.enabled || !selectedInfo.disableSupported) return
+    const bucket = selectedBucket
+    dialog.warning({
+      title: t("Disable table bucket"),
+      content: `${bucket}: ${t("Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.")}`,
+      positiveText: t("Disable"),
+      negativeText: t("Cancel"),
+      onPositiveClick: async () => {
+        try {
+          const info = await disableTableBucket(bucket)
+          setBucketInfo((current) => ({ ...current, [bucket]: info }))
+          message.success(t("Table bucket disabled"))
+        } catch (error) {
+          message.error(errorText(error, t("Unable to disable table bucket.")))
           throw error
         }
       },
@@ -924,6 +946,18 @@ export default function TableCatalogPage() {
                 </Badge>
               ) : selectedInfo ? (
                 <Badge variant="outline">{t("Not enabled")}</Badge>
+              ) : null}
+              {selectedInfo?.enabled && selectedInfo.disableSupported ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDisableBucket}
+                  disabled={
+                    !canEnableBucket || Boolean(bucketErrors[selectedBucket]) || bucketStatusLoading[selectedBucket]
+                  }
+                >
+                  {t("Disable table bucket")}
+                </Button>
               ) : null}
               {selectedInfo?.enabled && activeTab === "tables" ? (
                 <Button

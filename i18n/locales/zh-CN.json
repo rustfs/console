@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "关闭 table bucket",
+  "Table bucket disabled": "table bucket 已关闭",
+  "Unable to disable table bucket.": "无法关闭 table bucket。",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "只能关闭内容为空的 Catalog。已有对象会被保留。请在继续之前检查 bucket lifecycle 规则：过期处理可能恢复并删除对象。",
   "Bucket is required": "Bucket 为必填项",
   "Choose a suggested region or enter a new one.": "选择建议区域或输入新区域。",
   "Compliance or Object Lock retention may prevent deletion.": "Compliance 或 Object Lock 保留策略可能阻止删除。",

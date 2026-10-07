@@ -28,6 +28,7 @@ export interface CatalogConfig {
 export interface TableBucketInfo {
   tableBucket: string
   enabled: boolean
+  disableSupported: boolean
   catalogType: string
   warehouse: string
   warehouseLocation: string
@@ -201,6 +202,7 @@ export function normalizeTableBucket(value: unknown, fallbackBucket = ""): Table
   return {
     tableBucket: stringValue(value, "table-bucket", "tableBucket") || fallbackBucket,
     enabled: booleanValue(value, "enabled"),
+    disableSupported: booleanValue(value, "disable-supported", "disableSupported"),
     catalogType: stringValue(value, "catalog-type", "catalogType"),
     warehouse: stringValue(value, "warehouse") || fallbackBucket,
     warehouseLocation: stringValue(value, "warehouse-location", "warehouseLocation"),
@@ -361,6 +363,16 @@ export function useTableCatalog(catalogPrefix: string = TABLE_CATALOG_PREFIX) {
   const enableTableBucket = useCallback(
     async (bucket: string) => {
       const response = await api.put(requestUrl(tableBucketCatalogPath(bucket, catalogPrefixRef.current)), null, {
+        suppress403Redirect: true,
+      })
+      return normalizeTableBucket(response, bucket)
+    },
+    [api, requestUrl],
+  )
+
+  const disableTableBucket = useCallback(
+    async (bucket: string) => {
+      const response = await api.delete(requestUrl(tableBucketCatalogPath(bucket, catalogPrefixRef.current)), {
         suppress403Redirect: true,
       })
       return normalizeTableBucket(response, bucket)
@@ -652,6 +664,7 @@ export function useTableCatalog(catalogPrefix: string = TABLE_CATALOG_PREFIX) {
     getCatalogConfig,
     getTableBucket,
     enableTableBucket,
+    disableTableBucket,
     listNamespaces,
     createNamespace,
     getNamespace,

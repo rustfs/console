@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "테이블 버킷 비활성화",
+  "Table bucket disabled": "테이블 버킷이 비활성화되었습니다",
+  "Unable to disable table bucket.": "테이블 버킷을 비활성화할 수 없습니다.",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "비어 있는 카탈로그만 비활성화할 수 있습니다. 기존 객체는 보존됩니다. 계속하기 전에 버킷 수명 주기 규칙을 확인하세요. 만료 처리가 다시 시작되어 객체가 삭제될 수 있습니다.",
   "Bucket is required": "버킷은 필수입니다",
   "Choose a suggested region or enter a new one.": "추천 리전을 선택하거나 새 리전을 입력하세요.",
   "Compliance or Object Lock retention may prevent deletion.": "Compliance 또는 Object Lock 보존 정책으로 인해 삭제되지 않을 수 있습니다.",

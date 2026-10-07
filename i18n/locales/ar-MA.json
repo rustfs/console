@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "تعطيل حاوية الجداول",
+  "Table bucket disabled": "تم تعطيل حاوية الجداول",
+  "Unable to disable table bucket.": "تعذر تعطيل حاوية الجداول.",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "يمكن تعطيل كتالوج فارغ فقط. يتم الاحتفاظ بالكائنات الموجودة. راجع قواعد دورة حياة الحاوية قبل المتابعة: قد يُستأنف انتهاء الصلاحية ويحذف الكائنات.",
   "Bucket is required": "الحاوية مطلوبة",
   "Choose a suggested region or enter a new one.": "اختر منطقة مقترحة أو أدخل منطقة جديدة.",
   "Compliance or Object Lock retention may prevent deletion.": "قد تمنع سياسة الاحتفاظ Compliance أو Object Lock الحذف.",

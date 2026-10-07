@@ -115,3 +115,10 @@ test("table catalog page stays within the first-phase CRUD scope", () => {
   assert.doesNotMatch(pageSource, /value="connect"|PyIceberg example|connectionSnippet/)
   assert.match(pageSource, /setWorkspaceRefreshVersion/)
 })
+
+test("table bucket disablement requires server support and management permission", () => {
+  assert.match(hookSource, /disableSupported: booleanValue\(value, "disable-supported", "disableSupported"\)/)
+  assert.match(hookSource, /const disableTableBucket = useCallback/)
+  assert.match(hookSource, /api\.delete\(requestUrl\(tableBucketCatalogPath\(bucket, catalogPrefixRef\.current\)/)
+  assert.match(pageSource, /confirmTableBucketDisable\(/)
+})

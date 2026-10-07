@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "テーブルバケットを無効化",
+  "Table bucket disabled": "テーブルバケットを無効化しました",
+  "Unable to disable table bucket.": "テーブルバケットを無効化できませんでした。",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "空のカタログのみ無効化できます。既存のオブジェクトは保持されます。続行する前にバケットのライフサイクルルールを確認してください。有効期限処理が再開され、オブジェクトが削除される場合があります。",
   "Bucket is required": "バケットは必須です",
   "Choose a suggested region or enter a new one.": "候補のリージョンを選択するか、新しいリージョンを入力してください。",
   "Compliance or Object Lock retention may prevent deletion.": "Compliance または Object Lock の保持設定により削除できない場合があります。",

@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "Tablo bucket’ını devre dışı bırak",
+  "Table bucket disabled": "Tablo bucket’ı devre dışı bırakıldı",
+  "Unable to disable table bucket.": "Tablo bucket’ı devre dışı bırakılamadı.",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "Yalnızca boş bir katalog devre dışı bırakılabilir. Mevcut nesneler korunur. Devam etmeden önce bucket yaşam döngüsü kurallarını gözden geçirin: süre sonu işlemleri yeniden başlayarak nesneleri silebilir.",
   "Bucket is required": "Bucket gereklidir",
   "Choose a suggested region or enter a new one.": "Önerilen bir region seçin veya yeni bir tane girin.",
   "Compliance or Object Lock retention may prevent deletion.": "Compliance veya Object Lock saklama politikası silmeyi engelleyebilir.",

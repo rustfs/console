@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "Tắt bucket bảng",
+  "Table bucket disabled": "Đã tắt bucket bảng",
+  "Unable to disable table bucket.": "Không thể tắt bucket bảng.",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "Chỉ có thể tắt catalog trống. Các đối tượng hiện có được giữ nguyên. Hãy kiểm tra quy tắc vòng đời bucket trước khi tiếp tục: quá trình hết hạn có thể hoạt động trở lại và xóa đối tượng.",
   "Bucket is required": "Bắt buộc nhập bucket",
   "Choose a suggested region or enter a new one.": "Chọn region được đề xuất hoặc nhập region mới.",
   "Compliance or Object Lock retention may prevent deletion.": "Chính sách lưu giữ Compliance hoặc Object Lock có thể ngăn việc xóa.",

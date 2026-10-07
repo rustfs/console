@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "Tabellen-Bucket deaktivieren",
+  "Table bucket disabled": "Tabellen-Bucket deaktiviert",
+  "Unable to disable table bucket.": "Tabellen-Bucket konnte nicht deaktiviert werden.",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "Nur ein leerer Katalog kann deaktiviert werden. Vorhandene Objekte bleiben erhalten. Prüfen Sie vor dem Fortfahren die Lebenszyklusregeln des Buckets: Die Ablaufverarbeitung kann wieder beginnen und Objekte löschen.",
   "Bucket is required": "Bucket ist erforderlich",
   "Choose a suggested region or enter a new one.": "Wählen Sie eine vorgeschlagene Region oder geben Sie eine neue ein.",
   "Compliance or Object Lock retention may prevent deletion.": "Compliance- oder Object-Lock-Aufbewahrung kann das Löschen verhindern.",

@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "Nonaktifkan bucket tabel",
+  "Table bucket disabled": "Bucket tabel dinonaktifkan",
+  "Unable to disable table bucket.": "Tidak dapat menonaktifkan bucket tabel.",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "Hanya katalog kosong yang dapat dinonaktifkan. Objek yang ada tetap disimpan. Tinjau aturan siklus hidup bucket sebelum melanjutkan: proses kedaluwarsa dapat dilanjutkan dan menghapus objek.",
   "Bucket is required": "Bucket wajib diisi",
   "Choose a suggested region or enter a new one.": "Pilih region yang disarankan atau masukkan yang baru.",
   "Compliance or Object Lock retention may prevent deletion.": "Retensi Compliance atau Object Lock dapat mencegah penghapusan.",

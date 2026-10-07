@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "Disable table bucket",
+  "Table bucket disabled": "Table bucket disabled",
+  "Unable to disable table bucket.": "Unable to disable table bucket.",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.",
   "Bucket is required": "Bucket is required",
   "Choose a suggested region or enter a new one.": "Choose a suggested region or enter a new one.",
   "Compliance or Object Lock retention may prevent deletion.": "Compliance or Object Lock retention may prevent deletion.",

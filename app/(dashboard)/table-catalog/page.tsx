@@ -48,6 +48,7 @@ import { ViewDialog, type ViewDialogMode } from "@/components/table-catalog/view
 import { ViewDetailDialog } from "@/components/table-catalog/view-detail-dialog"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
+import { confirmTableBucketDisable } from "@/lib/table-catalog-disable"
 import { copyToClipboard } from "@/lib/clipboard"
 import { cn } from "@/lib/utils"
 import { displayNamespace, resolveTableCatalogPrefix, TABLE_CATALOG_PREFIX } from "@/lib/table-catalog-paths"
@@ -101,6 +102,7 @@ export default function TableCatalogPage() {
     getCatalogConfig,
     getTableBucket,
     enableTableBucket,
+    disableTableBucket,
     listNamespaces,
     dropNamespace,
     listTables,
@@ -469,6 +471,19 @@ export default function TableCatalogPage() {
           throw error
         }
       },
+    })
+  }
+
+  const handleDisableBucket = () => {
+    confirmTableBucketDisable({
+      bucket: selectedBucket,
+      canManage: canEnableBucket,
+      info: selectedInfo,
+      disable: disableTableBucket,
+      onDisabled: (bucket, info) => setBucketInfo((current) => ({ ...current, [bucket]: info })),
+      dialog,
+      message,
+      t,
     })
   }
 
@@ -924,6 +939,18 @@ export default function TableCatalogPage() {
                 </Badge>
               ) : selectedInfo ? (
                 <Badge variant="outline">{t("Not enabled")}</Badge>
+              ) : null}
+              {selectedInfo?.enabled && selectedInfo.disableSupported ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDisableBucket}
+                  disabled={
+                    !canEnableBucket || Boolean(bucketErrors[selectedBucket]) || bucketStatusLoading[selectedBucket]
+                  }
+                >
+                  {t("Disable table bucket")}
+                </Button>
               ) : null}
               {selectedInfo?.enabled && activeTab === "tables" ? (
                 <Button

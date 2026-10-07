@@ -1,4 +1,8 @@
 {
+  "Disable table bucket": "Отключить бакет таблиц",
+  "Table bucket disabled": "Бакет таблиц отключён",
+  "Unable to disable table bucket.": "Не удалось отключить бакет таблиц.",
+  "Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.": "Отключить можно только пустой каталог. Существующие объекты сохраняются. Перед продолжением проверьте правила жизненного цикла бакета: обработка срока хранения может возобновиться и удалить объекты.",
   "Bucket is required": "Требуется бакет",
   "Choose a suggested region or enter a new one.": "Выберите предложенный регион или введите новый.",
   "Compliance or Object Lock retention may prevent deletion.": "Политика хранения Compliance или Object Lock может препятствовать удалению.",

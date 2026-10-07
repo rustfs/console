@@ -53,6 +53,7 @@ import { DANGER_BUTTON_CLASS } from "@/components/danger-button"
 import { Spinner } from "@/components/ui/spinner"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
+import { useObjectListPagination } from "@/hooks/use-object-list-pagination"
 import { useBucket } from "@/hooks/use-bucket"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -854,25 +855,7 @@ export function ObjectList({
     void fetchObjects({ token: nextToken, append: true })
   }, [fetchObjects, nextToken])
 
-  React.useEffect(() => {
-    const node = loadMoreRef.current
-    if (!node || !nextToken || loading || loadMoreError || typeof IntersectionObserver === "undefined") return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          loadNextBatch()
-        }
-      },
-      { rootMargin: "320px 0px" },
-    )
-
-    observer.observe(node)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [loadNextBatch, nextToken, loading, loadMoreError])
+  useObjectListPagination({ loadMoreRef, nextToken, loading, loadMoreError, loadNextBatch })
 
   return (
     <div className="space-y-6">

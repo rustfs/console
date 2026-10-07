@@ -53,6 +53,7 @@ import { DANGER_BUTTON_CLASS } from "@/components/danger-button"
 import { Spinner } from "@/components/ui/spinner"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
+import { useObjectListPagination } from "@/hooks/use-object-list-pagination"
 import { useBucket } from "@/hooks/use-bucket"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -433,14 +434,18 @@ export function ObjectList({
   const filteredEmptyState = displayState === "filtered-partial" || displayState === "filtered-empty"
   const emptyTitle = filteredEmptyState
     ? t(displayState === "filtered-partial" ? "No matches in loaded objects" : "No matching objects")
-    : t("No Objects")
+    : displayState === "partial"
+      ? t("Load next objects")
+      : t("No Objects")
   const emptyDescription = filteredEmptyState
     ? t(
         displayState === "filtered-partial"
           ? "More objects have not been searched yet."
           : "No loaded objects match this filter.",
       )
-    : t("Upload files or create folders to populate this bucket.")
+    : displayState === "partial"
+      ? t("More objects have not been searched yet.")
+      : t("Upload files or create folders to populate this bucket.")
 
   const downloadFile = React.useCallback(
     async (key: string) => {
@@ -850,25 +855,7 @@ export function ObjectList({
     void fetchObjects({ token: nextToken, append: true })
   }, [fetchObjects, nextToken])
 
-  React.useEffect(() => {
-    const node = loadMoreRef.current
-    if (!node || !nextToken || typeof IntersectionObserver === "undefined") return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          loadNextBatch()
-        }
-      },
-      { rootMargin: "320px 0px" },
-    )
-
-    observer.observe(node)
-
-    return () => {
-      observer.disconnect()
-    }
-  }, [loadNextBatch, nextToken])
+  useObjectListPagination({ loadMoreRef, nextToken, loading, loadMoreError, loadNextBatch })
 
   return (
     <div className="space-y-6">
@@ -994,7 +981,7 @@ export function ObjectList({
         </div>
       ) : null}
 
-      {data.length > 0 ? (
+      {data.length > 0 || nextToken ? (
         <div
           ref={loadMoreRef}
           role={loadMoreError ? "alert" : undefined}

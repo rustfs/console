@@ -25,7 +25,7 @@ test("object list distinguishes access errors from a confirmed empty bucket", ()
 test("object list lazy loads additional object batches instead of showing a paginator", () => {
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 
-  assert.equal(source.includes("IntersectionObserver"), true)
+  assert.match(source, /useObjectListPagination\(\{ loadMoreRef, nextToken, loading, loadMoreError, loadNextBatch \}\)/)
   assert.equal(source.includes("setData((currentRows) => [...currentRows, ...rows])"), true)
   assert.equal(source.includes('t("Rows per page")'), false)
   assert.equal(source.includes('t("Previous Page")'), false)
@@ -38,7 +38,7 @@ test("last modified sorting discloses partial results and keeps continuation vis
   assert.match(source, /\{nextToken \? \(\s+<span[^>]*>\{t\("Loaded objects only"\)\}/)
   assert.match(
     source,
-    /\{data\.length > 0 \? \(\s+<div[\s\S]*?ref=\{loadMoreRef\}[\s\S]*?<Button[\s\S]*?onClick=\{loadNextBatch\}/,
+    /\{data\.length > 0 \|\| nextToken \? \(\s+<div[\s\S]*?ref=\{loadMoreRef\}[\s\S]*?<Button[\s\S]*?onClick=\{loadNextBatch\}/,
   )
   assert.equal(source.includes('t("Load next objects")'), true)
   assert.equal(source.includes('t("All objects loaded")'), true)

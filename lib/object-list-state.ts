@@ -15,6 +15,7 @@ interface ObjectListResponseGuardParams {
 export type ObjectListDisplayState =
   | "loading"
   | "empty"
+  | "partial"
   | "filtered-loading"
   | "filtered-partial"
   | "filtered-empty"
@@ -69,7 +70,8 @@ export function resolveObjectListDisplayState({
 
   const isFiltering = searchTerm.trim().length > 0
   if (!isFiltering) {
-    return loading && loadedCount === 0 ? "loading" : "empty"
+    if (loading && loadedCount === 0) return "loading"
+    return hasMore ? "partial" : "empty"
   }
 
   if (loading) return "filtered-loading"

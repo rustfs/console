@@ -48,6 +48,7 @@ import { ViewDialog, type ViewDialogMode } from "@/components/table-catalog/view
 import { ViewDetailDialog } from "@/components/table-catalog/view-detail-dialog"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
+import { confirmTableBucketDisable } from "@/lib/table-catalog-disable"
 import { copyToClipboard } from "@/lib/clipboard"
 import { cn } from "@/lib/utils"
 import { displayNamespace, resolveTableCatalogPrefix, TABLE_CATALOG_PREFIX } from "@/lib/table-catalog-paths"
@@ -474,23 +475,15 @@ export default function TableCatalogPage() {
   }
 
   const handleDisableBucket = () => {
-    if (!selectedBucket || !canEnableBucket || !selectedInfo?.enabled || !selectedInfo.disableSupported) return
-    const bucket = selectedBucket
-    dialog.warning({
-      title: t("Disable table bucket"),
-      content: `${bucket}: ${t("Only an empty catalog can be disabled. Existing objects are preserved. Review bucket lifecycle rules before continuing: expiration can resume and delete objects.")}`,
-      positiveText: t("Disable"),
-      negativeText: t("Cancel"),
-      onPositiveClick: async () => {
-        try {
-          const info = await disableTableBucket(bucket)
-          setBucketInfo((current) => ({ ...current, [bucket]: info }))
-          message.success(t("Table bucket disabled"))
-        } catch (error) {
-          message.error(errorText(error, t("Unable to disable table bucket.")))
-          throw error
-        }
-      },
+    confirmTableBucketDisable({
+      bucket: selectedBucket,
+      canManage: canEnableBucket,
+      info: selectedInfo,
+      disable: disableTableBucket,
+      onDisabled: (bucket, info) => setBucketInfo((current) => ({ ...current, [bucket]: info })),
+      dialog,
+      message,
+      t,
     })
   }
 

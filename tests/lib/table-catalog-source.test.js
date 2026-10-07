@@ -120,6 +120,5 @@ test("table bucket disablement requires server support and management permission
   assert.match(hookSource, /disableSupported: booleanValue\(value, "disable-supported", "disableSupported"\)/)
   assert.match(hookSource, /const disableTableBucket = useCallback/)
   assert.match(hookSource, /api\.delete\(requestUrl\(tableBucketCatalogPath\(bucket, catalogPrefixRef\.current\)/)
-  assert.match(pageSource, /!canEnableBucket \|\| !selectedInfo\?\.enabled \|\| !selectedInfo\.disableSupported/)
-  assert.match(pageSource, /expiration can resume and delete objects/)
+  assert.match(pageSource, /confirmTableBucketDisable\(/)
 })

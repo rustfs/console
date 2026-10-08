@@ -15,6 +15,7 @@ import { useAccessKeys } from "@/hooks/use-access-keys"
 import { useApi } from "@/contexts/api-context"
 import { makeRandomString } from "@/lib/functions"
 import { cn } from "@/lib/utils"
+import { isSecretKeyValid } from "@/lib/secret-key"
 
 interface AccessKeysNewItemProps {
   visible: boolean
@@ -105,8 +106,8 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
     }
     if (!secretKey) {
       newErrors.secretKey = t("Please enter Secret Key")
-    } else if (secretKey.length < 8 || secretKey.length > 40) {
-      newErrors.secretKey = t("Secret Key length must be between 8 and 40 characters")
+    } else if (!isSecretKeyValid(secretKey)) {
+      newErrors.secretKey = t("Secret Key must be at least 8 bytes")
     }
     if (!name) {
       newErrors.name = t("Please enter name")

@@ -24,6 +24,7 @@ import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { formatDateTime, makeRandomString } from "@/lib/functions"
 import { cn } from "@/lib/utils"
+import { isSecretKeyValid } from "@/lib/secret-key"
 import { useTranslation } from "react-i18next"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -169,8 +170,8 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
 
     if (!secretKey) {
       nextErrors.secretKey = t("Please enter Secret Key")
-    } else if (secretKey.length < 8 || secretKey.length > 40) {
-      nextErrors.secretKey = t("Secret Key length must be between 8 and 40 characters")
+    } else if (!isSecretKeyValid(secretKey)) {
+      nextErrors.secretKey = t("Secret Key must be at least 8 bytes")
     }
 
     if (!name) {

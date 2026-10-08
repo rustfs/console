@@ -10,9 +10,7 @@ import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useAccount } from "@/hooks/use-account"
 import { useMessage } from "@/lib/feedback/message"
-
-/** Mirrors the server's `SECRET_KEY_MIN_LEN`. */
-const PASSWORD_MIN_LENGTH = 8
+import { isSecretKeyValid } from "@/lib/secret-key"
 
 interface ChangePasswordDialogProps {
   open: boolean
@@ -66,8 +64,8 @@ export function ChangePasswordDialog({ open, onOpenChange, onChanged }: ChangePa
       current: current ? "" : t("Please enter your current password"),
       next: !next
         ? t("Please enter new password")
-        : next.length < PASSWORD_MIN_LENGTH
-          ? t("Password must be at least 8 characters")
+        : !isSecretKeyValid(next)
+          ? t("Password must be at least 8 bytes")
           : next === current
             ? t("The new password must be different from the current one")
             : "",
@@ -164,7 +162,6 @@ export function ChangePasswordDialog({ open, onOpenChange, onChanged }: ChangePa
                   type="password"
                   autoComplete="new-password"
                   spellCheck={false}
-                  minLength={PASSWORD_MIN_LENGTH}
                   required
                   disabled={submitting}
                   aria-invalid={Boolean(errors.next)}
@@ -172,7 +169,7 @@ export function ChangePasswordDialog({ open, onOpenChange, onChanged }: ChangePa
                 />
               </FieldContent>
               <FieldDescription id="account-password-new-hint">
-                {t("At least 8 characters. This is also your S3 secret key.")}
+                {t("At least 8 bytes. This is also your S3 secret key.")}
               </FieldDescription>
               <FieldError id="account-password-new-error">{errors.next}</FieldError>
             </Field>

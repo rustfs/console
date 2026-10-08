@@ -13,6 +13,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { usePolicies } from "@/hooks/use-policies"
 import { useGroups } from "@/hooks/use-groups"
 import { useMessage } from "@/lib/feedback/message"
+import { isSecretKeyValid } from "@/lib/secret-key"
 import { getAvailableUserEditTabs } from "@/lib/user-edit-tabs"
 import { UserEditSecretKey } from "./edit/secret-key"
 import { UserEditGroups } from "./edit/groups"
@@ -177,8 +178,8 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
 
   const validate = () => {
     const newErrors = { secretKey: "" }
-    if (secretKey && !/^.{8,40}$/.test(secretKey)) {
-      newErrors.secretKey = t("password length cannot be less than 8 characters and greater than 40 characters")
+    if (secretKey && !isSecretKeyValid(secretKey)) {
+      newErrors.secretKey = t("Password must be at least 8 bytes")
     }
     setErrors(newErrors)
     return !newErrors.secretKey

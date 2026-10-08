@@ -2226,5 +2226,8 @@
   "You do not have permission to control backfill": "You do not have permission to control backfill",
   "You do not have permission to view this bucket's migration settings.": "You do not have permission to view this bucket's migration settings.",
   "Your migration configuration changes will be lost.": "Your migration configuration changes will be lost.",
-  "pull failures": "pull failures"
+  "pull failures": "pull failures",
+  "Password must be at least 8 bytes": "비밀번호는 최소 8바이트여야 합니다",
+  "Secret Key must be at least 8 bytes": "시크릿 키는 최소 8바이트여야 합니다",
+  "At least 8 bytes. This is also your S3 secret key.": "최소 8바이트입니다. S3 시크릿 키로도 사용됩니다."
 }

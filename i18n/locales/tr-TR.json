@@ -2226,5 +2226,8 @@
   "You do not have permission to control backfill": "You do not have permission to control backfill",
   "You do not have permission to view this bucket's migration settings.": "You do not have permission to view this bucket's migration settings.",
   "Your migration configuration changes will be lost.": "Your migration configuration changes will be lost.",
-  "pull failures": "pull failures"
+  "pull failures": "pull failures",
+  "Password must be at least 8 bytes": "Parola en az 8 bayt olmalıdır",
+  "Secret Key must be at least 8 bytes": "Gizli anahtar en az 8 bayt olmalıdır",
+  "At least 8 bytes. This is also your S3 secret key.": "En az 8 bayt. Bu aynı zamanda S3 gizli anahtarınızdır."
 }

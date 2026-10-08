@@ -16,6 +16,7 @@ import { useUsers } from "@/hooks/use-users"
 import { usePolicies } from "@/hooks/use-policies"
 import { useGroups } from "@/hooks/use-groups"
 import { cn } from "@/lib/utils"
+import { isSecretKeyValid } from "@/lib/secret-key"
 
 interface UserNewFormProps {
   open: boolean
@@ -25,8 +26,6 @@ interface UserNewFormProps {
 
 const USERNAME_MIN_LENGTH = 3
 const USERNAME_MAX_LENGTH = 128
-const PASSWORD_MIN_LENGTH = 8
-const PASSWORD_MAX_LENGTH = 40
 
 export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps) {
   const { t } = useTranslation()
@@ -115,8 +114,8 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
     }
     if (!secretKey.trim()) {
       newErrors.secretKey = t("Please enter password")
-    } else if (secretKey.length < PASSWORD_MIN_LENGTH || secretKey.length > PASSWORD_MAX_LENGTH) {
-      newErrors.secretKey = t("password length cannot be less than 8 characters and greater than 40 characters")
+    } else if (!isSecretKeyValid(secretKey)) {
+      newErrors.secretKey = t("Password must be at least 8 bytes")
     }
     setErrors(newErrors)
     return !newErrors.accessKey && !newErrors.secretKey
@@ -218,8 +217,6 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
                     value={secretKey}
                     onChange={(e) => setSecretKey(e.target.value)}
                     type="password"
-                    minLength={PASSWORD_MIN_LENGTH}
-                    maxLength={PASSWORD_MAX_LENGTH}
                     autoComplete="new-password"
                     spellCheck={false}
                     required

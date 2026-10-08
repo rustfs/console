@@ -27,7 +27,7 @@ test("change password proves knowledge of the current secret before rotating it"
   // change the account's credentials.
   assert.match(source, /changePassword\(current, next\)/)
   assert.match(source, /autoComplete="current-password"/)
-  assert.match(source, /PASSWORD_MIN_LENGTH = 8/)
+  assert.match(source, /!isSecretKeyValid\(next\)/)
   assert.match(source, /<form\s+className="contents"\s+onSubmit=/)
   assert.match(source, /type="submit"/)
 

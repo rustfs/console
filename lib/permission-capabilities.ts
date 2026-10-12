@@ -24,6 +24,8 @@ export type ConsoleCapability =
   | "bucket.events.edit"
   | "bucket.onDemandMigration.view"
   | "bucket.onDemandMigration.edit"
+  | "bucket.mediaProcessing.view"
+  | "bucket.mediaProcessing.edit"
   | "objects.upload"
   | "objects.view"
   | "objects.preview"
@@ -82,6 +84,8 @@ const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]
   "bucket.events.edit": [{ actions: ["s3:PutBucketNotification"], resource: "bucket" }],
   "bucket.onDemandMigration.view": [{ actions: ["admin:GetBucketOnDemandMigration"], resource: "none" }],
   "bucket.onDemandMigration.edit": [{ actions: ["admin:SetBucketOnDemandMigration"], resource: "none" }],
+  "bucket.mediaProcessing.view": [{ actions: ["admin:GetBucketMediaProcessing"], resource: "none" }],
+  "bucket.mediaProcessing.edit": [{ actions: ["admin:SetBucketMediaProcessing"], resource: "none" }],
   "objects.upload": [{ actions: ["s3:PutObject"], resource: "objectPattern" }],
   "objects.view": [{ actions: ["s3:GetObject"], resource: "object" }],
   "objects.preview": [{ actions: ["s3:GetObject"], resource: "object" }],

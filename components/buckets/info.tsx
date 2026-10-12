@@ -8,6 +8,7 @@ import { useBucket } from "@/hooks/use-bucket"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useSSE } from "@/hooks/use-sse"
 import { BucketSettingRow, BucketSettingsSection } from "@/components/buckets/settings-layout"
+import { MediaProcessingSettingsRow } from "@/components/media-processing/settings-row"
 import { OnDemandMigrationSettingsRow } from "@/components/on-demand-migration/settings-row"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -1063,6 +1064,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             />
           ))}
           <OnDemandMigrationSettingsRow bucketName={bucketName} />
+          <MediaProcessingSettingsRow bucketName={bucketName} />
         </BucketSettingsSection>
       </div>
 

@@ -33,6 +33,7 @@ export type ConsoleCapability =
   | "objects.move"
   | "objects.transferDestination"
   | "objects.delete"
+  | "objects.forceCleanup"
   | "objects.bulkDelete"
   | "objects.tag.view"
   | "objects.tag.edit"
@@ -93,6 +94,7 @@ const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]
     { actions: ["s3:PutObject"], resource: "objectPattern" },
   ],
   "objects.delete": [{ actions: ["s3:DeleteObject"], resource: "object" }],
+  "objects.forceCleanup": [{ actions: ["s3:DeleteObject", "s3:ForceDeleteObject"], resource: "exactObject" }],
   "objects.bulkDelete": [{ actions: ["s3:DeleteObject"], resource: "objectPattern" }],
   "objects.tag.view": [{ actions: ["s3:GetObjectTagging"], resource: "object" }],
   "objects.tag.edit": [{ actions: ["s3:PutObjectTagging"], resource: "object" }],
@@ -144,11 +146,16 @@ function resolveResource(resource: ResourceTarget, context: PermissionResourceCo
   }
 }
 
+export function isForceCleanupTarget(context: PermissionResourceContext): boolean {
+  return Boolean(context.bucket && context.objectKey?.endsWith("/") && /[^/]/.test(context.objectKey))
+}
+
 export function hasConsoleCapability(
   policy: ConsolePolicy | null | undefined,
   capability: ConsoleCapability,
   context: PermissionResourceContext = {},
 ): boolean {
+  if (capability === "objects.forceCleanup" && !isForceCleanupTarget(context)) return false
   if (!policy) return false
 
   const requirements = CAPABILITY_REQUIREMENTS[capability]

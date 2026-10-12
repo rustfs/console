@@ -1,4 +1,7 @@
 {
+  "Path": "Путь",
+  "Force Cleanup Folder": "Принудительная очистка папки",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Безвозвратно удалить все объекты, версии, маркеры удаления и оставшиеся файлы в этой папке. Это действие нельзя отменить.",
   "Disable table bucket": "Отключить бакет таблиц",
   "Table bucket disabled": "Бакет таблиц отключён",
   "Unable to disable table bucket.": "Не удалось отключить бакет таблиц.",

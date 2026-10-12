@@ -1,4 +1,7 @@
 {
+  "Path": "Jalur",
+  "Force Cleanup Folder": "Bersihkan Folder Secara Paksa",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Hapus secara permanen semua objek, versi, penanda penghapusan, dan berkas sisa dalam folder ini. Tindakan ini tidak dapat dibatalkan.",
   "Disable table bucket": "Nonaktifkan bucket tabel",
   "Table bucket disabled": "Bucket tabel dinonaktifkan",
   "Unable to disable table bucket.": "Tidak dapat menonaktifkan bucket tabel.",

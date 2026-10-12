@@ -1,4 +1,7 @@
 {
+  "Path": "Ruta",
+  "Force Cleanup Folder": "Forzar limpieza de carpeta",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Eliminar permanentemente todos los objetos, versiones, marcadores de eliminación y archivos residuales de esta carpeta. Esta acción no se puede deshacer.",
   "Disable table bucket": "Desactivar bucket de tablas",
   "Table bucket disabled": "Bucket de tablas desactivado",
   "Unable to disable table bucket.": "No se pudo desactivar el bucket de tablas.",

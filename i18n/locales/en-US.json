@@ -1,4 +1,7 @@
 {
+  "Path": "Path",
+  "Force Cleanup Folder": "Force Cleanup Folder",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.",
   "Disable table bucket": "Disable table bucket",
   "Table bucket disabled": "Table bucket disabled",
   "Unable to disable table bucket.": "Unable to disable table bucket.",

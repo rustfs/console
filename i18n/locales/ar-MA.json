@@ -1,4 +1,7 @@
 {
+  "Path": "المسار",
+  "Force Cleanup Folder": "تنظيف المجلد بالقوة",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "حذف جميع الكائنات والإصدارات وعلامات الحذف والملفات المتبقية في هذا المجلد نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
   "Disable table bucket": "تعطيل حاوية الجداول",
   "Table bucket disabled": "تم تعطيل حاوية الجداول",
   "Unable to disable table bucket.": "تعذر تعطيل حاوية الجداول.",

@@ -57,6 +57,7 @@ import { useObjectListPagination } from "@/hooks/use-object-list-pagination"
 import { useBucket } from "@/hooks/use-bucket"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { usePermissions } from "@/hooks/use-permissions"
+import { isForceCleanupTarget } from "@/lib/permission-capabilities"
 import { useApi } from "@/contexts/api-context"
 import { useMessage } from "@/lib/feedback/message"
 import { downloadUrl } from "@/lib/export-file"
@@ -164,6 +165,7 @@ export function ObjectList({
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [deleteDialogKeys, setDeleteDialogKeys] = React.useState<string[]>([])
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
+  const [forceCleanupTarget, setForceCleanupTarget] = React.useState<{ bucket: string; objectKey: string } | null>(null)
   const [renameDialogOpen, setRenameDialogOpen] = React.useState(false)
   const [renameSourceKey, setRenameSourceKey] = React.useState("")
   const [renameName, setRenameName] = React.useState("")
@@ -566,8 +568,10 @@ export function ObjectList({
           const canCopy = isObject && canCapability("objects.copy", { bucket, objectKey: key })
           const canMove = isObject && canCapability("objects.move", { bucket, objectKey: key })
           const canDelete = canCapability("objects.delete", { bucket, objectKey: key })
+          const canForceCleanup =
+            row.original.type === "prefix" && canCapability("objects.forceCleanup", { bucket, objectKey: key })
 
-          if (!canPreview && !canDownload && !canRename && !canCopy && !canMove && !canDelete) {
+          if (!canPreview && !canDownload && !canRename && !canCopy && !canMove && !canDelete && !canForceCleanup) {
             return null
           }
 
@@ -645,6 +649,19 @@ export function ObjectList({
                   >
                     <RiDeleteBin5Line className="size-4" aria-hidden />
                     {t("Delete")}
+                  </DropdownMenuItem>
+                ) : null}
+                {canForceCleanup ? (
+                  <DropdownMenuItem
+                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
+                    variant="destructive"
+                    onClick={() => {
+                      actionTriggerRef.current = getRowActionTrigger(row.id)
+                      setForceCleanupTarget({ bucket, objectKey: key })
+                    }}
+                  >
+                    <RiDeleteBin5Line className="size-4" aria-hidden />
+                    {t("Force Cleanup Folder")}
                   </DropdownMenuItem>
                 ) : null}
               </DropdownMenuContent>
@@ -776,6 +793,25 @@ export function ObjectList({
       await handleDeleteAllVersions(keys)
     } else {
       await handleDelete(keys)
+    }
+  }
+
+  const handleForceCleanup = () => {
+    if (
+      !forceCleanupTarget ||
+      forceCleanupTarget.bucket !== bucket ||
+      !isForceCleanupTarget(forceCleanupTarget) ||
+      !canCapability("objects.forceCleanup", forceCleanupTarget)
+    ) {
+      message.error(t("Access Denied"))
+      return
+    }
+    try {
+      addDeleteFolder(forceCleanupTarget.objectKey, forceCleanupTarget.bucket, { forceDelete: true })
+      message.success(t("Delete task created"))
+      setForceCleanupTarget(null)
+    } catch (err) {
+      message.error((err as Error)?.message ?? t("Delete Failed"))
     }
   }
 
@@ -1078,6 +1114,56 @@ export function ObjectList({
                   disabled={bucketVersioningState === "unknown"}
                 >
                   {t("Confirm")}
+                </Button>
+              }
+            />
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={forceCleanupTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setForceCleanupTarget(null)
+        }}
+      >
+        <AlertDialogContent
+          className="max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] sm:max-w-md"
+          finalFocus={returnFocusToAction}
+        >
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("Force Cleanup Folder")}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogDescription className="min-h-0 overflow-y-auto">
+            {t(
+              "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.",
+            )}
+            <span className="mt-3 block break-all font-mono">
+              <bdi>
+                {forceCleanupTarget?.bucket}/{forceCleanupTarget?.objectKey}
+              </bdi>
+            </span>
+          </AlertDialogDescription>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              render={
+                <Button variant="outline" className="min-h-11 w-full sm:min-h-8 sm:w-auto text-foreground">
+                  {t("Cancel")}
+                </Button>
+              }
+            />
+            <AlertDialogAction
+              render={
+                <Button
+                  className={cn("min-h-11 w-full sm:min-h-8 sm:w-auto", DANGER_BUTTON_CLASS)}
+                  onClick={handleForceCleanup}
+                  disabled={
+                    !forceCleanupTarget ||
+                    forceCleanupTarget.bucket !== bucket ||
+                    !canCapability("objects.forceCleanup", forceCleanupTarget)
+                  }
+                >
+                  {t("Force Cleanup Folder")}
                 </Button>
               }
             />

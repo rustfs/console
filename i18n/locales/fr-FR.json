@@ -1,4 +1,7 @@
 {
+  "Path": "Chemin",
+  "Force Cleanup Folder": "Forcer le nettoyage du dossier",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Supprimer définitivement tous les objets, versions, marqueurs de suppression et fichiers résiduels de ce dossier. Cette action est irréversible.",
   "Disable table bucket": "Désactiver le bucket de tables",
   "Table bucket disabled": "Bucket de tables désactivé",
   "Unable to disable table bucket.": "Impossible de désactiver le bucket de tables.",

@@ -43,11 +43,7 @@ export function ObjectPathLinks({ objectKey, bucketName, onClick }: ObjectPathLi
     .filter(Boolean)
     .map((item, index) => ({ value: item, index }))
 
-  const displaySegments: Segment[] =
-    segments.length <= 6 ? segments : [...segments.slice(0, 3), { value: "…", index: -1 }, ...segments.slice(-3)]
-
   const handleClick = (segment: Segment) => {
-    if (segment.index === -1) return
     const path = segments
       .slice(0, segment.index + 1)
       .map((s) => s.value)
@@ -56,22 +52,23 @@ export function ObjectPathLinks({ objectKey, bucketName, onClick }: ObjectPathLi
   }
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-2">
-      <div className="flex min-w-0 flex-wrap items-center">
-        {displaySegments.map((segment) => (
+    <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div
+        className="flex min-w-0 flex-1 items-center overflow-x-auto whitespace-nowrap focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+        role="region"
+        aria-label={t("Path")}
+        tabIndex={0}
+      >
+        {segments.map((segment) => (
           <React.Fragment key={segment.index}>
-            <span className="text-muted-foreground">&nbsp;/&nbsp;</span>
-            {segment.index > -1 ? (
-              <button
-                type="button"
-                onClick={() => handleClick(segment)}
-                className="max-w-full break-all text-start text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
-              >
-                {segment.value}
-              </button>
-            ) : (
-              <span className="break-all text-muted-foreground">{segment.value}</span>
-            )}
+            <span className="shrink-0 text-muted-foreground">&nbsp;/&nbsp;</span>
+            <button
+              type="button"
+              onClick={() => handleClick(segment)}
+              className="shrink-0 whitespace-nowrap text-start text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+            >
+              {segment.value}
+            </button>
           </React.Fragment>
         ))}
       </div>

@@ -295,7 +295,7 @@ for (const statusCode of [204, 403, 400]) {
     assert.equal(requests.length, 1)
     assert.equal(requests[0].method, "DELETE")
     assert.equal(requests[0].path, "/test-bucket/parent/%E7%A9%BA%E9%97%B4/%252F%2B/")
-    assert.equal(requests[0].headers["x-minio-force-delete"], "true")
+    assert.equal(requests[0].headers["x-rustfs-force-delete"], "true")
     assert.equal(requests[0].query?.versionId, undefined)
   })
 }

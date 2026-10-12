@@ -78,7 +78,7 @@ function attachForceDeleteHeader(command: DeleteObjectCommand) {
   ;(command.middlewareStack.add as any)(
     (next: (args: unknown) => Promise<unknown>) => async (args: { request?: { headers?: Record<string, string> } }) => {
       if (args?.request?.headers) {
-        args.request.headers["x-minio-force-delete"] = "true"
+        args.request.headers["x-rustfs-force-delete"] = "true"
       }
       return next(args)
     },

@@ -1,3 +1,4 @@
+import { isForceCleanupTarget } from "./permission-capabilities"
 import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
@@ -77,7 +78,7 @@ function attachForceDeleteHeader(command: DeleteObjectCommand) {
   ;(command.middlewareStack.add as any)(
     (next: (args: unknown) => Promise<unknown>) => async (args: { request?: { headers?: Record<string, string> } }) => {
       if (args?.request?.headers) {
-        args.request.headers["X-Rustfs-Force-Delete"] = "true"
+        args.request.headers["x-rustfs-force-delete"] = "true"
       }
       return next(args)
     },
@@ -155,6 +156,9 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
     task.abortController = abortController
 
     if (forceDelete) {
+      if (!isForceCleanupTarget({ bucket: bucketName, objectKey: prefix })) {
+        throw new Error("Force cleanup requires a non-root folder prefix")
+      }
       const command = new DeleteObjectCommand({ Bucket: bucketName, Key: prefix })
       attachForceDeleteHeader(command)
       await s3Client.send(command, { abortSignal: abortController.signal })
@@ -195,6 +199,11 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
   const shouldRetry = (task: DeleteTask | FolderDeleteTask, error: unknown) => {
     if (task.status === lifecycle.canceled) return false
     if ((task.retryCount ?? 0) >= maxRetries) return false
+    if (task.kind === "delete-folder" && task.forceDelete) {
+      const status = (error as { $metadata?: { httpStatusCode?: number } })?.$metadata?.httpStatusCode
+      if (status && status >= 400 && status < 500 && status !== 408 && status !== 429) return false
+      if (!isForceCleanupTarget({ bucket: task.bucketName, objectKey: task.prefix })) return false
+    }
     const errorRecord = error as { name?: unknown; code?: unknown; Code?: unknown; message?: unknown }
     const errorText = [errorRecord?.name, errorRecord?.code, errorRecord?.Code, errorRecord?.message]
       .filter((value): value is string => typeof value === "string")
@@ -282,9 +291,9 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
     forceDelete: options?.forceDelete,
     status: lifecycle.pending,
     progress: 0,
-    actionLabel: "Delete Folder",
+    actionLabel: options?.forceDelete ? "Force Cleanup Folder" : "Delete Folder",
     displayName: prefix,
-    subInfo: options?.forceDelete ? "Deleting all versions" : "Recursive delete",
+    subInfo: options?.forceDelete ? bucketName : "Recursive delete",
     error: undefined,
     abortController: undefined,
     retryCount: 0,

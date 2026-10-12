@@ -25,7 +25,7 @@ export function TaskItem({ task }: TaskItemProps) {
   const taskManager = useTaskManager()
 
   const statusKey = statusMap[task.status] ?? "in progress"
-  const statusText = `${t(task.actionLabel)}${t(statusKey)}`
+  const statusText = `${t(task.actionLabel)} · ${t(statusKey)}`
   const isActive = task.status === "pending" || task.status === "running"
   const isFinished = task.status === "completed" || task.status === "failed" || task.status === "canceled"
 
@@ -61,6 +61,11 @@ export function TaskItem({ task }: TaskItemProps) {
         <div>{task.subInfo}</div>
         <div>{statusText}</div>
       </div>
+      {task.status === "failed" && task.error ? (
+        <p className="break-words text-xs text-destructive" role="alert">
+          {task.error}
+        </p>
+      ) : null}
     </div>
   )
 }

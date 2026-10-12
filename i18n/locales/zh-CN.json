@@ -1,4 +1,7 @@
 {
+  "Path": "路径",
+  "Force Cleanup Folder": "强制清理目录",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "永久删除此目录下的所有对象、版本、删除标记及残留文件。此操作无法撤销。",
   "Disable table bucket": "关闭 table bucket",
   "Table bucket disabled": "table bucket 已关闭",
   "Unable to disable table bucket.": "无法关闭 table bucket。",

@@ -1,4 +1,7 @@
 {
+  "Path": "Yol",
+  "Force Cleanup Folder": "Klasörü Zorla Temizle",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Bu klasördeki tüm nesneleri, sürümleri, silme işaretlerini ve artık dosyaları kalıcı olarak silin. Bu işlem geri alınamaz.",
   "Disable table bucket": "Tablo bucket’ını devre dışı bırak",
   "Table bucket disabled": "Tablo bucket’ı devre dışı bırakıldı",
   "Unable to disable table bucket.": "Tablo bucket’ı devre dışı bırakılamadı.",

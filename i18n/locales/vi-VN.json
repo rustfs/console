@@ -1,4 +1,7 @@
 {
+  "Path": "Đường dẫn",
+  "Force Cleanup Folder": "Buộc dọn dẹp thư mục",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Xóa vĩnh viễn tất cả đối tượng, phiên bản, dấu xóa và tệp còn sót lại trong thư mục này. Không thể hoàn tác thao tác này.",
   "Disable table bucket": "Tắt bucket bảng",
   "Table bucket disabled": "Đã tắt bucket bảng",
   "Unable to disable table bucket.": "Không thể tắt bucket bảng.",

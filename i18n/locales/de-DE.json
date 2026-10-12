@@ -1,4 +1,7 @@
 {
+  "Path": "Pfad",
+  "Force Cleanup Folder": "Ordner zwangsweise bereinigen",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Alle Objekte, Versionen, Löschmarkierungen und verbliebenen Dateien in diesem Ordner dauerhaft löschen. Dies kann nicht rückgängig gemacht werden.",
   "Disable table bucket": "Tabellen-Bucket deaktivieren",
   "Table bucket disabled": "Tabellen-Bucket deaktiviert",
   "Unable to disable table bucket.": "Tabellen-Bucket konnte nicht deaktiviert werden.",

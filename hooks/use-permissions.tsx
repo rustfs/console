@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from "react"
 import { hasConsoleScopes, type ConsolePolicy } from "@/lib/console-policy-parser"
-import { hasConsoleCapability, type ConsoleCapability } from "@/lib/permission-capabilities"
+import { hasConsoleCapability, isForceCleanupTarget, type ConsoleCapability } from "@/lib/permission-capabilities"
 import type { PermissionResourceContext } from "@/lib/permission-resources"
 import { CONSOLE_SCOPES, PAGE_PERMISSIONS } from "@/lib/console-permissions"
 import { scheduleMicrotask } from "@/lib/schedule-microtask"
@@ -32,6 +32,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
   const [userPolicy, setUserPolicy] = useState<ConsolePolicy | null>(null)
   const [userInfo, setUserInfo] = useState<Record<string, unknown> | null>(null)
+  const [isOwner, setIsOwner] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [hasResolvedAdmin, setHasResolvedAdmin] = useState(false)
   const [hasFetchedPolicy, setHasFetchedPolicy] = useState(false)
@@ -41,12 +42,21 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
     requestEpochRef.current += 1
     setUserInfo(null)
     setUserPolicy(null)
+    setIsOwner(false)
+    setIsLoading(false)
     setHasResolvedAdmin(false)
     setHasFetchedPolicy(false)
     if (isAuthenticated) {
       setIsAdmin(false)
     }
-  }, [api, credentials?.AccessKeyId, credentials?.SessionToken, isAuthenticated, setIsAdmin])
+  }, [
+    api,
+    credentials?.AccessKeyId,
+    credentials?.SecretAccessKey,
+    credentials?.SessionToken,
+    isAuthenticated,
+    setIsAdmin,
+  ])
 
   const fetchAdminStatus = useCallback(async () => {
     if (!api) return
@@ -70,6 +80,15 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
     const requestEpoch = requestEpochRef.current
 
     setIsLoading(true)
+    // /is-admin includes IAM administrators; /account/info reports caller.is_owner.
+    const ownerRequest = api.get("/account/info", { suppress403Redirect: true }).then(
+      (info) => {
+        if (requestEpoch === requestEpochRef.current) setIsOwner((info as { is_admin?: unknown })?.is_admin === true)
+      },
+      () => {
+        if (requestEpoch === requestEpochRef.current) setIsOwner(false)
+      },
+    )
     try {
       const info = (await api.get("/accountinfo")) as Record<string, unknown>
       if (requestEpoch !== requestEpochRef.current) return
@@ -90,6 +109,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
         setHasFetchedPolicy(true)
       }
     }
+    await ownerRequest
   }, [api])
 
   const hasPermission = useCallback(
@@ -105,10 +125,13 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
 
   const canCapability = useCallback(
     (capability: ConsoleCapability, context: PermissionResourceContext = {}) => {
+      if (capability === "objects.forceCleanup") {
+        return isForceCleanupTarget(context) && (isOwner || hasConsoleCapability(userPolicy, capability, context))
+      }
       if (isAdmin) return true
       return hasConsoleCapability(userPolicy, capability, context)
     },
-    [isAdmin, userPolicy],
+    [isAdmin, isOwner, userPolicy],
   )
 
   const canAccessPath = useCallback(

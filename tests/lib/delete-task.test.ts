@@ -2,11 +2,11 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import { DeleteObjectsCommand, ListObjectsV2Command, ListObjectVersionsCommand, S3Client } from "@aws-sdk/client-s3"
 import type { HttpRequest } from "@aws-sdk/types"
-import { createDeleteTaskHelpers, type DeleteTask } from "../../lib/delete-task"
+import { createDeleteTaskHelpers, type DeleteTask, type FolderDeleteTask } from "../../lib/delete-task"
 import { resolveBucketVersioningState, shouldDeleteAllVersions } from "../../lib/object-delete"
 import { TaskManager } from "../../lib/task-manager"
 
-async function waitForTaskStatus(task: DeleteTask, status: DeleteTask["status"]) {
+async function waitForTaskStatus(task: DeleteTask | FolderDeleteTask, status: DeleteTask["status"]) {
   for (let attempt = 0; attempt < 200; attempt += 1) {
     if (task.status === status) return
     await new Promise((resolve) => setTimeout(resolve, 5))
@@ -251,8 +251,8 @@ for (const status of [undefined, "Suspended"]) {
   })
 }
 
-for (const statusCode of [204, 403]) {
-  test(`explicit all-versions folder deletion uses one prefix request and handles HTTP ${statusCode}`, async (t) => {
+for (const statusCode of [204, 403, 400]) {
+  test(`explicit force cleanup uses one prefix request and handles HTTP ${statusCode}`, async (t) => {
     const requests: HttpRequest[] = []
     const client = new S3Client({
       region: "us-east-1",
@@ -268,7 +268,11 @@ for (const statusCode of [204, 403]) {
               statusCode,
               headers: {},
               body: new TextEncoder().encode(
-                statusCode === 403 ? "<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>" : "",
+                statusCode === 403
+                  ? "<Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>"
+                  : statusCode === 400
+                    ? "<Error><Code>InvalidRequest</Code><Message>Object Lock is configured</Message></Error>"
+                    : "",
               ),
             },
           }
@@ -279,8 +283,10 @@ for (const statusCode of [204, 403]) {
     const { folderHandler, createFolderDeleteTask } = createDeleteTaskHelpers(client)
     const task = createFolderDeleteTask("parent/空间/%2F+/", "test-bucket", { forceDelete: true })
 
-    if (statusCode === 403) {
-      await assert.rejects(folderHandler.perform(task), { name: "AccessDenied" })
+    if (statusCode !== 204) {
+      await assert.rejects(folderHandler.perform(task), {
+        name: statusCode === 403 ? "AccessDenied" : "InvalidRequest",
+      })
       assert.equal(task.progress, 0)
     } else {
       await folderHandler.perform(task)
@@ -289,7 +295,7 @@ for (const statusCode of [204, 403]) {
     assert.equal(requests.length, 1)
     assert.equal(requests[0].method, "DELETE")
     assert.equal(requests[0].path, "/test-bucket/parent/%E7%A9%BA%E9%97%B4/%252F%2B/")
-    assert.equal(requests[0].headers["X-Rustfs-Force-Delete"], "true")
+    assert.equal(requests[0].headers["x-rustfs-force-delete"], "true")
     assert.equal(requests[0].query?.versionId, undefined)
   })
 }
@@ -346,5 +352,53 @@ test("folder deletion rejects partial DeleteObjects failures", async () => {
   const task = createFolderDeleteTask("folder/", "bucket")
 
   await assert.rejects(folderHandler.perform(task), /Object is locked/)
+  assert.equal(task.progress, 0)
+})
+
+for (const prefix of ["", "/", "///", "file.txt"]) {
+  test(`force cleanup rejects unsafe prefix ${JSON.stringify(prefix)} without sending a request`, async () => {
+    let requests = 0
+    const client = {
+      send: async () => {
+        requests += 1
+      },
+    }
+    const { folderHandler, createFolderDeleteTask } = createDeleteTaskHelpers(client as unknown as S3Client)
+    const task = createFolderDeleteTask(prefix, "test-bucket", { forceDelete: true })
+    await assert.rejects(folderHandler.perform(task), /non-root folder prefix/)
+    assert.equal(requests, 0)
+  })
+}
+
+test("force cleanup tasks identify the destructive action and bucket", () => {
+  const { createFolderDeleteTask } = createDeleteTaskHelpers({} as S3Client)
+  const task = createFolderDeleteTask("folder/", "test-bucket", { forceDelete: true })
+  assert.equal(task.actionLabel, "Force Cleanup Folder")
+  assert.equal(task.displayName, "folder/")
+  assert.equal(task.subInfo, "test-bucket")
+})
+
+test("Object Lock rejection fails the force cleanup task immediately without retrying", async (t) => {
+  let requests = 0
+  const client = {
+    send: async () => {
+      requests += 1
+      throw Object.assign(new Error("Object Lock is configured"), {
+        name: "InvalidRequest",
+        $metadata: { httpStatusCode: 400 },
+      })
+    },
+  }
+  const { folderHandler, createFolderDeleteTask } = createDeleteTaskHelpers(client as unknown as S3Client, {
+    retryDelay: 0,
+  })
+  const task = createFolderDeleteTask("protected/", "test-bucket", { forceDelete: true })
+  const manager = new TaskManager<FolderDeleteTask>({ handlers: { "delete-folder": folderHandler } })
+  t.after(() => manager.dispose())
+  manager.enqueue([task])
+  await waitForTaskStatus(task, "failed")
+  assert.equal(requests, 1)
+  assert.equal(task.retryCount, 0)
+  assert.equal(task.error, "Object Lock is configured")
   assert.equal(task.progress, 0)
 })

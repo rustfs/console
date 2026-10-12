@@ -1,4 +1,7 @@
 {
+  "Path": "パス",
+  "Force Cleanup Folder": "フォルダーを強制クリーンアップ",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "このフォルダー内のすべてのオブジェクト、バージョン、削除マーカー、残存ファイルを完全に削除します。この操作は取り消せません。",
   "Disable table bucket": "テーブルバケットを無効化",
   "Table bucket disabled": "テーブルバケットを無効化しました",
   "Unable to disable table bucket.": "テーブルバケットを無効化できませんでした。",

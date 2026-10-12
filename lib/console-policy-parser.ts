@@ -184,6 +184,7 @@ function matchStatementResource(statement: ConsoleStatement, requestResource: st
 
   if (
     !isConsoleScope(action) &&
+    action !== "s3:ForceDeleteObject" &&
     matchesImpliedConsoleAction(statement.Action, action) &&
     (statement.Resource ?? []).some(isConsoleResource)
   ) {
@@ -319,6 +320,8 @@ export function hasConsolePermission(
   // Check Allow statements
   const allowed = statements.some((s) => {
     if (s.Effect !== "Allow") return false
+    // Force deletion requires an explicit grant, even with S3 or Console wildcards.
+    if (action === "s3:ForceDeleteObject" && !s.Action?.includes(action)) return false
 
     // Handle NotAction: allow all actions EXCEPT those in NotAction
     if (s.NotAction && s.NotAction.length > 0) {

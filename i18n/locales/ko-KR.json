@@ -1,4 +1,7 @@
 {
+  "Path": "경로",
+  "Force Cleanup Folder": "폴더 강제 정리",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "이 폴더의 모든 객체, 버전, 삭제 마커 및 잔여 파일을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.",
   "Disable table bucket": "테이블 버킷 비활성화",
   "Table bucket disabled": "테이블 버킷이 비활성화되었습니다",
   "Unable to disable table bucket.": "테이블 버킷을 비활성화할 수 없습니다.",

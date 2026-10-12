@@ -1,4 +1,7 @@
 {
+  "Path": "Percorso",
+  "Force Cleanup Folder": "Forza pulizia cartella",
+  "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Elimina definitivamente tutti gli oggetti, le versioni, i marcatori di eliminazione e i file residui in questa cartella. Questa operazione è irreversibile.",
   "Disable table bucket": "Disattiva bucket delle tabelle",
   "Table bucket disabled": "Bucket delle tabelle disattivato",
   "Unable to disable table bucket.": "Impossibile disattivare il bucket delle tabelle.",

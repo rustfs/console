@@ -36,7 +36,7 @@ function providerToFormValues(provider: OidcConfigProvider): OidcProviderFormVal
     client_secret: "",
     scopes: provider.scopes.join(","),
     other_audiences: provider.other_audiences.join(","),
-    redirect_uri: provider.redirect_uri,
+    redirect_uri: provider.redirect_uri ?? "",
     redirect_uri_dynamic: provider.redirect_uri_dynamic,
     claim_name: provider.claim_name,
     claim_prefix: provider.claim_prefix,
@@ -304,23 +304,23 @@ export default function OidcPage() {
     }
     if (isProviderReadOnly) return
 
-    const errors = validateForm(
-      formValues,
-      {
-        requireProviderId: true,
-        requireClientSecret: isCreateMode,
-      },
-      t,
-    )
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors)
-      message.error(t("Please fix the form errors before saving"))
-      return
-    }
-
-    setSaving(true)
     try {
+      const errors = validateForm(
+        formValues,
+        {
+          requireProviderId: true,
+          requireClientSecret: isCreateMode,
+        },
+        t,
+      )
+
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors)
+        message.error(t("Please fix the form errors before saving"))
+        return
+      }
+
+      setSaving(true)
       const providerId = trimOrEmpty(formValues.provider_id)
       const response = await saveOidcConfig(providerId, buildSavePayload(formValues))
 

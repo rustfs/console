@@ -2,7 +2,11 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   createObjectListScope,
+  deletedObjectAccessibleLabelKey,
   isDeletedObjectListEntry,
+  readObjectListDeletedViewDefault,
+  resolveObjectListDeletedView,
+  shouldShowObjectListRow,
   shouldResetObjectListSearch,
   resolveObjectListDisplayState,
   shouldApplyObjectListResponse,
@@ -21,18 +25,60 @@ test("isDeletedObjectListEntry never flags entries when deleted objects are hidd
   assert.equal(isDeletedObjectListEntry({}, false), false)
 })
 
+test("shouldShowObjectListRow keeps every row when only-deleted is off", () => {
+  assert.equal(shouldShowObjectListRow({ type: "object", deleted: false }, false), true)
+  assert.equal(shouldShowObjectListRow({ type: "object", deleted: true }, false), true)
+})
+
+test("shouldShowObjectListRow narrows to deleted objects when only-deleted is on", () => {
+  assert.equal(shouldShowObjectListRow({ type: "object", deleted: true }, true), true)
+  assert.equal(shouldShowObjectListRow({ type: "object", deleted: false }, true), false)
+})
+
+test("shouldShowObjectListRow keeps prefix rows navigable when only-deleted is on", () => {
+  assert.equal(shouldShowObjectListRow({ type: "prefix", deleted: false }, true), true)
+})
+
+test("resolveObjectListDisplayState treats only-deleted narrowing as filtering", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "",
+      filteredCount: 0,
+      loadedCount: 10,
+      hasMore: false,
+      loading: false,
+      onlyDeleted: true,
+    }),
+    "filtered-empty",
+  )
+})
+
+test("resolveObjectListDisplayState keeps loading more rows visible under only-deleted", () => {
+  assert.equal(
+    resolveObjectListDisplayState({
+      searchTerm: "",
+      filteredCount: 0,
+      loadedCount: 10,
+      hasMore: true,
+      loading: false,
+      onlyDeleted: true,
+    }),
+    "filtered-partial",
+  )
+})
+
 test("shouldResetObjectListSearch returns true when the prefix changes", () => {
   const previousScope = createObjectListScope({
     bucket: "bucket-a",
     prefix: "",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
   const nextScope = createObjectListScope({
     bucket: "bucket-a",
     prefix: "folder-a/",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
 
   assert.equal(shouldResetObjectListSearch(previousScope, nextScope), true)
@@ -43,13 +89,13 @@ test("shouldResetObjectListSearch returns true when the bucket changes", () => {
     bucket: "bucket-a",
     prefix: "",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
   const nextScope = createObjectListScope({
     bucket: "bucket-b",
     prefix: "",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
 
   assert.equal(shouldResetObjectListSearch(previousScope, nextScope), true)
@@ -60,13 +106,13 @@ test("shouldResetObjectListSearch ignores non-location scope changes", () => {
     bucket: "bucket-a",
     prefix: "folder-a/",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
   const nextScope = createObjectListScope({
     bucket: "bucket-a",
     prefix: "folder-a/",
     pageSize: 50,
-    showDeleted: true,
+    includeDeleted: true,
   })
 
   assert.equal(shouldResetObjectListSearch(previousScope, nextScope), false)
@@ -77,13 +123,13 @@ test("shouldResetObjectListPagination returns false for the same listing scope",
     bucket: "bucket-a",
     prefix: "folder-a/",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
   const nextScope = createObjectListScope({
     bucket: "bucket-a",
     prefix: "folder-a/",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
 
   assert.equal(shouldResetObjectListPagination(previousScope, nextScope), false)
@@ -94,13 +140,13 @@ test("shouldResetObjectListPagination returns true when prefix changes", () => {
     bucket: "bucket-a",
     prefix: "folder-a/",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
   const nextScope = createObjectListScope({
     bucket: "bucket-a",
     prefix: "",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
 
   assert.equal(shouldResetObjectListPagination(previousScope, nextScope), true)
@@ -111,13 +157,13 @@ test("shouldResetObjectListPagination returns true when the bucket changes", () 
     bucket: "bucket-a",
     prefix: "",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
   const nextScope = createObjectListScope({
     bucket: "bucket-b",
     prefix: "",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
 
   assert.equal(shouldResetObjectListPagination(previousScope, nextScope), true)
@@ -132,13 +178,13 @@ test("shouldApplyObjectListResponse rejects stale requests", () => {
         bucket: "bucket-a",
         prefix: "",
         pageSize: 25,
-        showDeleted: false,
+        includeDeleted: false,
       }),
       activeScope: createObjectListScope({
         bucket: "bucket-a",
         prefix: "",
         pageSize: 25,
-        showDeleted: false,
+        includeDeleted: false,
       }),
     }),
     false,
@@ -154,13 +200,13 @@ test("shouldApplyObjectListResponse rejects responses from an old scope", () => 
         bucket: "bucket-a",
         prefix: "folder-a/",
         pageSize: 25,
-        showDeleted: false,
+        includeDeleted: false,
       }),
       activeScope: createObjectListScope({
         bucket: "bucket-a",
         prefix: "",
         pageSize: 25,
-        showDeleted: false,
+        includeDeleted: false,
       }),
     }),
     false,
@@ -172,7 +218,7 @@ test("shouldApplyObjectListResponse accepts the latest response for the current 
     bucket: "bucket-a",
     prefix: "",
     pageSize: 25,
-    showDeleted: false,
+    includeDeleted: false,
   })
 
   assert.equal(
@@ -288,4 +334,64 @@ test("continuing an empty protected-list page displays loading", () => {
     }),
     "loading",
   )
+})
+
+test("resolveObjectListDeletedView passes through the three known views", () => {
+  assert.equal(resolveObjectListDeletedView("hide"), "hide")
+  assert.equal(resolveObjectListDeletedView("show"), "show")
+  assert.equal(resolveObjectListDeletedView("only"), "only")
+})
+
+test("resolveObjectListDeletedView falls back to hide for unknown values", () => {
+  assert.equal(resolveObjectListDeletedView("everything"), "hide")
+  assert.equal(resolveObjectListDeletedView(true), "hide")
+  assert.equal(resolveObjectListDeletedView(null), "hide")
+  assert.equal(resolveObjectListDeletedView(undefined), "hide")
+})
+
+test("readObjectListDeletedViewDefault hides deleted objects without storage", () => {
+  assert.equal(readObjectListDeletedViewDefault(), "hide")
+  assert.equal(readObjectListDeletedViewDefault({ getItem: () => null }), "hide")
+})
+
+test("readObjectListDeletedViewDefault migrates a legacy show-deleted flag", () => {
+  const values = new Map([["object-list-show-deleted", "true"]])
+  const storage = { getItem: (key: string) => values.get(key) ?? null }
+
+  assert.equal(readObjectListDeletedViewDefault(storage), "show")
+})
+
+test("readObjectListDeletedViewDefault ignores the legacy flag once the view key exists", () => {
+  const values = new Map([
+    ["object-list-show-deleted", "true"],
+    ["object-list-deleted-view", '"only"'],
+  ])
+  const storage = { getItem: (key: string) => values.get(key) ?? null }
+
+  assert.equal(readObjectListDeletedViewDefault(storage), "hide")
+})
+
+test("readObjectListDeletedViewDefault treats a legacy false flag as hidden", () => {
+  const values = new Map([["object-list-show-deleted", "false"]])
+  const storage = { getItem: (key: string) => values.get(key) ?? null }
+
+  assert.equal(readObjectListDeletedViewDefault(storage), "hide")
+})
+
+test("readObjectListDeletedViewDefault survives storage failures", () => {
+  const storage = {
+    getItem: () => {
+      throw new Error("denied")
+    },
+  }
+
+  assert.equal(readObjectListDeletedViewDefault(storage), "hide")
+})
+
+test("deletedObjectAccessibleLabelKey marks deleted rows with a state label", () => {
+  assert.equal(deletedObjectAccessibleLabelKey(true), "Deleted")
+})
+
+test("deletedObjectAccessibleLabelKey keeps live rows at the bare filename", () => {
+  assert.equal(deletedObjectAccessibleLabelKey(false), null)
 })

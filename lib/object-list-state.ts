@@ -5,6 +5,14 @@ export interface ObjectListScope {
   showDeleted: boolean
 }
 
+/**
+ * RustFS serializes delete-marker rows in an include-deleted ListObjectsV2
+ * response without an ETag element, while live objects always carry one.
+ */
+export function isDeletedObjectListEntry(entry: { ETag?: string }, includeDeleted: boolean): boolean {
+  return includeDeleted && entry.ETag == null
+}
+
 interface ObjectListResponseGuardParams {
   requestId: number
   activeRequestId: number

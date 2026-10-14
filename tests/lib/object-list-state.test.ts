@@ -2,11 +2,24 @@ import test from "node:test"
 import assert from "node:assert/strict"
 import {
   createObjectListScope,
+  isDeletedObjectListEntry,
   shouldResetObjectListSearch,
   resolveObjectListDisplayState,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
 } from "../../lib/object-list-state"
+
+test("isDeletedObjectListEntry flags an entry without an ETag when deleted objects are shown", () => {
+  assert.equal(isDeletedObjectListEntry({}, true), true)
+})
+
+test("isDeletedObjectListEntry ignores entries that carry an ETag", () => {
+  assert.equal(isDeletedObjectListEntry({ ETag: '"d41d8cd98f00b204e9800998ecf8427e"' }, true), false)
+})
+
+test("isDeletedObjectListEntry never flags entries when deleted objects are hidden", () => {
+  assert.equal(isDeletedObjectListEntry({}, false), false)
+})
 
 test("shouldResetObjectListSearch returns true when the prefix changes", () => {
   const previousScope = createObjectListScope({

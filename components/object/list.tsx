@@ -68,6 +68,7 @@ import { normalizeDateToIso } from "@/lib/safe-date"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
   createObjectListScope,
+  isDeletedObjectListEntry,
   resolveObjectListDisplayState,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
@@ -101,6 +102,7 @@ interface ObjectRow {
   type: "prefix" | "object"
   Size: number
   LastModified: string
+  deleted: boolean
 }
 
 type ObjectListError = "accessDenied" | "loadFailed"
@@ -262,7 +264,7 @@ export function ObjectList({
 
         const r = response as {
           CommonPrefixes?: Array<{ Prefix?: string }>
-          Contents?: Array<{ Key?: string; Size?: number; LastModified?: Date }>
+          Contents?: Array<{ Key?: string; Size?: number; LastModified?: Date; ETag?: string }>
           NextContinuationToken?: string
         }
 
@@ -285,6 +287,7 @@ export function ObjectList({
           type: "prefix" as const,
           Size: 0,
           LastModified: "",
+          deleted: false,
         }))
 
         const objectItems: ObjectRow[] = (r.Contents ?? []).map((item) => ({
@@ -292,6 +295,7 @@ export function ObjectList({
           type: "object" as const,
           Size: item.Size ?? 0,
           LastModified: normalizeDateToIso(item.LastModified),
+          deleted: isDeletedObjectListEntry(item, showDeleted),
         }))
 
         const rows = [...prefixItems, ...objectItems]
@@ -526,7 +530,11 @@ export function ObjectList({
               onClick={() => onOpenInfo(bucket, row.original.Key)}
             >
               <RiFileLine className="size-4 shrink-0" aria-hidden />
-              <span className="min-w-0 truncate">{display}</span>
+              {row.original.deleted ? (
+                <del className="min-w-0 truncate text-destructive line-through">{display}</del>
+              ) : (
+                <span className="min-w-0 truncate">{display}</span>
+              )}
             </button>
           )
         },

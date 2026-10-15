@@ -11,7 +11,7 @@ export interface OidcConfigProvider {
   client_secret_configured: boolean
   scopes: string[]
   other_audiences: string[]
-  redirect_uri: string
+  redirect_uri: string | null
   redirect_uri_dynamic: boolean
   claim_name: string
   claim_prefix: string

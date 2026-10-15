@@ -1,5 +1,8 @@
+import dayjs from "dayjs"
+
 const UNITS = ["B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
 const K8S_UNITS = ["B", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi", "Yi"]
+const DATE_TIME_FORMAT = "YYYY-MM-DD HH:mm:ss"
 
 export function niceBytes(x: string, isK8sUnits = false): string {
   const n = Number.parseInt(x, 10) || 0
@@ -30,16 +33,21 @@ export function formatInteger(value?: number | null, fallback = "--"): string {
   return new Intl.NumberFormat(getRuntimeLocale(), { maximumFractionDigits: 0 }).format(value)
 }
 
-export function formatDateTime(value?: string | number | Date | null, fallback = "--"): string {
-  if (!value) return fallback
+function parseDateTime(value?: string | number | Date | null): Date | null {
+  if (value == null || value === "") return null
 
   const date = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(date.getTime())) return String(value)
+  return Number.isNaN(date.getTime()) ? null : date
+}
 
-  return new Intl.DateTimeFormat(getRuntimeLocale(), {
-    dateStyle: "medium",
-    timeStyle: "medium",
-  }).format(date)
+export function formatDateTime(value?: string | number | Date | null, fallback = "--"): string {
+  const date = parseDateTime(value)
+  return date ? dayjs(date).format(DATE_TIME_FORMAT) : fallback
+}
+
+export function formatDateTimeWithOffset(value?: string | number | Date | null, fallback = "--"): string {
+  const date = parseDateTime(value)
+  return date ? dayjs(date).format(`${DATE_TIME_FORMAT} [UTC]Z`) : fallback
 }
 
 export function getBytes(value: string, unit: string, fromK8s = false): string {

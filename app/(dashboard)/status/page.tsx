@@ -326,7 +326,6 @@ export default function PerformancePage() {
           diagnostics={diagnosticsInfo}
           usageFreshness={diagnosticsInfo ? usageFreshness : undefined}
           t={t}
-          locale={i18n.resolvedLanguage}
         />
       </div>
     </Page>

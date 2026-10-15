@@ -19,6 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CopyButton } from "@/components/copy-button"
 import { useTableCatalog, type LoadedTable, type TableIdentifier, type TableRefs } from "@/hooks/use-table-catalog"
+import { formatDateTime } from "@/lib/functions"
+import { parseTimestampMilliseconds } from "@/lib/safe-date"
 import { displayNamespace } from "@/lib/table-catalog-paths"
 
 interface TableDetailDialogProps {
@@ -72,11 +74,6 @@ function formatJson(value: unknown) {
   } catch {
     return "{}"
   }
-}
-
-function snapshotTimestamp(snapshot: Record<string, unknown>) {
-  const value = snapshot["timestamp-ms"]
-  return typeof value === "number" || typeof value === "string" ? value : undefined
 }
 
 function metadataValue(table: LoadedTable | null, key: string) {
@@ -349,6 +346,7 @@ export function TableDetailDialog({
                     {snapshots.map((snapshot, index) => {
                       const snapshotId = snapshot["snapshot-id"]
                       const isCurrent = String(snapshotId) === currentSnapshotId
+                      const timestamp = parseTimestampMilliseconds(snapshot["timestamp-ms"])
                       return (
                         <div
                           key={`${String(snapshotId)}-${index}`}
@@ -363,13 +361,8 @@ export function TableDetailDialog({
                               {String(snapshot["manifest-list"] ?? snapshot["manifest-list-location"] ?? "--")}
                             </p>
                           </div>
-                          <time
-                            className="text-xs text-muted-foreground"
-                            dateTime={String(snapshotTimestamp(snapshot) ?? "")}
-                          >
-                            {snapshotTimestamp(snapshot)
-                              ? new Date(Number(snapshotTimestamp(snapshot))).toLocaleString()
-                              : "--"}
+                          <time className="text-xs text-muted-foreground" dateTime={timestamp?.toISOString()}>
+                            {formatDateTime(timestamp)}
                           </time>
                         </div>
                       )

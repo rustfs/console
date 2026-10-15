@@ -23,6 +23,7 @@ import { useDialog } from "@/lib/feedback/dialog"
 import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
 import { normalizeDateToIso } from "@/lib/safe-date"
+import { formatDateTimeWithOffset } from "@/lib/functions"
 import {
   getDefaultObjectRetentionDate,
   getMinimumObjectRetentionDate,
@@ -523,9 +524,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                     </div>
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <span className="font-medium text-muted-foreground">{t("Last Modified Time")}</span>
-                      <span className="max-w-[60%] truncate text-end" title={lastModified || "-"}>
-                        {lastModified || "-"}
-                      </span>
+                      <time
+                        className="max-w-[60%] min-w-0 text-end"
+                        dateTime={lastModified || undefined}
+                        title={lastModified || undefined}
+                        dir="ltr"
+                      >
+                        {formatDateTimeWithOffset(lastModified, "-")}
+                      </time>
                     </div>
                     <div className="flex items-center justify-between gap-3 min-w-0">
                       <label htmlFor="object-legal-hold" className="font-medium text-muted-foreground">

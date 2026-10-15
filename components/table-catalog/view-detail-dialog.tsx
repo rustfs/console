@@ -18,6 +18,8 @@ import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CopyButton } from "@/components/copy-button"
 import { useTableCatalog, type LoadedView, type ViewIdentifier } from "@/hooks/use-table-catalog"
+import { formatDateTime } from "@/lib/functions"
+import { parseTimestampMilliseconds } from "@/lib/safe-date"
 import { displayNamespace } from "@/lib/table-catalog-paths"
 
 interface ViewDetailDialogProps {
@@ -260,6 +262,7 @@ export function ViewDetailDialog({
                     {versions.map((version, index) => {
                       const versionId = version["version-id"]
                       const current = String(versionId) === String(metadata["current-version-id"])
+                      const timestamp = parseTimestampMilliseconds(version["timestamp-ms"])
                       return (
                         <div
                           key={`${String(versionId)}-${index}`}
@@ -279,10 +282,8 @@ export function ViewDetailDialog({
                                 .join(" · ") || "--"}
                             </p>
                           </div>
-                          <time className="text-xs text-muted-foreground">
-                            {typeof version["timestamp-ms"] === "number"
-                              ? new Date(version["timestamp-ms"] as number).toLocaleString()
-                              : "--"}
+                          <time className="text-xs text-muted-foreground" dateTime={timestamp?.toISOString()}>
+                            {formatDateTime(timestamp)}
                           </time>
                         </div>
                       )

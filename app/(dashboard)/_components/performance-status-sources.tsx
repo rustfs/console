@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator"
+import { formatDateTime } from "@/lib/functions"
 import type { ClusterDiagnostics, OperationalStatus, StatusDiagnostic } from "@/lib/performance-data"
 
 type Translate = (key: string) => string
@@ -35,12 +36,6 @@ function getDefaultDescription(state: OperationalStatus, t: Translate) {
   return t("The server reported this status source with an unknown condition.")
 }
 
-function formatTimestamp(value: string, locale: string | undefined) {
-  const timestamp = Date.parse(value)
-  if (!Number.isFinite(timestamp)) return value
-  return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "medium" }).format(timestamp)
-}
-
 function DiagnosticRow({
   label,
   diagnostic,
@@ -48,7 +43,6 @@ function DiagnosticRow({
   troubleshootingHref,
   showLastSuccessfulUpdate,
   t,
-  locale,
 }: {
   label: string
   diagnostic: StatusDiagnostic
@@ -56,7 +50,6 @@ function DiagnosticRow({
   troubleshootingHref?: string
   showLastSuccessfulUpdate?: boolean
   t: Translate
-  locale?: string
 }) {
   const scope = diagnostic.scope
   const scopeParts = [
@@ -91,10 +84,7 @@ function DiagnosticRow({
           <div className="flex flex-col gap-1 text-xs">
             {diagnostic.lastSuccessfulUpdate || showLastSuccessfulUpdate ? (
               <p>
-                {t("Last successful update")}:{" "}
-                {diagnostic.lastSuccessfulUpdate
-                  ? formatTimestamp(diagnostic.lastSuccessfulUpdate, locale)
-                  : t("Unknown")}
+                {t("Last successful update")}: {formatDateTime(diagnostic.lastSuccessfulUpdate, t("Unknown"))}
               </p>
             ) : null}
             {diagnostic.lastError ? (
@@ -153,12 +143,10 @@ function PerformanceStatusSourcesContent({
   diagnostics,
   usageFreshness,
   t,
-  locale,
 }: {
   diagnostics: ClusterDiagnostics
   usageFreshness?: StatusDiagnostic
   t: Translate
-  locale?: string
 }) {
   const rows = [
     { label: t("Peer Health"), diagnostic: diagnostics.peerHealth },
@@ -241,7 +229,6 @@ function PerformanceStatusSourcesContent({
                     troubleshootingHref={row.troubleshootingHref}
                     showLastSuccessfulUpdate={row.showLastSuccessfulUpdate}
                     t={t}
-                    locale={locale}
                   />
                 </React.Fragment>
               ))}
@@ -257,16 +244,12 @@ export function PerformanceStatusSources({
   diagnostics,
   usageFreshness,
   t,
-  locale,
 }: {
   diagnostics?: ClusterDiagnostics
   usageFreshness?: StatusDiagnostic
   t: Translate
-  locale?: string
 }) {
   if (!diagnostics) return null
 
-  return (
-    <PerformanceStatusSourcesContent diagnostics={diagnostics} usageFreshness={usageFreshness} t={t} locale={locale} />
-  )
+  return <PerformanceStatusSourcesContent diagnostics={diagnostics} usageFreshness={usageFreshness} t={t} />
 }

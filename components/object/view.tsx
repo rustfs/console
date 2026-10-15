@@ -10,6 +10,7 @@ import { useMessage } from "@/lib/feedback/message"
 import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
 import { normalizeDateToIso } from "@/lib/safe-date"
+import { formatDateTimeWithOffset } from "@/lib/functions"
 
 interface ObjectViewProps {
   bucketName: string
@@ -79,9 +80,16 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
             <span className="font-medium text-muted-foreground">ETag</span>
             <span>{String(object?.ETag ?? "-")}</span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex min-w-0 items-center justify-between gap-3">
             <span className="font-medium text-muted-foreground">{t("Last Modified Time")}</span>
-            <span>{lastModified || "-"}</span>
+            <time
+              className="max-w-[60%] min-w-0 text-end"
+              dateTime={lastModified || undefined}
+              title={lastModified || undefined}
+              dir="ltr"
+            >
+              {formatDateTimeWithOffset(lastModified, "-")}
+            </time>
           </div>
         </ItemContent>
       </Item>

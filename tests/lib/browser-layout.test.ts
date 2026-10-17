@@ -25,11 +25,6 @@ test("object browser source guards responsive and accessible row actions", async
   assert.match(pageHeader, /page-actions flex min-w-0 flex-wrap items-center gap-2/)
   assert.match(pageHeader, /lg:justify-end/)
   assert.doesNotMatch(objectList, /lg:flex-wrap lg:justify-end/)
-  const headerMenuSource = objectList.match(/aria-label=\{t\("More actions"\)\}[\s\S]*?<\/DropdownMenu>/)?.[0]
-
-  assert.ok(headerMenuSource)
-  assert.doesNotMatch(headerMenuSource, /All objects loaded/)
-  assert.match(headerMenuSource, /\{nextToken \? \(\s+<DropdownMenuItem/)
   assert.ok(rowActionsSource)
   assert.match(rowActionsSource, /size="icon-sm"/)
   assert.match(rowActionsSource, /className="w-max min-w-40 max-w-\[calc\(100vw-2rem\)\]"/)

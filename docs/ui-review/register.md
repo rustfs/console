@@ -90,6 +90,7 @@ The 2026-07-11 follow-up reviewed 44 candidate files containing cards, dialogs, 
 | UI-051 | S3 Tables | Warehouse, namespace and create actions competed across several stacked headers. | The selected scope and main action were hard to follow. | One warehouse header, compact catalog metadata, tabs with contextual actions, and namespace controls beside the list. | `catalog-redesign-51` | Resolved |
 | UI-052 | Pending and nested dialogs | The new site close button bypassed the saving guard; Escape reached the object detail drawer beneath retention; a large upload queue clipped its final rows. | In-flight state could be dismissed and selected files became unreachable. | Guard every site dismissal, retain the parent drawer while a child is open, and give the virtual list the actual available height. | `dialog-interaction-52` | Resolved |
 | UI-053 | Upload selection | File pickers were detached from the drop target, fixed height left excessive empty space, and instructions competed with the destination. | The next action and upload scope were harder to scan. | Center file selection in the empty drop target, size the queue to its contents, retain one destination field and footer, and preserve picker focus across selection changes. | `upload-redesign-53` | Resolved |
+| UI-054 | Object refresh | Refresh was hidden in a header menu even when it was the only item. | Reloading the object list required an unnecessary extra click. | Show Refresh beside Upload; keep pagination controls with the list. | `object-refresh-54` | Resolved |
 
 ## Deferred design debt
 

@@ -942,44 +942,15 @@ export function ObjectList({
                 </span>
               </Button>
             ) : null}
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    ref={refreshButtonRef}
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    aria-label={t("More actions")}
-                  >
-                    <RiMore2Line className="size-4" aria-hidden />
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-max min-w-40 max-w-[calc(100vw-2rem)]">
-                {nextToken ? (
-                  <DropdownMenuItem
-                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
-                    onClick={loadNextBatch}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Spinner className="size-4" aria-hidden />
-                    ) : (
-                      <RiArrowDownSLine className="size-4" aria-hidden />
-                    )}
-                    <span>{loading ? t("Loading more objects") : t("Load next objects")}</span>
-                  </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuItem
-                  className={OBJECT_ACTION_MENU_ITEM_CLASS}
-                  onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}
-                >
-                  <RiRefreshLine className="size-4" aria-hidden />
-                  <span>{t("Refresh")}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              ref={refreshButtonRef}
+              type="button"
+              variant="outline"
+              onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}
+            >
+              <RiRefreshLine className="size-4" aria-hidden />
+              <span>{t("Refresh")}</span>
+            </Button>
           </>
         }
       >

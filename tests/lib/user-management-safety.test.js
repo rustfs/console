@@ -41,7 +41,10 @@ test("nested user access key dialogs use one scroll container and fail closed wh
 
   assert.equal((source.match(/grid-rows-\[auto_minmax\(0,1fr\)_auto\]/g) ?? []).length, 2)
   assert.equal((source.match(/<form\s+className="contents"\s+onSubmit=/g) ?? []).length, 2)
-  assert.equal((source.match(/min-h-0[^\"]*overflow-y-auto overscroll-contain p-4/g) ?? []).length, 2)
+  assert.equal(
+    (source.match(/<DialogBody className="min-h-0[^\"]*overflow-y-auto overscroll-contain"/g) ?? []).length,
+    2,
+  )
   assert.match(source, /const \[parentPolicyError, setParentPolicyError\] = React\.useState\(""\)/)
   assert.match(source, /const \[formOwner, setFormOwner\] = React\.useState\(""\)/)
   assert.match(source, /accessKey !== row\?\.accessKey/)

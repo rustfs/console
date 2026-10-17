@@ -57,7 +57,7 @@ test("running status distinguishes unknown values and exposes recovery feedback"
   assert.match(pageSource, /aria-busy=\{refreshing\}/)
   assert.match(pageSource, /lastUpdatedAt/)
   assert.match(pageSource, /sourceErrors/)
-  assert.match(pageSource, /order-2 xl:order-3 xl:col-span-2/)
+  assert.match(pageSource, /xl:grid-cols-\[minmax\(0,1fr\)_22rem\]/)
   assert.match(pageSource, /isScannerCycleActive\(metricsInfo\)/)
   assert.match(pageSource, /t\("Scanner Status"\)/)
   assert.doesNotMatch(pageSource, /dayjs\(last\)/)

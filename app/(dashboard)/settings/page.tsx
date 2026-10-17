@@ -157,16 +157,6 @@ export default function SettingsPage() {
               <RiRefreshLine className="me-2 size-4" aria-hidden />
               {t("Sync")}
             </Button>
-            {canUpdateModuleSwitches ? (
-              <Button
-                type="button"
-                onClick={handleSave}
-                disabled={!snapshot || Boolean(loadError) || !isDirty || loading || saving}
-              >
-                {saving ? <Spinner className="me-2 size-4" /> : <RiSave3Line className="me-2 size-4" aria-hidden />}
-                {t("Save")}
-              </Button>
-            ) : null}
           </>
         }
       >
@@ -203,11 +193,11 @@ export default function SettingsPage() {
           </Alert>
         ) : null}
 
-        <div className="divide-y rounded-none border">
+        <div className="divide-y border-t">
           {switchItems.map((item) => {
             const isEnvManaged = isEnvManagedSource(item.source)
             return (
-              <Field key={item.name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 p-4 sm:p-5">
+              <Field key={item.name} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-6">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <FieldLabel htmlFor={`${item.name}-module-switch`} className="text-sm font-medium">
@@ -235,6 +225,18 @@ export default function SettingsPage() {
               </Field>
             )
           })}
+        </div>
+        <div className="flex flex-wrap items-center justify-end gap-3 border-t pt-5">
+          {canUpdateModuleSwitches ? (
+            <Button
+              type="button"
+              onClick={handleSave}
+              disabled={!snapshot || Boolean(loadError) || !isDirty || loading || saving}
+            >
+              {saving ? <Spinner className="me-2 size-4" /> : <RiSave3Line className="me-2 size-4" aria-hidden />}
+              {t("Save")}
+            </Button>
+          ) : null}
         </div>
       </div>
     </Page>

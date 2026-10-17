@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { RiRefreshLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { SearchInput } from "@/components/search-input"
 import { DataTable } from "@/components/data-table/data-table"
@@ -188,7 +188,7 @@ export function UserGroupSetPoliciesMultiple({
         className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-xl"
         aria-busy={loading || submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{t("Batch allocation policies")}</DialogTitle>
         </DialogHeader>
 
@@ -199,7 +199,7 @@ export function UserGroupSetPoliciesMultiple({
             void changePolicies()
           }}
         >
-          <div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4">
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto overscroll-contain">
             <div className="w-full sm:max-w-xs">
               <SearchInput
                 value={searchTerm}
@@ -225,9 +225,9 @@ export function UserGroupSetPoliciesMultiple({
             ) : (
               <DataTable table={table} isLoading={loading} />
             )}
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={closeModal} disabled={submitting}>
               {t("Cancel")}
             </Button>

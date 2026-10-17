@@ -6,7 +6,6 @@ import { RiFileCopyLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { copyToClipboard } from "@/lib/clipboard"
 import { useMessage } from "@/lib/feedback/message"
-import { cn } from "@/lib/utils"
 
 export function CopyButton({ value = "", iconOnly = false }) {
   const { t } = useTranslation()
@@ -30,8 +29,8 @@ export function CopyButton({ value = "", iconOnly = false }) {
     <Button
       type="button"
       variant={iconOnly ? "ghost" : "default"}
-      size={iconOnly ? "sm" : "default"}
-      className={cn(iconOnly && "shrink-0 outline h-8 w-8 p-0")}
+      size={iconOnly ? "icon-sm" : "default"}
+      className={iconOnly ? "shrink-0" : undefined}
       title={t("Copy")}
       onClick={handleCopy}
     >

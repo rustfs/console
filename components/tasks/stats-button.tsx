@@ -1,10 +1,10 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
+import { Drawer, DrawerClose, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
 import { Spinner } from "@/components/ui/spinner"
 import { useTaskManager, useTasks, useTaskPanelOpen } from "@/contexts/task-context"
-import { RiCheckLine } from "@remixicon/react"
+import { RiCheckLine, RiCloseLine } from "@remixicon/react"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { TaskPanel } from "./panel"
@@ -45,13 +45,14 @@ export function TaskStatsButton() {
           </div>
         )}
       </DrawerTrigger>
-      <DrawerContent className="sm:max-w-sm">
-        <DrawerHeader>
-          <DrawerTitle>{t("Task Management")}</DrawerTitle>
+      <DrawerContent className="data-[swipe-axis=x]:[--drawer-content-width:92vw] data-[swipe-axis=x]:sm:[--drawer-content-width:26rem]">
+        <DrawerHeader className="flex-row items-center justify-between gap-3 border-b p-5">
+          <DrawerTitle className="text-xl font-semibold">{t("Task Management")}</DrawerTitle>
+          <DrawerClose render={<Button variant="ghost" size="icon" aria-label={t("Close")} />}>
+            <RiCloseLine aria-hidden />
+          </DrawerClose>
         </DrawerHeader>
-        <div className="overflow-auto p-4">
-          <TaskPanel tasks={tasks} onClearFinishedTasks={() => taskManager.clearFinishedTasks()} />
-        </div>
+        <TaskPanel tasks={tasks} onClearFinishedTasks={() => taskManager.clearFinishedTasks()} />
       </DrawerContent>
     </Drawer>
   )

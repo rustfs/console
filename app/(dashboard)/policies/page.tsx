@@ -144,15 +144,9 @@ export default function PoliciesPage() {
   return (
     <Page>
       <PageHeader
+        count={!loading && !loadError ? data.length : undefined}
         actions={
           <>
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={t("Search")}
-              clearable
-              className="max-w-sm"
-            />
             {canCreatePolicy ? (
               <Button variant="outline" onClick={handleNew}>
                 <RiAddLine className="size-4" aria-hidden />
@@ -167,6 +161,15 @@ export default function PoliciesPage() {
 
       <div className="space-y-3">
         <DataTable
+          toolbar={
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={t("Search")}
+              clearable
+              className="max-w-sm"
+            />
+          }
           keepPreviousData
           caption={t("Policies")}
           errorTitle={loadError ? t("Failed to get data") : undefined}

@@ -2236,5 +2236,10 @@
   "pull failures": "lỗi kéo dữ liệu",
   "Password must be at least 8 bytes": "Mật khẩu phải có ít nhất 8 byte",
   "Secret Key must be at least 8 bytes": "Khóa bí mật phải có ít nhất 8 byte",
-  "At least 8 bytes. This is also your S3 secret key.": "Ít nhất 8 byte. Đây cũng là khóa bí mật S3 của bạn."
+  "At least 8 bytes. This is also your S3 secret key.": "Ít nhất 8 byte. Đây cũng là khóa bí mật S3 của bạn.",
+  "Identity": "Danh tính",
+  "Operations": "Vận hành",
+  "Resources": "Tài nguyên",
+  "Bucket size distribution": "Phân bố dung lượng bucket",
+  "Other buckets": "Các bucket khác"
 }

@@ -433,19 +433,17 @@ export default function OidcPage() {
 
   return (
     <Page>
-      <PageHeader>
+      <PageHeader
+        description={
+          <>
+            {t("Environment-managed providers are read-only")} {t("Changes will take effect after RustFS restarts")}
+          </>
+        }
+      >
         <h1 className="text-2xl font-bold">{t("OIDC Providers")}</h1>
       </PageHeader>
 
       <div className="space-y-4">
-        <Alert>
-          <AlertTitle>{t("Environment Managed")}</AlertTitle>
-          <AlertDescription className="space-y-1">
-            <p>{t("Environment-managed providers are read-only")}</p>
-            <p>{t("Changes will take effect after RustFS restarts")}</p>
-          </AlertDescription>
-        </Alert>
-
         {!canUpdateOidcProviders ? (
           <Alert>
             <AlertTitle>{t("Read-only OIDC settings")}</AlertTitle>
@@ -476,7 +474,7 @@ export default function OidcPage() {
             {t("Loading…")}
           </div>
         ) : loadError && providers.length === 0 ? null : (
-          <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+          <div className="grid items-start gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
             <ProviderList
               providers={providers}
               loading={loading}

@@ -4,12 +4,13 @@ import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -91,7 +92,7 @@ export function MfaRecoveryCodesDialog({ open, onOpenChange, onRegenerated }: Mf
         aria-busy={submitting}
         showCloseButton={!codes}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{codes ? t("Save your recovery codes") : t("Generate new recovery codes")}</DialogTitle>
           <DialogDescription>
             {codes
@@ -100,7 +101,7 @@ export function MfaRecoveryCodesDialog({ open, onOpenChange, onRegenerated }: Mf
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+        <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
           {codes ? (
             <RecoveryCodesPanel
               codes={codes}
@@ -154,9 +155,9 @@ export function MfaRecoveryCodesDialog({ open, onOpenChange, onRegenerated }: Mf
               </Field>
             </form>
           )}
-        </div>
+        </DialogBody>
 
-        <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+        <DialogFooter>
           {codes ? (
             <p className="text-sm text-muted-foreground">{t("These codes are shown only once.")}</p>
           ) : (

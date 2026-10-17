@@ -276,25 +276,6 @@ export default function RebalancePage() {
               )}
               {t("Sync")}
             </Button>
-            {showStop ? (
-              <Button variant="outline" onClick={handleStop} disabled={!canStop}>
-                {submitting ? (
-                  <Spinner className="me-2 size-4" />
-                ) : (
-                  <RiPauseCircleLine className="me-2 size-4" aria-hidden />
-                )}
-                {t("Stop rebalance")}
-              </Button>
-            ) : (
-              <Button onClick={handleStart} disabled={!canStart}>
-                {submitting ? (
-                  <Spinner className="me-2 size-4" />
-                ) : (
-                  <RiPlayCircleLine className="me-2 size-4" aria-hidden />
-                )}
-                {t("Start Rebalance")}
-              </Button>
-            )}
           </>
         }
       >
@@ -322,7 +303,33 @@ export default function RebalancePage() {
           </div>
         ) : overview.pools.length ? (
           <>
-            <PoolsOverviewCard overview={overview} operationLabel={t("Rebalance")} />
+            <PoolsOverviewCard
+              overview={overview}
+              operationLabel={t("Rebalance")}
+              actions={
+                <>
+                  {showStop ? (
+                    <Button variant="outline" onClick={handleStop} disabled={!canStop}>
+                      {submitting ? (
+                        <Spinner className="me-2 size-4" />
+                      ) : (
+                        <RiPauseCircleLine className="me-2 size-4" aria-hidden />
+                      )}
+                      {t("Stop rebalance")}
+                    </Button>
+                  ) : (
+                    <Button onClick={handleStart} disabled={!canStart}>
+                      {submitting ? (
+                        <Spinner className="me-2 size-4" />
+                      ) : (
+                        <RiPlayCircleLine className="me-2 size-4" aria-hidden />
+                      )}
+                      {t("Start Rebalance")}
+                    </Button>
+                  )}
+                </>
+              }
+            />
 
             {dataReady && overview.supportState === "unsupported" ? (
               <Alert>
@@ -331,7 +338,7 @@ export default function RebalancePage() {
               </Alert>
             ) : null}
 
-            <Card className="rounded-none" aria-busy={refreshing || submitting}>
+            <Card className="configuration-panel" aria-busy={refreshing || submitting}>
               <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-1">
                   <CardTitle>{t("Current Rebalance Status")}</CardTitle>
@@ -357,7 +364,9 @@ export default function RebalancePage() {
                     <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                       <div>
                         <p className="text-xs text-muted-foreground">{t("Progress")}</p>
-                        <p className="text-sm font-medium">{Math.round(status?.progressPercent ?? 0)}%</p>
+                        <p className="font-heading text-5xl font-semibold tabular-nums">
+                          {Math.round(status?.progressPercent ?? 0)}%
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">{t("Bytes Moved")}</p>
@@ -375,7 +384,7 @@ export default function RebalancePage() {
 
                     <Progress
                       value={status?.progressPercent ?? 0}
-                      className="h-2"
+                      className="h-3"
                       aria-label={`${t("Rebalance")} ${t("Progress")}`}
                     />
 

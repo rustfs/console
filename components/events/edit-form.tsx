@@ -7,7 +7,15 @@ import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogBody,
+  DialogSection,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { useBucket } from "@/hooks/use-bucket"
@@ -193,8 +201,8 @@ export function EventsEditForm({
       }}
       disablePointerDismissal
     >
-      <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b px-4 py-3 pe-12 text-start sm:px-6">
+      <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        <DialogHeader>
           <DialogTitle>
             {t("Edit Event Subscription")}
             <span className="mt-1 block text-sm font-normal text-muted-foreground">
@@ -211,7 +219,7 @@ export function EventsEditForm({
             void handleSubmit()
           }}
         >
-          <div className="min-h-0 space-y-6 overflow-y-auto overscroll-contain p-4 sm:p-6">
+          <DialogBody className="min-h-0 space-y-6 overflow-y-auto overscroll-contain">
             {saveError ? (
               <div role="alert" className="border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
                 {saveError}
@@ -233,119 +241,123 @@ export function EventsEditForm({
               </Alert>
             ) : null}
 
-            <Field>
-              <FieldLabel htmlFor="event-edit-resource-name">{t("Amazon Resource Name")}</FieldLabel>
-              <FieldContent>
-                <Select
-                  value={resourceName}
-                  onValueChange={(value) => {
-                    setResourceName(value ?? "")
-                    if (value) setResourceNameError("")
-                  }}
-                  disabled={disabled || submitting || arnLoading || Boolean(arnError) || !arnOptions.length}
-                >
-                  <SelectTrigger
-                    id="event-edit-resource-name"
-                    aria-label={t("Amazon Resource Name")}
-                    aria-invalid={Boolean(resourceNameError)}
-                    aria-describedby={resourceNameError ? "event-edit-resource-name-error" : undefined}
+            <DialogSection title={t("Configuration")}>
+              <Field>
+                <FieldLabel htmlFor="event-edit-resource-name">{t("Amazon Resource Name")}</FieldLabel>
+                <FieldContent>
+                  <Select
+                    value={resourceName}
+                    onValueChange={(value) => {
+                      setResourceName(value ?? "")
+                      if (value) setResourceNameError("")
+                    }}
+                    disabled={disabled || submitting || arnLoading || Boolean(arnError) || !arnOptions.length}
                   >
-                    <SelectValue placeholder={t("Please select resource name")} />
-                  </SelectTrigger>
-                  <SelectContent className="w-max min-w-(--anchor-width) max-w-(--available-width)">
-                    {arnOptions.map((item) => (
-                      <SelectItem key={item.value} value={item.value}>
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FieldContent>
-              {arnLoading ? <FieldDescription>{t("Loading")}</FieldDescription> : null}
-              {!arnLoading && !arnError && arnList.length === 0 ? (
-                <FieldDescription>{t("No Data")}</FieldDescription>
-              ) : null}
-              {resourceNameError ? (
-                <FieldDescription id="event-edit-resource-name-error" role="alert" className="text-destructive">
-                  {resourceNameError}
-                </FieldDescription>
-              ) : null}
-            </Field>
+                    <SelectTrigger
+                      id="event-edit-resource-name"
+                      aria-label={t("Amazon Resource Name")}
+                      aria-invalid={Boolean(resourceNameError)}
+                      aria-describedby={resourceNameError ? "event-edit-resource-name-error" : undefined}
+                    >
+                      <SelectValue placeholder={t("Please select resource name")} />
+                    </SelectTrigger>
+                    <SelectContent className="w-max min-w-(--anchor-width) max-w-(--available-width)">
+                      {arnOptions.map((item) => (
+                        <SelectItem key={item.value} value={item.value}>
+                          {item.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FieldContent>
+                {arnLoading ? <FieldDescription>{t("Loading")}</FieldDescription> : null}
+                {!arnLoading && !arnError && arnList.length === 0 ? (
+                  <FieldDescription>{t("No Data")}</FieldDescription>
+                ) : null}
+                {resourceNameError ? (
+                  <FieldDescription id="event-edit-resource-name-error" role="alert" className="text-destructive">
+                    {resourceNameError}
+                  </FieldDescription>
+                ) : null}
+              </Field>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="event-edit-prefix">{t("Prefix")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="event-edit-prefix"
+                      name="event-edit-prefix"
+                      value={prefix}
+                      onChange={(e) => setPrefix(e.target.value)}
+                      autoComplete="off"
+                      disabled={disabled || submitting}
+                      placeholder={t("Please enter prefix")}
+                      spellCheck={false}
+                    />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="event-edit-suffix">{t("Suffix")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="event-edit-suffix"
+                      name="event-edit-suffix"
+                      value={suffix}
+                      onChange={(e) => setSuffix(e.target.value)}
+                      autoComplete="off"
+                      disabled={disabled || submitting}
+                      placeholder={t("Please enter suffix")}
+                      spellCheck={false}
+                    />
+                  </FieldContent>
+                </Field>
+              </div>
+            </DialogSection>
 
-            <Field>
-              <FieldLabel htmlFor="event-edit-prefix">{t("Prefix")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="event-edit-prefix"
-                  name="event-edit-prefix"
-                  value={prefix}
-                  onChange={(e) => setPrefix(e.target.value)}
-                  autoComplete="off"
-                  disabled={disabled || submitting}
-                  placeholder={t("Please enter prefix")}
-                  spellCheck={false}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="event-edit-suffix">{t("Suffix")}</FieldLabel>
-              <FieldContent>
-                <Input
-                  id="event-edit-suffix"
-                  name="event-edit-suffix"
-                  value={suffix}
-                  onChange={(e) => setSuffix(e.target.value)}
-                  autoComplete="off"
-                  disabled={disabled || submitting}
-                  placeholder={t("Please enter suffix")}
-                  spellCheck={false}
-                />
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <fieldset
-                aria-invalid={Boolean(eventsError)}
-                aria-describedby={eventsError ? "event-edit-selection-error" : undefined}
-              >
-                <legend className="mb-2 text-sm font-medium">{t("Select events")}</legend>
-                <div className="bg-muted/20 p-4">
-                  <div className="flex flex-col gap-3">
-                    {EVENT_OPTIONS.map((event) => (
-                      <label
-                        key={event.value}
-                        htmlFor={`event-edit-option-${event.value.toLowerCase()}`}
-                        className="flex cursor-pointer items-start gap-3"
-                      >
-                        <Checkbox
-                          id={`event-edit-option-${event.value.toLowerCase()}`}
-                          checked={events.includes(event.value)}
-                          onCheckedChange={(v) => handleEventChecked(event.value, v)}
-                          disabled={disabled || submitting}
-                          className="mt-1"
-                        />
-                        <span>{t(event.labelKey)}</span>
-                      </label>
-                    ))}
-                    {customEvents.map((event) => (
-                      <label key={event} className="flex items-start gap-3">
-                        <Checkbox checked disabled className="mt-1" />
-                        <span className="break-all">{event}</span>
-                      </label>
-                    ))}
+            <DialogSection title={t("Select events")}>
+              <Field>
+                <fieldset
+                  aria-invalid={Boolean(eventsError)}
+                  aria-describedby={eventsError ? "event-edit-selection-error" : undefined}
+                >
+                  <legend className="sr-only">{t("Select events")}</legend>
+                  <div className="divide-y">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {EVENT_OPTIONS.map((event) => (
+                        <label
+                          key={event.value}
+                          htmlFor={`event-edit-option-${event.value.toLowerCase()}`}
+                          className="flex cursor-pointer items-start gap-3"
+                        >
+                          <Checkbox
+                            id={`event-edit-option-${event.value.toLowerCase()}`}
+                            checked={events.includes(event.value)}
+                            onCheckedChange={(v) => handleEventChecked(event.value, v)}
+                            disabled={disabled || submitting}
+                            className="mt-1"
+                          />
+                          <span>{t(event.labelKey)}</span>
+                        </label>
+                      ))}
+                      {customEvents.map((event) => (
+                        <label key={event} className="flex items-start gap-3">
+                          <Checkbox checked disabled className="mt-1" />
+                          <span className="break-all">{event}</span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </fieldset>
-              {eventsError ? (
-                <FieldDescription id="event-edit-selection-error" role="alert" className="text-destructive">
-                  {eventsError}
-                </FieldDescription>
-              ) : null}
-            </Field>
-          </div>
+                </fieldset>
+                {eventsError ? (
+                  <FieldDescription id="event-edit-selection-error" role="alert" className="text-destructive">
+                    {eventsError}
+                  </FieldDescription>
+                ) : null}
+              </Field>
+            </DialogSection>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3 sm:px-6">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

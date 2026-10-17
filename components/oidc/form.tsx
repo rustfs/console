@@ -59,7 +59,7 @@ export function OidcForm({
   const fieldsDisabled = isReadOnly || isSaving || isValidating
 
   return (
-    <section className="space-y-4 border p-4 md:p-6" aria-labelledby="oidc-provider-form-title">
+    <section className="space-y-8" aria-labelledby="oidc-provider-form-title">
       <div className="flex flex-col gap-3 border-b pb-4 md:flex-row md:items-start md:justify-between">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -119,7 +119,8 @@ export function OidcForm({
         </Alert>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <fieldset className="grid gap-5 md:grid-cols-2">
+        <legend className="mb-4 text-sm font-semibold">{t("Identity")}</legend>
         <Field>
           <FieldLabel htmlFor="provider_id">{t("Provider ID")}</FieldLabel>
           <FieldContent>
@@ -168,7 +169,9 @@ export function OidcForm({
             />
           </FieldContent>
         </Field>
-
+      </fieldset>
+      <fieldset className="grid gap-5 border-t pt-6 md:grid-cols-2">
+        <legend className="pe-3 text-sm font-semibold">{t("Configuration")}</legend>
         <Field>
           <FieldLabel htmlFor="config_url">{t("Configuration URL")}</FieldLabel>
           <FieldContent>
@@ -440,7 +443,7 @@ export function OidcForm({
             </Field>
           </div>
         </details>
-      </div>
+      </fieldset>
       <div className="sticky bottom-0 z-10 flex flex-wrap justify-end gap-2 border-t bg-background py-4 [&_[data-slot=button]]:min-h-11 sm:[&_[data-slot=button]]:min-h-10">
         {isCreateMode && !isReadOnly ? (
           <Button type="button" variant="outline" onClick={onValidate} disabled={isValidating || isSaving}>

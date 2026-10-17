@@ -838,13 +838,13 @@ export default function TableCatalogPage() {
     }
 
     return (
-      <div className="grid min-h-[36rem] border bg-card lg:grid-cols-[16rem_minmax(0,1fr)]">
+      <div className="grid min-h-[32rem] border bg-card lg:grid-cols-[15rem_minmax(0,1fr)]">
         <aside
           className="flex min-h-0 flex-col border-b lg:border-b-0 lg:border-e"
           aria-labelledby="table-buckets-heading"
         >
           <div className="space-y-3 border-b p-4">
-            <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col items-start gap-3">
               <div className="min-w-0">
                 <h2 id="table-buckets-heading" className="text-sm font-semibold">
                   {t("Table buckets")}
@@ -884,8 +884,8 @@ export default function TableCatalogPage() {
                     aria-pressed={selected}
                     onClick={() => setSelectedBucket(name)}
                     className={cn(
-                      "flex min-h-12 w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
-                      selected && "bg-muted",
+                      "flex min-h-12 w-full items-center gap-3 border-s-2 border-transparent px-4 py-3 text-start transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
+                      selected && "border-s-primary bg-selection text-link",
                     )}
                   >
                     <RiTableLine
@@ -919,74 +919,62 @@ export default function TableCatalogPage() {
         </aside>
 
         <section className="min-w-0" aria-labelledby="selected-table-bucket-heading">
-          <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("Warehouse")}</p>
-              <h2 id="selected-table-bucket-heading" className="mt-1 break-all font-mono text-base font-semibold">
-                {selectedBucket ? `s3://${selectedBucket}/` : t("No bucket selected")}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {selectedInfo?.enabled
-                  ? t("Iceberg metadata and data are managed through this table bucket.")
-                  : t("Enable this bucket to create namespaces and tables.")}
-              </p>
-            </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <header className="flex flex-col items-start justify-between gap-4 border-b px-5 py-5 sm:flex-row sm:flex-wrap">
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 id="selected-table-bucket-heading" className="break-all font-mono text-lg font-medium">
+                  {selectedBucket ? `s3://${selectedBucket}/` : t("No bucket selected")}
+                </h2>
+                {selectedInfo ? (
+                  <Badge variant="outline">
+                    {selectedInfo.enabled ? <RiCheckLine aria-hidden /> : null}
+                    {selectedInfo.enabled ? t("Ready") : t("Not enabled")}
+                  </Badge>
+                ) : null}
+              </div>
               {selectedInfo?.enabled ? (
-                <Badge variant="secondary">
-                  <RiCheckLine aria-hidden />
-                  {t("Ready")}
-                </Badge>
-              ) : selectedInfo ? (
-                <Badge variant="outline">{t("Not enabled")}</Badge>
-              ) : null}
-              {selectedInfo?.enabled && selectedInfo.disableSupported ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDisableBucket}
-                  disabled={
-                    !canEnableBucket || Boolean(bucketErrors[selectedBucket]) || bucketStatusLoading[selectedBucket]
-                  }
-                >
-                  {t("Disable table bucket")}
-                </Button>
-              ) : null}
-              {selectedInfo?.enabled && activeTab === "tables" ? (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={() => setTableDialogOpen(true)}
-                  disabled={!canCreateTable || !selectedNamespaceSegments.length}
-                >
-                  <RiAddLine className="size-4" aria-hidden />
-                  {t("Create table")}
-                </Button>
-              ) : selectedInfo?.enabled && activeTab === "views" ? (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={openCreateView}
-                  disabled={!canCreateView || !selectedNamespaceSegments.length}
-                >
-                  <RiAddLine className="size-4" aria-hidden />
-                  {t("Create view")}
-                </Button>
-              ) : selectedInfo?.enabled ? null : selectedInfo &&
-                !bucketErrors[selectedBucket] &&
-                !bucketStatusLoading[selectedBucket] ? (
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleEnableBucket}
-                  disabled={!canEnableBucket || !selectedBucket}
-                >
-                  <RiTableLine className="size-4" aria-hidden />
-                  {t("Enable table bucket")}
-                </Button>
-              ) : null}
+                <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5">
+                    <RiCloudLine className="size-4" aria-hidden />
+                    {selectedInfo.catalogType || "rest"}
+                  </span>
+                  <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
+                    <span className="shrink-0">{t("Catalog URI")}</span>
+                    <code className="truncate font-mono" title={selectedCatalogUri}>
+                      {selectedCatalogUri || "--"}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label={t("Copy catalog URI")}
+                      title={t("Copy catalog URI")}
+                      onClick={() => void copyValue(selectedCatalogUri)}
+                      disabled={!selectedCatalogUri}
+                    >
+                      <RiClipboardLine className="size-3.5" aria-hidden />
+                    </Button>
+                  </span>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {t("Enable this bucket to create namespaces and tables.")}
+                </p>
+              )}
             </div>
-          </div>
+            {selectedInfo?.enabled && selectedInfo.disableSupported ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDisableBucket}
+                disabled={
+                  !canEnableBucket || Boolean(bucketErrors[selectedBucket]) || bucketStatusLoading[selectedBucket]
+                }
+              >
+                {t("Disable table bucket")}
+              </Button>
+            ) : null}
+          </header>
 
           {bucketErrors[selectedBucket] ? (
             <div className="m-4 border border-amber-500/40 bg-amber-500/10 p-4" role="status">
@@ -1028,69 +1016,7 @@ export default function TableCatalogPage() {
             </EmptyState>
           ) : selectedInfo ? (
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b px-4 py-3 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5">
-                  <RiCloudLine className="size-4" aria-hidden />
-                  {selectedInfo.catalogType || "rest"}
-                </span>
-                <span className="inline-flex min-w-0 items-center gap-1.5">
-                  <span>{t("Catalog URI")}</span>
-                  <code className="max-w-[20rem] truncate font-mono text-foreground" title={selectedInfo.catalogUri}>
-                    {selectedCatalogUri || "--"}
-                  </code>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label={t("Copy catalog URI")}
-                    title={t("Copy catalog URI")}
-                    onClick={() => void copyValue(selectedCatalogUri)}
-                    disabled={!selectedCatalogUri}
-                  >
-                    <RiClipboardLine className="size-3.5" aria-hidden />
-                  </Button>
-                </span>
-              </div>
-
-              <div className="space-y-4 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <label htmlFor="table-catalog-namespace-select" className="mb-1.5 block text-xs font-medium">
-                      {t("Namespace")}
-                    </label>
-                    <NativeSelect
-                      id="table-catalog-namespace-select"
-                      name="namespace"
-                      value={selectedNamespace}
-                      onChange={(event) => setSelectedNamespace(event.target.value)}
-                      className="w-full sm:max-w-sm"
-                      disabled={namespaceLoading || !namespaces.length}
-                      aria-label={t("Select namespace")}
-                    >
-                      {!namespaces.length ? (
-                        <NativeSelectOption value="">{t("No namespaces")}</NativeSelectOption>
-                      ) : null}
-                      {namespaces.map((item) => {
-                        const label = displayNamespace(item.namespace)
-                        return (
-                          <NativeSelectOption key={label} value={label}>
-                            {label}
-                          </NativeSelectOption>
-                        )
-                      })}
-                    </NativeSelect>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={openCreateNamespace} disabled={!canCreateNamespace}>
-                      <RiAddLine className="size-4" aria-hidden />
-                      {t("Create namespace")}
-                    </Button>
-                    <span className="text-xs text-muted-foreground">
-                      {namespaceLoading ? t("Loading…") : `${namespaces.length} ${t("namespaces")}`}
-                    </span>
-                  </div>
-                </div>
-
+              <div className="space-y-4 p-5">
                 {namespaceError ? (
                   <Alert variant="destructive">
                     <RiAlertLine className="size-4" aria-hidden />
@@ -1110,29 +1036,72 @@ export default function TableCatalogPage() {
                   onValueChange={(value) => setActiveTab((value as CatalogTab) || "tables")}
                   className="gap-4"
                 >
-                  <TabsList variant="line" className="w-full justify-start overflow-x-auto">
-                    <TabsTrigger value="tables">{t("Tables")}</TabsTrigger>
-                    <TabsTrigger value="views">{t("Views")}</TabsTrigger>
-                    <TabsTrigger value="namespaces">{t("Namespaces")}</TabsTrigger>
-                  </TabsList>
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
+                    <TabsList
+                      variant="line"
+                      className="h-10 max-w-full justify-start gap-1 overflow-x-auto p-0 [&>button]:flex-none [&>button]:px-3"
+                    >
+                      <TabsTrigger value="tables">{t("Tables")}</TabsTrigger>
+                      <TabsTrigger value="views">{t("Views")}</TabsTrigger>
+                      <TabsTrigger value="namespaces">{t("Namespaces")}</TabsTrigger>
+                    </TabsList>
+                    <div className="page-actions">
+                      {activeTab === "tables" ? (
+                        <Button
+                          onClick={() => setTableDialogOpen(true)}
+                          disabled={!canCreateTable || !selectedNamespaceSegments.length}
+                        >
+                          <RiAddLine className="size-4" aria-hidden />
+                          {t("Create table")}
+                        </Button>
+                      ) : activeTab === "views" ? (
+                        <Button onClick={openCreateView} disabled={!canCreateView || !selectedNamespaceSegments.length}>
+                          <RiAddLine className="size-4" aria-hidden />
+                          {t("Create view")}
+                        </Button>
+                      ) : (
+                        <Button onClick={openCreateNamespace} disabled={!canCreateNamespace}>
+                          <RiAddLine className="size-4" aria-hidden />
+                          {t("Create namespace")}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  {activeTab !== "namespaces" ? (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label htmlFor="table-catalog-namespace-select" className="text-sm text-muted-foreground">
+                        {t("Namespace")}
+                      </label>
+                      <NativeSelect
+                        id="table-catalog-namespace-select"
+                        name="namespace"
+                        value={selectedNamespace}
+                        onChange={(event) => setSelectedNamespace(event.target.value)}
+                        className="w-full sm:w-52"
+                        disabled={namespaceLoading || !namespaces.length}
+                        aria-label={t("Select namespace")}
+                      >
+                        {!namespaces.length ? (
+                          <NativeSelectOption value="">{t("No namespaces")}</NativeSelectOption>
+                        ) : null}
+                        {namespaces.map((item) => {
+                          const label = displayNamespace(item.namespace)
+                          return (
+                            <NativeSelectOption key={label} value={label}>
+                              {label}
+                            </NativeSelectOption>
+                          )
+                        })}
+                      </NativeSelect>
+                      <Button variant="ghost" onClick={openCreateNamespace} disabled={!canCreateNamespace}>
+                        <RiAddLine className="size-4" aria-hidden />
+                        {t("Create namespace")}
+                      </Button>
+                      {namespaceLoading ? <Spinner className="size-4" aria-label={t("Loading…")} /> : null}
+                    </div>
+                  ) : null}
 
                   <TabsContent value="tables" className="mt-0 space-y-3">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <h3 className="text-sm font-semibold">{selectedNamespace || t("Tables")}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {t("Open a table to inspect metadata, snapshots, and recovery evidence.")}
-                        </p>
-                      </div>
-                      <SearchInput
-                        value={tableSearch}
-                        onChange={setTableSearch}
-                        placeholder={t("Search tables")}
-                        aria-label={t("Search tables")}
-                        clearable
-                        className="sm:max-w-xs"
-                      />
-                    </div>
                     {tableError ? (
                       <Alert variant="destructive">
                         <RiAlertLine className="size-4" aria-hidden />
@@ -1148,6 +1117,15 @@ export default function TableCatalogPage() {
                     ) : null}
                     <DataTable
                       table={tableTable}
+                      toolbar={
+                        <SearchInput
+                          value={tableSearch}
+                          onChange={setTableSearch}
+                          placeholder={t("Search tables")}
+                          aria-label={t("Search tables")}
+                          clearable
+                        />
+                      }
                       isLoading={tableLoading}
                       caption={t("Iceberg tables")}
                       emptyTitle={tableSearch ? t("No matching tables") : t("No tables")}
@@ -1160,33 +1138,6 @@ export default function TableCatalogPage() {
                   </TabsContent>
 
                   <TabsContent value="views" className="mt-0 space-y-3">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <h3 className="text-sm font-semibold">{selectedNamespace || t("Views")}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {t("Create and replace SQL views registered in this namespace.")}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <SearchInput
-                          value={viewSearch}
-                          onChange={setViewSearch}
-                          placeholder={t("Search views")}
-                          aria-label={t("Search views")}
-                          clearable
-                          className="sm:max-w-xs"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={openCreateView}
-                          disabled={!canCreateView || !selectedNamespaceSegments.length}
-                        >
-                          <RiAddLine className="size-4" aria-hidden />
-                          {t("Create view")}
-                        </Button>
-                      </div>
-                    </div>
                     {viewError ? (
                       <Alert variant="destructive">
                         <RiAlertLine className="size-4" aria-hidden />
@@ -1202,6 +1153,15 @@ export default function TableCatalogPage() {
                     ) : null}
                     <DataTable
                       table={viewTable}
+                      toolbar={
+                        <SearchInput
+                          value={viewSearch}
+                          onChange={setViewSearch}
+                          placeholder={t("Search views")}
+                          aria-label={t("Search views")}
+                          clearable
+                        />
+                      }
                       isLoading={viewLoading}
                       caption={t("Iceberg views")}
                       emptyTitle={viewSearch ? t("No matching views") : t("No views")}
@@ -1214,18 +1174,9 @@ export default function TableCatalogPage() {
                   </TabsContent>
 
                   <TabsContent value="namespaces" className="mt-0 space-y-3">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                      <div>
-                        <h3 className="text-sm font-semibold">{t("Namespaces")}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {t("Namespaces group tables and carry optional catalog properties.")}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm" onClick={openCreateNamespace} disabled={!canCreateNamespace}>
-                        <RiAddLine className="size-4" aria-hidden />
-                        {t("Create namespace")}
-                      </Button>
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {t("Namespaces group tables and carry optional catalog properties.")}
+                    </p>
                     <DataTable
                       table={namespaceTable}
                       isLoading={namespaceLoading}
@@ -1309,31 +1260,31 @@ export default function TableCatalogPage() {
         </div>
       ) : null}
 
-      <section aria-labelledby="table-catalog-state-heading" className="border bg-card">
+      {renderWorkspace()}
+
+      <section aria-labelledby="table-catalog-state-heading" className="border-y py-4">
         <h2 id="table-catalog-state-heading" className="sr-only">
           {t("Table catalog status")}
         </h2>
-        <div className="grid divide-y sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
-          <div className="space-y-1 p-4">
+        <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+          <div className="space-y-1">
             <p className="text-xs text-muted-foreground">{t("Catalog endpoint")}</p>
             <p className="break-all font-mono text-sm">{catalogPrefixLabel}</p>
           </div>
-          <div className="space-y-1 p-4">
+          <div className="space-y-1">
             <p className="text-xs text-muted-foreground">{t("Catalog backing")}</p>
             <p className="text-sm">{backing}</p>
           </div>
-          <div className="space-y-1 p-4">
+          <div className="space-y-1">
             <p className="text-xs text-muted-foreground">{t("Credential mode")}</p>
             <p className="break-words text-sm">{credentialMode}</p>
           </div>
-          <div className="space-y-1 p-4">
+          <div className="space-y-1">
             <p className="text-xs text-muted-foreground">{t("Catalog contract")}</p>
             <p className="text-sm">{tableMetadataCount(config)}</p>
           </div>
         </div>
       </section>
-
-      {renderWorkspace()}
 
       <NamespaceDialog
         open={namespaceDialogOpen}

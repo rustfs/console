@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client"
 import { Window } from "happy-dom"
 import ts from "typescript"
 import type { LoginFormProps } from "../../components/auth/login-form"
+import { buildSiteReplicationTlsPayload, isHttpsSiteReplicationEndpoint } from "../../lib/site-replication-tls"
 
 const key = Symbol.for("console-login-interaction")
 type Props = { children?: React.ReactNode; [name: string]: unknown }
@@ -24,7 +25,12 @@ async function load(file: string) {
       }
       if (specifier === "@/lib/mfa")
         return `import ${bindings} from "${new URL("../../lib/mfa.ts", import.meta.url).href}";`
-      const names = bindings.startsWith("{") ? bindings.replace(/[{}\s]/g, "").split(",") : ["default"]
+      const names = bindings.startsWith("{")
+        ? bindings
+            .replace(/[{}\s]/g, "")
+            .split(",")
+            .filter(Boolean)
+        : ["default"]
       const exports = names
         .map((name) => {
           if (name === "configManager")
@@ -41,6 +47,8 @@ async function load(file: string) {
 
 const { LoginForm } = await load("../../components/auth/login-form.tsx")
 const { BucketNewForm } = await load("../../components/buckets/new-form.tsx")
+const { SiteReplicationNewForm } = await load("../../components/site-replication/new-form.tsx")
+const { ObjectUploadPicker } = await load("../../components/object/upload-picker.tsx")
 const { default: LoginPage } = await load("../../app/(auth)/auth/login/page.tsx")
 
 async function mount(t: TestContext, component: React.ReactElement, overrides: Record<string, unknown>) {
@@ -77,7 +85,7 @@ async function mount(t: TestContext, component: React.ReactElement, overrides: R
     }
   })
   await React.act(async () => root.render(component))
-  return { container }
+  return { container, browser }
 }
 
 const formDefaults: LoginFormProps = {
@@ -274,4 +282,145 @@ test("object lock and versioning change together, and a pending bucket creation 
   assert.deepEqual(creates, [{ Bucket: "research-archive", ObjectLockEnabledForBucket: true }])
   assert.deepEqual(versions, [["research-archive", "Enabled"]])
   assert.deepEqual(closed, [false])
+})
+
+test("site creation rejects every dismissal while saving and preserves values after failure", async (t) => {
+  const inputs = new Map<string, { value: string; onChange: (event: { target: { value: string } }) => void }>()
+  let modal: { onOpenChange: (open: boolean, details: { reason: string }) => void }
+  let save: { onClick: () => Promise<void>; disabled: boolean }
+  const request = Promise.withResolvers<{ success: boolean }>()
+  const closed: boolean[] = []
+  const submissions: unknown[] = []
+  await mount(
+    t,
+    React.createElement(SiteReplicationNewForm, { open: true, onOpenChange: (open: boolean) => closed.push(open) }),
+    {
+      buildSiteReplicationTlsPayload,
+      isHttpsSiteReplicationEndpoint,
+      useMessage: () => ({ error: () => {}, success: () => {} }),
+      useSiteReplication: () => ({
+        addSiteReplication: async (sites: unknown) => {
+          submissions.push(sites)
+          return request.promise
+        },
+      }),
+      Input: (props: Props) => {
+        inputs.set(props.id as string, props as never)
+        return null
+      },
+      Dialog: (props: Props) => {
+        modal = props as never
+        return pass(props)
+      },
+      Button: (props: Props) => {
+        if (props.children === "Save" || props.children === "Saving…") save = props as never
+        return pass(props)
+      },
+    },
+  )
+  for (const [id, value] of [
+    ["site-endpoint-0", "https://east.example.test"],
+    ["site-access-0", "site-access"],
+    ["site-secret-0", "site-secret"],
+  ]) {
+    await React.act(async () => inputs.get(id)!.onChange({ target: { value } }))
+  }
+  let saving!: Promise<void>
+  await React.act(async () => {
+    saving = save!.onClick()
+  })
+  for (const reason of ["escape-key", "close-press", "outside-press"]) {
+    await React.act(async () => modal!.onOpenChange(false, { reason }))
+  }
+  assert.deepEqual(closed, [])
+  assert.equal(save!.disabled, true)
+  assert.equal(submissions.length, 1)
+  await React.act(async () => {
+    request.reject(new Error("Unavailable"))
+    await saving
+  })
+  assert.equal(inputs.get("site-endpoint-0")!.value, "https://east.example.test")
+  assert.equal(save!.disabled, false)
+  await React.act(async () => modal!.onOpenChange(false, { reason: "close-press" }))
+  assert.deepEqual(closed, [false])
+})
+
+const uploadMocks = {
+  RiInformationLine: () => React.createElement("svg"),
+  Button: (props: Props) =>
+    React.createElement(
+      "button",
+      {
+        onClick: props.onClick as React.MouseEventHandler<HTMLButtonElement>,
+        disabled: props.disabled as boolean,
+        "aria-label": props["aria-label"] as string,
+        ref: props.ref as React.Ref<HTMLButtonElement>,
+      },
+      props.children,
+    ),
+  Input: (props: Props) => React.createElement("input", props),
+  useAddUploadFiles: () => () => {},
+  useTaskPanelOpen: () => ({ setTaskPanelOpen: () => {} }),
+  useMessage: () => ({ error: () => {}, warning: () => {} }),
+  formatInteger: String,
+  formatBytes: (size: number) => `${size} B`,
+  normalizeUploadPrefix: (prefix: string) => prefix.replace(/^\/+|\/+$/g, ""),
+  useVirtualizer: ({ count }: { count: number }) => ({
+    getVirtualItems: () => Array.from({ length: count }, (_, index) => ({ index, size: 56, start: index * 56 })),
+    getTotalSize: () => count * 56,
+  }),
+}
+
+const uploadProps = {
+  show: true,
+  onShowChange: () => {},
+  bucketName: "datasets",
+  prefix: "activity-monitor/previews/",
+  canUpload: true,
+}
+
+test("an empty upload offers both pickers and keeps upload disabled without a cleanup action", async (t) => {
+  const { container } = await mount(t, React.createElement(ObjectUploadPicker, uploadProps), uploadMocks)
+  const actions = [...container.querySelectorAll("button")].map((button) => ({
+    name: button.getAttribute("aria-label") || button.textContent,
+    disabled: button.disabled,
+  }))
+
+  assert.deepEqual(actions, [
+    { name: "Select File", disabled: false },
+    { name: "Select Folder", disabled: false },
+    { name: "Cancel", disabled: false },
+    { name: "Start Upload", disabled: true },
+  ])
+})
+
+test("upload file removal names its target and clearing selection preserves the destination", async (t) => {
+  const { container, browser } = await mount(t, React.createElement(ObjectUploadPicker, uploadProps), uploadMocks)
+  const input = container.querySelector('input[name="upload-files"]')!
+  Object.defineProperty(input, "files", {
+    configurable: true,
+    value: [new File(["report"], "report.csv"), new File(["notes"], "notes.txt")],
+  })
+  await React.act(async () => input.dispatchEvent(new browser.Event("change", { bubbles: true })))
+  await React.act(async () =>
+    [...container.querySelectorAll("button")]
+      .find((button) => button.getAttribute("aria-label") === "Delete report.csv")!
+      .click(),
+  )
+  assert.equal(container.querySelector('[title="report.csv"]'), null)
+  assert.ok(container.querySelector('[title="notes.txt"]'))
+  assert.equal(browser.document.activeElement?.textContent, "Select File")
+
+  await React.act(async () =>
+    [...container.querySelectorAll("button")]
+      .find((button) => button.getAttribute("aria-label") === "Clear All")!
+      .click(),
+  )
+  assert.equal(container.querySelector('[title="notes.txt"]'), null)
+  assert.equal(container.querySelector('button[aria-label="Clear All"]'), null)
+  assert.equal(
+    [...container.querySelectorAll("input")].find((input) => input.name === "upload-prefix")!.value,
+    uploadProps.prefix,
+  )
+  assert.equal(browser.document.activeElement?.textContent, "Select File")
 })

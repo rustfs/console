@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { RiRefreshLine } from "@remixicon/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { useGroups } from "@/hooks/use-groups"
 import { useMessage } from "@/lib/feedback/message"
@@ -113,7 +113,7 @@ export function UserAddToGroupForm({ open, onOpenChange, selectedUsers, onSucces
         className="max-h-[min(90dvh,44rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg"
         aria-busy={loading || submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{t("Add to Group")}</DialogTitle>
         </DialogHeader>
 
@@ -124,7 +124,7 @@ export function UserAddToGroupForm({ open, onOpenChange, selectedUsers, onSucces
             void submitForm()
           }}
         >
-          <div className="min-h-0 space-y-5 overflow-y-auto overscroll-contain p-4">
+          <DialogBody className="min-h-0 space-y-5 overflow-y-auto overscroll-contain">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-sm font-medium">{t("Users")}</div>
@@ -170,9 +170,9 @@ export function UserAddToGroupForm({ open, onOpenChange, selectedUsers, onSucces
                 {submitError}
               </p>
             ) : null}
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

@@ -11,16 +11,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/dialog"
 import { runDialogAction } from "@/lib/feedback/dialog-action"
 import { useDialogController } from "@/lib/feedback/dialog"
 import type { DialogInstance } from "@/lib/feedback/dialog"
 import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
 import { DANGER_BUTTON_CLASS } from "@/components/danger-button"
 
 function positiveButtonVariant(dialog: DialogInstance) {
-  return dialog.tone === "warning" ? "secondary" : "default"
+  return dialog.tone === "destructive" ? "destructive" : dialog.tone === "warning" ? "secondary" : "default"
 }
 
 export function DialogHost() {
@@ -52,62 +51,51 @@ export function DialogHost() {
               <AlertDialogFooter>
                 {dialog.negativeText && (
                   <AlertDialogCancel
-                    render={
-                      <button
-                        type="button"
-                        disabled={isPending}
-                        className={cn(
-                          buttonVariants({ variant: "outline" }),
-                          "min-h-11 w-full sm:min-h-10 sm:w-auto text-foreground",
-                        )}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          void runDialogAction({
-                            dialogId: dialog.id,
-                            pendingIds: pendingDialogIdsRef.current,
-                            setPendingIds: setPendingDialogIds,
-                            action: dialog.onNegativeClick,
-                            close: () => controller.close(dialog.id),
-                            onError: (error) => {
-                              console.error(error)
-                            },
-                          })
-                        }}
-                      >
-                        {dialog.negativeText}
-                      </button>
-                    }
-                  />
+                    type="button"
+                    disabled={isPending}
+                    className={cn("min-h-11 w-full sm:min-h-10 sm:w-auto text-foreground")}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      void runDialogAction({
+                        dialogId: dialog.id,
+                        pendingIds: pendingDialogIdsRef.current,
+                        setPendingIds: setPendingDialogIds,
+                        action: dialog.onNegativeClick,
+                        close: () => controller.close(dialog.id),
+                        onError: (error) => {
+                          console.error(error)
+                        },
+                      })
+                    }}
+                  >
+                    {dialog.negativeText}
+                  </AlertDialogCancel>
                 )}
                 <AlertDialogAction
-                  render={
-                    <button
-                      type="button"
-                      disabled={isPending}
-                      className={cn(
-                        buttonVariants({ variant: positiveButtonVariant(dialog) }),
-                        "min-h-11 w-full sm:min-h-10 sm:w-auto",
-                        dialog.tone === "destructive" && DANGER_BUTTON_CLASS,
-                      )}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        void runDialogAction({
-                          dialogId: dialog.id,
-                          pendingIds: pendingDialogIdsRef.current,
-                          setPendingIds: setPendingDialogIds,
-                          action: dialog.onPositiveClick,
-                          close: () => controller.close(dialog.id),
-                          onError: (error) => {
-                            console.error(error)
-                          },
-                        })
-                      }}
-                    >
-                      {isPending ? <RiLoaderLine className="size-4 animate-spin" aria-hidden="true" /> : null}
-                      <span>{dialog.positiveText || "Confirm"}</span>
-                    </button>
-                  }
-                />
+                  variant={positiveButtonVariant(dialog)}
+                  type="button"
+                  disabled={isPending}
+                  className={cn(
+                    "min-h-11 w-full sm:min-h-10 sm:w-auto",
+                    dialog.tone === "destructive" && DANGER_BUTTON_CLASS,
+                  )}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    void runDialogAction({
+                      dialogId: dialog.id,
+                      pendingIds: pendingDialogIdsRef.current,
+                      setPendingIds: setPendingDialogIds,
+                      action: dialog.onPositiveClick,
+                      close: () => controller.close(dialog.id),
+                      onError: (error) => {
+                        console.error(error)
+                      },
+                    })
+                  }}
+                >
+                  {isPending ? <RiLoaderLine className="size-4 animate-spin" aria-hidden="true" /> : null}
+                  <span>{dialog.positiveText || "Confirm"}</span>
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

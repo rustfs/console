@@ -6,12 +6,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
@@ -155,7 +156,7 @@ export function TableDialog({
       }}
     >
       <DialogContent className="max-h-[min(92dvh,54rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b px-4 py-4 pe-12 sm:px-6">
+        <DialogHeader>
           <DialogTitle>{t("Create table")}</DialogTitle>
           <DialogDescription>
             {t("Create an Iceberg table in")} <span className="font-mono text-foreground">{bucket}</span>
@@ -172,7 +173,7 @@ export function TableDialog({
             void handleSubmit()
           }}
         >
-          <div className="min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+          <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
             <FieldGroup>
               {saveError ? (
                 <Alert variant="destructive">
@@ -264,9 +265,9 @@ export function TableDialog({
                 </FieldDescription>
               </Field>
             </FieldGroup>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t px-4 py-3 sm:px-6">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               {t("Cancel")}
             </Button>

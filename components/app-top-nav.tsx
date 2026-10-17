@@ -10,12 +10,12 @@ import { UserDropdown } from "@/components/user/dropdown"
 
 export function AppTopNav() {
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b bg-background transition-[height] ease-linear sm:h-16 group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
+    <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4 sm:px-8 xl:px-10">
       <div className="flex min-w-0 flex-1 items-center gap-3">
-        <SidebarTrigger className="-ms-1 size-11 shrink-0 sm:size-8" />
+        <SidebarTrigger className="-ms-1 shrink-0" />
         <TopNavBreadcrumb />
       </div>
-      <div className="flex shrink-0 items-center gap-1 [&>[data-slot=button]]:size-11 sm:gap-2 sm:[&>[data-slot=button]]:size-9">
+      <div className="flex shrink-0 items-center gap-1 sm:gap-2">
         <LanguageSwitcher />
         <ThemeSwitcher />
         <div className="hidden items-center gap-1 sm:flex sm:gap-2">

@@ -60,6 +60,19 @@ function Table({ data = [{ version: "A-version-id" }], ...props }: Options) {
 }
 const render = (props: Options) => renderToStaticMarkup(React.createElement(Table, props))
 
+test("collection tools remain outside the horizontal table and available during loading", () => {
+  const html = render({ isLoading: true, toolbar: React.createElement("input", { "aria-label": "Search versions" }) })
+  assert.match(html, /aria-label="Search versions"/)
+  assert.match(html, /role="status"/)
+  assert.ok(html.indexOf('aria-label="Search versions"') < html.indexOf('role="status"'))
+})
+
+test("collection tools precede the data table when rows are loaded", () => {
+  const html = render({ toolbar: React.createElement("button", null, "Filter") })
+  assert.ok(html.indexOf(">Filter<") < html.indexOf("<table"))
+  assert.match(html, /A-version-id/)
+})
+
 test("loading a different object does not expose previous versions or their delete actions by default", () => {
   const html = render({ isLoading: true })
   assert.doesNotMatch(html, /A-version-id|>Delete</)

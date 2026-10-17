@@ -1,7 +1,5 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
-
 export interface BackendInfoItem {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>
   title: string
@@ -10,15 +8,15 @@ export interface BackendInfoItem {
 
 export function PerformanceBackendCard({ items, t }: { items: BackendInfoItem[]; t: (key: string) => string }) {
   return (
-    <Card className="shadow-none">
-      <CardHeader className="pb-3">
+    <section className="grid gap-6 border-t pt-6 xl:grid-cols-[minmax(0,1fr)_2fr]">
+      <div className="space-y-2">
         <h2 id="storage-configuration-title" className="text-base font-semibold">
           {t("Storage Configuration")}
         </h2>
-        <CardDescription>{t("Parity and backend settings reported by the cluster.")}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <dl className="grid gap-0 border-y md:grid-cols-3" aria-labelledby="storage-configuration-title">
+        <p className="text-sm text-muted-foreground">{t("Parity and backend settings reported by the cluster.")}</p>
+      </div>
+      <div>
+        <dl className="grid gap-0 md:grid-cols-3" aria-labelledby="storage-configuration-title">
           {items.map((item) => (
             <div
               key={item.title}
@@ -34,7 +32,7 @@ export function PerformanceBackendCard({ items, t }: { items: BackendInfoItem[];
             </div>
           ))}
         </dl>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

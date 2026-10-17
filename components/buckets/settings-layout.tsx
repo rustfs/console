@@ -17,14 +17,14 @@ export function BucketSettingsSection({
   children: React.ReactNode
 }) {
   return (
-    <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-24 space-y-3">
+    <section id={id} aria-labelledby={`${id}-heading`} className="scroll-mt-24 space-y-5">
       <div className="space-y-1">
         <h2 id={`${id}-heading`} className="font-heading text-base font-semibold tracking-tight">
           {title}
         </h2>
         {description ? <p className="max-w-2xl text-sm text-muted-foreground">{description}</p> : null}
       </div>
-      <div className="divide-y border bg-card">{children}</div>
+      <div className="divide-y border-t">{children}</div>
     </section>
   )
 }
@@ -55,7 +55,7 @@ export function BucketSettingRow({
   className?: string
 }) {
   return (
-    <div className={cn("grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start", className)}>
+    <div className={cn("grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start", className)}>
       <div className="min-w-0 space-y-2">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <h3 className="min-w-0 text-sm font-medium text-foreground">{title}</h3>

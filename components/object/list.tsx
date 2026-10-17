@@ -27,17 +27,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
@@ -137,6 +138,7 @@ function isAccessDeniedError(error: unknown): boolean {
 
 interface ObjectListProps {
   bucket: string
+  heading?: React.ReactNode
   path: string
   onOpenInfo: (bucket: string, key: string) => void
   onUploadClick: () => void
@@ -149,6 +151,7 @@ interface ObjectListProps {
 
 export function ObjectList({
   bucket,
+  heading,
   path,
   onOpenInfo,
   onUploadClick,
@@ -616,8 +619,7 @@ export function ObjectList({
                     ref={(node) => setRowActionTrigger(row.id, node)}
                     type="button"
                     variant="ghost"
-                    size="icon"
-                    className="size-11 lg:size-8"
+                    size="icon-sm"
                     aria-label={`${t("Actions")}: ${displayKey(key)}`}
                   >
                     <RiMore2Line className="size-4" aria-hidden />
@@ -927,111 +929,87 @@ export function ObjectList({
   useObjectListPagination({ loadMoreRef, nextToken, loading, loadMoreError, loadNextBatch })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         actions={
           <>
             <TaskStatsButton />
             {canUpload ? (
-              <Button variant="outline" onClick={onUploadClick}>
+              <Button onClick={onUploadClick}>
                 <RiFileAddLine className="size-4" aria-hidden />
                 <span>
                   {t("Upload File")}/{t("Folder")}
                 </span>
               </Button>
             ) : null}
-            {checkedKeys.length > 0 ? (
-              <>
-                {canBulkDelete ? (
-                  <Button
-                    variant="outline"
-                    className="border-destructive text-destructive"
-                    onClick={(event) => handleBatchDelete(event.currentTarget)}
-                    disabled={bucketVersioningState === "unknown"}
-                  >
-                    <RiDeleteBin5Line className="size-4" aria-hidden />
-                    <span>{t("Delete Selected")}</span>
-                  </Button>
-                ) : null}
-                {canBulkDownload ? (
-                  <Button variant="outline" onClick={downloadMultiple}>
-                    <RiDownloadCloud2Line className="size-4" aria-hidden />
-                    <span>{t("Download")}</span>
-                  </Button>
-                ) : null}
-              </>
-            ) : null}
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <Button
-                    ref={refreshButtonRef}
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="size-11 lg:size-8"
-                    aria-label={t("More actions")}
-                  >
-                    <RiMore2Line className="size-4" aria-hidden />
-                  </Button>
-                }
-              />
-              <DropdownMenuContent align="end" className="w-max min-w-40 max-w-[calc(100vw-2rem)]">
-                {nextToken ? (
-                  <DropdownMenuItem
-                    className={OBJECT_ACTION_MENU_ITEM_CLASS}
-                    onClick={loadNextBatch}
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <Spinner className="size-4" aria-hidden />
-                    ) : (
-                      <RiArrowDownSLine className="size-4" aria-hidden />
-                    )}
-                    <span>{loading ? t("Loading more objects") : t("Load next objects")}</span>
-                  </DropdownMenuItem>
-                ) : null}
-                <DropdownMenuItem
-                  className={OBJECT_ACTION_MENU_ITEM_CLASS}
-                  onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}
-                >
-                  <RiRefreshLine className="size-4" aria-hidden />
-                  <span>{t("Refresh")}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              ref={refreshButtonRef}
+              type="button"
+              variant="outline"
+              onClick={() => (onRefresh ? onRefresh() : resetAndFetchObjects())}
+            >
+              <RiRefreshLine className="size-4" aria-hidden />
+              <span>{t("Refresh")}</span>
+            </Button>
           </>
         }
       >
-        <div className="flex flex-wrap items-center gap-4">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder={t("Filter loaded objects")}
-            clearable
-            className="lg:max-w-sm"
-          />
-          <RadioGroup
-            value={deletedView}
-            onValueChange={(value) => setDeletedView(resolveObjectListDeletedView(value))}
-            className="flex w-auto flex-wrap items-center gap-x-4 gap-y-2"
-            aria-label={t("Deleted Objects")}
-          >
-            {OBJECT_LIST_DELETED_VIEW_OPTIONS.map((option) => (
-              <label
-                key={option.value}
-                htmlFor={`object-list-deleted-view-${option.value}`}
-                className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer"
-              >
-                <RadioGroupItem id={`object-list-deleted-view-${option.value}`} value={option.value} />
-                <span>{t(option.labelKey)}</span>
-              </label>
-            ))}
-          </RadioGroup>
-        </div>
+        {heading ?? <h1>{bucket}</h1>}
       </PageHeader>
 
       <DataTable
+        caption={t("Objects")}
+        toolbar={
+          <div className="flex w-full flex-wrap items-center gap-4">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={t("Filter loaded objects")}
+              clearable
+              className="lg:max-w-sm"
+            />
+            <RadioGroup
+              value={deletedView}
+              onValueChange={(value) => setDeletedView(resolveObjectListDeletedView(value))}
+              className="flex w-auto flex-wrap items-center gap-x-4 gap-y-2"
+              aria-label={t("Deleted Objects")}
+            >
+              {OBJECT_LIST_DELETED_VIEW_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  htmlFor={`object-list-deleted-view-${option.value}`}
+                  className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer"
+                >
+                  <RadioGroupItem id={`object-list-deleted-view-${option.value}`} value={option.value} />
+                  <span>{t(option.labelKey)}</span>
+                </label>
+              ))}
+            </RadioGroup>
+            <div className="ms-auto flex flex-wrap items-center gap-2">
+              {checkedKeys.length > 0 ? (
+                <>
+                  {canBulkDelete ? (
+                    <Button
+                      variant="outline"
+                      className="border-destructive text-destructive"
+                      onClick={(event) => handleBatchDelete(event.currentTarget)}
+                      disabled={bucketVersioningState === "unknown"}
+                    >
+                      <RiDeleteBin5Line className="size-4" aria-hidden />
+                      <span>{t("Delete Selected")}</span>
+                    </Button>
+                  ) : null}
+                  {canBulkDownload ? (
+                    <Button variant="outline" onClick={downloadMultiple}>
+                      <RiDownloadCloud2Line className="size-4" aria-hidden />
+                      <span>{t("Download")}</span>
+                    </Button>
+                  ) : null}
+                </>
+              ) : null}
+            </div>
+          </div>
+        }
         table={table}
         isLoading={displayState === "loading" || displayState === "filtered-loading"}
         errorTitle={
@@ -1138,24 +1116,17 @@ export function ObjectList({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              render={
-                <Button variant="outline" className="w-full sm:w-auto text-foreground">
-                  {t("Cancel")}
-                </Button>
-              }
-            />
+            <AlertDialogCancel variant="outline" className="w-full sm:w-auto text-foreground">
+              {t("Cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
-              render={
-                <Button
-                  className={cn("w-full sm:w-auto", DANGER_BUTTON_CLASS)}
-                  onClick={handleConfirmDelete}
-                  disabled={bucketVersioningState === "unknown"}
-                >
-                  {t("Confirm")}
-                </Button>
-              }
-            />
+              variant={"destructive"}
+              className={cn("w-full sm:w-auto", DANGER_BUTTON_CLASS)}
+              onClick={handleConfirmDelete}
+              disabled={bucketVersioningState === "unknown"}
+            >
+              {t("Delete")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1184,28 +1155,21 @@ export function ObjectList({
             </span>
           </AlertDialogDescription>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              render={
-                <Button variant="outline" className="min-h-11 w-full sm:min-h-8 sm:w-auto text-foreground">
-                  {t("Cancel")}
-                </Button>
-              }
-            />
+            <AlertDialogCancel variant="outline" className="min-h-11 w-full sm:min-h-8 sm:w-auto text-foreground">
+              {t("Cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
-              render={
-                <Button
-                  className={cn("min-h-11 w-full sm:min-h-8 sm:w-auto", DANGER_BUTTON_CLASS)}
-                  onClick={handleForceCleanup}
-                  disabled={
-                    !forceCleanupTarget ||
-                    forceCleanupTarget.bucket !== bucket ||
-                    !canCapability("objects.forceCleanup", forceCleanupTarget)
-                  }
-                >
-                  {t("Force Cleanup Folder")}
-                </Button>
+              variant={"destructive"}
+              className={cn("min-h-11 w-full sm:min-h-8 sm:w-auto", DANGER_BUTTON_CLASS)}
+              onClick={handleForceCleanup}
+              disabled={
+                !forceCleanupTarget ||
+                forceCleanupTarget.bucket !== bucket ||
+                !canCapability("objects.forceCleanup", forceCleanupTarget)
               }
-            />
+            >
+              {t("Force Cleanup Folder")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1227,7 +1191,7 @@ export function ObjectList({
             <DialogTitle>{t("Rename Object")}</DialogTitle>
             <DialogDescription className="break-all">{renameSourceKey}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
+          <DialogBody className="space-y-2">
             <Input
               name="object-rename-name"
               value={renameName}
@@ -1240,7 +1204,7 @@ export function ObjectList({
             {renameValidation ? (
               <p className="text-xs text-destructive">{getRenameValidationMessage(renameValidation)}</p>
             ) : null}
-          </div>
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" disabled={renameSubmitting} onClick={() => handleRenameOpenChange(false)}>
               {t("Cancel")}

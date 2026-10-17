@@ -106,6 +106,12 @@ export default function TiersPage() {
   const columns: ColumnDef<TierRow>[] = useMemo(
     () => [
       {
+        id: "name",
+        header: () => t("Name"),
+        accessorFn: (row) => getConfig(row)?.name || "-",
+        cell: ({ row }) => <span className="font-medium">{getConfig(row.original)?.name || "-"}</span>,
+      },
+      {
         header: () => t("Tier Type"),
         accessorKey: "type",
         cell: ({ row }) => {
@@ -116,11 +122,6 @@ export default function TiersPage() {
             </span>
           )
         },
-      },
-      {
-        id: "name",
-        header: () => t("Name"),
-        accessorFn: (row) => getConfig(row)?.name || "-",
       },
       {
         id: "endpoint",
@@ -192,9 +193,10 @@ export default function TiersPage() {
   return (
     <Page>
       <PageHeader
+        count={!loading && !loadError ? data.length : undefined}
         actions={
           <>
-            <Button variant="outline" onClick={() => setNewFormOpen(true)}>
+            <Button onClick={() => setNewFormOpen(true)}>
               <RiAddLine className="size-4" aria-hidden />
               <span>{t("Add Tier")}</span>
             </Button>

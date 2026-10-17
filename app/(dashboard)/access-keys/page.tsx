@@ -217,23 +217,11 @@ export default function AccessKeysPage() {
   return (
     <Page>
       <PageHeader
+        count={!loading && !loadError ? data.length : undefined}
         actions={
           <>
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={t("Search Access Key")}
-              clearable
-              className="max-w-xs"
-            />
-            {selectedKeys.length > 0 && canBulkDeleteAccessKeys && (
-              <Button variant="outline" disabled={!selectedKeys.length} onClick={deleteSelected}>
-                <RiDeleteBin5Line className="size-4" aria-hidden />
-                <span>{t("Delete Selected")}</span>
-              </Button>
-            )}
             {canCreateAccessKey ? (
-              <Button variant="outline" onClick={() => setNewItemVisible(true)}>
+              <Button onClick={() => setNewItemVisible(true)}>
                 <RiAddLine className="size-4" aria-hidden />
                 <span>{t("Add Access Key")}</span>
               </Button>
@@ -246,6 +234,25 @@ export default function AccessKeysPage() {
 
       <div className="space-y-3">
         <DataTable
+          toolbar={
+            <>
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder={t("Search Access Key")}
+                clearable
+                className="max-w-xs"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedKeys.length > 0 && canBulkDeleteAccessKeys && (
+                  <Button variant="outline" disabled={!selectedKeys.length} onClick={deleteSelected}>
+                    <RiDeleteBin5Line className="size-4" aria-hidden />
+                    <span>{t("Delete Selected")}</span>
+                  </Button>
+                )}
+              </div>
+            </>
+          }
           keepPreviousData
           caption={t("Access Keys")}
           errorTitle={loadError ? t("Failed to get data") : undefined}

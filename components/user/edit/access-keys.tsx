@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { Switch } from "@/components/ui/switch"
 import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { SearchInput } from "@/components/search-input"
 import { DateTimePicker } from "@/components/datetime-picker"
 import { DataTable } from "@/components/data-table/data-table"
@@ -233,7 +233,7 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
         )}
         aria-busy={ownerMismatch || parentPolicyLoading || submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{t("Create Key")}</DialogTitle>
         </DialogHeader>
 
@@ -244,7 +244,7 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
             void submitForm()
           }}
         >
-          <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+          <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
             {ownerMismatch ? (
               <div
                 className="flex min-h-72 items-center justify-center gap-2 text-sm text-muted-foreground"
@@ -254,7 +254,7 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
                 {t("Loading…")}
               </div>
             ) : (
-              <div className="flex flex-col gap-4 lg:min-h-[32rem] lg:flex-row">
+              <div className="flex flex-col gap-4 lg:flex-row">
                 <div
                   className={cn(
                     impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
@@ -350,7 +350,7 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
                     </FieldContent>
                   </Field>
 
-                  <Field orientation="responsive" className="items-start gap-3 border p-3">
+                  <Field orientation="responsive" className="items-start gap-3 border-t pt-5">
                     <FieldLabel htmlFor="create-user-access-key-implied-policy" className="text-sm font-medium">
                       {t("Use main account policy")}
                     </FieldLabel>
@@ -407,9 +407,9 @@ function UserAccessKeysNewDialog({ open, onOpenChange, userName, onSuccess, onNo
                 ) : null}
               </div>
             )}
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={closeModal} disabled={submitting}>
               {t("Cancel")}
             </Button>
@@ -571,7 +571,7 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
         )}
         aria-busy={loading || submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{t("Edit Key")}</DialogTitle>
         </DialogHeader>
 
@@ -582,7 +582,7 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
             void submitForm()
           }}
         >
-          <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+          <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
             {loading || accessKey !== row?.accessKey ? (
               <div
                 className="flex min-h-72 items-center justify-center gap-2 text-sm text-muted-foreground"
@@ -603,7 +603,7 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-col gap-4 lg:min-h-[32rem] lg:flex-row">
+              <div className="flex flex-col gap-4 lg:flex-row">
                 <div
                   className={cn(
                     impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
@@ -658,7 +658,7 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
                     </FieldContent>
                   </Field>
 
-                  <Field orientation="responsive" className="items-start gap-3 border p-3">
+                  <Field orientation="responsive" className="items-start gap-3 border-t pt-5">
                     <FieldLabel htmlFor="edit-user-access-key-implied-policy" className="text-sm font-medium">
                       {t("Use main account policy")}
                     </FieldLabel>
@@ -716,9 +716,9 @@ function UserAccessKeysEditDialog({ open, onOpenChange, userName, row, onSuccess
                 ) : null}
               </div>
             )}
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={closeModal} disabled={submitting}>
               {t("Cancel")}
             </Button>

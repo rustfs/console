@@ -153,27 +153,28 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
     [clearPreviewQueryParams],
   )
 
+  const heading = (
+    <div className="min-w-0 space-y-3">
+      <h1 className="min-w-0 text-2xl font-bold">
+        <Link
+          href={bucketPath()}
+          className="block truncate hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {bucketName}
+        </Link>
+      </h1>
+      {keyPath ? <ObjectPathLinks objectKey={keyPath} bucketName={bucketName} onClick={handlePathClick} /> : null}
+    </div>
+  )
+
   return (
     <Page>
-      {keyPath ? (
-        <PageHeader>
-          <div className="flex min-w-0 items-center gap-4">
-            <h1 className="min-w-0 max-w-[40%] shrink-0 text-2xl font-bold">
-              <Link
-                href={bucketPath()}
-                className="block truncate hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {bucketName}
-              </Link>
-            </h1>
-            <ObjectPathLinks objectKey={keyPath} bucketName={bucketName} onClick={handlePathClick} />
-          </div>
-        </PageHeader>
-      ) : null}
+      {!isObjectList ? <PageHeader>{heading}</PageHeader> : null}
 
       <div className="flex flex-col gap-4">
         {isObjectList ? (
           <ObjectList
+            heading={heading}
             bucket={bucketName}
             path={prefix}
             onOpenInfo={handleOpenInfo}

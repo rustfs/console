@@ -6,12 +6,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
@@ -186,7 +187,7 @@ export function TableCommitDialog({
         className="max-h-[min(92dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl"
         aria-busy={loading || submitting}
       >
-        <DialogHeader className="border-b px-4 py-4 pe-12 sm:px-6">
+        <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="break-all font-mono">
             {bucket} / {namespaceLabel}
@@ -202,7 +203,7 @@ export function TableCommitDialog({
             void handleSubmit()
           }}
         >
-          <div className="min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+          <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
             {loading ? (
               <div
                 className="flex min-h-48 items-center justify-center gap-2 text-sm text-muted-foreground"
@@ -295,9 +296,9 @@ export function TableCommitDialog({
                 </Field>
               </FieldGroup>
             ) : null}
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t px-4 py-3 sm:px-6">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               {t("Cancel")}
             </Button>

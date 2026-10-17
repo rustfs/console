@@ -14,6 +14,7 @@ import {
 } from "@remixicon/react"
 import { OnDemandMigrationBackfillDialog } from "@/components/on-demand-migration/backfill-dialog"
 import { OnDemandMigrationConfigDialog } from "@/components/on-demand-migration/config-dialog"
+import { SectionNavigation } from "@/components/section-navigation"
 import { BucketSettingRow, BucketSettingsSection } from "@/components/buckets/settings-layout"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -60,7 +61,7 @@ function Metric({
   return (
     <div className="min-w-0 p-4">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-1 break-words text-lg font-medium tabular-nums">{value}</dd>
+      <dd className="mt-2 break-words font-heading text-2xl font-medium tabular-nums">{value}</dd>
       {detail ? <dd className="mt-1 text-xs text-muted-foreground">{detail}</dd> : null}
     </div>
   )
@@ -388,237 +389,252 @@ export function OnDemandMigrationManagement({ bucketName, renderHeader }: Manage
         </Alert>
       ) : null}
 
-      <BucketSettingsSection
-        id="migration-configuration"
-        title={t("Configuration")}
-        description={t("Connect this bucket to an external source without interrupting reads.")}
-      >
+      <div className={status?.configured ? "grid items-start gap-8 lg:grid-cols-[13rem_minmax(0,1fr)]" : undefined}>
         {status?.configured ? (
-          <BucketSettingRow
-            title={t("Source")}
-            description={t("Missing local objects are served from this source and then stored locally.")}
-            status={configurationState.label}
-            statusVariant={configurationState.variant}
-            action={
-              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-h-11 sm:min-h-0"
-                  onClick={() => setConfigDialogOpen(true)}
-                  disabled={!canEdit || !configResponse || !status.module_enabled || Boolean(mutation)}
-                >
-                  <RiEditLine data-icon="inline-start" aria-hidden />
-                  {t("Edit")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="min-h-11 sm:min-h-0"
-                  onClick={confirmDisable}
-                  disabled={!canEdit || !configResponse || Boolean(mutation)}
-                >
-                  {mutation === "disable" ? (
-                    <Spinner data-icon="inline-start" />
-                  ) : (
-                    <RiDeleteBin5Line data-icon="inline-start" aria-hidden />
-                  )}
-                  {mutation === "disable" ? t("Disabling") : t("Disable")}
-                </Button>
-              </div>
-            }
+          <SectionNavigation
+            items={[
+              { href: "#migration-configuration", label: t("Configuration") },
+              { href: "#migration-runtime", label: t("Runtime status") },
+              { href: "#migration-backfill", label: t("Background backfill") },
+            ]}
+          />
+        ) : null}
+        <div className="min-w-0 space-y-10">
+          <BucketSettingsSection
+            id="migration-configuration"
+            title={t("Configuration")}
+            description={t("Connect this bucket to an external source without interrupting reads.")}
           >
-            <dl className="grid gap-x-6 gap-y-3 pt-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <dt className="text-muted-foreground">{t("Provider")}</dt>
-                <dd>{providerName}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">{t("Endpoint host")}</dt>
-                <dd className="break-all font-mono text-xs">{status.endpoint_host ?? "--"}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">
-                  {configResponse?.config.source.provider === "azure" ? t("Source container") : t("Source Bucket")}
-                </dt>
-                <dd className="break-all">{configResponse?.config.source.bucket ?? "--"}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">{t("Local prefix")}</dt>
-                <dd className="break-all font-mono text-xs">{configResponse?.config.filter.prefix ?? t("All keys")}</dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">{t("Source prefix")}</dt>
-                <dd className="break-all font-mono text-xs">
-                  {configResponse?.config.filter.source_prefix ?? t("No added prefix")}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">{t("Updated")}</dt>
-                <dd>{formatDateTime(configResponse?.updated_at ?? status.updated_at)}</dd>
-              </div>
-            </dl>
-          </BucketSettingRow>
-        ) : (
-          <Empty className="min-h-48 border-0">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <RiCloudLine aria-hidden />
-              </EmptyMedia>
-              <EmptyTitle>{t("No migration source configured")}</EmptyTitle>
-              <EmptyDescription>
-                {t("Connect an existing AWS S3, S3-compatible, Azure Blob, or Google Cloud Storage bucket.")}
-              </EmptyDescription>
-            </EmptyHeader>
-            <EmptyContent>
-              <Button
-                className="min-h-11 sm:min-h-0"
-                onClick={() => setConfigDialogOpen(true)}
-                disabled={!canEdit || status?.module_enabled === false}
-                title={!canEdit ? t("Requires admin:SetBucketOnDemandMigration") : undefined}
-              >
-                <RiAddLine data-icon="inline-start" aria-hidden />
-                {t("Enable on-demand migration")}
-              </Button>
-            </EmptyContent>
-          </Empty>
-        )}
-      </BucketSettingsSection>
-
-      {status?.configured ? (
-        <BucketSettingsSection
-          id="migration-runtime"
-          title={t("Runtime status")}
-          description={t("Live counters from the RustFS node that answered this request.")}
-        >
-          <dl className="grid divide-y sm:grid-cols-2 sm:[&>*]:border-e sm:[&>*:nth-child(even)]:border-e-0 lg:grid-cols-3 lg:[&>*:nth-child(even)]:border-e lg:[&>*:nth-child(3n)]:border-e-0">
-            <Metric
-              label={t("Source-hit ratio")}
-              value={ratioLabel}
-              detail={t("Unavailable when the server has no bucket GET total.")}
-            />
-            <Metric
-              label={t("Migrated data")}
-              value={counters ? formatBytes(counters.pulled_bytes_total) : "—"}
-              detail={counters ? t("Lifetime on this node") : t("No live runtime state on this node")}
-            />
-            <Metric
-              label={t("Migrated objects")}
-              value={counters ? formatInteger(pulledObjects) : "—"}
-              detail={
-                pullFailures > 0
-                  ? `${t("Failed objects")}: ${formatInteger(pullFailures)}`
-                  : t("No recorded pull failures")
-              }
-            />
-            <Metric label={t("In-flight pulls")} value={formatInteger(status.inflight_pulls)} />
-            <Metric label={t("Queue depth")} value={formatInteger(status.queue_depth)} />
-            <Metric
-              label={t("Circuit breaker")}
-              value={
-                <Badge
-                  variant={status.breaker?.state === "open" ? "destructive" : status.breaker ? "outline" : "ghost"}
-                >
-                  {status.breaker?.state === "closed"
-                    ? t("Breaker closed")
-                    : status.breaker?.state === "half_open"
-                      ? t("Breaker half-open")
-                      : status.breaker?.state === "open"
-                        ? t("Breaker open")
-                        : t("No runtime state")}
-                </Badge>
-              }
-              detail={
-                status.last_source_error
-                  ? `${t("Last source error")}: ${status.last_source_error.class} · ${formatDateTime(status.last_source_error.at)}`
-                  : t("No source error recorded")
-              }
-            />
-          </dl>
-        </BucketSettingsSection>
-      ) : null}
-
-      {status?.configured ? (
-        <BucketSettingsSection
-          id="migration-backfill"
-          title={t("Background backfill")}
-          description={t("Scan the source and pull objects that have not been requested yet.")}
-        >
-          <BucketSettingRow
-            title={t("Latest job")}
-            description={
-              activeBackfill
-                ? t(
-                    "The source scan is active. Totals are not known until listing finishes, so progress is shown as counters.",
-                  )
-                : t("Start a job when you are ready to migrate the remaining source objects.")
-            }
-            status={backfillStateLabel(backfillState)}
-            statusVariant={backfillVariant}
-            action={
-              <Button
-                variant={activeBackfill ? "outline" : "default"}
-                size="sm"
-                className="min-h-11 sm:min-h-0"
-                onClick={() => setBackfillDialogOpen(true)}
-                disabled={
-                  !canEdit ||
-                  !configResponse ||
-                  (!activeBackfill && (!status.enabled || !status.module_enabled)) ||
-                  Boolean(mutation)
+            {status?.configured ? (
+              <BucketSettingRow
+                title={t("Source")}
+                description={t("Missing local objects are served from this source and then stored locally.")}
+                status={configurationState.label}
+                statusVariant={configurationState.variant}
+                action={
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-h-11 sm:min-h-0"
+                      onClick={() => setConfigDialogOpen(true)}
+                      disabled={!canEdit || !configResponse || !status.module_enabled || Boolean(mutation)}
+                    >
+                      <RiEditLine data-icon="inline-start" aria-hidden />
+                      {t("Edit")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-h-11 sm:min-h-0"
+                      onClick={confirmDisable}
+                      disabled={!canEdit || !configResponse || Boolean(mutation)}
+                    >
+                      {mutation === "disable" ? (
+                        <Spinner data-icon="inline-start" />
+                      ) : (
+                        <RiDeleteBin5Line data-icon="inline-start" aria-hidden />
+                      )}
+                      {mutation === "disable" ? t("Disabling") : t("Disable")}
+                    </Button>
+                  </div>
                 }
-                title={!canEdit ? t("Requires admin:SetBucketOnDemandMigration") : undefined}
               >
-                <RiPlayLine data-icon="inline-start" aria-hidden />
-                {activeBackfill ? t("View backfill") : t("Start backfill")}
-              </Button>
-            }
-          >
-            {currentJob ? (
-              <dl className="grid gap-x-6 gap-y-3 pt-1 text-sm sm:grid-cols-3 lg:grid-cols-6">
-                <div>
-                  <dt className="text-muted-foreground">{t("Listed")}</dt>
-                  <dd className="tabular-nums">{formatInteger(currentJob.listed)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t("Pulled")}</dt>
-                  <dd className="tabular-nums">{formatInteger(currentJob.pulled)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t("Skipped")}</dt>
-                  <dd className="tabular-nums">{formatInteger(currentJob.skipped_existing)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t("Failed objects")}</dt>
-                  <dd className={currentJob.failed > 0 ? "text-destructive tabular-nums" : "tabular-nums"}>
-                    {formatInteger(currentJob.failed)}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t("Data")}</dt>
-                  <dd className="tabular-nums">{formatBytes(currentJob.bytes)}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">{t("Updated")}</dt>
-                  <dd>{formatDateTime(currentJob.updated_at)}</dd>
-                </div>
-              </dl>
+                <dl className="grid gap-x-6 gap-y-3 pt-1 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                  <div>
+                    <dt className="text-muted-foreground">{t("Provider")}</dt>
+                    <dd>{providerName}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{t("Endpoint host")}</dt>
+                    <dd className="break-all font-mono text-xs">{status.endpoint_host ?? "--"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">
+                      {configResponse?.config.source.provider === "azure" ? t("Source container") : t("Source Bucket")}
+                    </dt>
+                    <dd className="break-all">{configResponse?.config.source.bucket ?? "--"}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{t("Local prefix")}</dt>
+                    <dd className="break-all font-mono text-xs">
+                      {configResponse?.config.filter.prefix ?? t("All keys")}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{t("Source prefix")}</dt>
+                    <dd className="break-all font-mono text-xs">
+                      {configResponse?.config.filter.source_prefix ?? t("No added prefix")}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-muted-foreground">{t("Updated")}</dt>
+                    <dd>{formatDateTime(configResponse?.updated_at ?? status.updated_at)}</dd>
+                  </div>
+                </dl>
+              </BucketSettingRow>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                {t("No background backfill has been started for this bucket.")}
-              </p>
+              <Empty className="min-h-48 border-0">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <RiCloudLine aria-hidden />
+                  </EmptyMedia>
+                  <EmptyTitle>{t("No migration source configured")}</EmptyTitle>
+                  <EmptyDescription>
+                    {t("Connect an existing AWS S3, S3-compatible, Azure Blob, or Google Cloud Storage bucket.")}
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button
+                    className="min-h-11 sm:min-h-0"
+                    onClick={() => setConfigDialogOpen(true)}
+                    disabled={!canEdit || status?.module_enabled === false}
+                    title={!canEdit ? t("Requires admin:SetBucketOnDemandMigration") : undefined}
+                  >
+                    <RiAddLine data-icon="inline-start" aria-hidden />
+                    {t("Enable on-demand migration")}
+                  </Button>
+                </EmptyContent>
+              </Empty>
             )}
-            {currentJob?.last_error ? (
-              <Alert variant="destructive" className="mt-3">
-                <AlertTitle>{t("Last backfill error")}</AlertTitle>
-                <AlertDescription>
-                  {currentJob.last_error.class} · {formatDateTime(currentJob.last_error.at)}
-                </AlertDescription>
-              </Alert>
-            ) : null}
-          </BucketSettingRow>
-        </BucketSettingsSection>
-      ) : null}
+          </BucketSettingsSection>
+
+          {status?.configured ? (
+            <BucketSettingsSection
+              id="migration-runtime"
+              title={t("Runtime status")}
+              description={t("Live counters from the RustFS node that answered this request.")}
+            >
+              <dl className="grid divide-y sm:grid-cols-2 sm:[&>*]:border-e sm:[&>*:nth-child(even)]:border-e-0 lg:grid-cols-3 lg:[&>*:nth-child(even)]:border-e lg:[&>*:nth-child(3n)]:border-e-0">
+                <Metric
+                  label={t("Source-hit ratio")}
+                  value={ratioLabel}
+                  detail={t("Unavailable when the server has no bucket GET total.")}
+                />
+                <Metric
+                  label={t("Migrated data")}
+                  value={counters ? formatBytes(counters.pulled_bytes_total) : "—"}
+                  detail={counters ? t("Lifetime on this node") : t("No live runtime state on this node")}
+                />
+                <Metric
+                  label={t("Migrated objects")}
+                  value={counters ? formatInteger(pulledObjects) : "—"}
+                  detail={
+                    pullFailures > 0
+                      ? `${t("Failed objects")}: ${formatInteger(pullFailures)}`
+                      : t("No recorded pull failures")
+                  }
+                />
+                <Metric label={t("In-flight pulls")} value={formatInteger(status.inflight_pulls)} />
+                <Metric label={t("Queue depth")} value={formatInteger(status.queue_depth)} />
+                <Metric
+                  label={t("Circuit breaker")}
+                  value={
+                    <Badge
+                      variant={status.breaker?.state === "open" ? "destructive" : status.breaker ? "outline" : "ghost"}
+                    >
+                      {status.breaker?.state === "closed"
+                        ? t("Breaker closed")
+                        : status.breaker?.state === "half_open"
+                          ? t("Breaker half-open")
+                          : status.breaker?.state === "open"
+                            ? t("Breaker open")
+                            : t("No runtime state")}
+                    </Badge>
+                  }
+                  detail={
+                    status.last_source_error
+                      ? `${t("Last source error")}: ${status.last_source_error.class} · ${formatDateTime(status.last_source_error.at)}`
+                      : t("No source error recorded")
+                  }
+                />
+              </dl>
+            </BucketSettingsSection>
+          ) : null}
+
+          {status?.configured ? (
+            <BucketSettingsSection
+              id="migration-backfill"
+              title={t("Background backfill")}
+              description={t("Scan the source and pull objects that have not been requested yet.")}
+            >
+              <BucketSettingRow
+                title={t("Latest job")}
+                description={
+                  activeBackfill
+                    ? t(
+                        "The source scan is active. Totals are not known until listing finishes, so progress is shown as counters.",
+                      )
+                    : t("Start a job when you are ready to migrate the remaining source objects.")
+                }
+                status={backfillStateLabel(backfillState)}
+                statusVariant={backfillVariant}
+                action={
+                  <Button
+                    variant={activeBackfill ? "outline" : "default"}
+                    size="sm"
+                    className="min-h-11 sm:min-h-0"
+                    onClick={() => setBackfillDialogOpen(true)}
+                    disabled={
+                      !canEdit ||
+                      !configResponse ||
+                      (!activeBackfill && (!status.enabled || !status.module_enabled)) ||
+                      Boolean(mutation)
+                    }
+                    title={!canEdit ? t("Requires admin:SetBucketOnDemandMigration") : undefined}
+                  >
+                    <RiPlayLine data-icon="inline-start" aria-hidden />
+                    {activeBackfill ? t("View backfill") : t("Start backfill")}
+                  </Button>
+                }
+              >
+                {currentJob ? (
+                  <dl className="grid gap-x-6 gap-y-3 pt-1 text-sm sm:grid-cols-3 lg:grid-cols-6">
+                    <div>
+                      <dt className="text-muted-foreground">{t("Listed")}</dt>
+                      <dd className="tabular-nums">{formatInteger(currentJob.listed)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">{t("Pulled")}</dt>
+                      <dd className="tabular-nums">{formatInteger(currentJob.pulled)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">{t("Skipped")}</dt>
+                      <dd className="tabular-nums">{formatInteger(currentJob.skipped_existing)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">{t("Failed objects")}</dt>
+                      <dd className={currentJob.failed > 0 ? "text-destructive tabular-nums" : "tabular-nums"}>
+                        {formatInteger(currentJob.failed)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">{t("Data")}</dt>
+                      <dd className="tabular-nums">{formatBytes(currentJob.bytes)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">{t("Updated")}</dt>
+                      <dd>{formatDateTime(currentJob.updated_at)}</dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {t("No background backfill has been started for this bucket.")}
+                  </p>
+                )}
+                {currentJob?.last_error ? (
+                  <Alert variant="destructive" className="mt-3">
+                    <AlertTitle>{t("Last backfill error")}</AlertTitle>
+                    <AlertDescription>
+                      {currentJob.last_error.class} · {formatDateTime(currentJob.last_error.at)}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+              </BucketSettingRow>
+            </BucketSettingsSection>
+          ) : null}
+        </div>
+      </div>
 
       <OnDemandMigrationConfigDialog
         open={configDialogOpen}

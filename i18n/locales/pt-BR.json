@@ -2236,5 +2236,10 @@
   "pull failures": "pull failures",
   "Password must be at least 8 bytes": "A senha deve ter pelo menos 8 bytes",
   "Secret Key must be at least 8 bytes": "A chave secreta deve ter pelo menos 8 bytes",
-  "At least 8 bytes. This is also your S3 secret key.": "Pelo menos 8 bytes. Esta também é sua chave secreta S3."
+  "At least 8 bytes. This is also your S3 secret key.": "Pelo menos 8 bytes. Esta também é sua chave secreta S3.",
+  "Identity": "Identidade",
+  "Operations": "Operações",
+  "Resources": "Recursos",
+  "Bucket size distribution": "Distribuição do tamanho dos buckets",
+  "Other buckets": "Outros buckets"
 }

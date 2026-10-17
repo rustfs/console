@@ -11,6 +11,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -19,7 +20,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarRail,
-  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar"
 import { RiArrowRightSLine, RiExternalLinkLine } from "@remixicon/react"
@@ -103,20 +103,18 @@ export function AppSidebar() {
     return [navItem]
   })
 
-  const navGroups: NavItem[][] = []
+  const navGroups: { label: string; items: NavItem[] }[] = []
   let current: NavItem[] = []
+  let groupLabel = ""
 
   for (let index = 0; index < visibleNavs.length; index++) {
     const nav = visibleNavs[index]
     if (!nav) continue
 
     if (nav.type === "divider") {
-      const hasItemsBefore = current.length > 0
-      const hasItemsAfter = visibleNavs.slice(index + 1).some((item) => item.type !== "divider")
-      if (hasItemsBefore && hasItemsAfter) {
-        navGroups.push(current)
-        current = []
-      }
+      if (current.length) navGroups.push({ label: groupLabel, items: current })
+      current = []
+      groupLabel = nav.label === "divider" ? "" : nav.label
       continue
     }
 
@@ -124,7 +122,7 @@ export function AppSidebar() {
   }
 
   if (current.length > 0) {
-    navGroups.push(current)
+    navGroups.push({ label: groupLabel, items: current })
   }
 
   const isRouteActive = (item: NavItem): boolean => {
@@ -145,7 +143,7 @@ export function AppSidebar() {
     <Sidebar
       collapsible="icon"
       side={dir === "rtl" ? "right" : "left"}
-      className="**:data-[sidebar=menu-button]:text-start! **:data-[sidebar=menu-sub-button]:text-start!"
+      className="workspace-navigation **:data-[sidebar=menu-button]:text-start! **:data-[sidebar=menu-sub-button]:text-start!"
     >
       <SidebarHeader>
         <Link href={homeRoute ?? "/"} className="flex items-center gap-3">
@@ -165,12 +163,13 @@ export function AppSidebar() {
 
       <SidebarContent>
         <ScrollArea className="flex-1 pe-1">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 pb-4">
             {navGroups.map((group, groupIndex) => (
-              <SidebarGroup key={groupIndex} className="gap-4 py-0">
+              <SidebarGroup key={groupIndex} className="gap-1 py-0">
+                {group.label ? <SidebarGroupLabel>{t(group.label)}</SidebarGroupLabel> : null}
                 <SidebarGroupContent>
-                  <SidebarMenu>
-                    {group.map((item) => (
+                  <SidebarMenu className="gap-0">
+                    {group.items.map((item) => (
                       <Collapsible
                         key={item.label}
                         defaultOpen={hasChildren(item) && isRouteActive(item)}
@@ -271,7 +270,6 @@ export function AppSidebar() {
                     ))}
                   </SidebarMenu>
                 </SidebarGroupContent>
-                {groupIndex !== navGroups.length - 1 ? <SidebarSeparator className="mx-2" /> : null}
               </SidebarGroup>
             ))}
           </div>

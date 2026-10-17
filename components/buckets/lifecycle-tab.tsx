@@ -147,41 +147,47 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
 
   const columns: ColumnDef<LifecycleRule>[] = React.useMemo(
     () => [
-      ...(["type", "version", "deleteMarker", "tier"] as const).map((field) => ({
-        id: field,
-        header: () =>
-          t({ type: "Type", version: "Version", deleteMarker: "Expiration Delete Mark", tier: "Tier" }[field]),
-        accessorFn: (row: LifecycleRule) =>
-          getLifecycleActions(row)
-            .map((action) => actionValue(action, field))
-            .join(" · "),
-        cell: ({ row }: { row: { original: LifecycleRule } }) => (
-          <div className="space-y-2">
-            {getLifecycleActions(row.original).map((action, index) => (
-              <div key={index} className="whitespace-nowrap">
-                {actionValue(action, field)}
-              </div>
-            ))}
-          </div>
-        ),
-      })),
+      {
+        accessorKey: "ID",
+        header: () => t("Rule ID"),
+        cell: ({ row }) => <span className="break-all font-medium">{row.original.ID || t("Unnamed rule")}</span>,
+      },
       {
         id: "prefix",
         header: () => t("Prefix"),
         accessorFn: (row) => row.Filter?.Prefix || row.Filter?.And?.Prefix || "",
+        cell: ({ row }) => (
+          <span className="break-all font-mono text-xs">
+            {row.original.Filter?.Prefix || row.original.Filter?.And?.Prefix || "--"}
+          </span>
+        ),
       },
       {
-        id: "timeCycle",
-        header: () => t("Time Cycle"),
-        accessorFn: (row) =>
-          getLifecycleActions(row)
-            .map((action) => actionValue(action, "timeCycle"))
-            .join(" · "),
+        id: "lifecycle-actions",
+        header: () => t("Actions"),
+        enableSorting: false,
         cell: ({ row }) => (
-          <div className="space-y-2">
+          <div className="min-w-64 divide-y">
             {getLifecycleActions(row.original).map((action, index) => (
-              <div key={index} className="whitespace-nowrap tabular-nums">
-                {actionValue(action, "timeCycle")}
+              <div key={index} className="flex items-start justify-between gap-6 py-3 first:pt-0 last:pb-0">
+                <div className="space-y-1">
+                  <p className="font-medium">{actionValue(action, "type")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Version")}: {actionValue(action, "version")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Expiration Delete Mark")}: {actionValue(action, "deleteMarker")}
+                  </p>
+                  {action.tier ? (
+                    <p className="text-xs text-muted-foreground">
+                      {t("Tier")}: {actionValue(action, "tier")}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="shrink-0 text-end">
+                  <p className="text-xs text-muted-foreground">{t("Time Cycle")}</p>
+                  <p className="mt-1 tabular-nums">{actionValue(action, "timeCycle")}</p>
+                </div>
               </div>
             ))}
           </div>

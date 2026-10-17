@@ -6,7 +6,7 @@ import { RiRefreshLine, RiStopCircleLine } from "@remixicon/react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useTiers, type ManualTransitionJobResponse, type ManualTransitionRunReport } from "@/hooks/use-tiers"
@@ -148,11 +148,11 @@ export function TiersTransitionJob({ open, onOpenChange, tierName }: TiersTransi
       }}
     >
       <DialogContent className="max-h-[min(90dvh,44rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b px-4 py-4 pe-12 sm:px-6">
+        <DialogHeader>
           <DialogTitle>{t("Manual Transition")}</DialogTitle>
         </DialogHeader>
 
-        <div className="min-h-0 space-y-5 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+        <DialogBody className="min-h-0 space-y-5 overflow-y-auto overscroll-contain">
           <Alert>
             <AlertTitle>{t("Run lifecycle transition manually")}</AlertTitle>
             <AlertDescription>
@@ -288,9 +288,9 @@ export function TiersTransitionJob({ open, onOpenChange, tierName }: TiersTransi
               {job.error ? <p className="text-sm text-destructive">{job.error}</p> : null}
             </section>
           ) : null}
-        </div>
+        </DialogBody>
 
-        <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             {t("Close")}
           </Button>

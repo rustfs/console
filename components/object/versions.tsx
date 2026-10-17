@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { RiFileCopyLine, RiEyeLine, RiDownloadCloud2Line, RiDeleteBin5Line, RiLoopLeftLine } from "@remixicon/react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogDescription, DialogContent, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
@@ -291,20 +291,24 @@ export function ObjectVersions({
 
   return (
     <Dialog open={visible} onOpenChange={(open) => !open && onClose()} disablePointerDismissal>
-      <DialogContent className="max-h-[80vh] w-[calc(100vw-2rem)] overflow-y-auto overflow-x-hidden sm:max-w-5xl 2xl:w-[80vw] 2xl:max-w-[80vw]">
+      <DialogContent className="max-h-[85dvh] sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>{t("Object Versions")}</DialogTitle>
+          <DialogDescription className="break-all font-mono">{objectKey}</DialogDescription>
         </DialogHeader>
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-          <span>
-            {t("Versions")}: <span className="font-medium text-foreground">{versionStats.count}</span>
-          </span>
-          <span>
-            {t("Total")} {t("Size")}:{" "}
-            <span className="font-medium text-foreground">{formatBytes(versionStats.totalSize)}</span>
-          </span>
-        </div>
-        <DataTable table={table} isLoading={loading} emptyTitle={t("No Versions")} />
+        <DialogBody className="space-y-5">
+          {" "}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            <span>
+              {t("Versions")}: <span className="font-medium text-foreground">{versionStats.count}</span>
+            </span>
+            <span>
+              {t("Total")} {t("Size")}:{" "}
+              <span className="font-medium text-foreground">{formatBytes(versionStats.totalSize)}</span>
+            </span>
+          </div>
+          <DataTable table={table} isLoading={loading} emptyTitle={t("No Versions")} />
+        </DialogBody>
       </DialogContent>
     </Dialog>
   )

@@ -2236,5 +2236,10 @@
   "pull failures": "pull failures",
   "Password must be at least 8 bytes": "Пароль должен содержать не менее 8 байт",
   "Secret Key must be at least 8 bytes": "Секретный ключ должен содержать не менее 8 байт",
-  "At least 8 bytes. This is also your S3 secret key.": "Не менее 8 байт. Это также ваш секретный ключ S3."
+  "At least 8 bytes. This is also your S3 secret key.": "Не менее 8 байт. Это также ваш секретный ключ S3.",
+  "Identity": "Идентификация",
+  "Operations": "Операции",
+  "Resources": "Ресурсы",
+  "Bucket size distribution": "Распределение объёма бакетов",
+  "Other buckets": "Другие бакеты"
 }

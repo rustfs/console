@@ -15,6 +15,14 @@ export function getEventsColumns(
 ): ColumnDef<NotificationItem>[] {
   return [
     {
+      id: "sourceId",
+      header: () => t("Rule ID"),
+      cell: ({ row }) => (
+        <span className="break-all font-medium">{row.original.sourceId || t("Unnamed subscription")}</span>
+      ),
+      meta: { maxWidth: "12rem" },
+    },
+    {
       id: "type",
       header: () => t("Type"),
       cell: ({ row }) => <Badge className={TYPE_BADGE_CLASSES[row.original.type] ?? ""}>{row.original.type}</Badge>,
@@ -23,7 +31,7 @@ export function getEventsColumns(
     {
       id: "arn",
       header: () => t("ARN"),
-      cell: ({ row }) => <span className="line-clamp-2 break-all font-medium">{row.original.arn}</span>,
+      cell: ({ row }) => <span className="break-all font-mono text-xs">{row.original.arn}</span>,
       meta: { maxWidth: "180px" },
     },
     {
@@ -58,7 +66,7 @@ export function getEventsColumns(
       enableSorting: false,
       meta: { maxWidth: "12rem" },
       cell: ({ row }) => (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center gap-2">
           {canManage ? (
             <>
               <Button

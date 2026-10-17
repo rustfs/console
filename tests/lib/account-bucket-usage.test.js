@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { getAccountBucketUsage } from "../../lib/account-bucket-usage.js"
+import { getAccountBucketUsage, summarizeBucketUsage } from "../../lib/account-bucket-usage.js"
 
 test("getAccountBucketUsage reads authoritative bucket statistics from accountinfo", () => {
   const usage = getAccountBucketUsage({
@@ -32,4 +32,28 @@ test("getAccountBucketUsage does not turn missing or malformed statistics into z
   })
 
   assert.equal(usage.size, 0)
+})
+
+test("bucket overview includes only the buckets visible to the current account", () => {
+  const usage = getAccountBucketUsage({
+    buckets: [
+      { name: "visible", objects: 3, size: 20 },
+      { name: "outside-scope", objects: 40, size: 800 },
+    ],
+  })
+  assert.deepEqual(summarizeBucketUsage(["visible"], usage), { objectsCount: 3, sizeBytes: 20 })
+})
+
+test("partial bucket usage stays unknown instead of reporting a misleading total", () => {
+  const usage = getAccountBucketUsage({ buckets: [{ name: "known", objects: 0, size: 0 }] })
+  assert.equal(summarizeBucketUsage(["known", "missing"], usage), undefined)
+})
+
+test("a confirmed empty bucket list has zero usage", () => {
+  assert.deepEqual(summarizeBucketUsage([], new Map()), { objectsCount: 0, sizeBytes: 0 })
+})
+
+test("overflowing usage totals stay unknown", () => {
+  const usage = new Map(["first", "second"].map((name) => [name, { objectsCount: 1, sizeBytes: Number.MAX_VALUE }]))
+  assert.equal(summarizeBucketUsage(["first", "second"], usage), undefined)
 })

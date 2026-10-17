@@ -18,7 +18,8 @@ import { PageHeader } from "@/components/page-header"
 import { UploadZone } from "@/components/upload-zone"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs as TabsPrimitive } from "@base-ui/react/tabs"
 import { useImportExport } from "@/hooks/use-import-export"
 import { useMessage } from "@/lib/feedback/message"
 
@@ -53,14 +54,13 @@ export default function ImportExportPage() {
 
   const exportHighlights = useMemo(
     () => [
-      { label: "Users", icon: RiUserLine, iconClass: "text-chart-1" },
-      { label: "User Groups", icon: RiGroupLine, iconClass: "text-chart-2" },
+      { label: "Users", icon: RiUserLine },
+      { label: "User Groups", icon: RiGroupLine },
       {
         label: "IAM Policies",
         icon: RiShieldCheckLine,
-        iconClass: "text-chart-3",
       },
-      { label: "AK/SK", icon: RiKeyLine, iconClass: "text-chart-4" },
+      { label: "AK/SK", icon: RiKeyLine },
     ],
     [],
   )
@@ -118,27 +118,33 @@ export default function ImportExportPage() {
   }
 
   return (
-    <Page className="max-w-5xl">
+    <Page>
       <PageHeader>
         <h1 className="text-2xl font-bold">{t("Import/Export")}</h1>
       </PageHeader>
 
       <div className="flex flex-col gap-6">
-        <Tabs
+        <TabsPrimitive.Root
+          orientation="vertical"
+          data-slot="tabs"
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as "export" | "import")}
-          className="flex flex-col gap-6"
+          className="grid items-start gap-8 lg:grid-cols-[13rem_minmax(0,1fr)]"
         >
-          <TabsList className="justify-start overflow-x-auto overflow-y-hidden">
+          <TabsList className="h-auto w-full flex-col items-stretch justify-start bg-transparent p-0">
             {tabs.map((tab) => (
-              <TabsTrigger key={tab.key} value={tab.key} className="capitalize">
+              <TabsTrigger
+                key={tab.key}
+                value={tab.key}
+                className="min-h-11 justify-start border-s-2 border-transparent px-4 capitalize data-active:border-brand data-active:bg-selection"
+              >
                 {tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
 
           <TabsContent value="export" className="mt-0">
-            <Card className="shadow-none">
+            <Card className="configuration-panel">
               <CardHeader className="space-y-1">
                 <CardTitle>{t("IAM Configuration Export")}</CardTitle>
                 <CardDescription>
@@ -146,10 +152,10 @@ export default function ImportExportPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2">
                   {exportHighlights.map((item) => (
-                    <div key={item.label} className="flex items-center gap-3 bg-muted/30 p-3">
-                      <item.icon className={`size-5 ${item.iconClass}`} aria-hidden />
+                    <div key={item.label} className="flex items-center gap-3 border-b py-3">
+                      <item.icon className="size-5 text-muted-foreground" aria-hidden />
                       <span className="text-sm font-medium text-foreground">{t(item.label)}</span>
                     </div>
                   ))}
@@ -182,7 +188,7 @@ export default function ImportExportPage() {
           </TabsContent>
 
           <TabsContent value="import" className="mt-0">
-            <Card className="shadow-none">
+            <Card className="configuration-panel">
               <CardHeader className="space-y-1">
                 <CardTitle>{t("IAM Configuration Import")}</CardTitle>
                 <CardDescription>{t("Import IAM configurations from a previously exported ZIP file.")}</CardDescription>
@@ -241,7 +247,7 @@ export default function ImportExportPage() {
               </CardFooter>
             </Card>
           </TabsContent>
-        </Tabs>
+        </TabsPrimitive.Root>
       </div>
     </Page>
   )

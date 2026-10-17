@@ -17,9 +17,9 @@ test("OIDC settings use a bounded provider rail before desktop-wide layouts", ()
   const page = fs.readFileSync("app/(dashboard)/oidc/page.tsx", "utf8")
   const providerList = fs.readFileSync("components/oidc/provider-list.tsx", "utf8")
 
-  assert.match(page, /lg:grid-cols-\[18rem_minmax\(0,1fr\)\]/)
+  assert.match(page, /lg:grid-cols-\[15rem_minmax\(0,1fr\)\]/)
   assert.match(providerList, /max-h-80/)
-  assert.match(providerList, /lg:min-h-\[28rem\]/)
+  assert.match(providerList, /flex flex-col items-start gap-4/)
   assert.match(providerList, /min-h-0[^\"]*overflow-y-auto/)
 })
 
@@ -49,7 +49,7 @@ test("long settings dialogs keep headers and actions visible while the form scro
     assert.match(source, /max-h-\[min\(90dvh,52rem\)\]/)
     assert.match(source, /grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
     assert.match(source, /min-h-0[^\"]*overflow-y-auto/)
-    assert.match(source, /<DialogFooter className="border-t bg-muted\/20/)
+    assert.match(source, /<DialogFooter>/)
     assert.match(source, /disablePointerDismissal=\{submitting\}/)
     assert.match(source, /aria-busy=\{submitting\}/)
     assert.match(source, /onClick=\{handleCancel\} disabled=\{submitting\}/)
@@ -65,12 +65,11 @@ test("long settings dialogs keep headers and actions visible while the form scro
 test("site replication setup stays inside the viewport with one mobile scroll container", () => {
   const source = fs.readFileSync("components/site-replication/new-form.tsx", "utf8")
 
-  assert.match(source, /max-h-\[min\(94dvh,56rem\)\]/)
-  assert.match(source, /min-h-0 overflow-y-auto overscroll-contain/)
-  assert.match(source, /lg:grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
-  assert.match(source, /lg:min-h-0 lg:overflow-y-auto/)
-  assert.match(source, /sticky bottom-0/)
-  assert.match(source, /<fieldset key=\{index\} className="overflow-hidden bg-muted\/20">/)
+  assert.match(source, /max-h-\[min\(94dvh,54rem\)\]/)
+  assert.match(fs.readFileSync("components/dialog.tsx", "utf8"), /min-h-0 overflow-y-auto overscroll-contain/)
+  assert.match(source, /<DialogBody className="space-y-6">/)
+  assert.match(source, /<DialogFooter>/)
+  assert.match(source, /<fieldset key=\{index\} className="space-y-5 border-b pb-6 last:border-b-0 last:pb-0">/)
   assert.doesNotMatch(source, /border bg-background\/70 p-4/)
   assert.doesNotMatch(source, /gap-3 border-b bg-background px-5 py-4/)
   assert.doesNotMatch(source, /<ScrollArea/)
@@ -82,9 +81,9 @@ test("event and audit target toolbars keep every action visible on mobile", () =
   for (const file of files) {
     const source = fs.readFileSync(file, "utf8")
 
-    assert.match(source, /grid w-full shrink-0 gap-2 sm:grid-cols-\[minmax\(12rem,1fr\)_auto\]/)
-    assert.match(source, /grid grid-cols-2 gap-2 sm:flex/)
-    assert.match(source, /h-11 w-full sm:h-8/)
+    assert.match(source, /<DataTable[\s\S]*toolbar=\{[\s\S]*<SearchInput/)
+    assert.match(source, /className="w-full sm:w-80"/)
+    assert.match(source, /<PageHeader[\s\S]*actions=/)
   }
 })
 
@@ -101,8 +100,8 @@ test("KMS key actions remain visible and identifiable in the scrolling table", (
 test("import and export tasks stay focused and resilient to long filenames", () => {
   const source = fs.readFileSync("app/(dashboard)/import-export/page.tsx", "utf8")
 
-  assert.match(source, /<Page className="max-w-5xl">/)
-  assert.match(source, /lg:grid-cols-4/)
+  assert.match(source, /lg:grid-cols-\[13rem_minmax\(0,1fr\)\]/)
+  assert.match(source, /<TabsPrimitive.Root\s+orientation="vertical"/)
   assert.match(source, /min-w-0 flex-1/)
   assert.match(source, /break-all/)
   assert.match(source, /items-stretch/)
@@ -115,12 +114,12 @@ test("import and export tasks stay focused and resilient to long filenames", () 
 test("license text uses a bounded readable surface without preserving mobile indentation", () => {
   const source = fs.readFileSync("components/license/article.tsx", "utf8")
 
-  assert.match(source, /<Page className="max-w-5xl">/)
-  assert.match(source, /h-\[min\(70dvh,48rem\)\]/)
-  assert.match(source, /whitespace-pre-line/)
-  assert.match(source, /<CardContent className="space-y-4">/)
-  assert.match(source, /className="text-start"/)
-  assert.doesNotMatch(source, /<ScrollArea[^>]+border/)
+  assert.match(source, /<article className="max-w-3xl/)
+  assert.match(source, /<SectionNavigation/)
+  assert.match(source, /whitespace-pre-line break-words text-start/)
+  assert.match(source, /response.ok/)
+  assert.match(source, /t\("Retry"\)/)
+  assert.doesNotMatch(source, /<ScrollArea/)
 })
 
 test("KMS key details keep a fixed header and one scrolling body", () => {

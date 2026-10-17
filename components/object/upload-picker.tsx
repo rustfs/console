@@ -2,14 +2,29 @@
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogBody,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { useAddUploadFiles, useTaskPanelOpen } from "@/contexts/task-context"
 import { formatBytes, formatInteger } from "@/lib/functions"
 import { useMessage } from "@/lib/feedback/message"
 import { buildUploadObjectKey, normalizeUploadPrefix } from "@/lib/object-upload"
-import { RiDeleteBinLine, RiFileAddLine, RiFolderAddLine, RiUploadCloudLine } from "@remixicon/react"
+import {
+  RiDeleteBinLine,
+  RiFileAddLine,
+  RiFileLine,
+  RiFolderAddLine,
+  RiInformationLine,
+  RiUploadCloudLine,
+} from "@remixicon/react"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
@@ -28,7 +43,7 @@ interface ObjectUploadPickerProps {
   onSuccess?: () => void
 }
 
-const ROW_HEIGHT = 40
+const ROW_HEIGHT = 56
 const MAX_FILES_LIMIT = 10_000
 const MEMORY_WARNING_THRESHOLD = 5_000
 
@@ -115,13 +130,17 @@ function FileListVirtualized({
   const virtualItems = virtualizer.getVirtualItems()
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col border-t text-sm">
+    <div className="flex min-h-min flex-1 flex-col text-sm">
       <div className="flex shrink-0 border-b bg-muted text-xs uppercase text-muted-foreground">
         <div className="min-w-0 flex-1 px-3 py-2 font-medium">{t("Name")}</div>
-        <div className="w-28 shrink-0 px-3 py-2 font-medium">{t("Size")}</div>
-        <div className="w-24 shrink-0 px-3 py-2 text-end font-medium">{t("Actions")}</div>
+        <div className="w-24 shrink-0 px-3 py-2 text-end font-medium">{t("Size")}</div>
+        <div className="w-20 shrink-0 px-3 py-2 text-end font-medium">{t("Actions")}</div>
       </div>
-      <div ref={parentRef} className="min-h-64 min-w-0 flex-1 overflow-auto" style={{ contain: "strict" }}>
+      <div
+        ref={parentRef}
+        className="min-h-14 min-w-0 overflow-auto"
+        style={{ contain: "strict", height: Math.min(items.length, 6) * ROW_HEIGHT }}
+      >
         <div
           style={{
             height: `${virtualizer.getTotalSize()}px`,
@@ -140,19 +159,26 @@ function FileListVirtualized({
                   transform: `translateY(${virtualRow.start}px)`,
                 }}
               >
-                <div className="min-w-0 flex-1 truncate px-3 py-2 font-medium" title={item.relativePath}>
-                  {item.relativePath}
+                <div className="flex min-w-0 flex-1 items-center gap-2 px-3" title={item.relativePath}>
+                  <RiFileLine className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                  <span dir="ltr" className="truncate">
+                    {item.relativePath}
+                  </span>
                 </div>
-                <div className="w-28 shrink-0 px-3 py-2 text-muted-foreground">{formatBytes(item.file.size)}</div>
-                <div className="w-24 shrink-0 px-3 py-2 text-end">
+                <div
+                  dir="ltr"
+                  className="flex w-24 shrink-0 items-center justify-end px-3 font-mono text-xs text-muted-foreground"
+                >
+                  {formatBytes(item.file.size)}
+                </div>
+                <div className="flex w-20 shrink-0 items-center justify-end px-3">
                   <Button
                     variant="ghost"
-                    size="sm"
-                    className="h-auto px-2"
+                    size="icon-sm"
+                    aria-label={`${t("Delete")} ${item.relativePath}`}
                     onClick={() => removeItem(virtualRow.index)}
                   >
                     <RiDeleteBinLine className="size-4" aria-hidden />
-                    {t("Delete")}
                   </Button>
                 </div>
               </div>
@@ -196,6 +222,8 @@ export function ObjectUploadPicker({
   const message = useMessage()
   const addUploadFiles = useAddUploadFiles()
   const { setTaskPanelOpen } = useTaskPanelOpen()
+  const prefixInputId = React.useId()
+  const selectFileButtonRef = React.useRef<HTMLButtonElement>(null)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   const folderInputRef = React.useRef<HTMLInputElement>(null)
   const mountedRef = React.useRef(true)
@@ -401,10 +429,12 @@ export function ObjectUploadPicker({
   }
 
   const removeItem = (index: number) => {
+    selectFileButtonRef.current?.focus()
     setItems((prev) => prev.filter((_, i) => i !== index))
   }
 
   const clearAllFiles = () => {
+    selectFileButtonRef.current?.focus()
     setItems([])
     setIsMemoryWarning(false)
     memoryWarningShownRef.current = false
@@ -447,13 +477,44 @@ export function ObjectUploadPicker({
     }
   }
 
+  const selectionActions = (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      <Button
+        ref={selectFileButtonRef}
+        variant={items.length ? "outline" : "default"}
+        disabled={!canUpload || isAdding || isFolderLoading}
+        onClick={selectFile}
+      >
+        <RiFileAddLine className="size-4" aria-hidden />
+        {t("Select File")}
+      </Button>
+      <Button variant="outline" disabled={!canUpload || isAdding || isFolderLoading} onClick={selectFolder}>
+        <RiFolderAddLine className="size-4" aria-hidden />
+        {t("Select Folder")}
+      </Button>
+    </div>
+  )
+
   return (
-    <Dialog open={show} onOpenChange={onShowChange} disablePointerDismissal>
-      <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden sm:max-w-2xl">
+    <Dialog
+      open={show}
+      onOpenChange={(nextOpen) => {
+        if (!isAdding) onShowChange(nextOpen)
+      }}
+      disablePointerDismissal
+    >
+      <DialogContent
+        className="max-h-[90dvh] sm:max-w-2xl"
+        initialFocus={selectFileButtonRef}
+        aria-busy={isAdding || isFolderLoading}
+      >
         <DialogHeader>
           <DialogTitle>{t("Upload File")}</DialogTitle>
+          <DialogDescription dir="ltr" className="font-mono text-xs break-all">
+            s3://{bucketName}/
+          </DialogDescription>
         </DialogHeader>
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-hidden">
+        <DialogBody className="flex min-h-0 flex-col gap-4">
           <input
             ref={fileInputRef}
             type="file"
@@ -476,51 +537,24 @@ export function ObjectUploadPicker({
             onChange={handleFolderSelect}
           />
 
-          <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1 space-y-2">
-              <p className="truncate text-sm font-medium text-muted-foreground">
-                {t("Target Bucket")}: {bucketName}
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="shrink-0 text-xs text-muted-foreground">{t("Current Prefix")}:</span>
-                <Input
-                  name="upload-prefix"
-                  value={editablePrefix}
-                  onChange={(e) => setEditablePrefix(e.target.value)}
-                  aria-label={t("Current Prefix")}
-                  className="h-7 py-1 px-2 text-xs"
-                  placeholder={t("Enter prefix…")}
-                  autoComplete="off"
-                  disabled={!canUpload || isAdding || isFolderLoading}
-                  spellCheck={false}
-                />
-              </div>
-            </div>
-            <div className="flex shrink-0 gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!canUpload || isAdding || isFolderLoading}
-                onClick={selectFile}
-              >
-                <RiFileAddLine className="size-4" aria-hidden />
-                {t("Select File")}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!canUpload || isAdding || isFolderLoading}
-                onClick={selectFolder}
-              >
-                <RiFolderAddLine className="size-4" aria-hidden />
-                {t("Select Folder")}
-              </Button>
-            </div>
+          <div className="min-w-0 shrink-0 space-y-2">
+            <label htmlFor={prefixInputId} className="text-sm font-medium">
+              {t("Current Prefix")}
+            </label>
+            <Input
+              id={prefixInputId}
+              dir="ltr"
+              name="upload-prefix"
+              value={editablePrefix}
+              onChange={(e) => setEditablePrefix(e.target.value)}
+              aria-label={t("Current Prefix")}
+              className="font-mono text-sm"
+              placeholder={t("Enter prefix…")}
+              autoComplete="off"
+              disabled={!canUpload || isAdding || isFolderLoading}
+              spellCheck={false}
+            />
           </div>
-
-          <Alert>
-            <AlertDescription>{t("Overwrite Warning")}</AlertDescription>
-          </Alert>
 
           {isMemoryWarning && (
             <Alert variant="destructive">
@@ -534,7 +568,7 @@ export function ObjectUploadPicker({
           )}
 
           <div
-            className={`min-h-0 min-w-0 flex flex-col overflow-hidden border transition-colors ${
+            className={`min-w-0 border transition-colors ${items.length ? "flex min-h-min flex-1 flex-col overflow-hidden" : "shrink-0 border-dashed bg-muted/10"} ${
               isDragOver ? "border-primary bg-primary/5" : ""
             }`}
             onDragEnter={handleDragEnter}
@@ -542,38 +576,39 @@ export function ObjectUploadPicker({
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
           >
-            <div className="flex shrink-0 items-center justify-between gap-3 px-4 py-2">
-              <div className="text-sm text-muted-foreground">
-                {items.length > 0 && (
-                  <p>
-                    {t("Total Files")}: {formatInteger(items.length)} / {formatInteger(MAX_FILES_LIMIT)}
-                  </p>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!canUpload || !items.length || isAdding || isFolderLoading}
-                onClick={clearAllFiles}
-              >
-                <RiDeleteBinLine className="size-4" aria-hidden />
-                {t("Clear All")}
-              </Button>
-            </div>
-
-            {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-4 p-6 text-center">
-                <RiUploadCloudLine className="size-12 text-muted-foreground" aria-hidden />
-                <p className="text-base font-medium text-muted-foreground">{t("No Selection")}</p>
-                <p className="max-w-[320px] text-xs text-muted-foreground">
-                  {t("Chrome and Firefox support drag and drop to this area and selecting multiple files or folders.")}
-                  <br />
-                  {t("Single file supports up to 512GB, use CLI for larger files.")}
-                  <br />
-                  {t("Up to {max} files per upload", { max: formatInteger(MAX_FILES_LIMIT) })}
+            <div
+              className={
+                items.length
+                  ? "flex shrink-0 flex-wrap items-center gap-3 border-b p-3"
+                  : "flex flex-col items-center gap-4 px-5 py-7 text-center"
+              }
+            >
+              {items.length > 0 ? (
+                <p className="me-auto text-xs text-muted-foreground">
+                  {t("Total Files")}: {formatInteger(items.length)} / {formatInteger(MAX_FILES_LIMIT)}
                 </p>
-              </div>
-            ) : (
+              ) : (
+                <RiUploadCloudLine className="size-8 text-primary" aria-hidden />
+              )}
+              {selectionActions}
+              {items.length > 0 ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label={t("Clear All")}
+                  title={t("Clear All")}
+                  disabled={!canUpload || isAdding || isFolderLoading}
+                  onClick={clearAllFiles}
+                >
+                  <RiDeleteBinLine className="size-4" aria-hidden />
+                </Button>
+              ) : (
+                <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
+                  {t("Chrome and Firefox support drag and drop to this area and selecting multiple files or folders.")}
+                </p>
+              )}
+            </div>
+            {items.length > 0 && (
               <FileListVirtualized items={items} removeItem={removeItem} t={t} formatBytes={formatBytes} />
             )}
 
@@ -597,9 +632,29 @@ export function ObjectUploadPicker({
               </div>
             )}
           </div>
-
-          <div className="flex justify-end gap-2">
+          {items.length === 0 && (
+            <div className="shrink-0 space-y-1 text-xs leading-relaxed text-muted-foreground">
+              <p>{t("Single file supports up to 512GB, use CLI for larger files.")}</p>
+              <p>{t("Up to {max} files per upload", { max: formatInteger(MAX_FILES_LIMIT) })}</p>
+            </div>
+          )}
+        </DialogBody>
+        <DialogFooter className="flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex min-w-0 items-start gap-2 text-xs leading-relaxed text-muted-foreground sm:max-w-xs">
+            <RiInformationLine className="mt-0.5 size-4 shrink-0" aria-hidden />
+            {t("Overwrite Warning")}
+          </p>
+          <div className="flex w-full shrink-0 gap-2 sm:w-auto">
             <Button
+              className="flex-1 sm:flex-none"
+              variant="outline"
+              disabled={isAdding}
+              onClick={() => onShowChange(false)}
+            >
+              {t("Cancel")}
+            </Button>
+            <Button
+              className="flex-1 sm:flex-none"
               variant="default"
               disabled={!canUpload || !items.length || isAdding || isFolderLoading}
               onClick={handleUpload}
@@ -607,7 +662,7 @@ export function ObjectUploadPicker({
               {isAdding ? t("Adding to Upload Queue") : t("Start Upload")}
             </Button>
           </div>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )

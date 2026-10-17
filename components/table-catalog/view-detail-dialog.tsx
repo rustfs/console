@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/empty-state"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogDescription,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CopyButton } from "@/components/copy-button"
@@ -144,7 +145,7 @@ export function ViewDetailDialog({
         className="max-h-[min(92dvh,54rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-3xl"
         aria-busy={loading}
       >
-        <DialogHeader className="border-b px-4 py-4 pe-12 sm:px-6">
+        <DialogHeader>
           <div className="flex min-w-0 flex-wrap items-center gap-2">
             <DialogTitle className="min-w-0 truncate font-mono text-base">{title}</DialogTitle>
             <Badge variant="outline">VIEW</Badge>
@@ -160,7 +161,7 @@ export function ViewDetailDialog({
             {t("Loading view details…")}
           </div>
         ) : error ? (
-          <div className="space-y-4 p-4" role="alert">
+          <DialogBody className="space-y-4" role="alert">
             <div className="border border-destructive/50 bg-destructive/10 p-4">
               <div className="flex items-start gap-2">
                 <RiAlertLine className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden />
@@ -174,7 +175,7 @@ export function ViewDetailDialog({
               <RiRefreshLine className="size-4" aria-hidden />
               {t("Retry")}
             </Button>
-          </div>
+          </DialogBody>
         ) : view ? (
           <div className="min-h-0 overflow-y-auto overscroll-contain">
             <Tabs defaultValue="overview" className="flex min-h-full flex-col gap-0">
@@ -305,7 +306,7 @@ export function ViewDetailDialog({
         ) : null}
 
         {view && !loading ? (
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3 sm:px-6">
+          <DialogFooter>
             <Button
               variant="outline"
               className="w-full sm:w-auto"

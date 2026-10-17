@@ -56,10 +56,10 @@ const mocks: Record<string, unknown> = {
           React.createElement("div", { role: "alertdialog" }, children),
         )
       : null,
-  AlertDialogAction: ({ render }: UiProps) => render,
-  AlertDialogCancel: function Cancel({ render }: UiProps) {
+  AlertDialogAction: button,
+  AlertDialogCancel: function Cancel(props: UiProps) {
     const setOpen = React.useContext(dialogContext)
-    return render ? React.cloneElement(render, { onClick: () => setOpen(false) }) : null
+    return button({ ...props, onClick: () => setOpen(false) })
   },
   AlertDialogTitle: ({ children }: UiProps) => React.createElement("h2", null, children),
   Dialog: ({ open, children }: UiProps) => (open ? passthrough({ children }) : null),
@@ -281,6 +281,20 @@ async function mount(t: TestContext, initialProps: ObjectListProps, versioning: 
 }
 const props: ObjectListProps = { bucket, path: "", onOpenInfo() {}, onUploadClick() {}, onPreview() {} }
 
+test("object refresh is available in the header and works without opening a menu", async (t) => {
+  let refreshes = 0
+  const ui = await mount(t, {
+    ...props,
+    onRefresh: () => {
+      refreshes += 1
+    },
+  })
+  const header = ui.container.querySelector("header")!
+  await ui.click(ui.findButton("Refresh", header))
+  assert.equal(refreshes, 1)
+  assert.equal(header.querySelector('[aria-label="More actions"]'), null)
+})
+
 test("folder force cleanup confirms the exact bucket and prefix with irreversible consequences", async (t) => {
   const ui = await mount(t, props)
   const row = await ui.openMenu(fullKey)
@@ -329,7 +343,7 @@ test("ordinary folder deletion does not opt into force cleanup", async (t) => {
   await ui.click(ui.findButton("Delete", row))
   const dialog = ui.container.querySelector('[role="alertdialog"]')
   assert.ok(dialog)
-  await ui.click(ui.findButton("Confirm", dialog))
+  await ui.click(ui.findButton("Delete", dialog))
   assert.deepEqual(ui.folderTasks, [[fullKey, bucket]])
 })
 

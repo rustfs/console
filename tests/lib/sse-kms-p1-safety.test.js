@@ -26,7 +26,7 @@ test("the non-production badge renders only on an explicit false, never on a mis
 test("rekey UI is gated on a served capability matrix so old servers never see it", () => {
   assert.match(
     pageSource,
-    /\{isRunning && capabilities \? <RekeyCard rewrapSupported=\{capabilities\.rewrap === true\} \/> : null\}/,
+    /\{isRunning && capabilities \? \(\s+<section id="kms-rekey"[^>]*>\s+<RekeyCard rewrapSupported=\{capabilities\.rewrap === true\} \/>\s+<\/section>\s+\) : null\}/,
   )
 })
 

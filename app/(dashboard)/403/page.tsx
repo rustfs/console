@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription } from "@/components/ui/empty"
+import { RiArrowLeftLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
 import { useFirstAccessibleDashboardRoute } from "@/hooks/use-first-accessible-dashboard-route"
@@ -26,36 +26,22 @@ export default function ForbiddenPage() {
   }
 
   return (
-    <div className="flex min-h-[60vh] flex-1 items-center justify-center">
-      <Empty className="py-8">
-        <EmptyContent className="max-w-sm text-center">
-          <EmptyHeader>
-            <EmptyMedia variant="icon" className="mx-auto">
-              <svg viewBox="0 0 48 48" fill="none" className="h-12 w-12 text-muted-foreground" aria-hidden>
-                <circle cx="24" cy="24" r="22" className="fill-muted stroke-border" strokeWidth="2" />
-                <path
-                  d="M16 21V19a8 8 0 0116 0v2"
-                  className="stroke-muted-foreground"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <rect x="16" y="28" width="16" height="4" rx="2" className="fill-muted-foreground" />
-                <rect x="22" y="32" width="4" height="4" rx="2" className="fill-muted-foreground" />
-              </svg>
-            </EmptyMedia>
-            <EmptyTitle>{t("Access Denied")}</EmptyTitle>
-            <EmptyDescription>
-              {t(
-                "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.",
-              )}
-            </EmptyDescription>
-          </EmptyHeader>
-          <Button variant="outline" className="mt-6" onClick={handleBack}>
-            {hasSafeHomeRoute ? t("Back to Home") : t("Back to Login")}
-          </Button>
-        </EmptyContent>
-      </Empty>
-    </div>
+    <section className="console-page mx-auto grid min-h-[60dvh] max-w-4xl content-center gap-8 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start sm:gap-12">
+      <p className="font-heading text-7xl font-semibold tracking-tight text-muted-foreground/40" aria-hidden="true">
+        403
+      </p>
+      <div className="space-y-5">
+        <h1 className="font-heading text-3xl font-semibold tracking-tight">{t("Access Denied")}</h1>
+        <p className="max-w-lg text-sm leading-relaxed text-muted-foreground">
+          {t(
+            "You do not have permission to access this page. This may be due to insufficient permissions or not being logged in.",
+          )}
+        </p>
+        <Button className="mt-3" onClick={handleBack}>
+          <RiArrowLeftLine className="size-4 rtl:rotate-180" aria-hidden />
+          {hasSafeHomeRoute ? t("Back to Home") : t("Back to Login")}
+        </Button>
+      </div>
+    </section>
   )
 }

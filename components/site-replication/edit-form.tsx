@@ -6,12 +6,13 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -124,8 +125,8 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
     <Dialog
       open={open}
       disablePointerDismissal={saving}
-      onOpenChange={(nextOpen, details) => {
-        if (saving && !nextOpen && details.reason === "escape-key") {
+      onOpenChange={(nextOpen) => {
+        if (saving && !nextOpen) {
           return
         }
 
@@ -133,7 +134,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
       }}
     >
       <DialogContent className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-xl">
-        <DialogHeader className="space-y-2 text-start">
+        <DialogHeader className="space-y-2">
           <DialogTitle>{t("Edit Site")}</DialogTitle>
           <DialogDescription>
             {t(
@@ -142,7 +143,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid min-h-0 gap-4 overflow-y-auto">
+        <DialogBody className="grid min-h-0 gap-4 overflow-y-auto">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="site-edit-name">{t("Site Name")}</Label>
@@ -284,7 +285,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
               </p>
             </div>
           </div>
-        </div>
+        </DialogBody>
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={handleCancel} disabled={saving}>

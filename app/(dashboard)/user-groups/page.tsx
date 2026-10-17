@@ -151,25 +151,10 @@ export default function UserGroupsPage() {
   return (
     <Page>
       <PageHeader
+        count={!loading && !loadError ? data.length : undefined}
         actions={
           <>
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={t("Search User Group")}
-              clearable
-              className="max-w-md"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!selectedKeys.length}
-              onClick={() => setPoliciesDialogOpen(true)}
-            >
-              <RiGroup2Fill className="size-4" aria-hidden />
-              {t("Assign Policy")}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setNewFormOpen(true)}>
+            <Button type="button" onClick={() => setNewFormOpen(true)}>
               <RiAddLine className="size-4" aria-hidden />
               {t("Add User Group")}
             </Button>
@@ -181,6 +166,28 @@ export default function UserGroupsPage() {
 
       <div className="space-y-4">
         <DataTable
+          toolbar={
+            <>
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder={t("Search User Group")}
+                clearable
+                className="max-w-md"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!selectedKeys.length}
+                  onClick={() => setPoliciesDialogOpen(true)}
+                >
+                  <RiGroup2Fill className="size-4" aria-hidden />
+                  {t("Assign Policy")}
+                </Button>
+              </div>
+            </>
+          }
           keepPreviousData
           caption={t("User Groups")}
           errorTitle={loadError ? t("Failed to get data") : undefined}

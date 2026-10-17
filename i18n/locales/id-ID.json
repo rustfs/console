@@ -2236,5 +2236,10 @@
   "pull failures": "pull failures",
   "Password must be at least 8 bytes": "Kata sandi harus berisi minimal 8 byte",
   "Secret Key must be at least 8 bytes": "Kunci rahasia harus berisi minimal 8 byte",
-  "At least 8 bytes. This is also your S3 secret key.": "Minimal 8 byte. Ini juga merupakan kunci rahasia S3 Anda."
+  "At least 8 bytes. This is also your S3 secret key.": "Minimal 8 byte. Ini juga merupakan kunci rahasia S3 Anda.",
+  "Identity": "Identitas",
+  "Operations": "Operasi",
+  "Resources": "Sumber daya",
+  "Bucket size distribution": "Distribusi ukuran bucket",
+  "Other buckets": "Bucket lainnya"
 }

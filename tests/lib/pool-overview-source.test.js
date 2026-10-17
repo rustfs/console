@@ -6,7 +6,8 @@ test("rebalance page keeps the overview compact and renders operation detail onc
   const source = fs.readFileSync("app/(dashboard)/rebalance/page.tsx", "utf8")
   const overview = fs.readFileSync("components/pools/overview.tsx", "utf8")
 
-  assert.match(source, /<PoolsOverviewCard overview=\{overview\} operationLabel=\{t\("Rebalance"\)\} \/>/)
+  assert.match(source, /<PoolsOverviewCard\s+overview=\{overview\}\s+operationLabel=\{t\("Rebalance"\)\}\s+actions=/)
+  assert.match(source, /actions=\{[\s\S]*handleStart[\s\S]*disabled=\{!canStart\}/)
   assert.doesNotMatch(overview, /<Table/)
   assert.match(source, /className="space-y-3 md:hidden"/)
   assert.match(source, /className="hidden md:block"/)

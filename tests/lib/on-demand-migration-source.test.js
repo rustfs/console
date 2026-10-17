@@ -27,7 +27,7 @@ test("migration dialogs keep actions visible while their bodies scroll", () => {
   for (const source of [configSource, backfillSource]) {
     assert.match(source, /grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
     assert.match(source, /min-h-0 space-y-5 overflow-y-auto/)
-    assert.match(source, /<DialogFooter className="border-t/)
+    assert.match(source, /<DialogFooter>/)
   }
 })
 

@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { DateTimePicker } from "@/components/datetime-picker"
 import { useMessage } from "@/lib/feedback/message"
 import { useAccessKeys } from "@/hooks/use-access-keys"
@@ -202,7 +202,7 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
         )}
         aria-busy={submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{t("Create Key")}</DialogTitle>
         </DialogHeader>
 
@@ -213,8 +213,8 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
             void submitForm()
           }}
         >
-          <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
-            <div className="flex flex-col gap-4 lg:min-h-[32rem] lg:flex-row">
+          <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
+            <div className="flex flex-col gap-4 lg:flex-row">
               <div
                 className={cn(
                   impliedPolicy ? "flex flex-1 flex-col gap-4" : "flex w-full flex-col gap-4 lg:w-72 lg:shrink-0",
@@ -310,7 +310,7 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
                   </FieldContent>
                 </Field>
 
-                <Field orientation="responsive" className="items-start gap-3 border p-3">
+                <Field orientation="responsive" className="items-start gap-3 border-t pt-5">
                   <FieldLabel htmlFor="create-implied-policy" className="text-sm font-medium">
                     {t("Use main account policy")}
                   </FieldLabel>
@@ -348,7 +348,7 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
                 </div>
               )}
             </div>
-          </div>
+          </DialogBody>
 
           {submitError && (
             <p role="alert" className="px-4 text-sm text-destructive">
@@ -356,7 +356,7 @@ export function AccessKeysNewItem({ visible, onVisibleChange, onSuccess, onNotic
             </p>
           )}
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { useGroups } from "@/hooks/use-groups"
 import { UserSelector } from "@/components/user/selector"
@@ -25,6 +25,7 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
   const [group, setGroup] = React.useState("")
   const [members, setMembers] = React.useState<string[]>([])
   const [submitting, setSubmitting] = React.useState(false)
+  const submittingRef = React.useRef(false)
 
   React.useEffect(() => {
     if (open) {
@@ -33,14 +34,18 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
     }
   }, [open])
 
-  const closeModal = () => onOpenChange(false)
+  const closeModal = () => {
+    if (!submittingRef.current) onOpenChange(false)
+  }
 
   const submitForm = async () => {
+    if (submittingRef.current) return
     if (!group.trim()) {
       message.error(t("Please enter user group name"))
       return
     }
 
+    submittingRef.current = true
     setSubmitting(true)
     try {
       await updateGroupMembers({
@@ -50,22 +55,29 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
         groupStatus: "enabled",
       })
       message.success(t("Add success"))
-      closeModal()
+      onOpenChange(false)
       onSuccess()
     } catch {
       message.error(t("Add failed"))
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
-      <DialogContent className="max-h-[90vh] overflow-y-auto overflow-x-hidden sm:max-w-lg">
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!submittingRef.current) onOpenChange(nextOpen)
+      }}
+      disablePointerDismissal
+    >
+      <DialogContent className="sm:max-w-lg" aria-busy={submitting}>
         <DialogHeader>
           <DialogTitle>{t("Add group members")}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-6">
+        <DialogBody className="space-y-6">
           <Field>
             <FieldLabel htmlFor="user-group-name" className="text-sm font-medium">
               {t("Name")}
@@ -78,6 +90,7 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
                 onChange={(e) => setGroup(e.target.value)}
                 autoComplete="off"
                 spellCheck={false}
+                disabled={submitting}
               />
             </FieldContent>
           </Field>
@@ -86,10 +99,11 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
             onChange={setMembers}
             label={t("Users")}
             placeholder={t("Select user group members")}
+            disabled={submitting}
           />
-        </div>
+        </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={closeModal}>
+          <Button variant="outline" onClick={closeModal} disabled={submitting}>
             {t("Cancel")}
           </Button>
           <Button onClick={submitForm} disabled={submitting}>

@@ -152,7 +152,7 @@ export default function EventsTargetPage() {
 
       dialog.error({
         title: t("Warning"),
-        content: t("Are you sure you want to delete this destination?"),
+        content: `${row.account_id}: ${t("Are you sure you want to delete this destination?")}`,
         positiveText: t("Confirm"),
         negativeText: t("Cancel"),
         onPositiveClick: () => deleteItem(row),
@@ -195,7 +195,7 @@ export default function EventsTargetPage() {
           return (
             <button
               type="button"
-              className="flex max-w-full items-center gap-1 rounded-none text-start font-mono text-sm outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring/50"
+              className="flex max-w-full items-center gap-2 rounded-none text-start font-medium text-sm outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring/50"
               aria-expanded={expanded}
               onClick={() => toggleSubscriptions(row.original)}
             >
@@ -318,31 +318,18 @@ export default function EventsTargetPage() {
   return (
     <Page>
       <PageHeader
+        count={!loading && !loadFailed ? data.length : undefined}
         actions={
-          <div className="grid w-full shrink-0 gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto] lg:w-auto">
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={t("Search")}
-              clearable
-              className="h-11 w-full sm:h-8 sm:w-64"
-            />
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end lg:flex-nowrap">
-              <Button
-                variant="outline"
-                className="h-11 w-full sm:h-8 sm:w-auto"
-                onClick={() => setNewFormOpen(true)}
-                disabled={!canManageDestinations}
-              >
-                <RiAddLine className="size-4" aria-hidden />
-                <span>{t("Add Event Destination")}</span>
-              </Button>
-              <Button variant="outline" className="h-11 w-full sm:h-8 sm:w-auto" onClick={loadData} disabled={loading}>
-                <RiRefreshLine className="size-4" aria-hidden />
-                <span>{loading ? t("Refreshing…") : t("Refresh")}</span>
-              </Button>
-            </div>
-          </div>
+          <>
+            <Button onClick={() => setNewFormOpen(true)} disabled={!canManageDestinations}>
+              <RiAddLine className="size-4" aria-hidden />
+              <span>{t("Add Event Destination")}</span>
+            </Button>
+            <Button variant="outline" onClick={loadData} disabled={loading}>
+              <RiRefreshLine className="size-4" aria-hidden />
+              <span>{loading ? t("Refreshing…") : t("Refresh")}</span>
+            </Button>
+          </>
         }
       >
         <h1 className="text-2xl font-bold">{t("Event Destinations")}</h1>
@@ -375,6 +362,15 @@ export default function EventsTargetPage() {
 
       {data.length > 0 || !loadFailed ? (
         <DataTable
+          toolbar={
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={t("Search")}
+              clearable
+              className="w-full sm:w-80"
+            />
+          }
           table={table}
           isLoading={loading && data.length === 0}
           emptyTitle={t("No Destinations")}

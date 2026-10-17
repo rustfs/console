@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { useGroups } from "@/hooks/use-groups"
 import { UserGroupMembers } from "./members"
 import { UserGroupPolicies } from "./policies"
@@ -114,11 +114,11 @@ export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGr
         className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl"
         aria-busy={loading || statusUpdating}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{row?.name || t("Members")}</DialogTitle>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+        <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
           {loading ? (
             <div
               className="flex min-h-64 items-center justify-center gap-2 text-sm text-muted-foreground"
@@ -167,9 +167,9 @@ export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGr
               </Tabs>
             </div>
           ) : null}
-        </div>
+        </DialogBody>
 
-        <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={closeModal} disabled={statusUpdating}>
             {t("Close")}
           </Button>

@@ -8,9 +8,24 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Spinner } from "@/components/ui/spinner"
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Item, ItemContent } from "@/components/ui/item"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer"
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog"
+import { ItemContent } from "@/components/ui/item"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -80,6 +95,9 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   const [isExpirationValid, setIsExpirationValid] = React.useState(false)
   const [isGeneratingUrl, setIsGeneratingUrl] = React.useState(false)
   const [isUpdatingRetention, setIsUpdatingRetention] = React.useState(false)
+  const updatingRetentionRef = React.useRef(false)
+  const [isUpdatingTags, setIsUpdatingTags] = React.useState(false)
+  const updatingTagsRef = React.useRef(false)
   const retentionDialogContentRef = React.useRef<HTMLDivElement>(null)
   const resolvedObjectKey = React.useMemo(() => String(object?.Key ?? objectKey ?? ""), [object?.Key, objectKey])
   const objectPermissionContext = React.useMemo(
@@ -325,7 +343,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }
 
   const submitTagForm = async () => {
-    if (!canEditObjectTags) return
+    if (!canEditObjectTags || updatingTagsRef.current) return
     if (!resolvedObjectKey) {
       message.error(t("Failed to fetch object info"))
       return
@@ -339,6 +357,8 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
       message.error(t("Please fill in the correct format"))
       return
     }
+    updatingTagsRef.current = true
+    setIsUpdatingTags(true)
     try {
       const nextTags = [...tags, nextTag]
       await objectApi.putObjectTags(resolvedObjectKey, nextTags)
@@ -347,10 +367,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
       message.success(t("Create Success"))
     } catch (err) {
       message.error((err as Error)?.message ?? t("Create Failed"))
+    } finally {
+      updatingTagsRef.current = false
+      setIsUpdatingTags(false)
     }
   }
 
   const confirmDeleteTag = (tagKey: string) => {
+    if (updatingTagsRef.current) return
     dialog.warning({
       title: t("Delete Tag"),
       content: t("Are you sure you want to delete this tag?"),
@@ -361,7 +385,9 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }
 
   const removeTag = async (tagKey: string) => {
-    if (!canEditObjectTags || !resolvedObjectKey) return
+    if (!canEditObjectTags || !resolvedObjectKey || updatingTagsRef.current) return
+    updatingTagsRef.current = true
+    setIsUpdatingTags(true)
     try {
       const nextTags = tags.filter((tag) => tag.Key !== tagKey)
       await objectApi.putObjectTags(resolvedObjectKey, nextTags)
@@ -369,11 +395,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
       message.success(t("Delete Success"))
     } catch (err) {
       message.error((err as Error)?.message ?? t("Delete Failed"))
+    } finally {
+      updatingTagsRef.current = false
+      setIsUpdatingTags(false)
     }
   }
 
   const submitRetention = async () => {
-    if (isUpdatingRetention) return
+    if (updatingRetentionRef.current) return
     if (!resolvedObjectKey) {
       message.error(t("Failed to fetch object info"))
       return
@@ -387,6 +416,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
       return
     }
 
+    updatingRetentionRef.current = true
     setIsUpdatingRetention(true)
     try {
       await objectApi.putObjectRetention(resolvedObjectKey, {
@@ -399,12 +429,13 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     } catch (err) {
       message.error((err as Error)?.message ?? t("Update Failed"))
     } finally {
+      updatingRetentionRef.current = false
       setIsUpdatingRetention(false)
     }
   }
 
   const resetRetention = async () => {
-    if (isUpdatingRetention) return
+    if (updatingRetentionRef.current) return
     if (!resolvedObjectKey) {
       message.error(t("Failed to fetch object info"))
       return
@@ -414,6 +445,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
       return
     }
 
+    updatingRetentionRef.current = true
     setIsUpdatingRetention(true)
     try {
       await objectApi.putObjectRetention(resolvedObjectKey, {
@@ -424,6 +456,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     } catch (err) {
       message.error((err as Error)?.message ?? t("Update Failed"))
     } finally {
+      updatingRetentionRef.current = false
       setIsUpdatingRetention(false)
     }
   }
@@ -432,13 +465,25 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
 
   return (
     <>
-      <Drawer open={open} onOpenChange={onOpenChange} swipeDirection="right">
-        <DrawerContent className="overflow-y-auto overflow-x-hidden data-[swipe-direction=right]:w-[92vw] data-[swipe-direction=right]:sm:max-w-2xl">
-          <DrawerHeader>
-            <DrawerTitle>{t("Object Details")}</DrawerTitle>
+      <Drawer
+        open={open}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen && (showTagView || showRetentionView || showVersions)) return
+          onOpenChange(nextOpen)
+        }}
+        swipeDirection="right"
+      >
+        <DrawerContent className="data-[swipe-axis=x]:[--drawer-content-width:92vw] data-[swipe-axis=x]:sm:[--drawer-content-width:30rem]">
+          <DrawerHeader className="relative gap-2 border-b p-5 pe-14">
+            <DrawerTitle className="text-xl font-semibold">{t("Object Details")}</DrawerTitle>
             <DrawerDescription className="break-all">{resolvedObjectKey || bucketName}</DrawerDescription>
+            <DrawerClose
+              render={<Button variant="ghost" size="icon" className="absolute top-4 end-4" aria-label={t("Close")} />}
+            >
+              <RiCloseLine aria-hidden />
+            </DrawerClose>
           </DrawerHeader>
-          <div className="min-w-0 space-y-4 p-4 overflow-hidden">
+          <div className="min-h-0 min-w-0 space-y-6 overflow-y-auto p-5">
             <div className="flex flex-wrap items-center gap-2">
               {canDownloadObject ? (
                 <Button variant="outline" size="sm" onClick={download}>
@@ -482,7 +527,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
               ) : null}
             </div>
 
-            <Item variant="outline" className="flex-col items-stretch gap-4">
+            <div className="space-y-6">
               <Tabs defaultValue="info" className="w-full">
                 <TabsList className="mb-2 inline-flex h-9 items-center justify-center rounded-none bg-muted p-1 text-muted-foreground">
                   <TabsTrigger value="info" className="px-4">
@@ -663,17 +708,24 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                   )}
                 </div>
               </ItemContent>
-            </Item>
+            </div>
           </div>
         </DrawerContent>
       </Drawer>
 
-      <Dialog open={showTagView} onOpenChange={setShowTagView} disablePointerDismissal>
-        <DialogContent className="sm:max-w-lg">
+      <Dialog
+        open={showTagView}
+        onOpenChange={(nextOpen) => {
+          if (!updatingTagsRef.current) setShowTagView(nextOpen)
+        }}
+        disablePointerDismissal
+      >
+        <DialogContent className="sm:max-w-lg" aria-busy={isUpdatingTags}>
           <DialogHeader>
             <DialogTitle>{t("Set Tags")}</DialogTitle>
+            <DialogDescription className="break-all font-mono">{resolvedObjectKey}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <DialogBody className="space-y-4">
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
                 <Badge
@@ -690,6 +742,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                       aria-label={t("Delete Tag")}
                       className="inline-flex size-6 shrink-0 items-center justify-center transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
                       onClick={() => confirmDeleteTag(tag.Key)}
+                      disabled={isUpdatingTags}
                     >
                       <RiCloseLine className="size-4" aria-hidden />
                     </button>
@@ -714,7 +767,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                       value={tagFormValue.Key}
                       onChange={(e) => setTagFormValue((v) => ({ ...v, Key: e.target.value }))}
                       placeholder={t("Tag Key Placeholder")}
-                      disabled={!canEditObjectTags}
+                      disabled={!canEditObjectTags || isUpdatingTags}
                     />
                   </FieldContent>
                 </Field>
@@ -732,33 +785,42 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                         }))
                       }
                       placeholder={t("Tag Value Placeholder")}
-                      disabled={!canEditObjectTags}
+                      disabled={!canEditObjectTags || isUpdatingTags}
                     />
                   </FieldContent>
                 </Field>
               </div>
-              <div className="flex justify-end">
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={() => void submitTagForm()}
-                  disabled={!canEditObjectTags || !resolvedObjectKey}
-                >
-                  {t("Add")}
-                </Button>
-              </div>
             </form>
-          </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowTagView(false)} disabled={isUpdatingTags}>
+              {t("Close")}
+            </Button>
+            <Button
+              onClick={() => void submitTagForm()}
+              disabled={!canEditObjectTags || !resolvedObjectKey || isUpdatingTags}
+            >
+              {isUpdatingTags ? <Spinner className="size-4" /> : null}
+              {t("Add")}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showRetentionView} onOpenChange={setShowRetentionView} disablePointerDismissal>
-        <DialogContent className="sm:max-w-lg">
+      <Dialog
+        open={showRetentionView}
+        onOpenChange={(nextOpen) => {
+          if (!updatingRetentionRef.current) setShowRetentionView(nextOpen)
+        }}
+        disablePointerDismissal
+      >
+        <DialogContent className="sm:max-w-lg" aria-busy={isUpdatingRetention}>
           <div ref={retentionDialogContentRef} className="contents">
             <DialogHeader>
               <DialogTitle>{t("Retention")}</DialogTitle>
+              <DialogDescription className="break-all font-mono">{resolvedObjectKey}</DialogDescription>
             </DialogHeader>
-            <div className="flex flex-col gap-3">
+            <DialogBody className="flex flex-col gap-3">
               <Field>
                 <FieldLabel>{t("Retention Mode")}</FieldLabel>
                 <FieldContent>
@@ -766,6 +828,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                     value={retentionMode}
                     onValueChange={(v) => setRetentionMode(v as "COMPLIANCE" | "GOVERNANCE")}
                     className="grid gap-2 sm:grid-cols-2"
+                    disabled={!canEditRetention || isUpdatingRetention}
                   >
                     {[
                       { label: t("COMPLIANCE"), value: "COMPLIANCE" },
@@ -800,34 +863,34 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                   />
                 </FieldContent>
               </Field>
-              <div className="flex justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={resetRetention}
-                  disabled={!canEditRetention || isUpdatingRetention}
-                >
-                  {t("Reset")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="default"
-                  onClick={() => void submitRetention()}
-                  disabled={!canEditRetention || isUpdatingRetention}
-                >
-                  {isUpdatingRetention ? <Spinner className="size-4" /> : null}
-                  {t("Confirm")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowRetentionView(false)}
-                  disabled={isUpdatingRetention}
-                >
-                  {t("Cancel")}
-                </Button>
-              </div>
-            </div>
+            </DialogBody>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowRetentionView(false)}
+                disabled={isUpdatingRetention}
+              >
+                {t("Cancel")}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={resetRetention}
+                disabled={!canEditRetention || isUpdatingRetention}
+              >
+                {t("Reset")}
+              </Button>
+              <Button
+                type="button"
+                variant="default"
+                onClick={() => void submitRetention()}
+                disabled={!canEditRetention || isUpdatingRetention}
+              >
+                {isUpdatingRetention ? <Spinner className="size-4" /> : null}
+                {t("Confirm")}
+              </Button>
+            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>

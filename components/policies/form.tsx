@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { usePolicies } from "@/hooks/use-policies"
 
@@ -122,7 +122,7 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
         className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-3xl"
         aria-busy={submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{isEditing ? t("Edit Policy") : t("New Policy")}</DialogTitle>
         </DialogHeader>
 
@@ -133,7 +133,7 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
             void submitForm()
           }}
         >
-          <div className="flex min-h-0 flex-col gap-4 overflow-hidden p-4">
+          <DialogBody className="flex min-h-0 flex-col gap-4 overflow-hidden">
             <Field>
               <FieldLabel htmlFor="policy-name">{t("Policy Name")}</FieldLabel>
               <FieldContent>
@@ -174,9 +174,9 @@ export function PolicyForm({ show, onShowChange, policy, onSaved }: PolicyFormPr
               </FieldContent>
               <FieldError id="policy-content-error">{errors.content}</FieldError>
             </Field>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

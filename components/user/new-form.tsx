@@ -9,7 +9,15 @@ import { Badge } from "@/components/ui/badge"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogBody,
+  DialogSection,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { useMessage } from "@/lib/feedback/message"
 import { useUsers } from "@/hooks/use-users"
@@ -174,7 +182,7 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
         className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl"
         aria-busy={loading || submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{t("Create User")}</DialogTitle>
         </DialogHeader>
 
@@ -185,184 +193,185 @@ export function UserNewForm({ open, onOpenChange, onSuccess }: UserNewFormProps)
             void submitForm()
           }}
         >
-          <div className="min-h-0 space-y-6 overflow-y-auto overscroll-contain p-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="new-user-access-key">{t("User Name")}</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="new-user-access-key"
-                    name="new-user-access-key"
-                    value={accessKey}
-                    onChange={(e) => setAccessKey(e.target.value)}
-                    minLength={USERNAME_MIN_LENGTH}
-                    maxLength={USERNAME_MAX_LENGTH}
-                    autoComplete="off"
-                    spellCheck={false}
-                    required
-                    disabled={submitting}
-                    aria-invalid={Boolean(errors.accessKey)}
-                    aria-describedby={errors.accessKey ? "new-user-access-key-error" : undefined}
-                  />
-                </FieldContent>
-                <FieldError id="new-user-access-key-error">{errors.accessKey}</FieldError>
-              </Field>
+          <DialogBody className="min-h-0 space-y-6 overflow-y-auto overscroll-contain">
+            <DialogSection title={t("Credentials")}>
+              <div className="grid gap-4 md:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="new-user-access-key">{t("User Name")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="new-user-access-key"
+                      name="new-user-access-key"
+                      value={accessKey}
+                      onChange={(e) => setAccessKey(e.target.value)}
+                      minLength={USERNAME_MIN_LENGTH}
+                      maxLength={USERNAME_MAX_LENGTH}
+                      autoComplete="off"
+                      spellCheck={false}
+                      required
+                      disabled={submitting}
+                      aria-invalid={Boolean(errors.accessKey)}
+                      aria-describedby={errors.accessKey ? "new-user-access-key-error" : undefined}
+                    />
+                  </FieldContent>
+                  <FieldError id="new-user-access-key-error">{errors.accessKey}</FieldError>
+                </Field>
 
-              <Field>
-                <FieldLabel htmlFor="new-user-password">{t("Password")}</FieldLabel>
-                <FieldContent>
-                  <Input
-                    id="new-user-password"
-                    name="new-user-password"
-                    value={secretKey}
-                    onChange={(e) => setSecretKey(e.target.value)}
-                    type="password"
-                    autoComplete="new-password"
-                    spellCheck={false}
-                    required
-                    disabled={submitting}
-                    aria-invalid={Boolean(errors.secretKey)}
-                    aria-describedby={errors.secretKey ? "new-user-password-error" : undefined}
-                  />
-                </FieldContent>
-                <FieldError id="new-user-password-error">{errors.secretKey}</FieldError>
-              </Field>
-            </div>
-
-            {loading ? (
-              <div
-                className="flex items-center gap-2 border border-dashed p-3 text-sm text-muted-foreground"
-                role="status"
-              >
-                <Spinner className="size-4" />
-                {t("Loading…")}
+                <Field>
+                  <FieldLabel htmlFor="new-user-password">{t("Password")}</FieldLabel>
+                  <FieldContent>
+                    <Input
+                      id="new-user-password"
+                      name="new-user-password"
+                      value={secretKey}
+                      onChange={(e) => setSecretKey(e.target.value)}
+                      type="password"
+                      autoComplete="new-password"
+                      spellCheck={false}
+                      required
+                      disabled={submitting}
+                      aria-invalid={Boolean(errors.secretKey)}
+                      aria-describedby={errors.secretKey ? "new-user-password-error" : undefined}
+                    />
+                  </FieldContent>
+                  <FieldError id="new-user-password-error">{errors.secretKey}</FieldError>
+                </Field>
               </div>
-            ) : loadError ? (
-              <div className="flex flex-wrap items-center gap-3 border border-dashed p-3" role="alert">
-                <p className="min-w-0 flex-1 text-sm text-destructive">{loadError}</p>
-                <Button type="button" variant="outline" onClick={() => setLoadVersion((current) => current + 1)}>
-                  <RiRefreshLine className="size-4" aria-hidden />
-                  {t("Refresh")}
-                </Button>
-              </div>
-            ) : null}
+            </DialogSection>
+            <DialogSection title={t("Access Control")}>
+              {loading ? (
+                <div
+                  className="flex items-center gap-2 border border-dashed p-3 text-sm text-muted-foreground"
+                  role="status"
+                >
+                  <Spinner className="size-4" />
+                  {t("Loading…")}
+                </div>
+              ) : loadError ? (
+                <div className="flex flex-wrap items-center gap-3 border border-dashed p-3" role="alert">
+                  <p className="min-w-0 flex-1 text-sm text-destructive">{loadError}</p>
+                  <Button type="button" variant="outline" onClick={() => setLoadVersion((current) => current + 1)}>
+                    <RiRefreshLine className="size-4" aria-hidden />
+                    {t("Refresh")}
+                  </Button>
+                </div>
+              ) : null}
+              <Field>
+                <FieldLabel>{t("Groups")}</FieldLabel>
+                <FieldContent>
+                  <Popover open={groupOpen} onOpenChange={setGroupOpen}>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="min-h-10 w-full min-w-0 justify-between gap-2"
+                          aria-label={t("Groups")}
+                          disabled={loading || Boolean(loadError) || submitting}
+                        >
+                          <span className="truncate">{groups.length ? groups.join(", ") : t("Select Group")}</span>
+                          <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
+                        </Button>
+                      }
+                    />
+                    <PopoverContent className="w-72 p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder={t("Search Group")} />
+                        <CommandList>
+                          <CommandEmpty>{t("No Data")}</CommandEmpty>
+                          <CommandGroup>
+                            {groupsList.map((option) => (
+                              <CommandItem
+                                key={option.value}
+                                value={option.label}
+                                onSelect={() => toggleGroup(option.value)}
+                              >
+                                <RiCheckLine
+                                  className={cn(
+                                    "me-2 size-4",
+                                    groups.includes(option.value) ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                <span>{option.label}</span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {groups.length > 0 && (
+                    <div className="mt-2 flex min-w-0 flex-wrap gap-2">
+                      {groups.map((value) => (
+                        <Badge key={value} variant="secondary" className="h-auto max-w-full whitespace-normal">
+                          <span className="min-w-0 break-all">{value}</span>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </FieldContent>
+              </Field>
+              <Field>
+                <FieldLabel>{t("Policy")}</FieldLabel>
+                <FieldContent>
+                  <Popover open={policyOpen} onOpenChange={setPolicyOpen}>
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="min-h-10 w-full min-w-0 justify-between gap-2"
+                          aria-label={t("Policy")}
+                          disabled={loading || Boolean(loadError) || submitting}
+                        >
+                          <span className="truncate">
+                            {policies.length ? policies.join(", ") : t("Select user group policies")}
+                          </span>
+                          <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
+                        </Button>
+                      }
+                    />
+                    <PopoverContent className="w-72 p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder={t("Search Policy")} />
+                        <CommandList>
+                          <CommandEmpty>{t("No Data")}</CommandEmpty>
+                          <CommandGroup>
+                            {policiesList.map((option) => (
+                              <CommandItem
+                                key={option.value}
+                                value={option.label}
+                                onSelect={() => togglePolicy(option.value)}
+                              >
+                                <RiCheckLine
+                                  className={cn(
+                                    "me-2 size-4",
+                                    policies.includes(option.value) ? "opacity-100" : "opacity-0",
+                                  )}
+                                />
+                                <span>{option.label}</span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                  {policies.length > 0 && (
+                    <div className="mt-2 flex min-w-0 flex-wrap gap-2">
+                      {policies.map((value) => (
+                        <Badge key={value} variant="secondary" className="h-auto max-w-full whitespace-normal">
+                          <span className="min-w-0 break-all">{value}</span>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </FieldContent>
+              </Field>
+            </DialogSection>
+          </DialogBody>
 
-            <Field>
-              <FieldLabel>{t("Groups")}</FieldLabel>
-              <FieldContent>
-                <Popover open={groupOpen} onOpenChange={setGroupOpen}>
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="min-h-10 w-full min-w-0 justify-between gap-2"
-                        aria-label={t("Groups")}
-                        disabled={loading || Boolean(loadError) || submitting}
-                      >
-                        <span className="truncate">{groups.length ? groups.join(", ") : t("Select Group")}</span>
-                        <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
-                      </Button>
-                    }
-                  />
-                  <PopoverContent className="w-72 p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder={t("Search Group")} />
-                      <CommandList>
-                        <CommandEmpty>{t("No Data")}</CommandEmpty>
-                        <CommandGroup>
-                          {groupsList.map((option) => (
-                            <CommandItem
-                              key={option.value}
-                              value={option.label}
-                              onSelect={() => toggleGroup(option.value)}
-                            >
-                              <RiCheckLine
-                                className={cn(
-                                  "me-2 size-4",
-                                  groups.includes(option.value) ? "opacity-100" : "opacity-0",
-                                )}
-                              />
-                              <span>{option.label}</span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                {groups.length > 0 && (
-                  <div className="mt-2 flex min-w-0 flex-wrap gap-2">
-                    {groups.map((value) => (
-                      <Badge key={value} variant="secondary" className="h-auto max-w-full whitespace-normal">
-                        <span className="min-w-0 break-all">{value}</span>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </FieldContent>
-            </Field>
-
-            <Field>
-              <FieldLabel>{t("Policy")}</FieldLabel>
-              <FieldContent>
-                <Popover open={policyOpen} onOpenChange={setPolicyOpen}>
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="min-h-10 w-full min-w-0 justify-between gap-2"
-                        aria-label={t("Policy")}
-                        disabled={loading || Boolean(loadError) || submitting}
-                      >
-                        <span className="truncate">
-                          {policies.length ? policies.join(", ") : t("Select user group policies")}
-                        </span>
-                        <RiArrowDownSLine className="size-4 text-muted-foreground" aria-hidden />
-                      </Button>
-                    }
-                  />
-                  <PopoverContent className="w-72 p-0" align="start">
-                    <Command>
-                      <CommandInput placeholder={t("Search Policy")} />
-                      <CommandList>
-                        <CommandEmpty>{t("No Data")}</CommandEmpty>
-                        <CommandGroup>
-                          {policiesList.map((option) => (
-                            <CommandItem
-                              key={option.value}
-                              value={option.label}
-                              onSelect={() => togglePolicy(option.value)}
-                            >
-                              <RiCheckLine
-                                className={cn(
-                                  "me-2 size-4",
-                                  policies.includes(option.value) ? "opacity-100" : "opacity-0",
-                                )}
-                              />
-                              <span>{option.label}</span>
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                {policies.length > 0 && (
-                  <div className="mt-2 flex min-w-0 flex-wrap gap-2">
-                    {policies.map((value) => (
-                      <Badge key={value} variant="secondary" className="h-auto max-w-full whitespace-normal">
-                        <span className="min-w-0 break-all">{value}</span>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </FieldContent>
-            </Field>
-          </div>
-
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={closeModal} disabled={submitting}>
               {t("Cancel")}
             </Button>

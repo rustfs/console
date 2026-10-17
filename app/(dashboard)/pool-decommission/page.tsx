@@ -551,7 +551,7 @@ export default function PoolDecommissionPage() {
         ) : null}
 
         {trackedTask ? (
-          <Card className="rounded-none" aria-busy={refreshing || submitting}>
+          <Card className="configuration-panel" aria-busy={refreshing || submitting}>
             <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0 space-y-1">
                 <CardTitle>{t("Current Pool Decommission Status")}</CardTitle>
@@ -578,7 +578,7 @@ export default function PoolDecommissionPage() {
                   className="flex-1"
                   aria-label={`${trackedTask.pool.name} ${t("Progress")}`}
                 />
-                <span className="w-12 text-right text-sm font-semibold tabular-nums">
+                <span className="order-first font-heading text-5xl font-semibold tabular-nums">
                   {Math.round(trackedProgress)}%
                 </span>
               </div>
@@ -650,7 +650,7 @@ export default function PoolDecommissionPage() {
         ) : null}
 
         {overview.pools.length ? (
-          <Card className="rounded-none" aria-busy={refreshing || submitting}>
+          <Card className="configuration-panel" aria-busy={refreshing || submitting}>
             <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="space-y-1">
                 <CardTitle>{t("Pool Decommission")}</CardTitle>
@@ -678,12 +678,12 @@ export default function PoolDecommissionPage() {
               ) : (
                 <>
                   {selectedRow ? (
-                    <div className="grid grid-cols-2 gap-4 border bg-muted/20 p-3 sm:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-6 border-s-2 border-primary bg-muted/30 p-6 sm:grid-cols-4">
                       <div className="col-span-2 min-w-0 sm:col-span-4">
                         <p className="text-xs text-muted-foreground">
                           {selectionLocked ? t("Selection Locked") : t("Selected Pool")}
                         </p>
-                        <p className="break-all text-sm font-semibold">{selectedRow.pool.name}</p>
+                        <p className="mt-2 break-all font-heading text-2xl font-semibold">{selectedRow.pool.name}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">{t("Total Capacity")}</p>

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -335,7 +335,6 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
                 variant="outline"
                 size="icon-xs"
                 type="button"
-                className="size-11 [@media(hover:hover)_and_(pointer:fine)]:size-6"
                 onClick={toggleImageFullscreen}
                 aria-label={isImageFullscreen ? t("Exit Fullscreen") : t("Fullscreen")}
                 title={isImageFullscreen ? t("Exit Fullscreen") : t("Fullscreen")}
@@ -476,7 +475,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="size-11 shrink-0 [@media(hover:hover)_and_(pointer:fine)]:size-7"
+            className="shrink-0"
             aria-label={isDialogExpanded ? t("Collapse") : t("Expand")}
             title={isDialogExpanded ? t("Collapse") : t("Expand")}
             onClick={() => setIsDialogExpanded((expanded) => !expanded)}
@@ -490,7 +489,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
               type="button"
               variant="ghost"
               size="icon-sm"
-              className="absolute end-2 top-2 size-11 [@media(hover:hover)_and_(pointer:fine)]:size-7"
+              className="absolute end-2 top-2"
               aria-label={t("Close")}
               title={t("Close")}
             />

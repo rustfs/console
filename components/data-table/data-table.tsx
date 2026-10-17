@@ -21,6 +21,7 @@ interface DataTableProps<TData> {
   emptyTitle?: string
   emptyDescription?: string
   caption?: string
+  toolbar?: React.ReactNode
   className?: string
   tableClass?: string
   stickyHeader?: boolean
@@ -88,6 +89,7 @@ export function DataTable<TData>({
   emptyTitle = "No data",
   emptyDescription = "There is nothing to display yet.",
   caption,
+  toolbar,
   className,
   tableClass,
   stickyHeader = false,
@@ -101,6 +103,11 @@ export function DataTable<TData>({
 
   const tableContent = (
     <>
+      {toolbar ? (
+        <div className="table-toolbar flex min-w-0 flex-wrap items-center justify-between gap-3 border-b p-4">
+          {toolbar}
+        </div>
+      ) : null}
       <UiTable className={cn("min-w-full tabular-nums", tableClass)} aria-busy={isLoading}>
         {caption ? <caption className="sr-only">{caption}</caption> : null}
         <TableHeader className={stickyHeader ? "sticky top-0 z-10 bg-muted" : "bg-muted"}>
@@ -222,9 +229,9 @@ export function DataTable<TData>({
         </div>
       ) : null}
       {bodyHeight ? (
-        <ScrollArea className={cn("border", bodyHeight)}>{tableContent}</ScrollArea>
+        <ScrollArea className={cn("workspace-table border bg-card", bodyHeight)}>{tableContent}</ScrollArea>
       ) : (
-        <div className="w-full border">{tableContent}</div>
+        <div className="workspace-table w-full border bg-card">{tableContent}</div>
       )}
     </div>
   )

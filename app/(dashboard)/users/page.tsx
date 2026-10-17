@@ -175,7 +175,7 @@ export default function UsersPage() {
     dialog.error({
       title: t("Warning"),
       content: `${row.accessKey}: ${t("Are you sure you want to delete this user?")}`,
-      positiveText: t("Confirm"),
+      positiveText: t("Delete"),
       negativeText: t("Cancel"),
       onPositiveClick: () => deleteItem(row),
     })
@@ -199,7 +199,7 @@ export default function UsersPage() {
     dialog.error({
       title: t("Warning"),
       content: t("Are you sure you want to delete all selected users?"),
-      positiveText: t("Confirm"),
+      positiveText: t("Delete"),
       negativeText: t("Cancel"),
       onPositiveClick: async () => {
         const results = await Promise.allSettled(selectedKeys.map((key) => deleteUser(key)))
@@ -226,35 +226,11 @@ export default function UsersPage() {
   return (
     <Page>
       <PageHeader
+        count={!loading && !loadError ? data.length : undefined}
         actions={
           <>
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={t("Search Access User")}
-              clearable
-              className="max-w-xs"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!canBulkDeleteUsers || !selectedKeys.length}
-              onClick={deleteByList}
-            >
-              <RiDeleteBin5Line className="size-4" aria-hidden />
-              {t("Delete Selected")}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!canAssignGroups || !selectedKeys.length}
-              onClick={addToGroup}
-            >
-              <RiGroup2Fill className="size-4" aria-hidden />
-              {t("Add to Group")}
-            </Button>
             {canCreateUser ? (
-              <Button type="button" variant="outline" onClick={() => setNewFormOpen(true)}>
+              <Button type="button" onClick={() => setNewFormOpen(true)}>
                 <RiAddLine className="size-4" aria-hidden />
                 {t("Add User")}
               </Button>
@@ -267,6 +243,37 @@ export default function UsersPage() {
 
       <div className="space-y-4">
         <DataTable
+          toolbar={
+            <>
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder={t("Search Access User")}
+                clearable
+                className="max-w-xs"
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!canBulkDeleteUsers || !selectedKeys.length}
+                  onClick={deleteByList}
+                >
+                  <RiDeleteBin5Line className="size-4" aria-hidden />
+                  {t("Delete Selected")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!canAssignGroups || !selectedKeys.length}
+                  onClick={addToGroup}
+                >
+                  <RiGroup2Fill className="size-4" aria-hidden />
+                  {t("Add to Group")}
+                </Button>
+              </div>
+            </>
+          }
           keepPreviousData
           caption={t("Users")}
           errorTitle={loadError ? t("Failed to get data") : undefined}

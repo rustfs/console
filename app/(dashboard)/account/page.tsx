@@ -101,57 +101,60 @@ export default function AccountPage() {
         </div>
       ) : info ? (
         <>
-          {/* Passive metadata as a definition list, not a grid of cards: these
-              are facts to read, not objects to select. */}
-          <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-[max-content_1fr]">
-            <dt className="text-sm text-muted-foreground">{t("Username")}</dt>
-            <dd className="font-mono break-all">{resolveAccountDisplayName(info)}</dd>
+          <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+            <div className="min-w-0 space-y-3">
+              <p className="text-xs text-muted-foreground">{t("Username")}</p>
+              <h2 className="break-words font-heading text-3xl font-semibold tracking-tight [overflow-wrap:anywhere]">
+                {resolveAccountDisplayName(info)}
+              </h2>
+            </div>
+            <dl className="profile-facts grid gap-x-8 gap-y-5 border-t pt-5 sm:grid-cols-[max-content_1fr]">
+              <dt className="text-sm text-muted-foreground">{t("Role")}</dt>
+              <dd className="flex flex-wrap items-center gap-2">
+                <span>{info.is_admin ? t("Administrator") : t("User")}</span>
+                <Badge variant="secondary">{identityTypeLabel(info.identity_type)}</Badge>
+              </dd>
 
-            <dt className="text-sm text-muted-foreground">{t("Role")}</dt>
-            <dd className="flex flex-wrap items-center gap-2">
-              <span>{info.is_admin ? t("Administrator") : t("User")}</span>
-              <Badge variant="secondary">{identityTypeLabel(info.identity_type)}</Badge>
-            </dd>
+              <dt className="text-sm text-muted-foreground">{t("Status")}</dt>
+              <dd>{info.status === "enabled" ? t("Enabled") : t("Disabled")}</dd>
 
-            <dt className="text-sm text-muted-foreground">{t("Status")}</dt>
-            <dd>{info.status === "enabled" ? t("Enabled") : t("Disabled")}</dd>
+              <dt className="text-sm text-muted-foreground">{t("Two-factor authentication")}</dt>
+              <dd>{info.mfa.enabled ? t("On") : t("Off")}</dd>
 
-            <dt className="text-sm text-muted-foreground">{t("Two-factor authentication")}</dt>
-            <dd>{info.mfa.enabled ? t("On") : t("Off")}</dd>
+              {info.policies.length > 0 && (
+                <>
+                  <dt className="text-sm text-muted-foreground">{t("Policies")}</dt>
+                  <dd className="flex flex-wrap gap-1">
+                    {info.policies.map((policy) => (
+                      <Badge key={policy} variant="outline">
+                        {policy}
+                      </Badge>
+                    ))}
+                  </dd>
+                </>
+              )}
 
-            {info.policies.length > 0 && (
-              <>
-                <dt className="text-sm text-muted-foreground">{t("Policies")}</dt>
-                <dd className="flex flex-wrap gap-1">
-                  {info.policies.map((policy) => (
-                    <Badge key={policy} variant="outline">
-                      {policy}
-                    </Badge>
-                  ))}
-                </dd>
-              </>
-            )}
+              {info.member_of.length > 0 && (
+                <>
+                  <dt className="text-sm text-muted-foreground">{t("Groups")}</dt>
+                  <dd className="flex flex-wrap gap-1">
+                    {info.member_of.map((group) => (
+                      <Badge key={group} variant="outline">
+                        {group}
+                      </Badge>
+                    ))}
+                  </dd>
+                </>
+              )}
 
-            {info.member_of.length > 0 && (
-              <>
-                <dt className="text-sm text-muted-foreground">{t("Groups")}</dt>
-                <dd className="flex flex-wrap gap-1">
-                  {info.member_of.map((group) => (
-                    <Badge key={group} variant="outline">
-                      {group}
-                    </Badge>
-                  ))}
-                </dd>
-              </>
-            )}
-
-            {info.session_access_key && (
-              <>
-                <dt className="text-sm text-muted-foreground">{t("Session access key")}</dt>
-                <dd className="font-mono text-sm break-all text-muted-foreground">{info.session_access_key}</dd>
-              </>
-            )}
-          </dl>
+              {info.session_access_key && (
+                <>
+                  <dt className="text-sm text-muted-foreground">{t("Session access key")}</dt>
+                  <dd className="font-mono text-sm break-all text-muted-foreground">{info.session_access_key}</dd>
+                </>
+              )}
+            </dl>
+          </section>
 
           {/* Root cannot be edited here, and saying so beats a disabled control
               with no explanation. */}

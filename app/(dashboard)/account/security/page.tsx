@@ -101,9 +101,12 @@ export default function AccountSecurityPage() {
           <Skeleton className="h-28 w-full" />
         </div>
       ) : info ? (
-        <div className="divide-y">
+        <div className="max-w-6xl divide-y border-t">
           {/* Peer sections separated by one divider system, no nested frames. */}
-          <section className="space-y-3 pb-6" aria-labelledby="security-password-heading">
+          <section
+            className="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]"
+            aria-labelledby="security-password-heading"
+          >
             <div>
               <h2 id="security-password-heading" className="font-heading font-semibold tracking-tight">
                 {t("Password")}
@@ -114,22 +117,27 @@ export default function AccountSecurityPage() {
                   : t("This identity's password is managed outside the console.")}
               </p>
             </div>
-            {canManagePassword ? (
-              <Button onClick={() => setPasswordOpen(true)}>{t("Change Password")}</Button>
-            ) : (
-              <Alert>
-                <AlertDescription>
-                  {info.credentials_source === "env"
-                    ? t(
-                        "This identity is provisioned from the server environment (RUSTFS_ACCESS_KEY). Change it by restarting the server with new values.",
-                      )
-                    : t("This identity's password is managed outside the console.")}
-                </AlertDescription>
-              </Alert>
-            )}
+            <div className="space-y-4">
+              {canManagePassword ? (
+                <Button onClick={() => setPasswordOpen(true)}>{t("Change Password")}</Button>
+              ) : (
+                <Alert>
+                  <AlertDescription>
+                    {info.credentials_source === "env"
+                      ? t(
+                          "This identity is provisioned from the server environment (RUSTFS_ACCESS_KEY). Change it by restarting the server with new values.",
+                        )
+                      : t("This identity's password is managed outside the console.")}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
           </section>
 
-          <section className="space-y-3 py-6" aria-labelledby="security-mfa-heading">
+          <section
+            className="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]"
+            aria-labelledby="security-mfa-heading"
+          >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 id="security-mfa-heading" className="font-heading font-semibold tracking-tight">
@@ -139,74 +147,75 @@ export default function AccountSecurityPage() {
               </div>
               <Badge variant={mfa?.enabled ? "default" : "secondary"}>{mfa?.enabled ? t("On") : t("Off")}</Badge>
             </div>
+            <div className="space-y-4">
+              {mfa?.enabled ? (
+                <>
+                  <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
+                    {mfa.activated_at && (
+                      <>
+                        <dt className="text-muted-foreground">{t("Enabled on")}</dt>
+                        <dd>{formatDateTime(mfa.activated_at)}</dd>
+                      </>
+                    )}
+                    {mfa.last_verified_at && (
+                      <>
+                        <dt className="text-muted-foreground">{t("Last used")}</dt>
+                        <dd>{formatDateTime(mfa.last_verified_at)}</dd>
+                      </>
+                    )}
+                    <dt className="text-muted-foreground">{t("Recovery codes remaining")}</dt>
+                    <dd>{mfa.recovery_codes_remaining}</dd>
+                  </dl>
 
-            {mfa?.enabled ? (
-              <>
-                <dl className="grid gap-x-8 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
-                  {mfa.activated_at && (
-                    <>
-                      <dt className="text-muted-foreground">{t("Enabled on")}</dt>
-                      <dd>{formatDateTime(mfa.activated_at)}</dd>
-                    </>
+                  {mfa.recovery_codes_remaining === 0 && (
+                    <Alert variant="destructive">
+                      <AlertDescription>
+                        {t(
+                          "You have no recovery codes left. Generate a new set so you can get back in if you lose your authenticator.",
+                        )}
+                      </AlertDescription>
+                    </Alert>
                   )}
-                  {mfa.last_verified_at && (
-                    <>
-                      <dt className="text-muted-foreground">{t("Last used")}</dt>
-                      <dd>{formatDateTime(mfa.last_verified_at)}</dd>
-                    </>
+                  {recoveryCodesRunningLow(mfa.recovery_codes_remaining) && (
+                    <Alert>
+                      <AlertDescription>
+                        {t("You are running low on recovery codes. Generate a new set to be safe.")}
+                      </AlertDescription>
+                    </Alert>
                   )}
-                  <dt className="text-muted-foreground">{t("Recovery codes remaining")}</dt>
-                  <dd>{mfa.recovery_codes_remaining}</dd>
-                </dl>
 
-                {mfa.recovery_codes_remaining === 0 && (
-                  <Alert variant="destructive">
-                    <AlertDescription>
-                      {t(
-                        "You have no recovery codes left. Generate a new set so you can get back in if you lose your authenticator.",
-                      )}
-                    </AlertDescription>
-                  </Alert>
-                )}
-                {recoveryCodesRunningLow(mfa.recovery_codes_remaining) && (
-                  <Alert>
-                    <AlertDescription>
-                      {t("You are running low on recovery codes. Generate a new set to be safe.")}
-                    </AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" onClick={() => setRecoveryOpen(true)} disabled={!canManageMfa}>
-                    {t("Generate new recovery codes")}
-                  </Button>
-                  <Button variant="outline" onClick={() => setSetupOpen(true)} disabled={!canManageMfa}>
-                    {t("Reconfigure authenticator")}
-                  </Button>
-                  <Button variant="destructive" onClick={() => setDisableOpen(true)} disabled={!canManageMfa}>
-                    {t("Turn off")}
-                  </Button>
-                </div>
-                {mfa.pending && (
-                  <p className="text-sm text-muted-foreground">
-                    {t("A new authenticator is waiting to be confirmed. Your current one keeps working until then.")}
-                  </p>
-                )}
-              </>
-            ) : (
-              <>
-                {/* An unavailable feature explains itself instead of showing a
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" onClick={() => setRecoveryOpen(true)} disabled={!canManageMfa}>
+                      {t("Generate new recovery codes")}
+                    </Button>
+                    <Button variant="outline" onClick={() => setSetupOpen(true)} disabled={!canManageMfa}>
+                      {t("Reconfigure authenticator")}
+                    </Button>
+                    <Button variant="destructive" onClick={() => setDisableOpen(true)} disabled={!canManageMfa}>
+                      {t("Turn off")}
+                    </Button>
+                  </div>
+                  {mfa.pending && (
+                    <p className="text-sm text-muted-foreground">
+                      {t("A new authenticator is waiting to be confirmed. Your current one keeps working until then.")}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* An unavailable feature explains itself instead of showing a
                     dead button. */}
-                {!canManageMfa && mfa?.enrollment_blocked_reason && (
-                  <Alert>
-                    <AlertDescription>{mfa.enrollment_blocked_reason}</AlertDescription>
-                  </Alert>
-                )}
-                <Button onClick={() => setSetupOpen(true)} disabled={!canManageMfa}>
-                  {t("Enable 2FA")}
-                </Button>
-              </>
-            )}
+                  {!canManageMfa && mfa?.enrollment_blocked_reason && (
+                    <Alert>
+                      <AlertDescription>{mfa.enrollment_blocked_reason}</AlertDescription>
+                    </Alert>
+                  )}
+                  <Button onClick={() => setSetupOpen(true)} disabled={!canManageMfa}>
+                    {t("Enable 2FA")}
+                  </Button>
+                </>
+              )}
+            </div>
           </section>
         </div>
       ) : null}

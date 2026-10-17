@@ -12,6 +12,7 @@ import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { BucketNewForm } from "@/components/buckets/new-form"
+import { BucketUsageOverview } from "@/components/buckets/usage-overview"
 import { Spinner } from "@/components/ui/spinner"
 import { useBucket } from "@/hooks/use-bucket"
 import { useObject } from "@/hooks/use-object"
@@ -296,15 +297,8 @@ function BrowserBucketsPage() {
       <PageHeader
         actions={
           <>
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={t("Search")}
-              clearable
-              className="max-w-sm"
-            />
             {canCreateBucket ? (
-              <Button variant="outline" onClick={() => setFormVisible(true)}>
+              <Button onClick={() => setFormVisible(true)}>
                 <RiAddLine className="size-4" aria-hidden />
                 <span>{t("Create Bucket")}</span>
               </Button>
@@ -319,7 +313,22 @@ function BrowserBucketsPage() {
         <h1 className="text-2xl font-bold">{t("Buckets")}</h1>
       </PageHeader>
 
+      <BucketUsageOverview
+        names={data.map((bucket) => bucket.Name)}
+        usage={bucketUsage}
+        unavailable={pending || usageLoading || loadError}
+      />
+
       <DataTable
+        toolbar={
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder={t("Search")}
+            clearable
+            className="max-w-sm"
+          />
+        }
         keepPreviousData
         table={table}
         isLoading={pending}

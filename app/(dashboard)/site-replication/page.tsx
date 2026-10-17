@@ -21,7 +21,7 @@ import { SiteReplicationEditForm } from "@/components/site-replication/edit-form
 import { SiteReplicationNewForm } from "@/components/site-replication/new-form"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -447,6 +447,9 @@ export default function SiteReplicationPage() {
     getRowId: (row) => row.deploymentId || row.endpoint,
   })
 
+  const showSetup = info?.enabled === false && peers.length === 0
+  const remotePeers = peers.filter((peer) => !localDeploymentId || peer.deploymentId !== localDeploymentId)
+
   if (featureUnavailable && !loading) {
     return (
       <Page>
@@ -526,13 +529,8 @@ export default function SiteReplicationPage() {
       <PageHeader
         actions={
           <>
-            {canManageSites ? (
-              <Button
-                type="button"
-                variant="outline"
-                className="inline-flex items-center gap-2"
-                onClick={() => setNewFormOpen(true)}
-              >
+            {canManageSites && !showSetup ? (
+              <Button type="button" className="inline-flex items-center gap-2" onClick={() => setNewFormOpen(true)}>
                 <RiAddLine className="size-4" aria-hidden />
                 <span>{t("Add Site")}</span>
               </Button>
@@ -581,153 +579,206 @@ export default function SiteReplicationPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-2 2xl:grid-cols-4">
-        <Card className="shadow-none">
-          <CardHeader>
-            <CardTitle>{t("Current Site")}</CardTitle>
-            <CardDescription>
-              {t("The server detects the local site identity from the active RustFS deployment.")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <SummaryStat label={t("Site Name")} value={info?.name || t("Unknown")} />
-            <SummaryStat
-              label={t("Endpoint")}
-              value={
-                <span className="font-mono text-xs break-all">
-                  {localPeer?.endpoint || localMetric?.endpoint || "--"}
-                </span>
-              }
-            />
-            <SummaryStat
-              label={t("Deployment ID")}
-              value={<span className="font-mono text-xs break-all">{localDeploymentId || "--"}</span>}
-            />
-            {info?.enabled && !localDeploymentId ? (
-              <p className="text-xs text-muted-foreground" role="note">
-                {localSite.ambiguousName
-                  ? t("Multiple peers share the local site name, so the current site cannot be identified.")
-                  : t("The current site could not be identified because the server did not report its deployment ID.")}
-              </p>
-            ) : null}
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-none">
-          <CardHeader>
-            <CardTitle>{t("Replication Summary")}</CardTitle>
-            <CardDescription>
-              {t("Overview of replicated configuration and object replication activity.")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <SummaryStat
-              label={t("Status")}
-              value={
-                info?.enabled ? <Badge>{t("Enabled")}</Badge> : <Badge variant="outline">{t("Not configured")}</Badge>
-              }
-            />
-            <SummaryStat label={t("Sites")} value={peers.length} />
-            <SummaryStat label={t("Replicated Objects")} value={status ? status.metrics.replicaCount : "--"} />
-            <SummaryStat
-              label={t("Replicated Size")}
-              value={status ? niceBytes(String(status.metrics.replicaSize ?? 0)) : "--"}
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-none">
-          <CardHeader>
-            <CardTitle>{t("Replicated Scope")}</CardTitle>
-            <CardDescription>
-              {statusUnavailable
-                ? t("This server does not provide the detailed site replication status endpoint yet.")
-                : t(
-                    "Current backend status for replicated buckets, users, groups, policies, and lifecycle expiry rules.",
-                  )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <SummaryStat label={t("Buckets")} value={status?.maxBuckets ?? localSummary?.totalBucketsCount ?? 0} />
-            <SummaryStat label={t("Users")} value={status?.maxUsers ?? localSummary?.totalUsersCount ?? 0} />
-            <SummaryStat label={t("Groups")} value={status?.maxGroups ?? localSummary?.totalGroupsCount ?? 0} />
-            <SummaryStat
-              label={t("Policies")}
-              value={status?.maxPolicies ?? localSummary?.totalIamPoliciesCount ?? 0}
-            />
-            <SummaryStat
-              label={t("ILM Expiry Rules")}
-              value={status?.maxIlmExpiryRules ?? localSummary?.totalIlmExpiryRulesCount ?? 0}
-            />
-            <SummaryStat label={t("Last Online")} value={formatDateTime(localMetric?.lastOnline)} />
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-none">
-          <CardHeader>
-            <CardTitle>{t("Replication Controls")}</CardTitle>
-            <CardDescription>
-              {t("Service account and global lifecycle expiry replication settings for the site replication group.")}
-            </CardDescription>
-            {info?.serviceAccountAccessKey ? (
-              <CardAction>
-                <CopyButton value={info.serviceAccountAccessKey} iconOnly />
-              </CardAction>
-            ) : null}
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <SummaryStat
-              label={t("Service Account Access Key")}
-              value={
-                info?.serviceAccountAccessKey ? (
-                  <span className="font-mono text-xs break-all">{info.serviceAccountAccessKey}</span>
-                ) : (
-                  t("Created automatically after the first remote site is added")
-                )
-              }
-            />
-            <SummaryStat
-              label={t("ILM Expiry")}
-              value={
-                ilmExpiryEnabled ? <Badge>{t("Enabled")}</Badge> : <Badge variant="outline">{t("Disabled")}</Badge>
-              }
-            />
+      {showSetup ? (
+        <section className="grid items-start gap-10 border-y py-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+          <div className="max-w-xl space-y-5">
+            <Badge variant="outline">{t("Not configured")}</Badge>
+            <h2 className="font-heading text-2xl font-semibold leading-snug">
+              {t("Add a remote site to initialize site replication for this deployment.")}
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "The current site is detected automatically by the server. Add one or more remote sites to join the replication group.",
+              )}
+            </p>
             {canManageSites ? (
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="inline-flex items-center gap-2"
-                  onClick={() => confirmToggleIlmExpiry(!ilmExpiryEnabled)}
-                  disabled={!info?.enabled || pendingIlmToggle}
-                >
-                  <RiUploadCloud2Line className="size-4" aria-hidden />
-                  <span>{ilmExpiryEnabled ? t("Disable ILM Expiry") : t("Enable ILM Expiry")}</span>
-                </Button>
-              </div>
+              <Button onClick={() => setNewFormOpen(true)}>
+                <RiAddLine className="size-4" aria-hidden />
+                {t("Add Site")}
+              </Button>
             ) : null}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+          <dl className="space-y-6 bg-muted/30 p-6">
+            <div>
+              <dt className="text-xs text-muted-foreground">{t("Current Site")}</dt>
+              <dd className="mt-2 break-all font-medium">{info?.name || t("Unknown")}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">{t("Deployment ID")}</dt>
+              <dd className="mt-2 break-all font-mono text-xs">{localDeploymentId || t("Unknown")}</dd>
+            </div>
+          </dl>
+        </section>
+      ) : (
+        <>
+          <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+            <section className="site-topology border bg-card p-6" aria-label={t("Site Replication")}>
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs font-medium text-muted-foreground">{t("Current Site")}</p>
+                {info?.enabled ? <Badge>{t("Enabled")}</Badge> : <Badge variant="outline">{t("Not configured")}</Badge>}
+              </div>
+              <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:items-center">
+                <div className="min-w-0 space-y-3">
+                  <h2 className="break-words font-heading text-2xl font-semibold">{info?.name || t("Unknown")}</h2>
+                  <p className="break-all font-mono text-xs text-muted-foreground">
+                    {localPeer?.endpoint || localMetric?.endpoint || "--"}
+                  </p>
+                </div>
+                <RiArrowLeftRightLine className="size-6 text-muted-foreground rtl:-scale-x-100" aria-hidden />
+                <div className="min-w-0 space-y-3">
+                  {remotePeers.length ? (
+                    remotePeers.slice(0, 3).map((peer) => (
+                      <div key={peer.deploymentId} className="border-s-2 border-brand ps-4">
+                        <p className="break-words text-sm font-medium">{peer.name || t("Unknown")}</p>
+                        <p className="mt-1 break-all font-mono text-xs text-muted-foreground">{peer.endpoint}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm leading-relaxed text-muted-foreground">
+                      {t("Add a remote site to initialize site replication for this deployment.")}
+                    </p>
+                  )}
+                  {remotePeers.length > 3 ? (
+                    <a href="#peer-sites" className="text-xs text-link hover:underline">
+                      {t("Peer Sites")} ({peers.length})
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+              <div className="mt-6 border-t pt-4">
+                <SummaryStat
+                  label={t("Deployment ID")}
+                  value={
+                    <span className="break-all font-mono text-xs text-muted-foreground">
+                      {localDeploymentId || "--"}
+                    </span>
+                  }
+                />
+                {info?.enabled && !localDeploymentId ? (
+                  <p className="mt-3 text-xs text-muted-foreground" role="note">
+                    {localSite.ambiguousName
+                      ? t("Multiple peers share the local site name, so the current site cannot be identified.")
+                      : t(
+                          "The current site could not be identified because the server did not report its deployment ID.",
+                        )}
+                  </p>
+                ) : null}
+              </div>
+            </section>
+            <section className="space-y-5">
+              <div className="space-y-2">
+                <h2 className="text-base font-semibold">{t("Replication Summary")}</h2>
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  {t("Overview of replicated configuration and object replication activity.")}
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <SummaryStat
+                  label={t("Status")}
+                  value={
+                    info?.enabled ? (
+                      <Badge>{t("Enabled")}</Badge>
+                    ) : (
+                      <Badge variant="outline">{t("Not configured")}</Badge>
+                    )
+                  }
+                />
+                <SummaryStat label={t("Sites")} value={peers.length} />
+                <SummaryStat label={t("Replicated Objects")} value={status ? status.metrics.replicaCount : "--"} />
+                <SummaryStat
+                  label={t("Replicated Size")}
+                  value={status ? niceBytes(String(status.metrics.replicaSize ?? 0)) : "--"}
+                />
+              </div>
+            </section>
+          </div>
 
-      <Card className="shadow-none">
-        <CardHeader>
-          <CardTitle>{t("Peer Sites")}</CardTitle>
-          <CardDescription>
-            {t(
-              "Peer membership and editable replication controls, aligned with the RustFS backend site replication API and MinIO-style site management flow.",
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <DataTable
-            table={table}
-            isLoading={loading}
-            emptyTitle={t("No Data")}
-            emptyDescription={t("Add a remote site to initialize site replication for this deployment.")}
-          />
-        </CardContent>
-      </Card>
+          <section id="peer-sites" className="scroll-mt-24 space-y-4" aria-labelledby="peer-sites-title">
+            <h2 id="peer-sites-title" className="font-heading text-lg font-semibold">
+              {t("Peer Sites")}
+            </h2>
+            <DataTable
+              caption={t("Peer Sites")}
+              table={table}
+              isLoading={loading}
+              emptyTitle={t("No Data")}
+              emptyDescription={t("Add a remote site to initialize site replication for this deployment.")}
+            />
+          </section>
+
+          <div className="grid gap-10 border-t pt-8 xl:grid-cols-2">
+            <section className="space-y-5">
+              <div className="space-y-2">
+                <h2 className="text-base font-semibold">{t("Replicated Scope")}</h2>
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  {statusUnavailable
+                    ? t("This server does not provide the detailed site replication status endpoint yet.")
+                    : t(
+                        "Current backend status for replicated buckets, users, groups, policies, and lifecycle expiry rules.",
+                      )}
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <SummaryStat label={t("Buckets")} value={status?.maxBuckets ?? localSummary?.totalBucketsCount ?? 0} />
+                <SummaryStat label={t("Users")} value={status?.maxUsers ?? localSummary?.totalUsersCount ?? 0} />
+                <SummaryStat label={t("Groups")} value={status?.maxGroups ?? localSummary?.totalGroupsCount ?? 0} />
+                <SummaryStat
+                  label={t("Policies")}
+                  value={status?.maxPolicies ?? localSummary?.totalIamPoliciesCount ?? 0}
+                />
+                <SummaryStat
+                  label={t("ILM Expiry Rules")}
+                  value={status?.maxIlmExpiryRules ?? localSummary?.totalIlmExpiryRulesCount ?? 0}
+                />
+                <SummaryStat label={t("Last Online")} value={formatDateTime(localMetric?.lastOnline)} />
+              </div>
+            </section>
+            <section className="space-y-5">
+              <div className="space-y-2">
+                <h2 className="text-base font-semibold">{t("Replication Controls")}</h2>
+                <p className="max-w-xl text-sm text-muted-foreground">
+                  {t(
+                    "Service account and global lifecycle expiry replication settings for the site replication group.",
+                  )}
+                </p>
+                {info?.serviceAccountAccessKey ? <CopyButton value={info.serviceAccountAccessKey} iconOnly /> : null}
+              </div>
+              <div className="grid gap-4">
+                <SummaryStat
+                  label={t("Service Account Access Key")}
+                  value={
+                    info?.serviceAccountAccessKey ? (
+                      <span className="font-mono text-xs break-all">{info.serviceAccountAccessKey}</span>
+                    ) : (
+                      t("Created automatically after the first remote site is added")
+                    )
+                  }
+                />
+                <SummaryStat
+                  label={t("ILM Expiry")}
+                  value={
+                    ilmExpiryEnabled ? <Badge>{t("Enabled")}</Badge> : <Badge variant="outline">{t("Disabled")}</Badge>
+                  }
+                />
+                {canManageSites ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="inline-flex items-center gap-2"
+                      onClick={() => confirmToggleIlmExpiry(!ilmExpiryEnabled)}
+                      disabled={!info?.enabled || pendingIlmToggle}
+                    >
+                      <RiUploadCloud2Line className="size-4" aria-hidden />
+                      <span>{ilmExpiryEnabled ? t("Disable ILM Expiry") : t("Enable ILM Expiry")}</span>
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          </div>
+        </>
+      )}
 
       <SiteReplicationNewForm
         open={newFormOpen}

@@ -2,8 +2,6 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
 
 export interface SummaryMetric {
   label: string
@@ -15,42 +13,36 @@ export interface SummaryMetric {
 
 export function PerformanceSummaryCards({ metrics, title }: { metrics: SummaryMetric[]; title: string }) {
   return (
-    <section aria-labelledby="inventory-title" className="space-y-3">
-      <h2 id="inventory-title" className="text-base font-semibold">
+    <section aria-labelledby="inventory-title" className="space-y-4">
+      <h2 id="inventory-title" className="text-sm font-medium text-muted-foreground">
         {title}
       </h2>
-      <div className="grid grid-cols-2 gap-3">
+      <dl className="grid grid-cols-2 gap-6">
         {metrics.map((metric) => {
-          const cardContent = (
-            <Card
-              className={cn("h-full shadow-none", metric.href && "cursor-pointer transition-colors hover:bg-muted/50")}
-            >
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{metric.label}</CardTitle>
-                <metric.icon className="size-5 text-muted-foreground" aria-hidden />
-              </CardHeader>
-              <CardContent>
-                <div className="flex min-w-0 flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
-                  <p className="break-words text-2xl font-semibold text-foreground tabular-nums">{metric.display}</p>
-                  {metric.caption ? <p className="text-xs text-muted-foreground">{metric.caption}</p> : null}
-                </div>
-              </CardContent>
-            </Card>
-          )
-          return metric.href ? (
-            <Link
-              key={metric.label}
-              href={metric.href}
-              aria-label={`${metric.label}: ${metric.display}`}
-              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              {cardContent}
-            </Link>
-          ) : (
-            <React.Fragment key={metric.label}>{cardContent}</React.Fragment>
+          return (
+            <div key={metric.label} className="min-w-0 border-t pt-4">
+              <dt className="flex items-center gap-2 text-xs text-muted-foreground">
+                <metric.icon className="size-4" aria-hidden />
+                {metric.label}
+              </dt>
+              <dd className="mt-2 break-words font-heading text-3xl font-semibold tabular-nums">
+                {metric.href ? (
+                  <Link
+                    href={metric.href}
+                    aria-label={`${metric.label}: ${metric.display}`}
+                    className="block transition-colors hover:text-link focus-visible:outline-2 focus-visible:outline-ring"
+                  >
+                    {metric.display}
+                  </Link>
+                ) : (
+                  metric.display
+                )}
+              </dd>
+              {metric.caption ? <dd className="mt-1 text-xs text-muted-foreground">{metric.caption}</dd> : null}
+            </div>
           )
         })}
-      </div>
+      </dl>
     </section>
   )
 }

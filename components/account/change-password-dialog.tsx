@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
@@ -113,7 +113,7 @@ export function ChangePasswordDialog({ open, onOpenChange, onChanged }: ChangePa
         className="max-h-[min(90dvh,40rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg"
         aria-busy={submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{t("Change Password")}</DialogTitle>
         </DialogHeader>
 
@@ -124,7 +124,7 @@ export function ChangePasswordDialog({ open, onOpenChange, onChanged }: ChangePa
             void submit()
           }}
         >
-          <div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4">
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto overscroll-contain">
             {submitError && (
               <Alert variant="destructive">
                 <AlertDescription>{submitError}</AlertDescription>
@@ -197,9 +197,9 @@ export function ChangePasswordDialog({ open, onOpenChange, onChanged }: ChangePa
             <p className="text-sm text-muted-foreground">
               {t("Changing your password signs out your other sessions and invalidates the old secret key.")}
             </p>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={submitting}>
               {t("Cancel")}
             </Button>

@@ -4,7 +4,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { useTiers } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
@@ -24,6 +24,7 @@ export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: Tier
   const [accessKey, setAccessKey] = React.useState("")
   const [secretKey, setSecretKey] = React.useState("")
   const [submitting, setSubmitting] = React.useState(false)
+  const submittingRef = React.useRef(false)
 
   React.useEffect(() => {
     if (open) {
@@ -33,17 +34,19 @@ export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: Tier
   }, [open])
 
   const closeModal = () => {
+    if (submittingRef.current) return
     onOpenChange(false)
-    setSubmitting(false)
     setAccessKey("")
     setSecretKey("")
   }
 
   const submitForm = async () => {
+    if (submittingRef.current) return
     if (!accessKey || !secretKey) {
       message.error(t("Please fill in the correct format"))
       return
     }
+    submittingRef.current = true
     setSubmitting(true)
     try {
       await updateTiers(tierName, {
@@ -52,23 +55,30 @@ export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: Tier
       })
       message.success(t("Update Success"))
       onSuccess?.()
-      closeModal()
+      onOpenChange(false)
     } catch (error) {
       message.error((error as Error).message || t("Update Failed"))
     } finally {
+      submittingRef.current = false
       setSubmitting(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!submittingRef.current) onOpenChange(nextOpen)
+      }}
+      disablePointerDismissal={submitting}
+    >
+      <DialogContent className="sm:max-w-lg" aria-busy={submitting}>
         <DialogHeader>
           <DialogTitle>
             {t("Update Key")}：{tierName}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <DialogBody className="space-y-4">
           <Field>
             <FieldLabel htmlFor="tier-change-access-key">{t("Access Key")}</FieldLabel>
             <FieldContent>
@@ -80,6 +90,7 @@ export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: Tier
                 placeholder={t("Please enter Access Key")}
                 autoComplete="off"
                 spellCheck={false}
+                disabled={submitting}
               />
             </FieldContent>
           </Field>
@@ -96,12 +107,13 @@ export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: Tier
                 placeholder={t("Please enter Secret Key")}
                 autoComplete="off"
                 spellCheck={false}
+                disabled={submitting}
               />
             </FieldContent>
           </Field>
-        </div>
+        </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={closeModal}>
+          <Button variant="outline" onClick={closeModal} disabled={submitting}>
             {t("Cancel")}
           </Button>
           <Button onClick={submitForm} disabled={submitting}>

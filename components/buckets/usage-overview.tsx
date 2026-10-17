@@ -14,7 +14,7 @@ export function BucketUsageOverview({
   usage: Map<string, { objectsCount: number; sizeBytes: number }>
   unavailable: boolean
 }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const summary = unavailable ? undefined : summarizeBucketUsage(names, usage)
   const distribution =
     summary && summary.sizeBytes > 0
@@ -23,6 +23,27 @@ export function BucketUsageOverview({
           .filter((bucket) => bucket.size > 0)
           .sort((a, b) => b.size - a.size)
       : []
+  const segments = distribution.slice(0, 4).map(({ name, size }, index) => ({
+    name,
+    size,
+    color: ["bg-chart-1", "bg-chart-2", "bg-chart-3", "bg-chart-4"][index],
+    href: `/browser?bucket=${encodeURIComponent(name)}` as string | undefined,
+  }))
+  if (distribution.length > 4) {
+    segments.push({
+      name: t("Other buckets"),
+      size: distribution.slice(4).reduce((total, bucket) => total + bucket.size, 0),
+      color: "bg-muted-foreground",
+      href: undefined,
+    })
+  }
+  const percent = new Intl.NumberFormat(i18n.language, { style: "percent", maximumFractionDigits: 1 })
+  const share = (size: number) => {
+    const ratio = size / summary!.sizeBytes
+    if (ratio < 0.001) return `<${percent.format(0.001)}`
+    if (ratio > 0.999 && ratio < 1) return `>${percent.format(0.999)}`
+    return percent.format(ratio)
+  }
 
   return (
     <section
@@ -49,31 +70,38 @@ export function BucketUsageOverview({
           </dd>
         </div>
       </dl>
-      {distribution.length ? (
+      {segments.length ? (
         <div className="min-w-0 space-y-3">
+          <h2 className="text-xs text-muted-foreground">{t("Bucket size distribution")}</h2>
           <div className="flex h-3 gap-0.5 overflow-hidden" aria-hidden="true">
-            {distribution.slice(0, 4).map(({ name, size }, index) => (
-              <span key={name} className="bg-brand" style={{ flex: size, opacity: Math.max(0.25, 1 - index * 0.12) }} />
-            ))}
-            {distribution.length > 4 ? (
-              <span
-                className="bg-muted-foreground/25"
-                style={{ flex: distribution.slice(4).reduce((total, bucket) => total + bucket.size, 0) }}
-              />
-            ) : null}
-          </div>
-          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
-            {distribution.slice(0, 4).map(({ name, size }) => (
-              <Link
-                key={name}
-                href={`/browser?bucket=${encodeURIComponent(name)}`}
-                className="group flex min-w-0 max-w-full items-baseline gap-2 focus-visible:outline-2 focus-visible:outline-ring"
-              >
-                <span className="truncate text-muted-foreground group-hover:text-link">{name}</span>
-                <span className="shrink-0 font-mono tabular-nums">{niceBytes(String(size))}</span>
-              </Link>
+            {segments.map(({ name, size, color }) => (
+              <span key={name} className={color} style={{ flex: size }} />
             ))}
           </div>
+          <ul className="grid gap-2 text-xs">
+            {segments.map(({ name, size, color, href }) => (
+              <li key={name} className="flex min-w-0 items-center gap-2">
+                <span className={`size-2 shrink-0 ${color}`} aria-hidden="true" />
+                {href ? (
+                  <Link
+                    href={href}
+                    title={name}
+                    className="min-w-0 flex-1 truncate text-muted-foreground hover:text-link focus-visible:outline-2 focus-visible:outline-ring"
+                  >
+                    <bdi>{name}</bdi>
+                  </Link>
+                ) : (
+                  <span className="min-w-0 flex-1 text-muted-foreground">{name}</span>
+                )}
+                <span className="shrink-0 font-mono tabular-nums" dir="ltr">
+                  {niceBytes(String(size))}
+                </span>
+                <span className="w-16 shrink-0 text-end tabular-nums">
+                  <bdi>{share(size)}</bdi>
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
     </section>

@@ -2239,5 +2239,7 @@
   "At least 8 bytes. This is also your S3 secret key.": "En az 8 bayt. Bu aynı zamanda S3 gizli anahtarınızdır.",
   "Identity": "Kimlik",
   "Operations": "İşlemler",
-  "Resources": "Kaynaklar"
+  "Resources": "Kaynaklar",
+  "Bucket size distribution": "Kova boyutu dağılımı",
+  "Other buckets": "Diğer kovalar"
 }

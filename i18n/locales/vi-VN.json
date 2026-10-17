@@ -2239,5 +2239,7 @@
   "At least 8 bytes. This is also your S3 secret key.": "Ít nhất 8 byte. Đây cũng là khóa bí mật S3 của bạn.",
   "Identity": "Danh tính",
   "Operations": "Vận hành",
-  "Resources": "Tài nguyên"
+  "Resources": "Tài nguyên",
+  "Bucket size distribution": "Phân bố dung lượng bucket",
+  "Other buckets": "Các bucket khác"
 }

@@ -2239,5 +2239,7 @@
   "At least 8 bytes. This is also your S3 secret key.": "至少 8 个字节。这也是您的 S3 Secret Key。",
   "Identity": "身份与权限",
   "Operations": "运行管理",
-  "Resources": "资源"
+  "Resources": "资源",
+  "Bucket size distribution": "桶容量占比",
+  "Other buckets": "其他桶"
 }

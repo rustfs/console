@@ -2239,5 +2239,7 @@
   "At least 8 bytes. This is also your S3 secret key.": "최소 8바이트입니다. S3 시크릿 키로도 사용됩니다.",
   "Identity": "ID 및 권한",
   "Operations": "운영",
-  "Resources": "리소스"
+  "Resources": "리소스",
+  "Bucket size distribution": "버킷 용량 비율",
+  "Other buckets": "기타 버킷"
 }

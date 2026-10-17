@@ -2239,5 +2239,7 @@
   "At least 8 bytes. This is also your S3 secret key.": "Almeno 8 byte. Questa è anche la chiave segreta S3.",
   "Identity": "Identità",
   "Operations": "Operazioni",
-  "Resources": "Risorse"
+  "Resources": "Risorse",
+  "Bucket size distribution": "Distribuzione delle dimensioni dei bucket",
+  "Other buckets": "Altri bucket"
 }

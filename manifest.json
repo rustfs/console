@@ -1,0 +1,4489 @@
+{
+  "base_commit": "ec3ddbe8121bfa8376bcb35781a6d4e703bca607",
+  "head_commit": "29377dc1f1f9db31564938527096a2b1f7ded9bc",
+  "design_commit": "28fa50ac0a7d5e8dd6a606a11206dbdd7c87eed4",
+  "scope": "All 28 rendered pages, 6 bucket-specific views, and 22 interaction states. Root and OIDC callback redirect behavior checked separately.",
+  "environment": "Chromium captures of the actual Next.js application with controlled S3/admin responses. Before uses the baseline development build; after uses the production static export at /rustfs/console. No live RustFS integration is claimed.",
+  "theme_capture": "The actual theme provider handles light/dark selection; root theme is asserted before state captures.",
+  "scenario_count": 56,
+  "comparison_pairs": 168,
+  "image_count": 336,
+  "browser_checks": {
+    "passed": 33,
+    "checks": [
+      "login locks credentials while pending",
+      "login locks method while pending",
+      "duplicate login submit sends one request",
+      "recovery code preserves first six characters",
+      "recovery code supports deletion",
+      "recovery code accepts complete paste",
+      "switching to TOTP clears recovery value",
+      "switching to recovery clears TOTP value",
+      "search hides unmatched buckets",
+      "clear restores buckets",
+      "table sorting updates accessible state",
+      "object lock enables versioning atomically",
+      "turning versioning off clears object lock",
+      "expanded bucket dialog and footer fit mobile viewport",
+      "idle bucket dialog closes on Escape",
+      "failed refresh preserves same-scope rows",
+      "refresh retry restores healthy table",
+      "initial read failure has no invented rows",
+      "initial read retry loads buckets",
+      "delete confirmation identifies policy",
+      "pending deletion ignores Escape",
+      "pending deletion disables cancel",
+      "failed deletion keeps confirmation open for retry",
+      "OIDC load failure does not present an empty editable provider",
+      "OIDC validation locks redirect URI",
+      "OIDC validation retains a visible progress action",
+      "OIDC validation blocks overlapping save",
+      "OIDC validation restores editing",
+      "theme Dark updates root and color scheme",
+      "theme Light updates root and color scheme",
+      "theme Dark updates root and color scheme",
+      "collapsed dark sidebar uses official white symbol",
+      "reduced motion shortens transitions"
+    ]
+  },
+  "locale_checks": {
+    "passed": 18,
+    "checks": [
+      {
+        "route": "auth/login",
+        "width": 1440,
+        "lang": "zh",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "登录"
+      },
+      {
+        "route": "auth/login",
+        "width": 390,
+        "lang": "zh",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "登录"
+      },
+      {
+        "route": "users",
+        "width": 1440,
+        "lang": "zh",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "用户"
+      },
+      {
+        "route": "users",
+        "width": 390,
+        "lang": "zh",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "用户"
+      },
+      {
+        "route": "sse",
+        "width": 1440,
+        "lang": "zh",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "服务器端加密 (SSE) 配置"
+      },
+      {
+        "route": "sse",
+        "width": 390,
+        "lang": "zh",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "服务器端加密 (SSE) 配置"
+      },
+      {
+        "route": "auth/login",
+        "width": 1440,
+        "lang": "de",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "Anmelden"
+      },
+      {
+        "route": "auth/login",
+        "width": 390,
+        "lang": "de",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "Anmelden"
+      },
+      {
+        "route": "users",
+        "width": 1440,
+        "lang": "de",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "Benutzer"
+      },
+      {
+        "route": "users",
+        "width": 390,
+        "lang": "de",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "Benutzer"
+      },
+      {
+        "route": "sse",
+        "width": 1440,
+        "lang": "de",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "Serverseitige Verschlüsselung (SSE) Konfiguration"
+      },
+      {
+        "route": "sse",
+        "width": 390,
+        "lang": "de",
+        "dir": "ltr",
+        "overflow": false,
+        "heading": "Serverseitige Verschlüsselung (SSE) Konfiguration"
+      },
+      {
+        "route": "auth/login",
+        "width": 1440,
+        "lang": "ar",
+        "dir": "rtl",
+        "overflow": false,
+        "heading": "تسجيل الدخول"
+      },
+      {
+        "route": "auth/login",
+        "width": 390,
+        "lang": "ar",
+        "dir": "rtl",
+        "overflow": false,
+        "heading": "تسجيل الدخول"
+      },
+      {
+        "route": "users",
+        "width": 1440,
+        "lang": "ar",
+        "dir": "rtl",
+        "overflow": false,
+        "heading": "المستخدمون"
+      },
+      {
+        "route": "users",
+        "width": 390,
+        "lang": "ar",
+        "dir": "rtl",
+        "overflow": false,
+        "heading": "المستخدمون"
+      },
+      {
+        "route": "sse",
+        "width": 1440,
+        "lang": "ar",
+        "dir": "rtl",
+        "overflow": false,
+        "heading": "إعداد التشفير من جانب الخادم (SSE)"
+      },
+      {
+        "route": "sse",
+        "width": 390,
+        "lang": "ar",
+        "dir": "rtl",
+        "overflow": false,
+        "heading": "إعداد التشفير من جانب الخادم (SSE)"
+      }
+    ]
+  },
+  "production_smoke": {
+    "rootRedirect": "/rustfs/console/browser/",
+    "loginConfigNavigation": true,
+    "oidcErrorRedirect": "/rustfs/console/auth/login/",
+    "logo": "/rustfs/console/_next/static/media/logo.2_5x3k7fpvvnw.svg",
+    "fonts": [
+      {
+        "family": "archivo",
+        "weight": "100 900",
+        "stretch": "62% 125%"
+      },
+      {
+        "family": "geist",
+        "weight": "100 900",
+        "stretch": "normal"
+      },
+      {
+        "family": "geistMono",
+        "weight": "100 900",
+        "stretch": "normal"
+      }
+    ],
+    "errors": [],
+    "failedAssets": []
+  },
+  "quality_gates": [
+    "pnpm install --frozen-lockfile",
+    "pnpm type-check",
+    "pnpm lint",
+    "pnpm format:check",
+    "pnpm test:run (744 passed)",
+    "pnpm build"
+  ],
+  "cases": [
+    {
+      "id": "login",
+      "route": "/auth/login/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/login-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 97080,
+            "sha256": "bd63508c88a63c00ccf41686c9578b0257392061e917a45fa90a7a003131c5ce"
+          },
+          "after": {
+            "file": "after/login-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 37219,
+            "sha256": "091f8ea2035658fa4d1f23bd1971ddac6796f1dfbedde56ae254240cbe1b5b05"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/login-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 93686,
+            "sha256": "ba0d406eda1c4c3520cc0f4d6813fecb5d9184f032a36182efdf525d93ed496a"
+          },
+          "after": {
+            "file": "after/login-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 36946,
+            "sha256": "38ed4df9fd7da02e5b2b57772e717f7eef8a59d8256896a6cb72b89e93f7f924"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/login-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 17815,
+            "sha256": "a3fd0451588302473f1a0831f599fff5ab959493ff36688c71a558c68dfaff36"
+          },
+          "after": {
+            "file": "after/login-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 18670,
+            "sha256": "fc5097bb05aa18db5905a2f6c055b46b2e20d57d6ce547bc32f0cdf5be7b178a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "config",
+      "route": "/config/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/config-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 96321,
+            "sha256": "21495c198688aa47def30250a6223fdf01f7551129120c641e6d150186d9b7f8"
+          },
+          "after": {
+            "file": "after/config-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 53385,
+            "sha256": "14afdeb32e5e17b8cfc7897c6040db9938d0977787f183566d8ede892570ec8b"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/config-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 97087,
+            "sha256": "e7bf6beb008c6005301639e667d4b10d69a36c3b7f9773cc97eedd5f164ac021"
+          },
+          "after": {
+            "file": "after/config-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 52780,
+            "sha256": "d1d52e37370bd61ccd047891c1d2d6e01e00981e5ddd40ddbc54fa1fd8867ad4"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/config-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 30751,
+            "sha256": "e9c4f7c059ce05225569219164fc82116a3563594474af061d5e681c3d716f82"
+          },
+          "after": {
+            "file": "after/config-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 33285,
+            "sha256": "71b5c21274bb82cee3b6aeb2a0b3d487307d652a5278551d6cb073104f225321"
+          }
+        }
+      ]
+    },
+    {
+      "id": "browser",
+      "route": "/browser/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/browser-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 71659,
+            "sha256": "850ca81682d0106bdc653b670b4585a10b9374c60f85547936f21dc101289f9d"
+          },
+          "after": {
+            "file": "after/browser-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 85679,
+            "sha256": "cbc046491279129af4936f8b61384fbea9ee030d6ff1350371fb5744fd30e826"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/browser-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 72525,
+            "sha256": "41049183ed4d914a7760b777ebce83be09229a634bae4d5d9e72bf110917a1af"
+          },
+          "after": {
+            "file": "after/browser-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 86740,
+            "sha256": "5eb903e90c024535b0ed4b2e862e243a591bdea1fc40e22036892b8a96f06f50"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/browser-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 21033,
+            "sha256": "edec318b70531b76861e8deace247748f3e72a8a9543e30b12bc69d62db19b7e"
+          },
+          "after": {
+            "file": "after/browser-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 25444,
+            "sha256": "716561b60caa5234dc013b4116416bc07b4bf65634e4ce6ebb57da2183480458"
+          }
+        }
+      ]
+    },
+    {
+      "id": "objects",
+      "route": "/browser/?bucket=datasets",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/objects-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 72405,
+            "sha256": "1fafd6ba9880df65923947f350cf6045a857bc99325e4130f290f3709338b146"
+          },
+          "after": {
+            "file": "after/objects-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82496,
+            "sha256": "b7900b750583fc91184873c40f520db11ea769eb7aa55fb47ce0f962588d140f"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/objects-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 73741,
+            "sha256": "808b4b979b5aa3a4dfdebfe701bd2f53cf170cb3fae6e958e0f023fbd5c9c0c9"
+          },
+          "after": {
+            "file": "after/objects-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82547,
+            "sha256": "07cfb8a828898d5a32af8796765a68afcd5f517b253675173a42e68cbee3bcfd"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/objects-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 29987,
+            "sha256": "f833b01ace16f0db968cca4ddf763dba956e8e78a7344de87a034dcc1a91e618"
+          },
+          "after": {
+            "file": "after/objects-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 35610,
+            "sha256": "22a8e8033eafa0fcc394f681b826e9e7ca2d7d1bf197bbec5354fc6b8c62cf31"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bucket-settings",
+      "route": "/buckets/?bucket=datasets",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-settings-desktop.png",
+            "width": 1440,
+            "height": 1578,
+            "bytes": 181003,
+            "sha256": "36a5f5d85a8f156608b194e6cb16916fa52dc8dc70508699bf2bd9b06e39b532"
+          },
+          "after": {
+            "file": "after/bucket-settings-desktop.png",
+            "width": 1440,
+            "height": 1599,
+            "bytes": 206322,
+            "sha256": "77ca81780fc1a1aeaf06848b3e9d55d6e4d5e290ca7f0770d82edbe321cf6847"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-settings-dark.png",
+            "width": 1440,
+            "height": 1578,
+            "bytes": 183369,
+            "sha256": "a02d6af01d1bca0a65ec915d29d636481d8c66c834a1003850c0fb39f3b3d07a"
+          },
+          "after": {
+            "file": "after/bucket-settings-dark.png",
+            "width": 1440,
+            "height": 1599,
+            "bytes": 208594,
+            "sha256": "dac83b1ab752d8ebfa4a28684a24058cad7ea99fc405e49f3f18c9eb031308d4"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-settings-mobile.png",
+            "width": 390,
+            "height": 2372,
+            "bytes": 127487,
+            "sha256": "3fd62593752fdb09ec5da92883d5bcc89512ecd6e798dbbc4dc949d503047919"
+          },
+          "after": {
+            "file": "after/bucket-settings-mobile.png",
+            "width": 390,
+            "height": 2553,
+            "bytes": 152945,
+            "sha256": "18c383bba36c09a6d3546616948ff31b1f70d514927660480f0b0c5952273acf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "buckets",
+      "route": "/buckets/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/buckets-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 67604,
+            "sha256": "c3248c478f1c8fa29caca5c023d94c27e98d1a06fcc32f3c0e09a7c7aa9a76c7"
+          },
+          "after": {
+            "file": "after/buckets-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 79971,
+            "sha256": "4b4acc105d89020099dcf88f6282a5dc9660ca8f8bd553a7ce9f84cdc66cdd5f"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/buckets-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 68598,
+            "sha256": "e15e908af9007f438e887098370ac70589f6bdaa3c17e42bf6ed9b8855e144cd"
+          },
+          "after": {
+            "file": "after/buckets-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 79800,
+            "sha256": "a7ec8c7432005ff639ae2d230f8507194afbef46b7e7260a0bd52bf5e3288dd0"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/buckets-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 21130,
+            "sha256": "53feae48fa18bd1253ee7ed173688329f95383e496a4ef09316056f9c319d486"
+          },
+          "after": {
+            "file": "after/buckets-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 25594,
+            "sha256": "f1b18a1b365f8c17570a80e8bdc79afff9eca9732945ca6d43ff26d76bd45cf4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "access-keys",
+      "route": "/access-keys/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/access-keys-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 67792,
+            "sha256": "e7bc0abd4afd6be51879a990ef4f355efbebbb10f7fb1fa2e40e70b9b3fbedc9"
+          },
+          "after": {
+            "file": "after/access-keys-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 78022,
+            "sha256": "b8a2551053fcfe285399ca60a94c3990096dd4f3dc0e4001c50a2217fe68f71b"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/access-keys-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 68719,
+            "sha256": "014c5dfd42e16f302fc18d289169779c57b232fb946eeea2576dd1c7f27633ea"
+          },
+          "after": {
+            "file": "after/access-keys-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 78024,
+            "sha256": "81a2a85dfc9334d17553d9706d3f491e244235a42bdc76ef0937c776a1247acb"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/access-keys-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 21617,
+            "sha256": "b0977e5ddf3241a0d426afc8edbfd98fa3732e8e0a79488818afb1f5063868ed"
+          },
+          "after": {
+            "file": "after/access-keys-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 26033,
+            "sha256": "782370a7366ea2885b11f07fa9d6808cf95518343b3c0a3661d2475146c44060"
+          }
+        }
+      ]
+    },
+    {
+      "id": "policies",
+      "route": "/policies/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/policies-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 60768,
+            "sha256": "203cf04761cc84955613fceff00eda1b1c4ac439894ee7509b1cc9e22fe95a30"
+          },
+          "after": {
+            "file": "after/policies-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 69263,
+            "sha256": "e68a76d19d8f7064621e2e1623c8c7979cd32eb921cca8550953733f49dcdea4"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/policies-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 61572,
+            "sha256": "56d322f02c587d135ddb2235d860d9480299851c4c6c1898140bd45f8e8e9da5"
+          },
+          "after": {
+            "file": "after/policies-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 69529,
+            "sha256": "0ac0d1372f5a6f68e500af525dbe589f7bd9fe72b5202df70e70ad1c6d564a7f"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/policies-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 19942,
+            "sha256": "2fc2423c7e777537f25c2310fa01472bc5e908aed987e213306166a42f3d1777"
+          },
+          "after": {
+            "file": "after/policies-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 24133,
+            "sha256": "d05fbc642ab6e661e04385a3824799080b3c1db44aa275327ee700497b346b75"
+          }
+        }
+      ]
+    },
+    {
+      "id": "users",
+      "route": "/users/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/users-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 71915,
+            "sha256": "b1b05a8cd66944137cfc27247dcf3cfde01fffa3328a6360b1b5aab457b7fb00"
+          },
+          "after": {
+            "file": "after/users-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 84394,
+            "sha256": "f062662baad7befe06cb4682abb073fbff6ce47bff456a98da3d8d9a6d93a6f4"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/users-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 73118,
+            "sha256": "a81ff222ad5e6ca814f01dba67af551918488a68aa52d1812128fecd0760a2fa"
+          },
+          "after": {
+            "file": "after/users-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 84562,
+            "sha256": "5a02fbb1b7b0d5e0e9f38183ae41ebe7f3cef6d36a2a12be54e53ba53db2891f"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/users-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 22517,
+            "sha256": "18717a227077b05cbdb47a0b0d6fa89ebc66b53a7b1416d3d04cc2e37fee4b6f"
+          },
+          "after": {
+            "file": "after/users-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 29841,
+            "sha256": "d19079a222b9b253f1c058b54069d62aa91d0430743cb2149b6aa589c4db456d"
+          }
+        }
+      ]
+    },
+    {
+      "id": "user-groups",
+      "route": "/user-groups/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/user-groups-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 63704,
+            "sha256": "9250581e1f13632e2c0792b2fad03754e543b04ecba948670aca98e00b2d166e"
+          },
+          "after": {
+            "file": "after/user-groups-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 73128,
+            "sha256": "658d5c0cfa785e8fd6075ba6ae5c6c75f8dee60a5c36348a830f60f29c139b8f"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/user-groups-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 64495,
+            "sha256": "51dad55f91d833a2a606119f1282c962c0ecbfeb96cdeb5f4f030ea2a144a709"
+          },
+          "after": {
+            "file": "after/user-groups-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 73052,
+            "sha256": "77fc8f0a6eddea6f246a582b8f70100fe8ed1ba2ae5b7056f7dae7604b7d3bac"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/user-groups-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 21768,
+            "sha256": "61f0498f1205ed3989be6f3e7fa8add714c5cd7562ac484a7803ee088f7fbd31"
+          },
+          "after": {
+            "file": "after/user-groups-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 27834,
+            "sha256": "6ba455150a13066e71038be04ac118852666a87db125f2325471642c2700c205"
+          }
+        }
+      ]
+    },
+    {
+      "id": "status",
+      "route": "/status/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/status-desktop.png",
+            "width": 1440,
+            "height": 1213,
+            "bytes": 123847,
+            "sha256": "e06fe29aa6a7fb71318519c4362a22b3911ee575ced674292c196e0917952de8"
+          },
+          "after": {
+            "file": "after/status-desktop.png",
+            "width": 1440,
+            "height": 1348,
+            "bytes": 142768,
+            "sha256": "ef76c23dde1597bfb753fa8b62af3d2e0b18b0724f70350a5cd6b360a44aa144"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/status-dark.png",
+            "width": 1440,
+            "height": 1213,
+            "bytes": 125130,
+            "sha256": "65ee0d0bea1b8660bfe32ae215646bf6cf4b261e77b2a4f2ffa5c5fa94b6fd6a"
+          },
+          "after": {
+            "file": "after/status-dark.png",
+            "width": 1440,
+            "height": 1348,
+            "bytes": 143454,
+            "sha256": "96e9cc0a377e4cc573b6f7ba6d86e302c2531c0db3bf97e3bfcc8d9815e2b700"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/status-mobile.png",
+            "width": 390,
+            "height": 2248,
+            "bytes": 88749,
+            "sha256": "d74e835a32393bfcfcaa59420b27c8041c9a5d7f117ec3a46a1a943652a14f02"
+          },
+          "after": {
+            "file": "after/status-mobile.png",
+            "width": 390,
+            "height": 2397,
+            "bytes": 102346,
+            "sha256": "75ecca473387670f8911b25068897bd89c65db0f4ab6cf934f3be613636bcee1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "rebalance",
+      "route": "/rebalance/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/rebalance-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 81428,
+            "sha256": "ec4b35a9c5fdb382307741e37b6e20b9914de368a0a983ef4cb2c62f9cc7e39b"
+          },
+          "after": {
+            "file": "after/rebalance-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 93403,
+            "sha256": "1edef24504e04ca943316d2f9448b01ead8ad48dbd13cf74c2e6aea1253b3ea9"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/rebalance-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 81984,
+            "sha256": "9e5f57083e2e2d30b97a2152a46639037206bd70b924214dec71e64d9c7f0ccd"
+          },
+          "after": {
+            "file": "after/rebalance-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 93374,
+            "sha256": "9331a5a4e93a39da686289a62b04993cd2291bb3f7a7a210db8338ba8ecad5a3"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/rebalance-mobile.png",
+            "width": 390,
+            "height": 1064,
+            "bytes": 44846,
+            "sha256": "1bb4dab5ce47ec8017ee0aaf98ff4a4c46b1a0ee41cc207b4935310a6c45258b"
+          },
+          "after": {
+            "file": "after/rebalance-mobile.png",
+            "width": 390,
+            "height": 1149,
+            "bytes": 53114,
+            "sha256": "49e0ca308c81f395b6594be67935bffa7d8e4e9f01be43c87b345ca5d7ff2640"
+          }
+        }
+      ]
+    },
+    {
+      "id": "pool-decommission",
+      "route": "/pool-decommission/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/pool-decommission-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 81978,
+            "sha256": "5ed7bbfde2ae317af519bab333d82f764c3d38dae4f38c2692c268326070955f"
+          },
+          "after": {
+            "file": "after/pool-decommission-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 93305,
+            "sha256": "723aa911bf69d553dcf7ebe27be892c3d49810010270379129c1b4c64e45d08d"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/pool-decommission-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82484,
+            "sha256": "4a7e52aa18220b581ad17364d0b755a9e9aba5b7a099afc819455cb13c6e651c"
+          },
+          "after": {
+            "file": "after/pool-decommission-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 93035,
+            "sha256": "22731de2be3312080bce5a442d213fc867fde5bf53f156aeb383898fddf8eb5d"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/pool-decommission-mobile.png",
+            "width": 390,
+            "height": 946,
+            "bytes": 40103,
+            "sha256": "4617bb71cc1374cffdcc08ee1c2e9cff2d404433d6711adec9cec7be0ee01ea0"
+          },
+          "after": {
+            "file": "after/pool-decommission-mobile.png",
+            "width": 390,
+            "height": 1013,
+            "bytes": 48633,
+            "sha256": "63cd1c940e2200a370f147037fbce8910d7d4ffee6f1d105123ac9b0dffd3097"
+          }
+        }
+      ]
+    },
+    {
+      "id": "events",
+      "route": "/events/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/events-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 65416,
+            "sha256": "a9861406efa3d5191359298c775d7c999700018f3ad028ea75c33a3db4eb24d2"
+          },
+          "after": {
+            "file": "after/events-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 76034,
+            "sha256": "c618f9f0c8828c0c748da58fce45a7c23281c243693aa15ec6fc8ad75e5e6712"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/events-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 66320,
+            "sha256": "7766350de2b8fbb7710903644cf664b05e8898e010c3e2ae26b7a8bf649a8ee3"
+          },
+          "after": {
+            "file": "after/events-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 76018,
+            "sha256": "c7e9a5174ce9dda786ff37a82aa04ae27fefe75cb03362be01763b360131b326"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/events-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 19283,
+            "sha256": "8f4a3a3a761d84d8539c5937f16bda07beb9c1642d661967444ec8d85d276ae9"
+          },
+          "after": {
+            "file": "after/events-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 22900,
+            "sha256": "f6352fb1b9d887c96e254116a51c4b34ceeb9d40a3b802609bc92938726f6c0f"
+          }
+        }
+      ]
+    },
+    {
+      "id": "events-rules",
+      "route": "/events/?bucket=datasets",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/events-rules-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 61930,
+            "sha256": "a90ad2def3ca831b6222ca2e1e244b50336fc517d42545d6adf76bda2d0503bd"
+          },
+          "after": {
+            "file": "after/events-rules-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 69154,
+            "sha256": "48c6d1eb89c91f667014d63e298abadbd044622225e4c73243cd3c7beefc38de"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/events-rules-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 62349,
+            "sha256": "43187d5e559b433b1075e007247c538f017d684071a317f54d80f55b1912c7f7"
+          },
+          "after": {
+            "file": "after/events-rules-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 69642,
+            "sha256": "27977d16c79df7cdd823a734f50af274dc7474d00b90dac030bd0556ad7e95d6"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/events-rules-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 17804,
+            "sha256": "1d2d5f29e14479aab1d9e6aeddca86dbbe03064f1036ebc6dc4a8615a691ee02"
+          },
+          "after": {
+            "file": "after/events-rules-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 21247,
+            "sha256": "01460dbe2dd77187856f81adf474040c5c62d957eda14161f4c902fd6975d5a2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "replication",
+      "route": "/replication/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/replication-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 67735,
+            "sha256": "8a63e7ecd87eb22ddd6888da39ee5857864c7c80df248cdc6bf2f36e18bbb720"
+          },
+          "after": {
+            "file": "after/replication-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 78959,
+            "sha256": "8cf8c31c2ff9f9ab4af33ccf738c23411d067573d01529af76f3a7048be241ff"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/replication-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 68777,
+            "sha256": "14621a144874ec570834d813aa7ac1981df04647545c627038749740d1e42932"
+          },
+          "after": {
+            "file": "after/replication-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 78726,
+            "sha256": "d74c947617540d2cd58ffa2af7fe21fa382ae19cd039f85cbfc9c84e3b2f84bf"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/replication-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 21666,
+            "sha256": "48d6fd223e0246061668a69826186a08d3df1e9ec18d6dafec0b44b6bd1d2512"
+          },
+          "after": {
+            "file": "after/replication-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 25662,
+            "sha256": "caace26b6374e57dfedbf652dbb4043bb67bc7c8ddffd55479734a1b99441653"
+          }
+        }
+      ]
+    },
+    {
+      "id": "replication-rules",
+      "route": "/replication/?bucket=datasets",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/replication-rules-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 66900,
+            "sha256": "3a31f7bab4e1b9fd2ffef424f48554a2035735088699dc945dfc9a786297e666"
+          },
+          "after": {
+            "file": "after/replication-rules-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 74521,
+            "sha256": "59d58d0dfca59e13bdf80388bebd104731d780deb24af726dc9a2a93a0211a50"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/replication-rules-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 67580,
+            "sha256": "153650e19ca8fb3f39c1f96acc6e2cbd48667fae7e6e7cbba7d20c6d764338ef"
+          },
+          "after": {
+            "file": "after/replication-rules-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 74814,
+            "sha256": "ca39c15754f805fab2746722d0906c73f92c6dd2f3c5580774ce696786d36c5b"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/replication-rules-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 20914,
+            "sha256": "6e56a44ab90db0058bec7aed43b86139107414eef26e02826549880d44749ca6"
+          },
+          "after": {
+            "file": "after/replication-rules-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 24570,
+            "sha256": "a5f05ec3ea43b1d9848de9d24e1c28650d1d3cd72c47181ba2ae5ee93f123dfd"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lifecycle",
+      "route": "/lifecycle/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/lifecycle-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 65028,
+            "sha256": "cb7e01d2721a21661f8c784a8f182038c5ac9dddc32889140fc8f173a3fa17d1"
+          },
+          "after": {
+            "file": "after/lifecycle-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 75679,
+            "sha256": "b958bd2694ef439ac51a1bd93b019d73c0fbf967d44dac27433b627930d6a2d1"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/lifecycle-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 65921,
+            "sha256": "de5909d4196f35cc78dae9fcc07289fc2d5ad656899173a07988de268e94d60c"
+          },
+          "after": {
+            "file": "after/lifecycle-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 75635,
+            "sha256": "d90f7b6f62e7b12dba5c6868a9a1c9bafa0d84c686de0e3baf474b312b293889"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/lifecycle-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 18914,
+            "sha256": "0dd5aaadedc6bf73f2d0e133132e67e64bec7621e39359afdcee84d686b3cdc2"
+          },
+          "after": {
+            "file": "after/lifecycle-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 22767,
+            "sha256": "54cbb9832cf183f40493d91183db3a087d22afda61cd3cc5d6c8581f5053577b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "lifecycle-rules",
+      "route": "/lifecycle/?bucket=datasets",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/lifecycle-rules-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 63469,
+            "sha256": "8f79bb5ff3c99e7b6db3735212c3b4806642cae8ff8615522e7db4a29fa48a44"
+          },
+          "after": {
+            "file": "after/lifecycle-rules-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 70188,
+            "sha256": "43a84d79b4f39fae21ad261e1d74123d3de10dc4fd3be5d7fa80f831bcd2eb59"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/lifecycle-rules-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 64081,
+            "sha256": "4d367bf90d24985e1af492834ec87d23301718cfeb1650917c2f59573c7eeda8"
+          },
+          "after": {
+            "file": "after/lifecycle-rules-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 70621,
+            "sha256": "37369ad2f09a4489d9226ca17b3e4edae03a6414116aa86e93cbd8f1494bad1f"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/lifecycle-rules-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 25287,
+            "sha256": "900cf8fe18c520049f08d3f053fe1340c1385b8302c8521e9b11f9db8b9b3d63"
+          },
+          "after": {
+            "file": "after/lifecycle-rules-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 29127,
+            "sha256": "f4fe209e211cf6e298b128e0345956d65280df50c80e2d1054c0b04b8fc60d2c"
+          }
+        }
+      ]
+    },
+    {
+      "id": "site-replication",
+      "route": "/site-replication/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/site-replication-desktop.png",
+            "width": 1440,
+            "height": 1048,
+            "bytes": 118652,
+            "sha256": "86569efbe4b8aa663acee86fa05c443826a7e745973fb3acd70d859074a29144"
+          },
+          "after": {
+            "file": "after/site-replication-desktop.png",
+            "width": 1440,
+            "height": 1152,
+            "bytes": 135468,
+            "sha256": "ec141e01c6274006e31515a8a3f40f8e3cbbe9653f7817aad9ef6a5d76a8f3c6"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/site-replication-dark.png",
+            "width": 1440,
+            "height": 1048,
+            "bytes": 119809,
+            "sha256": "87fc93e9dccab30ef47c8d46fb5d177391b60fc902d981cd207d86f7da62cc46"
+          },
+          "after": {
+            "file": "after/site-replication-dark.png",
+            "width": 1440,
+            "height": 1152,
+            "bytes": 136045,
+            "sha256": "bd064d1a213e39d96851691a0f660008c62c2b5e146f4f65df4512d1be0ee068"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/site-replication-mobile.png",
+            "width": 390,
+            "height": 1939,
+            "bytes": 82381,
+            "sha256": "20a774ddb88610621f08ffddcd9a593c97ca8c5c891e5d67cee454dae569a65d"
+          },
+          "after": {
+            "file": "after/site-replication-mobile.png",
+            "width": 390,
+            "height": 2115,
+            "bytes": 98357,
+            "sha256": "247bcfac41b82ed02772fe8cb8d10ef35cc68d7b438ef24188f5a556a25e3261"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tiers",
+      "route": "/tiers/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/tiers-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 60940,
+            "sha256": "d45e9be1c38bd295aa70208791afa85aecd33ba8dea53a481e061b5d17b1136e"
+          },
+          "after": {
+            "file": "after/tiers-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 68976,
+            "sha256": "7940be22ef3497911f76977d421d3ef211548236d418577ed72b97f245447953"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/tiers-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 61607,
+            "sha256": "6a0d1c2906aeb9a21bfcde6507864b5f93cb0626a221e2f20b8a3e413ad94410"
+          },
+          "after": {
+            "file": "after/tiers-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 69365,
+            "sha256": "66a826053f285eaa1544918e96bbd6daa6fff78d3f0c85410c850cfaacc90b76"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/tiers-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 14004,
+            "sha256": "b7bee40a02f63095c19e75e70fe460273b7e2ba07d5d04419ecb5e205885ad3a"
+          },
+          "after": {
+            "file": "after/tiers-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 16154,
+            "sha256": "56c930683f71bd0e2934c26a7b7398602fe257a781f744d66091b946e87e1f7d"
+          }
+        }
+      ]
+    },
+    {
+      "id": "events-target",
+      "route": "/events-target/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/events-target-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 61557,
+            "sha256": "d5ee0c12f9700e63c50b8ca1f4f868d5192d8e1abce8d379a1dc768c10dacb16"
+          },
+          "after": {
+            "file": "after/events-target-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 69933,
+            "sha256": "905e60deb9dbf77031e52b68d6ff9b6b6da2b13a982f55c2c37c8c91605faa5e"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/events-target-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 62248,
+            "sha256": "240b8b7f26dbd8a3e7e139a02f281108f3d0aa564f9ba38a56ce5936cf90b659"
+          },
+          "after": {
+            "file": "after/events-target-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 70306,
+            "sha256": "08f56d91e92212c0c5440da1dc37d93cc2c5077ff8604877a4f0602f11c66eae"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/events-target-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 18910,
+            "sha256": "6f4352a2134a4ae50707159f5c724dd67f56a1867ee8a0d7f53c4e5fd79e34b8"
+          },
+          "after": {
+            "file": "after/events-target-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 22189,
+            "sha256": "ca27c2ef7dbc094bfa54a884e622282a073f5118d9ad8d86cafa831db9ff6c18"
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit-target",
+      "route": "/audit-target/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/audit-target-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 59679,
+            "sha256": "5b3250f91ce3a87f9769607a8f87375628ccf6ed41485e23ab083df1508c05d3"
+          },
+          "after": {
+            "file": "after/audit-target-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 68238,
+            "sha256": "e0bb21d70ff760e84e232fa63c1ae48e99a084788b7a9cc703b46719b2869ec9"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/audit-target-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 60337,
+            "sha256": "c24eddd74acf03eb5853fdcf654f63d808fe6a3551d53625f4a815f6f7e0480f"
+          },
+          "after": {
+            "file": "after/audit-target-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 68312,
+            "sha256": "1fae1cfc055648e70fc322ee66098c9d0e9fad9f8909c032e5c72762f5c68bc7"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/audit-target-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 17695,
+            "sha256": "855fd015fb2b474dd979923abff880728148ab7d19f1c6daa8adf549697e5a30"
+          },
+          "after": {
+            "file": "after/audit-target-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 20573,
+            "sha256": "b0407dc58f317d4b06456a0cc83c9571dd80676498fc85c4e8b76a3fc0c7ee93"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sse",
+      "route": "/sse/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/sse-desktop.png",
+            "width": 1440,
+            "height": 1227,
+            "bytes": 139049,
+            "sha256": "b83b035541c3865b39843a00900e25a01b860141994c767f47def59a2a1a901c"
+          },
+          "after": {
+            "file": "after/sse-desktop.png",
+            "width": 1440,
+            "height": 1342,
+            "bytes": 161650,
+            "sha256": "76b4b5b7f0d8698f3dff3d97e8bccd84a6ad636a1c15890a5d42904fd964468b"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/sse-dark.png",
+            "width": 1440,
+            "height": 1227,
+            "bytes": 140080,
+            "sha256": "004bfb8c0d8c7ed14f31d632e7d159d0b3bab963496ab6d9191226a460eba703"
+          },
+          "after": {
+            "file": "after/sse-dark.png",
+            "width": 1440,
+            "height": 1342,
+            "bytes": 161934,
+            "sha256": "81fbf4d597f0b7e73ff0776f9ec74c32cb4d33f56f9843edb6b532492f77a98d"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/sse-mobile.png",
+            "width": 390,
+            "height": 1802,
+            "bytes": 96985,
+            "sha256": "f5b6fca36fecf34c4ff6c75c6f8e98a09b58b9ec47d7007a7b75a35a89884845"
+          },
+          "after": {
+            "file": "after/sse-mobile.png",
+            "width": 390,
+            "height": 1979,
+            "bytes": 119585,
+            "sha256": "37c0ca525bed100a87d5312d0383671b67076889c29141fe921d60b9cd79b827"
+          }
+        }
+      ]
+    },
+    {
+      "id": "oidc",
+      "route": "/oidc/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-desktop.png",
+            "width": 1440,
+            "height": 1056,
+            "bytes": 127354,
+            "sha256": "9ef5a014b1efe407f0395c2ef0cace10b6387a44bbca13f339f0d64d6d6fb63a"
+          },
+          "after": {
+            "file": "after/oidc-desktop.png",
+            "width": 1440,
+            "height": 1190,
+            "bytes": 132916,
+            "sha256": "c063bcda47bd9a859dafca55b452e8e59110b7649c85fc29a68905d5e8919539"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-dark.png",
+            "width": 1440,
+            "height": 1056,
+            "bytes": 129528,
+            "sha256": "39ffb1d4d56c0852323052c01416cd13012ed4f3a433a4bab4bce54c17c29096"
+          },
+          "after": {
+            "file": "after/oidc-dark.png",
+            "width": 1440,
+            "height": 1190,
+            "bytes": 133487,
+            "sha256": "a97f66189e935320d51d319a957cbe7e82a3ddd5d67b566238b79d0896012e4e"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-mobile.png",
+            "width": 390,
+            "height": 1626,
+            "bytes": 82841,
+            "sha256": "fe992017b3b34231f08efb30d0d88aa5459044e962b1c0569a831cbcab1d57be"
+          },
+          "after": {
+            "file": "after/oidc-mobile.png",
+            "width": 390,
+            "height": 1804,
+            "bytes": 98319,
+            "sha256": "4bdd103310a7f035fc6f3d386259206c4e2fb2e2bbffa911d27273b0360f400b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "route": "/settings/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/settings-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 55910,
+            "sha256": "b54eddf23b77e4bdf5b701a5a7d6a09da41f4760fbee94930159434d5113f495"
+          },
+          "after": {
+            "file": "after/settings-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 60848,
+            "sha256": "72dd1ef4febcea4dd5a2841250479c839a54d6ca5265224293efc84ef1870dfe"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/settings-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 56420,
+            "sha256": "9b7a318a157c4ff1b460cec4c3e19980b898892f8cada86b13412bab6a006a17"
+          },
+          "after": {
+            "file": "after/settings-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 60795,
+            "sha256": "da3c3dbbf5a7d9bbb8e1c725f4e9fa4ea06f1225d9253a1a7826cf04515335cc"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/settings-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 14619,
+            "sha256": "cc1dd8193c91cf09661845e2283a82b44b0f17bd157b358c7f625e3a7fb10eeb"
+          },
+          "after": {
+            "file": "after/settings-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 15216,
+            "sha256": "313f3a58871f1dc61038162f8fd52a392cbd6feaa3c7ed3fba5f1d10b3e7548e"
+          }
+        }
+      ]
+    },
+    {
+      "id": "license",
+      "route": "/license/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/license-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 138146,
+            "sha256": "a792aabf630c47c6aa3db50b43b30730c455917b4fe7c1fc2adecdda388a7495"
+          },
+          "after": {
+            "file": "after/license-desktop.png",
+            "width": 1440,
+            "height": 1019,
+            "bytes": 159754,
+            "sha256": "ea383150c9ed396ab41688944d791fd6c1c7274ce9810f45d2e582b97783a5ef"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/license-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 140382,
+            "sha256": "fef9e5c001a23285383e639a04aedd2aba0a9e92b1c5b07e924b0ff29488f03a"
+          },
+          "after": {
+            "file": "after/license-dark.png",
+            "width": 1440,
+            "height": 1019,
+            "bytes": 161623,
+            "sha256": "2ad7f4c22c977ece568f84f0684595737d5c9a26a55c792c795aebade331e52a"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/license-mobile.png",
+            "width": 390,
+            "height": 855,
+            "bytes": 48941,
+            "sha256": "4ed1bb8a512a7b3890261f54260b098a15220349e182ca5b54846178e9ec0eb9"
+          },
+          "after": {
+            "file": "after/license-mobile.png",
+            "width": 390,
+            "height": 898,
+            "bytes": 59387,
+            "sha256": "1c7eb05aa62c7c800cd0bd6ab53a9bcc40fdb546dcbe54f0fdbd00993d1f10fe"
+          }
+        }
+      ]
+    },
+    {
+      "id": "account",
+      "route": "/account/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/account-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 66563,
+            "sha256": "64beb549cfd636fedfda607a4d6e66f3a64073fe58812046faa782bd50746f7d"
+          },
+          "after": {
+            "file": "after/account-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 72671,
+            "sha256": "d739ada38785843700d6c7333acff8433338de8ff33e7d602fe9138de5fe6d47"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/account-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 67119,
+            "sha256": "cdc9e59eb702c7e5ac387c7c7e2f50f8d871d0b1cd3c339997e59bef9a92d4be"
+          },
+          "after": {
+            "file": "after/account-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 72518,
+            "sha256": "4ebd10d90d62e1b5d00c059ef1f4b014dd34dee0d37a0b9b32db7792f4343e20"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/account-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 25300,
+            "sha256": "22a9e192803487156427aead4ef8767591f1b20f4452df719f9c5345a0323eef"
+          },
+          "after": {
+            "file": "after/account-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 26932,
+            "sha256": "4a0a91e10c9a5ae22bbf7bd2c3579749258307cbbd8f0c9e87ff9df8104c788e"
+          }
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "route": "/account/security/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/security-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 69866,
+            "sha256": "12c0a91579f9f4e93ce522c66a96bbc1e4a77a0d4acffc2d9e61b6599867daa3"
+          },
+          "after": {
+            "file": "after/security-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 78133,
+            "sha256": "05166fbef2aab74cba00cd816b2a478afecb0c88441ad57aa28dfc46dde486ea"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/security-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 70665,
+            "sha256": "fc3b22f7f49dc7ab874c3c8ef5d118c2893b62a29bbd698ab618f0131ca5b2f4"
+          },
+          "after": {
+            "file": "after/security-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 78155,
+            "sha256": "127a53a0947b5c8d8119fcb480c91f3981d60f4fb48f4b9a55b5666a811be49e"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/security-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 27426,
+            "sha256": "21210c83aba9214ba5be00ff88e67b317c86be62bac82c29dbda768172516638"
+          },
+          "after": {
+            "file": "after/security-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 31674,
+            "sha256": "679d14db8e9c02b43e9679e5c89de5cf21d99fcef7b6b602a9257ea10d2e8929"
+          }
+        }
+      ]
+    },
+    {
+      "id": "import-export",
+      "route": "/import-export/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/import-export-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 72247,
+            "sha256": "f320efe23b63e56e75f6a90e93a5efd7926534caadc05b7126cab196f65b0c7c"
+          },
+          "after": {
+            "file": "after/import-export-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82519,
+            "sha256": "95ab699bf234094a6d90e8c60fffc9dc0d8d9c2c1ddee7679737d65740d1a726"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/import-export-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 72941,
+            "sha256": "1a8d6ddbd3dceafc3c3fbf8c335896fb31b92bf4e21300388b65bc76150ae15c"
+          },
+          "after": {
+            "file": "after/import-export-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82158,
+            "sha256": "97558d705426e12b808b18c5f400581001a316840c16d1fadf5728c3505c4e41"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/import-export-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 31680,
+            "sha256": "b4b07917b88b13c52ae965157173e8f57cad418d961315d914eb72494bb3207c"
+          },
+          "after": {
+            "file": "after/import-export-mobile.png",
+            "width": 390,
+            "height": 854,
+            "bytes": 37327,
+            "sha256": "867784f84fc179bd56b6cfef50227fa6a4c4ed5001fff3a464c56bf55f415627"
+          }
+        }
+      ]
+    },
+    {
+      "id": "table-catalog",
+      "route": "/table-catalog/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/table-catalog-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 102706,
+            "sha256": "1794ddf99af0796671da39e2b904cb9070ff2461ed879df8f96544317a42f155"
+          },
+          "after": {
+            "file": "after/table-catalog-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 119873,
+            "sha256": "04398324f7fc9db9dd4556fe51f2c1bed0496bfdcc641964737529527dd1af8a"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/table-catalog-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 103977,
+            "sha256": "ee08271a7a13e6359b56bbfd9719c8f5f397f76a9f99a6d6466087f82f2b2a14"
+          },
+          "after": {
+            "file": "after/table-catalog-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 119948,
+            "sha256": "b495e1829e418210c67faf48d46b25f2d3c9340de84ba425027a6946f5e56a8f"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/table-catalog-mobile.png",
+            "width": 390,
+            "height": 1406,
+            "bytes": 62650,
+            "sha256": "bb094bbfdace9e9d200791e1bbaba899f4a61825eea852bcfa9e58d0a12eeb8f"
+          },
+          "after": {
+            "file": "after/table-catalog-mobile.png",
+            "width": 390,
+            "height": 1467,
+            "bytes": 75021,
+            "sha256": "ea64d302de11375445d7641288340b9fc41889a7065cec6724185ff7e8d91bff"
+          }
+        }
+      ]
+    },
+    {
+      "id": "on-demand-migration",
+      "route": "/on-demand-migration/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/on-demand-migration-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 68004,
+            "sha256": "0971b0a686b3b93425978a12acaa85f4a0df111f59d2b614f4fdc7f303720983"
+          },
+          "after": {
+            "file": "after/on-demand-migration-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 80001,
+            "sha256": "64d307e808bf2d2ecb0c1f07997e3a473096dbdeee8d03ee2742c0d9b3fceb6a"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/on-demand-migration-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 68994,
+            "sha256": "02c71c84b1406d36b33f0e9227537939a528591c631122ccca99f8a67236b06e"
+          },
+          "after": {
+            "file": "after/on-demand-migration-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 79815,
+            "sha256": "74042a7144f4a3a92260d67ea9330de89bf42e66266824028a42661f011bc351"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/on-demand-migration-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 21964,
+            "sha256": "f9f5d045bd8bff5648d2416019924dbd572b292f4b5fee8461f57910ec64b456"
+          },
+          "after": {
+            "file": "after/on-demand-migration-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 26111,
+            "sha256": "a07b4c05e834462dfc5118aa2cc7f108d4ee597370ce45b90f7fffb158459338"
+          }
+        }
+      ]
+    },
+    {
+      "id": "migration-bucket",
+      "route": "/on-demand-migration/?bucket=datasets",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/migration-bucket-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 83546,
+            "sha256": "eaaa898beef3801f330dc6ddc35acd309795c6ad01bfabe986f8c19b43fc74c3"
+          },
+          "after": {
+            "file": "after/migration-bucket-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 93321,
+            "sha256": "d87e973a4f8f081e1855067416681aa82508d3f0a262fd284695ec2dd5edefc2"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/migration-bucket-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 84637,
+            "sha256": "e1ea4db122e214777418b13302022ff34628fbfc91c79c32da4f961823794485"
+          },
+          "after": {
+            "file": "after/migration-bucket-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 93402,
+            "sha256": "700cdd35e6fb175a1efd29197ad412fc515469dcb4df2d930c65ea937f6522f8"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/migration-bucket-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 40738,
+            "sha256": "b2a65c77566b53fbed29bf57f7b2f3a74efedd4dabfeb04967be95bfbc897702"
+          },
+          "after": {
+            "file": "after/migration-bucket-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 46354,
+            "sha256": "8a711060c32e27c90bbaa68401dddc7983ecd1e2ce96357a89a4eb31e8b911dc"
+          }
+        }
+      ]
+    },
+    {
+      "id": "forbidden",
+      "route": "/403/",
+      "state": "page",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/forbidden-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 56381,
+            "sha256": "f786286706f9c6d36858d36e89eec10bbe9be10c6e863bec18ec401701d7d4b3"
+          },
+          "after": {
+            "file": "after/forbidden-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 61746,
+            "sha256": "2eb256b03878d230085e1b9698367a87da7a8ea7a1571c4809a0792481fe6695"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/forbidden-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 57005,
+            "sha256": "57f11cd5bc76583654b3028b3f098d736e18516703194f973e792c22457ee2a9"
+          },
+          "after": {
+            "file": "after/forbidden-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 61608,
+            "sha256": "2ec8cd6e31b0bdff05b95a608f14ffc74411bf13ddbe72901662b013e3837f8e"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/forbidden-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 14578,
+            "sha256": "b411232eff344990401161950c3e2f9820374b8afcac5603931d6fdb37b3c507"
+          },
+          "after": {
+            "file": "after/forbidden-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 16733,
+            "sha256": "2b1c5ebb08b8adbe1280fdcae0973851f1c62ef44e6c195e113ab866c373781b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bucket-create",
+      "route": "/browser/",
+      "state": "bucket-create",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-create-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 107276,
+            "sha256": "619d1c6715859d4bea72b39918f6642f92210ed19948e6ad111cb8650368482a"
+          },
+          "after": {
+            "file": "after/bucket-create-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 103279,
+            "sha256": "ed4655ceac2b0f2cfd035f31fdd9b38c5bc9c1781e9840eb6854b6462e10e32a"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-create-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 109191,
+            "sha256": "acbe30554cf65eee4cbfaa3c033c4adadf86dcce43b321ebe72bbf211233cbc4"
+          },
+          "after": {
+            "file": "after/bucket-create-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 98627,
+            "sha256": "ba946ad6447e01c22789dd69d6e2a8787d62910a04b180601edbd19709cfbe8a"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-create-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 23110,
+            "sha256": "61110ccc43dbb7237fb06135993efbc4a106d668be57752f778ac5758059a151"
+          },
+          "after": {
+            "file": "after/bucket-create-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 25284,
+            "sha256": "ca34309e57ff33d3b8e0598c8455fa1f601a0d57e87068adedffeb4db58261ff"
+          }
+        }
+      ]
+    },
+    {
+      "id": "policy-edit",
+      "route": "/policies/",
+      "state": "policy-edit",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/policy-edit-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 95418,
+            "sha256": "9d9c745ba2c7510e1f4660a873f27e597f91cd6ca0e9b112dc42673a8d80cd69"
+          },
+          "after": {
+            "file": "after/policy-edit-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 94242,
+            "sha256": "2b562f7d32a4523d36eb64431dad92f459d21b023ae3fbfa5bc8bf5aeb2c59c6"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/policy-edit-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 96990,
+            "sha256": "0400533c80c68a2af1e711b754358e7ea5ad63be6846607ad852295d26c3fcd8"
+          },
+          "after": {
+            "file": "after/policy-edit-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 90200,
+            "sha256": "89c9ec6e4a1c17cc2554e8b3361e3179393bbdc9a25dd039c73a7104a588ff47"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/policy-edit-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 30982,
+            "sha256": "aebc9c2c666f71bd0275d57a2d7bc6fe94fc8bd96d3f5174b662119e0f6e44c4"
+          },
+          "after": {
+            "file": "after/policy-edit-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 31973,
+            "sha256": "dae11d3b443b876e3807152f515ab31ab16952dd96fdbc5c06e4290f33084cf1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "group-delete",
+      "route": "/user-groups/",
+      "state": "group-delete",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/group-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82603,
+            "sha256": "3064f77f0340d8f7637bd9c4932152d9429fbd45248feeeab8a426a5ccc8654f"
+          },
+          "after": {
+            "file": "after/group-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82672,
+            "sha256": "8e5540c01f11cdb8c19de88d4257132a29723c99fd9d3afbedd470f4b09878f2"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/group-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 84417,
+            "sha256": "22ccc84141444913dc8e1292eeb1235593e0c03f9639025bb757f501af65685b"
+          },
+          "after": {
+            "file": "after/group-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 79219,
+            "sha256": "ed8d97ffdd497ee8ba0ea30d8d7fbd2b745e8f74e8e896da8da0308a8214b954"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/group-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 28314,
+            "sha256": "c59f556713fa9666d9af7535832ed0c653b99a79d15e16b0a328ffa87797dc30"
+          },
+          "after": {
+            "file": "after/group-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 30475,
+            "sha256": "b5ac83cf4bcbd35e9b9e9741c6b5ed469a040d429b8bc72e02a64bbc283156b2"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mfa-recovery",
+      "route": "/auth/login/",
+      "state": "mfa-recovery",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/mfa-recovery-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 104883,
+            "sha256": "d4adf987b6a6cf93d395cba3ef1b74aa6368608b6b91770097aa23823c7927be"
+          },
+          "after": {
+            "file": "after/mfa-recovery-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 44215,
+            "sha256": "986cbc25a6bb1e10e8950ba95af545debb97f70d5da3a24ed9c8f97f0f2aaa34"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/mfa-recovery-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 101898,
+            "sha256": "39084c0aa4f6202934767ae79ea6ac4002c76cdc58bfc49d8c2fe8cad7479db0"
+          },
+          "after": {
+            "file": "after/mfa-recovery-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 44020,
+            "sha256": "2896b324d6c1c864068932c9f0103ccddb7530a61f0c1964ab7cac81bac44fd6"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/mfa-recovery-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 23466,
+            "sha256": "fb076fb51c97aa0aff154ddf588e745022e587041d35fbc08897151587812aed"
+          },
+          "after": {
+            "file": "after/mfa-recovery-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 24398,
+            "sha256": "2fef92fd09af915656bb5ccb32848effc6e9a87c44051a74eff6baf0fffd579e"
+          }
+        }
+      ]
+    },
+    {
+      "id": "filtered-empty",
+      "route": "/browser/",
+      "state": "filtered-empty",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/filtered-empty-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 61180,
+            "sha256": "2a6740492fedaca98f0b628545eeb888f92360a3b8651395e537baae38007dc4"
+          },
+          "after": {
+            "file": "after/filtered-empty-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 67400,
+            "sha256": "7b03d6387f9af399efb39ddb63a18379679314449b7ebff9c4b64b8ab927e9c1"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/filtered-empty-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 61739,
+            "sha256": "ec0f6cea1fa41d30701829c186e162fd3915783e120dc2b0c7888d040ba191f3"
+          },
+          "after": {
+            "file": "after/filtered-empty-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 67570,
+            "sha256": "9198df4bdc143d9c32afb3d27784c7bc2e0a281a904e6d879c60a02834d8f47a"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/filtered-empty-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 17578,
+            "sha256": "562e89b28458517d02927fd4f9f2904311e583b41480bd0493427c62db2e6a55"
+          },
+          "after": {
+            "file": "after/filtered-empty-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 19914,
+            "sha256": "f0aad5014f01ccc6133572886fe61dae6d9c2ff4508218795122695096af6a4b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bucket-refresh-error",
+      "route": "/browser/",
+      "state": "bucket-refresh-error",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-refresh-error-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 60387,
+            "sha256": "e2c4a10a571211727794f6256a1d0b84c0c1227cb6105c3d4439fd32df6ba895"
+          },
+          "after": {
+            "file": "after/bucket-refresh-error-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 89793,
+            "sha256": "9c3596f7650bffaa95de8857e72a4185d051047387f232c49aca41681470dcbb"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-refresh-error-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 60936,
+            "sha256": "bfb3d56b968d76f3e064fd0fbff654b98ee22543531e64d5fa6941ec8836dee1"
+          },
+          "after": {
+            "file": "after/bucket-refresh-error-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 90695,
+            "sha256": "68bb49167510d1d82bf38b12836980212ec03011bdcbc07f069951ea4bc44aa3"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-refresh-error-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 17354,
+            "sha256": "ebb504b18ad2831bb02eea7ee77508b035c9f4d8eb2be3b5ff79391aef9fe332"
+          },
+          "after": {
+            "file": "after/bucket-refresh-error-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 28979,
+            "sha256": "87c6ee6d3c1dd5eee2a9ed73be0914e4fa0f34793964f6adb159f6b9dce23b31"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bucket-initial-error",
+      "route": "/browser/",
+      "state": "bucket-initial-error",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-initial-error-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 60371,
+            "sha256": "113198e2f7150453588de575d820ca3b40175a4f613cbd16b9fe6690e92bdee9"
+          },
+          "after": {
+            "file": "after/bucket-initial-error-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 66738,
+            "sha256": "a8bb569fb178254ec558f700e7c6ec40f1a0bf8df6a8d55fc9c0eb08ef53f4cb"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-initial-error-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 60936,
+            "sha256": "bfb3d56b968d76f3e064fd0fbff654b98ee22543531e64d5fa6941ec8836dee1"
+          },
+          "after": {
+            "file": "after/bucket-initial-error-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 66789,
+            "sha256": "ca784a82d15a720aa7a3278d1e93b4d2e53a78cc7e7f52a62646011612960bfb"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-initial-error-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 17283,
+            "sha256": "44b6fd01b172b7a163bcece87f88ec88071155b9fed97c2e391a2da8d33134b5"
+          },
+          "after": {
+            "file": "after/bucket-initial-error-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 19189,
+            "sha256": "bb5eb5688e59fb89d4f1b4a11852dd9aefe52846055cb551e768d48b81685d6d"
+          }
+        }
+      ]
+    },
+    {
+      "id": "oidc-load-error",
+      "route": "/oidc/",
+      "state": "oidc-load-error",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-load-error-desktop.png",
+            "width": 1440,
+            "height": 1056,
+            "bytes": 132565,
+            "sha256": "7fdf1d5e2fd23d3936f8a03b75bdc9f306c366167b174540409522eb60f0ffa5"
+          },
+          "after": {
+            "file": "after/oidc-load-error-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 72843,
+            "sha256": "e8a3b178e4ab6957656487317410f977b08caf2fe4fd96128df6d64ede1dcfc9"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-load-error-dark.png",
+            "width": 1440,
+            "height": 1056,
+            "bytes": 133896,
+            "sha256": "55e3e7d27d67113a8a33a06686c75e321b05397177a32c3d249628316a0048e3"
+          },
+          "after": {
+            "file": "after/oidc-load-error-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 72536,
+            "sha256": "72af4300ad6c01e563f87c20adc0f007ccda31427239677e96564a01fc2499b0"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-load-error-mobile.png",
+            "width": 390,
+            "height": 1626,
+            "bytes": 85480,
+            "sha256": "51d30ba86cff35649682078a5b8dfa65c584815fdfcb07d2228cd53b37dde6fc"
+          },
+          "after": {
+            "file": "after/oidc-load-error-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 23339,
+            "sha256": "24d7c227dc025cca9c2fbe373ad2de72df06bda9ab71225edc30de15d5848424"
+          }
+        }
+      ]
+    },
+    {
+      "id": "site-edit",
+      "route": "/site-replication/",
+      "state": "site-edit",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/site-edit-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 161064,
+            "sha256": "f16a18246f7eba9edce440ea8e36f7a6f415089755e503b85eed4c02448563d2"
+          },
+          "after": {
+            "file": "after/site-edit-desktop.png",
+            "width": 1440,
+            "height": 1016,
+            "bytes": 164152,
+            "sha256": "2c1fcf852f18f940d473cdabd52f3fac845b9ffcdf587301b897e3beca5e07d7"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/site-edit-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 161756,
+            "sha256": "5cfae3e42a3e54f3e2233ccf60188883333bdd3d38bcb57eadc5a203377cbf7d"
+          },
+          "after": {
+            "file": "after/site-edit-dark.png",
+            "width": 1440,
+            "height": 1016,
+            "bytes": 162247,
+            "sha256": "51d3a8f1342f042a4c3f806f53af5d90c7ebf4c8df5b3dacae3c2b7d735a6bff"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/site-edit-mobile.png",
+            "width": 390,
+            "height": 1779,
+            "bytes": 80558,
+            "sha256": "9f1ec1eab2c752808ed28a527df2a9dbc704feff0012009da73914cc17498706"
+          },
+          "after": {
+            "file": "after/site-edit-mobile.png",
+            "width": 390,
+            "height": 1958,
+            "bytes": 100429,
+            "sha256": "4de90f2c0e958380df353474c9a85bfab47ec592b6aae64f017f46da66e535dc"
+          }
+        }
+      ]
+    },
+    {
+      "id": "oidc-advanced",
+      "route": "/oidc/",
+      "state": "oidc-advanced",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-advanced-desktop.png",
+            "width": 1440,
+            "height": 1418,
+            "bytes": 154531,
+            "sha256": "47aba935774e022627147a735c14079eea359351fdd7134b0ce7de9bb47fd9e4"
+          },
+          "after": {
+            "file": "after/oidc-advanced-desktop.png",
+            "width": 1440,
+            "height": 1584,
+            "bytes": 164949,
+            "sha256": "525c65a632469d415545d1ee21edd32d17454aa28a4b7bf99e153ea6f4ae8346"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-advanced-dark.png",
+            "width": 1440,
+            "height": 1418,
+            "bytes": 157065,
+            "sha256": "42b45350aee9e37212c08c468bb5d04e53efd0128cd38e160eeebeb297b016fd"
+          },
+          "after": {
+            "file": "after/oidc-advanced-dark.png",
+            "width": 1440,
+            "height": 1584,
+            "bytes": 165457,
+            "sha256": "d2ce76b0b286d2249720814c903156266fb905ccd3b9eff3d23c05cc90b326dd"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-advanced-mobile.png",
+            "width": 390,
+            "height": 2205,
+            "bytes": 107857,
+            "sha256": "d4ee5ead61c666d9ee5783f1b498568b8ddba80e2af0d15c2a36863e5c3d9b44"
+          },
+          "after": {
+            "file": "after/oidc-advanced-mobile.png",
+            "width": 390,
+            "height": 2467,
+            "bytes": 129849,
+            "sha256": "a01406c62ec403b24893dbb4d7217e4cd39ca33f0240091b99d2a38633ad5abc"
+          }
+        }
+      ]
+    },
+    {
+      "id": "oidc-callback-error",
+      "route": "/auth/oidc-callback/?error=access_denied",
+      "state": "oidc-callback-error",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-callback-error-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 97985,
+            "sha256": "66dea335e7b8e30cf468bad93e601494db2e088e0f3c8c27d674f4a458c8d8a5"
+          },
+          "after": {
+            "file": "after/oidc-callback-error-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 37219,
+            "sha256": "091f8ea2035658fa4d1f23bd1971ddac6796f1dfbedde56ae254240cbe1b5b05"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-callback-error-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 93686,
+            "sha256": "ba0d406eda1c4c3520cc0f4d6813fecb5d9184f032a36182efdf525d93ed496a"
+          },
+          "after": {
+            "file": "after/oidc-callback-error-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 36946,
+            "sha256": "38ed4df9fd7da02e5b2b57772e717f7eef8a59d8256896a6cb72b89e93f7f924"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-callback-error-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 17815,
+            "sha256": "a3fd0451588302473f1a0831f599fff5ab959493ff36688c71a558c68dfaff36"
+          },
+          "after": {
+            "file": "after/oidc-callback-error-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 18670,
+            "sha256": "fc5097bb05aa18db5905a2f6c055b46b2e20d57d6ce547bc32f0cdf5be7b178a"
+          }
+        }
+      ]
+    },
+    {
+      "id": "login-pending",
+      "route": "/auth/login/",
+      "state": "login-pending",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/login-pending-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 96577,
+            "sha256": "bbf63217dbc27705787a4413a9f683064725d07f5ec471b27d3356bbbbf07f78"
+          },
+          "after": {
+            "file": "after/login-pending-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 34992,
+            "sha256": "31d3d6ca39f28a092ceefd3ccb18df9c0d4b70ca023911d47caa947d8a4146cb"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/login-pending-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 92535,
+            "sha256": "e489efe90a2110579103abca529aced567b1082b8c30d3fb77006913315d26a1"
+          },
+          "after": {
+            "file": "after/login-pending-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 34726,
+            "sha256": "0592fe74013e0e6307afeb3e7dc051d574c9fee4f96379f95e92810e41d77533"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/login-pending-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 15837,
+            "sha256": "fb8ac76f3765f5b7b01ea9eafc44b70ccaf7b2bb76b6a9774840bbce99d7e968"
+          },
+          "after": {
+            "file": "after/login-pending-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 16426,
+            "sha256": "07f99ebf68136abbb55d1b8042b1af63c763593965bb7079e6b5c1f5f8b81a0b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "delete-pending",
+      "route": "/policies/",
+      "state": "delete-pending",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/delete-pending-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 83216,
+            "sha256": "b7d6b89c8a4ce62511b294c5cefaa7207c6066e8a71ea5c55ca7b433bbea3045"
+          },
+          "after": {
+            "file": "after/delete-pending-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82012,
+            "sha256": "60cc6ea9ce272d8ed385f41c5a563389ee6f7d7bb52b7db7617b324563a4fd65"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/delete-pending-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 84678,
+            "sha256": "5bf2af3e5fdc4dd12f50391ae764b7ad1a977b764360f796fb8ca56f6e603807"
+          },
+          "after": {
+            "file": "after/delete-pending-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 78573,
+            "sha256": "60fd35447ec20c6ab57cce5a8aa1a7c42a6bd32ccb3fd3c13fde08b203c6c632"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/delete-pending-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 28402,
+            "sha256": "5b6b5a3e1a1abbe228acf7a53c29d854fe1466386ac04d1d3a51eb4bac4c5492"
+          },
+          "after": {
+            "file": "after/delete-pending-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 29142,
+            "sha256": "f77345d2db9dad967903e30ecb8cedda9c3a4b8f88057682f31d86078e9e2abb"
+          }
+        }
+      ]
+    },
+    {
+      "id": "permission-loading",
+      "route": "/browser/",
+      "state": "permission-loading",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/permission-loading-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 6489,
+            "sha256": "cb9c3b8047859412e8abcaed51ad9ecefb4bd820c8849af4992e593d500d1836"
+          },
+          "after": {
+            "file": "after/permission-loading-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 8139,
+            "sha256": "b56ecede55d1f5e5683a8c060e8c00e6daff14b6634ebb4a6a54e43a89deedc9"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/permission-loading-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 6490,
+            "sha256": "654364cecbe87b4863c109fd895cf818350494b6fa41e4768747e86608728176"
+          },
+          "after": {
+            "file": "after/permission-loading-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 8138,
+            "sha256": "6fd6fad16c614168bcfa5821ffca5e22da7c0f2ce67510a12a3e2de73a1c88b9"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/permission-loading-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 2740,
+            "sha256": "fb32313e11bc8ffbd5310a1660e630b64cedb4622f8462a5eae2d5464ac8279e"
+          },
+          "after": {
+            "file": "after/permission-loading-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 4332,
+            "sha256": "59bb1bc6e2208a6e5176d15e8a3f73d34c1bc60a7803fd5ce873cd136657c903"
+          }
+        }
+      ]
+    },
+    {
+      "id": "bucket-delete",
+      "route": "/browser/",
+      "state": "bucket-delete",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 96979,
+            "sha256": "98655b64ab2674c58e13440ebbe7acc55eab6dd0c641f82040490ffefacb9dea"
+          },
+          "after": {
+            "file": "after/bucket-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 98496,
+            "sha256": "7ac8aa388a3276f8fba498e444866ddc0d3f37ec7ef7af86a9287fd6c1a10eba"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 98962,
+            "sha256": "fe54646ff6b12181f40989dc6cd9f47c11e538eebd7d3f285093c96b242ea34e"
+          },
+          "after": {
+            "file": "after/bucket-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 95250,
+            "sha256": "809715e0513bcaebbbf75ed0d481e6f72b211438d46ba59db87c4ab4d34fdf35"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 31534,
+            "sha256": "89c5c48b9d3eb2519a183abdd87b3da844c4e362cf4bce19a07df3f64a56bb62"
+          },
+          "after": {
+            "file": "after/bucket-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 29459,
+            "sha256": "592f389204f9e51f4a7afe79c3b675f25fc639647270cedceeefbc80932bef0b"
+          }
+        }
+      ]
+    },
+    {
+      "id": "user-delete",
+      "route": "/users/",
+      "state": "user-delete",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/user-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 95715,
+            "sha256": "85caec4a90edb35cedba35b4dfabf37222be8abad484d35f791caa6e8687507e"
+          },
+          "after": {
+            "file": "after/user-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 96533,
+            "sha256": "ad579b1f283b0c482b1727d28181d07bd76cf4acd423ff7c277645496ffcd13f"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/user-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 98196,
+            "sha256": "970c9df202ac9c84ead67a3a4cfd21176083893d4508206983f8c23526150cac"
+          },
+          "after": {
+            "file": "after/user-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 92938,
+            "sha256": "2a3f6cf3a21cdbea309eddfb27197465d107ece2ff829c6957964537af3f516f"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/user-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 29881,
+            "sha256": "0cd3261f02730cd8dde5c494d8842812c5379ed600b4064628a08fde5d0c146e"
+          },
+          "after": {
+            "file": "after/user-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 32092,
+            "sha256": "144f1045865c71a488e2fd2f79542c903d96cda04cbc0e20bea284d38b5296f8"
+          }
+        }
+      ]
+    },
+    {
+      "id": "access-key-delete",
+      "route": "/access-keys/",
+      "state": "access-key-delete",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/access-key-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 88668,
+            "sha256": "af102146a31db79e04b8b7515f4056b9de661b49d4f66d4e9a52051f17abf92d"
+          },
+          "after": {
+            "file": "after/access-key-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 92227,
+            "sha256": "f94792ccd6a0e97d212d7029e3f6a4ca4d9a1f182e8373684fcecdfcf08c33f9"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/access-key-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 90489,
+            "sha256": "a91a3dfb0d1130bddd2aa7423ed774e5f7eee88fbda973fe1b4d33faa519b096"
+          },
+          "after": {
+            "file": "after/access-key-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 88509,
+            "sha256": "5191fc8c4dc23ac92b670ff62cbee10bd3725bd6291d9a340efdfe3c8f4083de"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/access-key-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 29279,
+            "sha256": "cdda0cf2df4762065a8a9243fb0fb1644c3d8a81e72bf1849b1e996fed4d03f3"
+          },
+          "after": {
+            "file": "after/access-key-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 32833,
+            "sha256": "67efcaacc8d4263c953a525a1c4d91255030178b19de5a115fc29d26e1942a39"
+          }
+        }
+      ]
+    },
+    {
+      "id": "tier-delete",
+      "route": "/tiers/",
+      "state": "tier-delete",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/tier-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 83089,
+            "sha256": "e5780bd8432c41b295a9a376526da37d6a1f73ada9b301117a4775f04af2be27"
+          },
+          "after": {
+            "file": "after/tier-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82380,
+            "sha256": "4c3795ecf8487af05329af2e2c275bf8a970ccc628370ea3d3b7596c7ff3ce63"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/tier-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 83974,
+            "sha256": "5f0722833ee7896b732c3fd22a73f425372e7af44d49c5d8ef77bb602004e5d6"
+          },
+          "after": {
+            "file": "after/tier-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 78973,
+            "sha256": "353314844f0e1d6b50f6ac76116b01443e00588e0305a6312fd8d8bc8969f09c"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/tier-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 24856,
+            "sha256": "1ba7a6b79bb72b1feb147f4727b6dd5a0f0eb4bf28a72bd08a4be1bdb2627d62"
+          },
+          "after": {
+            "file": "after/tier-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 27904,
+            "sha256": "0273b14c8ee7f5115e7a4c041b68c5f30ddb42b909fcd119a019a1f693e229f9"
+          }
+        }
+      ]
+    },
+    {
+      "id": "audit-delete",
+      "route": "/audit-target/",
+      "state": "audit-delete",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/audit-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 81735,
+            "sha256": "d0525dbe5fa3b2dc123aaa08b698733fc2a4db7fbd6c2d27797968e393fede81"
+          },
+          "after": {
+            "file": "after/audit-delete-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 81951,
+            "sha256": "daa4d51aa845f2e3e0539ea177cea8ee1786fe54adf2e777d88c855f01764a1e"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/audit-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 82825,
+            "sha256": "ee20379edec98202e2cd4471181d064aeb7b8af58b3766378e6a66ae7b327e76"
+          },
+          "after": {
+            "file": "after/audit-delete-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 78077,
+            "sha256": "bb2ef8c5c2ea3435e7f73e5fc07c703fa59dd0f5ae61535f51a69760417a0273"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/audit-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 29657,
+            "sha256": "cee53b622256603c3464b3fe33ec24e0e145ef07f0eac5eff99bca6d01b8d11c"
+          },
+          "after": {
+            "file": "after/audit-delete-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 30069,
+            "sha256": "4f0715319ed0d77a61fc08717e91caf1a668b415f37191960cf50b3c83f4d086"
+          }
+        }
+      ]
+    },
+    {
+      "id": "navigation",
+      "route": "/browser/",
+      "state": "navigation",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/navigation-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 42096,
+            "sha256": "5829a1cce360277033436a4e054cc29f79e757f208187cf8cb9c022924053626"
+          },
+          "after": {
+            "file": "after/navigation-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 52404,
+            "sha256": "1ed66e6def2b49286f27e9509c6f57459e7b61560906866cdf101e4d0e146a7e"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/navigation-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 43192,
+            "sha256": "2c9214e1aaedab198092dd87c21849b4cd47a8f94b6f3e3d2876edde19e3d915"
+          },
+          "after": {
+            "file": "after/navigation-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 52892,
+            "sha256": "d40e6868ed77a356f6567e07282c4f6c072c74f5ccb32a6e03d56f51dbb1b503"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/navigation-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 37429,
+            "sha256": "e03e2b250e8cf6710b06bc170617e280bbafb7bec4bad19b3f886bfdab4b37e1"
+          },
+          "after": {
+            "file": "after/navigation-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 39118,
+            "sha256": "b69bad7d687fe831c2ef444f37ae9137fc7ca730a078d39c7b745c182a74fc79"
+          }
+        }
+      ]
+    },
+    {
+      "id": "object-lock-selection",
+      "route": "/browser/",
+      "state": "object-lock-selection",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/object-lock-selection-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 98784,
+            "sha256": "cc6708a8b8903dc19951ce1b81e305cb7c4719e317835c9952421afe4b1a46eb"
+          },
+          "after": {
+            "file": "after/object-lock-selection-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 92065,
+            "sha256": "2ef80d52cfbf10f5bbee576502d1a4f19e646918ee00958c7bf13699a4c1c657"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/object-lock-selection-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 101103,
+            "sha256": "3f419f20d4990f30cd32ffce3257905c79b3c33d92c44e8c8d63463400ea34dd"
+          },
+          "after": {
+            "file": "after/object-lock-selection-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 87892,
+            "sha256": "42335a33f72854a1da1f61cbe0342cc19f4af1d0cbbdfa581b8594f82540a13e"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/object-lock-selection-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 24581,
+            "sha256": "789d627ff9d5fe81c5c775cdb8f2b80d9ef201603592e33f553b44746e495de0"
+          },
+          "after": {
+            "file": "after/object-lock-selection-mobile.png",
+            "width": 390,
+            "height": 844,
+            "bytes": 24156,
+            "sha256": "803ebfca903a092678e38751a8524faa75b3df4acb720f4d25ca14f0f36a3caf"
+          }
+        }
+      ]
+    },
+    {
+      "id": "oidc-validating",
+      "route": "/oidc/",
+      "state": "oidc-validating",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-validating-desktop.png",
+            "width": 1440,
+            "height": 1056,
+            "bytes": 127381,
+            "sha256": "7af9970e1f615f348f22851dff2360028543a2d50617ede5f56d88da1ee84596"
+          },
+          "after": {
+            "file": "after/oidc-validating-desktop.png",
+            "width": 1440,
+            "height": 1190,
+            "bytes": 133103,
+            "sha256": "7bfb75709faa6bbab7d056322f21e3588565b941f8feb22d9fbd79fcee2c4326"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-validating-dark.png",
+            "width": 1440,
+            "height": 1056,
+            "bytes": 129499,
+            "sha256": "810b100c4da977e3f565be792bfa3f978f37fc06a78d17c214194e176073b608"
+          },
+          "after": {
+            "file": "after/oidc-validating-dark.png",
+            "width": 1440,
+            "height": 1190,
+            "bytes": 132900,
+            "sha256": "c7b9f39b9b4fed17a7aa7f95e42fd863d62100e509c9091ca646e2b1f2a8edbd"
+          }
+        },
+        {
+          "mode": "mobile",
+          "viewport": {
+            "width": 390,
+            "height": 844
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/oidc-validating-mobile.png",
+            "width": 390,
+            "height": 1626,
+            "bytes": 81902,
+            "sha256": "8fd3502176dc040eb64d75f44273f9c9ef39c5ecfffb9c7c42d38e386d1a3bfc"
+          },
+          "after": {
+            "file": "after/oidc-validating-mobile.png",
+            "width": 390,
+            "height": 1788,
+            "bytes": 95536,
+            "sha256": "e092ca0e432f4090f2c039dd4917b517983fc972b89b659d8ed13de46973d693"
+          }
+        }
+      ]
+    }
+  ]
+}

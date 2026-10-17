@@ -46,6 +46,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { SearchInput } from "@/components/search-input"
 import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
@@ -67,11 +68,18 @@ import { cn } from "@/lib/utils"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
+  OBJECT_LIST_DELETED_VIEW_STORAGE_KEY,
   createObjectListScope,
+  deletedObjectAccessibleLabelKey,
+  isDeletedObjectListEntry,
+  readObjectListDeletedViewDefault,
+  resolveObjectListDeletedView,
   resolveObjectListDisplayState,
   shouldApplyObjectListResponse,
   shouldResetObjectListPagination,
   shouldResetObjectListSearch,
+  shouldShowObjectListRow,
+  type ObjectListDeletedView,
 } from "@/lib/object-list-state"
 import { OBJECT_LIST_DEFAULT_PAGE_SIZE, resolveObjectListPageSize } from "@/lib/object-list-pagination"
 import {
@@ -101,11 +109,18 @@ interface ObjectRow {
   type: "prefix" | "object"
   Size: number
   LastModified: string
+  deleted: boolean
 }
 
 type ObjectListError = "accessDenied" | "loadFailed"
 
 const OBJECT_ACTION_MENU_ITEM_CLASS = "min-h-11 lg:min-h-8"
+
+const OBJECT_LIST_DELETED_VIEW_OPTIONS: Array<{ value: ObjectListDeletedView; labelKey: string }> = [
+  { value: "hide", labelKey: "Hide Deleted Objects" },
+  { value: "show", labelKey: "Show Deleted Objects" },
+  { value: "only", labelKey: "Show Only Deleted Objects" },
+]
 
 function isAccessDeniedError(error: unknown): boolean {
   const serviceError = error as {
@@ -154,7 +169,11 @@ export function ObjectList({
   const tasks = useTasks()
 
   const [searchTerm, setSearchTerm] = React.useState("")
-  const [showDeleted, setShowDeleted] = useLocalStorage("object-list-show-deleted", false)
+  const [storedDeletedView, setDeletedView] = useLocalStorage<ObjectListDeletedView>(
+    OBJECT_LIST_DELETED_VIEW_STORAGE_KEY,
+    readObjectListDeletedViewDefault(),
+  )
+  const deletedView = resolveObjectListDeletedView(storedDeletedView)
   const [loading, setLoading] = React.useState(false)
   const [listError, setListError] = React.useState<ObjectListError | null>(null)
   const [loadMoreError, setLoadMoreError] = React.useState(false)
@@ -189,15 +208,19 @@ export function ObjectList({
 
   const prefix = decodeURIComponent(path)
   const resolvedPageSize = resolveObjectListPageSize(pageSize)
+  const onlyDeleted = deletedView === "only"
+  // "Only deleted" is a client-side narrowing over the same include-deleted
+  // listing, so the wire flag is on for every view except "hide".
+  const includeDeleted = deletedView !== "hide"
   const listScope = React.useMemo(
     () =>
       createObjectListScope({
         bucket,
         prefix,
         pageSize: resolvedPageSize,
-        showDeleted,
+        includeDeleted,
       }),
-    [bucket, prefix, resolvedPageSize, showDeleted],
+    [bucket, prefix, resolvedPageSize, includeDeleted],
   )
   const canBulkDelete = canCapability("objects.bulkDelete", { bucket, prefix })
   const canBulkDownload = canCapability("objects.download", { bucket, prefix })
@@ -257,12 +280,12 @@ export function ObjectList({
       setLoadMoreError(false)
       try {
         const response = await listObject(bucket, prefix || undefined, resolvedPageSize, token, {
-          includeDeleted: showDeleted,
+          includeDeleted,
         })
 
         const r = response as {
           CommonPrefixes?: Array<{ Prefix?: string }>
-          Contents?: Array<{ Key?: string; Size?: number; LastModified?: Date }>
+          Contents?: Array<{ Key?: string; Size?: number; LastModified?: Date; ETag?: string }>
           NextContinuationToken?: string
         }
 
@@ -285,6 +308,7 @@ export function ObjectList({
           type: "prefix" as const,
           Size: 0,
           LastModified: "",
+          deleted: false,
         }))
 
         const objectItems: ObjectRow[] = (r.Contents ?? []).map((item) => ({
@@ -292,6 +316,7 @@ export function ObjectList({
           type: "object" as const,
           Size: item.Size ?? 0,
           LastModified: normalizeDateToIso(item.LastModified),
+          deleted: isDeletedObjectListEntry(item, includeDeleted),
         }))
 
         const rows = [...prefixItems, ...objectItems]
@@ -335,7 +360,7 @@ export function ObjectList({
         }, 200)
       }
     },
-    [bucket, prefix, resolvedPageSize, showDeleted, listObject, message, t],
+    [bucket, prefix, resolvedPageSize, includeDeleted, listObject, message, t],
   )
 
   const resetAndFetchObjects = React.useCallback(() => {
@@ -419,19 +444,21 @@ export function ObjectList({
   const filteredData = React.useMemo(() => {
     const term = searchTerm.trim().toLowerCase()
     return data.filter((item) => {
+      if (!shouldShowObjectListRow(item, onlyDeleted)) return false
       if (term) {
         const key = displayKey(item.Key).toLowerCase()
         return key.includes(term)
       }
       return item.Key !== prefix
     })
-  }, [data, searchTerm, prefix, displayKey])
+  }, [data, searchTerm, prefix, displayKey, onlyDeleted])
   const displayState = resolveObjectListDisplayState({
     searchTerm,
     filteredCount: filteredData.length,
     loadedCount: data.length,
     hasMore: Boolean(nextToken),
     loading,
+    onlyDeleted,
   })
   const filteredEmptyState = displayState === "filtered-partial" || displayState === "filtered-empty"
   const emptyTitle = filteredEmptyState
@@ -519,6 +546,7 @@ export function ObjectList({
               </Link>
             )
           }
+          const deletedLabelKey = deletedObjectAccessibleLabelKey(row.original.deleted)
           return (
             <button
               type="button"
@@ -526,7 +554,12 @@ export function ObjectList({
               onClick={() => onOpenInfo(bucket, row.original.Key)}
             >
               <RiFileLine className="size-4 shrink-0" aria-hidden />
-              <span className="min-w-0 truncate">{display}</span>
+              {row.original.deleted ? (
+                <del className="min-w-0 truncate text-destructive line-through">{display}</del>
+              ) : (
+                <span className="min-w-0 truncate">{display}</span>
+              )}
+              {deletedLabelKey ? <span className="sr-only">{` (${t(deletedLabelKey)})`}</span> : null}
             </button>
           )
         },
@@ -978,17 +1011,23 @@ export function ObjectList({
             clearable
             className="lg:max-w-sm"
           />
-          <label
-            htmlFor="object-list-show-deleted"
-            className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer"
+          <RadioGroup
+            value={deletedView}
+            onValueChange={(value) => setDeletedView(resolveObjectListDeletedView(value))}
+            className="flex w-auto flex-wrap items-center gap-x-4 gap-y-2"
+            aria-label={t("Deleted Objects")}
           >
-            <Checkbox
-              id="object-list-show-deleted"
-              checked={showDeleted}
-              onCheckedChange={(v) => setShowDeleted(v === true)}
-            />
-            <span>{t("Show Deleted Objects")}</span>
-          </label>
+            {OBJECT_LIST_DELETED_VIEW_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                htmlFor={`object-list-deleted-view-${option.value}`}
+                className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer"
+              >
+                <RadioGroupItem id={`object-list-deleted-view-${option.value}`} value={option.value} />
+                <span>{t(option.labelKey)}</span>
+              </label>
+            ))}
+          </RadioGroup>
         </div>
       </PageHeader>
 

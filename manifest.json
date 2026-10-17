@@ -1,6 +1,6 @@
 {
   "base_commit": "8a7c6ebbf78bc61e17ff8f3db74a7ec9d7c55da5",
-  "head_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93",
+  "head_commit": "9a45e76e0c50ea15732e655224412461fb821d79",
   "design_commit": "28fa50ac0a7d5e8dd6a606a11206dbdd7c87eed4",
   "scope": "28 rendered pages, 6 bucket-specific views, 10 configured/running scenarios, 22 interaction states, 27 dialog states, two completed-upload views, and three upload selection states. Root and OIDC callback redirects checked separately.",
   "environment": "Chromium captures of production static exports under /rustfs/console. Both versions use identical controlled S3/admin responses. No live RustFS integration is claimed.",
@@ -10,7 +10,8 @@
   "image_count": 392,
   "verification_commits": {
     "page_dialog_checks": "dbba54a991e608e59886a4e8780ed301be20592e",
-    "upload_checks": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
+    "upload_checks": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93",
+    "object_refresh_checks": "9a45e76e0c50ea15732e655224412461fb821d79"
   },
   "mobile_images": false,
   "browser_checks": {
@@ -1704,6 +1705,324 @@
           "remaining": 3
         }
       ]
+    },
+    "object_refresh": {
+      "refreshProof": [
+        {
+          "prefix": "reports/",
+          "token": null
+        },
+        {
+          "prefix": "reports/",
+          "token": null
+        },
+        {
+          "prefix": "reports/",
+          "token": null
+        }
+      ],
+      "paginationProof": [
+        {
+          "prefix": "reports/",
+          "token": null
+        },
+        {
+          "prefix": "reports/",
+          "token": "page-two"
+        }
+      ],
+      "emptyRefreshVisible": true,
+      "layouts": [
+        {
+          "lang": "en",
+          "width": 390,
+          "theme": "light",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "Upload File/Folder",
+              "height": 44,
+              "top": 143.828125
+            },
+            {
+              "name": "Refresh",
+              "height": 44,
+              "top": 143.828125
+            }
+          ]
+        },
+        {
+          "lang": "en",
+          "width": 390,
+          "theme": "dark",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "Upload File/Folder",
+              "height": 44,
+              "top": 143.828125
+            },
+            {
+              "name": "Refresh",
+              "height": 44,
+              "top": 143.828125
+            }
+          ]
+        },
+        {
+          "lang": "en",
+          "width": 1440,
+          "theme": "light",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "Upload File/Folder",
+              "height": 40,
+              "top": 96.3125
+            },
+            {
+              "name": "Refresh",
+              "height": 40,
+              "top": 96.3125
+            }
+          ]
+        },
+        {
+          "lang": "en",
+          "width": 1440,
+          "theme": "dark",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "Upload File/Folder",
+              "height": 40,
+              "top": 96.3125
+            },
+            {
+              "name": "Refresh",
+              "height": 40,
+              "top": 96.3125
+            }
+          ]
+        },
+        {
+          "lang": "zh",
+          "width": 390,
+          "theme": "light",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "上传文件/文件夹",
+              "height": 44,
+              "top": 143.828125
+            },
+            {
+              "name": "刷新",
+              "height": 44,
+              "top": 143.828125
+            }
+          ]
+        },
+        {
+          "lang": "zh",
+          "width": 390,
+          "theme": "dark",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "上传文件/文件夹",
+              "height": 44,
+              "top": 143.828125
+            },
+            {
+              "name": "刷新",
+              "height": 44,
+              "top": 143.828125
+            }
+          ]
+        },
+        {
+          "lang": "zh",
+          "width": 1440,
+          "theme": "light",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "上传文件/文件夹",
+              "height": 40,
+              "top": 96.3125
+            },
+            {
+              "name": "刷新",
+              "height": 40,
+              "top": 96.3125
+            }
+          ]
+        },
+        {
+          "lang": "zh",
+          "width": 1440,
+          "theme": "dark",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "上传文件/文件夹",
+              "height": 40,
+              "top": 96.3125
+            },
+            {
+              "name": "刷新",
+              "height": 40,
+              "top": 96.3125
+            }
+          ]
+        },
+        {
+          "lang": "de",
+          "width": 390,
+          "theme": "light",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "Datei hochladen/Ordner",
+              "height": 44,
+              "top": 143.828125
+            },
+            {
+              "name": "Aktualisieren",
+              "height": 44,
+              "top": 195.828125
+            }
+          ]
+        },
+        {
+          "lang": "de",
+          "width": 390,
+          "theme": "dark",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "Datei hochladen/Ordner",
+              "height": 44,
+              "top": 143.828125
+            },
+            {
+              "name": "Aktualisieren",
+              "height": 44,
+              "top": 195.828125
+            }
+          ]
+        },
+        {
+          "lang": "de",
+          "width": 1440,
+          "theme": "light",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "Datei hochladen/Ordner",
+              "height": 40,
+              "top": 96.3125
+            },
+            {
+              "name": "Aktualisieren",
+              "height": 40,
+              "top": 96.3125
+            }
+          ]
+        },
+        {
+          "lang": "de",
+          "width": 1440,
+          "theme": "dark",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "Datei hochladen/Ordner",
+              "height": 40,
+              "top": 96.3125
+            },
+            {
+              "name": "Aktualisieren",
+              "height": 40,
+              "top": 96.3125
+            }
+          ]
+        },
+        {
+          "lang": "ar",
+          "width": 390,
+          "theme": "light",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "تحميل ملف/المجلد",
+              "height": 44,
+              "top": 143.828125
+            },
+            {
+              "name": "تحديث",
+              "height": 44,
+              "top": 143.828125
+            }
+          ]
+        },
+        {
+          "lang": "ar",
+          "width": 390,
+          "theme": "dark",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "تحميل ملف/المجلد",
+              "height": 44,
+              "top": 143.828125
+            },
+            {
+              "name": "تحديث",
+              "height": 44,
+              "top": 143.828125
+            }
+          ]
+        },
+        {
+          "lang": "ar",
+          "width": 1440,
+          "theme": "light",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "تحميل ملف/المجلد",
+              "height": 40,
+              "top": 96.3125
+            },
+            {
+              "name": "تحديث",
+              "height": 40,
+              "top": 96.3125
+            }
+          ]
+        },
+        {
+          "lang": "ar",
+          "width": 1440,
+          "theme": "dark",
+          "overflow": false,
+          "buttons": [
+            {
+              "name": "تحميل ملف/المجلد",
+              "height": 40,
+              "top": 96.3125
+            },
+            {
+              "name": "تحديث",
+              "height": 40,
+              "top": 96.3125
+            }
+          ]
+        }
+      ],
+      "errors": []
     }
   },
   "quality_gates": [
@@ -1711,7 +2030,7 @@
     "pnpm type-check",
     "pnpm lint",
     "pnpm format:check",
-    "pnpm test:run (756 passed)",
+    "pnpm test:run (757 passed)",
     "pnpm build"
   ],
   "evidence_keys": {
@@ -1776,6 +2095,10 @@
       "upload-destination",
       "upload-selected",
       "upload-queue-end"
+    ],
+    "object-refresh-54": [
+      "objects",
+      "tasks-toolbar"
     ]
   },
   "cases": [
@@ -1965,8 +2288,8 @@
             "file": "after/objects-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 97074,
-            "sha256": "0ae74b2c1ab0030eff97065b1107301c50c7fc4c819d7ea479713488b22d377e"
+            "bytes": 98240,
+            "sha256": "90bcfd8c55632f528113d4c4d25c0fd78fcdb456836fb670d5b3bf17cf374cc8"
           }
         },
         {
@@ -1988,12 +2311,12 @@
             "file": "after/objects-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 98259,
-            "sha256": "e7b7acb890db09632cfa53934b5d7d5fda798860c10fbe7a585bcea6c5ae4188"
+            "bytes": 99655,
+            "sha256": "0b03c2a2809c30a0bc414b7ac360941750114b13ed6f97161a27b5a105e14c04"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "9a45e76e0c50ea15732e655224412461fb821d79"
     },
     {
       "id": "bucket-settings",
@@ -5421,8 +5744,8 @@
             "file": "after/dialog-upload-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 122679,
-            "sha256": "0be9b2d94ad966394446450df6c56ecba368de38f56dd86d5abbabb969071821"
+            "bytes": 123838,
+            "sha256": "79f57e3d90523864b709e596bf02547e56d4088c5165fedaa11697a8bbfa6af6"
           }
         },
         {
@@ -5444,12 +5767,12 @@
             "file": "after/dialog-upload-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 118995,
-            "sha256": "3bdecd8d9957d5ffa05d058bf11196beb7e2b5976a12a9232161d95de2785061"
+            "bytes": 120132,
+            "sha256": "634629b74b8fa5336a16b0fb3b457d29723a4cb3bb626942a88caf064aaf6574"
           }
         }
       ],
-      "after_capture_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
+      "after_capture_commit": "9a45e76e0c50ea15732e655224412461fb821d79"
     },
     {
       "id": "dialog-access-key",
@@ -6825,8 +7148,8 @@
             "file": "after/tasks-completed-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 110536,
-            "sha256": "73186398704774f6df5e48d4e3f3f89c36461c3795012afb7e3c97c9d5867f81"
+            "bytes": 111590,
+            "sha256": "ad88bba73886c7a971a52e0d4666b5a09624cc626d9b91be4d316d989b250d10"
           }
         },
         {
@@ -6848,12 +7171,12 @@
             "file": "after/tasks-completed-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 111009,
-            "sha256": "9789e5723109a45cd00b07451c4bea2fea4b6ea8751603d8bd46ab024ab2f29b"
+            "bytes": 112257,
+            "sha256": "1d8718f083dee22883b1ca416ee6f482b972ec49fe4d214b5d4755d1590f93bc"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "9a45e76e0c50ea15732e655224412461fb821d79"
     },
     {
       "id": "tasks-toolbar",
@@ -6879,8 +7202,8 @@
             "file": "after/tasks-toolbar-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 99314,
-            "sha256": "2cede97a1c57a7333a70abd3e824851f5f7cd94d982ef970e39ff979c18d97c8"
+            "bytes": 100243,
+            "sha256": "f887d37fd60161ad98f258e7b241f367c215174dc366277adb3c34b56f892e9d"
           }
         },
         {
@@ -6902,12 +7225,12 @@
             "file": "after/tasks-toolbar-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 100703,
-            "sha256": "214f6a6ad3ac17e5e7df92a0f5a42de561dc18d8590934405fa5ffb943e9e77f"
+            "bytes": 101825,
+            "sha256": "29404e1fa85ea7a28ff29d375720ddc83674188a6c906386ce2399a784e78675"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "9a45e76e0c50ea15732e655224412461fb821d79"
     },
     {
       "id": "upload-destination",
@@ -6933,8 +7256,8 @@
             "file": "after/upload-destination-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 124272,
-            "sha256": "ca0779d20e3499a78fb16f3b46174adb25cc1dfc92b166b8b48333e7d2d2272a"
+            "bytes": 125386,
+            "sha256": "3cec64767c99c9f3ceea21d09e9402fbd5c6dd375c502b63f389c546784af1da"
           }
         },
         {
@@ -6956,12 +7279,12 @@
             "file": "after/upload-destination-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 120644,
-            "sha256": "7a1bbe0fff8b32942db29a296c0e9172e5b2138a36ab71320060aae534b3d07d"
+            "bytes": 121738,
+            "sha256": "69a5f4353fe55312a3d2f56b165279819b2309cc582f95eed9be184f094b5141"
           }
         }
       ],
-      "after_capture_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
+      "after_capture_commit": "9a45e76e0c50ea15732e655224412461fb821d79"
     },
     {
       "id": "upload-selected",
@@ -6987,8 +7310,8 @@
             "file": "after/upload-selected-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 119856,
-            "sha256": "e7d6c25a33998425eb96a785cc40a81202c472a6a9556b4173263e9ea6aba2a7"
+            "bytes": 120956,
+            "sha256": "8b7eedc918b2cb4bbb3e4c0f245ce39c430f61b5353056bd4546c3add2245a7d"
           }
         },
         {
@@ -7010,12 +7333,12 @@
             "file": "after/upload-selected-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 116436,
-            "sha256": "6dac0e63f51275058a02d78b22aa038bbcaa0f3478dc1d486ce29f8ee52530fc"
+            "bytes": 117512,
+            "sha256": "ad348ecf00edc95bc24a340c2fa367455fd4ce21c68c3e993e4d7916d1d50123"
           }
         }
       ],
-      "after_capture_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
+      "after_capture_commit": "9a45e76e0c50ea15732e655224412461fb821d79"
     },
     {
       "id": "upload-queue-end",
@@ -7041,8 +7364,8 @@
             "file": "after/upload-queue-end-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 135762,
-            "sha256": "28abbb645c57f968a1ae749d715c94b859a31526a959f487d628d0d58582c43e"
+            "bytes": 136844,
+            "sha256": "9d7cf0012d1725d865708f20477eaa2f15f5950820b6a28a8abdd36c64662f52"
           }
         },
         {
@@ -7064,12 +7387,12 @@
             "file": "after/upload-queue-end-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 132367,
-            "sha256": "b12bd70f88b108f55a0325d51918d1aa089bac7c34fdb89b53389721d0bfa3a9"
+            "bytes": 133424,
+            "sha256": "a2fa3f22a0c1c4df77b83727ad3b0a4dc43e95d19f130d6f809725d64a463a95"
           }
         }
       ],
-      "after_capture_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
+      "after_capture_commit": "9a45e76e0c50ea15732e655224412461fb821d79"
     }
   ]
 }

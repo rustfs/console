@@ -1,13 +1,17 @@
 {
   "base_commit": "8a7c6ebbf78bc61e17ff8f3db74a7ec9d7c55da5",
-  "head_commit": "dbba54a991e608e59886a4e8780ed301be20592e",
+  "head_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93",
   "design_commit": "28fa50ac0a7d5e8dd6a606a11206dbdd7c87eed4",
-  "scope": "28 rendered pages, 6 bucket-specific views, 10 configured/running scenarios, 22 interaction states, 27 dialog states, and two completed-upload views. Root and OIDC callback redirects checked separately.",
+  "scope": "28 rendered pages, 6 bucket-specific views, 10 configured/running scenarios, 22 interaction states, 27 dialog states, two completed-upload views, and three upload selection states. Root and OIDC callback redirects checked separately.",
   "environment": "Chromium captures of production static exports under /rustfs/console. Both versions use identical controlled S3/admin responses. No live RustFS integration is claimed.",
   "theme_capture": "The real theme provider handles light/dark selection; its root class and color scheme are checked before each capture.",
-  "scenario_count": 95,
-  "comparison_pairs": 190,
-  "image_count": 380,
+  "scenario_count": 98,
+  "comparison_pairs": 196,
+  "image_count": 392,
+  "verification_commits": {
+    "page_dialog_checks": "dbba54a991e608e59886a4e8780ed301be20592e",
+    "upload_checks": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
+  },
   "mobile_images": false,
   "browser_checks": {
     "qa-interactions": {
@@ -1411,14 +1415,303 @@
           }
         ]
       }
-    ]
+    ],
+    "upload_redesign": {
+      "production-flow": {
+        "empty": {
+          "clearCount": 0,
+          "uploadDisabled": true,
+          "rect": {
+            "x": 16,
+            "y": 35,
+            "width": 358,
+            "height": 630
+          }
+        },
+        "nativeFiles": {
+          "remaining": [
+            "Clear All",
+            "notes.txt"
+          ]
+        },
+        "lastRemovalFocus": "Select File",
+        "clear": {
+          "prefix": " /audit//2026/ ",
+          "uploadDisabled": true,
+          "focus": "Select File"
+        },
+        "nativeDirectory": [
+          "Clear All",
+          "upload-audit-folder/root.txt",
+          "upload-audit-folder/nested/child.txt"
+        ],
+        "directoryAPI": [
+          "Clear All",
+          "modern-folder/top.txt",
+          "modern-folder/nested/leaf.txt"
+        ],
+        "fileDrop": [
+          "Clear All",
+          "dropped.txt"
+        ],
+        "directoryDrop": [
+          "Clear All",
+          "dropped-folder/nested/leaf.txt"
+        ],
+        "lastDelete": {
+          "geometry": {
+            "button": {
+              "x": 297,
+              "y": 481.5,
+              "width": 44,
+              "height": 44,
+              "top": 481.5,
+              "right": 341,
+              "bottom": 525.5,
+              "left": 297
+            },
+            "ancestors": [
+              {
+                "top": 195.5,
+                "bottom": 531.5,
+                "height": 336,
+                "client": 336,
+                "scroll": 5600
+              },
+              {
+                "top": 8.5,
+                "bottom": 532.5,
+                "height": 524,
+                "client": 522,
+                "scroll": 522
+              },
+              {
+                "top": 130,
+                "bottom": 552.5,
+                "height": 422.5,
+                "client": 423,
+                "scroll": 646
+              }
+            ],
+            "reachable": true,
+            "footer": {
+              "x": 16,
+              "y": 552.5,
+              "width": 358,
+              "height": 112.5,
+              "top": 552.5,
+              "right": 374,
+              "bottom": 665,
+              "left": 16
+            }
+          },
+          "removed": true
+        },
+        "uploadedPaths": [
+          "/datasets/audit//2026/final b.txt",
+          "/datasets/audit//2026/final-a.txt",
+          "/datasets/audit//2026/upload-audit-folder/nested/child.txt",
+          "/datasets/audit//2026/upload-audit-folder/root.txt"
+        ],
+        "expectedPaths": [
+          "/datasets/audit//2026/final b.txt",
+          "/datasets/audit//2026/final-a.txt",
+          "/datasets/audit//2026/upload-audit-folder/nested/child.txt",
+          "/datasets/audit//2026/upload-audit-folder/root.txt"
+        ]
+      },
+      "production-small": {
+        "viewport": [
+          320,
+          568
+        ],
+        "list": {
+          "rect": {
+            "x": 37,
+            "y": 69.90625,
+            "width": 246,
+            "height": 336,
+            "top": 69.90625,
+            "right": 283,
+            "bottom": 405.90625,
+            "left": 37
+          },
+          "client": 336,
+          "scroll": 5600
+        },
+        "button": {
+          "x": 227,
+          "y": 355.90625,
+          "width": 44,
+          "height": 44,
+          "top": 355.90625,
+          "right": 271,
+          "bottom": 399.90625,
+          "left": 227
+        },
+        "reachable": true,
+        "ancestors": [
+          {
+            "top": 69.90625,
+            "bottom": 405.90625
+          },
+          {
+            "top": -169.09375,
+            "bottom": 406.90625
+          },
+          {
+            "top": 123.40625,
+            "bottom": 427.09375
+          }
+        ],
+        "footer": {
+          "x": 16,
+          "y": 427.09375,
+          "width": 288,
+          "height": 112.5,
+          "top": 427.09375,
+          "right": 304,
+          "bottom": 539.59375,
+          "left": 16
+        },
+        "removed": true
+      },
+      "production-rtl": [
+        {
+          "width": 1440,
+          "theme": "dark",
+          "directions": {
+            "document": "rtl",
+            "nodes": [
+              {
+                "tag": "P",
+                "text": "s3://datasets/",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "INPUT",
+                "text": "reports/2026/目录/Verzeichnis/مسار/final-report/",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "SPAN",
+                "text": "001-最终报告-Abschlussbericht-تقرير-2026-datasets.txt",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "DIV",
+                "text": "36.0 B",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "SPAN",
+                "text": "002-最终报告-Abschlussbericht-تقرير-2026-datasets.txt",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "DIV",
+                "text": "36.0 B",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "SPAN",
+                "text": "003-最终报告-Abschlussbericht-تقرير-2026-datasets.txt",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "DIV",
+                "text": "36.0 B",
+                "direction": "ltr",
+                "declared": "ltr"
+              }
+            ]
+          },
+          "focus": {
+            "tag": "BUTTON",
+            "text": "تحديد ملف",
+            "inside": true
+          },
+          "remaining": 3
+        },
+        {
+          "width": 390,
+          "theme": "light",
+          "directions": {
+            "document": "rtl",
+            "nodes": [
+              {
+                "tag": "P",
+                "text": "s3://datasets/",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "INPUT",
+                "text": "reports/2026/目录/Verzeichnis/مسار/final-report/",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "SPAN",
+                "text": "001-最终报告-Abschlussbericht-تقرير-2026-datasets.txt",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "DIV",
+                "text": "36.0 B",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "SPAN",
+                "text": "002-最终报告-Abschlussbericht-تقرير-2026-datasets.txt",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "DIV",
+                "text": "36.0 B",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "SPAN",
+                "text": "003-最终报告-Abschlussbericht-تقرير-2026-datasets.txt",
+                "direction": "ltr",
+                "declared": "ltr"
+              },
+              {
+                "tag": "DIV",
+                "text": "36.0 B",
+                "direction": "ltr",
+                "declared": "ltr"
+              }
+            ]
+          },
+          "focus": {
+            "tag": "BUTTON",
+            "text": "تحديد ملف",
+            "inside": true
+          },
+          "remaining": 3
+        }
+      ]
+    }
   },
   "quality_gates": [
     "pnpm install --frozen-lockfile",
     "pnpm type-check",
     "pnpm lint",
     "pnpm format:check",
-    "pnpm test:run (754 passed)",
+    "pnpm test:run (756 passed)",
     "pnpm build"
   ],
   "evidence_keys": {
@@ -1478,6 +1771,11 @@
       "dialog-site",
       "dialog-upload",
       "dialog-kms-key"
+    ],
+    "upload-redesign-53": [
+      "upload-destination",
+      "upload-selected",
+      "upload-queue-end"
     ]
   },
   "cases": [
@@ -1532,7 +1830,8 @@
             "sha256": "0c1377b57e8d8131647de4f295bd86744315fe620d9e28d3445bfa0850fb1f46"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "config",
@@ -1585,7 +1884,8 @@
             "sha256": "3ca4104bcd23678647eefe84b6055bb9cd0ee1345f08f19b1d250fee756d5a39"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "browser",
@@ -1638,7 +1938,8 @@
             "sha256": "7014c2bc9c16c5780a5409b9b0861d0359130e3a63fccfed15a9856e1c8afa61"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "objects",
@@ -1691,7 +1992,8 @@
             "sha256": "e7b7acb890db09632cfa53934b5d7d5fda798860c10fbe7a585bcea6c5ae4188"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "bucket-settings",
@@ -1744,7 +2046,8 @@
             "sha256": "31e89b12760c1e3034022cc639e4236b96a99819df2c0d066212a40ec2931af1"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "buckets",
@@ -1797,7 +2100,8 @@
             "sha256": "95018cc2957ef1fe80cc6af9f97e517db2304bcabe878e894c7546992e14d389"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "access-keys",
@@ -1850,7 +2154,8 @@
             "sha256": "821ed02605cc7d069dcc9d346c8df1d6e840e6239a8754172ae1e3d8091ee158"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "policies",
@@ -1903,7 +2208,8 @@
             "sha256": "d44263fcaa695d881fe42afa6cee565c137191af2bb88f1f484be7a940b99c69"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "users",
@@ -1956,7 +2262,8 @@
             "sha256": "276f7fdc37cfa9598fc34cb309ba84804c34f686dd4b56555a559ec1c3ec8c19"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "user-groups",
@@ -2009,7 +2316,8 @@
             "sha256": "f26cf481506f617310129b0c6ec66e33c196575bae106670e2bef7dc9cafcda1"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "status",
@@ -2062,7 +2370,8 @@
             "sha256": "816fccb929495edd847c070872781c5c8b9fc3c233184123c83e08f1da2d9867"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "rebalance",
@@ -2115,7 +2424,8 @@
             "sha256": "d9a4caf619cee1753620de6709e102534ab0a8aebcbce35f577194aa9ffbf4a7"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "pool-decommission",
@@ -2168,7 +2478,8 @@
             "sha256": "60aa4a245881648c957a33d06ace663078ee14641cd430eea6ec1cb01e3589cf"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "events",
@@ -2221,7 +2532,8 @@
             "sha256": "05badf4be4492e8b1c93fa4513d1aa229ae5f965c3a987828287ad9a9ffdf5a2"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "events-rules",
@@ -2274,7 +2586,8 @@
             "sha256": "f641e62ee9700c21e51f694c74e0e8836f232aa1d3b336c52418284728aadd7f"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "replication",
@@ -2327,7 +2640,8 @@
             "sha256": "82e66befc362d4f040414d7bc21c1f1ed8c54311313975a5e72a2ebc75bff560"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "replication-rules",
@@ -2380,7 +2694,8 @@
             "sha256": "a00f588f3f208550ecdab1025faa6f5901d32a23317a7553d370ed3dd1966ce2"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "lifecycle",
@@ -2433,7 +2748,8 @@
             "sha256": "738eda53ac682cd8f0ce9f7e179cdceb2b2e7b41f0cf222ca4f2b823b9b36af3"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "lifecycle-rules",
@@ -2486,7 +2802,8 @@
             "sha256": "c07a49bfbf675b6f920c03434f9f322b095c3b1ab7ecfafe1fc34c8c9a0e30bd"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "site-replication",
@@ -2539,7 +2856,8 @@
             "sha256": "eadd2d5cb90c122767458efae9bce4777a30aa8ad189ed100f424f3affa503d9"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "tiers",
@@ -2592,7 +2910,8 @@
             "sha256": "ddc6c3eccab447996c3b9eb5b746e1ac09e309dc257db82e86163dce2e1e0157"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "events-target",
@@ -2645,7 +2964,8 @@
             "sha256": "96a99edbbbd00078009e2f3673984f36ffe8d9c0dd539f4b29d83176fef9e9f2"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "audit-target",
@@ -2698,7 +3018,8 @@
             "sha256": "bc488af643271ba9c5a5d00fc38f183481696f2a7e5d6be180acbea78c80b0bb"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "sse",
@@ -2751,7 +3072,8 @@
             "sha256": "c2fffa0a906aad2ff1682da90f889c18c1877ea0def6b3633fada11eca102510"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "oidc",
@@ -2804,7 +3126,8 @@
             "sha256": "2a71ad5f6ce423be09f90c1ae3b880832f1ac05570e2b924cfffaacf29c1a2bc"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "settings",
@@ -2857,7 +3180,8 @@
             "sha256": "039bfc5c817f0bd2fd3b38d26106aa045251d58be03432e5ae0f743886842d39"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "license",
@@ -2910,7 +3234,8 @@
             "sha256": "1fdeb784b3d4150067b31db531b8de98aa1c1985fffd9fcd5ae1e01dc8c3547b"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "account",
@@ -2963,7 +3288,8 @@
             "sha256": "5644ecc2befd663bf474715c5c9f55aa1cf7d1e29f95ec48e92549d5989ee799"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "security",
@@ -3016,7 +3342,8 @@
             "sha256": "1a8a6729a39d2b39b7f0cab902433d3720cbd68cf085e678d69dff75b50d8b4e"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "import-export",
@@ -3069,7 +3396,8 @@
             "sha256": "d0c0774a39c7a98195b44f3674d8d5e4628fbcfb5777bedfe35addd0ee0ae2b6"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "table-catalog",
@@ -3122,7 +3450,8 @@
             "sha256": "19fd632edc99c6e58cdef1eecd7b11b8d945755b7e39c76e355ce0b9409feeb6"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "on-demand-migration",
@@ -3175,7 +3504,8 @@
             "sha256": "f858563b62f1fe9d20f495b42259ac4930d47352e7dd7e82362997266a26caea"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "migration-bucket",
@@ -3228,7 +3558,8 @@
             "sha256": "3d80c0d070ac4a26a387c1c8ececd68a9e2c21a4c814e57b463dd774c1422bb4"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "forbidden",
@@ -3281,7 +3612,8 @@
             "sha256": "bc30ef6da107ca0e84ddfe68f585eafa1fe36e8c345b59517b0d6eea428b49d7"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "site-configured",
@@ -3334,7 +3666,8 @@
             "sha256": "be7a4d8fc9d0223f28583add90b65307c73a5185c0915e44dff76f1ce00894dd"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "sse-running",
@@ -3387,7 +3720,8 @@
             "sha256": "1804a6f883ad1922db947dcf77e5a9ca718f3494090d230a866f287998cf5e77"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "oidc-configured",
@@ -3440,7 +3774,8 @@
             "sha256": "05cb8de25823e1b133e7623cb78b76c721c105a8842163f9e0fde175de8cf74d"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "table-catalog-loaded",
@@ -3493,7 +3828,8 @@
             "sha256": "63a10d1b74dc7134dbf69b225850721176d6a2e68621a8c86bf18b141e625da2"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "migration-configured",
@@ -3546,7 +3882,8 @@
             "sha256": "da9a10b922eec61c170ac973f1ae1636b95b980728effec74b9283d43bf4ed88"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "events-rule-loaded",
@@ -3599,7 +3936,8 @@
             "sha256": "011a352a20c15d537295e38fed7fd406e9886565507a3e5d70a2e8f5397144cb"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "replication-rule-loaded",
@@ -3652,7 +3990,8 @@
             "sha256": "da2efc66a586498f487999eb89c0b93bb1f4690f367fc170b8dca3bb44751ba6"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "lifecycle-multiple-actions",
@@ -3705,7 +4044,8 @@
             "sha256": "8340da36ca5da8a6b7cbb5a2229de1f56da096d95aa749ddfdec83e04b1cdaa9"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "rebalance-running",
@@ -3758,7 +4098,8 @@
             "sha256": "3c52d49461736e62d723aebad88ea6e47d8e0b907faa64df28fac9d997c8eb6c"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "status-healthy",
@@ -3811,7 +4152,8 @@
             "sha256": "177a5a71a25541abbeb8a213653b4d96935fe3c6143a763a9ff817957be6d14b"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "bucket-create",
@@ -3864,7 +4206,8 @@
             "sha256": "d6620c2bf6db8ce0085faa11ec3299746351c88fb80a3c9d9bf101d8dbaee4b1"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "policy-edit",
@@ -3917,7 +4260,8 @@
             "sha256": "1a2c0a04188d194ca63b994b64be2faa708ea8af1cf5150e62a112f2c4d58207"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "group-delete",
@@ -3970,7 +4314,8 @@
             "sha256": "052b2bc6ed53d8f11a86fe87abd8f5665f8f29db6b6655fa99e9806a84fe2f6d"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "mfa-recovery",
@@ -4023,7 +4368,8 @@
             "sha256": "f6381e3de19ba4e60bf5030fc5a323fc746dd613e2cfd26f225a779117b4093a"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "filtered-empty",
@@ -4076,7 +4422,8 @@
             "sha256": "92581ed6a4556e0af7119d4d2bdd8c7abd4a3b598f86eb3f3b7e69b88dff4186"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "bucket-refresh-error",
@@ -4129,7 +4476,8 @@
             "sha256": "8a1e214178de27492aabf5a2ddaf3790400300c60159921a9bd4409b4a02f8ef"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "bucket-initial-error",
@@ -4182,7 +4530,8 @@
             "sha256": "0b3763003a7b6b28f24d7025727c29c3a57ddd389a2a352bee9a06fa4e28b0c4"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "oidc-load-error",
@@ -4235,7 +4584,8 @@
             "sha256": "962cacd2773e54acbcfac2cbad9897e6778169a0910e124b73fd0c6604a4e432"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "site-edit",
@@ -4288,7 +4638,8 @@
             "sha256": "e2cc5b16e82db663defcf8a912a7553a8b3a887ab10192321aeb3c1017a76e49"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "oidc-advanced",
@@ -4341,7 +4692,8 @@
             "sha256": "cbecaa00dd6c17ba8d11a105824f54cff0295894bd966cc6c39c1dd4c9698535"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "oidc-callback-error",
@@ -4394,7 +4746,8 @@
             "sha256": "0c1377b57e8d8131647de4f295bd86744315fe620d9e28d3445bfa0850fb1f46"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "login-pending",
@@ -4447,7 +4800,8 @@
             "sha256": "bc528e646ee91f690944795816d8f8c711ef0ed4db79d4cce242c3b52c27852d"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "delete-pending",
@@ -4500,7 +4854,8 @@
             "sha256": "e80227d1e0f2150970a9ac818638e1aa023ceabbbba16a39567a5896bd236088"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "permission-loading",
@@ -4553,7 +4908,8 @@
             "sha256": "6fd6fad16c614168bcfa5821ffca5e22da7c0f2ce67510a12a3e2de73a1c88b9"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "bucket-delete",
@@ -4606,7 +4962,8 @@
             "sha256": "9b4eec5dcb43c44cafb54579e436c26317276f1a7ddd7e128e52062dde8f4ec7"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "user-delete",
@@ -4659,7 +5016,8 @@
             "sha256": "4de60bbf61ccb8c60a013a593ed06c61fc53010f1dc8758d369b19b92c8c8f12"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "access-key-delete",
@@ -4712,7 +5070,8 @@
             "sha256": "4418da9f8f25a503fff1b8fbb567ef0f019f4b26c690752775267f1f71a2c417"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "tier-delete",
@@ -4765,7 +5124,8 @@
             "sha256": "81051c5beb9143fc2296f56d68c165466cf7aa1b48db332cab8fe6d1e75fcf75"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "audit-delete",
@@ -4818,7 +5178,8 @@
             "sha256": "cc520a351db1579f51f904357f2dde39854a9c62ff231e6ff441ef64d68d117b"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "navigation",
@@ -4871,7 +5232,8 @@
             "sha256": "b3fa7c68bf72541ee23ec7b30da8a959ce7f5722167efc20f608560e4e507c8f"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "object-lock-selection",
@@ -4924,7 +5286,8 @@
             "sha256": "e92cd46aa583478619f66cfb4a7062e6de0758e3745fcfe011ec4b801645ac70"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "oidc-validating",
@@ -4977,7 +5340,8 @@
             "sha256": "c7c282e16cd8010b5dbb245ecf82ab7f82008e330e7f8ee505d511ce58e5d5b6"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-bucket-create",
@@ -5030,7 +5394,8 @@
             "sha256": "bfa7fcdbb21938ac682c363de8bf08d2ae39d9aa41289c9f3fb2a39a691b69ce"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-upload",
@@ -5056,8 +5421,8 @@
             "file": "after/dialog-upload-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 120823,
-            "sha256": "c9c71a5a9bf93a915eb9d039e58cb7daf4a95fa4d1809b5ca23734d8d9808504"
+            "bytes": 122679,
+            "sha256": "0be9b2d94ad966394446450df6c56ecba368de38f56dd86d5abbabb969071821"
           }
         },
         {
@@ -5079,11 +5444,12 @@
             "file": "after/dialog-upload-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 117456,
-            "sha256": "f2b39cebbaf3054fd7da4cb23db0f8edd8485fd196c5c365d4dbb05e35ce0740"
+            "bytes": 118995,
+            "sha256": "3bdecd8d9957d5ffa05d058bf11196beb7e2b5976a12a9232161d95de2785061"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
     },
     {
       "id": "dialog-access-key",
@@ -5136,7 +5502,8 @@
             "sha256": "f9fdfef312e02d610522b0e1b2f97111ab46b12af2bc833e4e4d1ed9ce1496ba"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-policy",
@@ -5189,7 +5556,8 @@
             "sha256": "39db3dfa3560a45942e4f9c3ada386f15e23544c298e2b18abab75266608f847"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-user",
@@ -5242,7 +5610,8 @@
             "sha256": "4b61ca24bc6906279bc4e57575f30efe03172e209b710a26af31f49285587700"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-group",
@@ -5295,7 +5664,8 @@
             "sha256": "f9640d21dd13002d877e1e3ba9455a49196cf41c4971fb4ced057d774c1160d2"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-event-rule",
@@ -5348,7 +5718,8 @@
             "sha256": "89ea72e17283e013c4efb329d34250f3db3505209332a6a0d041fa59d449b1d8"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-replication-rule",
@@ -5401,7 +5772,8 @@
             "sha256": "0a03a5680c06f802c7fb4bf227a59a55d62fdbd7639fd476edcc6084e95dd90f"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-lifecycle-rule",
@@ -5454,7 +5826,8 @@
             "sha256": "51ef0c73136e2cdae20b6b60ee407a6913bdedd053f1142f863ad47a4c61b686"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-site",
@@ -5507,7 +5880,8 @@
             "sha256": "e5ca43f8675e1506ea8018b63a3def89651e65fc068cf710cc7457a20c2d5a4c"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-tier",
@@ -5560,7 +5934,8 @@
             "sha256": "a3f8c3976aff7515e386b4b9924f8a32de16284be7cf4fba3575524181a81f73"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-event-target",
@@ -5613,7 +5988,8 @@
             "sha256": "79c001a857afc5997917062df05d380111c76699d8467b86cf9cab7f981a370c"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-audit-target",
@@ -5666,7 +6042,8 @@
             "sha256": "504fc13f16129462ea323ed117ba4117170b6884adc167318e11e8feade78019"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-password",
@@ -5719,7 +6096,8 @@
             "sha256": "afdc4f79e72ce4ef20a2bbe29a68980d91ff143d07c8968d70adf1444614cc38"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-catalog-table",
@@ -5772,7 +6150,8 @@
             "sha256": "1c780d1b70a3532c58a93a2f8d21ff3854e83d0aad19b126f0bc3f0ad4f17e51"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-catalog-namespace",
@@ -5825,7 +6204,8 @@
             "sha256": "f63f535ddb9268decc30cc1a6c93a781761b757c2913c86fceb15830c18ea170"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-migration",
@@ -5878,7 +6258,8 @@
             "sha256": "1c551e4e59fa391f6ae6ac6e523d0548a5cdd097608db3974a07e81c696a352f"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-kms-key",
@@ -5931,7 +6312,8 @@
             "sha256": "ea31b691257f5995c3c5e369ce3838ac094c362f9c40d73569fa586efb8d235f"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-event-target-webhook",
@@ -5984,7 +6366,8 @@
             "sha256": "c7e692055f6bacbfe50f8fd441a78879936b176e1b3235df82bc1be368a7d683"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-audit-target-webhook",
@@ -6037,7 +6420,8 @@
             "sha256": "e5fe70b6a9354851d6a8ba952d9ecc0a9a967e409a33aff76cf920a961d6a7a3"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-tier-s3",
@@ -6090,7 +6474,8 @@
             "sha256": "eab90efa3215b3150a3e7d445d7a763a1e132c3ed51e228bf0a305417e57080e"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-bucket-policy",
@@ -6143,7 +6528,8 @@
             "sha256": "e9d0e3f19bff4f0cf96c2d6cc3c1df1717668751ddfa45fbdd2f2c80cb2dfedd"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-bucket-cors",
@@ -6196,7 +6582,8 @@
             "sha256": "be8c7a3d95b1707f534585b1c1603ccbbec7c1b4e4674d554e9adcd768dbb8c7"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-bucket-encryption",
@@ -6249,7 +6636,8 @@
             "sha256": "439c794d13f0f8e77330f6949e1ba6cbf436b7573907cb13b03218753068dcc2"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-bucket-retention",
@@ -6302,7 +6690,8 @@
             "sha256": "36972306e94e524fe1b8a4c64466c770b38786544839598af8b548aa6e64858a"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-bucket-quota",
@@ -6355,7 +6744,8 @@
             "sha256": "a3c653f9fcdd5d90686b605dbdc5a084fb94e8b292b777b8ad463fcc23d88afd"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "dialog-bucket-tag",
@@ -6408,7 +6798,8 @@
             "sha256": "7aa4023f0cdaa054c64594e40d6ae91d4de1437c5f9e0d1f811ff7714678b1c4"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "tasks-completed",
@@ -6461,7 +6852,8 @@
             "sha256": "9789e5723109a45cd00b07451c4bea2fea4b6ea8751603d8bd46ab024ab2f29b"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
     },
     {
       "id": "tasks-toolbar",
@@ -6514,7 +6906,170 @@
             "sha256": "214f6a6ad3ac17e5e7df92a0f5a42de561dc18d8590934405fa5ffb943e9e77f"
           }
         }
-      ]
+      ],
+      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+    },
+    {
+      "id": "upload-destination",
+      "route": "/browser/?bucket=datasets&key=activity-monitor%2Fpreviews%2F&lang=zh",
+      "state": "upload selection",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/upload-destination-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 117945,
+            "sha256": "8fa46ce260aea30e72d01c2dba1c25742f480645840c2ce338cfd5255a0243d2"
+          },
+          "after": {
+            "file": "after/upload-destination-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 124272,
+            "sha256": "ca0779d20e3499a78fb16f3b46174adb25cc1dfc92b166b8b48333e7d2d2272a"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/upload-destination-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 113393,
+            "sha256": "6e4ee375af329bb219c8f14cd58388ce5eade7f0c2a0790724eccdb8bc048cc8"
+          },
+          "after": {
+            "file": "after/upload-destination-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 120644,
+            "sha256": "7a1bbe0fff8b32942db29a296c0e9172e5b2138a36ab71320060aae534b3d07d"
+          }
+        }
+      ],
+      "after_capture_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
+    },
+    {
+      "id": "upload-selected",
+      "route": "/browser/?bucket=datasets&key=activity-monitor%2Fpreviews%2F&lang=zh",
+      "state": "upload selection",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/upload-selected-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 115196,
+            "sha256": "a3ad388272b11ebd843f61a46598268c9eda90743e4e2cb276b304c548ea82da"
+          },
+          "after": {
+            "file": "after/upload-selected-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 119856,
+            "sha256": "e7d6c25a33998425eb96a785cc40a81202c472a6a9556b4173263e9ea6aba2a7"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/upload-selected-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 111265,
+            "sha256": "4f9de620ae2cd06e67ab6ff9259106468ad6c109f39b73b0814e8dbad72cab78"
+          },
+          "after": {
+            "file": "after/upload-selected-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 116436,
+            "sha256": "6dac0e63f51275058a02d78b22aa038bbcaa0f3478dc1d486ce29f8ee52530fc"
+          }
+        }
+      ],
+      "after_capture_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
+    },
+    {
+      "id": "upload-queue-end",
+      "route": "/browser/?bucket=datasets&key=activity-monitor%2Fpreviews%2F&lang=zh",
+      "state": "upload selection",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/upload-queue-end-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 135288,
+            "sha256": "05ea47842fdd560212b3d350d05aa6d36aa12c8bd83d9a5d4bb57e09e256da9d"
+          },
+          "after": {
+            "file": "after/upload-queue-end-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 135762,
+            "sha256": "28abbb645c57f968a1ae749d715c94b859a31526a959f487d628d0d58582c43e"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/upload-queue-end-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 131720,
+            "sha256": "c27f2df658a28b015dae98d12f1c28b72933682d33fdc42589e011ee356a063f"
+          },
+          "after": {
+            "file": "after/upload-queue-end-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 132367,
+            "sha256": "b12bd70f88b108f55a0325d51918d1aa089bac7c34fdb89b53389721d0bfa3a9"
+          }
+        }
+      ],
+      "after_capture_commit": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93"
     }
   ]
 }

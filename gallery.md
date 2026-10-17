@@ -1,6 +1,6 @@
 # Console redesign: before and after
 
-95 scenarios, 190 comparison pairs. Desktop captures are 1440 by 1000 with full-page content in light and dark themes. Both production exports use the same controlled responses. No mobile images are included.
+98 scenarios, 196 comparison pairs. Desktop captures are 1440 by 1000 with full-page content in light and dark themes. Both production exports use the same controlled responses. No mobile images are included.
 
 [Manifest and checksums](manifest.json)
 
@@ -858,4 +858,31 @@ Route: `/browser/?bucket=datasets`
 | --- | --- | --- |
 | Light | ![Before](before/tasks-toolbar-desktop.png) | ![After](after/tasks-toolbar-desktop.png) |
 | Dark | ![Before](before/tasks-toolbar-dark.png) | ![After](after/tasks-toolbar-dark.png) |
+
+## Upload Destination
+
+Route: `/browser/?bucket=datasets&key=activity-monitor%2Fpreviews%2F&lang=zh`
+
+| Theme | Before | After |
+| --- | --- | --- |
+| Light | ![Before](before/upload-destination-desktop.png) | ![After](after/upload-destination-desktop.png) |
+| Dark | ![Before](before/upload-destination-dark.png) | ![After](after/upload-destination-dark.png) |
+
+## Upload Selected
+
+Route: `/browser/?bucket=datasets&key=activity-monitor%2Fpreviews%2F&lang=zh`
+
+| Theme | Before | After |
+| --- | --- | --- |
+| Light | ![Before](before/upload-selected-desktop.png) | ![After](after/upload-selected-desktop.png) |
+| Dark | ![Before](before/upload-selected-dark.png) | ![After](after/upload-selected-dark.png) |
+
+## Upload Queue End
+
+Route: `/browser/?bucket=datasets&key=activity-monitor%2Fpreviews%2F&lang=zh`
+
+| Theme | Before | After |
+| --- | --- | --- |
+| Light | ![Before](before/upload-queue-end-desktop.png) | ![After](after/upload-queue-end-desktop.png) |
+| Dark | ![Before](before/upload-queue-end-dark.png) | ![After](after/upload-queue-end-dark.png) |
 

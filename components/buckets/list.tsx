@@ -213,15 +213,9 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
   return (
     <>
       <PageHeader
+        count={!pending && !loadError ? data.length : undefined}
         actions={
           <>
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={t("Search")}
-              clearable
-              className="max-w-sm"
-            />
             <Button variant="outline" onClick={() => fetchBuckets({ force: true })}>
               <RiRefreshLine className="size-4" aria-hidden />
               <span>{t("Refresh")}</span>
@@ -233,6 +227,15 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
       </PageHeader>
 
       <DataTable
+        toolbar={
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder={t("Search")}
+            clearable
+            className="max-w-sm"
+          />
+        }
         keepPreviousData
         table={table}
         isLoading={pending}

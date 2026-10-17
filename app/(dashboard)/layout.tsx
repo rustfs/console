@@ -14,12 +14,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <TaskProvider>
           <PermissionsProvider>
             <DashboardAuthGuard>
-              <SidebarProvider defaultOpen>
+              <SidebarProvider defaultOpen style={{ "--sidebar-width": "14rem" } as React.CSSProperties}>
                 <AppSidebar />
-                <SidebarInset className="min-w-0">
-                  <div className="flex flex-1 flex-col gap-4 px-4 pb-6 pt-0 sm:px-6">
+                <SidebarInset className="min-w-0 bg-muted/20">
+                  <div className="flex flex-1 flex-col">
                     <AppTopNav />
-                    <main id="main-content" tabIndex={-1} className="min-w-0 flex-1 scroll-mt-16">
+                    <main
+                      id="main-content"
+                      tabIndex={-1}
+                      className="mx-auto w-full min-w-0 max-w-[1600px] flex-1 scroll-mt-24 px-4 py-6 sm:px-8 sm:py-8 xl:px-10"
+                    >
                       {children}
                     </main>
                   </div>

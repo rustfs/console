@@ -2236,5 +2236,8 @@
   "pull failures": "次拉取失败",
   "Password must be at least 8 bytes": "密码至少需要 8 个字节",
   "Secret Key must be at least 8 bytes": "Secret Key 至少需要 8 个字节",
-  "At least 8 bytes. This is also your S3 secret key.": "至少 8 个字节。这也是您的 S3 Secret Key。"
+  "At least 8 bytes. This is also your S3 secret key.": "至少 8 个字节。这也是您的 S3 Secret Key。",
+  "Identity": "身份与权限",
+  "Operations": "运行管理",
+  "Resources": "资源"
 }

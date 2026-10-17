@@ -192,15 +192,9 @@ export default function AuditTargetPage() {
   return (
     <Page>
       <PageHeader
+        count={!loading && !loadError ? data.length : undefined}
         actions={
           <div className="grid w-full shrink-0 gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto] lg:w-auto">
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={t("Search")}
-              clearable
-              className="h-11 w-full sm:h-8 sm:w-64"
-            />
             <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end lg:flex-nowrap">
               <Button
                 variant="outline"
@@ -230,6 +224,15 @@ export default function AuditTargetPage() {
       ) : null}
 
       <DataTable
+        toolbar={
+          <SearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder={t("Search")}
+            clearable
+            className="w-full sm:w-80"
+          />
+        }
         keepPreviousData
         caption={t("Audit Targets")}
         errorTitle={loadError ? t("Failed to get data") : undefined}

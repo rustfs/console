@@ -1,5 +1,6 @@
 "use client"
 
+import { SectionNavigation } from "@/components/section-navigation"
 import * as React from "react"
 import Link from "next/link"
 import { useTranslation } from "react-i18next"
@@ -736,19 +737,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-8">
-      <nav aria-label={t("Jump to section")} className="lg:sticky lg:top-24 lg:self-start">
-        <div className="flex gap-1 overflow-x-auto border bg-muted/20 p-1 lg:flex-col lg:overflow-visible">
-          {settingsNav.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="shrink-0 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              {item.label}
-            </a>
-          ))}
-        </div>
-      </nav>
+      <SectionNavigation items={settingsNav} />
 
       <div className="min-w-0 max-w-5xl space-y-8" aria-busy={loading || mutation !== null}>
         <BucketSettingsSection

@@ -838,7 +838,7 @@ export default function TableCatalogPage() {
     }
 
     return (
-      <div className="grid min-h-[36rem] border bg-card lg:grid-cols-[16rem_minmax(0,1fr)]">
+      <div className="grid min-h-[36rem] border bg-card lg:grid-cols-[19rem_minmax(0,1fr)]">
         <aside
           className="flex min-h-0 flex-col border-b lg:border-b-0 lg:border-e"
           aria-labelledby="table-buckets-heading"
@@ -884,8 +884,8 @@ export default function TableCatalogPage() {
                     aria-pressed={selected}
                     onClick={() => setSelectedBucket(name)}
                     className={cn(
-                      "flex min-h-12 w-full items-center gap-3 px-4 py-3 text-start transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
-                      selected && "bg-muted",
+                      "flex min-h-12 w-full items-center gap-3 border-s-2 border-transparent px-4 py-3 text-start transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
+                      selected && "border-s-primary bg-selection text-link",
                     )}
                   >
                     <RiTableLine
@@ -922,7 +922,7 @@ export default function TableCatalogPage() {
           <div className="flex flex-col gap-4 border-b p-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("Warehouse")}</p>
-              <h2 id="selected-table-bucket-heading" className="mt-1 break-all font-mono text-base font-semibold">
+              <h2 id="selected-table-bucket-heading" className="mt-2 break-all font-heading text-2xl font-semibold">
                 {selectedBucket ? `s3://${selectedBucket}/` : t("No bucket selected")}
               </h2>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -1309,24 +1309,24 @@ export default function TableCatalogPage() {
         </div>
       ) : null}
 
-      <section aria-labelledby="table-catalog-state-heading" className="border bg-card">
+      <section aria-labelledby="table-catalog-state-heading" className="border-y py-4">
         <h2 id="table-catalog-state-heading" className="sr-only">
           {t("Table catalog status")}
         </h2>
-        <div className="grid divide-y sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
-          <div className="space-y-1 p-4">
+        <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+          <div className="space-y-1">
             <p className="text-xs text-muted-foreground">{t("Catalog endpoint")}</p>
             <p className="break-all font-mono text-sm">{catalogPrefixLabel}</p>
           </div>
-          <div className="space-y-1 p-4">
+          <div className="space-y-1">
             <p className="text-xs text-muted-foreground">{t("Catalog backing")}</p>
             <p className="text-sm">{backing}</p>
           </div>
-          <div className="space-y-1 p-4">
+          <div className="space-y-1">
             <p className="text-xs text-muted-foreground">{t("Credential mode")}</p>
             <p className="break-words text-sm">{credentialMode}</p>
           </div>
-          <div className="space-y-1 p-4">
+          <div className="space-y-1">
             <p className="text-xs text-muted-foreground">{t("Catalog contract")}</p>
             <p className="text-sm">{tableMetadataCount(config)}</p>
           </div>

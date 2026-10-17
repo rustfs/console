@@ -1,7 +1,6 @@
 "use client"
 
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import type { RunningStatusTopology, StatusDiagnostic } from "@/lib/performance-data"
 
 export type InfrastructureHealthState = "healthy" | "attention" | "unknown"
@@ -52,9 +51,9 @@ export function getInfrastructureHealthState({
 
 function HealthMetric({ label, value, unavailableLabel }: { label: string; value?: number; unavailableLabel: string }) {
   return (
-    <div className="min-w-0 border-t pt-3">
+    <div className="min-w-0">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-1 text-lg font-semibold tabular-nums">{value ?? unavailableLabel}</dd>
+      <dd className="mt-1 font-heading text-2xl font-medium tabular-nums">{value ?? unavailableLabel}</dd>
     </div>
   )
 }
@@ -112,14 +111,14 @@ export function PerformanceInfrastructureCard({
           : t("All reported servers and disks are online.")
 
   return (
-    <Card className="h-full shadow-none">
-      <CardHeader className="pb-3">
+    <section className="space-y-6" aria-labelledby="cluster-health-title">
+      <div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="space-y-1.5">
             <h2 id="cluster-health-title" className="text-base font-semibold">
               {t("Cluster Health")}
             </h2>
-            <CardDescription>{description}</CardDescription>
+            <p className="max-w-xl text-sm text-muted-foreground">{description}</p>
           </div>
           <Badge
             variant={healthState === "attention" ? "destructive" : healthState === "unknown" ? "outline" : "secondary"}
@@ -128,8 +127,8 @@ export function PerformanceInfrastructureCard({
             {status}
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+      <div>
         <div className="grid gap-6 lg:grid-cols-2" aria-labelledby="cluster-health-title">
           <section aria-labelledby="server-health-title">
             <h3 id="server-health-title" className="text-sm font-medium text-muted-foreground">
@@ -185,7 +184,7 @@ export function PerformanceInfrastructureCard({
             ) : null}
           </section>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

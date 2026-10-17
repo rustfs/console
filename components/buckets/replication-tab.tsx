@@ -190,7 +190,7 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
       {
         accessorKey: "ID",
         header: () => t("Rule ID"),
-        cell: ({ row }) => <span>{row.original.ID || "-"}</span>,
+        cell: ({ row }) => <span className="break-all font-medium">{row.original.ID || "-"}</span>,
       },
       {
         accessorKey: "Status",
@@ -216,13 +216,15 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
         header: () => t("Destination Bucket"),
         cell: ({ row }) => {
           const bucketArn = row.original.Destination?.Bucket || ""
-          return <span>{bucketArn.replace(/^arn:aws:s3:::/, "") || "-"}</span>
+          return (
+            <div className="space-y-1">
+              <p className="break-all font-medium">{bucketArn.replace(/^arn:aws:s3:::/, "") || "-"}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("Storage Class")}: {row.original.Destination?.StorageClass || "-"}
+              </p>
+            </div>
+          )
         },
-      },
-      {
-        id: "destination-storage",
-        header: () => t("Storage Class"),
-        cell: ({ row }) => <span>{row.original.Destination?.StorageClass || "-"}</span>,
       },
       {
         id: "replication-mode",

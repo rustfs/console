@@ -278,8 +278,8 @@ export default function PerformancePage() {
           t={t}
         />
 
-        <div className="grid gap-4 xl:grid-cols-2">
-          <div className="order-1">
+        <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="min-w-0 space-y-8">
             <PerformanceInfrastructureCard
               onlineServers={serverSummary?.online}
               offlineServers={serverSummary?.offline}
@@ -294,9 +294,14 @@ export default function PerformancePage() {
               storageReadiness={diagnosticsInfo?.storageReadiness}
               t={t}
             />
+            <PerformanceServerList
+              servers={runningStatus.servers}
+              diagnostics={diagnosticsInfo}
+              topology={runningStatus.topology}
+              t={t}
+            />
           </div>
-
-          <div className="order-3 xl:order-2">
+          <aside className="min-w-0 space-y-8" aria-label={t("Storage Usage Statistics")}>
             <PerformanceUsageCard
               totalCapacity={totalCapacity}
               totalFreeCapacity={totalFreeCapacity}
@@ -306,19 +311,9 @@ export default function PerformancePage() {
               usageFreshness={diagnosticsInfo ? usageFreshness : undefined}
               t={t}
             />
-          </div>
-
-          <div className="order-2 xl:order-3 xl:col-span-2">
-            <PerformanceServerList
-              servers={runningStatus.servers}
-              diagnostics={diagnosticsInfo}
-              topology={runningStatus.topology}
-              t={t}
-            />
-          </div>
+            <PerformanceSummaryCards metrics={summaryMetrics} title={t("Inventory")} />
+          </aside>
         </div>
-
-        <PerformanceSummaryCards metrics={summaryMetrics} title={t("Inventory")} />
 
         <PerformanceBackendCard items={backendInfo} t={t} />
 

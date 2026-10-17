@@ -32,8 +32,8 @@ export function ProviderList({
   const { t } = useTranslation()
 
   return (
-    <div className="flex max-h-80 min-h-0 flex-col overflow-hidden border lg:max-h-none lg:min-h-[28rem]">
-      <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+    <div className="flex max-h-80 min-h-0 flex-col overflow-hidden border-t lg:max-h-none">
+      <div className="flex flex-col items-start gap-4 border-b py-4">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold">{t("OIDC Providers")}</h2>
           <p className="text-xs text-muted-foreground">{t("View and manage persisted OIDC providers.")}</p>
@@ -53,7 +53,7 @@ export function ProviderList({
             <span>{t("Loading…")}</span>
           </div>
         ) : providers.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center px-4 py-8 text-center text-sm text-muted-foreground">
+          <div className="flex flex-1 items-center px-4 py-8 text-start text-sm text-muted-foreground">
             {t("No OIDC providers configured yet.")}
           </div>
         ) : (
@@ -69,8 +69,8 @@ export function ProviderList({
                   aria-pressed={selected}
                   onClick={() => onSelectProvider(provider.provider_id)}
                   className={cn(
-                    "flex flex-col items-start gap-2 border-b px-4 py-3 text-start transition-colors last:border-b-0 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
-                    selected && "bg-muted/60",
+                    "flex flex-col items-start gap-2 border-s-2 border-transparent border-b px-4 py-3 text-start transition-colors last:border-b-0 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50",
+                    selected && "border-s-primary bg-selection",
                   )}
                 >
                   <div className="flex w-full items-start justify-between gap-3">

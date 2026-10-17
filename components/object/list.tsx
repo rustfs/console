@@ -137,6 +137,7 @@ function isAccessDeniedError(error: unknown): boolean {
 
 interface ObjectListProps {
   bucket: string
+  heading?: React.ReactNode
   path: string
   onOpenInfo: (bucket: string, key: string) => void
   onUploadClick: () => void
@@ -149,6 +150,7 @@ interface ObjectListProps {
 
 export function ObjectList({
   bucket,
+  heading,
   path,
   onOpenInfo,
   onUploadClick,
@@ -927,39 +929,18 @@ export function ObjectList({
   useObjectListPagination({ loadMoreRef, nextToken, loading, loadMoreError, loadNextBatch })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <PageHeader
         actions={
           <>
             <TaskStatsButton />
             {canUpload ? (
-              <Button variant="outline" onClick={onUploadClick}>
+              <Button onClick={onUploadClick}>
                 <RiFileAddLine className="size-4" aria-hidden />
                 <span>
                   {t("Upload File")}/{t("Folder")}
                 </span>
               </Button>
-            ) : null}
-            {checkedKeys.length > 0 ? (
-              <>
-                {canBulkDelete ? (
-                  <Button
-                    variant="outline"
-                    className="border-destructive text-destructive"
-                    onClick={(event) => handleBatchDelete(event.currentTarget)}
-                    disabled={bucketVersioningState === "unknown"}
-                  >
-                    <RiDeleteBin5Line className="size-4" aria-hidden />
-                    <span>{t("Delete Selected")}</span>
-                  </Button>
-                ) : null}
-                {canBulkDownload ? (
-                  <Button variant="outline" onClick={downloadMultiple}>
-                    <RiDownloadCloud2Line className="size-4" aria-hidden />
-                    <span>{t("Download")}</span>
-                  </Button>
-                ) : null}
-              </>
             ) : null}
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -1003,35 +984,62 @@ export function ObjectList({
           </>
         }
       >
-        <div className="flex flex-wrap items-center gap-4">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder={t("Filter loaded objects")}
-            clearable
-            className="lg:max-w-sm"
-          />
-          <RadioGroup
-            value={deletedView}
-            onValueChange={(value) => setDeletedView(resolveObjectListDeletedView(value))}
-            className="flex w-auto flex-wrap items-center gap-x-4 gap-y-2"
-            aria-label={t("Deleted Objects")}
-          >
-            {OBJECT_LIST_DELETED_VIEW_OPTIONS.map((option) => (
-              <label
-                key={option.value}
-                htmlFor={`object-list-deleted-view-${option.value}`}
-                className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer"
-              >
-                <RadioGroupItem id={`object-list-deleted-view-${option.value}`} value={option.value} />
-                <span>{t(option.labelKey)}</span>
-              </label>
-            ))}
-          </RadioGroup>
-        </div>
+        {heading ?? <h1>{bucket}</h1>}
       </PageHeader>
 
       <DataTable
+        caption={t("Objects")}
+        toolbar={
+          <div className="flex w-full flex-wrap items-center gap-4">
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={t("Filter loaded objects")}
+              clearable
+              className="lg:max-w-sm"
+            />
+            <RadioGroup
+              value={deletedView}
+              onValueChange={(value) => setDeletedView(resolveObjectListDeletedView(value))}
+              className="flex w-auto flex-wrap items-center gap-x-4 gap-y-2"
+              aria-label={t("Deleted Objects")}
+            >
+              {OBJECT_LIST_DELETED_VIEW_OPTIONS.map((option) => (
+                <label
+                  key={option.value}
+                  htmlFor={`object-list-deleted-view-${option.value}`}
+                  className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer"
+                >
+                  <RadioGroupItem id={`object-list-deleted-view-${option.value}`} value={option.value} />
+                  <span>{t(option.labelKey)}</span>
+                </label>
+              ))}
+            </RadioGroup>
+            <div className="ms-auto flex flex-wrap items-center gap-2">
+              {checkedKeys.length > 0 ? (
+                <>
+                  {canBulkDelete ? (
+                    <Button
+                      variant="outline"
+                      className="border-destructive text-destructive"
+                      onClick={(event) => handleBatchDelete(event.currentTarget)}
+                      disabled={bucketVersioningState === "unknown"}
+                    >
+                      <RiDeleteBin5Line className="size-4" aria-hidden />
+                      <span>{t("Delete Selected")}</span>
+                    </Button>
+                  ) : null}
+                  {canBulkDownload ? (
+                    <Button variant="outline" onClick={downloadMultiple}>
+                      <RiDownloadCloud2Line className="size-4" aria-hidden />
+                      <span>{t("Download")}</span>
+                    </Button>
+                  ) : null}
+                </>
+              ) : null}
+            </div>
+          </div>
+        }
         table={table}
         isLoading={displayState === "loading" || displayState === "filtered-loading"}
         errorTitle={

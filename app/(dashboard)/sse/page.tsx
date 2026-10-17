@@ -1,5 +1,6 @@
 "use client"
 
+import { SectionNavigation } from "@/components/section-navigation"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiAddLine, RiArrowLeftSLine, RiArrowRightSLine, RiCloseLine, RiRefreshLine } from "@remixicon/react"
@@ -1024,834 +1025,299 @@ export default function SSEPage() {
           <h1 className="text-2xl font-bold">{t("Server-Side Encryption (SSE) Configuration")}</h1>
         </PageHeader>
 
-        <div className="space-y-8">
-          {statusError ? (
-            <Alert variant="destructive">
-              <AlertTitle>{t("Failed to load KMS status")}</AlertTitle>
-              <AlertDescription>{statusError}</AlertDescription>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="mt-3"
-                onClick={handleRefresh}
-                disabled={Boolean(activeMutation) || loadingStatus}
-              >
-                {t("Refresh")}
-              </Button>
-            </Alert>
-          ) : null}
-          <Card className="shadow-none">
-            <CardHeader className="space-y-2">
-              <div className="flex flex-wrap items-center gap-3">
-                <h2 className="text-base font-semibold sm:text-lg">{t("KMS Status Overview")}</h2>
-                <Badge variant={getStateBadgeVariant(statusBadgeValue)} className="text-sm uppercase">
-                  {loadingStatus ? t("Loading…") : getKmsStatusText()}
-                </Badge>
-                {capabilities?.production_supported === false ? (
-                  <Badge variant="destructive" className="text-sm">
-                    {t("Development / testing backend — not supported for production")}
-                  </Badge>
-                ) : null}
-              </div>
-              <CardDescription>{getKmsStatusDescription()}</CardDescription>
-              {!statusError && status?.backend_type && (
-                <CardDescription>
-                  {t("Backend")}: {status.backend_type}
-                </CardDescription>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {!statusError ? (
-                <dl className="grid gap-4 bg-muted p-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="space-y-1">
-                    <dt className="text-xs text-muted-foreground">{t("Backend Type")}</dt>
-                    <dd className="text-sm font-medium text-foreground">
-                      {status?.backend_type ?? t("Not configured")}
-                    </dd>
-                  </div>
-                  <div className="space-y-1">
-                    <dt className="text-xs text-muted-foreground">{t("Status")}</dt>
-                    <dd className="break-all text-sm font-medium text-foreground">
-                      {loadingStatus ? t("Loading…") : getKmsStatusText()}
-                    </dd>
-                  </div>
-                  <div className="space-y-1">
-                    <dt className="text-xs text-muted-foreground">{t("Health")}</dt>
-                    <dd className="text-sm font-medium text-foreground">
-                      {status?.healthy == null ? t("Unknown") : status.healthy ? t("Healthy") : t("Unhealthy")}
-                    </dd>
-                  </div>
-                  <div className="space-y-1">
-                    <dt className="text-xs text-muted-foreground">{t("Default SSE Key")}</dt>
-                    <dd className="break-all text-sm font-medium text-foreground">
-                      {status?.config_summary?.default_key_id || t("Not set")}
-                    </dd>
-                  </div>
-                </dl>
-              ) : null}
-
-              {!statusError && statusKind === "Error" ? (
-                <Alert variant="destructive">
-                  <AlertTitle>{t("KMS service has errors")}</AlertTitle>
-                  <AlertDescription>
-                    {typeof status?.status === "object" && status?.status && "Error" in status.status
-                      ? status.status.Error
-                      : t("KMS server status unknown")}
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-
-              {statusKind === "Configured" && (
-                <Alert>
-                  <AlertTitle>{t("KMS configured but not started")}</AlertTitle>
-                  <AlertDescription>{t("Start KMS to make SSE and key management available.")}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="grid items-start gap-8 lg:grid-cols-[13rem_minmax(0,1fr)]">
+          <SectionNavigation
+            items={[
+              { href: "#kms-overview", label: t("KMS Status Overview") },
+              ...(isRunning ? [{ href: "#kms-keys", label: t("KMS Keys Management") }] : []),
+              { href: "#kms-configuration", label: t("KMS Configuration") },
+              ...(isRunning && capabilities ? [{ href: "#kms-rekey", label: t("Rekey Existing Objects") }] : []),
+            ]}
+          />
+          <div className="min-w-0 space-y-10">
+            {statusError ? (
+              <Alert variant="destructive">
+                <AlertTitle>{t("Failed to load KMS status")}</AlertTitle>
+                <AlertDescription>{statusError}</AlertDescription>
                 <Button
-                  size="sm"
+                  type="button"
                   variant="outline"
-                  disabled={refreshingStatus || Boolean(activeMutation) || loadingStatus}
+                  size="sm"
+                  className="mt-3"
                   onClick={handleRefresh}
+                  disabled={Boolean(activeMutation) || loadingStatus}
                 >
-                  {refreshingStatus ? <Spinner className="size-4" /> : <RiRefreshLine className="size-4" aria-hidden />}
                   {t("Refresh")}
                 </Button>
-
-                {hasConfiguration && (
-                  <Button
-                    size="sm"
-                    variant="default"
-                    onClick={requestStartKMS}
-                    disabled={startingKMS || mutationLocked || loadingStatus}
-                  >
-                    {startingKMS ? <Spinner className="size-4" /> : null}
-                    {isRunning ? t("Restart KMS") : t("Start KMS")}
-                  </Button>
-                )}
-
-                {hasConfiguration && (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button size="sm" variant="outline">
-                          {t("Advanced Actions")}
-                        </Button>
-                      }
-                    />
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        disabled={!isRunning || clearingCache || mutationLocked}
-                        onClick={handleClearCache}
-                      >
-                        {clearingCache ? t("Clearing cache…") : t("Clear Cache")}
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        disabled={!isRunning || stoppingKMS || mutationLocked}
-                        onClick={requestStopKMS}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        {stoppingKMS ? t("Stopping KMS…") : t("Stop KMS")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-none">
-            <CardHeader>
-              <h2 className="text-base font-semibold sm:text-lg">{t("KMS Configuration")}</h2>
-              <CardDescription>{t("Configure the KMS backend, cache policy, and default SSE key.")}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {configFormError ? (
-                <Alert variant="destructive" role="alert">
-                  <AlertTitle>{t("Please fix the form errors before saving")}</AlertTitle>
-                  <AlertDescription id="kms-config-error">{configFormError}</AlertDescription>
-                </Alert>
-              ) : null}
-              {configBaselineConflict ? (
-                <Alert variant="destructive" role="alert">
-                  <AlertTitle>{t("KMS configuration changed")}</AlertTitle>
-                  <AlertDescription>{configBaselineConflict}</AlertDescription>
-                </Alert>
-              ) : null}
-              {formState.backendType === "local" ? (
-                <Alert>
-                  <AlertTitle>{t("Warning")}</AlertTitle>
-                  <AlertDescription>
-                    {localKmsConfigured
-                      ? t(
-                          "Local KMS is intended for evaluation only. The key directory and file permissions are locked after configuration; changing or rotating the local master key is not supported.",
-                        )
-                      : t(
-                          "Local KMS is intended for evaluation only. Keys created without a server-managed master key are stored using plaintext development mode. Do not use this backend for production data.",
-                        )}
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-              {unsupportedKmsReadOnly ? (
-                <Alert variant="destructive">
-                  <AlertTitle>{t("Unsupported KMS backend")}</AlertTitle>
-                  <AlertDescription>
-                    {t(
-                      "This KMS backend is not supported by this Console version. Upgrade Console before reconfiguring KMS.",
-                    )}
-                  </AlertDescription>
-                </Alert>
-              ) : null}
-              <form
-                className="space-y-6"
-                noValidate
-                onSubmit={(event) => {
-                  event.preventDefault()
-                  void submitConfiguration()
-                }}
-              >
-                <fieldset className="space-y-4 border-t pt-4">
-                  <legend className="pe-2 text-sm font-semibold">{t("Backend and default key")}</legend>
-                  <FieldGroup className="grid gap-4 lg:grid-cols-2">
-                    <Field>
-                      <FieldLabel htmlFor="kmsBackend">{t("KMS Backend")}</FieldLabel>
-                      <FieldContent>
-                        <Select
-                          value={formState.backendType}
-                          onValueChange={(value) =>
-                            updateFormState("backendType", value as ConfigFormState["backendType"])
-                          }
-                          disabled={formDisabled || localKmsConfigured}
-                        >
-                          <SelectTrigger id="kmsBackend" className="w-full" aria-label={t("KMS Backend")}>
-                            <SelectValue placeholder={t("Select backend type")}>
-                              {backendTypeLabels[formState.backendType] ?? null}
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              {formState.backendType === "unsupported" ? (
-                                <SelectItem value="unsupported" disabled>
-                                  {t("Unsupported KMS backend")}
-                                </SelectItem>
-                              ) : null}
-                              <SelectItem value="local">{t("Local filesystem (dev/testing only)")}</SelectItem>
-                              <SelectItem value="vault-kv2">{t("HashiCorp Vault KV2")}</SelectItem>
-                              <SelectItem value="vault-transit">{t("HashiCorp Vault Transit Engine")}</SelectItem>
-                              <SelectItem value="static">
-                                {t("Static single-key (built-in, dev/testing only)")}
-                              </SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                      </FieldContent>
-                      <FieldDescription>{t("Choose the backend used by SSE/KMS.")}</FieldDescription>
-                    </Field>
-
-                    <Field>
-                      <FieldLabel htmlFor="defaultKeyId">{t("Default SSE Key")}</FieldLabel>
-                      <FieldContent>
-                        <Input
-                          id="defaultKeyId"
-                          name="defaultKeyId"
-                          value={formState.defaultKeyId}
-                          onChange={(event) => updateFormState("defaultKeyId", event.target.value)}
-                          autoComplete="off"
-                          placeholder={t("Enter the default SSE key ID")}
-                          spellCheck={false}
-                          disabled={formDisabled}
-                        />
-                      </FieldContent>
-                      <FieldDescription>
-                        {t("This key is used as the platform default SSE key for SSE-KMS and SSE-S3.")}
-                      </FieldDescription>
-                    </Field>
-                  </FieldGroup>
-                </fieldset>
-
-                <fieldset className="space-y-4 border-t pt-4">
-                  <legend className="pe-2 text-sm font-semibold">
-                    {formState.backendType === "local"
-                      ? t("Local filesystem")
-                      : formState.backendType === "unsupported"
-                        ? t("Unsupported KMS backend")
-                        : formState.backendType === "static"
-                          ? t("Static key configuration")
-                          : t("Vault connection")}
-                  </legend>
-                  {formState.backendType === "unsupported" ? (
-                    <Alert variant="destructive">
-                      <AlertTitle>{t("Unsupported KMS backend")}</AlertTitle>
-                      <AlertDescription>
-                        {t("Console cannot safely edit a newer or unknown KMS backend type.")}
-                      </AlertDescription>
-                    </Alert>
-                  ) : formState.backendType === "static" ? (
-                    <FieldGroup className="grid gap-4 lg:grid-cols-2">
-                      <Field>
-                        <FieldLabel htmlFor="secretKey">{t("Secret Key")}</FieldLabel>
-                        <FieldContent>
-                          <Input
-                            id="secretKey"
-                            name="secretKey"
-                            type="password"
-                            value={formState.secretKey}
-                            onChange={(event) => updateFormState("secretKey", event.target.value)}
-                            autoComplete="off"
-                            placeholder={t("Base64-encoded 32-byte AES-256 key")}
-                            spellCheck={false}
-                            disabled={formDisabled}
-                            required
-                            aria-required="true"
-                            aria-invalid={configFormErrorField === "secretKey"}
-                            aria-describedby={configFormErrorField === "secretKey" ? "kms-config-error" : undefined}
-                          />
-                        </FieldContent>
-                        <FieldDescription>
-                          {t("The base64-encoded 32-byte AES-256 key used to derive data encryption keys.")}
-                        </FieldDescription>
-                      </Field>
-                    </FieldGroup>
-                  ) : formState.backendType === "local" ? (
-                    <FieldGroup className="grid gap-4 lg:grid-cols-2">
-                      <Field>
-                        <FieldLabel htmlFor="keyDir">{t("Local Key Directory")}</FieldLabel>
-                        <FieldContent>
-                          <Input
-                            id="keyDir"
-                            name="keyDir"
-                            value={formState.keyDir}
-                            onChange={(event) => updateFormState("keyDir", event.target.value)}
-                            autoComplete="off"
-                            placeholder={t("Enter an absolute path such as D:/data/kms-keys")}
-                            spellCheck={false}
-                            disabled={formDisabled || localKmsConfigured}
-                            required
-                            aria-required="true"
-                            aria-invalid={configFormErrorField === "keyDir"}
-                            aria-describedby={configFormErrorField === "keyDir" ? "kms-config-error" : undefined}
-                          />
-                        </FieldContent>
-                        <FieldDescription>
-                          {t("The directory must be an absolute path on the server.")}
-                        </FieldDescription>
-                      </Field>
-
-                      <Field>
-                        <FieldLabel htmlFor="filePermissions">{t("File Permissions")}</FieldLabel>
-                        <FieldContent>
-                          <Input
-                            id="filePermissions"
-                            name="filePermissions"
-                            type="number"
-                            inputMode="numeric"
-                            min={0}
-                            autoComplete="off"
-                            value={formState.filePermissions}
-                            onChange={(event) => updateFormState("filePermissions", event.target.value)}
-                            placeholder="384"
-                            disabled={formDisabled || localKmsConfigured}
-                          />
-                        </FieldContent>
-                        <FieldDescription>{t("Use decimal values such as 384 for 0o600.")}</FieldDescription>
-                      </Field>
-                    </FieldGroup>
-                  ) : (
-                    <div className="space-y-4">
-                      <Alert>
-                        <AlertTitle>{t("Vault token authentication only")}</AlertTitle>
-                        <AlertDescription>
-                          {t("Vault AppRole is not supported in the first version of this console.")}
-                        </AlertDescription>
-                      </Alert>
-
-                      <FieldGroup className="grid gap-4 lg:grid-cols-2">
-                        <Field>
-                          <FieldLabel htmlFor="vaultAddress">{t("Vault Server Address")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="vaultAddress"
-                              name="vaultAddress"
-                              type="url"
-                              value={formState.address}
-                              onChange={(event) => updateFormState("address", event.target.value)}
-                              autoComplete="off"
-                              placeholder="http://127.0.0.1:8200"
-                              spellCheck={false}
-                              disabled={formDisabled}
-                              required
-                              aria-required="true"
-                              aria-invalid={configFormErrorField === "vaultAddress"}
-                              aria-describedby={
-                                configFormErrorField === "vaultAddress" ? "kms-config-error" : undefined
-                              }
-                            />
-                          </FieldContent>
-                        </Field>
-
-                        <Field>
-                          <FieldLabel htmlFor="vaultToken">{t("Vault Token")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="vaultToken"
-                              name="vaultToken"
-                              type="password"
-                              value={formState.vaultToken}
-                              onChange={(event) => updateFormState("vaultToken", event.target.value)}
-                              placeholder={
-                                hasStoredVaultCredentials
-                                  ? t("Stored token is hidden. Enter a new token only to replace it.")
-                                  : t("Enter your Vault authentication token")
-                              }
-                              autoComplete="off"
-                              spellCheck={false}
-                              disabled={formDisabled}
-                              required={!hasStoredVaultCredentials}
-                              aria-required={!hasStoredVaultCredentials ? "true" : "false"}
-                              aria-invalid={configFormErrorField === "vaultToken"}
-                              aria-describedby={configFormErrorField === "vaultToken" ? "kms-config-error" : undefined}
-                            />
-                          </FieldContent>
-                          <FieldDescription>
-                            {hasStoredVaultCredentials
-                              ? t("Leave blank to keep the stored Vault token.")
-                              : t("Required: Vault authentication token")}
-                          </FieldDescription>
-                        </Field>
-                      </FieldGroup>
-
-                      <FieldGroup className="grid gap-4 lg:grid-cols-2">
-                        <Field>
-                          <FieldLabel htmlFor="vaultNamespace">{t("Vault Namespace")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="vaultNamespace"
-                              name="vaultNamespace"
-                              value={formState.namespace}
-                              onChange={(event) => updateFormState("namespace", event.target.value)}
-                              autoComplete="off"
-                              placeholder={t("Optional Vault namespace")}
-                              disabled={formDisabled}
-                              spellCheck={false}
-                            />
-                          </FieldContent>
-                        </Field>
-
-                        <Field>
-                          <FieldLabel htmlFor="transitMountPath">{t("Transit Mount Path")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="transitMountPath"
-                              name="transitMountPath"
-                              value={formState.mountPath}
-                              onChange={(event) => updateFormState("mountPath", event.target.value)}
-                              autoComplete="off"
-                              placeholder="transit"
-                              disabled={formDisabled}
-                              required
-                              aria-required="true"
-                              aria-invalid={configFormErrorField === "transitMountPath"}
-                              aria-describedby={
-                                configFormErrorField === "transitMountPath" ? "kms-config-error" : undefined
-                              }
-                              spellCheck={false}
-                            />
-                          </FieldContent>
-                        </Field>
-
-                        {formState.backendType === "vault-kv2" && (
-                          <>
-                            <Field>
-                              <FieldLabel htmlFor="kvMount">{t("KV Mount")}</FieldLabel>
-                              <FieldContent>
-                                <Input
-                                  id="kvMount"
-                                  name="kvMount"
-                                  value={formState.kvMount}
-                                  onChange={(event) => updateFormState("kvMount", event.target.value)}
-                                  autoComplete="off"
-                                  placeholder="secret"
-                                  disabled={formDisabled}
-                                  spellCheck={false}
-                                />
-                              </FieldContent>
-                            </Field>
-
-                            <Field>
-                              <FieldLabel htmlFor="keyPathPrefix">{t("Key Path Prefix")}</FieldLabel>
-                              <FieldContent>
-                                <Input
-                                  id="keyPathPrefix"
-                                  name="keyPathPrefix"
-                                  value={formState.keyPathPrefix}
-                                  onChange={(event) => updateFormState("keyPathPrefix", event.target.value)}
-                                  autoComplete="off"
-                                  placeholder="rustfs/kms/keys"
-                                  disabled={formDisabled}
-                                  spellCheck={false}
-                                />
-                              </FieldContent>
-                            </Field>
-                          </>
-                        )}
-                      </FieldGroup>
-
-                      <div className="flex items-center gap-3 py-2">
-                        <Checkbox
-                          name="skipTlsVerify"
-                          checked={formState.skipTlsVerify}
-                          onCheckedChange={(checked) => updateFormState("skipTlsVerify", checked === true)}
-                          id="skipTlsVerify"
-                          disabled={formDisabled}
-                        />
-                        <label htmlFor="skipTlsVerify" className="text-sm">
-                          {t("Skip TLS verification")}
-                        </label>
-                      </div>
-
-                      <details ref={advancedTlsRef} className="space-y-4">
-                        <summary className="cursor-pointer text-sm font-semibold">
-                          {t("Advanced TLS")}
-                          <span className="ml-2 font-normal text-muted-foreground">
-                            {t("Custom CA")} · {t("mTLS client identity")}
-                          </span>
-                        </summary>
-
-                        {hasStoredCustomCa || hasStoredClientIdentity ? (
-                          <Alert>
-                            <AlertTitle>
-                              {[
-                                hasStoredCustomCa ? t("Custom CA: configured") : null,
-                                hasStoredClientIdentity ? t("mTLS client identity: configured") : null,
-                              ]
-                                .filter(Boolean)
-                                .join(" · ")}
-                            </AlertTitle>
-                            <AlertDescription>
-                              {t(
-                                "Stored TLS paths are never displayed. Re-enter the paths to keep them; saving with blank fields removes the stored TLS settings.",
-                              )}
-                            </AlertDescription>
-                          </Alert>
-                        ) : null}
-
-                        <FieldGroup className="grid gap-4 lg:grid-cols-2">
-                          <Field>
-                            <FieldLabel htmlFor="caCertPath">{t("CA Certificate Path")}</FieldLabel>
-                            <FieldContent>
-                              <Input
-                                id="caCertPath"
-                                name="caCertPath"
-                                value={formState.caCertPath}
-                                onChange={(event) => updateFormState("caCertPath", event.target.value)}
-                                autoComplete="off"
-                                placeholder="/etc/rustfs/certs/vault-ca.pem"
-                                spellCheck={false}
-                                disabled={formDisabled}
-                                aria-invalid={configFormErrorField === "caCertPath"}
-                                aria-describedby={
-                                  configFormErrorField === "caCertPath" ? "kms-config-error" : undefined
-                                }
-                              />
-                            </FieldContent>
-                            <FieldDescription>{t("PEM CA bundle trusted for the Vault connection.")}</FieldDescription>
-                          </Field>
-
-                          <Field>
-                            <FieldLabel htmlFor="clientCertPath">{t("Client Certificate Path")}</FieldLabel>
-                            <FieldContent>
-                              <Input
-                                id="clientCertPath"
-                                name="clientCertPath"
-                                value={formState.clientCertPath}
-                                onChange={(event) => updateFormState("clientCertPath", event.target.value)}
-                                autoComplete="off"
-                                placeholder="/etc/rustfs/certs/vault-client.pem"
-                                spellCheck={false}
-                                disabled={formDisabled}
-                                aria-invalid={configFormErrorField === "clientCertPath"}
-                                aria-describedby={
-                                  configFormErrorField === "clientCertPath" ? "kms-config-error" : undefined
-                                }
-                              />
-                            </FieldContent>
-                            <FieldDescription>
-                              {t("PEM client certificate presented to Vault for mTLS.")}
-                            </FieldDescription>
-                          </Field>
-
-                          <Field>
-                            <FieldLabel htmlFor="clientKeyPath">{t("Client Key Path")}</FieldLabel>
-                            <FieldContent>
-                              <Input
-                                id="clientKeyPath"
-                                name="clientKeyPath"
-                                value={formState.clientKeyPath}
-                                onChange={(event) => updateFormState("clientKeyPath", event.target.value)}
-                                autoComplete="off"
-                                placeholder="/etc/rustfs/certs/vault-client.key"
-                                spellCheck={false}
-                                disabled={formDisabled}
-                                aria-invalid={configFormErrorField === "clientKeyPath"}
-                                aria-describedby={
-                                  configFormErrorField === "clientKeyPath" ? "kms-config-error" : undefined
-                                }
-                              />
-                            </FieldContent>
-                            <FieldDescription>{t("PEM private key matching the client certificate.")}</FieldDescription>
-                          </Field>
-                        </FieldGroup>
-                        <p className="text-xs text-muted-foreground">
-                          {t(
-                            "Paths refer to PEM files on the RustFS server node. In a multi-node cluster the same path must exist on every node.",
-                          )}
-                        </p>
-                      </details>
-                    </div>
-                  )}
-                </fieldset>
-
-                <details ref={advancedSettingsRef} className="space-y-4 border-t pt-4">
-                  <summary className="cursor-pointer text-sm font-semibold">
-                    {t("Advanced Settings")}
-                    <span className="ml-2 font-normal text-muted-foreground">
-                      {t("Reliability")} · {t("KMS Cache")}
-                    </span>
-                  </summary>
-
-                  <div className="space-y-4">
-                    <fieldset className="space-y-4">
-                      <legend className="text-sm font-semibold">{t("Reliability")}</legend>
-                      <FieldGroup className="grid gap-4 lg:grid-cols-3">
-                        <Field>
-                          <FieldLabel htmlFor="timeoutSeconds">{t("Timeout (seconds)")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="timeoutSeconds"
-                              name="timeoutSeconds"
-                              type="number"
-                              inputMode="numeric"
-                              min={1}
-                              autoComplete="off"
-                              value={formState.timeoutSeconds}
-                              onChange={(event) => updateFormState("timeoutSeconds", event.target.value)}
-                              disabled={formDisabled}
-                            />
-                          </FieldContent>
-                        </Field>
-
-                        <Field>
-                          <FieldLabel htmlFor="retryAttempts">{t("Retry Attempts")}</FieldLabel>
-                          <FieldContent>
-                            <Input
-                              id="retryAttempts"
-                              name="retryAttempts"
-                              type="number"
-                              inputMode="numeric"
-                              min={0}
-                              autoComplete="off"
-                              value={formState.retryAttempts}
-                              onChange={(event) => updateFormState("retryAttempts", event.target.value)}
-                              disabled={formDisabled}
-                            />
-                          </FieldContent>
-                        </Field>
-                      </FieldGroup>
-                    </fieldset>
-
-                    <fieldset className="space-y-4 border-t pt-4">
-                      <legend className="pe-2 text-sm font-semibold">{t("KMS Cache")}</legend>
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          name="enableCache"
-                          checked={formState.enableCache}
-                          onCheckedChange={(checked) => updateFormState("enableCache", checked === true)}
-                          id="enableCache"
-                          disabled={formDisabled}
-                        />
-                        <label htmlFor="enableCache" className="text-sm font-medium">
-                          {t("Enable KMS Cache")}
-                        </label>
-                      </div>
-
-                      {formState.enableCache && (
-                        <FieldGroup className="grid gap-4 lg:grid-cols-2">
-                          <Field>
-                            <FieldLabel htmlFor="maxCachedKeys">{t("Max Cached Keys")}</FieldLabel>
-                            <FieldContent>
-                              <Input
-                                id="maxCachedKeys"
-                                name="maxCachedKeys"
-                                type="number"
-                                inputMode="numeric"
-                                min={1}
-                                autoComplete="off"
-                                value={formState.maxCachedKeys}
-                                onChange={(event) => updateFormState("maxCachedKeys", event.target.value)}
-                                disabled={formDisabled}
-                              />
-                            </FieldContent>
-                          </Field>
-
-                          <Field>
-                            <FieldLabel htmlFor="cacheTtlSeconds">{t("Cache TTL (seconds)")}</FieldLabel>
-                            <FieldContent>
-                              <Input
-                                id="cacheTtlSeconds"
-                                name="cacheTtlSeconds"
-                                type="number"
-                                inputMode="numeric"
-                                min={1}
-                                autoComplete="off"
-                                value={formState.cacheTtlSeconds}
-                                onChange={(event) => updateFormState("cacheTtlSeconds", event.target.value)}
-                                disabled={formDisabled}
-                              />
-                            </FieldContent>
-                          </Field>
-                        </FieldGroup>
-                      )}
-                    </fieldset>
-                  </div>
-                </details>
-
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={resetFormToCurrentStatus} disabled={resetDisabled}>
-                    {t("Reset to Current Status")}
-                  </Button>
-                  <Button type="submit" disabled={formDisabled || !isConfigDirty}>
-                    {submittingConfig ? <Spinner className="size-4" /> : null}
-                    {statusKind === "NotConfigured" ? t("Save Configuration") : t("Reconfigure KMS")}
-                  </Button>
+              </Alert>
+            ) : null}
+            <Card id="kms-overview" className="configuration-panel scroll-mt-24">
+              <CardHeader className="space-y-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h2 className="text-base font-semibold sm:text-lg">{t("KMS Status Overview")}</h2>
+                  <Badge variant={getStateBadgeVariant(statusBadgeValue)} className="text-sm uppercase">
+                    {loadingStatus ? t("Loading…") : getKmsStatusText()}
+                  </Badge>
+                  {capabilities?.production_supported === false ? (
+                    <Badge variant="destructive" className="text-sm">
+                      {t("Development / testing backend — not supported for production")}
+                    </Badge>
+                  ) : null}
                 </div>
-              </form>
-            </CardContent>
-          </Card>
-
-          {isRunning && (
-            <Card className="shadow-none">
-              <CardHeader className="gap-2">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <h2 className="text-base font-semibold sm:text-lg">{t("KMS Keys Management")}</h2>
-                    <CardDescription>
-                      {t("Create a new KMS key and optionally make it the default SSE key.")}
-                    </CardDescription>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={loadingKeys || Boolean(activeMutation) || loadingStatus}
-                      onClick={() => void loadKeys(currentMarker)}
-                    >
-                      {loadingKeys ? <Spinner className="size-4" /> : <RiRefreshLine className="size-4" aria-hidden />}
-                      {t("Refresh")}
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setCreateKeyOpen(true)}
-                      disabled={
-                        Boolean(activeMutation) ||
-                        loadingKeys ||
-                        loadingStatus ||
-                        Boolean(keysError) ||
-                        staticKmsReadOnly
-                      }
-                    >
-                      <RiAddLine className="size-4" aria-hidden />
-                      {t("Create Key")}
-                    </Button>
-                  </div>
-                </div>
+                <CardDescription>{getKmsStatusDescription()}</CardDescription>
+                {!statusError && status?.backend_type && (
+                  <CardDescription>
+                    {t("Backend")}: {status.backend_type}
+                  </CardDescription>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
-                <Alert>
-                  <AlertTitle>{t("Two-stage key deletion")}</AlertTitle>
-                  <AlertDescription>
-                    {t("Keys in PendingDeletion can still be restored or deleted immediately.")}
-                  </AlertDescription>
-                </Alert>
+                {!statusError ? (
+                  <dl className="grid gap-4 bg-muted p-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <div className="space-y-1">
+                      <dt className="text-xs text-muted-foreground">{t("Backend Type")}</dt>
+                      <dd className="text-sm font-medium text-foreground">
+                        {status?.backend_type ?? t("Not configured")}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs text-muted-foreground">{t("Status")}</dt>
+                      <dd className="break-all text-sm font-medium text-foreground">
+                        {loadingStatus ? t("Loading…") : getKmsStatusText()}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs text-muted-foreground">{t("Health")}</dt>
+                      <dd className="text-sm font-medium text-foreground">
+                        {status?.healthy == null ? t("Unknown") : status.healthy ? t("Healthy") : t("Unhealthy")}
+                      </dd>
+                    </div>
+                    <div className="space-y-1">
+                      <dt className="text-xs text-muted-foreground">{t("Default SSE Key")}</dt>
+                      <dd className="break-all text-sm font-medium text-foreground">
+                        {status?.config_summary?.default_key_id || t("Not set")}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : null}
 
-                {keysError ? (
+                {!statusError && statusKind === "Error" ? (
                   <Alert variant="destructive">
-                    <AlertTitle>{t("Failed to fetch KMS keys")}</AlertTitle>
-                    <AlertDescription>{keysError}</AlertDescription>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="mt-3"
-                      onClick={() => void loadKeys(currentMarker)}
-                      disabled={loadingKeys || Boolean(activeMutation) || loadingStatus}
-                    >
-                      {t("Refresh")}
-                    </Button>
+                    <AlertTitle>{t("KMS service has errors")}</AlertTitle>
+                    <AlertDescription>
+                      {typeof status?.status === "object" && status?.status && "Error" in status.status
+                        ? status.status.Error
+                        : t("KMS server status unknown")}
+                    </AlertDescription>
                   </Alert>
                 ) : null}
 
-                {loadingKeys ? (
-                  <div className="flex items-center justify-center border py-10">
-                    <Spinner className="size-5" />
+                {statusKind === "Configured" && (
+                  <Alert>
+                    <AlertTitle>{t("KMS configured but not started")}</AlertTitle>
+                    <AlertDescription>{t("Start KMS to make SSE and key management available.")}</AlertDescription>
+                  </Alert>
+                )}
+
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={refreshingStatus || Boolean(activeMutation) || loadingStatus}
+                    onClick={handleRefresh}
+                  >
+                    {refreshingStatus ? (
+                      <Spinner className="size-4" />
+                    ) : (
+                      <RiRefreshLine className="size-4" aria-hidden />
+                    )}
+                    {t("Refresh")}
+                  </Button>
+
+                  {hasConfiguration && (
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={requestStartKMS}
+                      disabled={startingKMS || mutationLocked || loadingStatus}
+                    >
+                      {startingKMS ? <Spinner className="size-4" /> : null}
+                      {isRunning ? t("Restart KMS") : t("Start KMS")}
+                    </Button>
+                  )}
+
+                  {hasConfiguration && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button size="sm" variant="outline">
+                            {t("Advanced Actions")}
+                          </Button>
+                        }
+                      />
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          disabled={!isRunning || clearingCache || mutationLocked}
+                          onClick={handleClearCache}
+                        >
+                          {clearingCache ? t("Clearing cache…") : t("Clear Cache")}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          disabled={!isRunning || stoppingKMS || mutationLocked}
+                          onClick={requestStopKMS}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          {stoppingKMS ? t("Stopping KMS…") : t("Stop KMS")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {isRunning && (
+              <Card id="kms-keys" className="configuration-panel scroll-mt-24">
+                <CardHeader className="gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <h2 className="text-base font-semibold sm:text-lg">{t("KMS Keys Management")}</h2>
+                      <CardDescription>
+                        {t("Create a new KMS key and optionally make it the default SSE key.")}
+                      </CardDescription>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={loadingKeys || Boolean(activeMutation) || loadingStatus}
+                        onClick={() => void loadKeys(currentMarker)}
+                      >
+                        {loadingKeys ? (
+                          <Spinner className="size-4" />
+                        ) : (
+                          <RiRefreshLine className="size-4" aria-hidden />
+                        )}
+                        {t("Refresh")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => setCreateKeyOpen(true)}
+                        disabled={
+                          Boolean(activeMutation) ||
+                          loadingKeys ||
+                          loadingStatus ||
+                          Boolean(keysError) ||
+                          staticKmsReadOnly
+                        }
+                      >
+                        <RiAddLine className="size-4" aria-hidden />
+                        {t("Create Key")}
+                      </Button>
+                    </div>
                   </div>
-                ) : keys.length === 0 && !keysError ? (
-                  <div className="border border-dashed py-10 text-center text-sm text-muted-foreground">
-                    {t("No KMS keys found")}
-                  </div>
-                ) : keys.length > 0 && !keysError ? (
-                  <>
-                    <div className="space-y-3 md:hidden">
-                      {keys.map((key) => {
-                        const isDefaultKey = key.key_id === status?.config_summary?.default_key_id
-                        const isPendingDeletion = (key.status ?? "").toLowerCase().includes("pendingdeletion")
-                        return (
-                          <article key={key.key_id} className="space-y-4 border p-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0">
-                                <h3 className="break-all text-sm font-medium">{getKeyDisplayName(key)}</h3>
-                                <p className="mt-1 break-all text-xs text-muted-foreground">{key.key_id}</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <Alert>
+                    <AlertTitle>{t("Two-stage key deletion")}</AlertTitle>
+                    <AlertDescription>
+                      {t("Keys in PendingDeletion can still be restored or deleted immediately.")}
+                    </AlertDescription>
+                  </Alert>
+
+                  {keysError ? (
+                    <Alert variant="destructive">
+                      <AlertTitle>{t("Failed to fetch KMS keys")}</AlertTitle>
+                      <AlertDescription>{keysError}</AlertDescription>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => void loadKeys(currentMarker)}
+                        disabled={loadingKeys || Boolean(activeMutation) || loadingStatus}
+                      >
+                        {t("Refresh")}
+                      </Button>
+                    </Alert>
+                  ) : null}
+
+                  {loadingKeys ? (
+                    <div className="flex items-center justify-center border py-10">
+                      <Spinner className="size-5" />
+                    </div>
+                  ) : keys.length === 0 && !keysError ? (
+                    <div className="border border-dashed py-10 text-center text-sm text-muted-foreground">
+                      {t("No KMS keys found")}
+                    </div>
+                  ) : keys.length > 0 && !keysError ? (
+                    <>
+                      <div className="space-y-3 md:hidden">
+                        {keys.map((key) => {
+                          const isDefaultKey = key.key_id === status?.config_summary?.default_key_id
+                          const isPendingDeletion = (key.status ?? "").toLowerCase().includes("pendingdeletion")
+                          return (
+                            <article key={key.key_id} className="space-y-4 border p-4">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <h3 className="break-all text-sm font-medium">{getKeyDisplayName(key)}</h3>
+                                  <p className="mt-1 break-all text-xs text-muted-foreground">{key.key_id}</p>
+                                </div>
+                                <Badge variant={getStateBadgeVariant(key.status)}>{key.status || "-"}</Badge>
                               </div>
-                              <Badge variant={getStateBadgeVariant(key.status)}>{key.status || "-"}</Badge>
-                            </div>
-                            {isDefaultKey ? (
-                              <p className="text-xs font-medium text-primary">{t("Default SSE Key")}</p>
-                            ) : null}
-                            <dl className="grid grid-cols-2 gap-3 text-sm">
-                              <div>
-                                <dt className="text-xs text-muted-foreground">{t("Algorithm")}</dt>
-                                <dd>{key.algorithm || "-"}</dd>
-                              </div>
-                              <div>
-                                <dt className="text-xs text-muted-foreground">{t("Created")}</dt>
-                                <dd>{formatTimestamp(key.created_at)}</dd>
-                              </div>
-                            </dl>
-                            <div className="flex flex-wrap gap-2">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                className="min-h-11 flex-1 sm:flex-none"
-                                onClick={() => setSelectedKeyId(key.key_id)}
-                              >
-                                {t("View Details")}
-                              </Button>
-                              {isPendingDeletion ? (
+                              {isDefaultKey ? (
+                                <p className="text-xs font-medium text-primary">{t("Default SSE Key")}</p>
+                              ) : null}
+                              <dl className="grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                  <dt className="text-xs text-muted-foreground">{t("Algorithm")}</dt>
+                                  <dd>{key.algorithm || "-"}</dd>
+                                </div>
+                                <div>
+                                  <dt className="text-xs text-muted-foreground">{t("Created")}</dt>
+                                  <dd>{formatTimestamp(key.created_at)}</dd>
+                                </div>
+                              </dl>
+                              <div className="flex flex-wrap gap-2">
                                 <Button
                                   type="button"
                                   variant="outline"
                                   className="min-h-11 flex-1 sm:flex-none"
-                                  disabled={Boolean(activeMutation) || loadingStatus || Boolean(keysError)}
-                                  onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}
+                                  onClick={() => setSelectedKeyId(key.key_id)}
                                 >
-                                  {t("Cancel Deletion")}
+                                  {t("View Details")}
                                 </Button>
-                              ) : (
+                                {isPendingDeletion ? (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="min-h-11 flex-1 sm:flex-none"
+                                    disabled={Boolean(activeMutation) || loadingStatus || Boolean(keysError)}
+                                    onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}
+                                  >
+                                    {t("Cancel Deletion")}
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="min-h-11 flex-1 sm:flex-none"
+                                    disabled={
+                                      isDefaultKey ||
+                                      Boolean(activeMutation) ||
+                                      loadingStatus ||
+                                      Boolean(keysError) ||
+                                      staticKmsReadOnly
+                                    }
+                                    onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}
+                                  >
+                                    {t("Schedule Deletion")}
+                                  </Button>
+                                )}
                                 <Button
                                   type="button"
-                                  variant="outline"
+                                  variant="destructive"
                                   className="min-h-11 flex-1 sm:flex-none"
                                   disabled={
                                     isDefaultKey ||
@@ -1860,84 +1326,90 @@ export default function SSEPage() {
                                     Boolean(keysError) ||
                                     staticKmsReadOnly
                                   }
-                                  onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}
+                                  onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
                                 >
-                                  {t("Schedule Deletion")}
+                                  {t("Delete Immediately")}
                                 </Button>
-                              )}
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                className="min-h-11 flex-1 sm:flex-none"
-                                disabled={
-                                  isDefaultKey ||
-                                  Boolean(activeMutation) ||
-                                  loadingStatus ||
-                                  Boolean(keysError) ||
-                                  staticKmsReadOnly
-                                }
-                                onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
-                              >
-                                {t("Delete Immediately")}
-                              </Button>
-                            </div>
-                          </article>
-                        )
-                      })}
-                    </div>
-                    <div className="hidden overflow-x-auto md:block">
-                      <Table className="min-w-[52rem]">
-                        <TableCaption className="sr-only">{t("KMS Keys Management")}</TableCaption>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead scope="col">{t("Name")}</TableHead>
-                            <TableHead scope="col">{t("KMS Key ID")}</TableHead>
-                            <TableHead scope="col">{t("Status")}</TableHead>
-                            <TableHead scope="col">{t("Algorithm")}</TableHead>
-                            <TableHead scope="col">{t("Usage")}</TableHead>
-                            <TableHead scope="col">{t("Created")}</TableHead>
-                            <TableHead scope="col" className="sticky end-0 z-20 border-s bg-card text-end">
-                              {t("Actions")}
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {keys.map((key) => {
-                            const isPendingDeletion = (key.status ?? "").toLowerCase().includes("pendingdeletion")
-                            const isDefaultKey = key.key_id === status?.config_summary?.default_key_id
-                            return (
-                              <TableRow key={key.key_id} className="group">
-                                <TableCell className="font-medium">{getKeyDisplayName(key)}</TableCell>
-                                <TableCell className="max-w-[220px] truncate" title={key.key_id}>
-                                  {key.key_id}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant={getStateBadgeVariant(key.status)}>{key.status || "-"}</Badge>
-                                </TableCell>
-                                <TableCell>{key.algorithm || "-"}</TableCell>
-                                <TableCell>{key.usage || "-"}</TableCell>
-                                <TableCell>{formatTimestamp(key.created_at)}</TableCell>
-                                <TableCell className="sticky end-0 z-10 border-s bg-card group-hover:bg-muted/50">
-                                  <div className="flex justify-end">
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger
-                                        render={
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            aria-label={`${t("Actions")}: ${getKeyDisplayName(key)}`}
-                                          >
-                                            {t("Actions")}
-                                          </Button>
-                                        }
-                                      />
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => setSelectedKeyId(key.key_id)}>
-                                          {t("View Details")}
-                                        </DropdownMenuItem>
-                                        {!isPendingDeletion && (
+                              </div>
+                            </article>
+                          )
+                        })}
+                      </div>
+                      <div className="hidden overflow-x-auto md:block">
+                        <Table className="min-w-[52rem]">
+                          <TableCaption className="sr-only">{t("KMS Keys Management")}</TableCaption>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead scope="col">{t("Name")}</TableHead>
+                              <TableHead scope="col">{t("KMS Key ID")}</TableHead>
+                              <TableHead scope="col">{t("Status")}</TableHead>
+                              <TableHead scope="col">{t("Algorithm")}</TableHead>
+                              <TableHead scope="col">{t("Usage")}</TableHead>
+                              <TableHead scope="col">{t("Created")}</TableHead>
+                              <TableHead scope="col" className="sticky end-0 z-20 border-s bg-card text-end">
+                                {t("Actions")}
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {keys.map((key) => {
+                              const isPendingDeletion = (key.status ?? "").toLowerCase().includes("pendingdeletion")
+                              const isDefaultKey = key.key_id === status?.config_summary?.default_key_id
+                              return (
+                                <TableRow key={key.key_id} className="group">
+                                  <TableCell className="font-medium">{getKeyDisplayName(key)}</TableCell>
+                                  <TableCell className="max-w-[220px] truncate" title={key.key_id}>
+                                    {key.key_id}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant={getStateBadgeVariant(key.status)}>{key.status || "-"}</Badge>
+                                  </TableCell>
+                                  <TableCell>{key.algorithm || "-"}</TableCell>
+                                  <TableCell>{key.usage || "-"}</TableCell>
+                                  <TableCell>{formatTimestamp(key.created_at)}</TableCell>
+                                  <TableCell className="sticky end-0 z-10 border-s bg-card group-hover:bg-muted/50">
+                                    <div className="flex justify-end">
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger
+                                          render={
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              aria-label={`${t("Actions")}: ${getKeyDisplayName(key)}`}
+                                            >
+                                              {t("Actions")}
+                                            </Button>
+                                          }
+                                        />
+                                        <DropdownMenuContent align="end">
+                                          <DropdownMenuItem onClick={() => setSelectedKeyId(key.key_id)}>
+                                            {t("View Details")}
+                                          </DropdownMenuItem>
+                                          {!isPendingDeletion && (
+                                            <DropdownMenuItem
+                                              onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}
+                                              disabled={
+                                                isDefaultKey ||
+                                                Boolean(activeMutation) ||
+                                                loadingStatus ||
+                                                Boolean(keysError) ||
+                                                staticKmsReadOnly
+                                              }
+                                            >
+                                              {t("Schedule Deletion")}
+                                            </DropdownMenuItem>
+                                          )}
+                                          {isPendingDeletion && (
+                                            <DropdownMenuItem
+                                              onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}
+                                              disabled={Boolean(activeMutation) || loadingStatus || Boolean(keysError)}
+                                            >
+                                              {t("Cancel Deletion")}
+                                            </DropdownMenuItem>
+                                          )}
+                                          <DropdownMenuSeparator />
                                           <DropdownMenuItem
-                                            onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}
+                                            onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
                                             disabled={
                                               isDefaultKey ||
                                               Boolean(activeMutation) ||
@@ -1945,91 +1417,648 @@ export default function SSEPage() {
                                               Boolean(keysError) ||
                                               staticKmsReadOnly
                                             }
+                                            className="text-destructive focus:text-destructive"
                                           >
-                                            {t("Schedule Deletion")}
+                                            {t("Delete Immediately")}
                                           </DropdownMenuItem>
-                                        )}
-                                        {isPendingDeletion && (
-                                          <DropdownMenuItem
-                                            onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}
-                                            disabled={Boolean(activeMutation) || loadingStatus || Boolean(keysError)}
-                                          >
-                                            {t("Cancel Deletion")}
-                                          </DropdownMenuItem>
-                                        )}
-                                        <DropdownMenuSeparator />
-                                        <DropdownMenuItem
-                                          onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
-                                          disabled={
-                                            isDefaultKey ||
-                                            Boolean(activeMutation) ||
-                                            loadingStatus ||
-                                            Boolean(keysError) ||
-                                            staticKmsReadOnly
-                                          }
-                                          className="text-destructive focus:text-destructive"
-                                        >
-                                          {t("Delete Immediately")}
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            )
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </>
-                ) : null}
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              )
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </>
+                  ) : null}
 
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs text-muted-foreground">
-                    {t("Showing up to {count} keys per page", { count: KEY_LIST_LIMIT })}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={
-                        previousMarkers.length === 0 ||
-                        loadingKeys ||
-                        Boolean(activeMutation) ||
-                        loadingStatus ||
-                        Boolean(keysError)
-                      }
-                      onClick={() => {
-                        const previousMarker = previousMarkers[previousMarkers.length - 1] ?? ""
-                        setPreviousMarkers((current) => current.slice(0, -1))
-                        void loadKeys(previousMarker)
-                      }}
-                    >
-                      <RiArrowLeftSLine className="size-4" aria-hidden />
-                      {t("Previous")}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      {t("Showing up to {count} keys per page", { count: KEY_LIST_LIMIT })}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={
+                          previousMarkers.length === 0 ||
+                          loadingKeys ||
+                          Boolean(activeMutation) ||
+                          loadingStatus ||
+                          Boolean(keysError)
+                        }
+                        onClick={() => {
+                          const previousMarker = previousMarkers[previousMarkers.length - 1] ?? ""
+                          setPreviousMarkers((current) => current.slice(0, -1))
+                          void loadKeys(previousMarker)
+                        }}
+                      >
+                        <RiArrowLeftSLine className="size-4" aria-hidden />
+                        {t("Previous")}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={
+                          !nextMarker || loadingKeys || Boolean(activeMutation) || loadingStatus || Boolean(keysError)
+                        }
+                        onClick={() => {
+                          if (!nextMarker) return
+                          setPreviousMarkers((current) => [...current, currentMarker])
+                          void loadKeys(nextMarker)
+                        }}
+                      >
+                        {t("Next")}
+                        <RiArrowRightSLine className="size-4" aria-hidden />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <Card id="kms-configuration" className="configuration-panel scroll-mt-24">
+              <CardHeader>
+                <h2 className="text-base font-semibold sm:text-lg">{t("KMS Configuration")}</h2>
+                <CardDescription>{t("Configure the KMS backend, cache policy, and default SSE key.")}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {configFormError ? (
+                  <Alert variant="destructive" role="alert">
+                    <AlertTitle>{t("Please fix the form errors before saving")}</AlertTitle>
+                    <AlertDescription id="kms-config-error">{configFormError}</AlertDescription>
+                  </Alert>
+                ) : null}
+                {configBaselineConflict ? (
+                  <Alert variant="destructive" role="alert">
+                    <AlertTitle>{t("KMS configuration changed")}</AlertTitle>
+                    <AlertDescription>{configBaselineConflict}</AlertDescription>
+                  </Alert>
+                ) : null}
+                {formState.backendType === "local" ? (
+                  <Alert>
+                    <AlertTitle>{t("Warning")}</AlertTitle>
+                    <AlertDescription>
+                      {localKmsConfigured
+                        ? t(
+                            "Local KMS is intended for evaluation only. The key directory and file permissions are locked after configuration; changing or rotating the local master key is not supported.",
+                          )
+                        : t(
+                            "Local KMS is intended for evaluation only. Keys created without a server-managed master key are stored using plaintext development mode. Do not use this backend for production data.",
+                          )}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+                {unsupportedKmsReadOnly ? (
+                  <Alert variant="destructive">
+                    <AlertTitle>{t("Unsupported KMS backend")}</AlertTitle>
+                    <AlertDescription>
+                      {t(
+                        "This KMS backend is not supported by this Console version. Upgrade Console before reconfiguring KMS.",
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+                <form
+                  className="space-y-6"
+                  noValidate
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    void submitConfiguration()
+                  }}
+                >
+                  <fieldset className="space-y-4 border-t pt-4">
+                    <legend className="pe-2 text-sm font-semibold">{t("Backend and default key")}</legend>
+                    <FieldGroup className="grid gap-4 lg:grid-cols-2">
+                      <Field>
+                        <FieldLabel htmlFor="kmsBackend">{t("KMS Backend")}</FieldLabel>
+                        <FieldContent>
+                          <Select
+                            value={formState.backendType}
+                            onValueChange={(value) =>
+                              updateFormState("backendType", value as ConfigFormState["backendType"])
+                            }
+                            disabled={formDisabled || localKmsConfigured}
+                          >
+                            <SelectTrigger id="kmsBackend" className="w-full" aria-label={t("KMS Backend")}>
+                              <SelectValue placeholder={t("Select backend type")}>
+                                {backendTypeLabels[formState.backendType] ?? null}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectGroup>
+                                {formState.backendType === "unsupported" ? (
+                                  <SelectItem value="unsupported" disabled>
+                                    {t("Unsupported KMS backend")}
+                                  </SelectItem>
+                                ) : null}
+                                <SelectItem value="local">{t("Local filesystem (dev/testing only)")}</SelectItem>
+                                <SelectItem value="vault-kv2">{t("HashiCorp Vault KV2")}</SelectItem>
+                                <SelectItem value="vault-transit">{t("HashiCorp Vault Transit Engine")}</SelectItem>
+                                <SelectItem value="static">
+                                  {t("Static single-key (built-in, dev/testing only)")}
+                                </SelectItem>
+                              </SelectGroup>
+                            </SelectContent>
+                          </Select>
+                        </FieldContent>
+                        <FieldDescription>{t("Choose the backend used by SSE/KMS.")}</FieldDescription>
+                      </Field>
+
+                      <Field>
+                        <FieldLabel htmlFor="defaultKeyId">{t("Default SSE Key")}</FieldLabel>
+                        <FieldContent>
+                          <Input
+                            id="defaultKeyId"
+                            name="defaultKeyId"
+                            value={formState.defaultKeyId}
+                            onChange={(event) => updateFormState("defaultKeyId", event.target.value)}
+                            autoComplete="off"
+                            placeholder={t("Enter the default SSE key ID")}
+                            spellCheck={false}
+                            disabled={formDisabled}
+                          />
+                        </FieldContent>
+                        <FieldDescription>
+                          {t("This key is used as the platform default SSE key for SSE-KMS and SSE-S3.")}
+                        </FieldDescription>
+                      </Field>
+                    </FieldGroup>
+                  </fieldset>
+
+                  <fieldset className="space-y-4 border-t pt-4">
+                    <legend className="pe-2 text-sm font-semibold">
+                      {formState.backendType === "local"
+                        ? t("Local filesystem")
+                        : formState.backendType === "unsupported"
+                          ? t("Unsupported KMS backend")
+                          : formState.backendType === "static"
+                            ? t("Static key configuration")
+                            : t("Vault connection")}
+                    </legend>
+                    {formState.backendType === "unsupported" ? (
+                      <Alert variant="destructive">
+                        <AlertTitle>{t("Unsupported KMS backend")}</AlertTitle>
+                        <AlertDescription>
+                          {t("Console cannot safely edit a newer or unknown KMS backend type.")}
+                        </AlertDescription>
+                      </Alert>
+                    ) : formState.backendType === "static" ? (
+                      <FieldGroup className="grid gap-4 lg:grid-cols-2">
+                        <Field>
+                          <FieldLabel htmlFor="secretKey">{t("Secret Key")}</FieldLabel>
+                          <FieldContent>
+                            <Input
+                              id="secretKey"
+                              name="secretKey"
+                              type="password"
+                              value={formState.secretKey}
+                              onChange={(event) => updateFormState("secretKey", event.target.value)}
+                              autoComplete="off"
+                              placeholder={t("Base64-encoded 32-byte AES-256 key")}
+                              spellCheck={false}
+                              disabled={formDisabled}
+                              required
+                              aria-required="true"
+                              aria-invalid={configFormErrorField === "secretKey"}
+                              aria-describedby={configFormErrorField === "secretKey" ? "kms-config-error" : undefined}
+                            />
+                          </FieldContent>
+                          <FieldDescription>
+                            {t("The base64-encoded 32-byte AES-256 key used to derive data encryption keys.")}
+                          </FieldDescription>
+                        </Field>
+                      </FieldGroup>
+                    ) : formState.backendType === "local" ? (
+                      <FieldGroup className="grid gap-4 lg:grid-cols-2">
+                        <Field>
+                          <FieldLabel htmlFor="keyDir">{t("Local Key Directory")}</FieldLabel>
+                          <FieldContent>
+                            <Input
+                              id="keyDir"
+                              name="keyDir"
+                              value={formState.keyDir}
+                              onChange={(event) => updateFormState("keyDir", event.target.value)}
+                              autoComplete="off"
+                              placeholder={t("Enter an absolute path such as D:/data/kms-keys")}
+                              spellCheck={false}
+                              disabled={formDisabled || localKmsConfigured}
+                              required
+                              aria-required="true"
+                              aria-invalid={configFormErrorField === "keyDir"}
+                              aria-describedby={configFormErrorField === "keyDir" ? "kms-config-error" : undefined}
+                            />
+                          </FieldContent>
+                          <FieldDescription>
+                            {t("The directory must be an absolute path on the server.")}
+                          </FieldDescription>
+                        </Field>
+
+                        <Field>
+                          <FieldLabel htmlFor="filePermissions">{t("File Permissions")}</FieldLabel>
+                          <FieldContent>
+                            <Input
+                              id="filePermissions"
+                              name="filePermissions"
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              autoComplete="off"
+                              value={formState.filePermissions}
+                              onChange={(event) => updateFormState("filePermissions", event.target.value)}
+                              placeholder="384"
+                              disabled={formDisabled || localKmsConfigured}
+                            />
+                          </FieldContent>
+                          <FieldDescription>{t("Use decimal values such as 384 for 0o600.")}</FieldDescription>
+                        </Field>
+                      </FieldGroup>
+                    ) : (
+                      <div className="space-y-4">
+                        <Alert>
+                          <AlertTitle>{t("Vault token authentication only")}</AlertTitle>
+                          <AlertDescription>
+                            {t("Vault AppRole is not supported in the first version of this console.")}
+                          </AlertDescription>
+                        </Alert>
+
+                        <FieldGroup className="grid gap-4 lg:grid-cols-2">
+                          <Field>
+                            <FieldLabel htmlFor="vaultAddress">{t("Vault Server Address")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="vaultAddress"
+                                name="vaultAddress"
+                                type="url"
+                                value={formState.address}
+                                onChange={(event) => updateFormState("address", event.target.value)}
+                                autoComplete="off"
+                                placeholder="http://127.0.0.1:8200"
+                                spellCheck={false}
+                                disabled={formDisabled}
+                                required
+                                aria-required="true"
+                                aria-invalid={configFormErrorField === "vaultAddress"}
+                                aria-describedby={
+                                  configFormErrorField === "vaultAddress" ? "kms-config-error" : undefined
+                                }
+                              />
+                            </FieldContent>
+                          </Field>
+
+                          <Field>
+                            <FieldLabel htmlFor="vaultToken">{t("Vault Token")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="vaultToken"
+                                name="vaultToken"
+                                type="password"
+                                value={formState.vaultToken}
+                                onChange={(event) => updateFormState("vaultToken", event.target.value)}
+                                placeholder={
+                                  hasStoredVaultCredentials
+                                    ? t("Stored token is hidden. Enter a new token only to replace it.")
+                                    : t("Enter your Vault authentication token")
+                                }
+                                autoComplete="off"
+                                spellCheck={false}
+                                disabled={formDisabled}
+                                required={!hasStoredVaultCredentials}
+                                aria-required={!hasStoredVaultCredentials ? "true" : "false"}
+                                aria-invalid={configFormErrorField === "vaultToken"}
+                                aria-describedby={
+                                  configFormErrorField === "vaultToken" ? "kms-config-error" : undefined
+                                }
+                              />
+                            </FieldContent>
+                            <FieldDescription>
+                              {hasStoredVaultCredentials
+                                ? t("Leave blank to keep the stored Vault token.")
+                                : t("Required: Vault authentication token")}
+                            </FieldDescription>
+                          </Field>
+                        </FieldGroup>
+
+                        <FieldGroup className="grid gap-4 lg:grid-cols-2">
+                          <Field>
+                            <FieldLabel htmlFor="vaultNamespace">{t("Vault Namespace")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="vaultNamespace"
+                                name="vaultNamespace"
+                                value={formState.namespace}
+                                onChange={(event) => updateFormState("namespace", event.target.value)}
+                                autoComplete="off"
+                                placeholder={t("Optional Vault namespace")}
+                                disabled={formDisabled}
+                                spellCheck={false}
+                              />
+                            </FieldContent>
+                          </Field>
+
+                          <Field>
+                            <FieldLabel htmlFor="transitMountPath">{t("Transit Mount Path")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="transitMountPath"
+                                name="transitMountPath"
+                                value={formState.mountPath}
+                                onChange={(event) => updateFormState("mountPath", event.target.value)}
+                                autoComplete="off"
+                                placeholder="transit"
+                                disabled={formDisabled}
+                                required
+                                aria-required="true"
+                                aria-invalid={configFormErrorField === "transitMountPath"}
+                                aria-describedby={
+                                  configFormErrorField === "transitMountPath" ? "kms-config-error" : undefined
+                                }
+                                spellCheck={false}
+                              />
+                            </FieldContent>
+                          </Field>
+
+                          {formState.backendType === "vault-kv2" && (
+                            <>
+                              <Field>
+                                <FieldLabel htmlFor="kvMount">{t("KV Mount")}</FieldLabel>
+                                <FieldContent>
+                                  <Input
+                                    id="kvMount"
+                                    name="kvMount"
+                                    value={formState.kvMount}
+                                    onChange={(event) => updateFormState("kvMount", event.target.value)}
+                                    autoComplete="off"
+                                    placeholder="secret"
+                                    disabled={formDisabled}
+                                    spellCheck={false}
+                                  />
+                                </FieldContent>
+                              </Field>
+
+                              <Field>
+                                <FieldLabel htmlFor="keyPathPrefix">{t("Key Path Prefix")}</FieldLabel>
+                                <FieldContent>
+                                  <Input
+                                    id="keyPathPrefix"
+                                    name="keyPathPrefix"
+                                    value={formState.keyPathPrefix}
+                                    onChange={(event) => updateFormState("keyPathPrefix", event.target.value)}
+                                    autoComplete="off"
+                                    placeholder="rustfs/kms/keys"
+                                    disabled={formDisabled}
+                                    spellCheck={false}
+                                  />
+                                </FieldContent>
+                              </Field>
+                            </>
+                          )}
+                        </FieldGroup>
+
+                        <div className="flex items-center gap-3 py-2">
+                          <Checkbox
+                            name="skipTlsVerify"
+                            checked={formState.skipTlsVerify}
+                            onCheckedChange={(checked) => updateFormState("skipTlsVerify", checked === true)}
+                            id="skipTlsVerify"
+                            disabled={formDisabled}
+                          />
+                          <label htmlFor="skipTlsVerify" className="text-sm">
+                            {t("Skip TLS verification")}
+                          </label>
+                        </div>
+
+                        <details ref={advancedTlsRef} className="space-y-4">
+                          <summary className="cursor-pointer text-sm font-semibold">
+                            {t("Advanced TLS")}
+                            <span className="ml-2 font-normal text-muted-foreground">
+                              {t("Custom CA")} · {t("mTLS client identity")}
+                            </span>
+                          </summary>
+
+                          {hasStoredCustomCa || hasStoredClientIdentity ? (
+                            <Alert>
+                              <AlertTitle>
+                                {[
+                                  hasStoredCustomCa ? t("Custom CA: configured") : null,
+                                  hasStoredClientIdentity ? t("mTLS client identity: configured") : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </AlertTitle>
+                              <AlertDescription>
+                                {t(
+                                  "Stored TLS paths are never displayed. Re-enter the paths to keep them; saving with blank fields removes the stored TLS settings.",
+                                )}
+                              </AlertDescription>
+                            </Alert>
+                          ) : null}
+
+                          <FieldGroup className="grid gap-4 lg:grid-cols-2">
+                            <Field>
+                              <FieldLabel htmlFor="caCertPath">{t("CA Certificate Path")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  id="caCertPath"
+                                  name="caCertPath"
+                                  value={formState.caCertPath}
+                                  onChange={(event) => updateFormState("caCertPath", event.target.value)}
+                                  autoComplete="off"
+                                  placeholder="/etc/rustfs/certs/vault-ca.pem"
+                                  spellCheck={false}
+                                  disabled={formDisabled}
+                                  aria-invalid={configFormErrorField === "caCertPath"}
+                                  aria-describedby={
+                                    configFormErrorField === "caCertPath" ? "kms-config-error" : undefined
+                                  }
+                                />
+                              </FieldContent>
+                              <FieldDescription>
+                                {t("PEM CA bundle trusted for the Vault connection.")}
+                              </FieldDescription>
+                            </Field>
+
+                            <Field>
+                              <FieldLabel htmlFor="clientCertPath">{t("Client Certificate Path")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  id="clientCertPath"
+                                  name="clientCertPath"
+                                  value={formState.clientCertPath}
+                                  onChange={(event) => updateFormState("clientCertPath", event.target.value)}
+                                  autoComplete="off"
+                                  placeholder="/etc/rustfs/certs/vault-client.pem"
+                                  spellCheck={false}
+                                  disabled={formDisabled}
+                                  aria-invalid={configFormErrorField === "clientCertPath"}
+                                  aria-describedby={
+                                    configFormErrorField === "clientCertPath" ? "kms-config-error" : undefined
+                                  }
+                                />
+                              </FieldContent>
+                              <FieldDescription>
+                                {t("PEM client certificate presented to Vault for mTLS.")}
+                              </FieldDescription>
+                            </Field>
+
+                            <Field>
+                              <FieldLabel htmlFor="clientKeyPath">{t("Client Key Path")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  id="clientKeyPath"
+                                  name="clientKeyPath"
+                                  value={formState.clientKeyPath}
+                                  onChange={(event) => updateFormState("clientKeyPath", event.target.value)}
+                                  autoComplete="off"
+                                  placeholder="/etc/rustfs/certs/vault-client.key"
+                                  spellCheck={false}
+                                  disabled={formDisabled}
+                                  aria-invalid={configFormErrorField === "clientKeyPath"}
+                                  aria-describedby={
+                                    configFormErrorField === "clientKeyPath" ? "kms-config-error" : undefined
+                                  }
+                                />
+                              </FieldContent>
+                              <FieldDescription>
+                                {t("PEM private key matching the client certificate.")}
+                              </FieldDescription>
+                            </Field>
+                          </FieldGroup>
+                          <p className="text-xs text-muted-foreground">
+                            {t(
+                              "Paths refer to PEM files on the RustFS server node. In a multi-node cluster the same path must exist on every node.",
+                            )}
+                          </p>
+                        </details>
+                      </div>
+                    )}
+                  </fieldset>
+
+                  <details ref={advancedSettingsRef} className="space-y-4 border-t pt-4">
+                    <summary className="cursor-pointer text-sm font-semibold">
+                      {t("Advanced Settings")}
+                      <span className="ml-2 font-normal text-muted-foreground">
+                        {t("Reliability")} · {t("KMS Cache")}
+                      </span>
+                    </summary>
+
+                    <div className="space-y-4">
+                      <fieldset className="space-y-4">
+                        <legend className="text-sm font-semibold">{t("Reliability")}</legend>
+                        <FieldGroup className="grid gap-4 lg:grid-cols-3">
+                          <Field>
+                            <FieldLabel htmlFor="timeoutSeconds">{t("Timeout (seconds)")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="timeoutSeconds"
+                                name="timeoutSeconds"
+                                type="number"
+                                inputMode="numeric"
+                                min={1}
+                                autoComplete="off"
+                                value={formState.timeoutSeconds}
+                                onChange={(event) => updateFormState("timeoutSeconds", event.target.value)}
+                                disabled={formDisabled}
+                              />
+                            </FieldContent>
+                          </Field>
+
+                          <Field>
+                            <FieldLabel htmlFor="retryAttempts">{t("Retry Attempts")}</FieldLabel>
+                            <FieldContent>
+                              <Input
+                                id="retryAttempts"
+                                name="retryAttempts"
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                autoComplete="off"
+                                value={formState.retryAttempts}
+                                onChange={(event) => updateFormState("retryAttempts", event.target.value)}
+                                disabled={formDisabled}
+                              />
+                            </FieldContent>
+                          </Field>
+                        </FieldGroup>
+                      </fieldset>
+
+                      <fieldset className="space-y-4 border-t pt-4">
+                        <legend className="pe-2 text-sm font-semibold">{t("KMS Cache")}</legend>
+                        <div className="flex items-center gap-3">
+                          <Checkbox
+                            name="enableCache"
+                            checked={formState.enableCache}
+                            onCheckedChange={(checked) => updateFormState("enableCache", checked === true)}
+                            id="enableCache"
+                            disabled={formDisabled}
+                          />
+                          <label htmlFor="enableCache" className="text-sm font-medium">
+                            {t("Enable KMS Cache")}
+                          </label>
+                        </div>
+
+                        {formState.enableCache && (
+                          <FieldGroup className="grid gap-4 lg:grid-cols-2">
+                            <Field>
+                              <FieldLabel htmlFor="maxCachedKeys">{t("Max Cached Keys")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  id="maxCachedKeys"
+                                  name="maxCachedKeys"
+                                  type="number"
+                                  inputMode="numeric"
+                                  min={1}
+                                  autoComplete="off"
+                                  value={formState.maxCachedKeys}
+                                  onChange={(event) => updateFormState("maxCachedKeys", event.target.value)}
+                                  disabled={formDisabled}
+                                />
+                              </FieldContent>
+                            </Field>
+
+                            <Field>
+                              <FieldLabel htmlFor="cacheTtlSeconds">{t("Cache TTL (seconds)")}</FieldLabel>
+                              <FieldContent>
+                                <Input
+                                  id="cacheTtlSeconds"
+                                  name="cacheTtlSeconds"
+                                  type="number"
+                                  inputMode="numeric"
+                                  min={1}
+                                  autoComplete="off"
+                                  value={formState.cacheTtlSeconds}
+                                  onChange={(event) => updateFormState("cacheTtlSeconds", event.target.value)}
+                                  disabled={formDisabled}
+                                />
+                              </FieldContent>
+                            </Field>
+                          </FieldGroup>
+                        )}
+                      </fieldset>
+                    </div>
+                  </details>
+
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={resetFormToCurrentStatus} disabled={resetDisabled}>
+                      {t("Reset to Current Status")}
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={
-                        !nextMarker || loadingKeys || Boolean(activeMutation) || loadingStatus || Boolean(keysError)
-                      }
-                      onClick={() => {
-                        if (!nextMarker) return
-                        setPreviousMarkers((current) => [...current, currentMarker])
-                        void loadKeys(nextMarker)
-                      }}
-                    >
-                      {t("Next")}
-                      <RiArrowRightSLine className="size-4" aria-hidden />
+                    <Button type="submit" disabled={formDisabled || !isConfigDirty}>
+                      {submittingConfig ? <Spinner className="size-4" /> : null}
+                      {statusKind === "NotConfigured" ? t("Save Configuration") : t("Reconfigure KMS")}
                     </Button>
                   </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
-          )}
 
-          {isRunning && capabilities ? <RekeyCard rewrapSupported={capabilities.rewrap === true} /> : null}
+            {isRunning && capabilities ? (
+              <section id="kms-rekey" className="scroll-mt-24">
+                <RekeyCard rewrapSupported={capabilities.rewrap === true} />
+              </section>
+            ) : null}
+          </div>
         </div>
       </Page>
 

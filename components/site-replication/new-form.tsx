@@ -245,7 +245,7 @@ export function SiteReplicationNewForm({
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute top-3 end-3 lg:hidden"
+              className="absolute top-3 end-3 z-10 lg:hidden"
               onClick={handleCancel}
               disabled={saving}
             >

@@ -5,11 +5,10 @@ const theme = getThemeManifest()
 
 // icons: https://icones.js.org/collection/ri
 export default [
-  // {
-  //   label: "Home",
-  //   to: "/",
-  //   icon: "ri:home-line",
-  // },
+  {
+    label: "Data",
+    type: "divider",
+  },
   {
     label: "Browser",
     to: "/browser",
@@ -19,6 +18,30 @@ export default [
     label: "S3 Tables",
     to: "/table-catalog",
     icon: "ri:table-line",
+  },
+  {
+    label: "Bucket Events",
+    to: "/events",
+    icon: "ri:broadcast-line",
+  },
+  {
+    label: "Bucket Replication",
+    to: "/replication",
+    icon: "ri:file-copy-line",
+  },
+  {
+    label: "Lifecycle",
+    to: "/lifecycle",
+    icon: "ri:exchange-2-line",
+  },
+  {
+    label: "Tiered Storage",
+    to: "/tiers",
+    icon: "ri:stack-line",
+  },
+  {
+    label: "Identity",
+    type: "divider",
   },
   {
     label: "Access Keys",
@@ -41,9 +64,8 @@ export default [
     icon: "ri:group-line",
   },
   {
-    label: "Import/Export",
-    to: "/import-export",
-    icon: "ri:download-2-line",
+    label: "Operations",
+    type: "divider",
   },
   {
     label: "Running Status",
@@ -61,34 +83,18 @@ export default [
     icon: "ri:delete-bin-5-line",
   },
   {
-    label: "divider",
-    key: "divider-1",
-    type: "divider",
-  },
-  {
-    label: "Bucket Events",
-    to: "/events",
-    icon: "ri:broadcast-line",
-  },
-  {
-    label: "Bucket Replication",
-    to: "/replication",
-    icon: "ri:file-copy-line",
-  },
-  {
-    label: "Lifecycle",
-    to: "/lifecycle",
-    icon: "ri:exchange-2-line",
-  },
-  {
     label: "Site Replication",
     to: "/site-replication",
     icon: "ri:upload-cloud-2-line",
   },
   {
-    label: "Tiered Storage",
-    to: "/tiers",
-    icon: "ri:stack-line",
+    label: "Import/Export",
+    to: "/import-export",
+    icon: "ri:download-2-line",
+  },
+  {
+    label: "Configuration",
+    type: "divider",
   },
   {
     label: "Event Destinations",
@@ -116,8 +122,7 @@ export default [
     icon: "ri:settings-line",
   },
   {
-    label: "divider",
-    key: "divider-2",
+    label: "Resources",
     type: "divider",
   },
   {

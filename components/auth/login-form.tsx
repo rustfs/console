@@ -111,12 +111,12 @@ export function LoginForm({
   const website = withUtm(theme.links.website ?? "https://www.rustfs.com", "login-form")
 
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-8 lg:p-12">
-      <div className="z-10 mx-auto flex w-full max-w-6xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[600px] lg:flex-row">
-        <div className="hidden lg:block lg:w-1/2">
+    <div className="auth-shell min-h-dvh bg-background">
+      <div className="grid min-h-dvh w-full lg:grid-cols-[1.05fr_1fr]">
+        <div className="hidden lg:block">
           <AuthHeroStatic />
         </div>
-        <div className="relative flex w-full flex-col items-center justify-center bg-card lg:w-1/2">
+        <div className="relative flex min-h-dvh w-full flex-col items-center justify-center bg-background px-4 py-20 sm:px-8">
           <div className="absolute end-4 top-4 z-10">
             <Link
               href="/config"
@@ -128,9 +128,9 @@ export function LoginForm({
             </Link>
           </div>
 
-          <div className="w-full max-w-md space-y-6 p-6 sm:p-8 lg:p-12">
+          <div className="w-full max-w-sm space-y-8">
             <ThemeLogo width={112} height={24} className="lg:hidden" priority />
-            <h1 className="font-heading text-3xl font-bold leading-tight">{t("Login")}</h1>
+            <h1 className="font-heading text-4xl font-semibold leading-tight tracking-tight">{t("Login")}</h1>
 
             {secondFactor ? (
               // A separate step, not an extra field: the password has already

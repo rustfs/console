@@ -57,7 +57,8 @@ export function PerformanceStatusSummary({
 
   return (
     <section
-      className="flex flex-col gap-3 border bg-card p-4 sm:flex-row sm:items-center sm:justify-between"
+      className="status-summary flex flex-col gap-3 border-s-2 bg-muted/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+      data-health={healthState}
       aria-labelledby="running-status-summary-title"
     >
       <div className="flex min-w-0 items-center gap-3">

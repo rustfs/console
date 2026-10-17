@@ -2,9 +2,9 @@
 
 export function AppLoadingShell() {
   return (
-    <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-8 lg:p-12">
-      <div className="z-10 mx-auto flex w-full max-w-6xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[600px] lg:flex-row">
-        <div className="hidden w-1/2 border-e bg-muted/40 p-16 lg:flex lg:flex-col lg:justify-center">
+    <div className="min-h-dvh bg-background" aria-hidden="true">
+      <div className="grid min-h-dvh w-full lg:grid-cols-[1.05fr_1fr]">
+        <div className="hidden border-e bg-muted/40 p-16 lg:flex lg:flex-col lg:justify-center">
           <div className="h-6 w-28 animate-pulse bg-muted-foreground/20" />
           <div className="mt-8 space-y-3">
             <div className="h-10 w-72 max-w-full animate-pulse bg-muted-foreground/20" />
@@ -12,8 +12,8 @@ export function AppLoadingShell() {
             <div className="h-5 w-64 max-w-full animate-pulse bg-muted-foreground/15" />
           </div>
         </div>
-        <div className="flex w-full flex-col items-center justify-center bg-card lg:w-1/2">
-          <div className="w-full max-w-md space-y-6 p-6 sm:p-8 lg:p-12">
+        <div className="flex min-h-dvh w-full flex-col items-center justify-center px-4 py-20 sm:px-8">
+          <div className="w-full max-w-sm space-y-8">
             <div className="h-6 w-28 animate-pulse bg-muted-foreground/20" />
             <div className="grid grid-cols-2 gap-2">
               <div className="h-10 animate-pulse bg-muted" />

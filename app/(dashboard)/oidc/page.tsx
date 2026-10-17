@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
 import { ProviderList } from "@/components/oidc/provider-list"
@@ -175,6 +177,7 @@ export default function OidcPage() {
   const [baselineValues, setBaselineValues] = useState<OidcProviderFormValues>(cloneDefaultFormValues)
   const [formErrors, setFormErrors] = useState<OidcProviderFormErrors>({})
   const [validateResult, setValidateResult] = useState<ValidateOidcConfigResponse | null>(null)
+  const [loadError, setLoadError] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [validating, setValidating] = useState(false)
@@ -187,7 +190,7 @@ export default function OidcPage() {
   )
   const isCreateMode = selectedProvider === null
   const isProviderReadOnly = selectedProvider?.editable === false || selectedProvider?.source === "env"
-  const isReadOnly = !canUpdateOidcProviders || isProviderReadOnly
+  const isReadOnly = !canUpdateOidcProviders || isProviderReadOnly || loading || loadError
   const isDirty = JSON.stringify(formValues) !== JSON.stringify(baselineValues)
 
   const applySelection = useCallback((providerId: string | null, nextProviders: OidcConfigProvider[]) => {
@@ -208,6 +211,7 @@ export default function OidcPage() {
   const loadProviders = useCallback(
     async (preferredProviderId?: string | null) => {
       setLoading(true)
+      setLoadError(false)
       try {
         const response = await getOidcConfig()
         const nextProviders = response?.providers ?? []
@@ -225,8 +229,7 @@ export default function OidcPage() {
         applySelection(candidateProviderId, nextProviders)
       } catch (error) {
         message.error((error as Error).message || t("Failed to load OIDC providers"))
-        setProviders([])
-        applySelection(null, [])
+        setLoadError(true)
       } finally {
         setLoading(false)
       }
@@ -267,6 +270,7 @@ export default function OidcPage() {
 
   const requestSelection = useCallback(
     (providerId: string | null) => {
+      if (loading || loadError || saving || validating) return
       if (providerId === null && !canUpdateOidcProviders) return
 
       const isSameSelection =
@@ -280,7 +284,17 @@ export default function OidcPage() {
       }
       select()
     },
-    [applySelection, canUpdateOidcProviders, confirmDiscardChanges, isDirty, providers],
+    [
+      applySelection,
+      canUpdateOidcProviders,
+      confirmDiscardChanges,
+      isDirty,
+      providers,
+      loading,
+      loadError,
+      saving,
+      validating,
+    ],
   )
 
   const handleFieldChange = useCallback(
@@ -439,36 +453,66 @@ export default function OidcPage() {
           </Alert>
         ) : null}
 
-        <div className="grid gap-4 lg:grid-cols-[18rem_minmax(0,1fr)]">
-          <ProviderList
-            providers={providers}
-            loading={loading}
-            selectedProviderId={selectedProviderId}
-            canAddProvider={canUpdateOidcProviders}
-            onAddProvider={() => requestSelection(null)}
-            onSelectProvider={(providerId) => requestSelection(providerId)}
-          />
+        {loadError ? (
+          <Alert variant="destructive">
+            <AlertTitle>{t("Failed to load OIDC providers")}</AlertTitle>
+            <AlertDescription>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  if (isDirty) confirmDiscardChanges(() => void loadProviders())
+                  else void loadProviders()
+                }}
+              >
+                {t("Retry")}
+              </Button>
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {loading && providers.length === 0 ? (
+          <div role="status" className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
+            <Spinner className="size-4" />
+            {t("Loading…")}
+          </div>
+        ) : loadError && providers.length === 0 ? null : (
+          <div className="grid items-start gap-6 lg:grid-cols-[18rem_minmax(0,1fr)]">
+            <ProviderList
+              providers={providers}
+              loading={loading}
+              selectedProviderId={selectedProviderId}
+              canAddProvider={canUpdateOidcProviders && !loading && !loadError && !saving && !validating}
+              onAddProvider={() => requestSelection(null)}
+              onSelectProvider={(providerId) => requestSelection(providerId)}
+            />
 
-          <OidcForm
-            values={formValues}
-            errors={formErrors}
-            source={selectedProvider?.source}
-            isCreateMode={isCreateMode}
-            isReadOnly={isReadOnly}
-            secretConfigured={selectedProvider?.client_secret_configured ?? false}
-            restartRequired={restartRequired}
-            readOnlyDescription={
-              !canUpdateOidcProviders ? t("You do not have permission to update OIDC providers.") : undefined
-            }
-            isSaving={saving}
-            isValidating={validating}
-            validateResult={validateResult}
-            onChange={handleFieldChange}
-            onSave={handleSave}
-            onValidate={handleValidate}
-            onDelete={handleDelete}
-          />
-        </div>
+            <OidcForm
+              values={formValues}
+              errors={formErrors}
+              source={selectedProvider?.source}
+              isCreateMode={isCreateMode}
+              isReadOnly={isReadOnly}
+              secretConfigured={selectedProvider?.client_secret_configured ?? false}
+              restartRequired={restartRequired}
+              readOnlyDescription={
+                loadError
+                  ? t("Failed to load OIDC providers")
+                  : loading
+                    ? t("Loading…")
+                    : !canUpdateOidcProviders
+                      ? t("You do not have permission to update OIDC providers.")
+                      : undefined
+              }
+              isSaving={saving}
+              isValidating={validating}
+              validateResult={validateResult}
+              onChange={handleFieldChange}
+              onSave={handleSave}
+              onValidate={handleValidate}
+              onDelete={handleDelete}
+            />
+          </div>
+        )}
       </div>
     </Page>
   )

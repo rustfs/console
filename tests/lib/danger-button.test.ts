@@ -5,7 +5,7 @@ import fs from "node:fs"
 // The working tree is CRLF on Windows, so normalize before matching line-anchored patterns.
 const read = (file: string) => fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n")
 
-const css = read("app/globals.css")
+const css = read("styles/rustfs-tokens.css")
 const dangerButton = read("components/danger-button.ts")
 const dialogHost = read("components/dialog-host.tsx")
 const objectList = read("components/object/list.tsx")
@@ -25,23 +25,28 @@ test("destructive label color is a registered theme token", () => {
 const DANGER_FILL_PAIR =
   /--destructive:\s*([^;]+);\s*\n\s*(?:\/\*[^*]*\*\/\s*\n\s*)?--destructive-foreground:\s*([^;]+);/
 
-const oklchLightness = (value: string) => Number(/oklch\(([\d.]+)/.exec(value)?.[1])
+function luminance(value: string): number {
+  const token = value.match(/var\((--[a-z0-9-]+)\)/)?.[1]
+  const hex = token ? css.match(new RegExp(`${token}:\\s*(#[0-9a-fA-F]{6})`))?.[1] : value.trim()
+  assert.ok(hex && /^#[0-9a-fA-F]{6}$/.test(hex), `unresolved color: ${value}`)
+  const channels = [1, 3, 5].map((start) => {
+    const channel = parseInt(hex.slice(start, start + 2), 16) / 255
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
+  })
+  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722
+}
 
-test("destructive label is a light neutral on the light-theme fill and a dark one on the dark-theme fill", () => {
+test("filled destructive actions have accessible label contrast in both themes", () => {
   const light = DANGER_FILL_PAIR.exec(css.slice(0, css.indexOf(".dark {")))
-  assert.ok(light, "light theme must pair --destructive with --destructive-foreground")
-
   const dark = DANGER_FILL_PAIR.exec(css.slice(css.indexOf(".dark {")))
-  assert.ok(dark, "dark theme must pair --destructive with --destructive-foreground")
-
-  assert.ok(
-    oklchLightness(light[2]) > 0.9,
-    "light theme destructive fill needs a near-white label so the filled button stays readable",
-  )
-  assert.ok(
-    oklchLightness(dark[1]) > oklchLightness(dark[2]),
-    "the dark theme lightens --destructive for tinted text, so its filled button needs a dark label",
-  )
+  for (const [theme, pair] of [
+    ["light", light],
+    ["dark", dark],
+  ] as const) {
+    assert.ok(pair, `${theme} theme must define both destructive colors`)
+    const [a, b] = [luminance(pair[1]), luminance(pair[2])].sort((a, b) => b - a)
+    assert.ok((a + 0.05) / (b + 0.05) >= 4.5, `${theme} destructive action must meet WCAG AA`)
+  }
 })
 
 test("every filled danger button reads its label from the destructive-foreground token", () => {

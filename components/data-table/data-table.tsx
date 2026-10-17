@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { useTranslation } from "react-i18next"
+import { Button } from "@/components/ui/button"
 import { flexRender, type Column, type Table } from "@tanstack/react-table"
 import { RiArrowUpDownLine, RiArrowUpSLine, RiArrowDownSLine } from "@remixicon/react"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -12,8 +14,10 @@ import { cn } from "@/lib/utils"
 interface DataTableProps<TData> {
   table: Table<TData>
   isLoading?: boolean
+  keepPreviousData?: boolean
   errorTitle?: string
   errorDescription?: string
+  onRetry?: () => void
   emptyTitle?: string
   emptyDescription?: string
   caption?: string
@@ -27,11 +31,17 @@ interface DataTableProps<TData> {
 
 function getColumnStyles<TData>(column: Column<TData, unknown>) {
   const meta = column.columnDef.meta as
-    | { width?: number | string; minWidth?: number | string; maxWidth?: number | string }
+    | {
+        width?: number | string
+        minWidth?: number | string
+        maxWidth?: number | string
+        align?: "start" | "end" | "center"
+      }
     | undefined
   if (!meta) return undefined
 
   const styles: React.CSSProperties = {}
+  if (meta.align) styles.textAlign = meta.align
   if (meta.width != null) {
     styles.width = typeof meta.width === "number" ? `${meta.width}px` : meta.width
   }
@@ -71,8 +81,10 @@ function getAriaSort<TData>(column: Column<TData, unknown>): React.AriaAttribute
 export function DataTable<TData>({
   table,
   isLoading = false,
+  keepPreviousData = false,
   errorTitle,
   errorDescription,
+  onRetry,
   emptyTitle = "No data",
   emptyDescription = "There is nothing to display yet.",
   caption,
@@ -83,104 +95,132 @@ export function DataTable<TData>({
   expandedRowId,
   renderExpandedRow,
 }: DataTableProps<TData>) {
-  const visibleColumnCount = table.getVisibleLeafColumns().length
+  const { t } = useTranslation()
   const hasRows = table.getRowModel().rows.length > 0
+  const showRows = hasRows && ((!isLoading && !errorTitle) || keepPreviousData)
 
   const tableContent = (
-    <UiTable className={cn("min-w-full tabular-nums", tableClass)} aria-busy={isLoading}>
-      {caption ? <caption className="sr-only">{caption}</caption> : null}
-      <TableHeader className={stickyHeader ? "sticky top-0 z-10 bg-muted/40 backdrop-blur" : "bg-muted/20"}>
-        {table.getHeaderGroups().map((headerGroup) => (
-          <TableRow
-            key={headerGroup.id}
-            className={stickyHeader ? "bg-muted/40 backdrop-blur" : "bg-muted/20 hover:bg-muted/30"}
-          >
-            {headerGroup.headers.map((header) => (
-              <TableHead
-                key={header.id}
-                scope="col"
-                aria-sort={getAriaSort(header.column)}
-                className={bodyHeight ? undefined : "py-2"}
-                style={getColumnStyles(header.column)}
-              >
-                {!header.isPlaceholder && (
-                  <>
-                    {canSort(header.column) ? (
-                      <button
-                        type="button"
-                        className="flex cursor-pointer items-center gap-2 select-none rounded-none outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring/50"
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {header.column.getIsSorted() === "asc" ? (
-                          <RiArrowUpSLine className="size-4" aria-hidden />
-                        ) : header.column.getIsSorted() === "desc" ? (
-                          <RiArrowDownSLine className="size-4" aria-hidden />
-                        ) : (
-                          <RiArrowUpDownLine className="size-4 text-muted-foreground opacity-50" aria-hidden />
-                        )}
-                      </button>
-                    ) : (
-                      flexRender(header.column.columnDef.header, header.getContext())
-                    )}
-                  </>
-                )}
-              </TableHead>
-            ))}
-          </TableRow>
-        ))}
-      </TableHeader>
-      <TableBody>
-        {isLoading ? (
-          <TableRow>
-            <TableCell colSpan={visibleColumnCount} className="h-48 text-center align-middle">
-              <div className="flex flex-col items-center gap-2">
-                <Spinner className="size-6" />
-                <span className="text-sm text-muted-foreground">Loading…</span>
-              </div>
-            </TableCell>
-          </TableRow>
-        ) : errorTitle ? (
-          <TableRow>
-            <TableCell colSpan={visibleColumnCount} className="h-48">
-              <div role="alert">
-                <EmptyState title={errorTitle} description={errorDescription} />
-              </div>
-            </TableCell>
-          </TableRow>
-        ) : hasRows ? (
-          table.getRowModel().rows.map((row) => (
-            <React.Fragment key={row.id}>
-              <TableRow
-                data-state={row.getIsSelected() ? "selected" : undefined}
-                className="transition-colors hover:bg-muted/40"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell
-                    key={cell.id}
-                    className={bodyHeight ? undefined : "py-2"}
-                    style={getColumnStyles(cell.column)}
+    <>
+      <UiTable className={cn("min-w-full tabular-nums", tableClass)} aria-busy={isLoading}>
+        {caption ? <caption className="sr-only">{caption}</caption> : null}
+        <TableHeader className={stickyHeader ? "sticky top-0 z-10 bg-muted" : "bg-muted"}>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id} className="bg-muted hover:bg-muted">
+              {headerGroup.headers.map((header) => (
+                <TableHead
+                  key={header.id}
+                  scope="col"
+                  aria-sort={getAriaSort(header.column)}
+                  className={cn(
+                    "font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground",
+                    !bodyHeight && "py-3",
+                  )}
+                  style={getColumnStyles(header.column)}
+                >
+                  {!header.isPlaceholder && (
+                    <>
+                      {canSort(header.column) ? (
+                        <button
+                          type="button"
+                          className="flex w-full cursor-pointer items-center gap-2 select-none rounded-none outline-none hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring/50"
+                          style={{
+                            justifyContent:
+                              getColumnStyles(header.column)?.textAlign === "end" ? "flex-end" : undefined,
+                          }}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getIsSorted() === "asc" ? (
+                            <RiArrowUpSLine className="size-4" aria-hidden />
+                          ) : header.column.getIsSorted() === "desc" ? (
+                            <RiArrowDownSLine className="size-4" aria-hidden />
+                          ) : (
+                            <RiArrowUpDownLine className="size-4 text-muted-foreground opacity-50" aria-hidden />
+                          )}
+                        </button>
+                      ) : (
+                        flexRender(header.column.columnDef.header, header.getContext())
+                      )}
+                    </>
+                  )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {showRows
+            ? table.getRowModel().rows.map((row) => (
+                <React.Fragment key={row.id}>
+                  <TableRow
+                    data-state={row.getIsSelected() ? "selected" : undefined}
+                    className="transition-colors hover:bg-muted/60"
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-              {expandedRowId === row.id && renderExpandedRow ? renderExpandedRow(row) : null}
-            </React.Fragment>
-          ))
-        ) : (
-          <TableRow>
-            <TableCell colSpan={visibleColumnCount} className="h-48">
-              <EmptyState title={emptyTitle} description={emptyDescription} />
-            </TableCell>
-          </TableRow>
-        )}
-      </TableBody>
-    </UiTable>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell
+                        key={cell.id}
+                        className={bodyHeight ? undefined : "py-2"}
+                        style={getColumnStyles(cell.column)}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {expandedRowId === row.id && renderExpandedRow ? renderExpandedRow(row) : null}
+                </React.Fragment>
+              ))
+            : null}
+        </TableBody>
+      </UiTable>
+      {!showRows ? (
+        <div className="flex min-h-48 w-full flex-col justify-center">
+          {isLoading ? (
+            <div role="status" className="flex flex-col items-center gap-2 py-10">
+              <Spinner className="size-6" />
+              <span className="text-sm text-muted-foreground">{t("Loading…")}</span>
+            </div>
+          ) : errorTitle ? (
+            <div role="alert">
+              <EmptyState title={errorTitle} description={errorDescription}>
+                {onRetry ? (
+                  <Button type="button" variant="outline" onClick={onRetry}>
+                    {t("Retry")}
+                  </Button>
+                ) : null}
+              </EmptyState>
+            </div>
+          ) : (
+            <EmptyState title={emptyTitle} description={emptyDescription} />
+          )}
+        </div>
+      ) : null}
+    </>
   )
 
   return (
-    <div className={cn("flex flex-col gap-4", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-4", className)}>
+      {showRows && errorTitle ? (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 border border-destructive/30 bg-destructive/5 p-4 text-sm"
+        >
+          <div className="min-w-0 space-y-1">
+            <p className="font-medium text-destructive">{errorTitle}</p>
+            {errorDescription ? <p className="text-muted-foreground">{errorDescription}</p> : null}
+          </div>
+          {onRetry ? (
+            <Button type="button" variant="outline" onClick={onRetry} disabled={isLoading}>
+              {t("Retry")}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+      {showRows && isLoading ? (
+        <div role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Spinner className="size-4" />
+          {t("Loading…")}
+        </div>
+      ) : null}
       {bodyHeight ? (
         <ScrollArea className={cn("border", bodyHeight)}>{tableContent}</ScrollArea>
       ) : (

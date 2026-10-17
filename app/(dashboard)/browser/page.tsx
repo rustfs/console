@@ -45,6 +45,7 @@ function BrowserBucketsPage() {
   const [formVisible, setFormVisible] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [data, setData] = useState<BucketRow[]>([])
+  const [loadError, setLoadError] = useState(false)
   const [pending, setPending] = useState(true)
   const [policyLoading, setPolicyLoading] = useState(false)
   const fetchIdRef = useRef(0)
@@ -84,6 +85,7 @@ function BrowserBucketsPage() {
       const fetchId = fetchIdRef.current + 1
       fetchIdRef.current = fetchId
       setPending(true)
+      setLoadError(false)
       try {
         const response = await listBuckets(options)
         if (fetchId !== fetchIdRef.current) return
@@ -118,7 +120,7 @@ function BrowserBucketsPage() {
       } catch (error) {
         if (fetchId !== fetchIdRef.current) return
         console.error("Failed to fetch buckets:", error)
-        setData([])
+        setLoadError(true)
       } finally {
         if (fetchId === fetchIdRef.current) {
           setPending(false)
@@ -184,6 +186,7 @@ function BrowserBucketsPage() {
     {
       header: () => t("Object Count"),
       accessorKey: "Count",
+      meta: { align: "end" },
       cell: ({ row }) =>
         typeof row.original.Count === "number" ? (
           formatInteger(row.original.Count)
@@ -196,6 +199,7 @@ function BrowserBucketsPage() {
     {
       header: () => t("Size"),
       id: "SizeBytes",
+      meta: { align: "end" },
       // use numeric bytes for sorting via accessorFn, but display the formatted string
       accessorFn: (row) => (typeof row.SizeBytes === "number" ? row.SizeBytes : undefined),
       cell: ({ row }) =>
@@ -258,7 +262,7 @@ function BrowserBucketsPage() {
   const confirmDelete = (row: BucketRow) => {
     dialog.error({
       title: t("Warning"),
-      content: t("Are you sure you want to delete this bucket?"),
+      content: `${row.Name}: ${t("Are you sure you want to delete this bucket?")}`,
       positiveText: t("Confirm"),
       negativeText: t("Cancel"),
       onPositiveClick: () => deleteItem(row),
@@ -316,10 +320,14 @@ function BrowserBucketsPage() {
       </PageHeader>
 
       <DataTable
+        keepPreviousData
         table={table}
         isLoading={pending}
-        emptyTitle={t("No Buckets")}
-        emptyDescription={t("Create a bucket to start storing objects.")}
+        caption={t("Buckets")}
+        errorTitle={loadError ? t("Failed to load bucket list") : undefined}
+        onRetry={() => void fetchBuckets({ force: true })}
+        emptyTitle={searchTerm ? t("No buckets match your search") : t("No Buckets")}
+        emptyDescription={searchTerm ? "" : t("Create a bucket to start storing objects.")}
       />
 
       <BucketNewForm show={formVisible} onShowChange={handleFormClosed} />

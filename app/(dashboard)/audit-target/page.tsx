@@ -39,7 +39,8 @@ export default function AuditTargetPage() {
   const { getModuleSwitches } = useModuleSwitches()
 
   const [data, setData] = useState<RowData[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [newFormOpen, setNewFormOpen] = useState(false)
   const [auditEnabled, setAuditEnabled] = useState<boolean | undefined>(undefined)
@@ -48,6 +49,7 @@ export default function AuditTargetPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const [response, switches] = await Promise.allSettled([
         getAuditTargetList(),
@@ -65,7 +67,7 @@ export default function AuditTargetPage() {
       const list = (response.value?.audit_endpoints ?? []) as RowData[]
       setData(list)
     } catch {
-      setData([])
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -113,7 +115,7 @@ export default function AuditTargetPage() {
 
       dialog.error({
         title: t("Warning"),
-        content: t("Are you sure you want to delete this audit target?"),
+        content: `${row.account_id}: ${t("Are you sure you want to delete this audit target?")}`,
         positiveText: t("Confirm"),
         negativeText: t("Cancel"),
         onPositiveClick: () => deleteItem(row),
@@ -228,6 +230,10 @@ export default function AuditTargetPage() {
       ) : null}
 
       <DataTable
+        keepPreviousData
+        caption={t("Audit Targets")}
+        errorTitle={loadError ? t("Failed to get data") : undefined}
+        onRetry={() => void loadData()}
         table={table}
         isLoading={loading}
         emptyTitle={t("No Audit Targets")}

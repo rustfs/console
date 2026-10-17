@@ -38,12 +38,16 @@ export function DialogHost() {
           <AlertDialog
             key={dialog.id}
             open={dialog.open}
-            onOpenChange={(value) => controller.setOpen(dialog.id, value)}
+            onOpenChange={(value) => {
+              if (!pendingDialogIdsRef.current.has(dialog.id)) controller.setOpen(dialog.id, value)
+            }}
           >
             <AlertDialogContent className="sm:max-w-md">
               <AlertDialogHeader>
                 {dialog.title && <AlertDialogTitle>{dialog.title}</AlertDialogTitle>}
-                {dialog.content && <AlertDialogDescription>{dialog.content}</AlertDialogDescription>}
+                {dialog.content && (
+                  <AlertDialogDescription className="[overflow-wrap:anywhere]">{dialog.content}</AlertDialogDescription>
+                )}
               </AlertDialogHeader>
               <AlertDialogFooter>
                 {dialog.negativeText && (
@@ -52,7 +56,10 @@ export function DialogHost() {
                       <button
                         type="button"
                         disabled={isPending}
-                        className={cn(buttonVariants({ variant: "outline" }), "w-full sm:w-auto text-foreground")}
+                        className={cn(
+                          buttonVariants({ variant: "outline" }),
+                          "min-h-11 w-full sm:min-h-10 sm:w-auto text-foreground",
+                        )}
                         onClick={(e) => {
                           e.preventDefault()
                           void runDialogAction({
@@ -79,7 +86,7 @@ export function DialogHost() {
                       disabled={isPending}
                       className={cn(
                         buttonVariants({ variant: positiveButtonVariant(dialog) }),
-                        "w-full sm:w-auto",
+                        "min-h-11 w-full sm:min-h-10 sm:w-auto",
                         dialog.tone === "destructive" && DANGER_BUTTON_CLASS,
                       )}
                       onClick={(e) => {

@@ -30,7 +30,8 @@ export default function UserGroupsPage() {
   const { listGroup, getGroup, removeGroup } = useGroups()
 
   const [data, setData] = useState<GroupRow[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [newFormOpen, setNewFormOpen] = useState(false)
   const [editFormOpen, setEditFormOpen] = useState(false)
@@ -39,6 +40,7 @@ export default function UserGroupsPage() {
 
   const getDataList = React.useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const res = (await listGroup()) as string[] | undefined
       setData(
@@ -47,6 +49,7 @@ export default function UserGroupsPage() {
         })),
       )
     } catch {
+      setLoadError(true)
       message.error(t("Failed to get data"))
     } finally {
       setLoading(false)
@@ -92,7 +95,7 @@ export default function UserGroupsPage() {
     (row: GroupRow) => {
       dialog.error({
         title: t("Confirm Delete"),
-        content: "",
+        content: row.name,
         positiveText: t("Delete"),
         negativeText: t("Cancel"),
         onPositiveClick: () => deleteItem(row),
@@ -178,6 +181,10 @@ export default function UserGroupsPage() {
 
       <div className="space-y-4">
         <DataTable
+          keepPreviousData
+          caption={t("User Groups")}
+          errorTitle={loadError ? t("Failed to get data") : undefined}
+          onRetry={() => void getDataList()}
           table={table}
           isLoading={loading}
           emptyTitle={t("No Data")}

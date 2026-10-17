@@ -58,14 +58,6 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const canEditObjectLock = canCapability("bucket.objectLock.edit", bucketContext)
   const canEditQuota = canCapability("bucket.quota.edit", bucketContext)
 
-  React.useEffect(() => {
-    if (objectLock) setVersion(true)
-  }, [objectLock])
-
-  React.useEffect(() => {
-    if (!version && objectLock) setObjectLock(false)
-  }, [version, objectLock])
-
   const resetForm = () => {
     setObjectKey("")
     setVersion(false)
@@ -146,13 +138,16 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   }
 
   return (
-    <Dialog open={show} onOpenChange={(open) => !open && closeModal()} disablePointerDismissal>
-      <DialogContent className="overflow-x-hidden sm:max-w-2xl" showCloseButton={false}>
+    <Dialog open={show} onOpenChange={(open) => !open && !creating && closeModal()} disablePointerDismissal>
+      <DialogContent
+        className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-2xl"
+        showCloseButton={false}
+      >
         <DialogHeader>
           <DialogTitle>{t("Create Bucket")}</DialogTitle>
         </DialogHeader>
 
-        <div className="-mx-2 max-h-[80vh] space-y-6 overflow-y-auto overflow-x-hidden px-2">
+        <div className="-mx-2 min-h-0 space-y-6 overflow-y-auto overflow-x-hidden px-2">
           <Field>
             <FieldLabel htmlFor="bucket-name">{t("Please enter name")}</FieldLabel>
             <FieldContent>
@@ -175,7 +170,10 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
               <Switch
                 id="bucket-new-version"
                 checked={version}
-                onCheckedChange={setVersion}
+                onCheckedChange={(checked) => {
+                  setVersion(checked)
+                  if (!checked) setObjectLock(false)
+                }}
                 disabled={!canEditVersioning}
               />
             </FieldContent>
@@ -187,7 +185,10 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
               <Switch
                 id="bucket-new-object-lock"
                 checked={objectLock}
-                onCheckedChange={setObjectLock}
+                onCheckedChange={(checked) => {
+                  setObjectLock(checked)
+                  if (checked) setVersion(true)
+                }}
                 disabled={!canEditObjectLock}
               />
             </FieldContent>
@@ -331,7 +332,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
         </div>
 
         <DialogFooter className="border-t pt-4">
-          <Button variant="outline" onClick={closeModal}>
+          <Button variant="outline" disabled={creating} onClick={closeModal}>
             {t("Cancel")}
           </Button>
           <Button variant="default" disabled={!canCreateBucket || isSubmitDisabled} onClick={handleCreateBucket}>

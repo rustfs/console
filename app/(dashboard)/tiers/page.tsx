@@ -52,7 +52,8 @@ export default function TiersPage() {
   const { listTiers, removeTiers } = useTiers()
 
   const [data, setData] = useState<TierRow[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [newFormOpen, setNewFormOpen] = useState(false)
   const [changeKeyOpen, setChangeKeyOpen] = useState(false)
   const [transitionJobOpen, setTransitionJobOpen] = useState(false)
@@ -60,11 +61,12 @@ export default function TiersPage() {
 
   const loadTiers = useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const response = await listTiers()
       setData(response ?? [])
     } catch {
-      setData([])
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -92,7 +94,7 @@ export default function TiersPage() {
     (row: TierRow) => {
       dialog.error({
         title: t("Warning"),
-        content: t("Are you sure you want to delete this tier?"),
+        content: `${getConfig(row)?.name}: ${t("Are you sure you want to delete this tier?")}`,
         positiveText: t("Confirm"),
         negativeText: t("Cancel"),
         onPositiveClick: () => deleteTier(row),
@@ -207,6 +209,10 @@ export default function TiersPage() {
       </PageHeader>
 
       <DataTable
+        keepPreviousData
+        caption={t("Tiers")}
+        errorTitle={loadError ? t("Failed to get data") : undefined}
+        onRetry={() => void loadTiers()}
         table={table}
         isLoading={loading}
         emptyTitle={t("No Tiers")}

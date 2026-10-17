@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { useTranslation } from "react-i18next"
 import { RiEyeLine, RiEyeOffLine, RiSettings3Line } from "@remixicon/react"
 import { Input } from "@/components/ui/input"
@@ -17,7 +16,6 @@ import { ThemeSwitcher } from "@/components/theme-switcher"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { ThemeLogo } from "@/components/theme/logo"
 import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
-import { buildRoute } from "@/lib/routes"
 import { getThemeManifest } from "@/lib/theme/manifest"
 import { withUtm } from "@/lib/utm"
 
@@ -54,6 +52,7 @@ export interface LoginFormProps {
       sessionToken: string
     }>
   >
+  submitting?: boolean
   handleLogin: (e: React.FormEvent) => void
   oidcProviders?: OidcProvider[]
   onOidcLogin?: (providerId: string) => void
@@ -69,18 +68,18 @@ function SecretKeyInput({ id, ...props }: SecretKeyInputProps) {
   const visibilityLabel = visible ? t("Hide key") : t("Show key")
 
   return (
-    <InputGroup className="h-11 sm:h-8">
+    <InputGroup className="h-11 sm:h-10">
       <InputGroupInput
         {...props}
         id={id}
         type={visible ? "text" : "password"}
-        className="h-11 text-base sm:h-8 sm:text-xs"
+        className="h-11 text-base sm:h-10 sm:text-sm"
       />
       <InputGroupAddon align="inline-end">
         <InputGroupButton
           type="button"
           size="icon-xs"
-          className="size-11 sm:size-6"
+          className="size-11 sm:size-8"
           aria-label={visibilityLabel}
           aria-controls={id}
           title={visibilityLabel}
@@ -101,24 +100,18 @@ export function LoginForm({
   sts,
   setSts,
   handleLogin,
+  submitting = false,
   oidcProviders,
   onOidcLogin,
   secondFactor,
 }: LoginFormProps) {
   const { t } = useTranslation()
+  const [secondFactorMethod, setSecondFactorMethod] = useState<"totp" | "recovery">("totp")
   const theme = getThemeManifest()
   const website = withUtm(theme.links.website ?? "https://www.rustfs.com", "login-form")
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-8 lg:p-12">
-      <Image
-        src={buildRoute("/backgrounds/scillate.svg")}
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="absolute inset-0 z-0 object-cover opacity-30"
-      />
       <div className="z-10 mx-auto flex w-full max-w-6xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[600px] lg:flex-row">
         <div className="hidden lg:block lg:w-1/2">
           <AuthHeroStatic />
@@ -135,9 +128,9 @@ export function LoginForm({
             </Link>
           </div>
 
-          <div className="w-full max-w-sm space-y-7 p-6 sm:p-8 lg:p-10">
+          <div className="w-full max-w-md space-y-6 p-6 sm:p-8 lg:p-12">
             <ThemeLogo width={112} height={24} className="lg:hidden" priority />
-            <h1 className="sr-only">{t("Login")}</h1>
+            <h1 className="font-heading text-3xl font-bold leading-tight">{t("Login")}</h1>
 
             {secondFactor ? (
               // A separate step, not an extra field: the password has already
@@ -159,8 +152,11 @@ export function LoginForm({
                     <InputOTP
                       id="login-mfa-code"
                       maxLength={TOTP_CODE_LENGTH}
-                      value={secondFactor.code}
-                      onChange={secondFactor.setCode}
+                      value={secondFactorMethod === "totp" ? secondFactor.code : ""}
+                      onChange={(code) => {
+                        setSecondFactorMethod("totp")
+                        secondFactor.setCode(code)
+                      }}
                       disabled={secondFactor.submitting}
                       autoFocus
                       dir="ltr"
@@ -183,13 +179,16 @@ export function LoginForm({
                     <Input
                       id="login-mfa-recovery"
                       name="recoveryCode"
-                      value={secondFactor.code.length > TOTP_CODE_LENGTH ? secondFactor.code : ""}
-                      onChange={(e) => secondFactor.setCode(e.target.value)}
+                      value={secondFactorMethod === "recovery" ? secondFactor.code : ""}
+                      onChange={(e) => {
+                        setSecondFactorMethod("recovery")
+                        secondFactor.setCode(e.target.value)
+                      }}
                       autoComplete="one-time-code"
                       spellCheck={false}
                       dir="ltr"
                       disabled={secondFactor.submitting}
-                      className="h-11 font-mono text-base sm:h-8 sm:text-xs"
+                      className="h-11 font-mono text-base sm:h-10 sm:text-sm"
                       placeholder="XXXX-XXXX-XXXX-XXXX-XXXX"
                     />
                   </FieldContent>
@@ -198,7 +197,7 @@ export function LoginForm({
                 <div className="grid gap-2">
                   <Button
                     type="submit"
-                    className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
+                    className="h-11 w-full justify-center text-sm sm:h-10 sm:text-sm"
                     disabled={secondFactor.submitting}
                   >
                     {secondFactor.submitting ? <Spinner className="size-4" /> : null}
@@ -207,7 +206,7 @@ export function LoginForm({
                   <Button
                     type="button"
                     variant="ghost"
-                    className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
+                    className="h-11 w-full justify-center text-sm sm:h-10 sm:text-sm"
                     onClick={secondFactor.onCancel}
                     disabled={secondFactor.submitting}
                   >
@@ -218,17 +217,17 @@ export function LoginForm({
             ) : (
               <div className="space-y-4">
                 <Tabs value={method} onValueChange={(v) => setMethod(v as LoginMethod)} className="flex flex-col gap-4">
-                  <TabsList className="h-11 w-full border bg-muted/60 sm:h-9">
-                    <TabsTrigger className="w-1/2 text-sm sm:text-xs" value="accessKeyAndSecretKey">
+                  <TabsList className="h-11 w-full border bg-muted sm:h-10">
+                    <TabsTrigger className="w-1/2 text-sm" disabled={submitting} value="accessKeyAndSecretKey">
                       {t("Key Login")}
                     </TabsTrigger>
-                    <TabsTrigger className="w-1/2 text-sm sm:text-xs" value="sts">
+                    <TabsTrigger className="w-1/2 text-sm" disabled={submitting} value="sts">
                       {t("STS Login")}
                     </TabsTrigger>
                   </TabsList>
 
-                  <form onSubmit={handleLogin} autoComplete="off">
-                    <div className="grid gap-y-5">
+                  <form onSubmit={handleLogin} autoComplete="off" aria-busy={submitting}>
+                    <fieldset disabled={submitting} className="grid min-w-0 gap-y-5">
                       {method === "accessKeyAndSecretKey" ? (
                         <>
                           <Field>
@@ -248,7 +247,7 @@ export function LoginForm({
                                 type="text"
                                 spellCheck={false}
                                 required
-                                className="h-11 text-base sm:h-8 sm:text-xs"
+                                className="h-11 text-base sm:h-10 sm:text-sm"
                                 placeholder={t("Please enter account")}
                               />
                             </FieldContent>
@@ -294,7 +293,7 @@ export function LoginForm({
                                 type="text"
                                 spellCheck={false}
                                 required
-                                className="h-11 text-base sm:h-8 sm:text-xs"
+                                className="h-11 text-base sm:h-10 sm:text-sm"
                                 placeholder={t("Please enter STS username")}
                               />
                             </FieldContent>
@@ -337,7 +336,7 @@ export function LoginForm({
                                 type="text"
                                 spellCheck={false}
                                 required
-                                className="h-11 text-base sm:h-8 sm:text-xs"
+                                className="h-11 text-base sm:h-10 sm:text-sm"
                                 placeholder={t("Please enter STS session token")}
                               />
                             </FieldContent>
@@ -348,11 +347,12 @@ export function LoginForm({
                       <Button
                         type="submit"
                         variant="default"
-                        className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
+                        className="h-11 w-full justify-center text-sm sm:h-10 sm:text-sm"
                       >
+                        {submitting ? <Spinner className="size-4" /> : null}
                         {t("Login")}
                       </Button>
-                    </div>
+                    </fieldset>
                   </form>
                 </Tabs>
               </div>
@@ -371,7 +371,8 @@ export function LoginForm({
                       key={provider.provider_id}
                       type="button"
                       variant="outline"
-                      className="h-11 w-full justify-center text-sm sm:h-8 sm:text-xs"
+                      className="h-11 w-full justify-center text-sm sm:h-10 sm:text-sm"
+                      disabled={submitting}
                       onClick={() => onOidcLogin(provider.provider_id)}
                     >
                       {t("Login with {name}", { name: provider.display_name })}
@@ -384,11 +385,11 @@ export function LoginForm({
             <div className="flex items-center justify-between gap-4 border-t pt-5">
               <p className="min-w-0 text-sm text-muted-foreground">
                 {t("Login Problems?")}{" "}
-                <Link href={website} className="text-foreground underline-offset-4 hover:underline">
+                <Link href={website} className="text-link underline-offset-4 hover:underline">
                   {t("Get Help")}
                 </Link>
               </p>
-              <div className="flex shrink-0 items-center gap-1 [&_[data-slot=button]]:size-10 sm:[&_[data-slot=button]]:size-8">
+              <div className="flex shrink-0 items-center gap-1 [&_[data-slot=button]]:size-11 sm:[&_[data-slot=button]]:size-9">
                 <ThemeSwitcher />
                 <LanguageSwitcher />
               </div>

@@ -149,13 +149,15 @@ export function AppSidebar() {
     >
       <SidebarHeader>
         <Link href={homeRoute ?? "/"} className="flex items-center gap-3">
-          {isCollapsed ? (
+          {isCollapsed && theme.id === "default" ? (
+            <ThemeLogo compact alt={APP_NAME} width={32} height={32} className="size-8 shrink-0" />
+          ) : isCollapsed ? (
             <div className="flex size-8 items-center justify-center rounded-none bg-primary text-sm font-semibold text-primary-foreground">
               <span>{brandInitial}</span>
             </div>
           ) : (
             <div className="flex min-w-0 items-baseline gap-2 px-3 py-4">
-              <ThemeLogo width={96} height={16} className="shrink-0" alt={APP_NAME} priority />
+              <ThemeLogo width={112} height={22} className="shrink-0" alt={APP_NAME} priority />
             </div>
           )}
         </Link>

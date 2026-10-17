@@ -19,7 +19,7 @@ export function EmptyState({ title, description, icon, children, className }: Em
           {icon && (
             <EmptyMedia
               variant="icon"
-              className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted"
+              className="mx-auto flex h-12 w-12 items-center justify-center rounded-none bg-muted"
             >
               {icon}
             </EmptyMedia>

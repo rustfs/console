@@ -118,7 +118,9 @@ test("license text uses a bounded readable surface without preserving mobile ind
   assert.match(source, /<Page className="max-w-5xl">/)
   assert.match(source, /h-\[min\(70dvh,48rem\)\]/)
   assert.match(source, /whitespace-pre-line/)
-  assert.match(source, /p-4[^\"]*sm:p-6/)
+  assert.match(source, /<CardContent className="space-y-4">/)
+  assert.match(source, /className="text-start"/)
+  assert.doesNotMatch(source, /<ScrollArea[^>]+border/)
 })
 
 test("KMS key details keep a fixed header and one scrolling body", () => {

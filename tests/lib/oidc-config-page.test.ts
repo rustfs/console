@@ -60,7 +60,12 @@ const provider: OidcConfigProvider = {
   username_claim: "preferred_username",
 }
 
-async function mount(t: TestContext, overrides: Partial<OidcConfigProvider> = {}, saveError?: Error) {
+async function mount(
+  t: TestContext,
+  overrides: Partial<OidcConfigProvider> = {},
+  saveError?: Error,
+  initialReadError?: Error,
+) {
   const browser = new Window()
   const globals = { window: browser, document: browser.document, IS_REACT_ACT_ENVIRONMENT: true }
   const descriptors = Object.keys(globals).map(
@@ -72,6 +77,7 @@ async function mount(t: TestContext, overrides: Partial<OidcConfigProvider> = {}
   let currentProvider = { ...provider, ...overrides }
   let form: FormProps | undefined
   let reads = 0
+  let readError = initialReadError
   const saves: { providerId: string; payload: SaveOidcConfigPayload }[] = []
   const errors: string[] = []
   const successes: string[] = []
@@ -84,6 +90,7 @@ async function mount(t: TestContext, overrides: Partial<OidcConfigProvider> = {}
   const api = {
     getOidcConfig: async () => {
       reads += 1
+      if (readError) throw readError
       return { providers: [currentProvider], restart_required: saves.length > 0 }
     },
     saveOidcConfig: async (providerId: string, payload: SaveOidcConfigPayload) => {
@@ -101,6 +108,9 @@ async function mount(t: TestContext, overrides: Partial<OidcConfigProvider> = {}
     usePermissions: () => ({ isAdmin: true }),
     useOidcConfig: () => api,
     Page: passthrough,
+    Spinner: () => null,
+    Button: ({ children, onClick }: { children: React.ReactNode; onClick: () => void }) =>
+      React.createElement("button", { onClick }, children),
     PageHeader: passthrough,
     Alert: passthrough,
     AlertTitle: passthrough,
@@ -137,7 +147,23 @@ async function mount(t: TestContext, overrides: Partial<OidcConfigProvider> = {}
       await getForm().onSave()
     })
   }
-  return { getForm, change, save, saves, errors, successes, getReads: () => reads }
+  return {
+    getForm,
+    change,
+    save,
+    saves,
+    errors,
+    successes,
+    getReads: () => reads,
+    hasForm: () => form !== undefined,
+    text: () => container.textContent,
+    setReadError: (error?: Error) => {
+      readError = error
+    },
+    retry: async () => {
+      await React.act(async () => container.querySelector("button")?.click())
+    },
+  }
 }
 
 test("a dynamic provider with a null redirect URI can be edited and saved again after reload", async (t) => {
@@ -215,4 +241,25 @@ test("a failed save reports the API error and preserves the edited fields", asyn
   assert.equal(ui.getForm().values.display_name, "Updated provider")
   assert.equal(ui.getForm().isSaving, false)
   assert.equal(ui.getReads(), 1)
+})
+
+test("a failed provider read does not masquerade as a new provider and can be retried", async (t) => {
+  const ui = await mount(t, {}, undefined, new Error("Unavailable"))
+  assert.equal(ui.hasForm(), false)
+  assert.match(ui.text(), /Failed to load OIDC providers/)
+  ui.setReadError()
+  await ui.retry()
+  assert.equal(ui.getForm().values.provider_id, "example")
+  assert.equal(ui.getForm().isReadOnly, false)
+})
+
+test("a failed reload preserves the selected provider and edited fields", async (t) => {
+  const ui = await mount(t)
+  await ui.change("display_name", "Updated provider")
+  ui.setReadError(new Error("Unavailable"))
+  await ui.save()
+  assert.equal(ui.getForm().values.provider_id, "example")
+  assert.equal(ui.getForm().values.display_name, "Updated provider")
+  assert.equal(ui.getForm().isReadOnly, true)
+  assert.match(ui.text(), /Retry/)
 })

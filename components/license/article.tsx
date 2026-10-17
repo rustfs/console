@@ -27,12 +27,12 @@ export function LicenseArticle() {
 
       <Card className="space-y-4 shadow-none">
         <CardContent className="space-y-4">
-          <div className="text-center">
+          <div className="text-start">
             <h2 className="text-xl font-semibold">{t("Apache License")}</h2>
             <p className="mt-2 text-sm text-muted-foreground">{t("Version 2.0, January 2004")}</p>
           </div>
-          <ScrollArea className="h-[min(70dvh,48rem)] min-h-[28rem] border">
-            <pre className="whitespace-pre-line break-words p-4 text-start text-sm leading-6 text-foreground/80 sm:p-6">
+          <ScrollArea className="h-[min(70dvh,48rem)] min-h-[28rem]">
+            <pre className="whitespace-pre-line break-words text-start font-mono text-sm leading-6 text-muted-foreground">
               {licenseContent || t("Loading…")}
             </pre>
           </ScrollArea>

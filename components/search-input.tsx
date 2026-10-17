@@ -52,6 +52,7 @@ export function SearchInput({
         <InputGroupButton
           variant="ghost"
           size="icon-xs"
+          className="size-11 sm:size-8"
           type="button"
           aria-label={t("Clear search")}
           onClick={handleClear}

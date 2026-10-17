@@ -38,7 +38,8 @@ export default function AccessKeysPage() {
   const { canCapability } = usePermissions()
 
   const [data, setData] = useState<RowData[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [newItemVisible, setNewItemVisible] = useState(false)
   const [editItemOpen, setEditItemOpen] = useState(false)
@@ -56,10 +57,12 @@ export default function AccessKeysPage() {
 
   const listUserAccounts = async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const res = (await listUserServiceAccounts({})) as { accounts?: RowData[] }
       setData(res?.accounts ?? [])
     } catch (error) {
+      setLoadError(true)
       console.error(error)
       message.error(t("Get Data Failed"))
     } finally {
@@ -153,7 +156,7 @@ export default function AccessKeysPage() {
   const confirmDeleteSingle = (row: RowData) => {
     dialog.error({
       title: t("Warning"),
-      content: t("Are you sure you want to delete this key?"),
+      content: `${row.accessKey}: ${t("Are you sure you want to delete this key?")}`,
       positiveText: t("Confirm"),
       negativeText: t("Cancel"),
       onPositiveClick: () => deleteItem(row.accessKey),
@@ -243,6 +246,10 @@ export default function AccessKeysPage() {
 
       <div className="space-y-3">
         <DataTable
+          keepPreviousData
+          caption={t("Access Keys")}
+          errorTitle={loadError ? t("Failed to get data") : undefined}
+          onRetry={() => void listUserAccounts()}
           table={table}
           isLoading={loading}
           emptyTitle={t("No Access Keys")}

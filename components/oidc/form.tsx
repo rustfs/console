@@ -56,6 +56,7 @@ export function OidcForm({
 }: OidcFormProps) {
   const { t } = useTranslation()
   const showRedirectUri = !values.redirect_uri_dynamic
+  const fieldsDisabled = isReadOnly || isSaving || isValidating
 
   return (
     <section className="space-y-4 border p-4 md:p-6" aria-labelledby="oidc-provider-form-title">
@@ -79,24 +80,6 @@ export function OidcForm({
               ? (readOnlyDescription ?? t("Environment-managed providers are read-only"))
               : t("Changes will take effect after RustFS restarts")}
           </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {isCreateMode && !isReadOnly ? (
-            <Button type="button" variant="outline" onClick={onValidate} disabled={isValidating || isSaving}>
-              {isValidating ? t("Validating…") : t("Validate")}
-            </Button>
-          ) : null}
-          {!isReadOnly ? (
-            <Button type="button" onClick={onSave} disabled={isSaving || isValidating}>
-              {isSaving ? t("Saving…") : t("Save")}
-            </Button>
-          ) : null}
-          {!isCreateMode && !isReadOnly ? (
-            <Button type="button" variant="outline" onClick={onDelete} disabled={isSaving || isValidating}>
-              {t("Delete")}
-            </Button>
-          ) : null}
         </div>
       </div>
 
@@ -148,7 +131,7 @@ export function OidcForm({
               autoComplete="off"
               placeholder={t("Provider ID")}
               spellCheck={false}
-              disabled={!isCreateMode || isReadOnly}
+              disabled={!isCreateMode || fieldsDisabled}
             />
           </FieldContent>
           <FieldDescription>{t("Only letters, numbers, underscores, and hyphens are allowed.")}</FieldDescription>
@@ -164,7 +147,7 @@ export function OidcForm({
                 name="enabled"
                 checked={values.enabled}
                 onCheckedChange={(checked) => onChange("enabled", checked)}
-                disabled={isReadOnly}
+                disabled={fieldsDisabled}
               />
               <span className="text-xs text-muted-foreground">{values.enabled ? t("Enabled") : t("Disabled")}</span>
             </div>
@@ -181,7 +164,7 @@ export function OidcForm({
               onChange={(event) => onChange("display_name", event.target.value)}
               autoComplete="off"
               placeholder={t("Display Name")}
-              disabled={isReadOnly}
+              disabled={fieldsDisabled}
             />
           </FieldContent>
         </Field>
@@ -198,7 +181,7 @@ export function OidcForm({
               autoComplete="off"
               placeholder="https://idp.example.com/.well-known/openid-configuration"
               spellCheck={false}
-              disabled={isReadOnly}
+              disabled={fieldsDisabled}
             />
           </FieldContent>
           <FieldError>{errors.config_url}</FieldError>
@@ -215,7 +198,7 @@ export function OidcForm({
               autoComplete="off"
               placeholder={t("Client ID")}
               spellCheck={false}
-              disabled={isReadOnly}
+              disabled={fieldsDisabled}
             />
           </FieldContent>
           <FieldError>{errors.client_id}</FieldError>
@@ -233,7 +216,7 @@ export function OidcForm({
               autoComplete="new-password"
               placeholder={isCreateMode ? t("Client Secret") : t("Leave empty to keep current secret")}
               spellCheck={false}
-              disabled={isReadOnly}
+              disabled={fieldsDisabled}
             />
           </FieldContent>
           <FieldDescription>
@@ -258,7 +241,7 @@ export function OidcForm({
               autoComplete="off"
               placeholder="openid,profile,email"
               spellCheck={false}
-              disabled={isReadOnly}
+              disabled={fieldsDisabled}
             />
           </FieldContent>
           <FieldDescription>{t("Use comma-separated scopes. The openid scope is required.")}</FieldDescription>
@@ -276,7 +259,7 @@ export function OidcForm({
               autoComplete="off"
               placeholder=""
               spellCheck={false}
-              disabled={isReadOnly}
+              disabled={fieldsDisabled}
             />
           </FieldContent>
           <FieldDescription>{t("Comma-separated audience IDs.")}</FieldDescription>
@@ -292,7 +275,7 @@ export function OidcForm({
                 name="redirect_uri_dynamic"
                 checked={values.redirect_uri_dynamic}
                 onCheckedChange={(checked) => onChange("redirect_uri_dynamic", checked)}
-                disabled={isReadOnly}
+                disabled={fieldsDisabled}
               />
               <span className="text-xs text-muted-foreground">
                 {values.redirect_uri_dynamic ? t("Enabled") : t("Disabled")}
@@ -318,7 +301,7 @@ export function OidcForm({
               autoComplete="off"
               placeholder="https://rustfs.example.com/rustfs/admin/v3/oidc/callback/default"
               spellCheck={false}
-              disabled={isReadOnly || !showRedirectUri}
+              disabled={fieldsDisabled || !showRedirectUri}
             />
           </FieldContent>
           <FieldDescription>
@@ -349,7 +332,7 @@ export function OidcForm({
                   autoComplete="off"
                   placeholder={t("Claim Name")}
                   spellCheck={false}
-                  disabled={isReadOnly}
+                  disabled={fieldsDisabled}
                 />
               </FieldContent>
             </Field>
@@ -365,7 +348,7 @@ export function OidcForm({
                   autoComplete="off"
                   placeholder={t("Claim Prefix")}
                   spellCheck={false}
-                  disabled={isReadOnly}
+                  disabled={fieldsDisabled}
                 />
               </FieldContent>
             </Field>
@@ -381,7 +364,7 @@ export function OidcForm({
                   autoComplete="off"
                   placeholder={t("Role Policy")}
                   spellCheck={false}
-                  disabled={isReadOnly}
+                  disabled={fieldsDisabled}
                 />
               </FieldContent>
               <FieldDescription>
@@ -400,7 +383,7 @@ export function OidcForm({
                   autoComplete="off"
                   placeholder={t("Groups Claim")}
                   spellCheck={false}
-                  disabled={isReadOnly}
+                  disabled={fieldsDisabled}
                 />
               </FieldContent>
             </Field>
@@ -416,7 +399,7 @@ export function OidcForm({
                   autoComplete="off"
                   placeholder="roles"
                   spellCheck={false}
-                  disabled={isReadOnly}
+                  disabled={fieldsDisabled}
                 />
               </FieldContent>
               <FieldDescription>
@@ -435,7 +418,7 @@ export function OidcForm({
                   autoComplete="off"
                   placeholder={t("Email Claim")}
                   spellCheck={false}
-                  disabled={isReadOnly}
+                  disabled={fieldsDisabled}
                 />
               </FieldContent>
             </Field>
@@ -451,12 +434,29 @@ export function OidcForm({
                   autoComplete="off"
                   placeholder={t("Username Claim")}
                   spellCheck={false}
-                  disabled={isReadOnly}
+                  disabled={fieldsDisabled}
                 />
               </FieldContent>
             </Field>
           </div>
         </details>
+      </div>
+      <div className="sticky bottom-0 z-10 flex flex-wrap justify-end gap-2 border-t bg-background py-4 [&_[data-slot=button]]:min-h-11 sm:[&_[data-slot=button]]:min-h-10">
+        {isCreateMode && !isReadOnly ? (
+          <Button type="button" variant="outline" onClick={onValidate} disabled={isValidating || isSaving}>
+            {isValidating ? t("Validating…") : t("Validate")}
+          </Button>
+        ) : null}
+        {!isReadOnly ? (
+          <Button type="button" onClick={onSave} disabled={isSaving || isValidating}>
+            {isSaving ? t("Saving…") : t("Save")}
+          </Button>
+        ) : null}
+        {!isCreateMode && !isReadOnly ? (
+          <Button type="button" variant="outline" onClick={onDelete} disabled={isSaving || isValidating}>
+            {t("Delete")}
+          </Button>
+        ) : null}
       </div>
     </section>
   )

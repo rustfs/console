@@ -61,7 +61,8 @@ export default function UsersPage() {
   const canAssignGroups = canCapability("users.assignGroups")
 
   const [data, setData] = useState<UserRow[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [newFormOpen, setNewFormOpen] = useState(false)
   const [editFormOpen, setEditFormOpen] = useState(false)
@@ -70,6 +71,7 @@ export default function UsersPage() {
 
   const getDataList = React.useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const res = (await listUsers()) as Record<string, Record<string, unknown>>
       const users: UserRow[] = Object.entries(res ?? {}).map(([username, info]) => ({
@@ -78,6 +80,7 @@ export default function UsersPage() {
       })) as UserRow[]
       setData(users)
     } catch {
+      setLoadError(true)
       message.error(t("Failed to get data"))
     } finally {
       setLoading(false)
@@ -171,7 +174,7 @@ export default function UsersPage() {
   const confirmDelete = (row: UserRow) => {
     dialog.error({
       title: t("Warning"),
-      content: t("Are you sure you want to delete this user?"),
+      content: `${row.accessKey}: ${t("Are you sure you want to delete this user?")}`,
       positiveText: t("Confirm"),
       negativeText: t("Cancel"),
       onPositiveClick: () => deleteItem(row),
@@ -264,6 +267,10 @@ export default function UsersPage() {
 
       <div className="space-y-4">
         <DataTable
+          keepPreviousData
+          caption={t("Users")}
+          errorTitle={loadError ? t("Failed to get data") : undefined}
+          onRetry={() => void getDataList()}
           table={table}
           isLoading={loading}
           emptyTitle={t("No Data")}

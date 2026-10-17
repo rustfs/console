@@ -132,7 +132,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
         onOpenChange(nextOpen)
       }}
     >
-      <DialogContent className="max-h-[90vh] max-w-xl overflow-y-auto overflow-x-hidden">
+      <DialogContent className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-xl">
         <DialogHeader className="space-y-2 text-start">
           <DialogTitle>{t("Edit Site")}</DialogTitle>
           <DialogDescription>
@@ -142,7 +142,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4">
+        <div className="grid min-h-0 gap-4 overflow-y-auto">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="site-edit-name">{t("Site Name")}</Label>
@@ -271,7 +271,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
             />
           </div>
 
-          <div className="grid gap-4 rounded-none border p-4 sm:grid-cols-2">
+          <div className="grid gap-4 bg-muted p-4 sm:grid-cols-2">
             <div className="space-y-1">
               <p className="text-xs text-muted-foreground">{t("Deployment ID")}</p>
               <p className="font-mono text-xs break-all">{peer.deploymentId || "-"}</p>

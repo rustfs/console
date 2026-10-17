@@ -870,7 +870,7 @@ export default function TableCatalogPage() {
               clearable
             />
           </div>
-          <div className="min-h-0 flex-1 divide-y overflow-y-auto">
+          <div className="max-h-64 min-h-0 flex-1 divide-y overflow-y-auto lg:max-h-none">
             {filteredBuckets.length ? (
               filteredBuckets.map((name) => {
                 const info = bucketInfo[name]

@@ -29,13 +29,15 @@ export default function PoliciesPage() {
   const canDeletePolicy = canCapability("policies.delete")
 
   const [data, setData] = useState<PolicyItem[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [showPolicyForm, setShowPolicyForm] = useState(false)
   const [currentPolicy, setCurrentPolicy] = useState<PolicyItem | null>(null)
 
   const listPolicies = async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const res = (await fetchPolicies()) as Record<string, unknown>
       const policies: PolicyItem[] = Object.keys(res ?? {})
@@ -46,6 +48,7 @@ export default function PoliciesPage() {
         }))
       setData(policies)
     } catch (error) {
+      setLoadError(true)
       console.error(error)
       message.error(t("Failed to fetch data"))
     } finally {
@@ -72,7 +75,7 @@ export default function PoliciesPage() {
   const confirmDelete = (row: PolicyItem) => {
     dialog.error({
       title: t("Warning"),
-      content: t("Are you sure you want to delete this policy?"),
+      content: `${row.name}: ${t("Are you sure you want to delete this policy?")}`,
       positiveText: t("Confirm"),
       negativeText: t("Cancel"),
       onPositiveClick: () => deleteItem(row),
@@ -164,6 +167,10 @@ export default function PoliciesPage() {
 
       <div className="space-y-3">
         <DataTable
+          keepPreviousData
+          caption={t("Policies")}
+          errorTitle={loadError ? t("Failed to get data") : undefined}
+          onRetry={() => void listPolicies()}
           table={table}
           isLoading={loading}
           emptyTitle={t("No Policies")}

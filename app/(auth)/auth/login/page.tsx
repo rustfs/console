@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, Suspense, useState } from "react"
+import { useEffect, Suspense, useState, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
@@ -37,10 +37,15 @@ function LoginPageContent() {
     secretAccessKey: "",
     sessionToken: "",
   })
+  const loginPendingRef = useRef(false)
+  const [submitting, setSubmitting] = useState(false)
   const [oidcProviders, setOidcProviders] = useState<OidcProvider[]>([])
   // The pending second-factor exchange. The long-term credentials it needs stay
   // in this component's state for the duration and are never persisted.
-  const [pendingMfa, setPendingMfa] = useState<{ challenge?: string } | null>(null)
+  const [pendingMfa, setPendingMfa] = useState<{
+    challenge?: string
+    credentials: typeof accessKeyAndSecretKey | typeof sts
+  } | null>(null)
   const [mfaCode, setMfaCode] = useState("")
   const [mfaError, setMfaError] = useState("")
   const [mfaSubmitting, setMfaSubmitting] = useState(false)
@@ -93,6 +98,9 @@ function LoginPageContent() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (loginPendingRef.current) return
+    loginPendingRef.current = true
+    setSubmitting(true)
 
     const credentials = method === "accessKeyAndSecretKey" ? accessKeyAndSecretKey : sts
 
@@ -104,7 +112,7 @@ function LoginPageContent() {
         // Not a failure: the password was accepted and the account simply has a
         // second factor. Saying "login failed" here would send the user to reset
         // a password that is working.
-        setPendingMfa({ challenge: outcome.challenge })
+        setPendingMfa({ challenge: outcome.challenge, credentials })
         setMfaCode("")
         setMfaError("")
         return
@@ -113,6 +121,9 @@ function LoginPageContent() {
       message.success(t("Login Success"))
     } catch {
       message.error(t("Login Failed"))
+    } finally {
+      loginPendingRef.current = false
+      setSubmitting(false)
     }
   }
 
@@ -125,7 +136,7 @@ function LoginPageContent() {
     try {
       const currentConfig = await configManager.loadConfig()
       await completeLoginWithSecondFactor(
-        method === "accessKeyAndSecretKey" ? accessKeyAndSecretKey : sts,
+        pendingMfa.credentials,
         { code: mfaCode, challenge: pendingMfa.challenge },
         currentConfig,
       )
@@ -155,13 +166,23 @@ function LoginPageContent() {
           setMfaCode("")
           setMfaError("")
         },
-        accountName: method === "accessKeyAndSecretKey" ? accessKeyAndSecretKey.accessKeyId : sts.accessKeyId,
+        accountName: pendingMfa.credentials.accessKeyId,
       }
     : undefined
 
   const handleOidcLogin = async (providerId: string) => {
-    const config = await configManager.loadConfig()
-    initiateOidcLogin(config.serverHost, providerId)
+    if (loginPendingRef.current) return
+    loginPendingRef.current = true
+    setSubmitting(true)
+    try {
+      const config = await configManager.loadConfig()
+      initiateOidcLogin(config.serverHost, providerId)
+    } catch {
+      message.error(t("Login Failed"))
+    } finally {
+      loginPendingRef.current = false
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -173,6 +194,7 @@ function LoginPageContent() {
       sts={sts}
       setSts={setSts}
       handleLogin={handleLogin}
+      submitting={submitting}
       oidcProviders={oidcProviders}
       onOidcLogin={handleOidcLogin}
       secondFactor={secondFactor}

@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect } from "react"
+import { useTranslation } from "react-i18next"
+import { Spinner } from "@/components/ui/spinner"
 import { usePathname, useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useApiReady } from "@/contexts/api-context"
@@ -9,6 +11,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { canAccessDashboardRoute } from "@/lib/dashboard-route-meta"
 
 export function DashboardAuthGuard({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation()
   const router = useRouter()
   const pathname = usePathname()
   const { isAuthenticated } = useAuth()
@@ -42,16 +45,13 @@ export function DashboardAuthGuard({ children }: { children: React.ReactNode }) 
     router,
   ])
 
-  if (!isReady || !isAuthenticated) {
-    return null
-  }
-
-  if (!hasResolvedAdmin) {
-    return null
-  }
-
-  if (!isAdmin && (isLoading || !hasFetchedPolicy)) {
-    return null
+  if (!isReady || !isAuthenticated || !hasResolvedAdmin || (!isAdmin && (isLoading || !hasFetchedPolicy))) {
+    return (
+      <div role="status" className="flex min-h-64 items-center justify-center gap-3 text-sm text-muted-foreground">
+        <Spinner className="size-5" />
+        <span>{t("Loading…")}</span>
+      </div>
+    )
   }
 
   if (!canAccessDashboardRoute(pathname, { isAdmin, canAccessPath })) {

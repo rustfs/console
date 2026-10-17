@@ -2,7 +2,6 @@
 
 import { useState, Suspense } from "react"
 import Link from "next/link"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { AppLoadingShell } from "@/components/app-loading-shell"
@@ -14,7 +13,7 @@ import { LanguageSwitcher } from "@/components/language-switcher"
 import { ThemeLogo } from "@/components/theme/logo"
 import { AuthHeroStatic } from "@/components/auth/heroes/hero-static"
 import { useMessage } from "@/lib/feedback/message"
-import { buildRoute, getLoginRoute } from "@/lib/routes"
+import { getLoginRoute } from "@/lib/routes"
 import { configManager } from "@/lib/config"
 import { checkServerHealth } from "@/lib/config-helpers"
 import { getThemeManifest } from "@/lib/theme/manifest"
@@ -104,19 +103,11 @@ function ConfigPageContent() {
 
   return (
     <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-muted p-4 sm:p-8 lg:p-12">
-      <Image
-        src={buildRoute("/backgrounds/scillate.svg")}
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="absolute inset-0 z-0 object-cover opacity-30"
-      />
       <div className="z-10 mx-auto flex w-full max-w-6xl flex-col overflow-hidden border bg-card shadow-none lg:min-h-[600px] lg:flex-row">
-        <div className="hidden lg:block lg:w-5/12">
+        <div className="hidden lg:block lg:w-1/2">
           <AuthHeroStatic />
         </div>
-        <div className="flex w-full flex-col items-center justify-center bg-card lg:w-7/12">
+        <div className="flex w-full flex-col items-center justify-center bg-card lg:w-1/2">
           <div className="w-full max-w-md p-6 sm:p-8 lg:p-10">
             <ThemeLogo width={112} height={24} className="lg:hidden" priority />
             <div className="mt-8 lg:mt-0">
@@ -141,7 +132,7 @@ function ConfigPageContent() {
                         type="url"
                         autoComplete="off"
                         spellCheck={false}
-                        className="h-11 text-base sm:h-8 sm:text-xs"
+                        className="h-11 text-base sm:h-10 sm:text-sm"
                         placeholder={t("Please enter server address (e.g., http://localhost:9000)")}
                       />
                     </FieldContent>

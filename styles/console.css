@@ -1,0 +1,147 @@
+/* Product-level overrides keep the upstream UI primitives reusable. */
+.console-ui {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.console-ui :where(h1, h2, h3) {
+  text-wrap: pretty;
+}
+
+.console-ui :where(h1, h2, .font-heading) {
+  font-stretch: 112%;
+}
+
+.console-ui :lang(zh) :where(h1, h2, h3, .font-heading) {
+  letter-spacing: 0;
+}
+
+.console-ui [data-slot="card"] {
+  --card-spacing: 1.5rem;
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+.console-ui [data-slot="card-title"] {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.console-ui
+  :where(
+    [data-slot="input"],
+    [data-slot="input-group"],
+    [data-slot="select-trigger"],
+    [data-slot="input-group-control"]
+  ) {
+  min-height: 2.5rem;
+  font-size: 0.875rem;
+}
+
+.console-ui [data-slot="input-group"] input {
+  min-height: 0;
+}
+
+.console-ui [data-slot="button"] {
+  min-height: 2rem;
+  font-size: 0.875rem;
+  transition-property: color, background-color, border-color, box-shadow, transform;
+  transition-duration: var(--duration-fast);
+}
+
+.console-ui :where([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"]) [data-slot="button"] {
+  min-height: 2.5rem;
+}
+
+.console-ui :where([data-slot="button"], [data-slot="input"], [data-slot="select-trigger"]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.console-ui :where([data-sidebar="menu-button"], [data-sidebar="menu-sub-button"])[data-active] {
+  background: var(--selection);
+  color: var(--link);
+  font-weight: 600;
+}
+
+.console-ui [data-slot="badge"] {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.console-ui
+  :where(
+    [data-slot="dialog-content"],
+    [data-slot="alert-dialog-content"],
+    [data-slot="popover-content"],
+    [data-slot="dropdown-menu-content"]
+  ) {
+  box-shadow: var(--shadow-overlay);
+}
+
+@media (max-width: 639px) {
+  .console-ui :where([data-slot="input"], [data-slot="input-group"], [data-slot="select-trigger"]) {
+    min-height: 2.75rem;
+    font-size: 1rem;
+  }
+
+  .console-ui :where([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"]) [data-slot="button"] {
+    min-height: 2.75rem;
+  }
+}
+
+.console-ui [data-slot="button"]:where(.h-8) {
+  min-height: 2.5rem;
+  padding-inline: 1rem;
+}
+
+.console-ui :where(a.text-primary, [data-slot="button"].text-primary) {
+  color: var(--link);
+}
+
+.console-ui [data-slot="table-head"] {
+  height: 2.5rem;
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.console-ui [data-slot="table-cell"] {
+  font-size: 0.875rem;
+}
+
+@media (max-width: 639px) {
+  .console-ui [data-slot="button"] {
+    min-height: 2.75rem;
+  }
+}
+
+.console-ui [data-slot="table-head"] button {
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+}
+
+.console-ui
+  :where(
+    [data-slot="switch"],
+    [data-slot="switch-thumb"],
+    [data-slot="radio-group-item"],
+    [data-slot="radio-group-indicator"] > span
+  ) {
+  border-radius: 0;
+}
+
+.console-ui :where([data-slot$="-overlay"], .backdrop-blur, .backdrop-blur-xs) {
+  backdrop-filter: none;
+}
+
+.console-ui [data-slot$="-overlay"] {
+  background-color: color-mix(in srgb, var(--color-neutral-950) 40%, transparent);
+}

@@ -1063,30 +1063,32 @@ export default function SSEPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {!statusError ? (
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="border bg-muted/40 p-3">
-                    <p className="text-xs text-muted-foreground">{t("Backend Type")}</p>
-                    <p className="text-sm font-medium text-foreground">{status?.backend_type ?? t("Not configured")}</p>
+                <dl className="grid gap-4 bg-muted p-4 sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="space-y-1">
+                    <dt className="text-xs text-muted-foreground">{t("Backend Type")}</dt>
+                    <dd className="text-sm font-medium text-foreground">
+                      {status?.backend_type ?? t("Not configured")}
+                    </dd>
                   </div>
-                  <div className="border bg-muted/40 p-3">
-                    <p className="text-xs text-muted-foreground">{t("Status")}</p>
-                    <p className="break-all text-sm font-medium text-foreground">
+                  <div className="space-y-1">
+                    <dt className="text-xs text-muted-foreground">{t("Status")}</dt>
+                    <dd className="break-all text-sm font-medium text-foreground">
                       {loadingStatus ? t("Loading…") : getKmsStatusText()}
-                    </p>
+                    </dd>
                   </div>
-                  <div className="border bg-muted/40 p-3">
-                    <p className="text-xs text-muted-foreground">{t("Health")}</p>
-                    <p className="text-sm font-medium text-foreground">
+                  <div className="space-y-1">
+                    <dt className="text-xs text-muted-foreground">{t("Health")}</dt>
+                    <dd className="text-sm font-medium text-foreground">
                       {status?.healthy == null ? t("Unknown") : status.healthy ? t("Healthy") : t("Unhealthy")}
-                    </p>
+                    </dd>
                   </div>
-                  <div className="border bg-muted/40 p-3">
-                    <p className="text-xs text-muted-foreground">{t("Default SSE Key")}</p>
-                    <p className="break-all text-sm font-medium text-foreground">
+                  <div className="space-y-1">
+                    <dt className="text-xs text-muted-foreground">{t("Default SSE Key")}</dt>
+                    <dd className="break-all text-sm font-medium text-foreground">
                       {status?.config_summary?.default_key_id || t("Not set")}
-                    </p>
+                    </dd>
                   </div>
-                </div>
+                </dl>
               ) : null}
 
               {!statusError && statusKind === "Error" ? (

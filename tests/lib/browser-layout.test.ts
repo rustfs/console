@@ -21,10 +21,9 @@ test("object browser source guards responsive and accessible row actions", async
 
   assert.match(layout, /<SidebarInset className="min-w-0">/)
   assert.doesNotMatch(browserContent + objectList, /min-w-\[40vw\]/)
-  // Header actions rely on PageHeader's own container: one scrollable line on small
-  // screens, wrapping on lg. ObjectList must not add a wrapper that breaks it.
-  assert.match(pageHeader, /flex w-full flex-nowrap items-center gap-2 overflow-x-auto/)
-  assert.match(pageHeader, /lg:flex-wrap lg:justify-end/)
+  // Header actions wrap at narrow widths; the object browser must use that container.
+  assert.match(pageHeader, /flex w-full min-w-0 flex-wrap items-center gap-2/)
+  assert.match(pageHeader, /lg:justify-end/)
   assert.doesNotMatch(objectList, /lg:flex-wrap lg:justify-end/)
   const headerMenuSource = objectList.match(/aria-label=\{t\("More actions"\)\}[\s\S]*?<\/DropdownMenu>/)?.[0]
 

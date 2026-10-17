@@ -11,11 +11,11 @@ test("auth surfaces use dynamic viewport height and mobile touch targets", () =>
     assert.match(source, /h-11/)
   }
 
-  assert.match(login, /<h1[^>]*className="sr-only"/)
+  assert.match(login, /<h1[^>]*className="font-heading text-3xl font-bold leading-tight"/)
   assert.match(login, /required/)
   assert.match(login, /hidden lg:block lg:w-1\/2/)
   assert.match(login, /bg-card lg:w-1\/2/)
-  assert.match(login, /w-full max-w-sm space-y-7/)
+  assert.match(login, /w-full max-w-md space-y-6/)
   assert.doesNotMatch(login, /lg:w-7\/12/)
 })
 
@@ -87,12 +87,13 @@ test("bucket rule actions share the page header with bucket navigation", () => {
   }
 })
 
-test("shared page headers stay compact and scroll naturally on narrow screens", () => {
+test("shared page headers wrap actions into reachable rows on narrow screens", () => {
   const source = fs.readFileSync("components/page-header.tsx", "utf8")
 
   assert.match(source, /lg:sticky/)
-  assert.match(source, /overflow-x-auto/)
-  assert.match(source, /flex-nowrap/)
+  assert.doesNotMatch(source, /overflow-x-auto|flex-nowrap/)
+  assert.match(source, /flex-wrap/)
+  assert.match(source, /min-h-11/)
   assert.match(source, /\[&_h1\]:font-heading/)
 })
 

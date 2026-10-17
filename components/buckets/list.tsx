@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 import { RiArchiveLine, RiRefreshLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
+import { PageHeader } from "@/components/page-header"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useBucket } from "@/hooks/use-bucket"
@@ -39,6 +40,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
 
   const [searchTerm, setSearchTerm] = React.useState("")
   const [data, setData] = React.useState<BucketListRow[]>([])
+  const [loadError, setLoadError] = React.useState(false)
   const [pending, setPending] = React.useState(true)
   const [policyLoading, setPolicyLoading] = React.useState(false)
   const fetchIdRef = React.useRef(0)
@@ -74,6 +76,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
       const fetchId = fetchIdRef.current + 1
       fetchIdRef.current = fetchId
       setPending(true)
+      setLoadError(false)
       try {
         const response = await listBuckets(options)
         if (fetchId !== fetchIdRef.current) return
@@ -102,7 +105,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         void loadPolicyStatus(fetchId, bucketNames)
       } catch {
         if (fetchId !== fetchIdRef.current) return
-        setData([])
+        setLoadError(true)
       } finally {
         if (fetchId === fetchIdRef.current) {
           setPending(false)
@@ -164,6 +167,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
       {
         header: () => t("Object Count"),
         accessorKey: "Count",
+        meta: { align: "end" },
         cell: ({ row }) =>
           typeof row.original.Count === "number" ? (
             formatInteger(row.original.Count)
@@ -176,6 +180,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
       {
         header: () => t("Size"),
         id: "SizeBytes",
+        meta: { align: "end" },
         accessorFn: (row) => (typeof row.SizeBytes === "number" ? row.SizeBytes : undefined),
         cell: ({ row }) =>
           row.original.Size ?? (usageLoading ? <Spinner className="size-3 text-muted-foreground" /> : "--"),
@@ -207,24 +212,36 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
 
   return (
     <>
-      <div className="sticky top-0 z-5 flex flex-col justify-between gap-2 bg-background lg:flex-row">
-        <div className="space-y-2">{title}</div>
-        <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder={t("Search")}
-            clearable
-            className="max-w-sm"
-          />
-          <Button variant="outline" onClick={() => fetchBuckets({ force: true })}>
-            <RiRefreshLine className="size-4" aria-hidden />
-            <span>{t("Refresh")}</span>
-          </Button>
-        </div>
-      </div>
+      <PageHeader
+        actions={
+          <>
+            <SearchInput
+              value={searchTerm}
+              onChange={setSearchTerm}
+              placeholder={t("Search")}
+              clearable
+              className="max-w-sm"
+            />
+            <Button variant="outline" onClick={() => fetchBuckets({ force: true })}>
+              <RiRefreshLine className="size-4" aria-hidden />
+              <span>{t("Refresh")}</span>
+            </Button>
+          </>
+        }
+      >
+        {title}
+      </PageHeader>
 
-      <DataTable table={table} isLoading={pending} emptyTitle={t("No Buckets")} emptyDescription={emptyDescription} />
+      <DataTable
+        keepPreviousData
+        table={table}
+        isLoading={pending}
+        caption={t("Buckets")}
+        errorTitle={loadError ? t("Failed to load bucket list") : undefined}
+        onRetry={() => void fetchBuckets({ force: true })}
+        emptyTitle={searchTerm ? t("No buckets match your search") : t("No Buckets")}
+        emptyDescription={searchTerm ? "" : emptyDescription}
+      />
     </>
   )
 }

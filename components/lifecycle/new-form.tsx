@@ -7,7 +7,15 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
@@ -201,7 +209,15 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
           : errors.deleteMarker
             ? "lifecycle-expired-delete-marker"
             : null
-    if (firstErrorId) document.getElementById(firstErrorId)?.focus()
+    if (firstErrorId) {
+      const field = document.getElementById(firstErrorId)
+      let disclosure = field?.closest("details")
+      while (disclosure) {
+        disclosure.open = true
+        disclosure = disclosure.parentElement?.closest("details")
+      }
+      field?.focus()
+    }
     return !firstErrorId
   }
 
@@ -292,10 +308,9 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
       disablePointerDismissal
     >
       <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b px-4 py-3 pe-12 sm:px-6">
-          <DialogTitle>
-            {t("Add Lifecycle Rule")} ({t("Bucket")}: {bucketName || ""})
-          </DialogTitle>
+        <DialogHeader>
+          <DialogTitle>{t("Add Lifecycle Rule")}</DialogTitle>
+          <DialogDescription className="font-mono break-all">{bucketName}</DialogDescription>
         </DialogHeader>
 
         <form
@@ -306,7 +321,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
             void handleSave()
           }}
         >
-          <div className="min-h-0 space-y-6 overflow-y-auto overscroll-contain p-4 sm:p-6">
+          <DialogBody className="min-h-0 space-y-6 overflow-y-auto overscroll-contain">
             {saveError ? (
               <div role="alert" className="border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
                 {saveError}
@@ -470,7 +485,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                                 <Button
                                   type="button"
                                   variant="ghost"
-                                  size="sm"
+                                  size="icon-sm"
                                   className="text-destructive"
                                   disabled={tags.length === 1 || submitting}
                                   aria-label={`${t("Delete")} ${t("Tag Name")} ${index + 1}`}
@@ -704,7 +719,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                                 <Button
                                   type="button"
                                   variant="ghost"
-                                  size="sm"
+                                  size="icon-sm"
                                   className="text-destructive"
                                   disabled={tags.length === 1 || submitting}
                                   aria-label={`${t("Delete")} ${t("Tag Name")} ${index + 1}`}
@@ -723,9 +738,9 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
                 </details>
               </TabsContent>
             </Tabs>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3 sm:px-6">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

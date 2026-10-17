@@ -6,7 +6,7 @@ import { RiRefreshLine } from "@remixicon/react"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { useUsers } from "@/hooks/use-users"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -272,11 +272,11 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
         className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-5xl"
         aria-busy={loading || submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{row?.accessKey || t("Account")}</DialogTitle>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+        <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
           {loading ? (
             <div
               className="flex min-h-72 items-center justify-center gap-2 text-sm text-muted-foreground"
@@ -356,9 +356,9 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
               ) : null}
             </Tabs>
           ) : null}
-        </div>
+        </DialogBody>
 
-        <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+        <DialogFooter>
           <Button variant="outline" onClick={closeModal} disabled={submitting}>
             {isAccessKeysTab ? t("Close") : t("Cancel")}
           </Button>

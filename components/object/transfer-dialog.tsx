@@ -7,12 +7,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
@@ -157,7 +158,7 @@ export function ObjectTransferDialog({
         finalFocus={returnFocus}
         aria-busy={submitting}
       >
-        <DialogHeader className="px-4 pt-4 pb-3">
+        <DialogHeader>
           <DialogTitle>{mode === "copy" ? t("Copy Object") : t("Move Object")}</DialogTitle>
           <DialogDescription className="truncate" title={`${bucket}/${objectKey}`}>
             {t("Source")}:{" "}
@@ -174,7 +175,7 @@ export function ObjectTransferDialog({
           }}
           noValidate
         >
-          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain px-4 py-1">
+          <DialogBody className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain">
             {bucket.length + objectKey.length > 80 ? (
               <p className="break-all text-xs text-muted-foreground">
                 {t("Source")}:{" "}
@@ -301,8 +302,8 @@ export function ObjectTransferDialog({
                 <p className="text-xs text-muted-foreground">{t("Keep this page open until the transfer finishes.")}</p>
               </div>
             ) : null}
-          </div>
-          <DialogFooter className="p-4">
+          </DialogBody>
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

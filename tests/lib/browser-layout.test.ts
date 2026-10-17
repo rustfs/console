@@ -31,7 +31,7 @@ test("object browser source guards responsive and accessible row actions", async
   assert.doesNotMatch(headerMenuSource, /All objects loaded/)
   assert.match(headerMenuSource, /\{nextToken \? \(\s+<DropdownMenuItem/)
   assert.ok(rowActionsSource)
-  assert.match(rowActionsSource, /className="size-11 lg:size-8"/)
+  assert.match(rowActionsSource, /size="icon-sm"/)
   assert.match(rowActionsSource, /className="w-max min-w-40 max-w-\[calc\(100vw-2rem\)\]"/)
   assert.match(rowActionsSource, /!canPreview[\s\S]*!canDelete[\s\S]*return null/)
   assert.match(rowActionsSource, /aria-label=\{`\$\{t\("Actions"\)\}: \$\{displayKey\(key\)\}`\}/)

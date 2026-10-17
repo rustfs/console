@@ -11,12 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import {
   Drawer,
   DrawerClose,
@@ -67,7 +68,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/dialog"
 
 const KEY_LIST_LIMIT = 20
 const DEFAULT_PENDING_DELETE_DAYS = 7
@@ -2076,17 +2077,14 @@ export default function SSEPage() {
         }}
       >
         <DialogContent className="max-h-[min(90dvh,42rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg">
-          <DialogHeader className="border-b px-4 py-4 pe-12 sm:px-6">
+          <DialogHeader>
             <DialogTitle>{t("Create New Key")}</DialogTitle>
             <DialogDescription>
               {t("Create a new KMS key and optionally make it the default SSE key.")}
             </DialogDescription>
           </DialogHeader>
 
-          <div
-            className="min-h-0 space-y-4 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6"
-            aria-busy={creatingKey}
-          >
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto overscroll-contain" aria-busy={creatingKey}>
             <Field>
               <FieldLabel htmlFor="kms-key-name">{t("Key Name")}</FieldLabel>
               <FieldContent>
@@ -2137,9 +2135,9 @@ export default function SSEPage() {
                 </span>
               </label>
             </div>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-4 sm:px-6">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

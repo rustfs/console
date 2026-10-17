@@ -317,12 +317,12 @@ test("bucket setting controls expose names, field errors, and unresolved depende
 })
 
 test("bucket forms preserve semantic groups without nested framing", () => {
-  assert.match(bucketNewFormSource, /<fieldset className="space-y-4 border-t pt-4">/)
+  assert.match(bucketNewFormSource, /<DialogSection title=\{t\("Security"\)\}>/)
   assert.match(bucketNewFormSource, /aria-label=\{t\("Quota Unit"\)\}/)
   assert.match(bucketNewFormSource, /aria-label=\{t\("Retention Mode"\)\}/)
   assert.doesNotMatch(bucketNewFormSource, /<div className="space-y-4 border p-4">/)
   assert.doesNotMatch(bucketInfoSource, /quotaFormEnabled[\s\S]{0,120}<div className="space-y-4 border p-4">/)
-  assert.match(eventsFormSource, /<div className="bg-muted\/20 p-4">/)
+  assert.match(eventsFormSource, /<DialogSection title=\{t\("Configuration"\)\}>/)
   assert.doesNotMatch(eventsFormSource, /<div className="border p-4">/)
 })
 

@@ -34,10 +34,14 @@ test("object info drawer stays open while the tag dialog is open", () => {
 
   assert.equal(source.includes("modal={false}"), false)
   assert.equal(source.includes("modal={!showTagView && !showRetentionView}"), false)
-  assert.match(source, /<Dialog open=\{showTagView\} onOpenChange=\{setShowTagView\} disablePointerDismissal>/)
+  assert.match(source, /if \(!nextOpen && \(showTagView \|\| showRetentionView \|\| showVersions\)\) return/)
   assert.match(
     source,
-    /<Dialog open=\{showRetentionView\} onOpenChange=\{setShowRetentionView\} disablePointerDismissal>/,
+    /<Dialog\s+open=\{showTagView\}\s+onOpenChange=\{\(nextOpen\) => \{\s*if \(!updatingTagsRef\.current\) setShowTagView\(nextOpen\)\s*\}\}\s+disablePointerDismissal/,
+  )
+  assert.match(
+    source,
+    /<Dialog\s+open=\{showRetentionView\}\s+onOpenChange=\{\(nextOpen\) => \{\s*if \(!updatingRetentionRef\.current\) setShowRetentionView\(nextOpen\)\s*\}\}\s+disablePointerDismissal/,
   )
 })
 

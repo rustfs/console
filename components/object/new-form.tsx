@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { useObject } from "@/hooks/use-object"
 import { useMessage } from "@/lib/feedback/message"
 interface ObjectNewFormProps {
@@ -60,7 +60,7 @@ export function ObjectNewForm({
         <DialogHeader>
           <DialogTitle>{t("New Form", { type: displayType })}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <DialogBody className="space-y-4">
           <Alert>
             <AlertDescription>{t("Overwrite Warning")}</AlertDescription>
           </Alert>
@@ -73,7 +73,7 @@ export function ObjectNewForm({
             autoComplete="off"
             spellCheck={false}
           />
-        </div>
+        </DialogBody>
         <DialogFooter>
           <Button variant="outline" onClick={() => onShowChange(false)}>
             {t("Close")}

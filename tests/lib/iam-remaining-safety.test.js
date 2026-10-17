@@ -76,5 +76,5 @@ test("batch policy dialog loads safely and cannot submit an empty selection", ()
     source,
     /disabled=\{!checked\.length \|\| !checkedKeys\.length \|\| loading \|\| Boolean\(loadError\) \|\| submitting\}/,
   )
-  assert.match(source, /<DialogFooter className="border-t bg-muted\/20 px-4 py-3">/)
+  assert.match(source, /<DialogFooter>/)
 })

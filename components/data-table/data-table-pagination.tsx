@@ -37,7 +37,7 @@ export function DataTablePagination<TData>({
       <div className="flex items-center gap-3">
         <span className="text-sm text-muted-foreground">{t("Rows per page")}</span>
         <Select value={String(pagination.pageSize)} onValueChange={(value) => handlePageSizeChange(value ?? "")}>
-          <SelectTrigger className="h-10 w-24 sm:h-8" aria-label={t("Rows per page")}>
+          <SelectTrigger className="w-24" aria-label={t("Rows per page")}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -60,8 +60,7 @@ export function DataTablePagination<TData>({
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
           <Button
             variant="outline"
-            size="sm"
-            className="h-10 w-full sm:h-7 sm:w-auto"
+            className="w-full sm:w-auto"
             disabled={!canPrevious}
             onClick={() => table.setPageIndex(0)}
           >
@@ -69,26 +68,18 @@ export function DataTablePagination<TData>({
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-10 w-full sm:h-7 sm:w-auto"
+            className="w-full sm:w-auto"
             disabled={!canPrevious}
             onClick={() => table.previousPage()}
           >
             {t("Prev")}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-10 w-full sm:h-7 sm:w-auto"
-            disabled={!canNext}
-            onClick={() => table.nextPage()}
-          >
+          <Button variant="outline" className="w-full sm:w-auto" disabled={!canNext} onClick={() => table.nextPage()}>
             {t("Next")}
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            className="h-10 w-full sm:h-7 sm:w-auto"
+            className="w-full sm:w-auto"
             disabled={!canNext}
             onClick={() => table.setPageIndex(Math.max(pageCount - 1, 0))}
           >

@@ -4,12 +4,13 @@ import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -107,7 +108,7 @@ export function MfaDisableDialog({ open, onOpenChange, accessKey, onDisabled }: 
         className="max-h-[min(90dvh,40rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg"
         aria-busy={submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{t("Turn off two-factor authentication")}</DialogTitle>
           <DialogDescription>
             {t("{account} will be protected by its password alone, and the recovery codes will stop working.", {
@@ -123,7 +124,7 @@ export function MfaDisableDialog({ open, onOpenChange, accessKey, onDisabled }: 
             void submit()
           }}
         >
-          <div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4">
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto overscroll-contain">
             {submitError && (
               <Alert variant="destructive">
                 <AlertDescription>{submitError}</AlertDescription>
@@ -180,9 +181,9 @@ export function MfaDisableDialog({ open, onOpenChange, accessKey, onDisabled }: 
               </FieldContent>
               <FieldError id="mfa-disable-password-error">{errors.password}</FieldError>
             </Field>
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="flex-col-reverse gap-2 border-t bg-muted/20 px-4 py-3 sm:flex-row sm:justify-end">
+          <DialogFooter className="flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={submitting}>
               {t("Cancel")}
             </Button>

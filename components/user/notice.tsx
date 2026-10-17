@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiDownloadLine, RiErrorWarningLine } from "@remixicon/react"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Button } from "@/components/ui/button"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { CopyInput } from "@/components/copy-input"
@@ -55,11 +55,11 @@ export function UserNotice({ open, onOpenChange, data, onClose, title }: UserNot
         className="max-h-[min(90dvh,40rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-md"
         showCloseButton={false}
       >
-        <DialogHeader className="border-b px-4 py-3">
+        <DialogHeader>
           <DialogTitle>{title ?? t("New user has been created")}</DialogTitle>
         </DialogHeader>
 
-        <div className="min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4">
+        <DialogBody className="min-h-0 space-y-4 overflow-y-auto overscroll-contain">
           <div className="flex gap-3 border bg-muted/30 p-3" role="note">
             <RiErrorWarningLine className="mt-0.5 size-4 shrink-0 text-foreground" aria-hidden />
             <div className="min-w-0 space-y-1">
@@ -98,9 +98,9 @@ export function UserNotice({ open, onOpenChange, data, onClose, title }: UserNot
               />
             </FieldContent>
           </Field>
-        </div>
+        </DialogBody>
 
-        <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+        <DialogFooter>
           <Button type="button" variant="outline" onClick={closeModal}>
             {t("Close")}
           </Button>

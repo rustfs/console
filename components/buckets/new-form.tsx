@@ -7,7 +7,15 @@ import { Input } from "@/components/ui/input"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogBody,
+  DialogSection,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { useBucket } from "@/hooks/use-bucket"
 import { usePermissions } from "@/hooks/use-permissions"
@@ -140,198 +148,203 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   return (
     <Dialog open={show} onOpenChange={(open) => !open && !creating && closeModal()} disablePointerDismissal>
       <DialogContent
-        className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-2xl"
+        className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden sm:max-w-3xl"
         showCloseButton={false}
       >
         <DialogHeader>
           <DialogTitle>{t("Create Bucket")}</DialogTitle>
         </DialogHeader>
 
-        <div className="-mx-2 min-h-0 space-y-6 overflow-y-auto overflow-x-hidden px-2">
-          <Field>
-            <FieldLabel htmlFor="bucket-name">{t("Please enter name")}</FieldLabel>
-            <FieldContent>
-              <Input
-                id="bucket-name"
-                name="bucket-name"
-                value={objectKey}
-                onChange={(e) => setObjectKey(e.target.value)}
-                autoComplete="off"
-                className={cn("w-full", nameError && "border-destructive focus-visible:ring-destructive")}
-                aria-invalid={Boolean(nameError)}
-              />
-            </FieldContent>
-            <FieldError>{nameError ? t(nameError) : undefined}</FieldError>
-          </Field>
-
-          <Field orientation="responsive" className="items-center">
-            <FieldLabel htmlFor="bucket-new-version">{t("Version")}</FieldLabel>
-            <FieldContent className="flex justify-end">
-              <Switch
-                id="bucket-new-version"
-                checked={version}
-                onCheckedChange={(checked) => {
-                  setVersion(checked)
-                  if (!checked) setObjectLock(false)
-                }}
-                disabled={!canEditVersioning}
-              />
-            </FieldContent>
-          </Field>
-
-          <Field orientation="responsive" className="items-center">
-            <FieldLabel htmlFor="bucket-new-object-lock">{t("Object Lock")}</FieldLabel>
-            <FieldContent className="flex justify-end">
-              <Switch
-                id="bucket-new-object-lock"
-                checked={objectLock}
-                onCheckedChange={(checked) => {
-                  setObjectLock(checked)
-                  if (checked) setVersion(true)
-                }}
-                disabled={!canEditObjectLock}
-              />
-            </FieldContent>
-          </Field>
-
-          <Field orientation="responsive" className="items-center">
-            <FieldLabel htmlFor="bucket-new-quota">{t("Bucket Quota")}</FieldLabel>
-            <FieldContent className="flex justify-end">
-              <Switch
-                id="bucket-new-quota"
-                checked={quotaEnabled}
-                onCheckedChange={setQuotaEnabled}
-                disabled={!canEditQuota}
-              />
-            </FieldContent>
-          </Field>
-
-          {quotaEnabled && (
-            <fieldset className="space-y-4 border-t pt-4">
-              <legend className="text-sm font-semibold">{t("Bucket Quota")}</legend>
-              <Field>
-                <FieldLabel>{t("Quota Size")}</FieldLabel>
-                <FieldContent>
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <Input
-                      name="bucket-quota-size"
-                      value={quotaSize}
-                      onChange={(e) => setQuotaSize(e.target.value)}
-                      type="number"
-                      inputMode="numeric"
-                      aria-label={t("Quota Size")}
-                      className="sm:w-32"
+        <DialogBody className="min-h-0 space-y-6 overflow-y-auto overflow-x-hidden">
+          <DialogSection title={t("Identity")}>
+            <Field>
+              <FieldLabel htmlFor="bucket-name">{t("Please enter name")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="bucket-name"
+                  name="bucket-name"
+                  value={objectKey}
+                  onChange={(e) => setObjectKey(e.target.value)}
+                  autoComplete="off"
+                  className={cn("w-full", nameError && "border-destructive focus-visible:ring-destructive")}
+                  aria-invalid={Boolean(nameError)}
+                />
+              </FieldContent>
+              <FieldError>{nameError ? t(nameError) : undefined}</FieldError>
+            </Field>
+          </DialogSection>
+          <DialogSection title={t("Security")}>
+            <Field orientation="horizontal" className="items-center justify-between">
+              <FieldLabel htmlFor="bucket-new-version">{t("Version")}</FieldLabel>
+              <FieldContent className="flex-none">
+                <Switch
+                  id="bucket-new-version"
+                  checked={version}
+                  onCheckedChange={(checked) => {
+                    setVersion(checked)
+                    if (!checked) setObjectLock(false)
+                  }}
+                  disabled={!canEditVersioning}
+                />
+              </FieldContent>
+            </Field>
+            <Field orientation="horizontal" className="items-center justify-between">
+              <FieldLabel htmlFor="bucket-new-object-lock">{t("Object Lock")}</FieldLabel>
+              <FieldContent className="flex-none">
+                <Switch
+                  id="bucket-new-object-lock"
+                  checked={objectLock}
+                  onCheckedChange={(checked) => {
+                    setObjectLock(checked)
+                    if (checked) setVersion(true)
+                  }}
+                  disabled={!canEditObjectLock}
+                />
+              </FieldContent>
+            </Field>
+            {objectLock && (
+              <fieldset className="space-y-4 border-t pt-5">
+                <legend className="sr-only">{t("Object Lock")}</legend>
+                <Field orientation="horizontal" className="items-center justify-between">
+                  <FieldLabel htmlFor="bucket-new-retention">{t("Retention")}</FieldLabel>
+                  <FieldContent className="flex-none">
+                    <Switch
+                      id="bucket-new-retention"
+                      checked={retentionEnabled}
+                      onCheckedChange={setRetentionEnabled}
                     />
-                    <RadioGroup
-                      value={quotaUnit}
-                      onValueChange={(v) => setQuotaUnit(v)}
-                      className="grid grid-cols-2 gap-2 sm:grid-cols-4"
-                      aria-label={t("Quota Unit")}
-                    >
-                      {["MiB", "GiB", "TiB", "PiB"].map((unit) => (
-                        <label
-                          key={unit}
-                          htmlFor={`bucket-new-quota-unit-${unit.toLowerCase()}`}
-                          className="flex items-start gap-3 border border-border/50 p-3"
-                        >
-                          <RadioGroupItem
-                            id={`bucket-new-quota-unit-${unit.toLowerCase()}`}
-                            value={unit}
-                            className="mt-0.5"
-                          />
-                          <span className="text-sm font-medium">{unit}</span>
-                        </label>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                </FieldContent>
-              </Field>
-            </fieldset>
-          )}
+                  </FieldContent>
+                </Field>
 
-          {objectLock && (
-            <fieldset className="space-y-4 border-t pt-4">
-              <legend className="text-sm font-semibold">{t("Object Lock")}</legend>
-              <Field orientation="responsive" className="items-center">
-                <FieldLabel htmlFor="bucket-new-retention">{t("Retention")}</FieldLabel>
-                <FieldContent className="flex justify-end">
-                  <Switch id="bucket-new-retention" checked={retentionEnabled} onCheckedChange={setRetentionEnabled} />
-                </FieldContent>
-              </Field>
-
-              {retentionEnabled && (
-                <div className="space-y-4">
-                  <Field>
-                    <FieldLabel>{t("Retention Mode")}</FieldLabel>
-                    <FieldContent>
-                      <RadioGroup
-                        value={retentionMode}
-                        onValueChange={(v) => setRetentionMode(v as "COMPLIANCE" | "GOVERNANCE")}
-                        className="grid gap-2 sm:grid-cols-2"
-                        aria-label={t("Retention Mode")}
-                      >
-                        {retentionModeOptions.map((option) => (
-                          <label
-                            key={option.value}
-                            htmlFor={`bucket-new-retention-mode-${option.value.toLowerCase()}`}
-                            className="flex items-start gap-3 border border-border/50 p-3"
-                          >
-                            <RadioGroupItem
-                              id={`bucket-new-retention-mode-${option.value.toLowerCase()}`}
-                              value={option.value}
-                              className="mt-0.5"
-                            />
-                            <span className="text-sm font-medium">{t(option.label)}</span>
-                          </label>
-                        ))}
-                      </RadioGroup>
-                    </FieldContent>
-                  </Field>
-
-                  <Field>
-                    <FieldLabel>{t("Validity")}</FieldLabel>
-                    <FieldContent>
-                      <div className="flex flex-col gap-2 sm:flex-row">
-                        <Input
-                          name="bucket-retention-period"
-                          value={retentionPeriod}
-                          onChange={(e) => setRetentionPeriod(e.target.value)}
-                          type="number"
-                          inputMode="numeric"
-                          aria-label={t("Validity")}
-                          className="sm:w-32"
-                        />
+                {retentionEnabled && (
+                  <div className="space-y-4">
+                    <Field>
+                      <FieldLabel>{t("Retention Mode")}</FieldLabel>
+                      <FieldContent>
                         <RadioGroup
-                          value={retentionUnit}
-                          onValueChange={(v) => setRetentionUnit(v as "day" | "year")}
+                          value={retentionMode}
+                          onValueChange={(v) => setRetentionMode(v as "COMPLIANCE" | "GOVERNANCE")}
                           className="grid gap-2 sm:grid-cols-2"
-                          aria-label={t("Retention Unit")}
+                          aria-label={t("Retention Mode")}
                         >
-                          {retentionUnitOptions.map((option) => (
+                          {retentionModeOptions.map((option) => (
                             <label
                               key={option.value}
-                              htmlFor={`bucket-new-retention-unit-${option.value}`}
-                              className="flex items-start gap-3 border border-border/50 p-3"
+                              htmlFor={`bucket-new-retention-mode-${option.value.toLowerCase()}`}
+                              className="flex cursor-pointer items-center gap-2 px-3 py-2 has-[[data-checked]]:bg-background has-[[data-checked]]:text-primary"
                             >
                               <RadioGroupItem
-                                id={`bucket-new-retention-unit-${option.value}`}
+                                id={`bucket-new-retention-mode-${option.value.toLowerCase()}`}
                                 value={option.value}
                                 className="mt-0.5"
                               />
-                              <span className="text-sm font-medium">{t(option.labelKey)}</span>
+                              <span className="text-sm font-medium">{t(option.label)}</span>
                             </label>
                           ))}
                         </RadioGroup>
-                      </div>
-                    </FieldContent>
-                  </Field>
-                </div>
-              )}
-            </fieldset>
-          )}
-        </div>
+                      </FieldContent>
+                    </Field>
 
-        <DialogFooter className="border-t pt-4">
+                    <Field>
+                      <FieldLabel>{t("Validity")}</FieldLabel>
+                      <FieldContent>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <Input
+                            name="bucket-retention-period"
+                            value={retentionPeriod}
+                            onChange={(e) => setRetentionPeriod(e.target.value)}
+                            type="number"
+                            inputMode="numeric"
+                            aria-label={t("Validity")}
+                            className="sm:w-32"
+                          />
+                          <RadioGroup
+                            value={retentionUnit}
+                            onValueChange={(v) => setRetentionUnit(v as "day" | "year")}
+                            className="grid gap-2 sm:grid-cols-2"
+                            aria-label={t("Retention Unit")}
+                          >
+                            {retentionUnitOptions.map((option) => (
+                              <label
+                                key={option.value}
+                                htmlFor={`bucket-new-retention-unit-${option.value}`}
+                                className="flex cursor-pointer items-center gap-2 px-3 py-2 has-[[data-checked]]:bg-background has-[[data-checked]]:text-primary"
+                              >
+                                <RadioGroupItem
+                                  id={`bucket-new-retention-unit-${option.value}`}
+                                  value={option.value}
+                                  className="mt-0.5"
+                                />
+                                <span className="text-sm font-medium">{t(option.labelKey)}</span>
+                              </label>
+                            ))}
+                          </RadioGroup>
+                        </div>
+                      </FieldContent>
+                    </Field>
+                  </div>
+                )}
+              </fieldset>
+            )}
+          </DialogSection>
+          <DialogSection title={t("Bucket Quota")}>
+            <Field orientation="horizontal" className="items-center justify-between">
+              <FieldLabel htmlFor="bucket-new-quota">{t("Bucket Quota")}</FieldLabel>
+              <FieldContent className="flex-none">
+                <Switch
+                  id="bucket-new-quota"
+                  checked={quotaEnabled}
+                  onCheckedChange={setQuotaEnabled}
+                  disabled={!canEditQuota}
+                />
+              </FieldContent>
+            </Field>
+            {quotaEnabled && (
+              <fieldset className="space-y-4">
+                <legend className="sr-only">{t("Bucket Quota")}</legend>
+                <Field>
+                  <FieldLabel>{t("Quota Size")}</FieldLabel>
+                  <FieldContent>
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Input
+                        name="bucket-quota-size"
+                        value={quotaSize}
+                        onChange={(e) => setQuotaSize(e.target.value)}
+                        type="number"
+                        inputMode="numeric"
+                        aria-label={t("Quota Size")}
+                        className="sm:w-32"
+                      />
+                      <RadioGroup
+                        value={quotaUnit}
+                        onValueChange={(v) => setQuotaUnit(v)}
+                        className="grid grid-cols-2 gap-1 bg-muted/40 p-1 sm:grid-cols-4"
+                        aria-label={t("Quota Unit")}
+                      >
+                        {["MiB", "GiB", "TiB", "PiB"].map((unit) => (
+                          <label
+                            key={unit}
+                            htmlFor={`bucket-new-quota-unit-${unit.toLowerCase()}`}
+                            className="flex cursor-pointer items-center gap-2 px-3 py-2 has-[[data-checked]]:bg-background has-[[data-checked]]:text-primary"
+                          >
+                            <RadioGroupItem
+                              id={`bucket-new-quota-unit-${unit.toLowerCase()}`}
+                              value={unit}
+                              className="mt-0.5"
+                            />
+                            <span className="text-sm font-medium">{unit}</span>
+                          </label>
+                        ))}
+                      </RadioGroup>
+                    </div>
+                  </FieldContent>
+                </Field>
+              </fieldset>
+            )}
+          </DialogSection>
+        </DialogBody>
+
+        <DialogFooter>
           <Button variant="outline" disabled={creating} onClick={closeModal}>
             {t("Cancel")}
           </Button>

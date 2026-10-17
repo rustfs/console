@@ -36,8 +36,8 @@ export function TaskItem({ task }: TaskItemProps) {
         {isActive && (
           <Button
             variant="ghost"
-            size="sm"
-            className="h-auto shrink-0 px-2 text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+            size="icon-sm"
+            className="shrink-0"
             aria-label={t("Cancel")}
             onClick={() => taskManager.cancelTask(task.id)}
           >
@@ -47,8 +47,8 @@ export function TaskItem({ task }: TaskItemProps) {
         {isFinished && (
           <Button
             variant="ghost"
-            size="sm"
-            className="h-auto shrink-0 px-2 text-xs opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"
+            size="icon-sm"
+            className="shrink-0"
             aria-label={t("Delete Record")}
             onClick={() => taskManager.removeFinishedTask(task.id)}
           >

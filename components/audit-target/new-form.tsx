@@ -5,7 +5,7 @@ import Image from "next/image"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { useAuditTarget } from "@/hooks/use-audit-target"
 import {
@@ -136,10 +136,10 @@ export function AuditTargetNewForm({ open, onOpenChange, onSuccess }: AuditTarge
       }}
     >
       <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg">
-        <DialogHeader className="border-b px-4 py-4 pe-12 sm:px-6">
+        <DialogHeader>
           <DialogTitle>{type ? t("Add {type} Audit Target", { type }) : t("Add Audit Target")}</DialogTitle>
         </DialogHeader>
-        <div className="min-h-0 space-y-6 overflow-y-auto px-4 py-5 sm:px-6" aria-busy={submitting}>
+        <DialogBody className="min-h-0 space-y-6 overflow-y-auto" aria-busy={submitting}>
           {!type ? (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {AUDIT_TARGET_TYPE_OPTIONS.map((option) => (
@@ -233,8 +233,8 @@ export function AuditTargetNewForm({ open, onOpenChange, onSuccess }: AuditTarge
               </div>
             </div>
           )}
-        </div>
-        <DialogFooter className="border-t bg-muted/20 px-4 py-4 sm:px-6">
+        </DialogBody>
+        <DialogFooter>
           <Button variant="outline" onClick={handleCancel} disabled={submitting}>
             {t("Cancel")}
           </Button>

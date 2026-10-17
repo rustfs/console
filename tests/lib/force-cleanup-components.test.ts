@@ -56,10 +56,10 @@ const mocks: Record<string, unknown> = {
           React.createElement("div", { role: "alertdialog" }, children),
         )
       : null,
-  AlertDialogAction: ({ render }: UiProps) => render,
-  AlertDialogCancel: function Cancel({ render }: UiProps) {
+  AlertDialogAction: button,
+  AlertDialogCancel: function Cancel(props: UiProps) {
     const setOpen = React.useContext(dialogContext)
-    return render ? React.cloneElement(render, { onClick: () => setOpen(false) }) : null
+    return button({ ...props, onClick: () => setOpen(false) })
   },
   AlertDialogTitle: ({ children }: UiProps) => React.createElement("h2", null, children),
   Dialog: ({ open, children }: UiProps) => (open ? passthrough({ children }) : null),
@@ -329,7 +329,7 @@ test("ordinary folder deletion does not opt into force cleanup", async (t) => {
   await ui.click(ui.findButton("Delete", row))
   const dialog = ui.container.querySelector('[role="alertdialog"]')
   assert.ok(dialog)
-  await ui.click(ui.findButton("Confirm", dialog))
+  await ui.click(ui.findButton("Delete", dialog))
   assert.deepEqual(ui.folderTasks, [[fullKey, bucket]])
 })
 

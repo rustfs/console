@@ -4,8 +4,7 @@ import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { TaskItem } from "./item"
 import type { AnyTask } from "@/contexts/task-context"
 
@@ -37,12 +36,12 @@ export function TaskPanel({ tasks, onClearFinishedTasks }: TaskPanelProps) {
     else setTab("pending")
   }, [processing.length, pending.length, completed.length, failed.length, canceled.length])
 
-  const tabs = [
-    { value: "pending", label: t("Pending", { count: pending.length }) },
-    { value: "processing", label: t("Processing (with count)", { count: processing.length }) },
-    { value: "completed", label: t("Completed", { count: completed.length }) },
-    { value: "failed", label: t("Failed", { count: failed.length }) },
-    { value: "canceled", label: `${t("Canceled")} (${canceled.length})` },
+  const statuses = [
+    { value: "pending", label: t("Pending", { count: pending.length }), tasks: pending },
+    { value: "processing", label: t("Processing (with count)", { count: processing.length }), tasks: processing },
+    { value: "completed", label: t("Completed", { count: completed.length }), tasks: completed },
+    { value: "failed", label: t("Failed", { count: failed.length }), tasks: failed },
+    { value: "canceled", label: `${t("Canceled")} (${canceled.length})`, tasks: canceled },
   ]
 
   const renderList = (list: readonly AnyTask[]) => (
@@ -56,18 +55,11 @@ export function TaskPanel({ tasks, onClearFinishedTasks }: TaskPanelProps) {
   )
 
   return (
-    <div className="flex flex-col gap-4">
-      <Alert role="note">
-        <AlertDescription className="text-sm leading-relaxed">
-          <p>{t("Browser Warning")}</p>
-          <p>{t("Cache Warning")}</p>
-        </AlertDescription>
-      </Alert>
-
+    <div className="flex min-h-0 flex-1 flex-col">
       {total > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4 px-5 pt-5">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <div>
+            <div className="font-mono text-2xl text-foreground">
               {finished}/{total}
             </div>
             {finished > 0 && (
@@ -76,35 +68,34 @@ export function TaskPanel({ tasks, onClearFinishedTasks }: TaskPanelProps) {
               </Button>
             )}
           </div>
-          <Progress value={percentage} className="h-[3px]" />
+          <Progress value={percentage} className="h-1" aria-label={t("Task Management")} />
         </div>
       )}
 
-      <Tabs value={tab} onValueChange={setTab} className="flex flex-col gap-4">
-        <TabsList className="justify-start overflow-x-auto overflow-y-hidden">
-          {tabs.map((tabItem) => (
-            <TabsTrigger key={tabItem.value} value={tabItem.value} className="capitalize">
-              {tabItem.label}
-            </TabsTrigger>
+      <div className="px-5 py-5">
+        <NativeSelect
+          value={tab}
+          onChange={(event) => setTab(event.target.value)}
+          aria-label={t("Status")}
+          className="w-full"
+        >
+          {statuses.map((status) => (
+            <NativeSelectOption key={status.value} value={status.value}>
+              {status.label}
+            </NativeSelectOption>
           ))}
-        </TabsList>
-
-        <TabsContent value="pending" className="mt-0">
-          {renderList(pending)}
-        </TabsContent>
-        <TabsContent value="processing" className="mt-0">
-          {renderList(processing)}
-        </TabsContent>
-        <TabsContent value="completed" className="mt-0">
-          {renderList(completed)}
-        </TabsContent>
-        <TabsContent value="failed" className="mt-0">
-          {renderList(failed)}
-        </TabsContent>
-        <TabsContent value="canceled" className="mt-0">
-          {renderList(canceled)}
-        </TabsContent>
-      </Tabs>
+        </NativeSelect>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5">
+        {renderList(statuses.find((status) => status.value === tab)?.tasks ?? [])}
+      </div>
+      <div
+        className="space-y-2 border-t bg-muted/20 px-5 py-4 text-xs leading-relaxed text-muted-foreground"
+        role="note"
+      >
+        <p>{t("Browser Warning")}</p>
+        <p>{t("Cache Warning")}</p>
+      </div>
     </div>
   )
 }

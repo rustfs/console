@@ -8,7 +8,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogBody,
+  DialogSection,
+  DialogContent,
+  DialogFooter,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { useBucket } from "@/hooks/use-bucket"
@@ -453,11 +462,10 @@ export function ReplicationEditForm({
       }}
       disablePointerDismissal
     >
-      <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b px-4 py-3 pe-12 sm:px-6">
-          <DialogTitle>
-            {t("Edit Replication Rule")} ({t("Bucket")}: {bucketName || ""})
-          </DialogTitle>
+      <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>{t("Edit Replication Rule")}</DialogTitle>
+          <DialogDescription className="font-mono break-all">{bucketName}</DialogDescription>
         </DialogHeader>
 
         <form
@@ -468,7 +476,7 @@ export function ReplicationEditForm({
             void handleSave()
           }}
         >
-          <div className="min-h-0 space-y-6 overflow-y-auto overscroll-contain p-4 sm:p-6">
+          <DialogBody className="min-h-0 space-y-6 overflow-y-auto overscroll-contain">
             {saveError ? (
               <div role="alert" className="border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
                 {saveError}
@@ -479,45 +487,8 @@ export function ReplicationEditForm({
                 {capabilitiesError}
               </p>
             ) : null}
-            <div className="space-y-4">
-              <div className="grid gap-3 md:grid-cols-2">
-                <Field>
-                  <FieldLabel htmlFor="replication-edit-priority">{t("Priority")}</FieldLabel>
-                  <FieldContent>
-                    <Input
-                      id="replication-edit-priority"
-                      name="replication-edit-priority"
-                      type="number"
-                      inputMode="numeric"
-                      min={1}
-                      autoComplete="off"
-                      value={level}
-                      onChange={(e) => setLevel(e.target.value)}
-                      disabled={controlsLocked || !canEditBucketField("Rule.Priority")}
-                    />
-                  </FieldContent>
-                </Field>
-                <Field>
-                  <FieldLabel>{t("Mode")}</FieldLabel>
-                  <FieldContent>
-                    <Select
-                      value={modeType}
-                      onValueChange={(value) => setModeType(value ?? "")}
-                      disabled={controlsLocked || !canEditTargetField("replicationSync")}
-                    >
-                      <SelectTrigger className="w-full" aria-label={t("Mode")}>
-                        <SelectValue>{modeOptions.find((opt) => opt.value === modeType)?.label ?? null}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {modeOptions.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FieldContent>
-                </Field>
+            <DialogSection title={t("Destination Bucket")}>
+              <div className="grid gap-5 md:grid-cols-2">
                 <Field>
                   <FieldLabel htmlFor="replication-edit-endpoint">{t("Endpoint")}</FieldLabel>
                   <FieldContent>
@@ -567,6 +538,56 @@ export function ReplicationEditForm({
                   <FieldError id="replication-edit-bucket-error">{fieldErrors.bucket}</FieldError>
                 </Field>
                 <Field>
+                  <FieldLabel htmlFor="replication-edit-region">{t("Region")}</FieldLabel>
+                  <FieldContent>
+                    {/* No region update group exists in the MinIO update contract,
+                        so the stored region is shown read-only. */}
+                    <Input
+                      id="replication-edit-region"
+                      name="replication-edit-region"
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value)}
+                      autoComplete="off"
+                      placeholder={t("Please enter region")}
+                      spellCheck={false}
+                      disabled
+                    />
+                  </FieldContent>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="replication-edit-storage-class">{t("Storage Class")}</FieldLabel>
+                  <FieldContent>
+                    <Select
+                      value={storageType}
+                      onValueChange={(value) => setStorageType(value ?? "")}
+                      disabled={controlsLocked}
+                    >
+                      <SelectTrigger
+                        id="replication-edit-storage-class"
+                        className="w-full"
+                        aria-label={t("Storage Class")}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {storageClassOptions.map((option) => (
+                          <SelectItem
+                            key={option}
+                            value={option}
+                            disabled={!(capabilities?.storageClasses.supportedWriteClasses ?? []).includes(option)}
+                          >
+                            {option}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FieldContent>
+                </Field>
+              </div>
+            </DialogSection>
+            <DialogSection title={t("Credentials")}>
+              <div className="grid gap-5 md:grid-cols-2">
+                <Field>
                   <FieldLabel htmlFor="replication-edit-access-key">{t("Access Key")}</FieldLabel>
                   <FieldContent>
                     <Input
@@ -614,46 +635,41 @@ export function ReplicationEditForm({
                   </p>
                   <FieldError id="replication-edit-secret-key-error">{fieldErrors.secretKey}</FieldError>
                 </Field>
+              </div>
+            </DialogSection>
+            <DialogSection title={t("Configuration")}>
+              <div className="grid gap-5 md:grid-cols-2">
                 <Field>
-                  <FieldLabel htmlFor="replication-edit-region">{t("Region")}</FieldLabel>
+                  <FieldLabel htmlFor="replication-edit-priority">{t("Priority")}</FieldLabel>
                   <FieldContent>
-                    {/* No region update group exists in the MinIO update contract,
-                        so the stored region is shown read-only. */}
                     <Input
-                      id="replication-edit-region"
-                      name="replication-edit-region"
-                      value={region}
-                      onChange={(e) => setRegion(e.target.value)}
+                      id="replication-edit-priority"
+                      name="replication-edit-priority"
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
                       autoComplete="off"
-                      placeholder={t("Please enter region")}
-                      spellCheck={false}
-                      disabled
+                      value={level}
+                      onChange={(e) => setLevel(e.target.value)}
+                      disabled={controlsLocked || !canEditBucketField("Rule.Priority")}
                     />
                   </FieldContent>
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="replication-edit-storage-class">{t("Storage Class")}</FieldLabel>
+                  <FieldLabel>{t("Mode")}</FieldLabel>
                   <FieldContent>
                     <Select
-                      value={storageType}
-                      onValueChange={(value) => setStorageType(value ?? "")}
-                      disabled={controlsLocked}
+                      value={modeType}
+                      onValueChange={(value) => setModeType(value ?? "")}
+                      disabled={controlsLocked || !canEditTargetField("replicationSync")}
                     >
-                      <SelectTrigger
-                        id="replication-edit-storage-class"
-                        className="w-full"
-                        aria-label={t("Storage Class")}
-                      >
-                        <SelectValue />
+                      <SelectTrigger className="w-full" aria-label={t("Mode")}>
+                        <SelectValue>{modeOptions.find((opt) => opt.value === modeType)?.label ?? null}</SelectValue>
                       </SelectTrigger>
                       <SelectContent>
-                        {storageClassOptions.map((option) => (
-                          <SelectItem
-                            key={option}
-                            value={option}
-                            disabled={!(capabilities?.storageClasses.supportedWriteClasses ?? []).includes(option)}
-                          >
-                            {option}
+                        {modeOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -661,7 +677,6 @@ export function ReplicationEditForm({
                   </FieldContent>
                 </Field>
               </div>
-
               <Field>
                 <FieldLabel htmlFor="replication-edit-prefix">{t("Prefix")}</FieldLabel>
                 <FieldContent>
@@ -677,7 +692,6 @@ export function ReplicationEditForm({
                   />
                 </FieldContent>
               </Field>
-
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <FieldLabel className="text-sm font-medium">{t("Tags")}</FieldLabel>
@@ -695,7 +709,7 @@ export function ReplicationEditForm({
                 {tags.length > 0 && (
                   <div className="space-y-3">
                     {tags.map((tag, index) => (
-                      <div key={index} className="grid gap-2 border p-3 md:grid-cols-2 md:items-center md:gap-4">
+                      <div key={index} className="grid gap-2 md:grid-cols-2 md:items-center md:gap-4">
                         <Input
                           id={`replication-edit-tag-key-${index}`}
                           name={`replication-edit-tag-key-${index}`}
@@ -723,7 +737,7 @@ export function ReplicationEditForm({
                           <Button
                             type="button"
                             variant="ghost"
-                            size="sm"
+                            size="icon-sm"
                             className="text-destructive"
                             aria-label={`${t("Delete")} ${t("Tag Name")} ${index + 1}`}
                             disabled={tags.length === 1 || controlsLocked || !canEditCurrentTagFilter}
@@ -737,9 +751,9 @@ export function ReplicationEditForm({
                   </div>
                 )}
               </div>
-            </div>
+            </DialogSection>
 
-            <div className="space-y-4">
+            <DialogSection title={t("Security")}>
               <div className="flex items-center justify-between">
                 <div>
                   <label htmlFor="replication-edit-use-tls" className="text-sm font-medium">
@@ -764,7 +778,6 @@ export function ReplicationEditForm({
                   }}
                 />
               </div>
-
               {tls ? (
                 <div className="space-y-3 border-s-2 border-border ps-4">
                   <Field>
@@ -833,7 +846,8 @@ export function ReplicationEditForm({
                   ) : null}
                 </div>
               ) : null}
-
+            </DialogSection>
+            <DialogSection title={t("Replication")}>
               <div className="flex items-center justify-between">
                 <div>
                   <label htmlFor="replication-edit-existing-object" className="text-sm font-medium">
@@ -851,7 +865,6 @@ export function ReplicationEditForm({
                   disabled={controlsLocked || !canEditBucketField("Rule.ExistingObjectReplication.Status")}
                 />
               </div>
-
               <div className="flex items-center justify-between">
                 <div>
                   <label htmlFor="replication-edit-expired-delete-marker" className="text-sm font-medium">
@@ -867,7 +880,6 @@ export function ReplicationEditForm({
                   disabled={controlsLocked || !canEditBucketField("Rule.DeleteMarkerReplication.Status")}
                 />
               </div>
-
               <div className="flex items-center justify-between">
                 <div>
                   <label htmlFor="replication-edit-delete" className="text-sm font-medium">
@@ -883,7 +895,6 @@ export function ReplicationEditForm({
                   disabled={controlsLocked || !canEditBucketField("Rule.DeleteReplication.Status")}
                 />
               </div>
-
               {modeType === "async" && (
                 <div className="space-y-3">
                   <Field>
@@ -950,10 +961,10 @@ export function ReplicationEditForm({
                   </Field>
                 </div>
               )}
-            </div>
-          </div>
+            </DialogSection>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3 sm:px-6">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

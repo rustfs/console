@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client"
 import { Window } from "happy-dom"
 import ts from "typescript"
 import type { LoginFormProps } from "../../components/auth/login-form"
+import { buildSiteReplicationTlsPayload, isHttpsSiteReplicationEndpoint } from "../../lib/site-replication-tls"
 
 const key = Symbol.for("console-login-interaction")
 type Props = { children?: React.ReactNode; [name: string]: unknown }
@@ -24,7 +25,12 @@ async function load(file: string) {
       }
       if (specifier === "@/lib/mfa")
         return `import ${bindings} from "${new URL("../../lib/mfa.ts", import.meta.url).href}";`
-      const names = bindings.startsWith("{") ? bindings.replace(/[{}\s]/g, "").split(",") : ["default"]
+      const names = bindings.startsWith("{")
+        ? bindings
+            .replace(/[{}\s]/g, "")
+            .split(",")
+            .filter(Boolean)
+        : ["default"]
       const exports = names
         .map((name) => {
           if (name === "configManager")
@@ -41,6 +47,7 @@ async function load(file: string) {
 
 const { LoginForm } = await load("../../components/auth/login-form.tsx")
 const { BucketNewForm } = await load("../../components/buckets/new-form.tsx")
+const { SiteReplicationNewForm } = await load("../../components/site-replication/new-form.tsx")
 const { default: LoginPage } = await load("../../app/(auth)/auth/login/page.tsx")
 
 async function mount(t: TestContext, component: React.ReactElement, overrides: Record<string, unknown>) {
@@ -273,5 +280,66 @@ test("object lock and versioning change together, and a pending bucket creation 
   await React.act(async () => request.resolve())
   assert.deepEqual(creates, [{ Bucket: "research-archive", ObjectLockEnabledForBucket: true }])
   assert.deepEqual(versions, [["research-archive", "Enabled"]])
+  assert.deepEqual(closed, [false])
+})
+
+test("site creation rejects every dismissal while saving and preserves values after failure", async (t) => {
+  const inputs = new Map<string, { value: string; onChange: (event: { target: { value: string } }) => void }>()
+  let modal: { onOpenChange: (open: boolean, details: { reason: string }) => void }
+  let save: { onClick: () => Promise<void>; disabled: boolean }
+  const request = Promise.withResolvers<{ success: boolean }>()
+  const closed: boolean[] = []
+  const submissions: unknown[] = []
+  await mount(
+    t,
+    React.createElement(SiteReplicationNewForm, { open: true, onOpenChange: (open: boolean) => closed.push(open) }),
+    {
+      buildSiteReplicationTlsPayload,
+      isHttpsSiteReplicationEndpoint,
+      useMessage: () => ({ error: () => {}, success: () => {} }),
+      useSiteReplication: () => ({
+        addSiteReplication: async (sites: unknown) => {
+          submissions.push(sites)
+          return request.promise
+        },
+      }),
+      Input: (props: Props) => {
+        inputs.set(props.id as string, props as never)
+        return null
+      },
+      Dialog: (props: Props) => {
+        modal = props as never
+        return pass(props)
+      },
+      Button: (props: Props) => {
+        if (props.children === "Save" || props.children === "Saving…") save = props as never
+        return pass(props)
+      },
+    },
+  )
+  for (const [id, value] of [
+    ["site-endpoint-0", "https://east.example.test"],
+    ["site-access-0", "site-access"],
+    ["site-secret-0", "site-secret"],
+  ]) {
+    await React.act(async () => inputs.get(id)!.onChange({ target: { value } }))
+  }
+  let saving!: Promise<void>
+  await React.act(async () => {
+    saving = save!.onClick()
+  })
+  for (const reason of ["escape-key", "close-press", "outside-press"]) {
+    await React.act(async () => modal!.onOpenChange(false, { reason }))
+  }
+  assert.deepEqual(closed, [])
+  assert.equal(save!.disabled, true)
+  assert.equal(submissions.length, 1)
+  await React.act(async () => {
+    request.reject(new Error("Unavailable"))
+    await saving
+  })
+  assert.equal(inputs.get("site-endpoint-0")!.value, "https://east.example.test")
+  assert.equal(save!.disabled, false)
+  await React.act(async () => modal!.onOpenChange(false, { reason: "close-press" }))
   assert.deepEqual(closed, [false])
 })

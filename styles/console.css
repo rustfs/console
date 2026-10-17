@@ -33,6 +33,7 @@
     [data-slot="input"],
     [data-slot="input-group"],
     [data-slot="select-trigger"],
+    [data-slot="native-select"],
     [data-slot="input-group-control"]
   ) {
   min-height: 2.5rem;
@@ -43,18 +44,51 @@
   min-height: 0;
 }
 
-.console-ui [data-slot="button"] {
-  min-height: 2rem;
+.console-ui [class~="group/button"] {
+  min-height: 2.5rem;
   font-size: 0.875rem;
   transition-property: color, background-color, border-color, box-shadow, transform;
   transition-duration: var(--duration-fast);
 }
 
-.console-ui :where([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"]) [data-slot="button"] {
-  min-height: 2.5rem;
+/* The class survives Base UI render composition; trigger data-slot values do not. */
+.console-ui [class~="group/button"]:is(.h-6, .size-6) {
+  min-height: 1.5rem;
 }
 
-.console-ui :where([data-slot="button"], [data-slot="input"], [data-slot="select-trigger"]):focus-visible {
+.console-ui [class~="group/button"]:is(.h-7, .size-7) {
+  min-height: 2rem;
+}
+
+.console-ui [class~="group/button"]:is(.h-9, .size-9) {
+  min-height: 2.75rem;
+}
+
+.console-ui [class~="group/button"].size-6 {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.console-ui [class~="group/button"].size-7 {
+  width: 2rem;
+  height: 2rem;
+}
+.console-ui [class~="group/button"].size-8 {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+.console-ui [class~="group/button"].size-9 {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.console-ui
+  :where([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"], .page-actions, .table-toolbar)
+  [class~="group/button"] {
+  min-height: 2.5rem;
+  height: 2.5rem;
+}
+
+.console-ui :where([class~="group/button"], [data-slot="input"], [data-slot="select-trigger"]):focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
@@ -88,17 +122,24 @@
     font-size: 1rem;
   }
 
-  .console-ui :where([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"]) [data-slot="button"] {
+  .console-ui :where([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"]) [class~="group/button"] {
     min-height: 2.75rem;
   }
 }
 
-.console-ui [data-slot="button"]:where(.h-8) {
+.console-ui [class~="group/button"]:where(.h-8) {
   min-height: 2.5rem;
   padding-inline: 1rem;
 }
 
-.console-ui :where(a.text-primary, [data-slot="button"].text-primary) {
+.console-ui [data-slot="input-group"] [class~="group/button"]:is([data-size="icon-xs"], [data-size="icon-sm"]) {
+  min-height: 2rem;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+.console-ui :where(a.text-primary, [class~="group/button"].text-primary) {
   color: var(--link);
 }
 
@@ -116,16 +157,45 @@
   font-size: 0.875rem;
 }
 
+.console-ui [data-slot="tabs-list"] {
+  height: auto;
+  min-height: 2.5rem;
+}
+
+.console-ui [data-slot="tabs-trigger"] {
+  min-height: 2.5rem;
+}
+
 @media (max-width: 639px) {
-  .console-ui [data-slot="button"] {
+  .console-ui [class~="group/button"] {
+    min-height: 2.75rem;
+  }
+
+  .console-ui [data-slot="tabs-list"],
+  .console-ui [data-slot="tabs-trigger"] {
     min-height: 2.75rem;
   }
 }
 
 .console-ui [data-slot="table-head"] button {
+  min-height: 2rem;
   font: inherit;
   letter-spacing: inherit;
   text-transform: inherit;
+}
+
+/* Table names are actions too, even when they render as plain buttons. */
+.console-ui [data-slot="table-cell"] button:not([class~="group/button"]):not([role="checkbox"]):not([role="switch"]) {
+  min-height: 2rem;
+}
+
+@media (max-width: 639px) {
+  .console-ui
+    :where([data-slot="table-head"], [data-slot="table-cell"])
+    button:not([role="checkbox"]):not([role="switch"]),
+  .console-ui [data-slot="native-select"] {
+    min-height: 2.75rem;
+  }
 }
 
 .console-ui
@@ -161,8 +231,61 @@
   font-weight: 600;
 }
 
-.page-actions [data-slot="button"] {
-  min-height: 2.5rem;
+@media (max-width: 639px) {
+  .console-ui [class~="group/button"]:is(.h-6, .h-7, .h-8, .h-9, .size-6, .size-7, .size-8, .size-9),
+  .console-ui
+    :where([data-slot="dialog-footer"], [data-slot="alert-dialog-footer"], .page-actions, .table-toolbar)
+    [class~="group/button"] {
+    min-height: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .console-ui [class~="group/button"]:is(.size-6, .size-7, .size-8, .size-9) {
+    width: 2.75rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .console-ui [data-slot="input-group"] [class~="group/button"]:is([data-size="icon-xs"], [data-size="icon-sm"]) {
+    min-height: 2.75rem;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+.console-dialog [data-slot="dialog-close"] {
+  inset-block-start: 1rem;
+  inset-inline-end: 1rem;
+  width: 2rem;
+  height: 2rem;
+}
+
+.console-dialog [data-slot="dialog-description"] {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.dialog-section:first-child {
+  border-block-start: 0;
+  padding-block-start: 0;
+}
+
+.console-confirmation [data-slot="alert-dialog-header"] {
+  justify-items: start;
+  gap: 1rem;
+  text-align: start;
+}
+
+.console-confirmation [data-slot="alert-dialog-title"] {
+  font-size: 1.25rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.console-confirmation [data-slot="alert-dialog-description"] {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  text-wrap: pretty;
 }
 
 .table-toolbar > [data-slot="input-group"] {
@@ -252,7 +375,7 @@
   padding-block-start: 2rem;
 }
 
-.console-ui [data-slot="button"]:active:not(:disabled) {
+.console-ui [class~="group/button"]:active:not(:disabled) {
   transform: translateY(1px);
 }
 
@@ -279,7 +402,7 @@
   .page-actions {
     width: 100%;
   }
-  .page-actions [data-slot="button"] {
+  .page-actions [class~="group/button"] {
     min-height: 2.75rem;
   }
   .table-toolbar > [data-slot="input-group"] {
@@ -294,7 +417,7 @@
   .console-page {
     animation: none;
   }
-  .console-ui [data-slot="button"]:active:not(:disabled) {
+  .console-ui [class~="group/button"]:active:not(:disabled) {
     transform: none;
   }
 }

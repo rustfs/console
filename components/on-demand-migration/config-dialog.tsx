@@ -16,12 +16,13 @@ import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import {
   Field,
   FieldContent,
@@ -371,14 +372,14 @@ export function OnDemandMigrationConfigDialog({
         className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-3xl"
         showCloseButton={false}
       >
-        <DialogHeader className="border-b px-4 py-4 sm:px-6">
+        <DialogHeader>
           <DialogTitle>{editing ? t("Edit on-demand migration") : t("Enable on-demand migration")}</DialogTitle>
           <DialogDescription>
             {t("Bucket")}: <span className="break-all font-medium text-foreground">{bucketName}</span>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
+        <DialogBody className="min-h-0 space-y-5 overflow-y-auto">
           {!moduleEnabled ? (
             <Alert variant="destructive">
               <RiErrorWarningLine aria-hidden />
@@ -919,9 +920,9 @@ export function OnDemandMigrationConfigDialog({
               </CollapsibleContent>
             </Collapsible>
           </FieldGroup>
-        </div>
+        </DialogBody>
 
-        <DialogFooter className="border-t bg-muted/20 px-4 py-3 sm:px-6">
+        <DialogFooter>
           <Button
             type="button"
             variant="outline"

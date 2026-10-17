@@ -5,12 +5,13 @@ import Image from "next/image"
 import { useTranslation } from "react-i18next"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { CopyInput } from "@/components/copy-input"
@@ -125,11 +126,11 @@ export function MfaSetupDialog({ open, onOpenChange, onCompleted }: MfaSetupDial
   return (
     <Dialog open={open} onOpenChange={handleOpenChange} disablePointerDismissal>
       <DialogContent
-        className="max-h-[min(90dvh,44rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg"
+        className="max-h-[min(90dvh,44rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl"
         aria-busy={step === "loading" || verifying}
         showCloseButton={step !== "codes"}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{step === "codes" ? t("Save your recovery codes") : t("Two-factor authentication")}</DialogTitle>
           <DialogDescription>
             {step === "codes"
@@ -138,7 +139,7 @@ export function MfaSetupDialog({ open, onOpenChange, onCompleted }: MfaSetupDial
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+        <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
           {step === "loading" && (
             <div className="space-y-4" aria-live="polite">
               <Skeleton className="mx-auto size-48" />
@@ -159,7 +160,7 @@ export function MfaSetupDialog({ open, onOpenChange, onCompleted }: MfaSetupDial
           )}
 
           {step === "scan" && enrollment && (
-            <div className="space-y-5">
+            <div className="grid gap-6 sm:grid-cols-[12rem_minmax(0,1fr)]">
               <div className="flex justify-center">
                 <Image
                   // Server-rendered SVG, embedded as data rather than injected
@@ -173,54 +174,56 @@ export function MfaSetupDialog({ open, onOpenChange, onCompleted }: MfaSetupDial
                 />
               </div>
 
-              <Field>
-                <FieldLabel htmlFor="mfa-manual-key">{t("Can't scan? Manual setup key")}</FieldLabel>
-                <FieldContent>
-                  <CopyInput
-                    id="mfa-manual-key"
-                    value={formatManualSetupKey(enrollment.secret_base32)}
-                    readonly
-                    className="font-mono"
-                    dir="ltr"
-                  />
-                </FieldContent>
-                <FieldDescription>
-                  {t("Time-based, {digits} digits, {period}s period.", {
-                    digits: enrollment.digits,
-                    period: enrollment.period_seconds,
-                  })}
-                </FieldDescription>
-              </Field>
+              <div className="space-y-6">
+                <Field>
+                  <FieldLabel htmlFor="mfa-manual-key">{t("Can't scan? Manual setup key")}</FieldLabel>
+                  <FieldContent>
+                    <CopyInput
+                      id="mfa-manual-key"
+                      value={formatManualSetupKey(enrollment.secret_base32)}
+                      readonly
+                      className="font-mono"
+                      dir="ltr"
+                    />
+                  </FieldContent>
+                  <FieldDescription>
+                    {t("Time-based, {digits} digits, {period}s period.", {
+                      digits: enrollment.digits,
+                      period: enrollment.period_seconds,
+                    })}
+                  </FieldDescription>
+                </Field>
 
-              <Field>
-                <FieldLabel htmlFor="mfa-setup-code">{t("Enter the 6-digit code")}</FieldLabel>
-                <FieldContent>
-                  <InputOTP
-                    id="mfa-setup-code"
-                    ref={codeInputRef}
-                    maxLength={TOTP_CODE_LENGTH}
-                    value={code}
-                    onChange={(value) => {
-                      setCode(value)
-                      setCodeError("")
-                    }}
-                    onComplete={() => void verify()}
-                    disabled={verifying}
-                    autoFocus
-                    // Codes are always LTR even in a right-to-left locale.
-                    dir="ltr"
-                    aria-invalid={Boolean(codeError)}
-                    aria-describedby={codeError ? "mfa-setup-code-error" : undefined}
-                  >
-                    <InputOTPGroup>
-                      {Array.from({ length: TOTP_CODE_LENGTH }, (_, index) => (
-                        <InputOTPSlot key={index} index={index} />
-                      ))}
-                    </InputOTPGroup>
-                  </InputOTP>
-                </FieldContent>
-                <FieldError id="mfa-setup-code-error">{codeError}</FieldError>
-              </Field>
+                <Field>
+                  <FieldLabel htmlFor="mfa-setup-code">{t("Enter the 6-digit code")}</FieldLabel>
+                  <FieldContent>
+                    <InputOTP
+                      id="mfa-setup-code"
+                      ref={codeInputRef}
+                      maxLength={TOTP_CODE_LENGTH}
+                      value={code}
+                      onChange={(value) => {
+                        setCode(value)
+                        setCodeError("")
+                      }}
+                      onComplete={() => void verify()}
+                      disabled={verifying}
+                      autoFocus
+                      // Codes are always LTR even in a right-to-left locale.
+                      dir="ltr"
+                      aria-invalid={Boolean(codeError)}
+                      aria-describedby={codeError ? "mfa-setup-code-error" : undefined}
+                    >
+                      <InputOTPGroup>
+                        {Array.from({ length: TOTP_CODE_LENGTH }, (_, index) => (
+                          <InputOTPSlot key={index} index={index} />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </FieldContent>
+                  <FieldError id="mfa-setup-code-error">{codeError}</FieldError>
+                </Field>
+              </div>
             </div>
           )}
 
@@ -235,9 +238,9 @@ export function MfaSetupDialog({ open, onOpenChange, onCompleted }: MfaSetupDial
               }}
             />
           )}
-        </div>
+        </DialogBody>
 
-        <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+        <DialogFooter>
           {step === "codes" ? (
             <p className="text-sm text-muted-foreground">{t("These codes are shown only once.")}</p>
           ) : (

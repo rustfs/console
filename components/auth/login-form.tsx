@@ -78,8 +78,7 @@ function SecretKeyInput({ id, ...props }: SecretKeyInputProps) {
       <InputGroupAddon align="inline-end">
         <InputGroupButton
           type="button"
-          size="icon-xs"
-          className="size-11 sm:size-8"
+          size="icon-sm"
           aria-label={visibilityLabel}
           aria-controls={id}
           title={visibilityLabel}
@@ -120,7 +119,7 @@ export function LoginForm({
           <div className="absolute end-4 top-4 z-10">
             <Link
               href="/config"
-              className="inline-flex size-11 items-center justify-center border bg-background text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-accent-foreground sm:size-9"
+              className="inline-flex size-11 items-center justify-center border bg-background text-muted-foreground shadow-none transition-colors hover:bg-accent hover:text-accent-foreground sm:size-10"
               title={t("Server Configuration")}
               aria-label={t("Server Configuration")}
             >
@@ -389,7 +388,7 @@ export function LoginForm({
                   {t("Get Help")}
                 </Link>
               </p>
-              <div className="flex shrink-0 items-center gap-1 [&_[data-slot=button]]:size-11 sm:[&_[data-slot=button]]:size-9">
+              <div className="flex shrink-0 items-center gap-1">
                 <ThemeSwitcher />
                 <LanguageSwitcher />
               </div>

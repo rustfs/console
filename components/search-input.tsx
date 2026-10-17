@@ -41,6 +41,7 @@ export function SearchInput({
       <InputGroupInput
         {...inputProps}
         type={type}
+        className={clearable ? "[&::-webkit-search-cancel-button]:appearance-none" : undefined}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -51,8 +52,7 @@ export function SearchInput({
       {showClear && (
         <InputGroupButton
           variant="ghost"
-          size="icon-xs"
-          className="size-11 sm:size-8"
+          size="icon-sm"
           type="button"
           aria-label={t("Clear search")}
           onClick={handleClear}

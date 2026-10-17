@@ -12,7 +12,7 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
@@ -186,7 +186,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
       }}
     >
       <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-2xl">
-        <DialogHeader className="border-b px-4 py-4 pe-12 sm:px-6">
+        <DialogHeader>
           <DialogTitle>{t("Add Tier")}</DialogTitle>
         </DialogHeader>
 
@@ -199,7 +199,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
             void handleSave()
           }}
         >
-          <div className="min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
+          <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
             {!type ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {TIER_PROVIDERS.map((item) => (
@@ -495,9 +495,9 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                 </FieldGroup>
               </div>
             )}
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-4 sm:px-6">
+          <DialogFooter>
             <Button type="button" variant="outline" onClick={handleCancel} disabled={submitting}>
               {t("Cancel")}
             </Button>

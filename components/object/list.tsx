@@ -27,17 +27,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
+  DialogBody,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/dialog"
 import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
@@ -618,8 +619,7 @@ export function ObjectList({
                     ref={(node) => setRowActionTrigger(row.id, node)}
                     type="button"
                     variant="ghost"
-                    size="icon"
-                    className="size-11 lg:size-8"
+                    size="icon-sm"
                     aria-label={`${t("Actions")}: ${displayKey(key)}`}
                   >
                     <RiMore2Line className="size-4" aria-hidden />
@@ -950,7 +950,6 @@ export function ObjectList({
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="size-11 lg:size-8"
                     aria-label={t("More actions")}
                   >
                     <RiMore2Line className="size-4" aria-hidden />
@@ -1146,24 +1145,17 @@ export function ObjectList({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              render={
-                <Button variant="outline" className="w-full sm:w-auto text-foreground">
-                  {t("Cancel")}
-                </Button>
-              }
-            />
+            <AlertDialogCancel variant="outline" className="w-full sm:w-auto text-foreground">
+              {t("Cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
-              render={
-                <Button
-                  className={cn("w-full sm:w-auto", DANGER_BUTTON_CLASS)}
-                  onClick={handleConfirmDelete}
-                  disabled={bucketVersioningState === "unknown"}
-                >
-                  {t("Confirm")}
-                </Button>
-              }
-            />
+              variant={"destructive"}
+              className={cn("w-full sm:w-auto", DANGER_BUTTON_CLASS)}
+              onClick={handleConfirmDelete}
+              disabled={bucketVersioningState === "unknown"}
+            >
+              {t("Delete")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1192,28 +1184,21 @@ export function ObjectList({
             </span>
           </AlertDialogDescription>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              render={
-                <Button variant="outline" className="min-h-11 w-full sm:min-h-8 sm:w-auto text-foreground">
-                  {t("Cancel")}
-                </Button>
-              }
-            />
+            <AlertDialogCancel variant="outline" className="min-h-11 w-full sm:min-h-8 sm:w-auto text-foreground">
+              {t("Cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
-              render={
-                <Button
-                  className={cn("min-h-11 w-full sm:min-h-8 sm:w-auto", DANGER_BUTTON_CLASS)}
-                  onClick={handleForceCleanup}
-                  disabled={
-                    !forceCleanupTarget ||
-                    forceCleanupTarget.bucket !== bucket ||
-                    !canCapability("objects.forceCleanup", forceCleanupTarget)
-                  }
-                >
-                  {t("Force Cleanup Folder")}
-                </Button>
+              variant={"destructive"}
+              className={cn("min-h-11 w-full sm:min-h-8 sm:w-auto", DANGER_BUTTON_CLASS)}
+              onClick={handleForceCleanup}
+              disabled={
+                !forceCleanupTarget ||
+                forceCleanupTarget.bucket !== bucket ||
+                !canCapability("objects.forceCleanup", forceCleanupTarget)
               }
-            />
+            >
+              {t("Force Cleanup Folder")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1235,7 +1220,7 @@ export function ObjectList({
             <DialogTitle>{t("Rename Object")}</DialogTitle>
             <DialogDescription className="break-all">{renameSourceKey}</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
+          <DialogBody className="space-y-2">
             <Input
               name="object-rename-name"
               value={renameName}
@@ -1248,7 +1233,7 @@ export function ObjectList({
             {renameValidation ? (
               <p className="text-xs text-destructive">{getRenameValidationMessage(renameValidation)}</p>
             ) : null}
-          </div>
+          </DialogBody>
           <DialogFooter>
             <Button variant="outline" disabled={renameSubmitting} onClick={() => handleRenameOpenChange(false)}>
               {t("Cancel")}

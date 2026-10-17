@@ -94,7 +94,7 @@ test("shared page headers wrap actions into reachable rows on narrow screens", (
   const styles = fs.readFileSync("styles/console.css", "utf8")
   assert.doesNotMatch(source, /overflow-x-auto|flex-nowrap/)
   assert.match(source, /flex-wrap/)
-  assert.match(styles, /\.page-actions \[data-slot="button"\][\s\S]*min-height: 2.75rem/)
+  assert.match(styles, /\.page-actions, \.table-toolbar\)\s*\[class~="group\/button"\] \{\s*min-height: 2.75rem/)
   assert.match(styles, /\.page-heading :where\(h1\)[\s\S]*font-family: var\(--font-heading\)/)
 })
 
@@ -103,7 +103,7 @@ test("data table pagination uses a mobile grid and announces page changes", () =
 
   assert.match(source, /grid-cols-2/)
   assert.match(source, /aria-live="polite"/)
-  assert.match(source, /h-10/)
+  assert.match(source, /w-full sm:w-auto/)
 })
 
 test("data table headers expose sorting semantics and avoid nested horizontal scrollers", () => {

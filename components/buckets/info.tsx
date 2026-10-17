@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +29,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { formatBytes, getBytes } from "@/lib/functions"
 import { detectBucketPolicy, setBucketPolicy, type BucketPolicyType } from "@/lib/bucket-policy"
@@ -991,7 +991,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                   <li key={`${tag.Key}-${index}`} className="flex max-w-full items-center border bg-muted/40 text-xs">
                     <button
                       type="button"
-                      className="min-h-10 min-w-0 break-all px-3 text-start hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:no-underline"
+                      className="min-h-10 min-w-0 break-all px-3 text-start text-sm max-sm:min-h-11 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:no-underline"
                       onClick={() => openTagModal(index)}
                       disabled={!canEditTags || mutation !== null}
                       aria-label={`${t("Edit")} ${t("Tag")}: ${tag.Key}:${tag.Value}`}
@@ -1000,8 +1000,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                     </button>
                     <Button
                       variant="ghost"
-                      size="icon-sm"
-                      className="min-h-10 min-w-10"
+                      size="icon"
                       onClick={() => setDeleteTagIndex(index)}
                       disabled={!canEditTags || mutation !== null}
                       aria-label={`${t("Delete Tag")}: ${tag.Key}:${tag.Value}`}
@@ -1061,10 +1060,10 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:max-w-xl"
           showCloseButton={!mutation}
         >
-          <DialogHeader className="px-6 pt-6">
+          <DialogHeader>
             <DialogTitle>{t("Set Policy")}</DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 space-y-4 overflow-y-auto px-6 py-1">
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto">
             <Field>
               <FieldLabel htmlFor="bucket-policy-type">{t("Policy")}</FieldLabel>
               <FieldContent>
@@ -1126,8 +1125,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                 <FieldError id="bucket-policy-error">{policyFormError || undefined}</FieldError>
               </Field>
             )}
-          </div>
-          <DialogFooter className="border-t px-6 py-4">
+          </DialogBody>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowPolicyModal(false)} disabled={mutation === "policy"}>
               {t("Cancel")}
             </Button>
@@ -1145,10 +1144,10 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:max-w-md"
           showCloseButton={!mutation}
         >
-          <DialogHeader className="px-6 pt-6">
+          <DialogHeader>
             <DialogTitle>{t("Enable Storage Encryption")}</DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 space-y-4 overflow-y-auto px-6 py-1">
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto">
             <Field>
               <FieldLabel htmlFor="bucket-encryption-type">{t("Encryption Type")}</FieldLabel>
               <FieldContent>
@@ -1229,8 +1228,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                 ) : null}
               </Field>
             )}
-          </div>
-          <DialogFooter className="border-t px-6 py-4">
+          </DialogBody>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowEncryptModal(false)} disabled={mutation === "encryption"}>
               {t("Cancel")}
             </Button>
@@ -1254,10 +1253,10 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:max-w-2xl"
           showCloseButton={!mutation}
         >
-          <DialogHeader className="px-6 pt-6">
+          <DialogHeader>
             <DialogTitle>{t("Set Bucket CORS")}</DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 space-y-4 overflow-y-auto px-6 py-1">
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto">
             <Field className="flex items-center justify-between">
               <FieldLabel htmlFor="bucket-info-cors-enabled">{t("Bucket CORS")}</FieldLabel>
               <FieldContent className="flex justify-end">
@@ -1297,8 +1296,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                 {t("Disable Bucket CORS to remove the current cross-origin configuration.")}
               </FieldDescription>
             )}
-          </div>
-          <DialogFooter className="border-t px-6 py-4">
+          </DialogBody>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowCorsModal(false)} disabled={mutation === "cors"}>
               {t("Cancel")}
             </Button>
@@ -1319,10 +1318,10 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:max-w-md"
           showCloseButton={!mutation}
         >
-          <DialogHeader className="px-6 pt-6">
+          <DialogHeader>
             <DialogTitle>{t("Set Tag")}</DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 space-y-4 overflow-y-auto px-6 py-1">
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto">
             <Field>
               <FieldLabel htmlFor="bucket-tag-key">{t("Tag Key")}</FieldLabel>
               <FieldContent>
@@ -1351,8 +1350,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                 />
               </FieldContent>
             </Field>
-          </div>
-          <DialogFooter className="border-t px-6 py-4">
+          </DialogBody>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowTagModal(false)} disabled={mutation === "tagging"}>
               {t("Cancel")}
             </Button>
@@ -1370,10 +1369,10 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:max-w-md"
           showCloseButton={!mutation}
         >
-          <DialogHeader className="px-6 pt-6">
+          <DialogHeader>
             <DialogTitle>{t("Set Bucket Quota")}</DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 space-y-4 overflow-y-auto px-6 py-1">
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto">
             <Field className="flex items-center justify-between">
               <FieldLabel htmlFor="bucket-info-quota-enabled">{t("Bucket Quota")}</FieldLabel>
               <FieldContent className="flex justify-end">
@@ -1433,8 +1432,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                 </Field>
               </div>
             )}
-          </div>
-          <DialogFooter className="border-t px-6 py-4">
+          </DialogBody>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowQuotaModal(false)} disabled={mutation === "quota"}>
               {t("Cancel")}
             </Button>
@@ -1452,10 +1451,10 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           className="grid max-h-[calc(100dvh-2rem)] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden p-0 sm:max-w-md"
           showCloseButton={!mutation}
         >
-          <DialogHeader className="px-6 pt-6">
+          <DialogHeader>
             <DialogTitle>{t("Set Retention")}</DialogTitle>
           </DialogHeader>
-          <div className="min-h-0 space-y-4 overflow-y-auto px-6 py-1">
+          <DialogBody className="min-h-0 space-y-4 overflow-y-auto">
             <Field>
               <FieldLabel>{t("Retention Mode")}</FieldLabel>
               <FieldContent>
@@ -1546,8 +1545,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               </FieldContent>
               <FieldError id="bucket-retention-error">{retentionFormError || undefined}</FieldError>
             </Field>
-          </div>
-          <DialogFooter className="border-t px-6 py-4">
+          </DialogBody>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowRetentionModal(false)} disabled={mutation === "retention"}>
               {t("Cancel")}
             </Button>

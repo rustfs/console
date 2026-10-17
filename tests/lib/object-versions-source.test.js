@@ -20,7 +20,7 @@ test("object versions restore copies a source version back to the current object
 test("object versions dialog is wide, sortable by date and size, and shows summary statistics", () => {
   const source = fs.readFileSync("components/object/versions.tsx", "utf8")
 
-  assert.match(source, /2xl:w-\[80vw\]/)
+  assert.match(source, /sm:max-w-5xl/)
   assert.match(source, /count: versions\.length/)
   assert.match(source, /totalSize: versions\.reduce/)
   assert.match(source, /accessorFn: \(row\) => \(row\.LastModified \? new Date\(row\.LastModified\)\.getTime\(\) : 0\)/)

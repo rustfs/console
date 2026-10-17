@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Spinner } from "@/components/ui/spinner"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { DateTimePicker } from "@/components/datetime-picker"
 import { useMessage } from "@/lib/feedback/message"
 import { useAccessKeys } from "@/hooks/use-access-keys"
@@ -184,7 +184,7 @@ export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: Acces
         className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-6xl"
         aria-busy={loading || submitting}
       >
-        <DialogHeader className="border-b px-4 py-3 pe-12">
+        <DialogHeader>
           <DialogTitle>{t("Edit Key")}</DialogTitle>
         </DialogHeader>
 
@@ -195,7 +195,7 @@ export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: Acces
             void submitForm()
           }}
         >
-          <div className="min-h-0 overflow-y-auto overscroll-contain p-4">
+          <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
             {loading ? (
               <div
                 className="flex min-h-72 items-center justify-center gap-2 text-sm text-muted-foreground"
@@ -216,7 +216,7 @@ export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: Acces
                 </Button>
               </div>
             ) : (
-              <div className="flex flex-col gap-4 lg:min-h-[32rem] lg:flex-row">
+              <div className="flex flex-col gap-4 lg:flex-row">
                 <div className="flex w-full flex-col gap-4 lg:w-72 lg:shrink-0">
                   <Field>
                     <FieldLabel htmlFor="edit-access-key">{t("Access Key")}</FieldLabel>
@@ -306,9 +306,9 @@ export function AccessKeysEditItem({ open, onOpenChange, row, onSuccess }: Acces
                 </div>
               </div>
             )}
-          </div>
+          </DialogBody>
 
-          <DialogFooter className="border-t bg-muted/20 px-4 py-3">
+          <DialogFooter>
             <Button
               type="button"
               variant="outline"

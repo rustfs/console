@@ -16,5 +16,5 @@ test("task controls separate cancellation from record cleanup", () => {
   assert.match(itemSource, /taskManager\.cancelTask\(task\.id\)/)
   assert.match(itemSource, /taskManager\.removeFinishedTask\(task\.id\)/)
   assert.match(statsSource, /taskManager\.clearFinishedTasks\(\)/)
-  assert.match(panelSource, /value="canceled"/)
+  assert.match(panelSource, /value: "canceled"[\s\S]*tasks: canceled/)
 })

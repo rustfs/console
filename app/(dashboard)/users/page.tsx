@@ -175,7 +175,7 @@ export default function UsersPage() {
     dialog.error({
       title: t("Warning"),
       content: `${row.accessKey}: ${t("Are you sure you want to delete this user?")}`,
-      positiveText: t("Confirm"),
+      positiveText: t("Delete"),
       negativeText: t("Cancel"),
       onPositiveClick: () => deleteItem(row),
     })
@@ -199,7 +199,7 @@ export default function UsersPage() {
     dialog.error({
       title: t("Warning"),
       content: t("Are you sure you want to delete all selected users?"),
-      positiveText: t("Confirm"),
+      positiveText: t("Delete"),
       negativeText: t("Cancel"),
       onPositiveClick: async () => {
         const results = await Promise.allSettled(selectedKeys.map((key) => deleteUser(key)))

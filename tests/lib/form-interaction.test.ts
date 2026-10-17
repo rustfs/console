@@ -48,6 +48,7 @@ async function load(file: string) {
 const { LoginForm } = await load("../../components/auth/login-form.tsx")
 const { BucketNewForm } = await load("../../components/buckets/new-form.tsx")
 const { SiteReplicationNewForm } = await load("../../components/site-replication/new-form.tsx")
+const { ObjectUploadPicker } = await load("../../components/object/upload-picker.tsx")
 const { default: LoginPage } = await load("../../app/(auth)/auth/login/page.tsx")
 
 async function mount(t: TestContext, component: React.ReactElement, overrides: Record<string, unknown>) {
@@ -84,7 +85,7 @@ async function mount(t: TestContext, component: React.ReactElement, overrides: R
     }
   })
   await React.act(async () => root.render(component))
-  return { container }
+  return { container, browser }
 }
 
 const formDefaults: LoginFormProps = {
@@ -342,4 +343,84 @@ test("site creation rejects every dismissal while saving and preserves values af
   assert.equal(save!.disabled, false)
   await React.act(async () => modal!.onOpenChange(false, { reason: "close-press" }))
   assert.deepEqual(closed, [false])
+})
+
+const uploadMocks = {
+  RiInformationLine: () => React.createElement("svg"),
+  Button: (props: Props) =>
+    React.createElement(
+      "button",
+      {
+        onClick: props.onClick as React.MouseEventHandler<HTMLButtonElement>,
+        disabled: props.disabled as boolean,
+        "aria-label": props["aria-label"] as string,
+        ref: props.ref as React.Ref<HTMLButtonElement>,
+      },
+      props.children,
+    ),
+  Input: (props: Props) => React.createElement("input", props),
+  useAddUploadFiles: () => () => {},
+  useTaskPanelOpen: () => ({ setTaskPanelOpen: () => {} }),
+  useMessage: () => ({ error: () => {}, warning: () => {} }),
+  formatInteger: String,
+  formatBytes: (size: number) => `${size} B`,
+  normalizeUploadPrefix: (prefix: string) => prefix.replace(/^\/+|\/+$/g, ""),
+  useVirtualizer: ({ count }: { count: number }) => ({
+    getVirtualItems: () => Array.from({ length: count }, (_, index) => ({ index, size: 56, start: index * 56 })),
+    getTotalSize: () => count * 56,
+  }),
+}
+
+const uploadProps = {
+  show: true,
+  onShowChange: () => {},
+  bucketName: "datasets",
+  prefix: "activity-monitor/previews/",
+  canUpload: true,
+}
+
+test("an empty upload offers both pickers and keeps upload disabled without a cleanup action", async (t) => {
+  const { container } = await mount(t, React.createElement(ObjectUploadPicker, uploadProps), uploadMocks)
+  const actions = [...container.querySelectorAll("button")].map((button) => ({
+    name: button.getAttribute("aria-label") || button.textContent,
+    disabled: button.disabled,
+  }))
+
+  assert.deepEqual(actions, [
+    { name: "Select File", disabled: false },
+    { name: "Select Folder", disabled: false },
+    { name: "Cancel", disabled: false },
+    { name: "Start Upload", disabled: true },
+  ])
+})
+
+test("upload file removal names its target and clearing selection preserves the destination", async (t) => {
+  const { container, browser } = await mount(t, React.createElement(ObjectUploadPicker, uploadProps), uploadMocks)
+  const input = container.querySelector('input[name="upload-files"]')!
+  Object.defineProperty(input, "files", {
+    configurable: true,
+    value: [new File(["report"], "report.csv"), new File(["notes"], "notes.txt")],
+  })
+  await React.act(async () => input.dispatchEvent(new browser.Event("change", { bubbles: true })))
+  await React.act(async () =>
+    [...container.querySelectorAll("button")]
+      .find((button) => button.getAttribute("aria-label") === "Delete report.csv")!
+      .click(),
+  )
+  assert.equal(container.querySelector('[title="report.csv"]'), null)
+  assert.ok(container.querySelector('[title="notes.txt"]'))
+  assert.equal(browser.document.activeElement?.textContent, "Select File")
+
+  await React.act(async () =>
+    [...container.querySelectorAll("button")]
+      .find((button) => button.getAttribute("aria-label") === "Clear All")!
+      .click(),
+  )
+  assert.equal(container.querySelector('[title="notes.txt"]'), null)
+  assert.equal(container.querySelector('button[aria-label="Clear All"]'), null)
+  assert.equal(
+    [...container.querySelectorAll("input")].find((input) => input.name === "upload-prefix")!.value,
+    uploadProps.prefix,
+  )
+  assert.equal(browser.document.activeElement?.textContent, "Select File")
 })

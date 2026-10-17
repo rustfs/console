@@ -1,6 +1,6 @@
 # Console redesign: before and after
 
-98 scenarios, 196 comparison pairs. Desktop captures are 1440 by 1000 with full-page content in light and dark themes. Both production exports use the same controlled responses. No mobile images are included.
+100 scenarios, 200 comparison pairs. Desktop captures are 1440 by 1000 with full-page content in light and dark themes. Both production exports use the same controlled responses. No mobile images are included.
 
 [Manifest and checksums](manifest.json)
 
@@ -885,4 +885,22 @@ Route: `/browser/?bucket=datasets&key=activity-monitor%2Fpreviews%2F&lang=zh`
 | --- | --- | --- |
 | Light | ![Before](before/upload-queue-end-desktop.png) | ![After](after/upload-queue-end-desktop.png) |
 | Dark | ![Before](before/upload-queue-end-dark.png) | ![After](after/upload-queue-end-dark.png) |
+
+## Bucket Distribution Many
+
+Route: `/browser/`
+
+| Theme | Before | After |
+| --- | --- | --- |
+| Light | ![Before](before/bucket-distribution-many-desktop.png) | ![After](after/bucket-distribution-many-desktop.png) |
+| Dark | ![Before](before/bucket-distribution-many-dark.png) | ![After](after/bucket-distribution-many-dark.png) |
+
+## Bucket Distribution Skewed
+
+Route: `/browser/`
+
+| Theme | Before | After |
+| --- | --- | --- |
+| Light | ![Before](before/bucket-distribution-skewed-desktop.png) | ![After](after/bucket-distribution-skewed-desktop.png) |
+| Dark | ![Before](before/bucket-distribution-skewed-dark.png) | ![After](after/bucket-distribution-skewed-dark.png) |
 

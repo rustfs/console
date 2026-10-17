@@ -1,17 +1,18 @@
 {
   "base_commit": "8a7c6ebbf78bc61e17ff8f3db74a7ec9d7c55da5",
-  "head_commit": "9a45e76e0c50ea15732e655224412461fb821d79",
+  "head_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246",
   "design_commit": "28fa50ac0a7d5e8dd6a606a11206dbdd7c87eed4",
-  "scope": "28 rendered pages, 6 bucket-specific views, 10 configured/running scenarios, 22 interaction states, 27 dialog states, two completed-upload views, and three upload selection states. Root and OIDC callback redirects checked separately.",
+  "scope": "28 rendered pages, 6 bucket-specific views, 10 configured/running scenarios, 22 interaction states, 27 dialog states, two completed-upload views, three upload selection states, and two bucket distribution states. Root and OIDC callback redirects checked separately.",
   "environment": "Chromium captures of production static exports under /rustfs/console. Both versions use identical controlled S3/admin responses. No live RustFS integration is claimed.",
   "theme_capture": "The real theme provider handles light/dark selection; its root class and color scheme are checked before each capture.",
-  "scenario_count": 98,
-  "comparison_pairs": 196,
-  "image_count": 392,
+  "scenario_count": 100,
+  "comparison_pairs": 200,
+  "image_count": 400,
   "verification_commits": {
     "page_dialog_checks": "dbba54a991e608e59886a4e8780ed301be20592e",
     "upload_checks": "c0fb4e9a0c6577eaf97df8e5ee57de641bb5cf93",
-    "object_refresh_checks": "9a45e76e0c50ea15732e655224412461fb821d79"
+    "object_refresh_checks": "9a45e76e0c50ea15732e655224412461fb821d79",
+    "bucket_distribution_checks": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
   },
   "mobile_images": false,
   "browser_checks": {
@@ -2023,6 +2024,347 @@
         }
       ],
       "errors": []
+    },
+    "bucket_distribution": {
+      "results": [
+        {
+          "case": "many",
+          "text": "Size\n100.0 B\nObjects\n6\nBuckets\n6\nBucket size distribution\nanalytics\n40.0 B\n40%\ndatasets\n20.0 B\n20%\nmedia\n15.0 B\n15%\nbackups\n10.0 B\n10%\nOther buckets\n15.0 B\n15%",
+          "rows": [
+            {
+              "text": "analytics\n40.0 B\n40%",
+              "color": "rgb(0, 98, 255)"
+            },
+            {
+              "text": "datasets\n20.0 B\n20%",
+              "color": "rgb(255, 94, 20)"
+            },
+            {
+              "text": "media\n15.0 B\n15%",
+              "color": "rgb(0, 174, 174)"
+            },
+            {
+              "text": "backups\n10.0 B\n10%",
+              "color": "rgb(125, 91, 230)"
+            },
+            {
+              "text": "Other buckets\n15.0 B\n15%",
+              "color": "rgb(90, 97, 109)"
+            }
+          ],
+          "segments": [
+            {
+              "color": "rgb(0, 98, 255)",
+              "width": 187.203125
+            },
+            {
+              "color": "rgb(255, 94, 20)",
+              "width": 93.59375
+            },
+            {
+              "color": "rgb(0, 174, 174)",
+              "width": 70.203125
+            },
+            {
+              "color": "rgb(125, 91, 230)",
+              "width": 46.796875
+            },
+            {
+              "color": "rgb(90, 97, 109)",
+              "width": 70.203125
+            }
+          ],
+          "overflow": false
+        },
+        {
+          "case": "skewed",
+          "text": "Size\n4.8 MiB\nObjects\n4\nBuckets\n4\nBucket size distribution\ndatasets\n4.8 MiB\n>99.9%\nanalytics\n46.0 B\n<0.1%\nmedia\n46.0 B\n<0.1%",
+          "rows": [
+            {
+              "text": "datasets\n4.8 MiB\n>99.9%",
+              "color": "rgb(0, 98, 255)"
+            },
+            {
+              "text": "analytics\n46.0 B\n<0.1%",
+              "color": "rgb(255, 94, 20)"
+            },
+            {
+              "text": "media\n46.0 B\n<0.1%",
+              "color": "rgb(0, 174, 174)"
+            }
+          ],
+          "segments": [
+            {
+              "color": "rgb(0, 98, 255)",
+              "width": 472
+            },
+            {
+              "color": "rgb(255, 94, 20)",
+              "width": 0
+            },
+            {
+              "color": "rgb(0, 174, 174)",
+              "width": 0
+            }
+          ],
+          "overflow": false
+        },
+        {
+          "case": "single",
+          "text": "Size\n1.0 KiB\nObjects\n2\nBuckets\n2\nBucket size distribution\ndatasets\n1.0 KiB\n100%",
+          "rows": [
+            {
+              "text": "datasets\n1.0 KiB\n100%",
+              "color": "rgb(0, 98, 255)"
+            }
+          ],
+          "segments": [
+            {
+              "color": "rgb(0, 98, 255)",
+              "width": 476
+            }
+          ],
+          "overflow": false
+        },
+        {
+          "case": "zero",
+          "text": "Size\n0 B\nObjects\n2\nBuckets\n2",
+          "rows": [],
+          "segments": [],
+          "overflow": false
+        },
+        {
+          "case": "empty",
+          "text": "Size\n0 B\nObjects\n0\nBuckets\n0",
+          "rows": [],
+          "segments": [],
+          "overflow": false
+        },
+        {
+          "case": "missing",
+          "text": "Size\nUnknown\nObjects\n—\nBuckets\n2",
+          "rows": [],
+          "segments": [],
+          "overflow": false
+        },
+        {
+          "lang": "en",
+          "width": 390,
+          "theme": "light",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(90, 97, 109)"
+          ]
+        },
+        {
+          "lang": "en",
+          "width": 390,
+          "theme": "dark",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(154, 160, 172)"
+          ]
+        },
+        {
+          "lang": "en",
+          "width": 1440,
+          "theme": "light",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(90, 97, 109)"
+          ]
+        },
+        {
+          "lang": "en",
+          "width": 1440,
+          "theme": "dark",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(154, 160, 172)"
+          ]
+        },
+        {
+          "lang": "zh",
+          "width": 390,
+          "theme": "light",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(90, 97, 109)"
+          ]
+        },
+        {
+          "lang": "zh",
+          "width": 390,
+          "theme": "dark",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(154, 160, 172)"
+          ]
+        },
+        {
+          "lang": "zh",
+          "width": 1440,
+          "theme": "light",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(90, 97, 109)"
+          ]
+        },
+        {
+          "lang": "zh",
+          "width": 1440,
+          "theme": "dark",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(154, 160, 172)"
+          ]
+        },
+        {
+          "lang": "de",
+          "width": 390,
+          "theme": "light",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(90, 97, 109)"
+          ]
+        },
+        {
+          "lang": "de",
+          "width": 390,
+          "theme": "dark",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(154, 160, 172)"
+          ]
+        },
+        {
+          "lang": "de",
+          "width": 1440,
+          "theme": "light",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(90, 97, 109)"
+          ]
+        },
+        {
+          "lang": "de",
+          "width": 1440,
+          "theme": "dark",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(154, 160, 172)"
+          ]
+        },
+        {
+          "lang": "ar",
+          "width": 390,
+          "theme": "light",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(90, 97, 109)"
+          ]
+        },
+        {
+          "lang": "ar",
+          "width": 390,
+          "theme": "dark",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(154, 160, 172)"
+          ]
+        },
+        {
+          "lang": "ar",
+          "width": 1440,
+          "theme": "light",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(90, 97, 109)"
+          ]
+        },
+        {
+          "lang": "ar",
+          "width": 1440,
+          "theme": "dark",
+          "overflow": false,
+          "colors": [
+            "rgb(0, 98, 255)",
+            "rgb(255, 94, 20)",
+            "rgb(0, 174, 174)",
+            "rgb(125, 91, 230)",
+            "rgb(154, 160, 172)"
+          ]
+        },
+        {
+          "keyboardBucketLink": "http://127.0.0.1:3222/rustfs/console/browser/?bucket=analytics"
+        }
+      ],
+      "pageErrors": []
+    },
+    "bucket_distribution_live_preview": {
+      "url": "http://127.0.0.1:3222/rustfs/console/browser/?lang=zh",
+      "text": "大小\n4.8 MiB\n对象\n38\n存储桶\n4\n桶容量占比\ndatasets\n4.8 MiB\n>99.9%\nanalytics\n46.0 B\n<0.1%\nmedia\n46.0 B\n<0.1%",
+      "overflow": false
     }
   },
   "quality_gates": [
@@ -2030,7 +2372,7 @@
     "pnpm type-check",
     "pnpm lint",
     "pnpm format:check",
-    "pnpm test:run (757 passed)",
+    "pnpm test:run (763 passed)",
     "pnpm build"
   ],
   "evidence_keys": {
@@ -2099,6 +2441,11 @@
     "object-refresh-54": [
       "objects",
       "tasks-toolbar"
+    ],
+    "bucket-distribution-55": [
+      "browser",
+      "bucket-distribution-many",
+      "bucket-distribution-skewed"
     ]
   },
   "cases": [
@@ -2234,8 +2581,8 @@
             "file": "after/browser-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 112190,
-            "sha256": "62fe99ffc86c1d5ca0a29f029decf2ec265faca40e68b2d47a23f45c0062a53c"
+            "bytes": 116946,
+            "sha256": "3468a6d1eacdc10deb2bf19e496bc1cdc143ed206d26cca518322ec8317206dd"
           }
         },
         {
@@ -2257,12 +2604,12 @@
             "file": "after/browser-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 113323,
-            "sha256": "7014c2bc9c16c5780a5409b9b0861d0359130e3a63fccfed15a9856e1c8afa61"
+            "bytes": 118419,
+            "sha256": "4d1e104b6846d99889ce15238302ef77c0b11bc5992c4ead537916115c05f8a9"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
     },
     {
       "id": "objects",
@@ -4502,8 +4849,8 @@
             "file": "after/bucket-create-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 120583,
-            "sha256": "141b38376f4638c46a9866d90865f3ee56bd1227937096068c34fd0bc14e2d7a"
+            "bytes": 124038,
+            "sha256": "53c9a94f45345d47bb3d6ae9c0fd512a55afea97603212933b10c4f51e90434a"
           }
         },
         {
@@ -4525,12 +4872,12 @@
             "file": "after/bucket-create-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 117381,
-            "sha256": "d6620c2bf6db8ce0085faa11ec3299746351c88fb80a3c9d9bf101d8dbaee4b1"
+            "bytes": 120574,
+            "sha256": "de75713eb6a8892a3b05efb0a1df75cbca9848ceda0e0b27360b0eb12e1246ee"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
     },
     {
       "id": "policy-edit",
@@ -4718,8 +5065,8 @@
             "file": "after/filtered-empty-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 92234,
-            "sha256": "5716b632f221eefd2496b3e53677e4d8590f859e26ed367570145368c6c27ea4"
+            "bytes": 97036,
+            "sha256": "9e56d5836c35eaa477ad6d67d2ad94652e831e0009898a29db8fce3ba644e31c"
           }
         },
         {
@@ -4741,12 +5088,12 @@
             "file": "after/filtered-empty-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 93034,
-            "sha256": "92581ed6a4556e0af7119d4d2bdd8c7abd4a3b598f86eb3f3b7e69b88dff4186"
+            "bytes": 98000,
+            "sha256": "fb49f7986a1cfe9eb93ca1b3aaf42accb64170722648edd266f550d9d139a887"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
     },
     {
       "id": "bucket-refresh-error",
@@ -5258,8 +5605,8 @@
             "file": "after/bucket-delete-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 123955,
-            "sha256": "dc899e70ed5251790d1a5504b8a7f733efa7754a2de5ecaef6902a1c930e2860"
+            "bytes": 130512,
+            "sha256": "34c2efd26f3900c8b50777594d71df2117ac977ff467822cd2f4173722a2b3ac"
           }
         },
         {
@@ -5281,12 +5628,12 @@
             "file": "after/bucket-delete-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 120727,
-            "sha256": "9b4eec5dcb43c44cafb54579e436c26317276f1a7ddd7e128e52062dde8f4ec7"
+            "bytes": 127075,
+            "sha256": "b53d00da84a94240231ff0b6e8a6250c86a0db76938f31a71dd4dd92e8e1a7b3"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
     },
     {
       "id": "user-delete",
@@ -5528,8 +5875,8 @@
             "file": "after/navigation-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 68402,
-            "sha256": "34535166c230f3e9b5e75ca5c10b512fa54b757051045ce5d6dd6399fbdfed92"
+            "bytes": 73195,
+            "sha256": "86d4ae576778e1c25146069b78dc6f1809057c10f1ab2af6d04ed99d4eb0c75c"
           }
         },
         {
@@ -5551,12 +5898,12 @@
             "file": "after/navigation-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 69456,
-            "sha256": "b3fa7c68bf72541ee23ec7b30da8a959ce7f5722167efc20f608560e4e507c8f"
+            "bytes": 74146,
+            "sha256": "5825be05c5de86ca1db1606d560cba6e253c3eceee7d3e485911a4f63351b353"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
     },
     {
       "id": "object-lock-selection",
@@ -5582,8 +5929,8 @@
             "file": "after/object-lock-selection-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 117232,
-            "sha256": "6c0a64fb7f179238aab38c71436a1e830456ffbdcb54bbd1576c1f9740e3860b"
+            "bytes": 117702,
+            "sha256": "4db83c8b0f3ef85183833f76f6164649d3f54759b0e8b09748b3c330f69f8d7d"
           }
         },
         {
@@ -5605,12 +5952,12 @@
             "file": "after/object-lock-selection-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 114121,
-            "sha256": "e92cd46aa583478619f66cfb4a7062e6de0758e3745fcfe011ec4b801645ac70"
+            "bytes": 114482,
+            "sha256": "c627a0c3d1e886a7b11855c1143c94f38d046194c0163f634a6af65e36d2358e"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
     },
     {
       "id": "oidc-validating",
@@ -5690,8 +6037,8 @@
             "file": "after/dialog-bucket-create-desktop.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 115635,
-            "sha256": "4bd6f3f8338c8910fd33ee34d05b9baa9811092056b34ef897bb801d9c2dc2f8"
+            "bytes": 120230,
+            "sha256": "446902e091576e258ca4d6a957f63f76472293a57dd5d28514b5434fa6a1d3b3"
           }
         },
         {
@@ -5713,12 +6060,12 @@
             "file": "after/dialog-bucket-create-dark.png",
             "width": 1440,
             "height": 1000,
-            "bytes": 112595,
-            "sha256": "bfa7fcdbb21938ac682c363de8bf08d2ae39d9aa41289c9f3fb2a39a691b69ce"
+            "bytes": 116942,
+            "sha256": "ac60d51799ecb0f48c1b68d85c475ac551e0ed7db87b1e2ea0e5ba5a3a9b1c90"
           }
         }
       ],
-      "after_capture_commit": "dbba54a991e608e59886a4e8780ed301be20592e"
+      "after_capture_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
     },
     {
       "id": "dialog-upload",
@@ -7393,6 +7740,114 @@
         }
       ],
       "after_capture_commit": "9a45e76e0c50ea15732e655224412461fb821d79"
+    },
+    {
+      "id": "bucket-distribution-many",
+      "route": "/browser/",
+      "state": "bucket size distribution",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-distribution-many-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 108964,
+            "sha256": "2445fd84e956c5681a9830cfb30fb995a474f0e09b1284b63f8cba7f07706b95"
+          },
+          "after": {
+            "file": "after/bucket-distribution-many-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 146466,
+            "sha256": "31fa03970e72376284245670914dd6b156377877e5e631f86980c4a993a9ec1e"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-distribution-many-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 110103,
+            "sha256": "458cc5353420b0ddb754d91f190b2d5fa1a41aa7b68cf867e16266612aa4ecf4"
+          },
+          "after": {
+            "file": "after/bucket-distribution-many-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 148411,
+            "sha256": "075c58b8ec4a9a4e43b4a4ed89e1b24b842c4d68c34a0b185a8d57984ae2911c"
+          }
+        }
+      ],
+      "after_capture_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
+    },
+    {
+      "id": "bucket-distribution-skewed",
+      "route": "/browser/",
+      "state": "bucket size distribution",
+      "captures": [
+        {
+          "mode": "desktop",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "light",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-distribution-skewed-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 92862,
+            "sha256": "65c7f22e083252659639108556bfa0d808cec2e9d08393c0b229a89eb285e56c"
+          },
+          "after": {
+            "file": "after/bucket-distribution-skewed-desktop.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 123812,
+            "sha256": "a1a62635318da581b9ba1aee347f04a1324736607f5c153c9f60130c7ae38a57"
+          }
+        },
+        {
+          "mode": "dark",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "theme": "dark",
+          "full_page": true,
+          "before": {
+            "file": "before/bucket-distribution-skewed-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 93702,
+            "sha256": "e0d048998dbf71a2a159cf0c9f3f5a0b947e7318b597b3e91369ae46462b82e2"
+          },
+          "after": {
+            "file": "after/bucket-distribution-skewed-dark.png",
+            "width": 1440,
+            "height": 1000,
+            "bytes": 125190,
+            "sha256": "c8d1fa2426c6528f8fbec4643e63d9e5958218d21e11f348da93fd12ab606997"
+          }
+        }
+      ],
+      "after_capture_commit": "21b24c1dd17260eeefdb58566dd1181b8f53c246"
     }
   ]
 }

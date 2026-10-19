@@ -7,9 +7,9 @@ import { getFirstAccessibleDashboardRoute } from "@/lib/dashboard-route-meta"
 
 export function useFirstAccessibleDashboardRoute() {
   const { isAuthenticated } = useAuth()
-  const { isAdmin, canAccessPath, hasFetchedPolicy, hasResolvedAdmin, isLoading } = usePermissions()
+  const { isAdmin, canAccessPath, hasFetchedPolicy, hasResolvedAdmin } = usePermissions()
 
-  const isReady = isAuthenticated && hasResolvedAdmin && (isAdmin || (!isLoading && hasFetchedPolicy))
+  const isReady = isAuthenticated && hasResolvedAdmin && (isAdmin || hasFetchedPolicy)
 
   const route = useMemo(() => {
     if (!isReady) return null

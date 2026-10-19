@@ -17,7 +17,7 @@ export function DashboardAuthGuard({ children }: { children: React.ReactNode }) 
   const { isAuthenticated } = useAuth()
   const { isReady: apiReady } = useApiReady()
   const { isReady: s3Ready } = useS3Ready()
-  const { isAdmin, isLoading, hasFetchedPolicy, hasResolvedAdmin, canAccessPath } = usePermissions()
+  const { isAdmin, hasFetchedPolicy, hasResolvedAdmin, canAccessPath } = usePermissions()
 
   const isReady = apiReady && s3Ready
 
@@ -29,23 +29,14 @@ export function DashboardAuthGuard({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     if (!isReady || !isAuthenticated || !hasResolvedAdmin) return
-    if (!isAdmin && (isLoading || !hasFetchedPolicy)) return
+    if (!isAdmin && !hasFetchedPolicy) return
     if (!canAccessDashboardRoute(pathname, { isAdmin, canAccessPath })) {
       router.replace("/403/")
     }
-  }, [
-    isReady,
-    isAuthenticated,
-    hasResolvedAdmin,
-    isAdmin,
-    isLoading,
-    hasFetchedPolicy,
-    canAccessPath,
-    pathname,
-    router,
-  ])
+  }, [isReady, isAuthenticated, hasResolvedAdmin, isAdmin, hasFetchedPolicy, canAccessPath, pathname, router])
 
-  if (!isReady || !isAuthenticated || !hasResolvedAdmin || (!isAdmin && (isLoading || !hasFetchedPolicy))) {
+  // Background refreshes must not unmount the page that requested them.
+  if (!isReady || !isAuthenticated || !hasResolvedAdmin || (!isAdmin && !hasFetchedPolicy)) {
     return (
       <div role="status" className="flex min-h-64 items-center justify-center gap-3 text-sm text-muted-foreground">
         <Spinner className="size-5" />

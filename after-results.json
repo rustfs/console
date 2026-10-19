@@ -1,0 +1,26 @@
+{
+  "phase": "after",
+  "url": "http://127.0.0.1:3271/browser/",
+  "counts": {
+    "account": 9,
+    "buckets": 8,
+    "policyStatus": 6
+  },
+  "checks": {
+    "initialSettled": {
+      "account": 2,
+      "buckets": 1,
+      "policyStatus": 1
+    },
+    "desktopSidebarRetained": true,
+    "successSettled": {
+      "account": 5,
+      "buckets": 4,
+      "policyStatus": 4
+    },
+    "mobileMenuAndFocusRetained": true,
+    "themeSwitcherDark": true
+  },
+  "errors": [],
+  "pending": 0
+}

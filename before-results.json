@@ -1,0 +1,11 @@
+{
+  "phase": "before",
+  "url": "http://127.0.0.1:3271/browser/",
+  "counts": {
+    "account": 6,
+    "buckets": 5,
+    "policyStatus": 5
+  },
+  "errors": [],
+  "pending": 1
+}

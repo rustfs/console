@@ -68,9 +68,9 @@ export function AppSidebar() {
   const dir = useDirection()
   const brandInitial = APP_NAME.charAt(0).toUpperCase() ?? "R"
 
-  const { isAdmin, canAccessPath, hasResolvedAdmin, hasFetchedPolicy, isLoading } = usePermissions()
+  const { isAdmin, canAccessPath, hasResolvedAdmin, hasFetchedPolicy } = usePermissions()
   const { route: homeRoute } = useFirstAccessibleDashboardRoute()
-  const isPermissionsReady = hasResolvedAdmin && (isAdmin || (!isLoading && hasFetchedPolicy))
+  const isPermissionsReady = hasResolvedAdmin && (isAdmin || hasFetchedPolicy)
 
   if (!isPermissionsReady) {
     return null

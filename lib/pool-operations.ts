@@ -511,6 +511,7 @@ function deriveStatusFromPools(pools: PoolSummary[]): string {
   ) {
     return "running"
   }
+  if (states.some((state) => ["stopped", "stopped_by_user", "cancelled", "canceled"].includes(state))) return "stopped"
   const rebalancePools = participatingRebalancePools(pools)
   if (rebalancePools.length > 0 && rebalancePools.every(isCompletedRebalancePool)) {
     return "completed"

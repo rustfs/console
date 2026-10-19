@@ -312,6 +312,58 @@ test("normalizeRebalanceStatus completes mixed completed and non-participating p
   assert.equal(deriveRebalanceDisplayState(status, "supported"), "completed")
 })
 
+for (const stoppedAt of [null, "2026-10-16T01:50:00Z"]) {
+  test(`normalizeRebalanceStatus preserves a stopped run with stoppedAt=${stoppedAt}`, () => {
+    const status = normalizeRebalanceStatus({
+      id: "previous-rebalance",
+      stoppedAt,
+      pools: [
+        {
+          id: 0,
+          status: "Stopped",
+          progress: { bytes: 1610612736, objects: 3054, versions: 3054, elapsed: 295, eta: 0 },
+        },
+        { id: 1, status: "None", progress: null },
+        { id: 2, status: "None", progress: null },
+      ],
+    })
+
+    assert.deepEqual(
+      { state: deriveRebalanceDisplayState(status, "supported"), totals: status.totals },
+      {
+        state: "stopped",
+        totals: { bytes: 1610612736, objects: 3054, versions: 3054, elapsed: 295, eta: 0 },
+      },
+    )
+  })
+}
+
+for (const [states, expected] of [
+  [["Stopped", "Stopped"], "stopped"],
+  [["Stopped", "Completed", "None"], "stopped"],
+  [["Stopped", "Started", "None"], "running"],
+  [["Stopped", "Stopping", "None"], "stopping"],
+  [["Stopped", "Failed", "None"], "failed"],
+  [[" stopped_by_user ", "None"], "stopped"],
+  [["Cancelled", "None"], "stopped"],
+  [["Canceled", "None"], "stopped"],
+]) {
+  test(`normalizeRebalanceStatus derives ${expected} from ${states.join(" / ")}`, () => {
+    const status = normalizeRebalanceStatus({
+      id: "previous-rebalance",
+      pools: states.map((state, id) => ({ id, status: state })),
+    })
+
+    assert.equal(deriveRebalanceDisplayState(status, "supported"), expected)
+  })
+}
+
+test("deriveRebalanceDisplayState keeps a new start response in starting state", () => {
+  const status = normalizeRebalanceStatus({ id: "new-rebalance" })
+
+  assert.equal(deriveRebalanceDisplayState(status, "supported"), "starting")
+})
+
 test("normalizeRebalanceStatus aggregates pool progress when totals are missing", () => {
   const status = normalizeRebalanceStatus({
     id: "reb-2",

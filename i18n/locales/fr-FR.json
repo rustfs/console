@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "Resynchronisation recommandée",
+  "Later": "Plus tard",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "Il s'agit de l'adresse que les autres sites utilisent pour joindre ce site. Mettez-la à jour après un changement d'adresse de ce serveur ; tous les sites pairs reçoivent la nouvelle adresse.",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "L'adresse de ce site a changé. Les objets écrits sur les autres sites pendant que l'ancienne adresse était injoignable n'ont pas été répliqués ici. Lancez une resynchronisation vers ce site depuis la console de chaque site pair.",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "L'adresse de {name} a changé. Les objets écrits sur ce site pendant que l'ancienne adresse était injoignable n'y ont pas été répliqués. Lancez une resynchronisation pour ce site afin de les copier.",
   "Path": "Chemin",
   "Force Cleanup Folder": "Forcer le nettoyage du dossier",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Supprimer définitivement tous les objets, versions, marqueurs de suppression et fichiers résiduels de ce dossier. Cette action est irréversible.",

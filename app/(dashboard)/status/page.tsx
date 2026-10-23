@@ -12,6 +12,7 @@ import {
   isScannerCycleActive,
   resolveUsageFreshness,
 } from "@/lib/performance-data"
+import { formatDuration } from "@/lib/functions"
 import { cn } from "@/lib/utils"
 import {
   RiArchiveDrawerFill,
@@ -31,20 +32,6 @@ import { PerformanceSummaryCards } from "../_components/performance-summary-card
 import { PerformanceStatusSources } from "../_components/performance-status-sources"
 import { PerformanceStatusSummary } from "../_components/performance-status-summary"
 import { PerformanceUsageCard } from "../_components/performance-usage-card"
-
-function formatDuration(seconds: number | undefined, t: (key: string) => string) {
-  if (seconds === undefined || !Number.isFinite(seconds) || seconds < 0) return t("Unknown")
-  const totalMinutes = Math.floor(seconds / 60)
-  const days = Math.floor(totalMinutes / 1440)
-  const hours = Math.floor((totalMinutes % 1440) / 60)
-  const minutes = totalMinutes % 60
-  const parts = [
-    days ? `${days} ${t("Days")}` : "",
-    hours ? `${hours} ${t("Hours")}` : "",
-    !days && minutes ? `${minutes} ${t("Minutes")}` : "",
-  ].filter(Boolean)
-  return parts.slice(0, 2).join(" ") || `0 ${t("Minutes")}`
-}
 
 export default function PerformancePage() {
   const { t, i18n } = useTranslation()

@@ -33,6 +33,21 @@ export function formatInteger(value?: number | null, fallback = "--"): string {
   return new Intl.NumberFormat(getRuntimeLocale(), { maximumFractionDigits: 0 }).format(value)
 }
 
+/** Whole days, hours, and minutes, at most two units, e.g. "2 Days 3 Hours". */
+export function formatDuration(seconds: number | undefined, t: (key: string) => string): string {
+  if (seconds === undefined || !Number.isFinite(seconds) || seconds < 0) return t("Unknown")
+  const totalMinutes = Math.floor(seconds / 60)
+  const days = Math.floor(totalMinutes / 1440)
+  const hours = Math.floor((totalMinutes % 1440) / 60)
+  const minutes = totalMinutes % 60
+  const parts = [
+    days ? `${days} ${t("Days")}` : "",
+    hours ? `${hours} ${t("Hours")}` : "",
+    !days && minutes ? `${minutes} ${t("Minutes")}` : "",
+  ].filter(Boolean)
+  return parts.slice(0, 2).join(" ") || `0 ${t("Minutes")}`
+}
+
 function parseDateTime(value?: string | number | Date | null): Date | null {
   if (value == null || value === "") return null
 

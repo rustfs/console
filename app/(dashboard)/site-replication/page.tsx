@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 import {
   RiAddLine,
   RiArrowLeftRightLine,
   RiDeleteBin5Line,
+  RiFileList3Line,
   RiMore2Line,
   RiRefreshLine,
   RiRestartLine,
@@ -36,16 +37,29 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useSiteReplication } from "@/hooks/use-site-replication"
 import { useSystem } from "@/hooks/use-system"
-import { formatDateTime, niceBytes } from "@/lib/functions"
+import { formatDateTime, formatDuration, formatInteger, niceBytes } from "@/lib/functions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
+import {
+  assessSiteReplicationHealth,
+  siteReplicationFailures,
+  type SiteReplicationBucketMismatch,
+  type SiteReplicationConnection,
+  type SiteReplicationDriftEntity,
+  type SiteReplicationDriftItem,
+  type SiteReplicationHealthIssue,
+  type SiteReplicationHealthLevel,
+} from "@/lib/site-replication-health"
 import { extractServerDeploymentId, resolveSiteReplicationLocalSite } from "@/lib/site-replication-local-site"
 import { isHttpsSiteReplicationEndpoint } from "@/lib/site-replication-tls"
+import { cn } from "@/lib/utils"
 import type {
   SiteReplicationInfo,
   SiteReplicationPeerInfo,
   SiteReplicationResyncOperation,
+  SiteReplicationResyncResponse,
   SiteReplicationStatus,
+  SiteReplicationVolume,
 } from "@/types/site-replication"
 
 const STATUS_QUERY = {
@@ -58,20 +72,176 @@ const STATUS_QUERY = {
   "ilm-expiry-rules": "true",
 }
 
+const AUTO_REFRESH_MS = 30_000
+const DRIFT_PREVIEW_LIMIT = 10
+
+type Translate = (key: string, options?: Record<string, unknown>) => string
+
 function isNotImplementedError(error: unknown) {
   const message = (error as Error | undefined)?.message ?? ""
   return /notimplemented|not implemented/i.test(message)
 }
 
-function formatSyncBadge(t: (key: string) => string, syncState: SiteReplicationPeerInfo["syncState"]) {
-  switch (syncState) {
-    case "enable":
-      return <Badge>{t("Enabled")}</Badge>
-    case "disable":
-      return <Badge variant="secondary">{t("Disabled")}</Badge>
-    default:
-      return <Badge variant="outline">{t("Unknown")}</Badge>
+// The sync flag is a per-peer setting, not link health, so it must not look
+// like a status badge (the connection column carries health).
+function formatSyncSetting(t: Translate, syncState: SiteReplicationPeerInfo["syncState"]) {
+  const label = syncState === "enable" ? t("Enabled") : syncState === "disable" ? t("Disabled") : t("Unknown")
+  return <span className="text-xs text-muted-foreground">{label}</span>
+}
+
+const HEALTH_BADGES: Record<
+  SiteReplicationHealthLevel,
+  { label: string; variant: "secondary" | "destructive" | "outline"; className?: string }
+> = {
+  healthy: { label: "Healthy", variant: "secondary" },
+  degraded: { label: "Needs attention", variant: "outline", className: "border-amber-500/40 bg-amber-500/10" },
+  critical: { label: "Unhealthy", variant: "destructive" },
+  unknown: { label: "Unknown", variant: "outline" },
+}
+
+function HealthBadge({ t, level }: { t: Translate; level: SiteReplicationHealthLevel }) {
+  const badge = HEALTH_BADGES[level]
+  return (
+    <Badge variant={badge.variant} className={badge.className}>
+      {t(badge.label)}
+    </Badge>
+  )
+}
+
+function ConnectionCell({ t, connection }: { t: Translate; connection?: SiteReplicationConnection }) {
+  if (!connection || connection.state === "unknown") {
+    return <Badge variant="outline">{t("Unknown")}</Badge>
   }
+  if (connection.state === "online") {
+    return <Badge variant="secondary">{t("Online")}</Badge>
+  }
+
+  return (
+    <div className="space-y-1">
+      <Badge variant="destructive">{t("Offline")}</Badge>
+      {connection.lastOnline ? (
+        <p className="text-xs text-muted-foreground">
+          {t("Last Online")}: {formatDateTime(connection.lastOnline)}
+        </p>
+      ) : null}
+      {connection.downtimeNs > 0 ? (
+        <p className="text-xs text-muted-foreground">
+          {t("Downtime")}: {formatDuration(connection.downtimeNs / 1e9, t)}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+const OPERATION_LABELS: Record<string, string> = {
+  remove: "Site removal",
+  "endpoint-refresh": "Endpoint update",
+  "rotate-svc-acct": "Service account rotation",
+}
+
+function describeIssue(t: Translate, issue: SiteReplicationHealthIssue, siteName: (deploymentId: string) => string) {
+  switch (issue.kind) {
+    case "peer-offline":
+      return t("Site {site} is unreachable, so nothing replicates to it.", { site: siteName(issue.deploymentId) })
+    case "pending-operation": {
+      const { operation, pendingPeers } = issue.operation
+      const label = OPERATION_LABELS[operation] ? t(OPERATION_LABELS[operation]) : operation
+      return pendingPeers.length
+        ? t("{operation} has not finished; waiting for {sites}.", {
+            operation: label,
+            sites: pendingPeers.map(siteName).join(", "),
+          })
+        : t("{operation} has not finished.", { operation: label })
+    }
+    case "retry-backlog":
+      return t("{pending} configuration changes are waiting to be delivered to peer sites, {failed} failed.", {
+        pending: issue.retryStats.pending,
+        failed: issue.retryStats.failed,
+      })
+    case "recent-failures":
+      return t("{count} object replication failures in the last hour.", { count: issue.count })
+    case "drift":
+      return t("{count} buckets, IAM entities, or expiry rules differ between sites.", { count: issue.count })
+  }
+}
+
+// Server errors can be long debug strings; they are shown clamped, in full on hover.
+function issueError(issue: SiteReplicationHealthIssue) {
+  if (issue.kind === "peer-offline") return issue.error
+  if (issue.kind === "retry-backlog") return issue.retryStats.lastError || undefined
+  return undefined
+}
+
+const DRIFT_ENTITY_LABELS: Record<SiteReplicationDriftEntity, string> = {
+  bucket: "Bucket",
+  policy: "Policy",
+  user: "User",
+  group: "Group",
+  ilmExpiryRule: "ILM Expiry Rule",
+}
+
+const DRIFT_MISMATCH_LABELS: Record<SiteReplicationBucketMismatch | "content", string> = {
+  markedDeleted: "Marked for deletion",
+  tags: "Tags",
+  versioning: "Versioning",
+  objectLock: "Object Lock",
+  policy: "Bucket Policy",
+  encryption: "Encryption",
+  replication: "Replication",
+  quota: "Quota",
+  cors: "CORS",
+  content: "Policy document",
+}
+
+function describeDrift(t: Translate, item: SiteReplicationDriftItem, siteName: (deploymentId: string) => string) {
+  return [
+    item.missingOn.length ? t("Missing on {sites}", { sites: item.missingOn.map(siteName).join(", ") }) : "",
+    item.mismatches.length
+      ? t("Differs: {settings}", {
+          settings: item.mismatches.map((mismatch) => t(DRIFT_MISMATCH_LABELS[mismatch])).join(", "),
+        })
+      : "",
+  ]
+    .filter(Boolean)
+    .join("; ")
+}
+
+function formatVolume(volume: SiteReplicationVolume) {
+  return `${formatInteger(volume.count)} (${niceBytes(String(volume.bytes))})`
+}
+
+const RESYNC_STATE_LABELS: Record<string, string> = {
+  pending: "Waiting",
+  running: "Running",
+  canceling: "Canceling",
+  canceled: "Canceled",
+  completed: "Done",
+  failed: "Error",
+}
+
+function describeResync(t: Translate, resync: SiteReplicationResyncResponse) {
+  if (!resync.resyncId) {
+    return t("No resync has been started for this site.")
+  }
+
+  const state = RESYNC_STATE_LABELS[resync.state] ? t(RESYNC_STATE_LABELS[resync.state]) : resync.state
+  return [
+    t(
+      "{state}: {completed} of {total} buckets completed, {failed} failed. {objects} objects replicated, {failedObjects} failed.",
+      {
+        state,
+        completed: resync.completedBuckets,
+        total: resync.totalBuckets,
+        failed: resync.failedBuckets,
+        objects: resync.replicatedObjects,
+        failedObjects: resync.failedObjects,
+      },
+    ),
+    resync.updatedAt ? `${t("Updated")}: ${formatDateTime(resync.updatedAt)}` : "",
+    resync.errorDetail,
+  ]
+    .filter(Boolean)
+    .join(" ")
 }
 
 function formatBandwidth(t: (key: string) => string, peer: SiteReplicationPeerInfo) {
@@ -133,66 +303,95 @@ export default function SiteReplicationPage() {
   const [pendingResyncDeploymentId, setPendingResyncDeploymentId] = useState("")
   const [pendingRemoveDeploymentId, setPendingRemoveDeploymentId] = useState("")
   const [pendingIlmToggle, setPendingIlmToggle] = useState(false)
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
+  const loadingRef = useRef(false)
 
   const canManageSites = isAdmin || hasPermission("admin:SiteReplicationAdd")
   const canRemoveSites = isAdmin || hasPermission("admin:SiteReplicationRemove")
   const canResyncSites = isAdmin || hasPermission("admin:SiteReplicationResync")
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    setFeatureUnavailable(false)
-    setStatusUnavailable(false)
-
-    // The local deployment ID is the only stable way to tell which entry of
-    // the shared, deployment-ID-sorted site list belongs to this server. Fetch
-    // it alongside the replication data; a failure here only degrades the
-    // "current site" identification, so it must not fail the whole page.
-    const serverDeploymentIdPromise = getSystemInfo(undefined, { suppress403Redirect: true })
-      .then(extractServerDeploymentId)
-      .catch(() => "")
-
-    try {
-      let nextInfo: SiteReplicationInfo | null = null
-      let nextStatus: SiteReplicationStatus | null = null
-
-      try {
-        nextInfo = await getSiteReplicationInfo()
-      } catch (loadError) {
-        if (isNotImplementedError(loadError)) {
-          setFeatureUnavailable(true)
-          setInfo(null)
-          setStatus(null)
-          return
-        }
-
-        throw loadError
+  const loadData = useCallback(
+    async ({ quiet = false }: { quiet?: boolean } = {}) => {
+      // A quiet refresh never overlaps another load and keeps the current view
+      // (no spinner) so the periodic poll does not flicker the page.
+      if (quiet && loadingRef.current) {
+        return
       }
+      loadingRef.current = true
+      if (!quiet) {
+        setLoading(true)
+      }
+      setError(null)
+      setFeatureUnavailable(false)
+      setStatusUnavailable(false)
+
+      // The local deployment ID is the only stable way to tell which entry of
+      // the shared, deployment-ID-sorted site list belongs to this server. Fetch
+      // it alongside the replication data; a failure here only degrades the
+      // "current site" identification, so it must not fail the whole page.
+      const serverDeploymentIdPromise = getSystemInfo(undefined, { suppress403Redirect: true })
+        .then(extractServerDeploymentId)
+        .catch(() => "")
 
       try {
-        nextStatus = await getSiteReplicationStatus(STATUS_QUERY)
-      } catch (loadError) {
-        if (isNotImplementedError(loadError)) {
-          setStatusUnavailable(true)
-          nextStatus = null
-        } else {
+        let nextInfo: SiteReplicationInfo | null = null
+        let nextStatus: SiteReplicationStatus | null = null
+
+        try {
+          nextInfo = await getSiteReplicationInfo()
+        } catch (loadError) {
+          if (isNotImplementedError(loadError)) {
+            setFeatureUnavailable(true)
+            setInfo(null)
+            setStatus(null)
+            return
+          }
+
           throw loadError
         }
-      }
 
-      setServerDeploymentId(await serverDeploymentIdPromise)
-      setInfo(nextInfo)
-      setStatus(nextStatus)
-    } catch (loadError) {
-      setError((loadError as Error).message || t("Load Failed"))
-    } finally {
-      setLoading(false)
-    }
-  }, [getSiteReplicationInfo, getSiteReplicationStatus, getSystemInfo, t])
+        try {
+          nextStatus = await getSiteReplicationStatus(STATUS_QUERY)
+        } catch (loadError) {
+          if (isNotImplementedError(loadError)) {
+            setStatusUnavailable(true)
+            nextStatus = null
+          } else {
+            throw loadError
+          }
+        }
+
+        setServerDeploymentId(await serverDeploymentIdPromise)
+        setInfo(nextInfo)
+        setStatus(nextStatus)
+        setUpdatedAt(new Date())
+      } catch (loadError) {
+        setError((loadError as Error).message || t("Load Failed"))
+      } finally {
+        loadingRef.current = false
+        setLoading(false)
+      }
+    },
+    [getSiteReplicationInfo, getSiteReplicationStatus, getSystemInfo, t],
+  )
 
   useEffect(() => {
     void loadData()
   }, [loadData])
+
+  const replicationEnabled = !!info?.enabled
+  useEffect(() => {
+    if (!replicationEnabled) return
+    const refresh = () => {
+      if (document.visibilityState === "visible") void loadData({ quiet: true })
+    }
+    const interval = window.setInterval(refresh, AUTO_REFRESH_MS)
+    document.addEventListener("visibilitychange", refresh)
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener("visibilitychange", refresh)
+    }
+  }, [loadData, replicationEnabled])
 
   const peers = info?.sites ?? []
   const ilmExpiryEnabled = peers.some((peer) => peer.replicateIlmExpiry)
@@ -207,6 +406,32 @@ export default function SiteReplicationPage() {
   const localPeer = peers.find((peer) => peer.deploymentId === localDeploymentId) ?? null
   const localSummary = (localDeploymentId && status?.statsSummary[localDeploymentId]) || null
   const localMetric = (localDeploymentId && status?.metrics.metrics[localDeploymentId]) || null
+  const health = useMemo(
+    () => assessSiteReplicationHealth({ info, status, localDeploymentId }),
+    [info, status, localDeploymentId],
+  )
+  const failures = siteReplicationFailures(status)
+  const siteName = (deploymentId: string) =>
+    peers.find((peer) => peer.deploymentId === deploymentId)?.name || deploymentId
+
+  const showResyncStatus = useCallback(
+    async (peer: SiteReplicationPeerInfo) => {
+      setPendingResyncDeploymentId(peer.deploymentId)
+      try {
+        const resync = await resyncSiteReplication("status", peer)
+        dialog.info({
+          title: `${t("Resync Status")}: ${peer.name || peer.endpoint}`,
+          content: describeResync(t, resync),
+          positiveText: t("Close"),
+        })
+      } catch (resyncError) {
+        message.error((resyncError as Error).message || t("Load Failed"))
+      } finally {
+        setPendingResyncDeploymentId("")
+      }
+    },
+    [dialog, message, resyncSiteReplication, t],
+  )
 
   const handleResync = useCallback(
     async (peer: SiteReplicationPeerInfo, operation: SiteReplicationResyncOperation) => {
@@ -332,6 +557,16 @@ export default function SiteReplicationPage() {
         },
       },
       {
+        id: "connection",
+        header: () => t("Connection"),
+        cell: ({ row }) =>
+          row.original.deploymentId === localDeploymentId ? (
+            <span className="text-xs text-muted-foreground">-</span>
+          ) : (
+            <ConnectionCell t={t} connection={health.connections[row.original.deploymentId]} />
+          ),
+      },
+      {
         id: "endpoint",
         header: () => t("Endpoint"),
         accessorKey: "endpoint",
@@ -350,9 +585,9 @@ export default function SiteReplicationPage() {
       },
       {
         id: "syncState",
-        header: () => t("Sync"),
+        header: () => t("Sync Setting"),
         accessorKey: "syncState",
-        cell: ({ row }) => formatSyncBadge(t, row.original.syncState),
+        cell: ({ row }) => formatSyncSetting(t, row.original.syncState),
       },
       {
         id: "ilmExpiry",
@@ -414,6 +649,12 @@ export default function SiteReplicationPage() {
                       {t("Cancel Resync")}
                     </DropdownMenuItem>
                   ) : null}
+                  {canResyncSites ? (
+                    <DropdownMenuItem onClick={() => void showResyncStatus(peer)}>
+                      <RiFileList3Line className="size-4" aria-hidden />
+                      {t("Resync Status")}
+                    </DropdownMenuItem>
+                  ) : null}
                 </DropdownMenuGroup>
                 {canRemoveSites ? <DropdownMenuSeparator /> : null}
                 {canRemoveSites ? (
@@ -434,9 +675,11 @@ export default function SiteReplicationPage() {
       canResyncSites,
       confirmRemoveSite,
       handleResync,
+      health.connections,
       localDeploymentId,
       pendingRemoveDeploymentId,
       pendingResyncDeploymentId,
+      showResyncStatus,
       t,
     ],
   )
@@ -611,6 +854,52 @@ export default function SiteReplicationPage() {
         </section>
       ) : (
         <>
+          <section
+            className={cn(
+              "space-y-3 border p-5",
+              health.level === "critical" && "border-destructive/40 bg-destructive/10",
+              health.level === "degraded" && "border-amber-500/40 bg-amber-500/10",
+            )}
+            role="status"
+            aria-live="polite"
+            aria-labelledby="replication-health-title"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 id="replication-health-title" className="text-base font-semibold">
+                  {t("Replication Health")}
+                </h2>
+                <HealthBadge t={t} level={health.level} />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t("Updated")}: {formatDateTime(updatedAt)} · {t("Refreshes every 30 seconds")}
+              </p>
+            </div>
+            {health.issues.length ? (
+              <ul className="list-disc space-y-1 ps-5 text-sm">
+                {health.issues.map((issue, index) => {
+                  const error = issueError(issue)
+                  return (
+                    <li key={`${issue.kind}-${index}`} className="break-words">
+                      {describeIssue(t, issue, siteName)}
+                      {error ? (
+                        <p className="line-clamp-2 break-all text-xs text-muted-foreground" title={error}>
+                          {t("Last error")}: {error}
+                        </p>
+                      ) : null}
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {health.level === "healthy"
+                  ? t("Every peer site is reachable and nothing is waiting to be replicated or repaired.")
+                  : t("Peer reachability is not reported by this server, so replication health cannot be confirmed.")}
+              </p>
+            )}
+          </section>
+
           <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
             <section className="site-topology border bg-card p-6" aria-label={t("Site Replication")}>
               <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -667,27 +956,33 @@ export default function SiteReplicationPage() {
             </section>
             <section className="space-y-5">
               <div className="space-y-2">
-                <h2 className="text-base font-semibold">{t("Replication Summary")}</h2>
+                <h2 className="text-base font-semibold">{t("Failures and Backlog")}</h2>
                 <p className="max-w-xl text-sm text-muted-foreground">
-                  {t("Overview of replicated configuration and object replication activity.")}
+                  {t("Object counters come from the node that answered this request and reset when it restarts.")}
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
+                <SummaryStat label={t("Queued now")} value={status ? formatVolume(status.metrics.queued.curr) : "--"} />
+                <SummaryStat label={t("Queued peak")} value={status ? formatVolume(status.metrics.queued.max) : "--"} />
                 <SummaryStat
-                  label={t("Status")}
+                  label={t("Failed in the last hour")}
+                  value={status ? formatVolume(failures.lastHour) : "--"}
+                />
+                <SummaryStat label={t("Failed since start")} value={status ? formatVolume(failures.totals) : "--"} />
+                <SummaryStat
+                  label={t("Active workers")}
                   value={
-                    info?.enabled ? (
-                      <Badge>{t("Enabled")}</Badge>
-                    ) : (
-                      <Badge variant="outline">{t("Not configured")}</Badge>
-                    )
+                    status
+                      ? `${formatInteger(status.metrics.activeWorkers.curr)} / ${formatInteger(status.metrics.activeWorkers.max)}`
+                      : "--"
                   }
                 />
-                <SummaryStat label={t("Sites")} value={peers.length} />
-                <SummaryStat label={t("Replicated Objects")} value={status ? status.metrics.replicaCount : "--"} />
                 <SummaryStat
-                  label={t("Replicated Size")}
-                  value={status ? niceBytes(String(status.metrics.replicaSize ?? 0)) : "--"}
+                  label={t("Configuration deliveries")}
+                  value={t("{pending} waiting, {failed} failed", {
+                    pending: (status?.retryStats ?? info?.retryStats)?.pending ?? 0,
+                    failed: (status?.retryStats ?? info?.retryStats)?.failed ?? 0,
+                  })}
                 />
               </div>
             </section>
@@ -718,6 +1013,32 @@ export default function SiteReplicationPage() {
                       )}
                 </p>
               </div>
+              {status ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">{t("Consistency")}</p>
+                  {health.drift === null ? (
+                    <p className="text-sm text-muted-foreground">
+                      {t("Consistency cannot be checked until every peer site is reachable.")}
+                    </p>
+                  ) : health.drift.length === 0 ? (
+                    <p className="text-sm">{t("Every site holds the same buckets, IAM entities, and expiry rules.")}</p>
+                  ) : (
+                    <ul className="space-y-1 text-sm">
+                      {health.drift.slice(0, DRIFT_PREVIEW_LIMIT).map((item) => (
+                        <li key={`${item.entity}:${item.name}`} className="break-words">
+                          <span className="text-muted-foreground">{t(DRIFT_ENTITY_LABELS[item.entity])}</span>{" "}
+                          <span className="font-mono text-xs">{item.name}</span> — {describeDrift(t, item, siteName)}
+                        </li>
+                      ))}
+                      {health.drift.length > DRIFT_PREVIEW_LIMIT ? (
+                        <li className="text-muted-foreground">
+                          {t("and {count} more", { count: health.drift.length - DRIFT_PREVIEW_LIMIT })}
+                        </li>
+                      ) : null}
+                    </ul>
+                  )}
+                </div>
+              ) : null}
               <div className="grid gap-4 sm:grid-cols-2">
                 <SummaryStat label={t("Buckets")} value={status?.maxBuckets ?? localSummary?.totalBucketsCount ?? 0} />
                 <SummaryStat label={t("Users")} value={status?.maxUsers ?? localSummary?.totalUsersCount ?? 0} />
@@ -730,7 +1051,6 @@ export default function SiteReplicationPage() {
                   label={t("ILM Expiry Rules")}
                   value={status?.maxIlmExpiryRules ?? localSummary?.totalIlmExpiryRulesCount ?? 0}
                 />
-                <SummaryStat label={t("Last Online")} value={formatDateTime(localMetric?.lastOnline)} />
               </div>
             </section>
             <section className="space-y-5">

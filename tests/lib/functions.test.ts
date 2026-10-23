@@ -107,3 +107,13 @@ test("date formatting preserves half-hour timezone offsets", () => {
     ["2026-09-24 05:30:00", "2026-09-24 05:30:00 UTC+05:30"],
   ])
 })
+
+test("formatDuration keeps the two largest whole units", async () => {
+  const { formatDuration } = await import("../../lib/functions")
+  const t = (key: string) => key
+
+  assert.equal(formatDuration(90, t), "1 Minutes")
+  assert.equal(formatDuration(3 * 86400 + 5 * 3600 + 7 * 60, t), "3 Days 5 Hours")
+  assert.equal(formatDuration(20, t), "0 Minutes")
+  assert.equal(formatDuration(-1, t), "Unknown")
+})

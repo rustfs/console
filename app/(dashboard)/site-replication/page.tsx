@@ -154,14 +154,14 @@ function describeIssue(t: Translate, issue: SiteReplicationHealthIssue, siteName
         : t("{operation} has not finished.", { operation: label })
     }
     case "retry-backlog":
-      return t("{pending} configuration changes are waiting to be delivered to peer sites, {failed} failed.", {
+      return t("Configuration changes waiting to be delivered to peer sites: {pending} (failed: {failed}).", {
         pending: issue.retryStats.pending,
         failed: issue.retryStats.failed,
       })
     case "recent-failures":
-      return t("{count} object replication failures in the last hour.", { count: issue.count })
+      return t("Object replication failures in the last hour: {count}.", { count: issue.count })
     case "drift":
-      return t("{count} buckets, IAM entities, or expiry rules differ between sites.", { count: issue.count })
+      return t("Buckets, IAM entities, or expiry rules that differ between sites: {count}.", { count: issue.count })
   }
 }
 

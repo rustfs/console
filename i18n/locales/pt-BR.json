@@ -1488,6 +1488,7 @@
   "Quota Unit": "Unidade da cota",
   "Replication rules unavailable": "Regras de replicação indisponíveis",
   "Requires Object Lock": "Requer Object Lock",
+  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "A retenção protege as versões dos objetos contra exclusão, mas não as remove quando expira. Crie uma regra de ciclo de vida para excluir dados antigos.",
   "Save CORS": "Salvar CORS",
   "Save Encryption": "Salvar criptografia",
   "Save Policy": "Salvar política",

@@ -1488,6 +1488,7 @@
   "Quota Unit": "Единица квоты",
   "Replication rules unavailable": "Правила репликации недоступны",
   "Requires Object Lock": "Требуется Object Lock",
+  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "Хранение защищает версии объектов от удаления, но не удаляет их по истечении срока. Создайте правило жизненного цикла, чтобы удалять старые данные.",
   "Save CORS": "Сохранить CORS",
   "Save Encryption": "Сохранить шифрование",
   "Save Policy": "Сохранить политику",

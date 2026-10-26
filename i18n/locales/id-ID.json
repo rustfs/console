@@ -1488,6 +1488,7 @@
   "Quota Unit": "Satuan Kuota",
   "Replication rules unavailable": "Aturan replikasi tidak tersedia",
   "Requires Object Lock": "Memerlukan Object Lock",
+  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "Retensi melindungi versi objek dari penghapusan, tetapi tidak menghapusnya saat retensi berakhir. Buat aturan siklus hidup untuk menghapus data lama.",
   "Save CORS": "Simpan CORS",
   "Save Encryption": "Simpan Enkripsi",
   "Save Policy": "Simpan Policy",

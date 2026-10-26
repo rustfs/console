@@ -1488,6 +1488,7 @@
   "Quota Unit": "وحدة الحصة",
   "Replication rules unavailable": "قواعد النسخ المتماثل غير متاحة",
   "Requires Object Lock": "يتطلب Object Lock",
+  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "يحمي الاحتفاظ إصدارات الكائنات من الحذف لكنه لا يزيلها عند انتهاء صلاحيته. أنشئ قاعدة دورة حياة لحذف البيانات القديمة.",
   "Save CORS": "حفظ CORS",
   "Save Encryption": "حفظ التشفير",
   "Save Policy": "حفظ السياسة",

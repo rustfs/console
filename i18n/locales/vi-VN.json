@@ -1488,6 +1488,7 @@
   "Quota Unit": "Đơn vị Hạn mức",
   "Replication rules unavailable": "Quy tắc sao chép không khả dụng",
   "Requires Object Lock": "Yêu cầu Object Lock",
+  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "Lưu giữ bảo vệ các phiên bản đối tượng khỏi bị xóa nhưng không xóa chúng khi hết hạn. Hãy tạo quy tắc vòng đời để xóa dữ liệu cũ.",
   "Save CORS": "Lưu CORS",
   "Save Encryption": "Lưu Mã hóa",
   "Save Policy": "Lưu Policy",

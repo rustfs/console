@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
@@ -282,6 +283,15 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                         </div>
                       </FieldContent>
                     </Field>
+
+                    <Alert>
+                      <AlertTitle>{t("Warning")}</AlertTitle>
+                      <AlertDescription>
+                        {t(
+                          "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.",
+                        )}
+                      </AlertDescription>
+                    </Alert>
                   </div>
                 )}
               </fieldset>

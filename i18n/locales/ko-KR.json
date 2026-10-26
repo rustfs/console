@@ -1488,6 +1488,7 @@
   "Quota Unit": "할당량 단위",
   "Replication rules unavailable": "복제 규칙을 확인할 수 없음",
   "Requires Object Lock": "객체 잠금 필요",
+  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "보존은 객체 버전을 삭제로부터 보호하지만 만료되어도 제거하지 않습니다. 오래된 데이터를 삭제하려면 수명 주기 규칙을 만드세요.",
   "Save CORS": "CORS 저장",
   "Save Encryption": "암호화 설정 저장",
   "Save Policy": "정책 저장",

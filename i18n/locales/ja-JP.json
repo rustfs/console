@@ -1488,6 +1488,7 @@
   "Quota Unit": "クォータの単位",
   "Replication rules unavailable": "レプリケーションルールを取得できません",
   "Requires Object Lock": "オブジェクトロックが必要",
+  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "保持はオブジェクトバージョンを削除から保護しますが、期限切れになっても削除しません。古いデータを削除するにはライフサイクルルールを作成してください。",
   "Save CORS": "CORSを保存",
   "Save Encryption": "暗号化設定を保存",
   "Save Policy": "ポリシーを保存",

@@ -1545,6 +1545,14 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               </FieldContent>
               <FieldError id="bucket-retention-error">{retentionFormError || undefined}</FieldError>
             </Field>
+            <Alert>
+              <AlertTitle>{t("Warning")}</AlertTitle>
+              <AlertDescription>
+                {t(
+                  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.",
+                )}
+              </AlertDescription>
+            </Alert>
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRetentionModal(false)} disabled={mutation === "retention"}>

@@ -1488,6 +1488,7 @@
   "Quota Unit": "Kota Birimi",
   "Replication rules unavailable": "Çoğaltma kuralları kullanılamıyor",
   "Requires Object Lock": "Object Lock gerektirir",
+  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "Saklama, nesne sürümlerini silinmeye karşı korur ancak süresi dolduğunda bunları kaldırmaz. Eski verileri silmek için bir yaşam döngüsü kuralı oluşturun.",
   "Save CORS": "CORS'u Kaydet",
   "Save Encryption": "Şifrelemeyi Kaydet",
   "Save Policy": "Policy'yi Kaydet",

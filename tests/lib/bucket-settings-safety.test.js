@@ -286,6 +286,11 @@ test("replication controls fail closed on missing capabilities and preserve targ
   assert.match(replicationTabSource, /Replication rules unavailable/)
 })
 
+test("editing bucket retention warns that expired versions require a lifecycle rule to be deleted", () => {
+  const retentionDialog = bucketInfoSource.slice(bucketInfoSource.indexOf('t("Set Retention")'))
+  assert.match(retentionDialog, /bucket-retention-error[\s\S]*Create a lifecycle rule to delete old data\./)
+})
+
 test("bucket setting controls expose names, field errors, and unresolved dependency states", () => {
   assert.match(bucketInfoSource, /aria-label=\{t\("Versioning"\)\}/)
   assert.match(bucketInfoSource, /bucket-policy-error/)

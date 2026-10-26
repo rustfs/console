@@ -1488,6 +1488,7 @@
   "Quota Unit": "Quota Unit",
   "Replication rules unavailable": "Replication rules unavailable",
   "Requires Object Lock": "Requires Object Lock",
+  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.",
   "Save CORS": "Save CORS",
   "Save Encryption": "Save Encryption",
   "Save Policy": "Save Policy",

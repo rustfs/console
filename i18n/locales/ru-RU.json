@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "Рекомендуется повторная синхронизация",
+  "Later": "Позже",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "По этому адресу другие сайты подключаются к этому сайту. Обновите его после смены адреса этого сервера; новый адрес получат все одноранговые сайты.",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "Адрес этого сайта изменился. Объекты, записанные на других сайтах, пока старый адрес был недоступен, не были реплицированы сюда. Запустите повторную синхронизацию в сторону этого сайта из консоли каждого однорангового сайта.",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "Адрес {name} изменился. Объекты, записанные на этом сайте, пока старый адрес был недоступен, не были реплицированы туда. Запустите повторную синхронизацию для этого сайта, чтобы скопировать их.",
   "Path": "Путь",
   "Force Cleanup Folder": "Принудительная очистка папки",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Безвозвратно удалить все объекты, версии, маркеры удаления и оставшиеся файлы в этой папке. Это действие нельзя отменить.",

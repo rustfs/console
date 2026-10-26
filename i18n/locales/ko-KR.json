@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "재동기화 권장",
+  "Later": "나중에",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "다른 사이트가 이 사이트에 접속할 때 사용하는 주소입니다. 이 서버의 주소가 변경되면 업데이트하세요. 새 주소는 모든 피어 사이트에 전달됩니다.",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "이 사이트의 주소가 변경되었습니다. 이전 주소에 연결할 수 없던 동안 다른 사이트에 기록된 객체는 이 사이트로 복제되지 않았습니다. 각 피어 사이트의 콘솔에서 이 사이트로의 재동기화를 시작하세요.",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "{name}의 주소가 변경되었습니다. 이전 주소에 연결할 수 없던 동안 이 사이트에 기록된 객체는 해당 사이트로 복제되지 않았습니다. 이 사이트에 대해 재동기화를 실행하여 복사하세요.",
   "Path": "경로",
   "Force Cleanup Folder": "폴더 강제 정리",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "이 폴더의 모든 객체, 버전, 삭제 마커 및 잔여 파일을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.",

@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "再同期を推奨",
+  "Later": "後で",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "これは他のサイトがこのサイトに接続する際のアドレスです。このサーバーのアドレスが変わったら更新してください。新しいアドレスはすべてのピアサイトに反映されます。",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "このサイトのアドレスが変更されました。旧アドレスに到達できなかった間に他のサイトへ書き込まれたオブジェクトは、このサイトにレプリケートされていません。各ピアサイトのコンソールから、このサイトへの再同期を開始してください。",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "{name} のアドレスが変更されました。旧アドレスに到達できなかった間にこのサイトへ書き込まれたオブジェクトは、そのサイトにレプリケートされていません。このサイトの再同期を実行してコピーしてください。",
   "Path": "パス",
   "Force Cleanup Folder": "フォルダーを強制クリーンアップ",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "このフォルダー内のすべてのオブジェクト、バージョン、削除マーカー、残存ファイルを完全に削除します。この操作は取り消せません。",

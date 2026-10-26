@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "Resync Recommended",
+  "Later": "Later",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.",
   "Path": "Path",
   "Force Cleanup Folder": "Force Cleanup Folder",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.",

@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "建议执行重同步",
+  "Later": "稍后",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "这是其他站点访问本站点使用的地址。本服务器地址变更后请在此更新，新地址会同步给所有对端站点。",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "本站点地址已变更。旧地址不可达期间写入其他站点的对象未复制到本站点。请在每个对端站点的控制台上发起指向本站点的重同步。",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "{name} 的地址已变更。旧地址不可达期间写入本站点的对象未复制到该站点。请对该站点执行重同步以补齐这些对象。",
   "Path": "路径",
   "Force Cleanup Folder": "强制清理目录",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "永久删除此目录下的所有对象、版本、删除标记及残留文件。此操作无法撤销。",

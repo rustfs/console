@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "Sinkronisasi ulang disarankan",
+  "Later": "Nanti",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "Ini adalah alamat yang digunakan situs lain untuk menjangkau situs ini. Perbarui setelah alamat server ini berubah; semua situs peer akan menerima alamat baru.",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "Alamat situs ini berubah. Objek yang ditulis di situs lain selama alamat lama tidak dapat dijangkau tidak direplikasi ke sini. Mulai sinkronisasi ulang ke situs ini dari konsol setiap situs peer.",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "Alamat {name} berubah. Objek yang ditulis di situs ini selama alamat lama tidak dapat dijangkau tidak direplikasi ke sana. Jalankan sinkronisasi ulang untuk situs ini untuk menyalinnya.",
   "Path": "Jalur",
   "Force Cleanup Folder": "Bersihkan Folder Secara Paksa",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Hapus secara permanen semua objek, versi, penanda penghapusan, dan berkas sisa dalam folder ini. Tindakan ini tidak dapat dibatalkan.",

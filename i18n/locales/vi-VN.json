@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "Nên đồng bộ lại",
+  "Later": "Để sau",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "Đây là địa chỉ mà các site khác dùng để kết nối tới site này. Hãy cập nhật sau khi địa chỉ của máy chủ này thay đổi; mọi site ngang hàng sẽ nhận địa chỉ mới.",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "Địa chỉ của site này đã thay đổi. Các đối tượng được ghi trên site khác trong lúc không truy cập được địa chỉ cũ chưa được sao chép về đây. Hãy bắt đầu đồng bộ lại hướng tới site này từ console của từng site ngang hàng.",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "Địa chỉ của {name} đã thay đổi. Các đối tượng được ghi trên site này trong lúc không truy cập được địa chỉ cũ chưa được sao chép sang đó. Hãy chạy đồng bộ lại cho site này để sao chép chúng.",
   "Path": "Đường dẫn",
   "Force Cleanup Folder": "Buộc dọn dẹp thư mục",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Xóa vĩnh viễn tất cả đối tượng, phiên bản, dấu xóa và tệp còn sót lại trong thư mục này. Không thể hoàn tác thao tác này.",

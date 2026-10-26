@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "Yeniden eşitleme önerilir",
+  "Later": "Daha sonra",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "Bu, diğer sitelerin bu siteye ulaşmak için kullandığı adrestir. Bu sunucunun adresi değiştikten sonra güncelleyin; tüm eş siteler yeni adresi alır.",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "Bu sitenin adresi değişti. Eski adrese ulaşılamadığı sırada diğer sitelere yazılan nesneler buraya çoğaltılmadı. Her eş sitenin konsolundan bu siteye doğru yeniden eşitleme başlatın.",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "{name} sitesinin adresi değişti. Eski adrese ulaşılamadığı sırada bu siteye yazılan nesneler oraya çoğaltılmadı. Bunları kopyalamak için bu site için yeniden eşitleme çalıştırın.",
   "Path": "Yol",
   "Force Cleanup Folder": "Klasörü Zorla Temizle",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "Bu klasördeki tüm nesneleri, sürümleri, silme işaretlerini ve artık dosyaları kalıcı olarak silin. Bu işlem geri alınamaz.",

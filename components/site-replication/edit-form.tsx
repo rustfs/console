@@ -31,10 +31,19 @@ interface SiteReplicationEditFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   peer: SiteReplicationPeerInfo | null
-  onSuccess?: () => void
+  /** True when `peer` is the site this console is connected to. */
+  isLocal?: boolean
+  /** Called with the saved endpoint after the server accepted the edit. */
+  onSuccess?: (endpoint: string) => void
 }
 
-export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }: SiteReplicationEditFormProps) {
+export function SiteReplicationEditForm({
+  open,
+  onOpenChange,
+  peer,
+  isLocal = false,
+  onSuccess,
+}: SiteReplicationEditFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { editSiteReplication } = useSiteReplication()
@@ -98,7 +107,7 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
       }
 
       message.success(response.status || t("Save Success"))
-      onSuccess?.()
+      onSuccess?.(endpoint.trim())
       onOpenChange(false)
     } catch (error) {
       message.error((error as Error).message || t("Save Failed"))
@@ -137,9 +146,13 @@ export function SiteReplicationEditForm({ open, onOpenChange, peer, onSuccess }:
         <DialogHeader className="space-y-2">
           <DialogTitle>{t("Edit Site")}</DialogTitle>
           <DialogDescription>
-            {t(
-              "Update the peer details that RustFS uses for site replication management. Fields not shown here are preserved from the current configuration.",
-            )}
+            {isLocal
+              ? t(
+                  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.",
+                )
+              : t(
+                  "Update the peer details that RustFS uses for site replication management. Fields not shown here are preserved from the current configuration.",
+                )}
           </DialogDescription>
         </DialogHeader>
 

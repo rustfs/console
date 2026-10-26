@@ -39,6 +39,7 @@ import { useSystem } from "@/hooks/use-system"
 import { formatDateTime, niceBytes } from "@/lib/functions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
+import { siteReplicationResyncAdvice } from "@/lib/site-replication-edit"
 import { extractServerDeploymentId, resolveSiteReplicationLocalSite } from "@/lib/site-replication-local-site"
 import { isHttpsSiteReplicationEndpoint } from "@/lib/site-replication-tls"
 import type {
@@ -240,6 +241,43 @@ export default function SiteReplicationPage() {
     [loadData, message, resyncSiteReplication, t],
   )
 
+  // Edits do not replay writes made while the old address was unreachable, so
+  // an endpoint change is followed by the resync that recovers them.
+  const handleEditSuccess = (peer: SiteReplicationPeerInfo, nextEndpoint: string) => {
+    void loadData()
+
+    const advice = siteReplicationResyncAdvice({
+      isLocal: peer.deploymentId === localDeploymentId,
+      previousEndpoint: peer.endpoint,
+      nextEndpoint,
+    })
+
+    if (advice === "resync-from-peers") {
+      dialog.warning({
+        title: t("Resync Recommended"),
+        content: t(
+          "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.",
+        ),
+        positiveText: t("Close"),
+      })
+    } else if (advice === "resync-peer") {
+      dialog.warning({
+        title: t("Resync Recommended"),
+        content: t(
+          "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.",
+          { name: peer.name || peer.endpoint },
+        ),
+        ...(canResyncSites
+          ? {
+              positiveText: t("Start Resync"),
+              negativeText: t("Later"),
+              onPositiveClick: () => void handleResync({ ...peer, endpoint: nextEndpoint }, "start"),
+            }
+          : { positiveText: t("Close") }),
+      })
+    }
+  }
+
   const confirmRemoveSite = useCallback(
     (peer: SiteReplicationPeerInfo) => {
       dialog.error({
@@ -379,7 +417,10 @@ export default function SiteReplicationPage() {
           const isBusy =
             pendingRemoveDeploymentId === peer.deploymentId || pendingResyncDeploymentId === peer.deploymentId
 
-          if (isLocal) {
+          // The local site's stored endpoint is only inferred when replication
+          // is set up, so it must stay editable for address changes; resync and
+          // removal still only make sense for remote peers.
+          if (isLocal && !canManageSites) {
             return <span className="text-xs text-muted-foreground">{t("Managed automatically")}</span>
           }
 
@@ -395,28 +436,28 @@ export default function SiteReplicationPage() {
               />
               <DropdownMenuContent align="end">
                 <DropdownMenuGroup>
-                  <DropdownMenuLabel>{peer.name || t("Peer site")}</DropdownMenuLabel>
+                  <DropdownMenuLabel>{peer.name || (isLocal ? t("Current Site") : t("Peer site"))}</DropdownMenuLabel>
                   {canManageSites ? (
                     <DropdownMenuItem onClick={() => setEditingPeer(peer)}>
                       <RiArrowLeftRightLine className="size-4" aria-hidden />
                       {t("Edit Site")}
                     </DropdownMenuItem>
                   ) : null}
-                  {canResyncSites ? (
+                  {canResyncSites && !isLocal ? (
                     <DropdownMenuItem onClick={() => void handleResync(peer, "start")}>
                       <RiRestartLine className="size-4" aria-hidden />
                       {t("Start Resync")}
                     </DropdownMenuItem>
                   ) : null}
-                  {canResyncSites ? (
+                  {canResyncSites && !isLocal ? (
                     <DropdownMenuItem onClick={() => void handleResync(peer, "cancel")}>
                       <RiRefreshLine className="size-4" aria-hidden />
                       {t("Cancel Resync")}
                     </DropdownMenuItem>
                   ) : null}
                 </DropdownMenuGroup>
-                {canRemoveSites ? <DropdownMenuSeparator /> : null}
-                {canRemoveSites ? (
+                {canRemoveSites && !isLocal ? <DropdownMenuSeparator /> : null}
+                {canRemoveSites && !isLocal ? (
                   <DropdownMenuItem variant="destructive" onClick={() => confirmRemoveSite(peer)}>
                     <RiDeleteBin5Line className="size-4" aria-hidden />
                     {t("Remove Site")}
@@ -795,7 +836,10 @@ export default function SiteReplicationPage() {
           }
         }}
         peer={editingPeer}
-        onSuccess={() => void loadData()}
+        isLocal={!!editingPeer && editingPeer.deploymentId === localDeploymentId}
+        onSuccess={(endpoint) => {
+          if (editingPeer) handleEditSuccess(editingPeer, endpoint)
+        }}
       />
     </Page>
   )

@@ -1,4 +1,9 @@
 {
+  "Resync Recommended": "يُوصى بإعادة المزامنة",
+  "Later": "لاحقًا",
+  "This is the address other sites use to reach this site. Update it after this server's address changes; every peer site receives the new address.": "هذا هو العنوان الذي تستخدمه المواقع الأخرى للوصول إلى هذا الموقع. حدّثه بعد تغيّر عنوان هذا الخادم؛ وستتلقى جميع المواقع النظيرة العنوان الجديد.",
+  "This site's address changed. Objects written on other sites while the old address was unreachable were not replicated here. Start a resync toward this site from each peer site's console.": "تغيّر عنوان هذا الموقع. لم تُنسخ إلى هنا الكائنات التي كُتبت على المواقع الأخرى أثناء تعذّر الوصول إلى العنوان القديم. ابدأ إعادة مزامنة نحو هذا الموقع من وحدة تحكم كل موقع نظير.",
+  "The address of {name} changed. Objects written on this site while the old address was unreachable were not replicated to it. Run a resync for this site to copy them.": "تغيّر عنوان {name}. لم تُنسخ إليه الكائنات التي كُتبت على هذا الموقع أثناء تعذّر الوصول إلى العنوان القديم. شغّل إعادة مزامنة لهذا الموقع لنسخها.",
   "Path": "المسار",
   "Force Cleanup Folder": "تنظيف المجلد بالقوة",
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone.": "حذف جميع الكائنات والإصدارات وعلامات الحذف والملفات المتبقية في هذا المجلد نهائيًا. لا يمكن التراجع عن هذا الإجراء.",

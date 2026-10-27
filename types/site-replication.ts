@@ -19,11 +19,27 @@ export interface SiteReplicationPeerInfo {
   apiVersion?: string
 }
 
+export interface SiteReplicationPendingOperation {
+  operation: string
+  id: string
+  pendingPeers: string[]
+  ackedPeers: string[]
+  updatedAt?: string
+}
+
+export interface SiteReplicationRetryStats {
+  pending: number
+  failed: number
+  lastError: string
+}
+
 export interface SiteReplicationInfo {
   enabled: boolean
   name: string
   sites: SiteReplicationPeerInfo[]
   serviceAccountAccessKey: string
+  pendingOperation?: SiteReplicationPendingOperation
+  retryStats?: SiteReplicationRetryStats
   apiVersion?: string
 }
 
@@ -66,6 +82,17 @@ export interface SiteReplicationStateInfo {
   apiVersion?: string
 }
 
+export interface SiteReplicationVolume {
+  count: number
+  bytes: number
+}
+
+export interface SiteReplicationTimedErrors {
+  lastMinute: SiteReplicationVolume
+  lastHour: SiteReplicationVolume
+  totals: SiteReplicationVolume
+}
+
 export interface SiteReplicationMetric {
   deploymentId: string
   endpoint: string
@@ -74,6 +101,7 @@ export interface SiteReplicationMetric {
   online: boolean
   replicatedSize: number
   replicatedCount: number
+  failed: SiteReplicationTimedErrors
 }
 
 export interface SiteReplicationWorkerStat {
@@ -82,12 +110,46 @@ export interface SiteReplicationWorkerStat {
   max: number
 }
 
+export interface SiteReplicationQueueStat {
+  curr: SiteReplicationVolume
+  avg: SiteReplicationVolume
+  max: SiteReplicationVolume
+}
+
 export interface SiteReplicationMetricsSummary {
   activeWorkers: SiteReplicationWorkerStat
   replicaSize: number
   replicaCount: number
+  queued: SiteReplicationQueueStat
   metrics: Record<string, SiteReplicationMetric>
 }
+
+export interface SiteReplicationPeerError {
+  name: string
+  endpoint: string
+  error: string
+}
+
+export interface SiteReplicationBucketStats {
+  hasBucket: boolean
+  bucketMarkedDeleted: boolean
+  tagMismatch: boolean
+  versioningConfigMismatch: boolean
+  objectLockConfigMismatch: boolean
+  policyMismatch: boolean
+  sseConfigMismatch: boolean
+  replicationCfgMismatch: boolean
+  quotaCfgMismatch: boolean
+  corsCfgMismatch: boolean
+}
+
+export interface SiteReplicationPolicyStats {
+  hasPolicy: boolean
+  policyMismatch: boolean
+}
+
+/** Per-entity details keyed by entity name, then by deployment ID. */
+export type SiteReplicationEntityStats<T> = Record<string, Record<string, T>>
 
 export interface SiteReplicationStatus {
   enabled: boolean
@@ -99,7 +161,16 @@ export interface SiteReplicationStatus {
   sites: Record<string, SiteReplicationPeerInfo>
   statsSummary: Record<string, SiteReplicationSiteSummary>
   peerStates: Record<string, SiteReplicationStateInfo>
+  peerErrors: Record<string, SiteReplicationPeerError>
+  pendingOperation?: SiteReplicationPendingOperation
+  retryStats?: SiteReplicationRetryStats
   metrics: SiteReplicationMetricsSummary
+  bucketStats: SiteReplicationEntityStats<SiteReplicationBucketStats>
+  policyStats: SiteReplicationEntityStats<SiteReplicationPolicyStats>
+  /** Deployment IDs that hold each user, group, or ILM expiry rule. */
+  userSites: Record<string, string[]>
+  groupSites: Record<string, string[]>
+  ilmExpiryRuleSites: Record<string, string[]>
   apiVersion?: string
 }
 
@@ -138,7 +209,7 @@ export interface SiteReplicationRemoveResponse {
   apiVersion?: string
 }
 
-export type SiteReplicationResyncOperation = "start" | "cancel"
+export type SiteReplicationResyncOperation = "start" | "cancel" | "status"
 
 export interface SiteReplicationResyncBucketStatus {
   bucket: string
@@ -150,6 +221,13 @@ export interface SiteReplicationResyncResponse {
   opType: string
   resyncId: string
   status: string
+  state: string
   buckets: SiteReplicationResyncBucketStatus[]
+  totalBuckets: number
+  completedBuckets: number
+  failedBuckets: number
+  replicatedObjects: number
+  failedObjects: number
+  updatedAt?: string
   errorDetail: string
 }

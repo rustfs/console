@@ -1548,9 +1548,14 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
             <Alert>
               <AlertTitle>{t("Warning")}</AlertTitle>
               <AlertDescription>
-                {t(
-                  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.",
-                )}
+                <p>
+                  {t(
+                    "Retention protects object versions from deletion during the configured period. It does not automatically delete them when the period ends, and lifecycle expiration cannot delete protected versions early. Use a lifecycle expiration rule to remove object versions after retention expires.",
+                  )}
+                </p>
+                <Link className="inline-block" href={buildModuleBucketPath("/lifecycle", bucketName)}>
+                  {`${t("Open")} ${t("Lifecycle")}`}
+                </Link>
               </AlertDescription>
             </Alert>
           </DialogBody>

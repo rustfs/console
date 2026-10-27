@@ -1488,7 +1488,7 @@
   "Quota Unit": "配额单位",
   "Replication rules unavailable": "复制规则不可用",
   "Requires Object Lock": "需要启用对象锁定",
-  "Retention protects object versions from deletion but does not remove them when threshold is reached. Create a lifecycle rule to delete old data.": "保留策略可防止对象版本被删除，但到期后不会自动移除这些版本。请创建生命周期规则来删除旧数据。",
+  "Retention protects object versions from deletion during the configured period. It does not automatically delete them when the period ends, and lifecycle expiration cannot delete protected versions early. Use a lifecycle expiration rule to remove object versions after retention expires.": "保留策略会在配置的期限内保护对象版本不被删除。保留期结束时不会自动删除这些版本，生命周期过期规则也无法提前删除仍受保护的版本。如需在保留期结束后移除对象版本，请配置生命周期过期规则。",
   "Save CORS": "保存 CORS",
   "Save Encryption": "保存加密设置",
   "Save Policy": "保存策略",

@@ -284,7 +284,7 @@ test("object lock and versioning change together, and a pending bucket creation 
   assert.deepEqual(closed, [false])
 })
 
-test("enabling bucket retention warns that expired versions require a lifecycle rule to be deleted", async (t) => {
+test("enabling bucket retention explains lifecycle expiration limits", async (t) => {
   const switches = new Map<string, { onCheckedChange: (value: boolean) => void }>()
   const { container } = await mount(t, React.createElement(BucketNewForm, { show: true, onShowChange: () => {} }), {
     useBucket: () => ({}),
@@ -298,7 +298,7 @@ test("enabling bucket retention warns that expired versions require a lifecycle 
       return null
     },
   })
-  const warning = "Create a lifecycle rule to delete old data."
+  const warning = "lifecycle expiration cannot delete protected versions early"
   await React.act(async () => switches.get("bucket-new-object-lock")!.onCheckedChange(true))
   assert.equal(container.textContent?.includes(warning), false)
   await React.act(async () => switches.get("bucket-new-retention")!.onCheckedChange(true))

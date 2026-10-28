@@ -599,6 +599,8 @@
   "LastModified": "最終更新",
   "Leave blank to keep the stored Vault token.": "保存済みの Vault トークンを保持するには空のままにしてください。",
   "Leave empty to keep current secret": "現在のシークレットを維持するには空欄のままにしてください",
+  "Keep the masked value to preserve the secret; clear it to remove it.": "シークレットを保持するにはマスクされた値をそのままにし、削除するには値を消去してください。",
+  "Upgrade RustFS to edit event destinations safely.": "イベントの送信先を安全に編集するには、RustFS をアップグレードしてください。",
   "Leave empty to use current host as default": "デフォルトとして現在のホストを使用するには空のままにします",
   "Legal Hold": "法的保持",
   "License": "ライセンス",

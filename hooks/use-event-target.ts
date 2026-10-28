@@ -2,7 +2,11 @@
 
 import { useCallback } from "react"
 import { useApi } from "@/contexts/api-context"
-import { buildEventTargetSubscriptionsPath } from "@/lib/event-target-api"
+import {
+  buildEventTargetInstanceUrl,
+  buildEventTargetSubscriptionsPath,
+  buildEventTargetUpdatePayload,
+} from "@/lib/event-target-api"
 
 export function useEventTarget() {
   const api = useApi()
@@ -22,6 +26,31 @@ export function useEventTarget() {
   const updateEventTarget = useCallback(
     async (targetType: string, targetName: string, targetData: Record<string, unknown>) => {
       return api.put(`/target/${targetType}/${targetName}`, targetData)
+    },
+    [api],
+  )
+
+  const getEventTargetInstance = useCallback(
+    async (service: string, targetName: string) => {
+      return api.get(buildEventTargetInstanceUrl(api.resolveUrl(""), service, targetName), {
+        dedupe: false,
+      }) as Promise<unknown>
+    },
+    [api],
+  )
+
+  const updateEventTargetInstance = useCallback(
+    async (
+      service: string,
+      targetName: string,
+      config: Record<string, string>,
+      expectedConfig: Record<string, string>,
+      expectedRevision: string,
+    ) => {
+      return api.put(
+        buildEventTargetInstanceUrl(api.resolveUrl(""), service, targetName),
+        buildEventTargetUpdatePayload(config, expectedConfig, expectedRevision),
+      )
     },
     [api],
   )
@@ -55,6 +84,8 @@ export function useEventTarget() {
   return {
     getEventsTargetList,
     updateEventTarget,
+    getEventTargetInstance,
+    updateEventTargetInstance,
     deleteEventTarget,
     getEventTargetArnList,
     getEventTargetSubscriptions,

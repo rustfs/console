@@ -597,6 +597,8 @@
   "LastModified": "最后修改时间",
   "Leave blank to keep the stored Vault token.": "留空以保留已存储的 Vault 令牌。",
   "Leave empty to keep current secret": "留空表示保留当前密钥",
+  "Keep the masked value to preserve the secret; clear it to remove it.": "保留掩码值以保留密钥；清空该字段可删除密钥。",
+  "Upgrade RustFS to edit event destinations safely.": "升级 RustFS 后才能安全编辑事件目标。",
   "Leave empty to use current host as default": "留空表示使用当前主机作为默认值",
   "Legal Hold": "合法保留",
   "Leave blank to keep the current credentials.": "留空则保持现有凭证不变。",

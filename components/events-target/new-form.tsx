@@ -21,28 +21,31 @@ interface EventsTargetNewFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
+  edit?: { type: EventTargetType; name: string; config: Record<string, string>; revision: string }
 }
 
-export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTargetNewFormProps) {
+export function EventsTargetNewForm({ open, onOpenChange, onSuccess, edit }: EventsTargetNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
-  const { updateEventTarget } = useEventTarget()
+  const { updateEventTarget, updateEventTargetInstance } = useEventTarget()
 
   const [type, setType] = React.useState<EventTargetType | "">("")
   const [name, setName] = React.useState("")
-  const [config, setConfig] = React.useState<Record<string, string | number>>({})
+  const [config, setConfig] = React.useState<Record<string, string>>({})
   const [nameError, setNameError] = React.useState("")
   const [submitting, setSubmitting] = React.useState(false)
+  const [submitError, setSubmitError] = React.useState("")
 
   const currentConfigOptions = type ? (EVENT_TARGET_CONFIG_OPTIONS[type] ?? []) : []
   const selectedOption = EVENT_TARGET_TYPE_OPTIONS.find((o) => o.value === type)
 
   const resetForm = React.useCallback(() => {
-    setType("")
-    setName("")
-    setConfig({})
+    setType(edit?.type ?? "")
+    setName(edit?.name ?? "")
+    setConfig(edit?.config ?? {})
     setNameError("")
-  }, [])
+    setSubmitError("")
+  }, [edit])
 
   React.useEffect(() => {
     if (open) {
@@ -51,14 +54,14 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
   }, [open, resetForm])
 
   React.useEffect(() => {
-    if (type && EVENT_TARGET_CONFIG_OPTIONS[type]) {
-      const nextConfig: Record<string, string | number> = {}
+    if (!edit && type && EVENT_TARGET_CONFIG_OPTIONS[type]) {
+      const nextConfig: Record<string, string> = {}
       EVENT_TARGET_CONFIG_OPTIONS[type].forEach((item) => {
         nextConfig[item.name] = ""
       })
       setConfig(nextConfig)
     }
-  }, [type])
+  }, [type, edit])
 
   const validateNameFormat = (v: string) => {
     if (!v) {
@@ -79,9 +82,13 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
   }
 
   const validateForm = () => {
-    validateNameFormat(name)
+    if (!edit) validateNameFormat(name)
     if (!type) {
       message.error(t("Please select event target type"))
+      return false
+    }
+    if (!edit && (!name || !/^[A-Za-z0-9_]+$/.test(name))) {
+      message.error(t("Please enter name"))
       return false
     }
     if (nameError) {
@@ -100,6 +107,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
     if (!validateForm()) return
 
     setSubmitting(true)
+    setSubmitError("")
     try {
       if (!type) return
       const targetType = EVENT_TARGET_TYPE_MAPPING[type]
@@ -108,14 +116,25 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
         value: String(value ?? ""),
       }))
       const payload = { key_values: keyValues }
-      await updateEventTarget(targetType, name, payload)
-      message.success(t("Event Target created successfully"))
+      if (edit) {
+        await updateEventTargetInstance(
+          targetType.replace(/^notify_/, ""),
+          name,
+          Object.fromEntries(Object.entries(config).map(([key, value]) => [key, String(value)])),
+          edit.config,
+          edit.revision,
+        )
+      } else {
+        await updateEventTarget(targetType, name, payload)
+      }
+      message.success(t(edit ? "Save Success" : "Event Target created successfully"))
       onSuccess?.()
       onOpenChange(false)
       resetForm()
     } catch (error) {
       console.error(error)
-      const msg = (error as Error)?.message || t("Failed to create event target")
+      const msg = (error as Error)?.message || t(edit ? "Edit Failed" : "Failed to create event target")
+      setSubmitError(msg)
       message.error(msg)
     } finally {
       setSubmitting(false)
@@ -138,7 +157,9 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
     >
       <DialogContent className="max-h-[min(90dvh,52rem)] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{type ? t("Add {type} Destination", { type }) : t("Add Event Destination")}</DialogTitle>
+          <DialogTitle>
+            {edit ? t("Edit Configuration") : type ? t("Add {type} Destination", { type }) : t("Add Event Destination")}
+          </DialogTitle>
         </DialogHeader>
         <DialogBody className="min-h-0 space-y-6 overflow-y-auto" aria-busy={submitting}>
           {!type ? (
@@ -173,6 +194,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
               <button
                 type="button"
                 onClick={() => setType("")}
+                disabled={!!edit}
                 className="flex w-full cursor-pointer items-center gap-3 border p-4 text-start transition hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
               >
                 {selectedOption && (
@@ -200,6 +222,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
                       id="target-name"
                       name="target-name"
                       value={name}
+                      disabled={!!edit}
                       onChange={handleNameChange}
                       placeholder={t("Please enter name")}
                       autoComplete="off"
@@ -220,15 +243,25 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
                         onChange={(e) =>
                           setConfig((prev) => ({
                             ...prev,
-                            [cfg.name]: cfg.type === "number" ? Number(e.target.value) || 0 : e.target.value,
+                            [cfg.name]: e.target.value,
                           }))
                         }
                         type={cfg.type === "password" ? "password" : "text"}
+                        aria-describedby={
+                          edit && cfg.type === "password" && edit.config[cfg.name] === "***redacted***"
+                            ? `config-${cfg.name}-description`
+                            : undefined
+                        }
                         autoComplete="off"
                         placeholder={`${t("Please enter")} ${t(cfg.label).toLowerCase()}`}
                         spellCheck={false}
                       />
                     </FieldContent>
+                    {edit && cfg.type === "password" && edit.config[cfg.name] === "***redacted***" && (
+                      <FieldDescription id={`config-${cfg.name}-description`}>
+                        {t("Keep the masked value to preserve the secret; clear it to remove it.")}
+                      </FieldDescription>
+                    )}
                   </Field>
                 ))}
               </div>
@@ -236,6 +269,11 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
           )}
         </DialogBody>
         <DialogFooter>
+          {submitError && (
+            <p role="alert" className="text-sm text-destructive">
+              {submitError}
+            </p>
+          )}
           <Button variant="outline" onClick={handleCancel} disabled={submitting}>
             {t("Cancel")}
           </Button>

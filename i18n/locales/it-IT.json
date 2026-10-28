@@ -599,6 +599,8 @@
   "LastModified": "Ultima modifica",
   "Leave blank to keep the stored Vault token.": "Lascia vuoto per mantenere il token Vault salvato.",
   "Leave empty to keep current secret": "Lascia vuoto per mantenere il segreto corrente",
+  "Keep the masked value to preserve the secret; clear it to remove it.": "Mantieni il valore mascherato per conservare il segreto; cancellalo per rimuoverlo.",
+  "Upgrade RustFS to edit event destinations safely.": "Aggiorna RustFS per modificare le destinazioni degli eventi in sicurezza.",
   "Leave empty to use current host as default": "Lascia vuoto per usare l'host corrente come predefinito",
   "Legal Hold": "Blocco legale",
   "License": "Licenza",

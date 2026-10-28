@@ -599,6 +599,8 @@
   "LastModified": "Đã chỉnh sửa lúc",
   "Leave blank to keep the stored Vault token.": "Để trống để giữ token Vault đã lưu.",
   "Leave empty to keep current secret": "Để trống để giữ secret hiện tại",
+  "Keep the masked value to preserve the secret; clear it to remove it.": "Giữ giá trị đã che để giữ bí mật; xóa giá trị để loại bỏ bí mật.",
+  "Upgrade RustFS to edit event destinations safely.": "Nâng cấp RustFS để chỉnh sửa đích sự kiện một cách an toàn.",
   "Leave empty to use current host as default": "Để trống để sử dụng máy chủ hiện tại làm mặc định",
   "Legal Hold": "Tạm dừng tiêu hủy (Pháp lý)",
   "License": "Giấy phép",

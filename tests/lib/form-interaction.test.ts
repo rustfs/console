@@ -23,6 +23,8 @@ async function load(file: string) {
       if (specifier === "react" || specifier === "react/jsx-runtime") {
         return `import ${bindings} from "${import.meta.resolve(specifier)}";`
       }
+      if (specifier === "@/lib/events-target-config")
+        return `import ${bindings} from "${new URL("../../lib/events-target-config.ts", import.meta.url).href}";`
       if (specifier === "@/lib/mfa")
         return `import ${bindings} from "${new URL("../../lib/mfa.ts", import.meta.url).href}";`
       const names = bindings.startsWith("{")
@@ -46,6 +48,7 @@ async function load(file: string) {
 }
 
 const { LoginForm } = await load("../../components/auth/login-form.tsx")
+const { EventsTargetNewForm } = await load("../../components/events-target/new-form.tsx")
 const { BucketNewForm } = await load("../../components/buckets/new-form.tsx")
 const { SiteReplicationNewForm } = await load("../../components/site-replication/new-form.tsx")
 const { ObjectUploadPicker } = await load("../../components/object/upload-picker.tsx")
@@ -444,4 +447,89 @@ test("upload file removal names its target and clearing selection preserves the 
     uploadProps.prefix,
   )
   assert.equal(browser.document.activeElement?.textContent, "Select File")
+})
+
+test("creating an event target preserves large numeric input exactly", async (t) => {
+  const inputs = new Map<string, { value: string; onChange: (event: { target: { value: string } }) => void }>()
+  let save: { onClick: () => Promise<void> }
+  const calls: unknown[][] = []
+  const ui = await mount(t, React.createElement(EventsTargetNewForm, { open: true, onOpenChange: () => {} }), {
+    Input: (props: Props) => {
+      inputs.set(
+        props.name as string,
+        props as unknown as { value: string; onChange: (event: { target: { value: string } }) => void },
+      )
+      return null
+    },
+    Button: (props: Props) => {
+      if (props.children === "Save") save = props as unknown as typeof save
+      return null
+    },
+    useEventTarget: () => ({
+      updateEventTarget: async (...args: unknown[]) => {
+        calls.push(args)
+      },
+      updateEventTargetInstance: async (...args: unknown[]) => {
+        calls.push(args)
+      },
+    }),
+    useMessage: () => ({ success: () => {}, error: () => {} }),
+    buildRoute: (path: string) => path,
+  })
+  const nats = Array.from(ui.container.querySelectorAll("button")).find((button) =>
+    button.textContent?.includes("NATS"),
+  )!
+  await React.act(async () => nats.click())
+  await React.act(async () => inputs.get("target-name")!.onChange({ target: { value: "primary" } }))
+  await React.act(async () => inputs.get("config-address")!.onChange({ target: { value: "nats://localhost:4222" } }))
+  const large = "9007199254740993"
+  await React.act(async () => inputs.get("config-queue_limit")!.onChange({ target: { value: large } }))
+  assert.equal(inputs.get("config-queue_limit")!.value, large)
+  await React.act(async () => save!.onClick())
+  const createBody = calls[0][2] as { key_values: Array<{ key: string; value: string }> }
+  assert.equal(createBody.key_values.find((entry) => entry.key === "queue_limit")?.value, large)
+})
+
+test("editing an event target preserves a cleared numeric field", async (t) => {
+  const inputs = new Map<string, { value: string; onChange: (event: { target: { value: string } }) => void }>()
+  let save: { onClick: () => Promise<void> }
+  const calls: unknown[][] = []
+  const config = { address: "nats://localhost:4222", queue_limit: "9007199254740993" }
+  await mount(
+    t,
+    React.createElement(EventsTargetNewForm, {
+      open: true,
+      onOpenChange: () => {},
+      edit: { type: "NATS", name: "primary", config, revision: "rev" },
+    }),
+    {
+      Input: (props: Props) => {
+        inputs.set(
+          props.name as string,
+          props as unknown as { value: string; onChange: (event: { target: { value: string } }) => void },
+        )
+        return null
+      },
+      Button: (props: Props) => {
+        if (props.children === "Save") save = props as unknown as typeof save
+        return null
+      },
+      useEventTarget: () => ({
+        updateEventTarget: async (...args: unknown[]) => {
+          calls.push(args)
+        },
+        updateEventTargetInstance: async (...args: unknown[]) => {
+          calls.push(args)
+        },
+      }),
+      useMessage: () => ({ success: () => {}, error: () => {} }),
+      buildRoute: (path: string) => path,
+    },
+  )
+  assert.equal(inputs.get("config-queue_limit")!.value, "9007199254740993")
+  await React.act(async () => inputs.get("config-queue_limit")!.onChange({ target: { value: "" } }))
+  assert.equal(inputs.get("config-queue_limit")!.value, "")
+  await React.act(async () => save!.onClick())
+  assert.equal((calls[0][2] as Record<string, string>).queue_limit, "")
+  assert.equal((calls[0][3] as Record<string, string>).queue_limit, "9007199254740993")
 })

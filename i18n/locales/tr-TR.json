@@ -599,6 +599,8 @@
   "LastModified": "SonDeğiştirme",
   "Leave blank to keep the stored Vault token.": "Saklanan Vault token'ını korumak için boş bırakın.",
   "Leave empty to keep current secret": "Geçerli sırrı korumak için boş bırakın",
+  "Keep the masked value to preserve the secret; clear it to remove it.": "Gizli bilgiyi korumak için maskelenmiş değeri bırakın; kaldırmak için değeri temizleyin.",
+  "Upgrade RustFS to edit event destinations safely.": "Olay hedeflerini güvenle düzenlemek için RustFS sürümünü yükseltin.",
   "Leave empty to use current host as default": "Mevcut sunucuyu varsayılan olarak kullanmak için boş bırakın",
   "Legal Hold": "Yasal Tutma",
   "License": "Lisans",

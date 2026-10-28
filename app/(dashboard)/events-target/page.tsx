@@ -15,6 +15,8 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { useEventTarget } from "@/hooks/use-event-target"
 import { useModuleSwitches } from "@/hooks/use-module-switches"
 import { EventsTargetNewForm } from "@/components/events-target/new-form"
+import { EventsTargetEditForm } from "@/components/events-target/edit-form"
+import { EVENT_TARGET_TYPE_OPTIONS } from "@/lib/events-target-config"
 import {
   applyEventDestinationsLoadResult,
   canManageEventDestinations,
@@ -60,6 +62,7 @@ export default function EventsTargetPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [newFormOpen, setNewFormOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<RowData>()
   const [expandedRowId, setExpandedRowId] = useState<string>()
   const [subscriptions, setSubscriptions] = useState<Record<string, SubscriptionData[]>>({})
   const [subscriptionLoading, setSubscriptionLoading] = useState<Record<string, boolean>>({})
@@ -243,6 +246,16 @@ export default function EventsTargetPage() {
         cell: ({ row }) =>
           isConfigSource(row.original.source) ? (
             <div className="flex items-center gap-2">
+              {EVENT_TARGET_TYPE_OPTIONS.some((option) => option.value.toLowerCase() === row.original.service) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!canManageDestinations}
+                  onClick={() => setEditTarget(row.original)}
+                >
+                  {t("Edit")}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -381,6 +394,9 @@ export default function EventsTargetPage() {
         />
       ) : null}
 
+      {editTarget && (
+        <EventsTargetEditForm target={editTarget} onClose={() => setEditTarget(undefined)} onSuccess={loadData} />
+      )}
       <EventsTargetNewForm open={newFormOpen} onOpenChange={setNewFormOpen} onSuccess={loadData} />
     </Page>
   )

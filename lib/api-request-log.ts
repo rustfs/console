@@ -1,8 +1,12 @@
 const SENSITIVE_LOG_KEY =
   /(?:token|secret|password|authorization|cookie|credential|creds|api[_-]?key|master[_-]?key|private[_-]?key|account[_-]?key|service[_-]?account[_-]?json)/i
 
+// Target payloads carry values under generic names and may contain secrets in
+// fields that the client does not know yet. Never log either configuration map.
+const SENSITIVE_CONFIG_PAYLOAD_KEY = /^(?:key_values|expected_config|expected_revision)$/i
+
 function redactLogValue(value: unknown, key?: string): unknown {
-  if (key && SENSITIVE_LOG_KEY.test(key)) return "[REDACTED]"
+  if (key && (SENSITIVE_LOG_KEY.test(key) || SENSITIVE_CONFIG_PAYLOAD_KEY.test(key))) return "[REDACTED]"
   if (Array.isArray(value)) return value.map((item) => redactLogValue(item))
   if (!value || typeof value !== "object") return value
 

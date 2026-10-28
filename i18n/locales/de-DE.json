@@ -2287,5 +2287,6 @@
   "Quota": "Kontingent",
   "CORS": "CORS",
   "Policy document": "Richtliniendokument",
-  "Service account rotation": "Rotation des Dienstkontos"
+  "Service account rotation": "Rotation des Dienstkontos",
+  "Objects per batch": "Objekte pro Stapel"
 }

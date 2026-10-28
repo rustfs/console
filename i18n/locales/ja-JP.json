@@ -2287,5 +2287,6 @@
   "Quota": "クォータ",
   "CORS": "CORS",
   "Policy document": "ポリシードキュメント",
-  "Service account rotation": "サービスアカウントのローテーション"
+  "Service account rotation": "サービスアカウントのローテーション",
+  "Objects per batch": "1回あたりのオブジェクト数"
 }

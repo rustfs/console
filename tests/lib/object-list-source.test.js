@@ -32,6 +32,16 @@ test("object list lazy loads additional object batches instead of showing a pagi
   assert.equal(source.includes('t("Next Page")'), false)
 })
 
+test("object list persists its batch size and virtualizes loaded rows", () => {
+  const source = fs.readFileSync("components/object/list.tsx", "utf8")
+
+  assert.match(source, /OBJECT_LIST_PAGE_SIZE_STORAGE_KEY = "object-list-page-size"/)
+  assert.match(source, /useLocalStorage<unknown>\(\s+OBJECT_LIST_PAGE_SIZE_STORAGE_KEY/)
+  assert.match(source, /OBJECT_LIST_PAGE_SIZE_OPTIONS\.map/)
+  assert.match(source, /virtualizeRows/)
+  assert.match(source, /aria-labelledby="object-list-page-size-label"/)
+})
+
 test("last modified sorting discloses partial results and keeps continuation visible", () => {
   const source = fs.readFileSync("components/object/list.tsx", "utf8")
 

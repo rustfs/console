@@ -2287,5 +2287,6 @@
   "Quota": "Cuota",
   "CORS": "CORS",
   "Policy document": "Documento de política",
-  "Service account rotation": "Rotación de la cuenta de servicio"
+  "Service account rotation": "Rotación de la cuenta de servicio",
+  "Objects per batch": "Objetos por lote"
 }

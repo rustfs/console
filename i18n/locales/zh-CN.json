@@ -2287,5 +2287,6 @@
   "Quota": "配额",
   "CORS": "CORS",
   "Policy document": "策略内容",
-  "Service account rotation": "服务账户轮换"
+  "Service account rotation": "服务账户轮换",
+  "Objects per batch": "每批对象数"
 }

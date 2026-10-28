@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { RiAddLine, RiRefreshLine, RiKey2Line, RiDeleteBin5Line, RiPlayCircleLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,8 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { useTiers, type TierRow, type TierConfig } from "@/hooks/use-tiers"
 import { TiersNewForm } from "@/components/tiers/new-form"
 import { TiersChangeKey } from "@/components/tiers/change-key"
+import { TierDeletionDialog } from "@/components/tiers/deletion-dialog"
+import { isTierDeletionBlocked } from "@/lib/tier-deletion"
 import { TiersTransitionJob } from "@/components/tiers/transition-job"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
@@ -59,16 +61,33 @@ export default function TiersPage() {
   const [transitionJobOpen, setTransitionJobOpen] = useState(false)
   const [selectedTierName, setSelectedTierName] = useState("")
 
+  const [deletionFailure, setDeletionFailure] = useState<{ name: string; error: string } | null>(null)
+  const deletionTrigger = useRef<HTMLButtonElement | null>(null)
+  const deletionTarget = useRef("")
+  const deleting = useRef(false)
+  const mounted = useRef(false)
+
+  useEffect(() => {
+    if (!deletionFailure && deletionTarget.current) deletionTrigger.current?.focus({ preventScroll: true })
+  }, [deletionFailure])
+
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+
   const loadTiers = useCallback(async () => {
     setLoading(true)
     setLoadError(false)
     try {
       const response = await listTiers()
-      setData(response ?? [])
+      if (mounted.current) setData(response ?? [])
     } catch {
-      setLoadError(true)
+      if (mounted.current) setLoadError(true)
     } finally {
-      setLoading(false)
+      if (mounted.current) setLoading(false)
     }
   }, [listTiers])
 
@@ -78,13 +97,21 @@ export default function TiersPage() {
 
   const deleteTier = useCallback(
     async (row: TierRow) => {
+      if (deleting.current) return
+      deleting.current = true
+      const name = getConfig(row)?.name || ""
       try {
-        const name = getConfig(row)?.name || ""
         await removeTiers(name)
+        if (!mounted.current) return
         message.success(t("Delete Success"))
-        loadTiers()
+        void loadTiers()
       } catch (error) {
-        message.error((error as Error).message || t("Delete Failed"))
+        if (!mounted.current) return
+        const errorText = (error as Error).message || t("Delete Failed")
+        message.error(errorText)
+        if (isTierDeletionBlocked(error)) setDeletionFailure({ name, error: errorText })
+      } finally {
+        deleting.current = false
       }
     },
     [removeTiers, message, t, loadTiers],
@@ -97,7 +124,9 @@ export default function TiersPage() {
         content: `${getConfig(row)?.name}: ${t("Are you sure you want to delete this tier?")}`,
         positiveText: t("Confirm"),
         negativeText: t("Cancel"),
-        onPositiveClick: () => deleteTier(row),
+        onPositiveClick: async () => {
+          await deleteTier(row)
+        },
       })
     },
     [dialog, t, deleteTier],
@@ -173,7 +202,18 @@ export default function TiersPage() {
               <RiPlayCircleLine className="size-4" aria-hidden />
               <span>{t("Manual Transition")}</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => confirmDelete(row.original)}>
+            <Button
+              variant="outline"
+              size="sm"
+              ref={(element) => {
+                if (getConfig(row.original)?.name === deletionTarget.current) deletionTrigger.current = element
+              }}
+              onClick={(event) => {
+                deletionTarget.current = getConfig(row.original)?.name || ""
+                deletionTrigger.current = event.currentTarget
+                confirmDelete(row.original)
+              }}
+            >
               <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
@@ -221,6 +261,15 @@ export default function TiersPage() {
         emptyDescription={t("Add tiers to configure remote storage destinations.")}
       />
 
+      {deletionFailure ? (
+        <TierDeletionDialog
+          key={deletionFailure.name}
+          tierName={deletionFailure.name}
+          originalError={deletionFailure.error}
+          onClose={() => setDeletionFailure(null)}
+          onDeleted={loadTiers}
+        />
+      ) : null}
       <TiersNewForm open={newFormOpen} onOpenChange={setNewFormOpen} onSuccess={loadTiers} />
       <TiersChangeKey
         open={changeKeyOpen}

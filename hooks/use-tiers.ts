@@ -89,6 +89,20 @@ export function useTiers() {
     [api],
   )
 
+  const checkTierDeletion = useCallback(
+    async (name: string): Promise<unknown> => {
+      return api.get(`/tier/${encodeURIComponent(name)}/deletion-check`, { suppress403Redirect: true })
+    },
+    [api],
+  )
+
+  const retryTierCleanup = useCallback(
+    async (name: string): Promise<unknown> => {
+      return api.post(`/tier/${encodeURIComponent(name)}/cleanup-retry`, null, { suppress403Redirect: true })
+    },
+    [api],
+  )
+
   const runManualTransition = useCallback(
     async (options: ManualTransitionRunOptions) => {
       const params: Record<string, string> = {
@@ -132,6 +146,8 @@ export function useTiers() {
     updateTiers,
     listTiers,
     removeTiers,
+    checkTierDeletion,
+    retryTierCleanup,
     runManualTransition,
     getManualTransitionJob,
     cancelManualTransitionJob,

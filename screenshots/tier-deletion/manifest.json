@@ -1,0 +1,127 @@
+{
+  "route": "http://127.0.0.1:3217/tiers/",
+  "backend": "Actual local Next.js UI with Playwright mocked admin API. No live backend or cleanup worker integration validation.",
+  "productBaseCommit": "994fc921ccbdf96b600ce6d5a8b47f43c58efc83",
+  "productPatchSha256": "870acac7a5db09d9993875b52b3981991169c9f4725913662d9405bcd203296e",
+  "images": [
+    {
+      "file": "screenshots/tier-deletion/after-advisory-clear-desktop.png",
+      "sha256": "22ad462da50b172b20a4720b3628ad8cfd262fbae4be2077dd8067daaac50781",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-authoritative-delete-blocked-desktop.png",
+      "sha256": "f509f72f674cf0923789036c75ced314434d29a7cc2ee924b015fe6ec28e0cfa",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-cleanup-accepted-desktop.png",
+      "sha256": "095c2950ce512fd4a9aef45fef5dc7dedf9c541e127f808a9359efcb143897a4",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-cleanup-accepted-mobile.png",
+      "sha256": "e54a36130b23224e2980efb474784feae8d0b8778a4e1dbb4d69d93d5ee05cd2",
+      "width": 390,
+      "height": 844,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-cleanup-busy-desktop.png",
+      "sha256": "b24a0a5331228d2f8104c43d0e85655848300b9df0f0f93912c9acb891230f9e",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-cleanup-busy-mobile.png",
+      "sha256": "83b3a142d45460965ce250c0a5ab5b3b4bc3f55d00bd8bcfebaf134a060f734e",
+      "width": 390,
+      "height": 844,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-cleanup-pending-dark-desktop.png",
+      "sha256": "51a5a9d34230e21f1e0458948cb715c8334750c4a3ef202f359c053e313afe3d",
+      "width": 1440,
+      "height": 1000,
+      "theme": "dark"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-cleanup-pending-dark-mobile.png",
+      "sha256": "892804ef541a691ef04278523cd33201adcb6d1c94ed06843935a0ad456c5fa4",
+      "width": 390,
+      "height": 844,
+      "theme": "dark"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-cleanup-pending-desktop.png",
+      "sha256": "55f41ad7758ce5198f3b4fa9dd7b6e3cf404ac07a8527a0e91d6564bacb4603b",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-cleanup-pending-mobile.png",
+      "sha256": "69ebbd73d2cffe999580f4e3fb7e9f0acabed366f92dd77334b4b212188c82cb",
+      "width": 390,
+      "height": 844,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-delete-confirmed-desktop.png",
+      "sha256": "021ba03330d83f4a62c589ae964dc248b15b251630fc7f4a95538e2030fc966e",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-diagnostic-error-desktop.png",
+      "sha256": "9c7835023ee654743edf4703e40a2ce5db57422d3c4605af335b35a2e6f87613",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-loading-desktop.png",
+      "sha256": "4ef97ad2fba47298fb5de1f83349463cb1385a1c5cec561c0741a6ff7346b382",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-old-server-desktop.png",
+      "sha256": "5f8054c3e4a008243b7c947a17695060b9804a016d2d6d3c4b700a6398570a5e",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/after-unknown-reason-desktop.png",
+      "sha256": "257537f69bbd22c36c1e5aba4e6fa7aefc8bdcac91a5e0f5484896cf5555c394",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/before-desktop.png",
+      "sha256": "c8b55a1b635d39f3965e688a0cdea995dcb25cc4709772dff2fe5f50aaf7db01",
+      "width": 1440,
+      "height": 1000,
+      "theme": "light"
+    },
+    {
+      "file": "screenshots/tier-deletion/before-mobile.png",
+      "sha256": "4bb6de68acbe17b8dd18f77cd4db40ef0bc2299ec827f4f5342991ffe944be1c",
+      "width": 390,
+      "height": 844,
+      "theme": "light"
+    }
+  ]
+}

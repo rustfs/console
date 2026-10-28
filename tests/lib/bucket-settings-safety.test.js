@@ -286,6 +286,15 @@ test("replication controls fail closed on missing capabilities and preserve targ
   assert.match(replicationTabSource, /Replication rules unavailable/)
 })
 
+test("editing bucket retention explains lifecycle limits and links to lifecycle settings", () => {
+  const retentionDialog = bucketInfoSource.slice(bucketInfoSource.indexOf('t("Set Retention")'))
+  assert.match(
+    retentionDialog,
+    /bucket-retention-error[\s\S]*lifecycle expiration cannot delete protected versions early/,
+  )
+  assert.match(retentionDialog, /buildModuleBucketPath\("\/lifecycle", bucketName\)/)
+})
+
 test("bucket setting controls expose names, field errors, and unresolved dependency states", () => {
   assert.match(bucketInfoSource, /aria-label=\{t\("Versioning"\)\}/)
   assert.match(bucketInfoSource, /bucket-policy-error/)

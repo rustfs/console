@@ -1488,6 +1488,7 @@
   "Quota Unit": "Unidade da cota",
   "Replication rules unavailable": "Regras de replicação indisponíveis",
   "Requires Object Lock": "Requer Object Lock",
+  "Retention protects object versions from deletion during the configured period. It does not automatically delete them when the period ends, and lifecycle expiration cannot delete protected versions early. Use a lifecycle expiration rule to remove object versions after retention expires.": "A retenção protege as versões dos objetos contra exclusão durante o período configurado. Ela não as exclui automaticamente quando o período termina, e a expiração do ciclo de vida não pode excluir versões protegidas antecipadamente. Use uma regra de expiração do ciclo de vida para remover versões de objetos após o término da retenção.",
   "Save CORS": "Salvar CORS",
   "Save Encryption": "Salvar criptografia",
   "Save Policy": "Salvar política",

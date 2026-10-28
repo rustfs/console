@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useTranslation } from "react-i18next"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
@@ -282,6 +283,15 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                         </div>
                       </FieldContent>
                     </Field>
+
+                    <Alert>
+                      <AlertTitle>{t("Warning")}</AlertTitle>
+                      <AlertDescription>
+                        {t(
+                          "Retention protects object versions from deletion during the configured period. It does not automatically delete them when the period ends, and lifecycle expiration cannot delete protected versions early. Use a lifecycle expiration rule to remove object versions after retention expires.",
+                        )}
+                      </AlertDescription>
+                    </Alert>
                   </div>
                 )}
               </fieldset>

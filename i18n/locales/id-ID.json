@@ -1488,6 +1488,7 @@
   "Quota Unit": "Satuan Kuota",
   "Replication rules unavailable": "Aturan replikasi tidak tersedia",
   "Requires Object Lock": "Memerlukan Object Lock",
+  "Retention protects object versions from deletion during the configured period. It does not automatically delete them when the period ends, and lifecycle expiration cannot delete protected versions early. Use a lifecycle expiration rule to remove object versions after retention expires.": "Retensi melindungi versi objek dari penghapusan selama periode yang dikonfigurasi. Retensi tidak otomatis menghapusnya saat periode berakhir, dan kedaluwarsa siklus hidup tidak dapat menghapus versi yang masih dilindungi lebih awal. Gunakan aturan kedaluwarsa siklus hidup untuk menghapus versi objek setelah retensi berakhir.",
   "Save CORS": "Simpan CORS",
   "Save Encryption": "Simpan Enkripsi",
   "Save Policy": "Simpan Policy",

@@ -1488,6 +1488,7 @@
   "Quota Unit": "할당량 단위",
   "Replication rules unavailable": "복제 규칙을 확인할 수 없음",
   "Requires Object Lock": "객체 잠금 필요",
+  "Retention protects object versions from deletion during the configured period. It does not automatically delete them when the period ends, and lifecycle expiration cannot delete protected versions early. Use a lifecycle expiration rule to remove object versions after retention expires.": "보존 정책은 설정된 기간 동안 객체 버전이 삭제되지 않도록 보호합니다. 보존 기간이 끝나도 자동으로 삭제되지 않으며, 수명 주기 만료 규칙도 보호 중인 버전을 조기에 삭제할 수 없습니다. 보존 기간이 끝난 후 객체 버전을 제거하려면 수명 주기 만료 규칙을 사용하세요.",
   "Save CORS": "CORS 저장",
   "Save Encryption": "암호화 설정 저장",
   "Save Policy": "정책 저장",

@@ -284,6 +284,27 @@ test("object lock and versioning change together, and a pending bucket creation 
   assert.deepEqual(closed, [false])
 })
 
+test("enabling bucket retention explains lifecycle expiration limits", async (t) => {
+  const switches = new Map<string, { onCheckedChange: (value: boolean) => void }>()
+  const { container } = await mount(t, React.createElement(BucketNewForm, { show: true, onShowChange: () => {} }), {
+    useBucket: () => ({}),
+    usePermissions: () => ({ canCapability: () => true }),
+    useMessage: () => ({ error: () => {}, success: () => {} }),
+    getOptionalBucketNameError: () => null,
+    cn: (...values: unknown[]) => values.filter(Boolean).join(" "),
+    Input: () => null,
+    Switch: (props: Props) => {
+      switches.set(props.id as string, props as never)
+      return null
+    },
+  })
+  const warning = "lifecycle expiration cannot delete protected versions early"
+  await React.act(async () => switches.get("bucket-new-object-lock")!.onCheckedChange(true))
+  assert.equal(container.textContent?.includes(warning), false)
+  await React.act(async () => switches.get("bucket-new-retention")!.onCheckedChange(true))
+  assert.equal(container.textContent?.includes(warning), true)
+})
+
 test("site creation rejects every dismissal while saving and preserves values after failure", async (t) => {
   const inputs = new Map<string, { value: string; onChange: (event: { target: { value: string } }) => void }>()
   let modal: { onOpenChange: (open: boolean, details: { reason: string }) => void }

@@ -1545,6 +1545,19 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
               </FieldContent>
               <FieldError id="bucket-retention-error">{retentionFormError || undefined}</FieldError>
             </Field>
+            <Alert>
+              <AlertTitle>{t("Warning")}</AlertTitle>
+              <AlertDescription>
+                <p>
+                  {t(
+                    "Retention protects object versions from deletion during the configured period. It does not automatically delete them when the period ends, and lifecycle expiration cannot delete protected versions early. Use a lifecycle expiration rule to remove object versions after retention expires.",
+                  )}
+                </p>
+                <Link className="inline-block" href={buildModuleBucketPath("/lifecycle", bucketName)}>
+                  {`${t("Open")} ${t("Lifecycle")}`}
+                </Link>
+              </AlertDescription>
+            </Alert>
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRetentionModal(false)} disabled={mutation === "retention"}>

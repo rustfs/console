@@ -1488,6 +1488,7 @@
   "Quota Unit": "وحدة الحصة",
   "Replication rules unavailable": "قواعد النسخ المتماثل غير متاحة",
   "Requires Object Lock": "يتطلب Object Lock",
+  "Retention protects object versions from deletion during the configured period. It does not automatically delete them when the period ends, and lifecycle expiration cannot delete protected versions early. Use a lifecycle expiration rule to remove object versions after retention expires.": "تحمي سياسة الاحتفاظ إصدارات الكائنات من الحذف خلال المدة المحددة. ولا تحذفها تلقائيًا عند انتهاء المدة، كما لا يمكن لانتهاء دورة الحياة حذف الإصدارات المحمية قبل موعدها. استخدم قاعدة انتهاء صلاحية دورة الحياة لإزالة إصدارات الكائنات بعد انتهاء مدة الاحتفاظ.",
   "Save CORS": "حفظ CORS",
   "Save Encryption": "حفظ التشفير",
   "Save Policy": "حفظ السياسة",

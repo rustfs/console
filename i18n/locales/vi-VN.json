@@ -2287,5 +2287,6 @@
   "Quota": "Hạn mức",
   "CORS": "CORS",
   "Policy document": "Tài liệu chính sách",
-  "Service account rotation": "Xoay vòng tài khoản dịch vụ"
+  "Service account rotation": "Xoay vòng tài khoản dịch vụ",
+  "Objects per batch": "Đối tượng mỗi đợt"
 }

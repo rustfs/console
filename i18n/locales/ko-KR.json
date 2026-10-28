@@ -2287,5 +2287,6 @@
   "Quota": "할당량",
   "CORS": "CORS",
   "Policy document": "정책 문서",
-  "Service account rotation": "서비스 계정 교체"
+  "Service account rotation": "서비스 계정 교체",
+  "Objects per batch": "배치당 객체 수"
 }

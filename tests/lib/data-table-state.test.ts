@@ -1,8 +1,10 @@
-import test from "node:test"
+import test, { type TestContext } from "node:test"
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
+import { createRoot } from "react-dom/client"
+import { Window } from "happy-dom"
 import { getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table"
 import ts from "typescript"
 import type { DataTable as DataTableComponent } from "../../components/data-table/data-table"
@@ -107,4 +109,92 @@ test("empty successful results remain distinct from loading and errors", () => {
   assert.match(html, /No versions/)
   assert.doesNotMatch(html, /role="alert"|Loading…|>Retry</)
   assert.ok(html.indexOf("</table>") < html.indexOf("No versions"))
+})
+
+const largeData = Array.from({ length: 1000 }, (_, index) => ({ version: `version-${index}` }))
+
+async function mountVirtualTable(t: TestContext, initialProps: Options = {}) {
+  const browser = new Window({ innerHeight: 800 })
+  Object.defineProperty(browser.HTMLElement.prototype, "offsetHeight", { configurable: true, get: () => 40 })
+  browser.HTMLElement.prototype.getBoundingClientRect = function () {
+    return new browser.DOMRect(0, this.tagName === "TBODY" ? 200 - browser.scrollY : 0, 800, 40)
+  }
+  const globals = { window: browser, document: browser.document, IS_REACT_ACT_ENVIRONMENT: true }
+  const previousDescriptors = Object.keys(globals).map(
+    (key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)] as const,
+  )
+  for (const [key, value] of Object.entries(globals)) {
+    Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
+  }
+
+  const container = browser.document.createElement("div")
+  browser.document.body.appendChild(container)
+  const root = createRoot(container as unknown as Element)
+  t.after(async () => {
+    await React.act(async () => root.unmount())
+    await browser.happyDOM.close()
+    for (const [key, descriptor] of previousDescriptors) {
+      if (descriptor) Object.defineProperty(globalThis, key, descriptor)
+      else Reflect.deleteProperty(globalThis, key)
+    }
+  })
+
+  let props: Options = { data: largeData, virtualizeRows: true, ...initialProps }
+  const update = async (changes: Partial<Options> = {}) => {
+    props = { ...props, ...changes }
+    await React.act(async () => root.render(React.createElement(Table, props)))
+  }
+  const scrollTo = async (top: number) => {
+    await React.act(async () => {
+      browser.scrollTo({ top })
+      browser.dispatchEvent(new browser.Event("scroll"))
+    })
+  }
+  await update()
+  return { container, update, scrollTo }
+}
+
+test("window virtualization limits mounted rows while announcing the complete loaded row count", async (t) => {
+  const { container } = await mountVirtualTable(t)
+  const rows = container.querySelectorAll("tbody tr[data-index]")
+  assert.ok(rows.length > 0 && rows.length < 50)
+  assert.equal(container.querySelector("table")?.getAttribute("aria-rowcount"), "1001")
+  assert.equal(rows[0].getAttribute("aria-rowindex"), "2")
+  const paddingHeight = Array.from(container.querySelectorAll("tbody tr[aria-hidden] td")).reduce(
+    (total, cell) => total + Number.parseFloat((cell as unknown as HTMLTableCellElement).style.height),
+    0,
+  )
+  assert.equal(rows.length * 40 + paddingHeight, largeData.length * 40)
+})
+
+test("scrolling a virtual table replaces mounted rows and preserves their absolute positions", async (t) => {
+  const { container, scrollTo } = await mountVirtualTable(t)
+  await scrollTo(20200)
+  const first = container.querySelector("tbody tr[data-index]")
+  const index = Number(first?.getAttribute("data-index"))
+  assert.ok(index > 400)
+  assert.equal(first?.getAttribute("aria-rowindex"), String(index + 2))
+  assert.ok(first?.textContent?.includes(`version-${index}`))
+  assert.equal(container.querySelector("tbody tr[aria-hidden] td")?.getAttribute("style"), `height: ${index * 40}px;`)
+  await scrollTo(0)
+  assert.ok(container.querySelector("tbody tr[data-index]")?.textContent?.includes("version-0"))
+})
+
+test("virtualized tables update total rows after appending and discard rows during a scope reload", async (t) => {
+  const { container, update, scrollTo } = await mountVirtualTable(t)
+  await scrollTo(20200)
+  await update({ data: [...largeData, { version: "appended-version" }] })
+  assert.equal(container.querySelector("table")?.getAttribute("aria-rowcount"), "1002")
+  await update({ isLoading: true })
+  assert.equal(container.querySelectorAll("tbody tr[data-index]").length, 0)
+  assert.ok(container.querySelector('[role="status"]'))
+  await scrollTo(0)
+  await update({ data: [], isLoading: false })
+  assert.ok(container.textContent?.includes("No versions"))
+})
+
+test("tables retain all rows unless window virtualization is explicitly enabled", () => {
+  const html = render({ data: largeData })
+  assert.equal((html.match(/>Delete</g) ?? []).length, largeData.length)
+  assert.doesNotMatch(html, /aria-rowcount|data-index/)
 })

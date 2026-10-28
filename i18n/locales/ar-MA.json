@@ -2287,5 +2287,6 @@
   "Quota": "الحصة",
   "CORS": "CORS",
   "Policy document": "مستند السياسة",
-  "Service account rotation": "تدوير حساب الخدمة"
+  "Service account rotation": "تدوير حساب الخدمة",
+  "Objects per batch": "عدد الكائنات في كل دفعة"
 }

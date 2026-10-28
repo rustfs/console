@@ -2287,5 +2287,6 @@
   "Quota": "Квота",
   "CORS": "CORS",
   "Policy document": "Документ политики",
-  "Service account rotation": "Смена сервисной учётной записи"
+  "Service account rotation": "Смена сервисной учётной записи",
+  "Objects per batch": "Объектов за пакет"
 }

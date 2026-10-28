@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/dialog"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,7 +83,11 @@ import {
   shouldShowObjectListRow,
   type ObjectListDeletedView,
 } from "@/lib/object-list-state"
-import { OBJECT_LIST_DEFAULT_PAGE_SIZE, resolveObjectListPageSize } from "@/lib/object-list-pagination"
+import {
+  OBJECT_LIST_DEFAULT_PAGE_SIZE,
+  OBJECT_LIST_PAGE_SIZE_OPTIONS,
+  resolveObjectListPageSize,
+} from "@/lib/object-list-pagination"
 import {
   resolveBucketVersioningState,
   shouldDeleteAllVersions,
@@ -122,6 +127,7 @@ const OBJECT_LIST_DELETED_VIEW_OPTIONS: Array<{ value: ObjectListDeletedView; la
   { value: "show", labelKey: "Show Deleted Objects" },
   { value: "only", labelKey: "Show Only Deleted Objects" },
 ]
+const OBJECT_LIST_PAGE_SIZE_STORAGE_KEY = "object-list-page-size"
 
 function isAccessDeniedError(error: unknown): boolean {
   const serviceError = error as {
@@ -143,7 +149,6 @@ interface ObjectListProps {
   onOpenInfo: (bucket: string, key: string) => void
   onUploadClick: () => void
   canUpload?: boolean
-  pageSize?: number
   onRefresh?: () => void
   refreshTrigger?: number
   onPreview: (params: { key?: string; data?: Record<string, unknown> }) => void
@@ -156,7 +161,6 @@ export function ObjectList({
   onOpenInfo,
   onUploadClick,
   canUpload = false,
-  pageSize = OBJECT_LIST_DEFAULT_PAGE_SIZE,
   onRefresh,
   refreshTrigger = 0,
   onPreview,
@@ -175,6 +179,10 @@ export function ObjectList({
   const [storedDeletedView, setDeletedView] = useLocalStorage<ObjectListDeletedView>(
     OBJECT_LIST_DELETED_VIEW_STORAGE_KEY,
     readObjectListDeletedViewDefault(),
+  )
+  const [storedPageSize, setStoredPageSize] = useLocalStorage<unknown>(
+    OBJECT_LIST_PAGE_SIZE_STORAGE_KEY,
+    OBJECT_LIST_DEFAULT_PAGE_SIZE,
   )
   const deletedView = resolveObjectListDeletedView(storedDeletedView)
   const [loading, setLoading] = React.useState(false)
@@ -210,7 +218,7 @@ export function ObjectList({
   )
 
   const prefix = decodeURIComponent(path)
-  const resolvedPageSize = resolveObjectListPageSize(pageSize)
+  const resolvedPageSize = resolveObjectListPageSize(storedPageSize)
   const onlyDeleted = deletedView === "only"
   // "Only deleted" is a client-side narrowing over the same include-deleted
   // listing, so the wire flag is on for every view except "hide".
@@ -985,6 +993,28 @@ export function ObjectList({
                 </label>
               ))}
             </RadioGroup>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span id="object-list-page-size-label">{t("Objects per batch")}</span>
+              <Select
+                value={String(resolvedPageSize)}
+                onValueChange={(value) => {
+                  if (value) setStoredPageSize(Number(value))
+                }}
+              >
+                <SelectTrigger aria-labelledby="object-list-page-size-label" className="w-24">
+                  <SelectValue>{resolvedPageSize}</SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    {OBJECT_LIST_PAGE_SIZE_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={String(option)}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="ms-auto flex flex-wrap items-center gap-2">
               {checkedKeys.length > 0 ? (
                 <>
@@ -1011,6 +1041,7 @@ export function ObjectList({
           </div>
         }
         table={table}
+        virtualizeRows
         isLoading={displayState === "loading" || displayState === "filtered-loading"}
         errorTitle={
           listError === "accessDenied"

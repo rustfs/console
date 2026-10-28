@@ -10,6 +10,7 @@ import { TableBody, TableCell, TableHead, TableHeader, TableRow, Table as UiTabl
 import { Spinner } from "@/components/ui/spinner"
 import { EmptyState } from "@/components/empty-state"
 import { cn } from "@/lib/utils"
+import { useWindowVirtualizer } from "@tanstack/react-virtual"
 
 interface DataTableProps<TData> {
   table: Table<TData>
@@ -26,6 +27,7 @@ interface DataTableProps<TData> {
   tableClass?: string
   stickyHeader?: boolean
   bodyHeight?: string
+  virtualizeRows?: boolean
   expandedRowId?: string
   renderExpandedRow?: (row: import("@tanstack/react-table").Row<TData>) => React.ReactNode
 }
@@ -94,12 +96,56 @@ export function DataTable<TData>({
   tableClass,
   stickyHeader = false,
   bodyHeight,
+  virtualizeRows = false,
   expandedRowId,
   renderExpandedRow,
 }: DataTableProps<TData>) {
   const { t } = useTranslation()
-  const hasRows = table.getRowModel().rows.length > 0
+  const rows = table.getRowModel().rows
+  const hasRows = rows.length > 0
   const showRows = hasRows && ((!isLoading && !errorTitle) || keepPreviousData)
+  const tableRootRef = React.useRef<HTMLDivElement>(null)
+  const tableBodyRef = React.useRef<HTMLTableSectionElement>(null)
+  const [scrollMargin, setScrollMargin] = React.useState(0)
+
+  React.useLayoutEffect(() => {
+    if (!virtualizeRows) return
+
+    const updateScrollMargin = () => {
+      const bodyTop = tableBodyRef.current?.getBoundingClientRect().top
+      if (bodyTop == null) return
+
+      const nextScrollMargin = Math.max(0, bodyTop + window.scrollY)
+      setScrollMargin((current) => (current === nextScrollMargin ? current : nextScrollMargin))
+    }
+
+    updateScrollMargin()
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(updateScrollMargin)
+    if (tableRootRef.current) observer?.observe(tableRootRef.current)
+    window.addEventListener("resize", updateScrollMargin)
+
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener("resize", updateScrollMargin)
+    }
+  }, [virtualizeRows])
+
+  const getItemKey = React.useCallback((index: number) => rows[index]?.id ?? index, [rows])
+  const virtualizer = useWindowVirtualizer({
+    count: virtualizeRows && showRows ? rows.length : 0,
+    estimateSize: () => 40,
+    getItemKey,
+    overscan: 12,
+    scrollMargin,
+    enabled: virtualizeRows,
+  })
+  const virtualRows = virtualizeRows ? virtualizer.getVirtualItems() : null
+  const visibleRows = virtualRows ? virtualRows.map((item) => rows[item.index]!) : rows
+  const topPadding = virtualRows?.length ? Math.max(0, virtualRows[0].start - scrollMargin) : 0
+  const bottomPadding =
+    virtualRows?.length && virtualRows.length < rows.length
+      ? Math.max(0, virtualizer.getTotalSize() - (virtualRows[virtualRows.length - 1].end - scrollMargin))
+      : 0
 
   const tableContent = (
     <>
@@ -108,7 +154,11 @@ export function DataTable<TData>({
           {toolbar}
         </div>
       ) : null}
-      <UiTable className={cn("min-w-full tabular-nums", tableClass)} aria-busy={isLoading}>
+      <UiTable
+        className={cn("min-w-full tabular-nums", tableClass)}
+        aria-busy={isLoading}
+        aria-rowcount={virtualizeRows ? rows.length + 1 : undefined}
+      >
         {caption ? <caption className="sr-only">{caption}</caption> : null}
         <TableHeader className={stickyHeader ? "sticky top-0 z-10 bg-muted" : "bg-muted"}>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -155,28 +205,54 @@ export function DataTable<TData>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody>
-          {showRows
-            ? table.getRowModel().rows.map((row) => (
-                <React.Fragment key={row.id}>
-                  <TableRow
-                    data-state={row.getIsSelected() ? "selected" : undefined}
-                    className="transition-colors hover:bg-muted/60"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell
-                        key={cell.id}
-                        className={bodyHeight ? undefined : "py-2"}
-                        style={getColumnStyles(cell.column)}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  {expandedRowId === row.id && renderExpandedRow ? renderExpandedRow(row) : null}
-                </React.Fragment>
-              ))
-            : null}
+        <TableBody ref={tableBodyRef}>
+          {showRows ? (
+            <>
+              {topPadding > 0 ? (
+                <TableRow aria-hidden="true" className="border-0 hover:bg-transparent">
+                  <TableCell
+                    colSpan={table.getVisibleFlatColumns().length}
+                    className="border-0 p-0"
+                    style={{ height: topPadding }}
+                  />
+                </TableRow>
+              ) : null}
+              {visibleRows.map((row, index) => {
+                const virtualRow = virtualRows?.[index]
+                return (
+                  <React.Fragment key={row.id}>
+                    <TableRow
+                      ref={virtualizeRows ? virtualizer.measureElement : undefined}
+                      data-index={virtualRow?.index}
+                      aria-rowindex={virtualizeRows && virtualRow ? virtualRow.index + 2 : undefined}
+                      data-state={row.getIsSelected() ? "selected" : undefined}
+                      className="transition-colors hover:bg-muted/60"
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className={bodyHeight ? undefined : "py-2"}
+                          style={getColumnStyles(cell.column)}
+                        >
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    {expandedRowId === row.id && renderExpandedRow ? renderExpandedRow(row) : null}
+                  </React.Fragment>
+                )
+              })}
+              {bottomPadding > 0 ? (
+                <TableRow aria-hidden="true" className="border-0 hover:bg-transparent">
+                  <TableCell
+                    colSpan={table.getVisibleFlatColumns().length}
+                    className="border-0 p-0"
+                    style={{ height: bottomPadding }}
+                  />
+                </TableRow>
+              ) : null}
+            </>
+          ) : null}
         </TableBody>
       </UiTable>
       {!showRows ? (
@@ -205,7 +281,7 @@ export function DataTable<TData>({
   )
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-4", className)}>
+    <div ref={tableRootRef} className={cn("flex min-w-0 flex-col gap-4", className)}>
       {showRows && errorTitle ? (
         <div
           role="alert"

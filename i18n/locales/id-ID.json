@@ -2287,5 +2287,6 @@
   "Quota": "Kuota",
   "CORS": "CORS",
   "Policy document": "Dokumen kebijakan",
-  "Service account rotation": "Rotasi akun layanan"
+  "Service account rotation": "Rotasi akun layanan",
+  "Objects per batch": "Objek per batch"
 }

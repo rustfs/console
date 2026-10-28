@@ -2287,5 +2287,6 @@
   "Quota": "Kota",
   "CORS": "CORS",
   "Policy document": "İlke belgesi",
-  "Service account rotation": "Hizmet hesabı döndürme"
+  "Service account rotation": "Hizmet hesabı döndürme",
+  "Objects per batch": "Parti başına nesne sayısı"
 }

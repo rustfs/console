@@ -19,7 +19,11 @@ import {
 } from "@/components/replication/edit-form"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
-import { isMissingBucketConfiguration, removeMatchingBucketRule } from "@/lib/bucket-configuration"
+import {
+  getReplicationDestinationBucket,
+  isMissingBucketConfiguration,
+  removeMatchingBucketRule,
+} from "@/lib/bucket-configuration"
 import type { ColumnDef } from "@tanstack/react-table"
 
 interface ReplicationRule {
@@ -212,13 +216,23 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
         cell: ({ row }) => <span>{row.original.Filter?.Prefix || "-"}</span>,
       },
       {
+        id: "destination-endpoint",
+        header: () => t("Endpoint"),
+        cell: ({ row }) => (
+          <span className="break-all font-mono text-xs">{targetForRule(row.original)?.endpoint || "-"}</span>
+        ),
+      },
+      {
         id: "destination-bucket",
         header: () => t("Destination Bucket"),
         cell: ({ row }) => {
-          const bucketArn = row.original.Destination?.Bucket || ""
+          const bucket = getReplicationDestinationBucket(
+            row.original.Destination?.Bucket,
+            targetForRule(row.original)?.targetbucket,
+          )
           return (
             <div className="space-y-1">
-              <p className="break-all font-medium">{bucketArn.replace(/^arn:aws:s3:::/, "") || "-"}</p>
+              <p className="break-all font-medium">{bucket}</p>
               <p className="text-xs text-muted-foreground">
                 {t("Storage Class")}: {row.original.Destination?.StorageClass || "-"}
               </p>
@@ -347,19 +361,27 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
         ) : (
           data.map((rule) => {
             const identity = rule.ID ?? JSON.stringify(rule)
-            const destination = (rule.Destination?.Bucket ?? "").replace(/^arn:aws:s3:::/, "") || "-"
+            const target = targetForRule(rule)
+            const bucket = getReplicationDestinationBucket(rule.Destination?.Bucket, target?.targetbucket)
             return (
               <article key={identity} className="space-y-4 border p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <h3 className="break-all text-sm font-medium">{rule.ID ?? t("Unnamed rule")}</h3>
-                    <p className="mt-1 break-all text-xs text-muted-foreground">{destination}</p>
                   </div>
                   <Badge variant={rule.Status === "Enabled" ? "secondary" : "outline"}>
                     {rule.Status === "Enabled" ? t("Enabled") : t("Disabled")}
                   </Badge>
                 </div>
                 <dl className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="col-span-2 min-w-0">
+                    <dt className="text-xs text-muted-foreground">{t("Endpoint")}</dt>
+                    <dd className="break-all font-mono text-xs">{target?.endpoint || "-"}</dd>
+                  </div>
+                  <div className="col-span-2 min-w-0">
+                    <dt className="text-xs text-muted-foreground">{t("Destination Bucket")}</dt>
+                    <dd className="break-all">{bucket}</dd>
+                  </div>
                   <div>
                     <dt className="text-xs text-muted-foreground">{t("Priority")}</dt>
                     <dd className="tabular-nums">{String(rule.Priority ?? "-")}</dd>
@@ -375,15 +397,10 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
                       variant="outline"
                       className="min-h-11 w-full whitespace-normal break-all"
                       onClick={() => {
-                        const target = targetForRule(rule)
                         if (target) setEditing({ rule, target })
                       }}
                       disabled={
-                        Boolean(loadError) ||
-                        loading ||
-                        mutatingRuleId !== null ||
-                        !remoteTargetsSupported ||
-                        !targetForRule(rule)
+                        Boolean(loadError) || loading || mutatingRuleId !== null || !remoteTargetsSupported || !target
                       }
                     >
                       <RiEditLine className="size-4" aria-hidden />

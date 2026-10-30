@@ -70,6 +70,17 @@ export function normalizeReplicationRulesForRolelessConfig<T extends { Destinati
   }))
 }
 
+export function getReplicationDestinationBucket(destination?: string, targetBucket?: string): string {
+  if (targetBucket) return targetBucket
+  if (!destination) return "-"
+  if (!destination.startsWith("arn:")) return destination
+
+  const bucket =
+    destination.match(/^arn:(?:minio|rustfs):replication:[^:]*:[^:]*:([^:]+)$/)?.[1] ??
+    destination.match(/^arn:aws:s3:::([^:]+)$/)?.[1]
+  return bucket || "-"
+}
+
 export function createLatestRequestGate() {
   let version = 0
   return {

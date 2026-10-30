@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises"
 import { PutBucketLifecycleConfigurationCommand, S3Client } from "@aws-sdk/client-s3"
 import {
   createLatestRequestGate,
+  getReplicationDestinationBucket,
   isMissingBucketConfiguration,
   normalizeReplicationRulesForRolelessConfig,
   removeMatchingBucketRule,
@@ -41,6 +42,30 @@ const runtimeCapabilitiesHookSource = await readFile(
 const lifecycleFormSource = await readFile(new URL("../../components/lifecycle/new-form.tsx", import.meta.url), "utf8")
 const eventsFormSource = await readFile(new URL("../../components/events/new-form.tsx", import.meta.url), "utf8")
 const bucketHookSource = await readFile(new URL("../../hooks/use-bucket.ts", import.meta.url), "utf8")
+
+test("replication destinations prefer target bucket names without changing their ARN identity", () => {
+  const destination = "arn:minio:replication::deployment-id:hello"
+  const target = Object.freeze({ arn: destination, endpoint: "remote.example.com:9000", targetbucket: "archive" })
+  assert.equal(getReplicationDestinationBucket(destination, target.targetbucket), "archive")
+  assert.equal(target.arn, destination)
+})
+
+test("replication destinations show bucket names when remote target details are unavailable", () => {
+  for (const destination of [
+    "arn:minio:replication::deployment-id:hello",
+    "arn:rustfs:replication:us-east-1:deployment-id:hello",
+    "arn:aws:s3:::hello",
+    "hello",
+  ]) {
+    assert.equal(getReplicationDestinationBucket(destination), "hello", destination)
+  }
+})
+
+test("missing and unrecognized replication destinations never display raw ARNs", () => {
+  for (const destination of [undefined, "", "arn:unknown:replication::id:hello", "arn:minio:replication::id:"]) {
+    assert.equal(getReplicationDestinationBucket(destination), "-", destination)
+  }
+})
 
 test("bucket settings distinguish known missing configurations from read failures", () => {
   assert.equal(isMissingBucketConfiguration({ name: "NoSuchBucketPolicy" }, "policy"), true)

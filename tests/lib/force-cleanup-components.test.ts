@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client"
 import { Window, type Element as HappyElement } from "happy-dom"
 import ts from "typescript"
 import { isForceCleanupTarget } from "../../lib/permission-capabilities"
+import { PrefixSummaryLimitError } from "../../lib/prefix-summary"
 import type { ObjectList as ObjectListComponent } from "../../components/object/list"
 import type { TaskItem as TaskItemComponent } from "../../components/tasks/item"
 import type { AnyTask } from "../../contexts/task-context"
@@ -97,10 +98,11 @@ const mocks: Record<string, unknown> = {
   }) =>
     React.createElement("input", { type: "checkbox", checked, id, onChange: (e) => onCheckedChange(e.target.checked) }),
   PageHeader: ({ children, actions }: UiProps) => React.createElement("header", null, actions, children),
-  DataTable: ({ table }: { table: MockTable }) =>
+  DataTable: ({ table, toolbar }: { table: MockTable; toolbar?: React.ReactNode }) =>
     React.createElement(
       "section",
       null,
+      toolbar,
       table.data.map((row) =>
         React.createElement(
           "div",
@@ -117,8 +119,22 @@ const mocks: Record<string, unknown> = {
   }),
   useLocalStorage: (_key: string, initial: boolean) => React.useState(initial),
   useObjectListPagination() {},
+  SearchInput: ({
+    value,
+    onChange,
+    placeholder,
+  }: {
+    value: string
+    onChange: (value: string) => void
+    placeholder: string
+  }) =>
+    React.createElement("input", {
+      value,
+      placeholder,
+      onInput: (event: React.FormEvent<HTMLInputElement>) => onChange(event.currentTarget.value),
+    }),
   formatBytes: (bytes: number) => String(bytes),
-  formatDateTime: (date: string) => date,
+  formatDateTime: (date: string | Date) => (date instanceof Date ? date.toISOString() : date),
 }
 for (const name of [
   "AlertDialogContent",
@@ -182,7 +198,12 @@ const fullKey = "parent/中文%2F+space /child/"
 const consequences =
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone."
 
-async function mount(t: TestContext, initialProps: ObjectListProps, versioning: string = "Suspended") {
+async function mount(
+  t: TestContext,
+  initialProps: ObjectListProps,
+  versioning: string = "Suspended",
+  calculatePrefixSummary?: (key: string, signal: AbortSignal) => Promise<{ size: number; lastModified?: Date }>,
+) {
   const browser = new Window()
   const globals = { window: browser, document: browser.document, IS_REACT_ACT_ENVIRONMENT: true }
   const descriptors = Object.keys(globals).map(
@@ -205,6 +226,7 @@ async function mount(t: TestContext, initialProps: ObjectListProps, versioning: 
       CommonPrefixes: folders.map((Prefix) => ({ Prefix })),
       Contents: [{ Key: "file.txt" }, { Key: "literal-object/" }],
     }),
+    calculatePrefixSummary,
     getSignedUrl: async () => "",
     renameObject: async () => {},
   }
@@ -251,7 +273,7 @@ async function mount(t: TestContext, initialProps: ObjectListProps, versioning: 
       (element) => element.getAttribute("data-object-key") === key,
     )
     assert.ok(row, `expected row ${key}`)
-    await click(row.querySelector("button[aria-label]"))
+    await click(row.querySelector('button[aria-label^="Actions:"]'))
     return row
   }
   t.after(async () => {
@@ -422,3 +444,140 @@ test("successful tasks do not display stale backend errors", async (t) => {
   await React.act(async () => ui.root.render(React.createElement(TaskItem, { task })))
   assert.equal(ui.container.querySelector('[role="alert"]'), null)
 })
+
+test("folder statistics do not land in a new bucket after a scope change", async (t) => {
+  const response = Promise.withResolvers<{ size: number; lastModified?: Date }>()
+  let usedSignal: AbortSignal | undefined
+  const ui = await mount(t, props, "Suspended", async (_key, signal) => {
+    usedSignal = signal
+    return response.promise
+  })
+  await ui.click(ui.findButton("Calculate folder statistics"))
+  assert.equal(usedSignal?.aborted, false)
+  await ui.render({ bucket: "other-bucket" })
+  assert.equal(usedSignal?.aborted, true)
+  await React.act(async () => response.resolve({ size: 731, lastModified: new Date("2026-01-01") }))
+  assert.equal(ui.container.textContent?.includes("731"), false)
+})
+
+test("refresh cancels folder statistics and ignores a late result", async (t) => {
+  const response = Promise.withResolvers<{ size: number; lastModified?: Date }>()
+  let usedSignal: AbortSignal | undefined
+  const ui = await mount(t, props, "Suspended", async (_key, signal) => {
+    usedSignal = signal
+    return response.promise
+  })
+  await ui.click(ui.findButton("Calculate folder statistics"))
+  await ui.render({ refreshTrigger: 1 })
+  assert.equal(usedSignal?.aborted, true)
+  await React.act(async () => response.resolve({ size: 731 }))
+  assert.equal(ui.container.textContent?.includes("731"), false)
+})
+
+test("folder statistics update only the requested row and clear on refresh", async (t) => {
+  const ui = await mount(t, props, "Suspended", async () => ({ size: 731 }))
+  await ui.click(ui.findButton("Calculate folder statistics"))
+  const rows = Array.from(ui.container.querySelectorAll("[data-object-key]"))
+  assert.ok(rows.find((row) => row.getAttribute("data-object-key") === fullKey)?.textContent?.includes("731"))
+  assert.equal(
+    rows.find((row) => row.getAttribute("data-object-key") === "other/")?.textContent?.includes("731"),
+    false,
+  )
+  await ui.render({ refreshTrigger: 1 })
+  assert.equal(ui.container.textContent?.includes("731"), false)
+})
+
+test("folder scan remains cancellable when search hides its row, and a late response is ignored", async (t) => {
+  const response = Promise.withResolvers<{ size: number; lastModified?: Date }>()
+  let usedSignal: AbortSignal | undefined
+  let calls = 0
+  const ui = await mount(t, props, "Suspended", async (_key, signal) => {
+    calls++
+    usedSignal = signal
+    return response.promise
+  })
+  await ui.click(ui.findButton("Calculate folder statistics"))
+  const search = ui.container.querySelector('input[placeholder="Filter loaded objects"]') as HTMLInputElement | null
+  assert.ok(search)
+  await React.act(async () => {
+    search.value = "other"
+    search.dispatchEvent(new search.ownerDocument.defaultView!.Event("input", { bubbles: true }))
+  })
+  assert.equal(ui.container.querySelector(`[data-object-key="${fullKey}"]`), null)
+  assert.ok(ui.container.querySelector('[role="status"]')?.textContent?.includes(fullKey))
+  const otherScan = ui.findButton("Calculate folder statistics")
+  assert.ok(otherScan)
+  assert.equal((otherScan as unknown as HTMLButtonElement).disabled, true)
+  await ui.click(otherScan)
+  assert.equal(calls, 1)
+  await ui.click(ui.findButton("Cancel"))
+  assert.equal(usedSignal?.aborted, true)
+  await React.act(async () => response.resolve({ size: 731, lastModified: new Date("2026-01-01") }))
+  assert.ok(ui.container.querySelector('[role="status"]')?.textContent?.includes("Calculation cancelled."))
+  assert.ok(ui.container.querySelector('[role="status"]')?.textContent?.includes(fullKey))
+  await ui.click(ui.findButton("Close"))
+  assert.equal(ui.container.querySelector('[role="status"]'), null)
+  await React.act(async () => {
+    search.value = ""
+    search.dispatchEvent(new search.ownerDocument.defaultView!.Event("input", { bubbles: true }))
+  })
+  assert.equal(ui.container.textContent?.includes("731"), false)
+})
+
+for (const [error, expected] of [
+  [new Error("network"), "Could not calculate folder statistics."],
+  [new PrefixSummaryLimitError("limit"), "Folder exceeds the scan limit."],
+] as const) {
+  test(`a hidden folder scan reports ${expected} until closed`, async (t) => {
+    const response = Promise.withResolvers<{ size: number; lastModified?: Date }>()
+    const ui = await mount(t, props, "Suspended", async () => response.promise)
+    await ui.click(ui.findButton("Calculate folder statistics"))
+    const search = ui.container.querySelector('input[placeholder="Filter loaded objects"]') as HTMLInputElement | null
+    assert.ok(search)
+    await React.act(async () => {
+      search.value = "other"
+      search.dispatchEvent(new search.ownerDocument.defaultView!.Event("input", { bubbles: true }))
+    })
+    assert.equal(ui.container.querySelector(`[data-object-key="${fullKey}"]`), null)
+    await React.act(async () => response.reject(error))
+    assert.ok(ui.container.querySelector('[role="alert"]')?.textContent?.includes(expected))
+    assert.ok(ui.container.querySelector('[role="alert"]')?.textContent?.includes(fullKey))
+    await ui.click(ui.findButton("Close"))
+    assert.equal(ui.container.querySelector('[role="alert"]'), null)
+  })
+}
+
+for (const [summary, dateText] of [
+  [{ size: 731, lastModified: new Date("2026-01-01") }, "2026-01-01T00:00:00.000Z"],
+  [{ size: 0 }, "-"],
+] as const) {
+  test(`a hidden folder scan shows completed statistics (${dateText}) and can be closed`, async (t) => {
+    const response = Promise.withResolvers<{ size: number; lastModified?: Date }>()
+    const ui = await mount(t, props, "Suspended", async () => response.promise)
+    await ui.click(ui.findButton("Calculate folder statistics"))
+    const search = ui.container.querySelector('input[placeholder="Filter loaded objects"]') as HTMLInputElement | null
+    assert.ok(search)
+    await React.act(async () => {
+      search.value = "other"
+      search.dispatchEvent(new search.ownerDocument.defaultView!.Event("input", { bubbles: true }))
+    })
+    assert.equal(ui.container.querySelector(`[data-object-key="${fullKey}"]`), null)
+    await React.act(async () => response.resolve(summary))
+    const status = ui.container.querySelector('[role="status"]')
+    assert.ok(status?.textContent?.includes("Complete"))
+    assert.ok(status?.textContent?.includes(fullKey))
+    assert.ok(status?.textContent?.includes(`Size: ${summary.size}`))
+    assert.ok(status?.textContent?.includes(`Last Modified: ${dateText}`))
+    await ui.click(ui.findButton("Close"))
+    assert.equal(ui.container.querySelector('[role="status"]'), null)
+    await React.act(async () => {
+      search.value = ""
+      search.dispatchEvent(new search.ownerDocument.defaultView!.Event("input", { bubbles: true }))
+    })
+    assert.ok(ui.container.querySelector(`[data-object-key="${fullKey}"]`)?.textContent?.includes(String(summary.size)))
+    await ui.render({ refreshTrigger: 1 })
+    assert.equal(ui.container.querySelector('[role="status"]'), null)
+    const row = ui.container.querySelector(`[data-object-key="${fullKey}"]`)
+    assert.equal(row?.textContent?.includes(String(summary.size)), false)
+  })
+}

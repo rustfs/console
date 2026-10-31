@@ -26,6 +26,11 @@ import { useMessage } from "@/lib/feedback/message"
 import { getBytes } from "@/lib/functions"
 import { isMissingBucketConfiguration, normalizeReplicationRulesForRolelessConfig } from "@/lib/bucket-configuration"
 import { buildBucketReplicationTlsPayload, type BucketReplicationTlsMode } from "@/lib/bucket-replication-tls"
+import {
+  bytesToBandwidth,
+  remoteTargetBandwidthLimit,
+  remoteTargetHealthCheckSeconds,
+} from "@/lib/bucket-replication-target"
 import { getRuntimeCapabilityFieldState } from "@/lib/runtime-capabilities"
 
 export interface RemoteReplicationTarget {
@@ -35,6 +40,10 @@ export interface RemoteReplicationTarget {
   secure?: boolean
   region?: string
   replicationSync?: boolean
+  // list-remote-targets uses madmin's `bandwidthlimit` (bytes/s) and encodes
+  // `healthCheckDuration` as Go nanoseconds; older servers used the legacy
+  // keys. Read both through lib/bucket-replication-target.
+  bandwidthlimit?: number
   bandwidth_limit?: number
   healthCheckDuration?: number
   skipTlsVerify?: boolean
@@ -69,17 +78,6 @@ interface ReplicationEditFormProps {
   rule: EditableReplicationRule | null
   target: RemoteReplicationTarget | null
   onSuccess?: () => void
-}
-
-const BANDWIDTH_UNITS = ["Gi", "Mi", "Ki"] as const
-
-function bytesToBandwidth(bytes: number | undefined): { bandwidth: number; unit: string } {
-  if (!bytes || bytes <= 0) return { bandwidth: 100, unit: "Gi" }
-  for (const unit of BANDWIDTH_UNITS) {
-    const factor = unit === "Gi" ? 1024 ** 3 : unit === "Mi" ? 1024 ** 2 : 1024
-    if (bytes % factor === 0) return { bandwidth: bytes / factor, unit }
-  }
-  return { bandwidth: Math.max(1, Math.round(bytes / 1024)), unit: "Ki" }
 }
 
 function ruleTags(rule: EditableReplicationRule | null): Tag[] {
@@ -224,8 +222,10 @@ export function ReplicationEditForm({
     setBucket(target?.targetbucket ?? "")
     setRegion(target?.region || "us-east-1")
     setModeType(target?.replicationSync ? "sync" : "async")
-    setTimecheck(String(target?.healthCheckDuration || 60))
-    const initial = bytesToBandwidth(target?.bandwidth_limit)
+    // A stored 0 (default interval / unlimited bandwidth) is a real value; only
+    // a target that reports no field at all falls back to the form defaults.
+    setTimecheck(String(remoteTargetHealthCheckSeconds(target) ?? 60))
+    const initial = bytesToBandwidth(remoteTargetBandwidthLimit(target))
     setBandwidth(initial.bandwidth)
     setUnit(initial.unit)
     setStorageType(rule?.Destination?.StorageClass || "STANDARD")
@@ -276,7 +276,8 @@ export function ReplicationEditForm({
   const credsOp = connectionChanged || secretKey !== ""
   const syncOp = (modeType === "sync") !== Boolean(target?.replicationSync)
   const bandwidthOp =
-    modeType === "async" && (Number(getBytes(String(bandwidth), unit, true)) || 0) !== (target?.bandwidth_limit ?? 0)
+    modeType === "async" &&
+    (Number(getBytes(String(bandwidth), unit, true)) || 0) !== (remoteTargetBandwidthLimit(target) ?? 0)
 
   const validate = () => {
     const errors: typeof fieldErrors = {}
@@ -284,7 +285,8 @@ export function ReplicationEditForm({
     if (!bucket) errors.bucket = t("Please enter bucket")
     if (!accessKey) errors.accessKey = t("Please enter Access Key")
     if (connectionChanged && !secretKey) errors.secretKey = t("Please enter Secret Key")
-    if (modeType === "async" && Number(timecheck) < 1) {
+    // 0 is a stored value (server default) and must stay saveable.
+    if (modeType === "async" && (timecheck.trim() === "" || !(Number(timecheck) >= 0))) {
       errors.timecheck = t("Please enter valid health check interval")
     }
     if (tls && tlsMode === "custom-ca" && !caCertPem.trim()) {
@@ -337,7 +339,7 @@ export function ReplicationEditForm({
         type: "replication",
         replicationSync: modeType === "sync",
         arn: target.arn,
-        ...(canEditTargetField("healthCheckDuration") ? { healthCheckDuration: Number(timecheck) || 60 } : {}),
+        ...(canEditTargetField("healthCheckDuration") ? { healthCheckDuration: Number(timecheck) } : {}),
       }
       if (modeType === "async") {
         config.bandwidth = Number(getBytes(String(bandwidth), unit, true)) || 0
@@ -907,7 +909,7 @@ export function ReplicationEditForm({
                         name="replication-edit-health-check-interval"
                         type="number"
                         inputMode="numeric"
-                        min={1}
+                        min={0}
                         autoComplete="off"
                         value={timecheck}
                         onChange={(e) => {

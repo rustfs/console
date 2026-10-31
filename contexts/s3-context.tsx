@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { S3Client } from "@aws-sdk/client-s3"
 import { useAuth } from "@/contexts/auth-context"
 import { addApiPrefixMiddleware } from "@/lib/api-prefix-middleware"
+import { addDeleteReplicationMiddleware } from "@/lib/bucket-replication-delete"
 import { configManager } from "@/lib/config"
 import { getServiceErrorMessage, getXmlErrorCode, getXmlErrorMessage } from "@/lib/error-handler"
 import { scheduleMicrotask } from "@/lib/schedule-microtask"
@@ -46,20 +47,6 @@ const createS3ServiceError = (message: string, statusCode: number, code?: string
   if (code) error.Code = code
   error.$metadata = { httpStatusCode: statusCode }
   return error
-}
-
-function patchReplicationBody(
-  body: string | undefined,
-  config: { Rules?: Array<{ DeleteReplication?: { Status?: string } }> } | undefined,
-): string | undefined {
-  if (typeof body !== "string" || !config?.Rules?.length) return body
-  let i = 0
-  return body.replace(/<\/Rule>/g, () => {
-    const rule = config.Rules?.[i++]
-    const dr = rule?.DeleteReplication
-    const tag = dr ? `<DeleteReplication><Status>${dr.Status ?? "Disabled"}</Status></DeleteReplication>` : ""
-    return tag + "</Rule>"
-  })
 }
 
 interface S3ContextValue {
@@ -108,31 +95,9 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
 
       addApiPrefixMiddleware(client)
 
+      addDeleteReplicationMiddleware(client)
+
       /* eslint-disable @typescript-eslint/no-explicit-any -- AWS SDK middleware types are complex */
-      client.middlewareStack.add(
-        ((next: any) => async (args: any) => {
-          const input = args?.input
-          if (
-            input &&
-            "ReplicationConfiguration" in input &&
-            "Bucket" in input &&
-            input.ReplicationConfiguration?.Rules?.length
-          ) {
-            const raw =
-              typeof args.request?.body === "string"
-                ? args.request.body
-                : args.request?.body instanceof Uint8Array
-                  ? new TextDecoder().decode(args.request.body)
-                  : null
-            if (raw) {
-              const patched = patchReplicationBody(raw, input.ReplicationConfiguration)
-              if (patched != null) args.request.body = patched
-            }
-          }
-          return next(args)
-        }) as any,
-        { step: "serialize", name: "injectDeleteReplication", priority: "low" },
-      )
       client.middlewareStack.addRelativeTo(
         ((next: any) => async (args: any) => {
           const result = await next(args)

@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "Statistik folder tidak dapat dihitung.",
   "Calculation cancelled.": "Penghitungan dibatalkan.",
   "Folder exceeds the scan limit.": "Folder melampaui batas pemindaian.",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "Statistik folder memindai hingga 100.000 objek saat ini. Modifikasi terakhir berdasarkan objek tersebut; hasil dapat berubah selama pemindaian.",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "Statistik folder memindai hingga 100 halaman atau 100.000 objek saat ini, mana pun yang tercapai lebih dahulu. Modifikasi terakhir berdasarkan objek tersebut; hasil dapat berubah selama pemindaian.",
   "Cancel": "Batal",
   "Cancel Deletion": "Batalkan Penghapusan",
   "Cancel Key Deletion": "Batalkan Penghapusan Kunci",

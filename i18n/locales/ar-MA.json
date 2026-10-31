@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "تعذر حساب إحصاءات المجلد.",
   "Calculation cancelled.": "تم إلغاء الحساب.",
   "Folder exceeds the scan limit.": "يتجاوز المجلد حد الفحص.",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "تفحص إحصاءات المجلد حتى 100,000 كائن حالي. يعتمد آخر تعديل على هذه الكائنات؛ قد تتغير النتائج أثناء الفحص.",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "تفحص إحصاءات المجلد حتى 100 صفحة أو 100,000 كائن حالي، أيهما يتحقق أولاً. يعتمد آخر تعديل على هذه الكائنات؛ قد تتغير النتائج أثناء الفحص.",
   "Cancel": "إلغاء",
   "Cancel Deletion": "إلغاء الحذف",
   "Cancel Key Deletion": "إلغاء حذف المفتاح",

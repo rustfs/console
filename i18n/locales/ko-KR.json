@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "폴더 통계를 계산할 수 없습니다.",
   "Calculation cancelled.": "계산이 취소되었습니다.",
   "Folder exceeds the scan limit.": "폴더가 스캔 한도를 초과했습니다.",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "폴더 통계는 현재 객체를 최대 100,000개 스캔합니다. 최근 수정 시간은 이 객체를 기준으로 하며 스캔 중 결과가 바뀔 수 있습니다.",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "폴더 통계는 최대 100페이지 또는 현재 객체 100,000개 중 먼저 도달하는 한도까지 스캔합니다. 최근 수정 시간은 이 객체를 기준으로 하며 스캔 중 결과가 바뀔 수 있습니다.",
   "Cancel": "취소",
   "Cancel Deletion": "삭제 취소",
   "Cancel Key Deletion": "키 삭제 취소",

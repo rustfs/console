@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "No se pudieron calcular las estadísticas.",
   "Calculation cancelled.": "Cálculo cancelado.",
   "Folder exceeds the scan limit.": "La carpeta supera el límite de exploración.",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "Las estadísticas exploran hasta 100.000 objetos actuales. La última modificación se basa en estos objetos; los resultados pueden cambiar durante la exploración.",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "Las estadísticas exploran hasta 100 páginas o 100.000 objetos actuales, lo que ocurra primero. La última modificación se basa en estos objetos; los resultados pueden cambiar durante la exploración.",
   "Cancel": "Cancelar",
   "Cancel Deletion": "Cancelar eliminación",
   "Cancel Key Deletion": "Cancelar eliminación de clave",

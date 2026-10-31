@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "フォルダーの統計を計算できませんでした。",
   "Calculation cancelled.": "計算をキャンセルしました。",
   "Folder exceeds the scan limit.": "フォルダーがスキャン上限を超えています。",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "フォルダーの統計は現在のオブジェクトを最大 100,000 件スキャンします。最終更新はこれらに基づき、スキャン中に結果が変わる場合があります。",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "フォルダーの統計は最大 100 ページまたは現在のオブジェクト 100,000 件のいずれか先に達するまでスキャンします。最終更新はこれらに基づき、スキャン中に結果が変わる場合があります。",
   "Cancel": "キャンセル",
   "Cancel Deletion": "削除をキャンセル",
   "Cancel Key Deletion": "キー削除をキャンセル",

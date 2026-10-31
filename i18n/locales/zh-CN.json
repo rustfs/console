@@ -183,7 +183,7 @@
   "Could not calculate folder statistics.": "无法计算文件夹统计。",
   "Calculation cancelled.": "计算已取消。",
   "Folder exceeds the scan limit.": "文件夹超出扫描上限。",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "文件夹统计最多扫描 100,000 个当前对象。最近修改时间基于这些对象；扫描期间结果可能发生变化。",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "文件夹统计最多扫描 100 页或 100,000 个当前对象，以先达到的上限为准。最近修改时间基于这些对象；扫描期间结果可能发生变化。",
   "Cancel": "取消",
   "Cancel Deletion": "取消删除",
   "Cancel Key Deletion": "取消密钥删除",

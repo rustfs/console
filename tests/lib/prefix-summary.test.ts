@@ -1,6 +1,6 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { summarizePrefix } from "../../lib/prefix-summary"
+import { PrefixSummaryLimitError, summarizePrefix } from "../../lib/prefix-summary"
 
 const signal = () => new AbortController().signal
 const object = (size: number, time: string) => ({ Size: size, LastModified: new Date(time) })
@@ -79,4 +79,34 @@ test("cancellation after a page request never reports a partial result", async (
       return { Contents: [object(1, "2026-01-01")], IsTruncated: false }
     }, controller.signal),
   )
+})
+
+test("accepts a short final page at the 100-page limit", async () => {
+  let pages = 0
+  const result = await summarizePrefix(async () => {
+    pages++
+    return {
+      Contents: [object(1, "2026-01-01")],
+      IsTruncated: pages < 100,
+      NextContinuationToken: pages < 100 ? String(pages) : undefined,
+    }
+  }, signal())
+  assert.equal(pages, 100)
+  assert.equal(result.size, 100)
+})
+
+test("rejects a truncated 100th short page without presenting partial statistics", async () => {
+  let pages = 0
+  await assert.rejects(
+    summarizePrefix(async () => {
+      pages++
+      return {
+        Contents: [object(1, "2026-01-01")],
+        IsTruncated: true,
+        NextContinuationToken: String(pages),
+      }
+    }, signal()),
+    PrefixSummaryLimitError,
+  )
+  assert.equal(pages, 100)
 })

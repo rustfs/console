@@ -457,3 +457,16 @@ test("refresh cancels folder statistics and ignores a late result", async (t) =>
   await React.act(async () => response.resolve({ size: 731 }))
   assert.equal(ui.container.textContent?.includes("731"), false)
 })
+
+test("folder statistics update only the requested row and clear on refresh", async (t) => {
+  const ui = await mount(t, props, "Suspended", async () => ({ size: 731 }))
+  await ui.click(ui.findButton("Calculate folder statistics"))
+  const rows = Array.from(ui.container.querySelectorAll("[data-object-key]"))
+  assert.ok(rows.find((row) => row.getAttribute("data-object-key") === fullKey)?.textContent?.includes("731"))
+  assert.equal(
+    rows.find((row) => row.getAttribute("data-object-key") === "other/")?.textContent?.includes("731"),
+    false,
+  )
+  await ui.render({ refreshTrigger: 1 })
+  assert.equal(ui.container.textContent?.includes("731"), false)
+})

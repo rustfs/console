@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "Không thể tính thống kê thư mục.",
   "Calculation cancelled.": "Đã hủy tính toán.",
   "Folder exceeds the scan limit.": "Thư mục vượt giới hạn quét.",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "Thống kê thư mục quét tối đa 100.000 đối tượng hiện tại. Thời gian sửa đổi dựa trên các đối tượng này; kết quả có thể thay đổi trong khi quét.",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "Thống kê thư mục quét tối đa 100 trang hoặc 100.000 đối tượng hiện tại, tùy giới hạn nào đạt trước. Thời gian sửa đổi dựa trên các đối tượng này; kết quả có thể thay đổi trong khi quét.",
   "Cancel": "Hủy bỏ",
   "Cancel Deletion": "Hủy xóa",
   "Cancel Key Deletion": "Hủy xóa khóa",

@@ -830,11 +830,13 @@ export function ObjectList({
     ],
   )
 
-  const tableRows = React.useMemo(
-    () =>
-      filteredData.map((row) => ({ ...row, summary: row.type === "prefix" ? prefixSummaries[row.Key] : undefined })),
-    [filteredData, prefixSummaries],
-  )
+  const tableRows = React.useMemo(() => {
+    if (Object.keys(prefixSummaries).length === 0) return filteredData
+    return filteredData.map((row) => {
+      const summary = row.type === "prefix" ? prefixSummaries[row.Key] : undefined
+      return summary ? { ...row, summary } : row
+    })
+  }, [filteredData, prefixSummaries])
   const { table, selectedRowIds } = useDataTable<ObjectRow>({
     data: tableRows,
     columns,
@@ -1072,7 +1074,7 @@ export function ObjectList({
       {data.some((row) => row.type === "prefix") ? (
         <p className="text-sm text-muted-foreground">
           {t(
-            "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.",
+            "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.",
           )}
         </p>
       ) : null}

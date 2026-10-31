@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "Не удалось рассчитать статистику папки.",
   "Calculation cancelled.": "Расчёт отменён.",
   "Folder exceeds the scan limit.": "Папка превышает лимит сканирования.",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "Статистика папки охватывает до 100 000 текущих объектов. Время изменения относится к ним; результаты могут измениться во время сканирования.",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "Статистика папки охватывает до 100 страниц или 100 000 текущих объектов, в зависимости от того, какой предел достигнут первым. Время изменения относится к ним; результаты могут измениться во время сканирования.",
   "Cancel": "Отмена",
   "Cancel Deletion": "Отменить удаление",
   "Cancel Key Deletion": "Отменить удаление ключа",

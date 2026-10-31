@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "Não foi possível calcular as estatísticas.",
   "Calculation cancelled.": "Cálculo cancelado.",
   "Folder exceeds the scan limit.": "A pasta excede o limite de varredura.",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "As estatísticas verificam até 100.000 objetos atuais. A última modificação considera esses objetos; os resultados podem mudar durante a varredura.",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "As estatísticas verificam até 100 páginas ou 100.000 objetos atuais, o que ocorrer primeiro. A última modificação considera esses objetos; os resultados podem mudar durante a varredura.",
   "Cancel": "Cancelar",
   "Cancel Deletion": "Cancelar exclusão",
   "Cancel Key Deletion": "Cancelar exclusão da chave",

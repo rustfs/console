@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "Ordnerstatistik konnte nicht berechnet werden.",
   "Calculation cancelled.": "Berechnung abgebrochen.",
   "Folder exceeds the scan limit.": "Ordner überschreitet das Scanlimit.",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "Die Ordnerstatistik durchsucht bis zu 100.000 aktuelle Objekte. Die letzte Änderung basiert auf diesen Objekten; Ergebnisse können sich während des Scans ändern.",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "Die Ordnerstatistik durchsucht höchstens 100 Seiten oder 100.000 aktuelle Objekte, je nachdem, welches Limit zuerst erreicht wird. Die letzte Änderung basiert auf diesen Objekten; Ergebnisse können sich während des Scans ändern.",
   "Cancel": "Abbrechen",
   "Cancel Deletion": "Löschung abbrechen",
   "Cancel Key Deletion": "Schlüssellöschung abbrechen",

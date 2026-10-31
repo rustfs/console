@@ -186,7 +186,7 @@
   "Could not calculate folder statistics.": "Klasör istatistikleri hesaplanamadı.",
   "Calculation cancelled.": "Hesaplama iptal edildi.",
   "Folder exceeds the scan limit.": "Klasör tarama sınırını aşıyor.",
-  "Folder statistics scan up to 100,000 current objects. Latest modification is based on these objects; results may change during the scan.": "Klasör istatistikleri en fazla 100.000 geçerli nesneyi tarar. Son değişiklik bu nesnelere dayanır; sonuçlar tarama sırasında değişebilir.",
+  "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.": "Klasör istatistikleri en fazla 100 sayfa veya 100.000 geçerli nesneyi, hangisine önce ulaşılırsa, tarar. Son değişiklik bu nesnelere dayanır; sonuçlar tarama sırasında değişebilir.",
   "Cancel": "İptal",
   "Cancel Deletion": "Silmeyi iptal et",
   "Cancel Key Deletion": "Anahtar silmeyi iptal et",

@@ -182,7 +182,12 @@ const fullKey = "parent/中文%2F+space /child/"
 const consequences =
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone."
 
-async function mount(t: TestContext, initialProps: ObjectListProps, versioning: string = "Suspended") {
+async function mount(
+  t: TestContext,
+  initialProps: ObjectListProps,
+  versioning: string = "Suspended",
+  calculatePrefixSummary?: (key: string, signal: AbortSignal) => Promise<{ size: number; lastModified?: Date }>,
+) {
   const browser = new Window()
   const globals = { window: browser, document: browser.document, IS_REACT_ACT_ENVIRONMENT: true }
   const descriptors = Object.keys(globals).map(
@@ -205,6 +210,7 @@ async function mount(t: TestContext, initialProps: ObjectListProps, versioning: 
       CommonPrefixes: folders.map((Prefix) => ({ Prefix })),
       Contents: [{ Key: "file.txt" }, { Key: "literal-object/" }],
     }),
+    calculatePrefixSummary,
     getSignedUrl: async () => "",
     renameObject: async () => {},
   }
@@ -251,7 +257,7 @@ async function mount(t: TestContext, initialProps: ObjectListProps, versioning: 
       (element) => element.getAttribute("data-object-key") === key,
     )
     assert.ok(row, `expected row ${key}`)
-    await click(row.querySelector("button[aria-label]"))
+    await click(row.querySelector('button[aria-label^="Actions:"]'))
     return row
   }
   t.after(async () => {
@@ -421,4 +427,33 @@ test("successful tasks do not display stale backend errors", async (t) => {
   }
   await React.act(async () => ui.root.render(React.createElement(TaskItem, { task })))
   assert.equal(ui.container.querySelector('[role="alert"]'), null)
+})
+
+test("folder statistics do not land in a new bucket after a scope change", async (t) => {
+  const response = Promise.withResolvers<{ size: number; lastModified?: Date }>()
+  let usedSignal: AbortSignal | undefined
+  const ui = await mount(t, props, "Suspended", async (_key, signal) => {
+    usedSignal = signal
+    return response.promise
+  })
+  await ui.click(ui.findButton("Calculate folder statistics"))
+  assert.equal(usedSignal?.aborted, false)
+  await ui.render({ bucket: "other-bucket" })
+  assert.equal(usedSignal?.aborted, true)
+  await React.act(async () => response.resolve({ size: 731, lastModified: new Date("2026-01-01") }))
+  assert.equal(ui.container.textContent?.includes("731"), false)
+})
+
+test("refresh cancels folder statistics and ignores a late result", async (t) => {
+  const response = Promise.withResolvers<{ size: number; lastModified?: Date }>()
+  let usedSignal: AbortSignal | undefined
+  const ui = await mount(t, props, "Suspended", async (_key, signal) => {
+    usedSignal = signal
+    return response.promise
+  })
+  await ui.click(ui.findButton("Calculate folder statistics"))
+  await ui.render({ refreshTrigger: 1 })
+  assert.equal(usedSignal?.aborted, true)
+  await React.act(async () => response.resolve({ size: 731 }))
+  assert.equal(ui.container.textContent?.includes("731"), false)
 })

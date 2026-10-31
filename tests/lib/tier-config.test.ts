@@ -3,11 +3,10 @@ import assert from "node:assert/strict"
 import fs from "node:fs"
 import { TIER_PROVIDERS, WASABI_REGIONS, buildTierPayload, getWasabiEndpoint } from "../../lib/tier-config"
 
-test("Wasabi is the strict first provider without becoming a default selection", () => {
+test("Wasabi is the last provider and is disabled for new tier creation", () => {
   assert.deepEqual(
     TIER_PROVIDERS.map(({ value, labelKey }) => [value, labelKey]),
     [
-      ["wasabi", "Wasabi"],
       ["rustfs", "RustFS"],
       ["minio", "MinIO"],
       ["s3", "AWS S3"],
@@ -15,7 +14,13 @@ test("Wasabi is the strict first provider without becoming a default selection",
       ["azure", "Azure Blob"],
       ["gcs", "Google Cloud Storage"],
       ["r2", "Cloudflare R2"],
+      ["wasabi", "Wasabi"],
     ],
+  )
+  assert.equal(TIER_PROVIDERS.at(-1)?.disabled, true)
+  assert.equal(
+    TIER_PROVIDERS.slice(0, -1).some((provider) => provider.disabled),
+    false,
   )
 })
 

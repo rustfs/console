@@ -36,6 +36,7 @@ test("Wasabi is supported by tier rows and all name-based actions", () => {
   assert.match(pageSource, /className=\{provider \? undefined : "capitalize"\}/)
   assert.match(newFormSource, /buildTierPayload\(type,/)
   assert.match(newFormSource, /selectedOption\?\.labelKey/)
+  assert.match(newFormSource, /disabled=\{item\.disabled\}/)
 })
 
 test("Wasabi form keeps failures in context and protects duplicate submissions", () => {

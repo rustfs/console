@@ -1,5 +1,10 @@
-export const TIER_PROVIDERS = [
-  { labelKey: "Wasabi", value: "wasabi", icon: "/svg/wasabi.svg", descKey: "Wasabi hot cloud storage" },
+export const TIER_PROVIDERS: {
+  labelKey: string
+  value: "rustfs" | "minio" | "s3" | "aliyun" | "azure" | "gcs" | "r2" | "wasabi"
+  icon: string
+  descKey: string
+  disabled?: boolean
+}[] = [
   { labelKey: "RustFS", value: "rustfs", icon: "/logo.svg", descKey: "RustFS built-in cold storage" },
   { labelKey: "MinIO", value: "minio", icon: "/svg/minio.svg", descKey: "External MinIO tier" },
   { labelKey: "AWS S3", value: "s3", icon: "/svg/aws.svg", descKey: "Standard AWS S3 tier" },
@@ -12,6 +17,7 @@ export const TIER_PROVIDERS = [
   { labelKey: "Azure Blob", value: "azure", icon: "/svg/azure.svg", descKey: "Microsoft Azure Blob Storage" },
   { labelKey: "Google Cloud Storage", value: "gcs", icon: "/svg/google.svg", descKey: "Google Cloud Storage" },
   { labelKey: "Cloudflare R2", value: "r2", icon: "/svg/cloudflare.svg", descKey: "Cloudflare R2 Storage" },
+  { labelKey: "Wasabi", value: "wasabi", icon: "/svg/wasabi.svg", descKey: "Wasabi hot cloud storage", disabled: true },
 ] as const
 
 export type TierProviderType = (typeof TIER_PROVIDERS)[number]["value"]

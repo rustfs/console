@@ -209,7 +209,8 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
                     type="button"
                     autoFocus={focusTarget === item.value}
                     onClick={() => handleProviderSelect(item.value)}
-                    className="min-h-20 cursor-pointer border border-border/70 text-start transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+                    disabled={item.disabled}
+                    className="min-h-20 cursor-pointer border border-border/70 text-start transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-border/70"
                   >
                     <div className="flex items-center gap-3 p-4">
                       {renderTypeIcon(item.icon)}

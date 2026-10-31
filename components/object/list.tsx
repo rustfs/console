@@ -192,7 +192,7 @@ export function ObjectList({
   )
   const [prefixScan, setPrefixScan] = React.useState<{
     key: string
-    state: "loading" | "failed" | "cancelled" | "limit"
+    state: "loading" | "failed" | "cancelled" | "limit" | "success"
   } | null>(null)
   const prefixScanRef = React.useRef<AbortController | null>(null)
   const [loading, setLoading] = React.useState(false)
@@ -398,8 +398,9 @@ export function ObjectList({
       try {
         const summary = await calculatePrefixSummary(key, controller.signal)
         if (prefixScanRef.current !== controller) return
+        controller.signal.throwIfAborted()
         setPrefixSummaries((current) => ({ ...current, [key]: summary }))
-        setPrefixScan(null)
+        setPrefixScan({ key, state: "success" })
       } catch (error) {
         if (prefixScanRef.current !== controller) return
         setPrefixScan({
@@ -647,19 +648,7 @@ export function ObjectList({
           return (
             <div className="flex flex-col items-start gap-1">
               {summary ? <span>{formatBytes(summary.size)}</span> : <span>-</span>}
-              {state === "loading" ? (
-                <>
-                  <span role="status">{t("Calculating folder statistics...")}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    aria-label={t("Cancel statistics for {prefix}", { prefix: key })}
-                    onClick={() => prefixScanRef.current?.abort()}
-                  >
-                    {t("Cancel")}
-                  </Button>
-                </>
-              ) : (
+              {state !== "loading" ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -669,10 +658,7 @@ export function ObjectList({
                 >
                   {t("Calculate folder statistics")}
                 </Button>
-              )}
-              {state === "failed" ? <span role="alert">{t("Could not calculate folder statistics.")}</span> : null}
-              {state === "limit" ? <span role="alert">{t("Folder exceeds the scan limit.")}</span> : null}
-              {state === "cancelled" ? <span role="status">{t("Calculation cancelled.")}</span> : null}
+              ) : null}
             </div>
           )
         },
@@ -1077,6 +1063,58 @@ export function ObjectList({
             "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.",
           )}
         </p>
+      ) : null}
+      {prefixScan ? (
+        <div className="sticky top-16 z-10 flex items-center gap-2 rounded-md border bg-background p-3">
+          <div
+            role={prefixScan.state === "failed" || prefixScan.state === "limit" ? "alert" : "status"}
+            className="min-w-0 flex-1"
+            title={prefixScan.key}
+          >
+            <div className="flex min-w-0 gap-1">
+              <span className="shrink-0">
+                {prefixScan.state === "loading"
+                  ? t("Calculating folder statistics...")
+                  : prefixScan.state === "cancelled"
+                    ? t("Calculation cancelled.")
+                    : prefixScan.state === "limit"
+                      ? t("Folder exceeds the scan limit.")
+                      : prefixScan.state === "success"
+                        ? t("Complete")
+                        : t("Could not calculate folder statistics.")}
+              </span>
+              <bdi className="truncate">{prefixScan.key}</bdi>
+            </div>
+            {prefixScan.state === "success" && prefixSummaries[prefixScan.key] ? (
+              <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                <span>
+                  {t("Size")}: {formatBytes(prefixSummaries[prefixScan.key].size)}
+                </span>
+                <span>
+                  {t("Last Modified")}:{" "}
+                  {prefixSummaries[prefixScan.key].lastModified
+                    ? formatDateTime(prefixSummaries[prefixScan.key].lastModified)
+                    : "-"}
+                </span>
+              </div>
+            ) : null}
+          </div>
+          {prefixScan.state === "loading" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={t("Cancel statistics for {prefix}", { prefix: prefixScan.key })}
+              className="shrink-0"
+              onClick={() => prefixScanRef.current?.abort()}
+            >
+              {t("Cancel")}
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" className="shrink-0" onClick={() => setPrefixScan(null)}>
+              {t("Close")}
+            </Button>
+          )}
+        </div>
       ) : null}
       <DataTable
         caption={t("Objects")}

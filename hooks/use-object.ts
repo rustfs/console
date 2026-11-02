@@ -22,7 +22,6 @@ import {
 } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { useS3 } from "@/contexts/s3-context"
-import { fetchPrefixSummary } from "@/lib/prefix-summary-request"
 import { encodeObjectCopySource } from "@/lib/object-rename"
 import { decodeS3UrlEncodedObjectList, decodeS3UrlEncodedObjectVersions } from "@/lib/s3-object-encoding"
 
@@ -154,11 +153,6 @@ export function useObject(bucket: string) {
       return decodeS3UrlEncodedObjectList(response)
     },
     [client],
-  )
-
-  const calculatePrefixSummary = useCallback(
-    (prefix: string, signal: AbortSignal) => fetchPrefixSummary(client, bucket, prefix, signal),
-    [client, bucket],
   )
 
   const mapAllFiles = useCallback(
@@ -346,7 +340,6 @@ export function useObject(bucket: string) {
     restoreObjectVersion,
     getSignedUrl: getSignedUrlFn,
     listObject,
-    calculatePrefixSummary,
     mapAllFiles,
     getObjectInfo,
     getObjectTags,

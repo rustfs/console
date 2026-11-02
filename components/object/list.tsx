@@ -67,7 +67,7 @@ import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
 import { formatBytes, formatDateTime } from "@/lib/functions"
 import { cn } from "@/lib/utils"
-import { PrefixSummaryLimitError } from "@/lib/prefix-summary"
+import { PrefixSummaryLimitError, compareByteCounts } from "@/lib/prefix-summary"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
@@ -116,7 +116,7 @@ interface ObjectRow {
   type: "prefix" | "object"
   Size: number
   LastModified: string
-  summary?: { size: number; lastModified?: Date }
+  summary?: { size: number | bigint; lastModified?: Date }
   deleted: boolean
 }
 
@@ -187,9 +187,9 @@ export function ObjectList({
     OBJECT_LIST_DEFAULT_PAGE_SIZE,
   )
   const deletedView = resolveObjectListDeletedView(storedDeletedView)
-  const [prefixSummaries, setPrefixSummaries] = React.useState<Record<string, { size: number; lastModified?: Date }>>(
-    {},
-  )
+  const [prefixSummaries, setPrefixSummaries] = React.useState<
+    Record<string, { size: number | bigint; lastModified?: Date }>
+  >({})
   const [prefixScan, setPrefixScan] = React.useState<{
     key: string
     state: "loading" | "failed" | "cancelled" | "limit" | "success"
@@ -640,6 +640,8 @@ export function ObjectList({
         id: "size",
         header: () => t("Size"),
         accessorFn: (row) => (row.type === "object" ? row.Size : (row.summary?.size ?? -1)),
+        sortingFn: (left, right, columnId) =>
+          compareByteCounts(left.getValue<number | bigint>(columnId), right.getValue<number | bigint>(columnId)),
         cell: ({ row }) => {
           if (row.original.type === "object") return formatBytes(row.original.Size)
           const key = row.original.Key

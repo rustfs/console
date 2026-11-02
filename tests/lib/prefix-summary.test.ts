@@ -23,17 +23,13 @@ test("empty prefixes have zero size and no object time", async () => {
   })
 })
 
-test("rejects missing metadata and unsafe totals", async () => {
+test("rejects missing metadata and unsafe object sizes", async () => {
   await assert.rejects(summarizePrefix(async () => ({ Contents: [{ Size: 2 }], IsTruncated: false }), signal()))
-  await assert.rejects(
-    summarizePrefix(
-      async () => ({
-        Contents: [object(Number.MAX_SAFE_INTEGER, "2026-01-01"), object(1, "2026-01-01")],
-        IsTruncated: false,
-      }),
-      signal(),
-    ),
-  )
+  for (const size of [-1, 0.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]) {
+    await assert.rejects(
+      summarizePrefix(async () => ({ Contents: [object(size, "2026-01-01")], IsTruncated: false }), signal()),
+    )
+  }
 })
 
 test("rejects missing and repeated continuation tokens", async () => {
@@ -109,4 +105,29 @@ test("rejects a truncated 100th short page without presenting partial statistics
     PrefixSummaryLimitError,
   )
   assert.equal(pages, 100)
+})
+
+test("promotes the total only when adding a value would exceed the safe integer range", async () => {
+  const fetch = (sizes: number[]) =>
+    summarizePrefix(
+      async () => ({ Contents: sizes.map((size) => object(size, "2026-01-01")), IsTruncated: false }),
+      signal(),
+    )
+  assert.equal((await fetch([Number.MAX_SAFE_INTEGER - 1, 1])).size, Number.MAX_SAFE_INTEGER)
+  assert.equal((await fetch([Number.MAX_SAFE_INTEGER, 1, 3])).size, 9007199254740995n)
+})
+
+test("sums 2048 large valid objects over three pages without losing bytes", async () => {
+  let page = 0
+  const objectSize = 4 * 1024 ** 4
+  const result = await summarizePrefix(async () => {
+    page++
+    return {
+      Contents: Array.from({ length: page < 3 ? 1000 : 48 }, () => object(objectSize, "2026-01-01")),
+      IsTruncated: page < 3,
+      NextContinuationToken: page < 3 ? String(page) : undefined,
+    }
+  }, signal())
+  assert.equal(result.size, 9007199254740992n)
+  assert.equal(page, 3)
 })

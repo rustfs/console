@@ -5,6 +5,7 @@ import * as React from "react"
 import { createRoot } from "react-dom/client"
 import { Window, type Element as HappyElement } from "happy-dom"
 import ts from "typescript"
+import { createTable, getCoreRowModel, getSortedRowModel, type ColumnDef } from "@tanstack/react-table"
 import { isForceCleanupTarget } from "../../lib/permission-capabilities"
 import { PrefixSummaryLimitError } from "../../lib/prefix-summary"
 import type { ObjectList as ObjectListComponent } from "../../components/object/list"
@@ -27,6 +28,7 @@ type MockTable = {
   resetRowSelection: () => void
 }
 
+let observedTable: MockTable | undefined
 const mocksKey = Symbol.for("force-cleanup-components")
 const dialogContext = React.createContext<(open: boolean) => void>(() => {})
 const menuContext = React.createContext({
@@ -113,10 +115,13 @@ const mocks: Record<string, unknown> = {
         ),
       ),
     ),
-  useDataTable: (table: MockTable) => ({
-    table: { ...table, getColumn: () => ({ setFilterValue() {} }), resetRowSelection() {} },
-    selectedRowIds: [],
-  }),
+  useDataTable: (table: MockTable) => {
+    observedTable = table
+    return {
+      table: { ...table, getColumn: () => ({ setFilterValue() {} }), resetRowSelection() {} },
+      selectedRowIds: [],
+    }
+  },
   useLocalStorage: (_key: string, initial: boolean) => React.useState(initial),
   useObjectListPagination() {},
   SearchInput: ({
@@ -133,7 +138,7 @@ const mocks: Record<string, unknown> = {
       placeholder,
       onInput: (event: React.FormEvent<HTMLInputElement>) => onChange(event.currentTarget.value),
     }),
-  formatBytes: (bytes: number) => String(bytes),
+  formatBytes: (bytes: number | bigint) => String(bytes),
   formatDateTime: (date: string | Date) => (date instanceof Date ? date.toISOString() : date),
 }
 for (const name of [
@@ -202,7 +207,10 @@ async function mount(
   t: TestContext,
   initialProps: ObjectListProps,
   versioning: string = "Suspended",
-  calculatePrefixSummary?: (key: string, signal: AbortSignal) => Promise<{ size: number; lastModified?: Date }>,
+  calculatePrefixSummary?: (
+    key: string,
+    signal: AbortSignal,
+  ) => Promise<{ size: number | bigint; lastModified?: Date }>,
 ) {
   const browser = new Window()
   const globals = { window: browser, document: browser.document, IS_REACT_ACT_ENVIRONMENT: true }
@@ -581,3 +589,44 @@ for (const [summary, dateText] of [
     assert.equal(row?.textContent?.includes(String(summary.size)), false)
   })
 }
+
+test("object and large prefix sizes sort numerically in the real table model", async (t) => {
+  await mount(t, props)
+  const sizeColumn = observedTable?.columns.find((column) => column.id === "size")
+  assert.ok(sizeColumn)
+  type SizeRow = { Key: string; type: "object" | "prefix"; Size: number; summary?: { size: number | bigint } }
+  const data: SizeRow[] = [
+    { Key: "large/", type: "prefix", Size: 0, summary: { size: 9007199254740993n } },
+    { Key: "object", type: "object", Size: Number.MAX_SAFE_INTEGER },
+    { Key: "unknown/", type: "prefix", Size: 0 },
+    { Key: "small/", type: "prefix", Size: 0, summary: { size: 4n } },
+    { Key: "small-object", type: "object", Size: 4 },
+    { Key: "smaller-large/", type: "prefix", Size: 0, summary: { size: 9007199254740992n } },
+  ]
+  const table = createTable<SizeRow>({
+    data,
+    columns: [sizeColumn as unknown as ColumnDef<SizeRow>],
+    state: { sorting: [{ id: "size", desc: false }] },
+    onStateChange: () => {},
+    renderFallbackValue: null,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  })
+  assert.deepEqual(
+    table.getRowModel().rows.map((row) => row.original.Key),
+    ["unknown/", "small/", "small-object", "object", "smaller-large/", "large/"],
+  )
+  table.setOptions((options) => ({ ...options, state: { sorting: [{ id: "size", desc: true }] } }))
+  assert.deepEqual(
+    table.getRowModel().rows.map((row) => row.original.Key),
+    ["large/", "smaller-large/", "object", "small/", "small-object", "unknown/"],
+  )
+})
+
+test("large exact prefix size appears in both row and completed status", async (t) => {
+  const ui = await mount(t, props, "Suspended", async () => ({ size: 9007199254740993n }))
+  await ui.click(ui.findButton("Calculate folder statistics"))
+  const row = ui.container.querySelector(`[data-object-key="${fullKey}"]`)
+  assert.ok(row?.textContent?.includes("9007199254740993"))
+  assert.ok(ui.container.querySelector('[role="status"]')?.textContent?.includes("9007199254740993"))
+})

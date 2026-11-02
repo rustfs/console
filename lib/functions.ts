@@ -9,7 +9,19 @@ export function niceBytes(x: string, isK8sUnits = false): string {
   return formatBytes(n, isK8sUnits)
 }
 
-export function formatBytes(n: number, isK8sUnits = false): string {
+export function formatBytes(n: number | bigint, isK8sUnits = false): string {
+  if (typeof n === "bigint") {
+    if (n <= 0n) return "0 B"
+    const units = isK8sUnits ? K8S_UNITS : UNITS
+    let divisor = 1n
+    let unit = 0
+    while (n >= divisor * 1024n && unit < units.length - 1) {
+      divisor *= 1024n
+      unit++
+    }
+    const tenths = (n * 10n + divisor / 2n) / divisor
+    return `${tenths / 10n}.${tenths % 10n} ${units[unit]}`
+  }
   const l = Math.floor(Math.log(n) / Math.log(1024)) || 0
 
   if (l < 0) {

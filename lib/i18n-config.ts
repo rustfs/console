@@ -4,6 +4,7 @@ export const LOCALE_FILE_MAP = {
   en: "en-US",
   ar: "ar-MA",
   zh: "zh-CN",
+  "zh-TW": "zh-TW",
   ja: "ja-JP",
   ko: "ko-KR",
   de: "de-DE",
@@ -52,6 +53,12 @@ const LOCALE_ALIASES: Record<string, Locale> = {
   zh: "zh",
   zhcn: "zh",
   zhhans: "zh",
+  zhhant: "zh-TW",
+  zhhanthk: "zh-TW",
+  zhhanttw: "zh-TW",
+  zhhk: "zh-TW",
+  zhmo: "zh-TW",
+  zhtw: "zh-TW",
 }
 
 function isLocale(value: string): value is Locale {

@@ -117,7 +117,7 @@ export async function initI18n() {
         fallbackLng: DEFAULT_LOCALE,
         supportedLngs: LOCALE_CODES,
         nonExplicitSupportedLngs: true,
-        load: "languageOnly",
+        load: "currentOnly",
         interpolation: {
           escapeValue: false,
           prefix: "{",

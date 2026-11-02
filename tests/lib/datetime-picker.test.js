@@ -20,6 +20,7 @@ import {
 test("maps app locales to date-fns locale module codes", () => {
   assert.equal(getDateFnsLocaleCode("zh-CN"), "zh-CN")
   assert.equal(getDateFnsLocaleCode("zh"), "zh-CN")
+  assert.equal(getDateFnsLocaleCode("zh-TW"), "zh-TW")
   assert.equal(getDateFnsLocaleCode("pt-BR"), "pt-BR")
   assert.equal(getDateFnsLocaleCode("en-US"), "en-US")
   assert.equal(getDateFnsLocaleCode("unknown"), "en-US")

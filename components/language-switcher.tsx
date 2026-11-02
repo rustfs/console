@@ -4,12 +4,13 @@ import { useTranslation } from "react-i18next"
 import { RiTranslate2 } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { changeLocale, LOCALE_CODES, type Locale } from "@/lib/i18n"
+import { changeLocale, LOCALE_CODES, normalizeLocale } from "@/lib/i18n"
 
 const languageConfig: Record<string, { text: string; icon: typeof RiTranslate2 }> = {
   en: { text: "English", icon: RiTranslate2 },
   ar: { text: "العربية", icon: RiTranslate2 },
-  zh: { text: "中文", icon: RiTranslate2 },
+  zh: { text: "簡體中文", icon: RiTranslate2 },
+  "zh-TW": { text: "繁體中文", icon: RiTranslate2 },
   fr: { text: "Français", icon: RiTranslate2 },
   tr: { text: "Türkçe", icon: RiTranslate2 },
   ja: { text: "日本語", icon: RiTranslate2 },
@@ -30,7 +31,7 @@ const options = LOCALE_CODES.map((key) => ({
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation()
-  const currentLocale = (i18n.language?.split("-")[0] ?? "en") as Locale
+  const currentLocale = normalizeLocale(i18n.language)
   const currentLanguage = languageConfig[currentLocale] ?? languageConfig.en
 
   const CurrentIcon = currentLanguage.icon

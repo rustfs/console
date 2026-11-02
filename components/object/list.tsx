@@ -67,7 +67,6 @@ import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
 import { formatBytes, formatDateTime } from "@/lib/functions"
 import { cn } from "@/lib/utils"
-import { PrefixSummaryLimitError } from "@/lib/prefix-summary"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { buildBucketPath } from "@/lib/bucket-path"
 import {
@@ -116,7 +115,6 @@ interface ObjectRow {
   type: "prefix" | "object"
   Size: number
   LastModified: string
-  summary?: { size: number; lastModified?: Date }
   deleted: boolean
 }
 
@@ -170,7 +168,7 @@ export function ObjectList({
   const { t } = useTranslation()
   const message = useMessage()
   const api = useApi()
-  const { listObject, calculatePrefixSummary, getSignedUrl, renameObject } = useObject(bucket)
+  const { listObject, getSignedUrl, renameObject } = useObject(bucket)
   const { getBucketVersioning } = useBucket()
   const { canCapability } = usePermissions()
   const addDeleteKeys = useAddDeleteKeys()
@@ -187,14 +185,6 @@ export function ObjectList({
     OBJECT_LIST_DEFAULT_PAGE_SIZE,
   )
   const deletedView = resolveObjectListDeletedView(storedDeletedView)
-  const [prefixSummaries, setPrefixSummaries] = React.useState<Record<string, { size: number; lastModified?: Date }>>(
-    {},
-  )
-  const [prefixScan, setPrefixScan] = React.useState<{
-    key: string
-    state: "loading" | "failed" | "cancelled" | "limit" | "success"
-  } | null>(null)
-  const prefixScanRef = React.useRef<AbortController | null>(null)
   const [loading, setLoading] = React.useState(false)
   const [listError, setListError] = React.useState<ObjectListError | null>(null)
   const [loadMoreError, setLoadMoreError] = React.useState(false)
@@ -384,53 +374,7 @@ export function ObjectList({
     [bucket, prefix, resolvedPageSize, includeDeleted, listObject, message, t],
   )
 
-  const scanPrefix = React.useCallback(
-    async (key: string) => {
-      if (prefixScanRef.current) return
-      const controller = new AbortController()
-      prefixScanRef.current = controller
-      setPrefixSummaries((current) => {
-        const next = { ...current }
-        delete next[key]
-        return next
-      })
-      setPrefixScan({ key, state: "loading" })
-      try {
-        const summary = await calculatePrefixSummary(key, controller.signal)
-        if (prefixScanRef.current !== controller) return
-        controller.signal.throwIfAborted()
-        setPrefixSummaries((current) => ({ ...current, [key]: summary }))
-        setPrefixScan({ key, state: "success" })
-      } catch (error) {
-        if (prefixScanRef.current !== controller) return
-        setPrefixScan({
-          key,
-          state: controller.signal.aborted
-            ? "cancelled"
-            : error instanceof PrefixSummaryLimitError
-              ? "limit"
-              : "failed",
-        })
-      } finally {
-        if (prefixScanRef.current === controller) prefixScanRef.current = null
-      }
-    },
-    [calculatePrefixSummary],
-  )
-
-  React.useEffect(
-    () => () => {
-      prefixScanRef.current?.abort()
-      prefixScanRef.current = null
-    },
-    [listScope],
-  )
-
   const resetAndFetchObjects = React.useCallback(() => {
-    prefixScanRef.current?.abort()
-    prefixScanRef.current = null
-    setPrefixScan(null)
-    setPrefixSummaries({})
     setNextToken(undefined)
     setData([])
     void fetchObjects({ resetPagination: true })
@@ -639,29 +583,8 @@ export function ObjectList({
       {
         id: "size",
         header: () => t("Size"),
-        accessorFn: (row) => (row.type === "object" ? row.Size : (row.summary?.size ?? -1)),
-        cell: ({ row }) => {
-          if (row.original.type === "object") return formatBytes(row.original.Size)
-          const key = row.original.Key
-          const summary = row.original.summary
-          const state = prefixScan?.key === key ? prefixScan.state : null
-          return (
-            <div className="flex flex-col items-start gap-1">
-              {summary ? <span>{formatBytes(summary.size)}</span> : <span>-</span>}
-              {state !== "loading" ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label={t("Calculate statistics for {prefix}", { prefix: key })}
-                  disabled={prefixScan?.state === "loading"}
-                  onClick={() => void scanPrefix(key)}
-                >
-                  {t("Calculate folder statistics")}
-                </Button>
-              ) : null}
-            </div>
-          )
-        },
+        accessorFn: (row) => (row.type === "object" ? row.Size : -1),
+        cell: ({ row }) => (row.original.type === "object" ? formatBytes(row.original.Size) : "-"),
       },
       {
         id: "lastModified",
@@ -673,14 +596,8 @@ export function ObjectList({
             ) : null}
           </span>
         ),
-        accessorFn: (row) => {
-          const date = row.type === "prefix" ? row.summary?.lastModified : row.LastModified
-          return date ? new Date(date).getTime() : -1
-        },
-        cell: ({ row }) => {
-          const date = row.original.type === "prefix" ? row.original.summary?.lastModified : row.original.LastModified
-          return date ? formatDateTime(date) : "-"
-        },
+        accessorFn: (row) => (row.type === "prefix" || !row.LastModified ? "" : new Date(row.LastModified).getTime()),
+        cell: ({ row }) => (row.original.LastModified ? formatDateTime(row.original.LastModified) : "-"),
       },
       {
         id: "actions",
@@ -811,20 +728,11 @@ export function ObjectList({
       nextToken,
       setRowActionTrigger,
       getRowActionTrigger,
-      prefixScan,
-      scanPrefix,
     ],
   )
 
-  const tableRows = React.useMemo(() => {
-    if (Object.keys(prefixSummaries).length === 0) return filteredData
-    return filteredData.map((row) => {
-      const summary = row.type === "prefix" ? prefixSummaries[row.Key] : undefined
-      return summary ? { ...row, summary } : row
-    })
-  }, [filteredData, prefixSummaries])
   const { table, selectedRowIds } = useDataTable<ObjectRow>({
-    data: tableRows,
+    data: filteredData,
     columns,
     getRowId: (row) => row.Key,
     enableRowSelection: true,
@@ -1057,65 +965,6 @@ export function ObjectList({
         {heading ?? <h1>{bucket}</h1>}
       </PageHeader>
 
-      {data.some((row) => row.type === "prefix") ? (
-        <p className="text-sm text-muted-foreground">
-          {t(
-            "Folder statistics scan up to 100 pages or 100,000 current objects, whichever comes first. Latest modification is based on these objects; results may change during the scan.",
-          )}
-        </p>
-      ) : null}
-      {prefixScan ? (
-        <div className="sticky top-16 z-10 flex items-center gap-2 rounded-md border bg-background p-3">
-          <div
-            role={prefixScan.state === "failed" || prefixScan.state === "limit" ? "alert" : "status"}
-            className="min-w-0 flex-1"
-            title={prefixScan.key}
-          >
-            <div className="flex min-w-0 gap-1">
-              <span className="shrink-0">
-                {prefixScan.state === "loading"
-                  ? t("Calculating folder statistics...")
-                  : prefixScan.state === "cancelled"
-                    ? t("Calculation cancelled.")
-                    : prefixScan.state === "limit"
-                      ? t("Folder exceeds the scan limit.")
-                      : prefixScan.state === "success"
-                        ? t("Complete")
-                        : t("Could not calculate folder statistics.")}
-              </span>
-              <bdi className="truncate">{prefixScan.key}</bdi>
-            </div>
-            {prefixScan.state === "success" && prefixSummaries[prefixScan.key] ? (
-              <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                <span>
-                  {t("Size")}: {formatBytes(prefixSummaries[prefixScan.key].size)}
-                </span>
-                <span>
-                  {t("Last Modified")}:{" "}
-                  {prefixSummaries[prefixScan.key].lastModified
-                    ? formatDateTime(prefixSummaries[prefixScan.key].lastModified)
-                    : "-"}
-                </span>
-              </div>
-            ) : null}
-          </div>
-          {prefixScan.state === "loading" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              aria-label={t("Cancel statistics for {prefix}", { prefix: prefixScan.key })}
-              className="shrink-0"
-              onClick={() => prefixScanRef.current?.abort()}
-            >
-              {t("Cancel")}
-            </Button>
-          ) : (
-            <Button variant="outline" size="sm" className="shrink-0" onClick={() => setPrefixScan(null)}>
-              {t("Close")}
-            </Button>
-          )}
-        </div>
-      ) : null}
       <DataTable
         caption={t("Objects")}
         toolbar={

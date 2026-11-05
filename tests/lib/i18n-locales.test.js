@@ -115,6 +115,16 @@ test("task warnings contain actionable guidance in every locale", () => {
   }
 })
 
+test("login hero marketing copy uses the updated English and Chinese wording", () => {
+  const enUS = readLocale("en-US.json")
+  const zhCN = readLocale("zh-CN.json")
+
+  assert.equal(enUS["Reliable distributed file system"], "Object storage for AI era")
+  assert.equal(enUS["Rust-based"], "Rust-based · Apache 2.0")
+  assert.equal(zhCN["Reliable distributed file system"], "高性能分布式对象存储")
+  assert.equal(zhCN["Rust-based"], "Rust 语言 · Apache 2.0")
+})
+
 test("default SSE key description is translated for every locale", () => {
   const key = "This key is used as the platform default SSE key for SSE-KMS and SSE-S3."
   const enUS = readLocale("en-US.json")

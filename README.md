@@ -213,6 +213,7 @@ When tests are configured:
 The project supports multiple languages. Currently supported languages:
 
 - 中文（简体）(Chinese Simplified)
+- 中文（繁體）(Chinese Traditional)
 - English (US)
 - Deutsch (DE)
 - Español (ES)

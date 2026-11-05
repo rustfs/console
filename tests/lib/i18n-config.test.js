@@ -14,9 +14,25 @@ test("normalizeLocale accepts supported, browser, and legacy locale values", () 
   assert.equal(normalizeLocale("unknown"), "en")
 })
 
+test("normalizeLocale routes Traditional Chinese variants to zh-TW", () => {
+  assert.deepEqual(["zh-TW", "zh_TW", "zh-Hant", "zh-Hant-TW", "zh-HK", "zh-MO"].map(normalizeLocale), [
+    "zh-TW",
+    "zh-TW",
+    "zh-TW",
+    "zh-TW",
+    "zh-TW",
+    "zh-TW",
+  ])
+})
+
+test("normalizeLocale keeps Simplified Chinese variants on zh", () => {
+  assert.deepEqual(["zh", "zh-CN", "zh-Hans", "zh-SG"].map(normalizeLocale), ["zh", "zh", "zh", "zh"])
+})
+
 test("getLocaleFile resolves normalized locales to bundled locale files", () => {
   assert.equal(getLocaleFile("en-US"), "en-US")
   assert.equal(getLocaleFile("zh_CN"), "zh-CN")
+  assert.equal(getLocaleFile("zh-TW"), "zh-TW")
   assert.equal(getLocaleFile("pt-BR"), "pt-BR")
 })
 

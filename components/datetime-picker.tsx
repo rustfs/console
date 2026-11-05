@@ -17,6 +17,7 @@ import {
   tr,
   vi,
   zhCN,
+  zhTW,
   type Locale as DateFnsLocale,
 } from "date-fns/locale"
 import { RiCalendarLine, RiCloseLine, RiTimeLine } from "@remixicon/react"
@@ -50,6 +51,7 @@ const DATE_FNS_LOCALES: Record<string, DateFnsLocale> = {
   tr,
   vi,
   "zh-CN": zhCN,
+  "zh-TW": zhTW,
 }
 
 interface DateTimePickerProps extends Omit<React.ComponentProps<typeof Button>, "value" | "onChange"> {

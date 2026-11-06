@@ -2313,5 +2313,13 @@
   "Object cleanup is pending for this tier. Background recovery continues automatically.": "Hay limpieza de objetos pendiente para este nivel. La recuperación automática en segundo plano continúa.",
   "A transition is still pending for this tier. Wait for recovery, then recheck.": "Hay una transferencia pendiente para este nivel. Espere a la recuperación y vuelva a comprobarlo.",
   "The server could not complete the deletion safety check. Recheck before retrying deletion.": "El servidor no pudo completar la comprobación de seguridad. Vuelva a comprobarlo antes de reintentar la eliminación.",
-  "The server reported an unrecognized blocker. The original deletion error still applies.": "El servidor notificó un bloqueo desconocido. El error de eliminación original sigue siendo válido."
+  "The server reported an unrecognized blocker. The original deletion error still applies.": "El servidor notificó un bloqueo desconocido. El error de eliminación original sigue siendo válido.",
+  "Enable Versioning": "Activar el control de versiones",
+  "Suspend Versioning": "Suspender el control de versiones",
+  "Suspended": "Suspendido",
+  "Enable versioning for bucket {bucket}?": "¿Activar el control de versiones para el bucket {bucket}?",
+  "Suspend versioning for bucket {bucket}?": "¿Suspender el control de versiones para el bucket {bucket}?",
+  "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "Una vez activado, el control de versiones no se puede desactivar ni restablecer al estado sin configurar. Solo se puede suspender. Se conservan las versiones existentes.",
+  "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "Al suspender el control de versiones, las futuras escrituras dejarán de crear nuevas versiones. Se conservan los ID de versión existentes, pero las futuras escrituras pueden sobrescribir objetos con un ID de versión null.",
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "El bloqueo de objetos no se puede desactivar después de crear el bucket y activa automáticamente el control de versiones."
 }

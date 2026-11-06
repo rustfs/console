@@ -110,7 +110,9 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
   const [loading, setLoading] = React.useState(true)
   const [loadedBucket, setLoadedBucket] = React.useState<string | null>(null)
   const [readErrors, setReadErrors] = React.useState<Partial<Record<BucketSettingKey, string>>>({})
-  const [versionLoading, setVersionLoading] = React.useState(false)
+  const [pendingVersioning, setPendingVersioning] = React.useState<boolean | null>(null)
+  const [versioningError, setVersioningError] = React.useState("")
+  const versioningSwitchRef = React.useRef<HTMLButtonElement | null>(null)
   const [mutation, setMutation] = React.useState<BucketMutation | null>(null)
   const requestVersionRef = React.useRef(0)
   const mutationRef = React.useRef<BucketMutation | null>(null)
@@ -300,6 +302,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     setShowQuotaModal(false)
     setShowRetentionModal(false)
     setDeleteTagIndex(null)
+    setPendingVersioning(null)
+    setVersioningError("")
     mutationRef.current = null
     setMutation(null)
     fetchData()
@@ -572,21 +576,36 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     }
   }
 
-  const handleVersionToggle = async (enabled: boolean) => {
-    if (!canEditVersioning || readErrors.versioning || readErrors.objectLock || loading) return
+  const versioningDisabled =
+    !canEditVersioning ||
+    Boolean(readErrors.versioning || readErrors.objectLock) ||
+    Boolean(objectLock) ||
+    loading ||
+    mutation !== null
+
+  const handleVersionToggle = (enabled: boolean) => {
+    if (versioningDisabled || enabled === (versioning === "Enabled")) return
+    setVersioningError("")
+    setPendingVersioning(enabled)
+  }
+
+  const confirmVersioning = async () => {
+    if (pendingVersioning === null || versioningDisabled) return
     if (!beginMutation("versioning")) return
-    setVersionLoading(true)
-    const prev = versioning
+    const requestVersion = requestVersionRef.current
+    const next = pendingVersioning ? "Enabled" : "Suspended"
+    setVersioningError("")
     try {
-      await bucketApi.putBucketVersioning(bucketName, enabled ? "Enabled" : "Suspended")
-      setVersioning(enabled ? "Enabled" : "Suspended")
+      await bucketApi.putBucketVersioning(bucketName, next)
+      if (requestVersion !== requestVersionRef.current) return
+      setVersioning(next)
+      setPendingVersioning(null)
       message.success(t("Edit Success"))
     } catch (err) {
-      setVersioning(prev)
-      message.error(`${t("Edit Failed")}: ${(err as Error).message}`)
+      if (requestVersion !== requestVersionRef.current) return
+      setVersioningError(`${t("Edit Failed")}: ${(err as Error).message}`)
     } finally {
-      setVersionLoading(false)
-      finishMutation()
+      if (requestVersion === requestVersionRef.current) finishMutation()
     }
   }
 
@@ -841,26 +860,29 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
                 ? t("Versioning stays enabled while Object Lock is active.")
                 : t("Keep previous object versions and recover from overwrites or deletes.")
             }
-            status={readErrors.versioning ? t("Unavailable") : versioning === "Enabled" ? t("Enabled") : t("Disabled")}
+            status={
+              readErrors.versioning
+                ? t("Unavailable")
+                : versioning === "Enabled"
+                  ? t("Enabled")
+                  : versioning === "Suspended"
+                    ? t("Suspended")
+                    : t("Not Configured")
+            }
             statusVariant={readErrors.versioning ? "destructive" : versioning === "Enabled" ? "secondary" : "outline"}
             action={
               canEditVersioning ? (
                 <div className="flex min-h-9 items-center gap-2">
                   <Switch
                     id="bucket-info-versioning"
+                    ref={versioningSwitchRef}
                     checked={versioning === "Enabled"}
-                    disabled={
-                      Boolean(readErrors.versioning || readErrors.objectLock) ||
-                      (objectLock ?? false) ||
-                      versionLoading ||
-                      loading ||
-                      mutation !== null
-                    }
+                    disabled={versioningDisabled}
                     onCheckedChange={handleVersionToggle}
                     aria-label={t("Versioning")}
                     aria-describedby="bucket-info-versioning-description"
                   />
-                  {versionLoading ? (
+                  {mutation === "versioning" ? (
                     <Spinner className="size-4 text-muted-foreground" aria-label={t("Loading")} />
                   ) : null}
                 </div>
@@ -1570,6 +1592,53 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={pendingVersioning !== null}
+        onOpenChange={(open) => {
+          if (!open && !mutationRef.current) setPendingVersioning(null)
+        }}
+      >
+        <AlertDialogContent finalFocus={versioningSwitchRef} className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{pendingVersioning ? t("Enable Versioning") : t("Suspend Versioning")}</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3" render={<div />}>
+              <p className="font-medium text-foreground [overflow-wrap:anywhere]">
+                {pendingVersioning
+                  ? t("Enable versioning for bucket {bucket}?", { bucket: bucketName })
+                  : t("Suspend versioning for bucket {bucket}?", { bucket: bucketName })}
+              </p>
+              <p>
+                {pendingVersioning
+                  ? t(
+                      "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.",
+                    )
+                  : t(
+                      "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.",
+                    )}
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {versioningError ? (
+            <p role="alert" className="text-sm text-destructive [overflow-wrap:anywhere]">
+              {versioningError}
+            </p>
+          ) : null}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={mutation === "versioning"} className="min-h-11 sm:min-h-10">
+              {t("Cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmVersioning}
+              disabled={versioningDisabled}
+              className="min-h-11 sm:min-h-10"
+            >
+              {mutation === "versioning" ? <Spinner className="size-4" aria-label={t("Loading")} /> : null}
+              {pendingVersioning ? t("Enable Versioning") : t("Suspend Versioning")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Tag Confirm */}
       <AlertDialog

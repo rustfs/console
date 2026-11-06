@@ -2313,5 +2313,13 @@
   "Object cleanup is pending for this tier. Background recovery continues automatically.": "この階層のオブジェクトクリーンアップが保留中です。バックグラウンドの自動復旧は継続します。",
   "A transition is still pending for this tier. Wait for recovery, then recheck.": "この階層の移行処理が保留中です。復旧を待って再確認してください。",
   "The server could not complete the deletion safety check. Recheck before retrying deletion.": "サーバーが削除の安全性確認を完了できませんでした。削除の再試行前に再確認してください。",
-  "The server reported an unrecognized blocker. The original deletion error still applies.": "サーバーが認識できない阻害要因を報告しました。元の削除エラーは引き続き有効です。"
+  "The server reported an unrecognized blocker. The original deletion error still applies.": "サーバーが認識できない阻害要因を報告しました。元の削除エラーは引き続き有効です。",
+  "Enable Versioning": "バージョニングを有効化",
+  "Suspend Versioning": "バージョニングを一時停止",
+  "Suspended": "一時停止中",
+  "Enable versioning for bucket {bucket}?": "バケット {bucket} のバージョニングを有効にしますか？",
+  "Suspend versioning for bucket {bucket}?": "バケット {bucket} のバージョニングを一時停止しますか？",
+  "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "バージョニングは一度有効にすると、無効にしたり未設定の状態に戻したりすることはできません。一時停止のみ可能です。既存のバージョンは保持されます。",
+  "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "バージョニングを一時停止すると、以降の書き込みで新しいバージョンが作成されなくなります。既存のバージョン ID は保持されますが、以降の書き込みでバージョン ID が null のオブジェクトが上書きされる可能性があります。",
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "オブジェクトロックはバケット作成後に無効にできず、バージョニングが自動的に有効になります。"
 }

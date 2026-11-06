@@ -2313,5 +2313,13 @@
   "Object cleanup is pending for this tier. Background recovery continues automatically.": "Bu katmanda nesne temizliği bekliyor. Otomatik arka plan kurtarması devam ediyor.",
   "A transition is still pending for this tier. Wait for recovery, then recheck.": "Bu katmanda bir aktarım hâlâ bekliyor. Kurtarmayı bekleyip yeniden denetleyin.",
   "The server could not complete the deletion safety check. Recheck before retrying deletion.": "Sunucu silme güvenliği denetimini tamamlayamadı. Silmeyi tekrar denemeden önce yeniden denetleyin.",
-  "The server reported an unrecognized blocker. The original deletion error still applies.": "Sunucu tanınmayan bir engel bildirdi. İlk silme hatası hâlâ geçerli."
+  "The server reported an unrecognized blocker. The original deletion error still applies.": "Sunucu tanınmayan bir engel bildirdi. İlk silme hatası hâlâ geçerli.",
+  "Enable Versioning": "Sürüm Oluşturmayı Etkinleştir",
+  "Suspend Versioning": "Sürüm Oluşturmayı Askıya Al",
+  "Suspended": "Askıya Alındı",
+  "Enable versioning for bucket {bucket}?": "{bucket} kovası için sürüm oluşturma etkinleştirilsin mi?",
+  "Suspend versioning for bucket {bucket}?": "{bucket} kovası için sürüm oluşturma askıya alınsın mı?",
+  "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "Sürüm oluşturma etkinleştirildikten sonra devre dışı bırakılamaz veya yapılandırılmamış duruma döndürülemez. Yalnızca askıya alınabilir. Mevcut sürümler korunur.",
+  "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "Sürüm oluşturmanın askıya alınması, sonraki yazma işlemlerinde yeni sürüm oluşturulmasını durdurur. Mevcut sürüm kimlikleri korunur, ancak sonraki yazma işlemleri sürüm kimliği null olan nesnelerin üzerine yazabilir.",
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "Nesne Kilidi kova oluşturulduktan sonra devre dışı bırakılamaz ve sürüm oluşturmayı otomatik olarak etkinleştirir."
 }

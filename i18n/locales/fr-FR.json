@@ -2313,5 +2313,13 @@
   "Object cleanup is pending for this tier. Background recovery continues automatically.": "Le nettoyage d’objets de ce niveau est en attente. La récupération automatique en arrière-plan continue.",
   "A transition is still pending for this tier. Wait for recovery, then recheck.": "Un transfert est encore en attente pour ce niveau. Attendez la récupération, puis vérifiez à nouveau.",
   "The server could not complete the deletion safety check. Recheck before retrying deletion.": "Le serveur n’a pas pu terminer la vérification de sécurité. Vérifiez à nouveau avant de réessayer la suppression.",
-  "The server reported an unrecognized blocker. The original deletion error still applies.": "Le serveur a signalé un blocage inconnu. L’erreur de suppression initiale reste valable."
+  "The server reported an unrecognized blocker. The original deletion error still applies.": "Le serveur a signalé un blocage inconnu. L’erreur de suppression initiale reste valable.",
+  "Enable Versioning": "Activer la gestion des versions",
+  "Suspend Versioning": "Suspendre la gestion des versions",
+  "Suspended": "Suspendue",
+  "Enable versioning for bucket {bucket}?": "Activer la gestion des versions pour le bucket {bucket} ?",
+  "Suspend versioning for bucket {bucket}?": "Suspendre la gestion des versions pour le bucket {bucket} ?",
+  "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "Une fois activée, la gestion des versions ne peut pas être désactivée ni réinitialisée à un état non configuré. Elle peut uniquement être suspendue. Les versions existantes sont conservées.",
+  "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "La suspension de la gestion des versions empêche la création de nouvelles versions lors des écritures futures. Les identifiants de version existants sont conservés, mais les écritures futures peuvent écraser les objets dont l’identifiant de version est null.",
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "Le verrouillage des objets ne peut pas être désactivé après la création du bucket et active automatiquement la gestion des versions."
 }

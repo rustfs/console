@@ -2313,5 +2313,13 @@
   "Object cleanup is pending for this tier. Background recovery continues automatically.": "Pembersihan objek untuk tier ini masih tertunda. Pemulihan otomatis di latar belakang tetap berjalan.",
   "A transition is still pending for this tier. Wait for recovery, then recheck.": "Transisi untuk tier ini masih tertunda. Tunggu pemulihan, lalu periksa kembali.",
   "The server could not complete the deletion safety check. Recheck before retrying deletion.": "Server tidak dapat menyelesaikan pemeriksaan keamanan penghapusan. Periksa kembali sebelum mencoba menghapus lagi.",
-  "The server reported an unrecognized blocker. The original deletion error still applies.": "Server melaporkan penghalang yang tidak dikenal. Kesalahan penghapusan awal tetap berlaku."
+  "The server reported an unrecognized blocker. The original deletion error still applies.": "Server melaporkan penghalang yang tidak dikenal. Kesalahan penghapusan awal tetap berlaku.",
+  "Enable Versioning": "Aktifkan Pembuatan Versi",
+  "Suspend Versioning": "Tangguhkan Pembuatan Versi",
+  "Suspended": "Ditangguhkan",
+  "Enable versioning for bucket {bucket}?": "Aktifkan pembuatan versi untuk bucket {bucket}?",
+  "Suspend versioning for bucket {bucket}?": "Tangguhkan pembuatan versi untuk bucket {bucket}?",
+  "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "Setelah diaktifkan, pembuatan versi tidak dapat dinonaktifkan atau dikembalikan ke status belum dikonfigurasi. Fitur ini hanya dapat ditangguhkan. Versi yang sudah ada tetap disimpan.",
+  "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "Menangguhkan pembuatan versi menghentikan pembuatan versi baru untuk penulisan berikutnya. ID versi yang sudah ada tetap disimpan, tetapi penulisan berikutnya dapat menimpa objek dengan ID versi null.",
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "Object Lock tidak dapat dinonaktifkan setelah bucket dibuat dan secara otomatis mengaktifkan pembuatan versi."
 }

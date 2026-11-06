@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
+import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
@@ -180,6 +180,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
               <FieldContent className="flex-none">
                 <Switch
                   id="bucket-new-version"
+                  aria-describedby="bucket-new-version-description"
                   checked={version}
                   onCheckedChange={(checked) => {
                     setVersion(checked)
@@ -189,11 +190,17 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                 />
               </FieldContent>
             </Field>
+            <FieldDescription id="bucket-new-version-description">
+              {t(
+                "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.",
+              )}
+            </FieldDescription>
             <Field orientation="horizontal" className="items-center justify-between">
               <FieldLabel htmlFor="bucket-new-object-lock">{t("Object Lock")}</FieldLabel>
               <FieldContent className="flex-none">
                 <Switch
                   id="bucket-new-object-lock"
+                  aria-describedby="bucket-new-object-lock-description"
                   checked={objectLock}
                   onCheckedChange={(checked) => {
                     setObjectLock(checked)
@@ -203,6 +210,9 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
                 />
               </FieldContent>
             </Field>
+            <FieldDescription id="bucket-new-object-lock-description">
+              {t("Object Lock cannot be disabled after bucket creation and automatically enables versioning.")}
+            </FieldDescription>
             {objectLock && (
               <fieldset className="space-y-4 border-t pt-5">
                 <legend className="sr-only">{t("Object Lock")}</legend>

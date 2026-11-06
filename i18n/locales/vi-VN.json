@@ -2313,5 +2313,13 @@
   "Object cleanup is pending for this tier. Background recovery continues automatically.": "Việc dọn dẹp đối tượng của tầng này đang chờ. Khôi phục tự động trong nền vẫn tiếp tục.",
   "A transition is still pending for this tier. Wait for recovery, then recheck.": "Một quá trình chuyển của tầng này vẫn đang chờ. Hãy đợi khôi phục rồi kiểm tra lại.",
   "The server could not complete the deletion safety check. Recheck before retrying deletion.": "Máy chủ không hoàn tất kiểm tra an toàn xóa. Hãy kiểm tra lại trước khi thử xóa lại.",
-  "The server reported an unrecognized blocker. The original deletion error still applies.": "Máy chủ báo cáo trở ngại không xác định. Lỗi xóa ban đầu vẫn có hiệu lực."
+  "The server reported an unrecognized blocker. The original deletion error still applies.": "Máy chủ báo cáo trở ngại không xác định. Lỗi xóa ban đầu vẫn có hiệu lực.",
+  "Enable Versioning": "Bật quản lý phiên bản",
+  "Suspend Versioning": "Tạm dừng quản lý phiên bản",
+  "Suspended": "Đã tạm dừng",
+  "Enable versioning for bucket {bucket}?": "Bật quản lý phiên bản cho bucket {bucket}?",
+  "Suspend versioning for bucket {bucket}?": "Tạm dừng quản lý phiên bản cho bucket {bucket}?",
+  "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "Sau khi bật, không thể tắt quản lý phiên bản hoặc đưa về trạng thái chưa cấu hình. Chỉ có thể tạm dừng. Các phiên bản hiện có được giữ lại.",
+  "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "Tạm dừng quản lý phiên bản sẽ ngừng tạo phiên bản mới cho các thao tác ghi sau này. Các ID phiên bản hiện có được giữ lại, nhưng các thao tác ghi sau này có thể ghi đè đối tượng có ID phiên bản là null.",
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "Không thể tắt Khóa đối tượng sau khi tạo bucket và tính năng này tự động bật quản lý phiên bản."
 }

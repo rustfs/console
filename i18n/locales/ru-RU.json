@@ -2313,5 +2313,13 @@
   "Object cleanup is pending for this tier. Background recovery continues automatically.": "Для этого уровня ожидается очистка объектов. Автоматическое фоновое восстановление продолжается.",
   "A transition is still pending for this tier. Wait for recovery, then recheck.": "Для этого уровня ещё ожидается перемещение. Дождитесь восстановления и повторите проверку.",
   "The server could not complete the deletion safety check. Recheck before retrying deletion.": "Сервер не завершил проверку безопасности удаления. Повторите проверку перед удалением.",
-  "The server reported an unrecognized blocker. The original deletion error still applies.": "Сервер сообщил о неизвестном препятствии. Исходная ошибка удаления остаётся в силе."
+  "The server reported an unrecognized blocker. The original deletion error still applies.": "Сервер сообщил о неизвестном препятствии. Исходная ошибка удаления остаётся в силе.",
+  "Enable Versioning": "Включить управление версиями",
+  "Suspend Versioning": "Приостановить управление версиями",
+  "Suspended": "Приостановлено",
+  "Enable versioning for bucket {bucket}?": "Включить управление версиями для бакета {bucket}?",
+  "Suspend versioning for bucket {bucket}?": "Приостановить управление версиями для бакета {bucket}?",
+  "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "После включения управление версиями нельзя отключить или вернуть в ненастроенное состояние. Его можно только приостановить. Существующие версии сохраняются.",
+  "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "Приостановка управления версиями прекращает создание новых версий при последующих операциях записи. Существующие идентификаторы версий сохраняются, но последующие операции записи могут перезаписать объекты с идентификатором версии null.",
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "Блокировку объектов нельзя отключить после создания бакета. Она автоматически включает управление версиями."
 }

@@ -2313,5 +2313,13 @@
   "Object cleanup is pending for this tier. Background recovery continues automatically.": "此存储层仍有对象等待清理。后台恢复会自动继续。",
   "A transition is still pending for this tier. Wait for recovery, then recheck.": "此存储层仍有迁移尚未完成。请等待恢复后重新检查。",
   "The server could not complete the deletion safety check. Recheck before retrying deletion.": "服务器未能完成删除安全检查。请重新检查后再重试删除。",
-  "The server reported an unrecognized blocker. The original deletion error still applies.": "服务器报告了无法识别的阻塞项。原始删除错误仍然适用。"
+  "The server reported an unrecognized blocker. The original deletion error still applies.": "服务器报告了无法识别的阻塞项。原始删除错误仍然适用。",
+  "Enable Versioning": "启用版本控制",
+  "Suspend Versioning": "暂停版本控制",
+  "Suspended": "已暂停",
+  "Enable versioning for bucket {bucket}?": "确认对存储桶 {bucket} 启用版本控制？",
+  "Suspend versioning for bucket {bucket}?": "确认暂停存储桶 {bucket} 的版本控制？",
+  "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "版本控制一旦启用，就无法禁用或恢复为未配置状态，只能暂停。现有版本会予以保留。",
+  "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "暂停版本控制后，后续写入将不再创建新版本。现有版本 ID 会予以保留，但后续写入可能覆盖版本 ID 为 null 的对象。",
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "对象锁在存储桶创建后无法禁用，并会自动启用版本控制。"
 }

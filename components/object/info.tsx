@@ -37,6 +37,7 @@ import { useMessage } from "@/lib/feedback/message"
 import { useDialog } from "@/lib/feedback/dialog"
 import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
+import { createObjectPreviewInfo } from "@/lib/object-preview"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { formatDateTimeWithOffset } from "@/lib/functions"
 import {
@@ -306,7 +307,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
           { expiresIn: 3600 },
         ),
       ])
-      const data = { ...head, SignedUrl: signed }
+      const data = createObjectPreviewInfo(key, { ...head, SignedUrl: signed }, version)
       setShowVersions(false)
       onPreview({ key, data })
     } catch (err) {

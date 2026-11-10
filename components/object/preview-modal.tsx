@@ -10,23 +10,16 @@ import { RiCloseLine, RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/
 import { PdfViewer } from "@/components/object/pdf-viewer"
 import { ParquetViewer } from "@/components/object/parquet-viewer"
 import { TiffViewer } from "@/components/object/tiff-viewer"
-import { getObjectPreviewMode, normalizePreviewContentType } from "@/lib/object-preview"
+import {
+  getObjectPreviewMode,
+  isSafeTextPreview,
+  MAX_TEXT_PREVIEW_BYTES,
+  normalizePreviewContentType,
+} from "@/lib/object-preview"
+import { useObjectPreviewText } from "@/hooks/use-object-preview-text"
 import Image from "next/image"
 
-const SAFE_TEXT_MIMES = [
-  "application/json",
-  "application/jsonl",
-  "application/ndjson",
-  "application/x-ndjson",
-  "application/xml",
-  "text/plain",
-  "text/xml",
-  "text/csv",
-  "text/markdown",
-]
-const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".jsonl", ".ndjson", ".xml", ".csv", ".md", ".yml", ".yaml"]
 const SAFE_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp", ".ico", ".tif", ".tiff"]
-const ALLOWED_SIZE = 1024 * 1024 * 2 // 2MB
 
 const PARQUET_MIMES = ["application/vnd.apache.parquet", "application/x-parquet", "application/parquet"]
 const PARQUET_EXTENSIONS = [".parquet", ".pq"]
@@ -34,6 +27,7 @@ const PARQUET_EXTENSIONS = [".parquet", ".pq"]
 interface ObjectPreviewModalProps {
   show: boolean
   onShowChange: (show: boolean) => void
+  onDownload?: () => Promise<void>
   object: {
     ContentType?: string
     ContentLength?: number
@@ -49,13 +43,6 @@ type FullscreenDocument = Document & {
 
 type FullscreenElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void
-}
-
-function isSafeTextPreview(contentType: string, objectKey: string, objectSize: number) {
-  if (objectSize > ALLOWED_SIZE) return false
-  if (SAFE_TEXT_MIMES.includes(contentType)) return true
-  const keyLower = objectKey.toLowerCase()
-  return SAFE_TEXT_EXTENSIONS.some((ext) => keyLower.endsWith(ext))
 }
 
 function isImagePreview(contentType: string, objectKey: string) {
@@ -109,10 +96,8 @@ function requestFullscreen(element: FullscreenElement): Promise<void> {
   return Promise.resolve()
 }
 
-export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreviewModalProps) {
+export function ObjectPreviewModal({ show, onShowChange, onDownload, object }: ObjectPreviewModalProps) {
   const { t } = useTranslation()
-  const [textContent, setTextContent] = React.useState("")
-  const [loading, setLoading] = React.useState(false)
   const [audioLoadError, setAudioLoadError] = React.useState(false)
   const [videoLoadError, setVideoLoadError] = React.useState(false)
   const [isFormatted, setIsFormatted] = React.useState(true)
@@ -139,17 +124,32 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   const canRenderPdf = hasPreviewUrl && isPdfPreview(normalizedContentType)
   const canRenderParquet = hasPreviewUrl && isParquetPreview(normalizedContentType, objectKey)
   const canRenderTiff = hasPreviewUrl && isTiffPreview(objectKey)
-  const previewMode = getObjectPreviewMode({
+  const initialPreviewMode = getObjectPreviewMode({
     hasPreviewUrl,
     contentType,
+    objectSize,
     canRenderText,
     canRenderImage,
     canRenderPdf,
     canRenderParquet,
     canRenderTiff,
   })
+  const { status: textStatus, content: textContent } = useObjectPreviewText({
+    show,
+    mode: initialPreviewMode,
+    url: previewUrl,
+  })
+  const previewMode =
+    textStatus === "error"
+      ? "error"
+      : textStatus === "unsupported"
+        ? "download"
+        : initialPreviewMode === "detect-text" && textStatus === "ready"
+          ? "text"
+          : initialPreviewMode
+  const loading = textStatus === "loading"
   const isImageMode = previewMode === "image"
-  const isCompactPreview = previewMode === "audio" || previewMode === "download"
+  const isCompactPreview = previewMode === "audio" || previewMode === "download" || previewMode === "error"
 
   const getFormattedContent = () => {
     if (!isJson || !isFormatted) return textContent
@@ -162,30 +162,8 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
   }
 
   React.useEffect(() => {
-    if (show && previewMode === "text" && previewUrl) {
-      const controller = new AbortController()
-      setLoading(true)
-      setIsFormatted(true)
-      setTextContent("")
-      fetch(previewUrl, { signal: controller.signal })
-        .then((response) => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`)
-          return response.text()
-        })
-        .then(setTextContent)
-        .catch((error: unknown) => {
-          if ((error as Error)?.name !== "AbortError") setTextContent(t("Preview unavailable"))
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setLoading(false)
-        })
-
-      return () => controller.abort()
-    } else if (!show) {
-      setTextContent("")
-      setLoading(false)
-    }
-  }, [show, previewMode, previewUrl, t])
+    setIsFormatted(true)
+  }, [show, previewUrl])
 
   React.useEffect(() => {
     setAudioLoadError(false)
@@ -295,7 +273,7 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
     if (loading) {
       return (
         <div className="flex flex-1 items-center justify-center">
-          <Spinner className="size-8 text-muted-foreground" />
+          <Spinner className="size-8 text-muted-foreground" aria-label={t("Loading…")} />
         </div>
       )
     }
@@ -440,12 +418,22 @@ export function ObjectPreviewModal({ show, onShowChange, object }: ObjectPreview
       case "tiff":
         return <TiffViewer url={previewUrl} objectKey={objectKey} />
       case "download":
+      case "error":
       default:
         return (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 text-sm text-muted-foreground">
-            {t("Cannot Preview", {
-              contentType: contentType || "unknown",
-            })}
+            <p className="text-center" role={previewMode === "error" ? "alert" : undefined}>
+              {previewMode === "error"
+                ? t("Preview unavailable")
+                : objectSize > MAX_TEXT_PREVIEW_BYTES
+                  ? t("File is too large to preview, please download to view")
+                  : t("Cannot Preview", { contentType: contentType || "unknown" })}
+            </p>
+            {onDownload && (
+              <Button variant="outline" onClick={onDownload}>
+                {t("Download")}
+              </Button>
+            )}
           </div>
         )
     }

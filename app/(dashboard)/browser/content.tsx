@@ -19,6 +19,9 @@ import { ObjectPreviewModal } from "@/components/object/preview-modal"
 import { useObject } from "@/hooks/use-object"
 import { usePermissions } from "@/hooks/use-permissions"
 import { isMissingBucketError } from "@/lib/bucket-access"
+import { getAttachmentContentDisposition } from "@/lib/content-disposition"
+import { downloadUrl } from "@/lib/export-file"
+import { createObjectPreviewInfo } from "@/lib/object-preview"
 
 interface BrowserContentProps {
   bucketName: string
@@ -44,6 +47,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   const [refreshTrigger, setRefreshTrigger] = React.useState(0)
   const [showPreview, setShowPreview] = React.useState(false)
   const [previewObject, setPreviewObject] = React.useState<Record<string, unknown> | null>(null)
+  const [previewBucketName, setPreviewBucketName] = React.useState("")
   const objectApi = useObject(bucketName)
   const canUploadObjects = canCapability("objects.upload", { bucket: bucketName, prefix })
 
@@ -88,11 +92,38 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
     async ({ key, data }: { key?: string; data?: Record<string, unknown> }) => {
       if (!key) return
       const info = data ?? (await objectApi.getObjectInfo(key))
-      setPreviewObject(info as Record<string, unknown>)
+      setPreviewObject(createObjectPreviewInfo(key, info))
+      setPreviewBucketName(bucketName)
       setShowPreview(true)
     },
-    [objectApi],
+    [objectApi, bucketName],
   )
+
+  const previewObjectKey = typeof previewObject?.Key === "string" ? previewObject.Key : ""
+  const previewVersionId =
+    typeof previewObject?.SelectedVersionId === "string" ? previewObject.SelectedVersionId : undefined
+  const canDownloadPreview =
+    previewBucketName === bucketName &&
+    canCapability(previewVersionId ? "objects.version.download" : "objects.download", {
+      bucket: bucketName,
+      objectKey: previewObjectKey,
+    })
+  const downloadPreview = async () => {
+    if (!canDownloadPreview || !previewObjectKey) return
+    try {
+      const filename = previewObjectKey.split("/").pop() ?? ""
+      const url = await objectApi.getSignedUrl(
+        previewObjectKey,
+        3600,
+        getAttachmentContentDisposition(filename),
+        previewVersionId,
+      )
+      downloadUrl(url, filename)
+      message.success(t("Download ready"))
+    } catch (error) {
+      message.error((error as Error)?.message ?? t("Download Failed"))
+    }
+  }
 
   const clearPreviewQueryParams = React.useCallback(() => {
     if (!searchParams.has("preview") && !searchParams.has("previewKey")) return
@@ -206,7 +237,12 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
         canUpload={canUploadObjects}
       />
 
-      <ObjectPreviewModal show={showPreview} onShowChange={handlePreviewModalChange} object={previewObject} />
+      <ObjectPreviewModal
+        show={showPreview}
+        onShowChange={handlePreviewModalChange}
+        onDownload={canDownloadPreview ? downloadPreview : undefined}
+        object={previewObject}
+      />
     </Page>
   )
 }

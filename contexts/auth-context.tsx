@@ -1,6 +1,15 @@
 "use client"
 
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react"
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from "react"
 import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@aws-sdk/types"
 import type { SiteConfig } from "@/types/config"
 import { getLoginRoute } from "@/lib/routes"
@@ -41,6 +50,7 @@ interface AuthContextValue {
   logout: () => void
   logoutAndRedirect: () => void
   logoutWithOidcRedirect: () => Promise<boolean>
+  getIsLoggingOut: () => boolean
   setIsAdmin: (value: boolean) => void
   getIsAdmin: () => boolean
   credentials: Credentials | undefined
@@ -81,6 +91,9 @@ function isValidOidcLogoutSession(session: OidcLogoutSession | undefined): sessi
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  // Old API/S3 callbacks must see this flag before React commits the cleared credentials.
+  const loggingOutRef = useRef(false)
+  const getIsLoggingOut = useCallback(() => loggingOutRef.current, [])
   const [store, setStore] = useLocalStorage<Credentials | undefined>("auth.credentials", undefined)
   const [isAdminStore, setIsAdminStore] = useLocalStorage<boolean | undefined>("auth.isAdmin", undefined)
   const [oidcSessionStore, setOidcSessionStore] = useLocalStorage<OidcLogoutSession | undefined>(
@@ -90,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setCredentials = useCallback(
     (credentials: Credentials) => {
+      loggingOutRef.current = false
       setStore(credentials)
     },
     [setStore],
@@ -221,12 +235,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOidcSessionStore(undefined)
   }, [setStore, setIsAdminStore, setOidcSessionStore])
 
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (!event.persisted || !loggingOutRef.current) return
+      // Reload current storage; another document may already have established a new session.
+      window.location.replace(getLoginRoute())
+    }
+    window.addEventListener("pageshow", handlePageShow)
+    return () => window.removeEventListener("pageshow", handlePageShow)
+  }, [])
+
   const logoutAndRedirect = useCallback(() => {
+    if (loggingOutRef.current) return
     logout()
     window.location.href = getLoginRoute()
   }, [logout])
 
   const logoutWithOidcRedirect = useCallback(async () => {
+    if (loggingOutRef.current) return true
     const oidcSession = isValidOidcLogoutSession(oidcSessionStore) ? oidcSessionStore : undefined
 
     if (!oidcSession) {
@@ -234,16 +260,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false
     }
 
+    loggingOutRef.current = true
     try {
-      // Build the URL before logout(), or DashboardAuthGuard redirects to login before this navigation runs.
-      const { configManager } = await import("@/lib/config")
       const config = await configManager.loadConfig()
       const logoutUrl = buildOidcLogoutUrl(config.serverHost, oidcSession.logoutToken)
 
       logout()
       window.location.href = logoutUrl
       return true
-    } catch {
+    } catch (error) {
+      loggingOutRef.current = false
+      console.error("Failed to start OIDC logout", error)
       logout()
       return false
     }
@@ -251,6 +278,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const credentials = getCredentials()
   const isAuthenticated = isValidCredentials(store)
+
+  useLayoutEffect(() => {
+    // Cross-tab login bypasses setCredentials; reset before consumer effects run.
+    if (isAuthenticated) loggingOutRef.current = false
+  }, [isAuthenticated])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -260,6 +292,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       logoutAndRedirect,
       logoutWithOidcRedirect,
+      getIsLoggingOut,
       setIsAdmin,
       getIsAdmin,
       credentials,
@@ -273,6 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       logoutAndRedirect,
       logoutWithOidcRedirect,
+      getIsLoggingOut,
       setIsAdmin,
       getIsAdmin,
       credentials,

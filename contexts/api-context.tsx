@@ -17,7 +17,7 @@ interface ApiContextValue {
 const ApiContext = createContext<ApiContextValue>({ api: null, isReady: false })
 
 export function ApiProvider({ children }: { children: React.ReactNode }) {
-  const { credentials, isAuthenticated, logout } = useAuth()
+  const { credentials, isAuthenticated, logout, getIsLoggingOut } = useAuth()
   const [apiClient, setApiClient] = useState<ApiClient | null>(null)
   const [isReady, setIsReady] = useState(false)
   const router = useRouter()
@@ -58,10 +58,12 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
 
       const errorHandler = new ApiErrorHandler({
         onUnauthorized: async () => {
+          if (getIsLoggingOut()) return
           logout()
           router.replace("/auth/login/")
         },
         onForbidden: async (url) => {
+          if (getIsLoggingOut()) return
           // If the forbidden error happens on the accountinfo endpoint, it means the session is invalid
           // or the user has no permissions at all. In this case, we should log out.
           if (url?.includes("/is-admin") || url?.includes("/accountinfo") || url?.includes("/version")) {
@@ -94,6 +96,7 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
     credentials?.SecretAccessKey,
     credentials?.SessionToken,
     logout,
+    getIsLoggingOut,
     router,
   ])
 

@@ -1,6 +1,15 @@
 "use client"
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, type ReactNode } from "react"
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  type ReactNode,
+} from "react"
 import type { AwsCredentialIdentity, AwsCredentialIdentityProvider } from "@aws-sdk/types"
 import type { SiteConfig } from "@/types/config"
 import { getLoginRoute } from "@/lib/routes"
@@ -269,6 +278,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const credentials = getCredentials()
   const isAuthenticated = isValidCredentials(store)
+
+  useLayoutEffect(() => {
+    // Cross-tab login bypasses setCredentials; reset before consumer effects run.
+    if (isAuthenticated) loggingOutRef.current = false
+  }, [isAuthenticated])
 
   const value = useMemo<AuthContextValue>(
     () => ({

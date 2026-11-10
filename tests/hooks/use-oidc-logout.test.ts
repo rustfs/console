@@ -1,7 +1,7 @@
 import test, { type TestContext } from "node:test"
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
-import { act, cloneElement, createElement, type ReactElement, type ReactNode } from "react"
+import { act, cloneElement, createElement, useEffect, type ReactElement, type ReactNode } from "react"
 import { createRoot } from "react-dom/client"
 import { Window } from "happy-dom"
 import ts from "typescript"
@@ -90,7 +90,10 @@ const credentials = {
   Expiration: "2099-01-01T00:00:00.000Z",
 }
 
-async function mountDashboard(t: TestContext, options: { token?: string | null } = {}) {
+async function mountDashboard(
+  t: TestContext,
+  options: { token?: string | null; onCredentials?: (auth: Auth) => void } = {},
+) {
   const browser = new Window({ url: "https://console.example.test/browser/" })
   const globals = {
     window: browser,
@@ -161,7 +164,11 @@ async function mountDashboard(t: TestContext, options: { token?: string | null }
   })
   let auth: Auth
   function Probe() {
-    auth = useAuth()
+    const value = useAuth()
+    auth = value
+    useEffect(() => {
+      if (value.isAuthenticated) options.onCredentials?.(value)
+    }, [value])
     return null
   }
   const container = browser.document.createElement("div")
@@ -225,6 +232,20 @@ async function mountDashboard(t: TestContext, options: { token?: string | null }
     async denyRoute() {
       routeAllowed = false
       await render()
+    },
+    async syncStorage(key: string, newValue: string | null) {
+      await act(async () => {
+        const oldValue = browser.localStorage.getItem(key)
+        if (newValue === null) browser.localStorage.removeItem(key)
+        else browser.localStorage.setItem(key, newValue)
+        browser.dispatchEvent(
+          new browser.StorageEvent("storage", {
+            key,
+            oldValue: oldValue ?? undefined,
+            newValue: newValue ?? undefined,
+          }),
+        )
+      })
     },
   }
 }
@@ -403,6 +424,81 @@ for (const method of ["sts", "password"]) {
     )
   })
 }
+
+test("a session received from another tab can log out with its own OIDC token", async (t) => {
+  const mounted = await mountDashboard(t)
+  await mounted.logout()
+  await mounted.syncStorage("auth.credentials", JSON.stringify({ ...credentials, AccessKeyId: "other-tab" }))
+  await mounted.syncStorage("auth.oidcSession", JSON.stringify({ logoutToken: "other-tab-token" }))
+  assert.equal(mounted.auth.isAuthenticated, true)
+  assert.equal(await mounted.logout(), true)
+  assert.deepEqual(
+    mounted.navigate.mock.calls.map((call) => call.arguments),
+    [[logoutUrl], [`${config.serverHost}/rustfs/admin/v3/oidc/logout?logout_token=other-tab-token`]],
+  )
+  assert.equal(mounted.auth.isAuthenticated, false)
+  assert.equal(mounted.browser.localStorage.getItem("auth.credentials"), null)
+  assert.equal(mounted.browser.localStorage.getItem("auth.oidcSession"), null)
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+})
+
+for (const service of ["API", "S3"]) {
+  test(`a cross-tab session restores ${service} authentication handling before child effects run`, async (t) => {
+    let failure: Promise<unknown> | undefined
+    const mounted = await mountDashboard(t, {
+      onCredentials: (auth) => {
+        if (auth.credentials?.AccessKeyId !== "other-tab") return
+        failure =
+          service === "API"
+            ? mounted.apiHandler.handle401()
+            : mounted.s3Error({ $metadata: { httpStatusCode: 403 }, Code: "UnauthorizedAccess" })
+      },
+    })
+    await mounted.logout()
+    await mounted.syncStorage("auth.credentials", JSON.stringify({ ...credentials, AccessKeyId: "other-tab" }))
+    await act(async () => failure)
+    assert.ok(failure, "the new authenticated session runs its child effect")
+    assert.equal(mounted.router.replace.mock.calls[0]?.arguments[0], "/auth/login/")
+    assert.equal(mounted.auth.isAuthenticated, false)
+  })
+}
+
+test("deleted, invalid and unrelated storage values preserve an in-flight logout", async (t) => {
+  const mounted = await mountDashboard(t)
+  await mounted.logout()
+  const updates: [string, string | null][] = [
+    ["auth.credentials", null],
+    ["auth.credentials", JSON.stringify({ AccessKeyId: "incomplete" })],
+    ["auth.credentials", JSON.stringify({ ...credentials, Expiration: "2000-01-01T00:00:00.000Z" })],
+    ["auth.oidcSession", JSON.stringify({ logoutToken: "unrelated-token" })],
+    ["theme", "dark"],
+  ]
+  for (const [key, value] of updates) {
+    await mounted.syncStorage(key, value)
+    await act(async () => mounted.apiHandler.handle401())
+    assert.equal(mounted.auth.getIsLoggingOut(), true, `keeps logout protection for ${key}: ${value}`)
+    assert.equal(mounted.router.replace.mock.callCount(), 0)
+  }
+  assert.deepEqual(
+    mounted.navigate.mock.calls.map((call) => call.arguments),
+    [[logoutUrl]],
+  )
+})
+
+test("a repeated current-credentials storage event cannot interrupt logout config loading", async (t) => {
+  const mounted = await mountDashboard(t)
+  const pending = await pendingLogout(mounted)
+  await mounted.syncStorage("auth.credentials", JSON.stringify(credentials))
+  await act(async () => mounted.apiHandler.handle401())
+  assert.equal(mounted.auth.getIsLoggingOut(), true)
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+  await pending.finish()
+  assert.deepEqual(
+    mounted.navigate.mock.calls.map((call) => call.arguments),
+    [[logoutUrl]],
+  )
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+})
 
 test("restoring an old logged-out document preserves a newer session and reloads login", async (t) => {
   const mounted = await mountDashboard(t)

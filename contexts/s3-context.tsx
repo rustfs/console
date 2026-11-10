@@ -60,7 +60,7 @@ const S3Context = createContext<S3ContextValue>({
 })
 
 export function S3Provider({ children }: { children: React.ReactNode }) {
-  const { credentials, isAuthenticated, logout } = useAuth()
+  const { credentials, isAuthenticated, logout, getIsLoggingOut } = useAuth()
   const [s3Client, setS3Client] = useState<S3Client | null>(null)
   const [isReady, setIsReady] = useState(false)
   const router = useRouter()
@@ -152,8 +152,10 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
               message?: string
             }
             if (err?.$metadata?.httpStatusCode === 401) {
-              logout()
-              router.replace("/auth/login/")
+              if (!getIsLoggingOut()) {
+                logout()
+                router.replace("/auth/login/")
+              }
               return { response: { statusCode: 401, headers: {} } }
             }
             if (err?.$metadata?.httpStatusCode === 403) {
@@ -161,8 +163,10 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
               const isUnauthorizedAccess = codeText === "unauthorizedaccess"
               const isInvalidAccessKey = codeText === "invalidaccesskeyid"
               if (isUnauthorizedAccess || isInvalidAccessKey) {
-                logout()
-                router.replace("/auth/login/")
+                if (!getIsLoggingOut()) {
+                  logout()
+                  router.replace("/auth/login/")
+                }
                 return { response: { statusCode: 401, headers: {} } }
               }
             }
@@ -191,6 +195,7 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
     credentials?.SecretAccessKey,
     credentials?.SessionToken,
     logout,
+    getIsLoggingOut,
     router,
   ])
 

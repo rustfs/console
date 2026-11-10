@@ -113,6 +113,7 @@ async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: bool
   const setIsAdmin = (value: boolean) => {
     isAdmin = value
   }
+  const getIsLoggingOut = () => false
   const router = { replace: t.mock.fn(), push: t.mock.fn() }
   const listBuckets = t.mock.fn<(options?: { force?: boolean }) => Promise<unknown>>(async () => ({
     Buckets: [{ Name: "test-bucket" }],
@@ -127,7 +128,7 @@ async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: bool
         .flat()
         .map((name) => [name, () => null]),
     ),
-    useAuth: () => ({ isAuthenticated: !!credentials, credentials, isAdmin, setIsAdmin }),
+    useAuth: () => ({ isAuthenticated: !!credentials, credentials, isAdmin, setIsAdmin, getIsLoggingOut }),
     useApiOptional: () => api,
     useApiReady: () => ({ isReady: apiReady }),
     useS3Ready: () => ({ isReady: s3Ready }),

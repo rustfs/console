@@ -100,19 +100,23 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   )
 
   const previewObjectKey = typeof previewObject?.Key === "string" ? previewObject.Key : ""
+  const previewVersionId =
+    typeof previewObject?.SelectedVersionId === "string" ? previewObject.SelectedVersionId : undefined
   const canDownloadPreview =
     previewBucketName === bucketName &&
-    canCapability("objects.download", { bucket: bucketName, objectKey: previewObjectKey })
+    canCapability(previewVersionId ? "objects.version.download" : "objects.download", {
+      bucket: bucketName,
+      objectKey: previewObjectKey,
+    })
   const downloadPreview = async () => {
     if (!canDownloadPreview || !previewObjectKey) return
     try {
       const filename = previewObjectKey.split("/").pop() ?? ""
-      const versionId = typeof previewObject?.VersionId === "string" ? previewObject.VersionId : undefined
       const url = await objectApi.getSignedUrl(
         previewObjectKey,
         3600,
         getAttachmentContentDisposition(filename),
-        versionId,
+        previewVersionId,
       )
       downloadUrl(url, filename)
       message.success(t("Download ready"))

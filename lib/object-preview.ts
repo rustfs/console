@@ -42,7 +42,7 @@ export function normalizePreviewContentType(contentType: string) {
 }
 
 export function createObjectPreviewInfo<T extends object>(key: string, info: T, versionId?: string) {
-  return { ...info, Key: key, ...(versionId === undefined ? {} : { VersionId: versionId }) }
+  return { ...info, Key: key, ...(versionId === undefined ? {} : { SelectedVersionId: versionId }) }
 }
 
 export function isSafeTextPreview(contentType: string, objectKey: string, objectSize: number) {

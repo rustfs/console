@@ -24,11 +24,28 @@ test("preview metadata keeps the selected key when a HEAD response has no object
 })
 
 test("version preview keeps the selected version when response headers do not expose it", () => {
-  assert.equal(createObjectPreviewInfo("fred", { SignedUrl: "/fred?versionId=old" }, "old").VersionId, "old")
+  assert.equal(createObjectPreviewInfo("fred", { SignedUrl: "/fred?versionId=old" }, "old").SelectedVersionId, "old")
 })
 
-test("ordinary previews preserve the version returned by HEAD", () => {
-  assert.equal(createObjectPreviewInfo("fred", { VersionId: "current" }).VersionId, "current")
+test("ordinary previews do not select the version returned by HEAD for download", () => {
+  assert.equal(createObjectPreviewInfo("fred", { VersionId: "current" }).SelectedVersionId, undefined)
+})
+
+test("an explicitly selected version stays separate from HEAD metadata", () => {
+  assert.deepEqual(createObjectPreviewInfo("fred", { VersionId: "head-version" }, "selected-version"), {
+    Key: "fred",
+    VersionId: "head-version",
+    SelectedVersionId: "selected-version",
+  })
+})
+
+test("passing version preview metadata to the browser preserves the explicit selection", () => {
+  const data = createObjectPreviewInfo("fred", { SignedUrl: "/fred?versionId=old" }, "old")
+  assert.equal(createObjectPreviewInfo("fred", data).SelectedVersionId, "old")
+})
+
+test("a normalized zero version does not inherit the version returned by HEAD", () => {
+  assert.equal(createObjectPreviewInfo("fred", { VersionId: "head-version" }, undefined).SelectedVersionId, undefined)
 })
 
 for (const contentType of [

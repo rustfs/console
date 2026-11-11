@@ -43,6 +43,7 @@ import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Tabl
 import { useSSE } from "@/hooks/use-sse"
 import { useMessage } from "@/lib/feedback/message"
 import { formatDateTime } from "@/lib/functions"
+import { isImmediateKeyDeletionConfirmed, isKeyPendingDeletion } from "@/lib/sse/key-deletion"
 import {
   INITIAL_FORM_STATE,
   buildFormStateFromStatus,
@@ -187,7 +188,12 @@ export default function SSEPage() {
   const [keyDetailsReloadVersion, setKeyDetailsReloadVersion] = React.useState(0)
   const keyDetailsRequestRef = React.useRef(0)
 
-  const [pendingKeyAction, setPendingKeyAction] = React.useState<KeyActionState>(null)
+  const [pendingKeyAction, setPendingKeyActionState] = React.useState<KeyActionState>(null)
+  const [confirmKeyId, setConfirmKeyId] = React.useState("")
+  const setPendingKeyAction = React.useCallback((action: KeyActionState) => {
+    setConfirmKeyId("")
+    setPendingKeyActionState(action)
+  }, [])
   const [processingKeyAction, setProcessingKeyAction] = React.useState(false)
   const [pendingServiceAction, setPendingServiceAction] = React.useState<"start" | "restart" | "stop" | null>(null)
   const [pendingNavigation, setPendingNavigation] = React.useState<PendingNavigation>(null)
@@ -938,7 +944,7 @@ export default function SSEPage() {
       }
 
       if (pendingKeyAction.type === "forceDelete") {
-        const response = await forceDeleteKey(pendingKeyAction.key.key_id)
+        const response = await forceDeleteKey(pendingKeyAction.key.key_id, confirmKeyId)
         if (response.success === false) {
           message.error(response.message || t("Failed to force delete key"))
           setPendingKeyAction(null)
@@ -981,7 +987,9 @@ export default function SSEPage() {
 
   const keyActionDescription =
     pendingKeyAction?.type === "forceDelete"
-      ? t("This permanently deletes the key immediately and cannot be undone.")
+      ? t(
+          "This permanently deletes the key now instead of waiting for its scheduled deletion date. Objects encrypted with it can never be decrypted again.",
+        )
       : pendingKeyAction?.type === "cancelDeletion"
         ? t("This restores the key from the pending deletion state.")
         : t("This schedules the key for deletion using the default pending window.")
@@ -1223,7 +1231,9 @@ export default function SSEPage() {
                   <Alert>
                     <AlertTitle>{t("Two-stage key deletion")}</AlertTitle>
                     <AlertDescription>
-                      {t("Keys in PendingDeletion can still be restored or deleted immediately.")}
+                      {t(
+                        "Schedule a deletion first; it can be canceled during the waiting period. Only a key in PendingDeletion can be deleted immediately, and the server must allow immediate deletion.",
+                      )}
                     </AlertDescription>
                   </Alert>
 
@@ -1257,7 +1267,7 @@ export default function SSEPage() {
                       <div className="space-y-3 md:hidden">
                         {keys.map((key) => {
                           const isDefaultKey = key.key_id === status?.config_summary?.default_key_id
-                          const isPendingDeletion = (key.status ?? "").toLowerCase().includes("pendingdeletion")
+                          const isPendingDeletion = isKeyPendingDeletion(key.status)
                           return (
                             <article key={key.key_id} className="space-y-4 border p-4">
                               <div className="flex items-start justify-between gap-3">
@@ -1316,21 +1326,23 @@ export default function SSEPage() {
                                     {t("Schedule Deletion")}
                                   </Button>
                                 )}
-                                <Button
-                                  type="button"
-                                  variant="destructive"
-                                  className="min-h-11 flex-1 sm:flex-none"
-                                  disabled={
-                                    isDefaultKey ||
-                                    Boolean(activeMutation) ||
-                                    loadingStatus ||
-                                    Boolean(keysError) ||
-                                    staticKmsReadOnly
-                                  }
-                                  onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
-                                >
-                                  {t("Delete Immediately")}
-                                </Button>
+                                {isPendingDeletion ? (
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    className="min-h-11 flex-1 sm:flex-none"
+                                    disabled={
+                                      isDefaultKey ||
+                                      Boolean(activeMutation) ||
+                                      loadingStatus ||
+                                      Boolean(keysError) ||
+                                      staticKmsReadOnly
+                                    }
+                                    onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
+                                  >
+                                    {t("Delete Immediately")}
+                                  </Button>
+                                ) : null}
                               </div>
                             </article>
                           )
@@ -1354,7 +1366,7 @@ export default function SSEPage() {
                           </TableHeader>
                           <TableBody>
                             {keys.map((key) => {
-                              const isPendingDeletion = (key.status ?? "").toLowerCase().includes("pendingdeletion")
+                              const isPendingDeletion = isKeyPendingDeletion(key.status)
                               const isDefaultKey = key.key_id === status?.config_summary?.default_key_id
                               return (
                                 <TableRow key={key.key_id} className="group">
@@ -1401,27 +1413,31 @@ export default function SSEPage() {
                                             </DropdownMenuItem>
                                           )}
                                           {isPendingDeletion && (
-                                            <DropdownMenuItem
-                                              onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}
-                                              disabled={Boolean(activeMutation) || loadingStatus || Boolean(keysError)}
-                                            >
-                                              {t("Cancel Deletion")}
-                                            </DropdownMenuItem>
+                                            <>
+                                              <DropdownMenuItem
+                                                onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}
+                                                disabled={
+                                                  Boolean(activeMutation) || loadingStatus || Boolean(keysError)
+                                                }
+                                              >
+                                                {t("Cancel Deletion")}
+                                              </DropdownMenuItem>
+                                              <DropdownMenuSeparator />
+                                              <DropdownMenuItem
+                                                onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
+                                                disabled={
+                                                  isDefaultKey ||
+                                                  Boolean(activeMutation) ||
+                                                  loadingStatus ||
+                                                  Boolean(keysError) ||
+                                                  staticKmsReadOnly
+                                                }
+                                                className="text-destructive focus:text-destructive"
+                                              >
+                                                {t("Delete Immediately")}
+                                              </DropdownMenuItem>
+                                            </>
                                           )}
-                                          <DropdownMenuSeparator />
-                                          <DropdownMenuItem
-                                            onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
-                                            disabled={
-                                              isDefaultKey ||
-                                              Boolean(activeMutation) ||
-                                              loadingStatus ||
-                                              Boolean(keysError) ||
-                                              staticKmsReadOnly
-                                            }
-                                            className="text-destructive focus:text-destructive"
-                                          >
-                                            {t("Delete Immediately")}
-                                          </DropdownMenuItem>
                                         </DropdownMenuContent>
                                       </DropdownMenu>
                                     </div>
@@ -2349,6 +2365,22 @@ export default function SSEPage() {
               ) : null}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {pendingKeyAction?.type === "forceDelete" ? (
+            <Field>
+              <FieldLabel htmlFor="confirmKeyId">{t("Type the KMS key ID to confirm")}</FieldLabel>
+              <FieldContent>
+                <Input
+                  id="confirmKeyId"
+                  name="confirmKeyId"
+                  value={confirmKeyId}
+                  onChange={(event) => setConfirmKeyId(event.target.value)}
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={processingKeyAction}
+                />
+              </FieldContent>
+            </Field>
+          ) : null}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={processingKeyAction}>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
@@ -2357,6 +2389,10 @@ export default function SSEPage() {
                 processingKeyAction ||
                 Boolean(activeMutation) ||
                 Boolean(statusError) ||
+                Boolean(
+                  pendingKeyAction?.type === "forceDelete" &&
+                  !isImmediateKeyDeletionConfirmed(pendingKeyAction.key.key_id, confirmKeyId),
+                ) ||
                 Boolean(isPendingDefaultKey && pendingKeyAction?.type !== "cancelDeletion")
               }
               className={pendingKeyAction?.type === "forceDelete" ? DANGER_BUTTON_CLASS : undefined}

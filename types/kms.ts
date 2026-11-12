@@ -231,7 +231,6 @@ export interface KmsKeyDetailResponse extends KmsMutationResponse {
 
 export interface KmsDeleteKeyOptions {
   pending_window_in_days?: number
-  force_immediate?: boolean
 }
 
 export interface KmsCancelDeletionRequest {

@@ -2,6 +2,7 @@
 
 import { useCallback } from "react"
 import { useApi } from "@/contexts/api-context"
+import { buildImmediateKeyDeletionRequest } from "@/lib/sse/key-deletion"
 import type {
   KmsCancelDeletionRequest,
   KmsConfigPayload,
@@ -113,9 +114,6 @@ export function useSSE() {
       if (options.pending_window_in_days != null) {
         queryParams.append("pending_window_in_days", String(options.pending_window_in_days))
       }
-      if (options.force_immediate) {
-        queryParams.append("force_immediate", "true")
-      }
       const url = `/kms/keys/delete?${queryParams.toString()}`
       return (await api.delete(url)) as KmsMutationResponse
     },
@@ -123,10 +121,12 @@ export function useSSE() {
   )
 
   const forceDeleteKey = useCallback(
-    async (keyId: string): Promise<KmsMutationResponse> => {
-      return deleteKey(keyId, { force_immediate: true })
+    async (keyId: string, confirmKeyId: string): Promise<KmsMutationResponse> => {
+      return (await api.delete("/kms/keys/delete", {
+        body: buildImmediateKeyDeletionRequest(keyId, confirmKeyId),
+      })) as KmsMutationResponse
     },
-    [deleteKey],
+    [api],
   )
 
   const cancelKeyDeletion = useCallback(

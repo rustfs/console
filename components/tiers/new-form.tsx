@@ -202,7 +202,8 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
           <DialogBody className="min-h-0 overflow-y-auto overscroll-contain">
             {!type ? (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                {TIER_PROVIDERS.map((item) => (
+                {/* Wasabi is hidden pending future workflow and scenario improvements. */}
+                {TIER_PROVIDERS.filter((item) => item.value !== "wasabi").map((item) => (
                   <button
                     key={item.value}
                     id={`tier-provider-${item.value}`}

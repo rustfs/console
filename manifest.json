@@ -1,0 +1,32 @@
+{
+  "route": "/tiers",
+  "source_before": "9d5b78f",
+  "source_after": "cce6059d8ae2ea0dd5043b17ef4292289c9daf79",
+  "backend": "Local HTTP fixtures; not live RustFS integration",
+  "language": "zh-CN",
+  "theme": "light",
+  "viewports": {
+    "desktop": {
+      "width": 1440,
+      "height": 1000
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "images": {
+    "after-desktop.jpg": {
+      "sha256": "56e521864b4ee27c422924f638ee4ae679c782e72d7996699cf9d7436e629d14"
+    },
+    "after-mobile.jpg": {
+      "sha256": "e48c743ac82674c89bcee955436c7fd02b1d21e4b9a3f3f4b0f904ce1818c396"
+    },
+    "before-desktop.jpg": {
+      "sha256": "f689926e1e6d4d1efdd23ac1e3b4d9dcfd846566fd946f78ac4039cfdf7611bb"
+    },
+    "before-mobile.jpg": {
+      "sha256": "92c4a586eb8c76b7647a8a75a76bf85d5e20571b376718e79cc7857bf25bcb5e"
+    }
+  }
+}

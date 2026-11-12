@@ -23,7 +23,7 @@ test("tier picker hides Huawei and Tencent without filtering existing rows", () 
   assert.equal(hookSource.includes("UNSUPPORTED_TIER_TYPES"), false)
 })
 
-test("Wasabi is supported by tier rows and all name-based actions", () => {
+test("Wasabi is hidden from the tier picker while existing rows and name-based actions remain supported", () => {
   const newFormSource = fs.readFileSync("components/tiers/new-form.tsx", "utf8")
   const pageSource = fs.readFileSync("app/(dashboard)/tiers/page.tsx", "utf8")
   const hookSource = fs.readFileSync("hooks/use-tiers.ts", "utf8")
@@ -37,6 +37,7 @@ test("Wasabi is supported by tier rows and all name-based actions", () => {
   assert.match(newFormSource, /buildTierPayload\(type,/)
   assert.match(newFormSource, /selectedOption\?\.labelKey/)
   assert.match(newFormSource, /disabled=\{item\.disabled\}/)
+  assert.match(newFormSource, /TIER_PROVIDERS\.filter\(\(item\) => item\.value !== "wasabi"\)\.map/)
 })
 
 test("Wasabi form keeps failures in context and protects duplicate submissions", () => {

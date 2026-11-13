@@ -105,6 +105,11 @@ export default [
     icon: "ri:bar-chart-box-line",
   },
   {
+    label: "Recovery & Integrity",
+    to: "/recovery",
+    icon: "ri:shield-check-line",
+  },
+  {
     label: "Administration",
     type: "divider",
   },

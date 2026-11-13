@@ -28,6 +28,9 @@ interface RequestOptions {
    */
   suppress403Redirect?: boolean
   signal?: AbortSignal
+  /** Opt in to handling status, bounded bodies, and errors in the caller. */
+  rawResponse?: boolean
+  redirect?: RequestRedirect
 }
 
 interface HttpError extends Error {
@@ -91,6 +94,7 @@ export class ApiClient {
     const shouldDedupe =
       method === "GET" &&
       parseJson &&
+      !requestOptions.rawResponse &&
       requestOptions.dedupe !== false &&
       !providedOptions.headers &&
       !requestOptions.signal
@@ -101,6 +105,8 @@ export class ApiClient {
       logger.log("[request] options:", redactRequestOptionsForLog(requestOptions))
 
       const response = await this.$api.fetch(url, requestOptions as ApiRequestInit)
+
+      if (requestOptions.rawResponse) return response
 
       logger.log("[request] response:", response)
 

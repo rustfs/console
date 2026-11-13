@@ -58,6 +58,21 @@ async function render(
 
 const all = () => true
 
+test("recovery navigation identifies its page with the human-readable label", async () => {
+  await render(
+    "/recovery/",
+    "",
+    (path) => path === "/recovery",
+    (document) => {
+      assert.deepEqual(
+        [...document.querySelectorAll('[aria-current="page"]')].map((node) => node.textContent),
+        ["Recovery & Integrity"],
+      )
+      assert.equal(document.querySelectorAll("a").length, 0)
+    },
+  )
+})
+
 for (const [pathname, current] of [
   ["/rebalance/", "Rebalance"],
   ["/pool-decommission/", "Decommission"],

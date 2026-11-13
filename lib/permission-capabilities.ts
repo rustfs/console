@@ -8,6 +8,9 @@ import {
 } from "./permission-resources"
 
 export type ConsoleCapability =
+  | "recovery.mrf"
+  | "recovery.jobs.view"
+  | "recovery.readiness.view"
   | "bucket.create"
   | "bucket.delete"
   | "bucket.policy.put"
@@ -67,6 +70,9 @@ interface CapabilityRequirement {
 }
 
 const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]> = {
+  "recovery.mrf": [{ actions: ["admin:Heal"], resource: "none" }],
+  "recovery.jobs.view": [{ actions: ["admin:DescribeBatchJob"], resource: "none" }],
+  "recovery.readiness.view": [{ actions: ["admin:ServerInfo"], resource: "none" }],
   "bucket.create": [{ actions: ["s3:CreateBucket"], resource: "allBuckets" }],
   "bucket.delete": [{ actions: ["s3:DeleteBucket"], resource: "bucket" }],
   "bucket.policy.put": [{ actions: ["s3:PutBucketPolicy"], resource: "bucket" }],

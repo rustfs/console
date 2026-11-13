@@ -30,6 +30,7 @@ export const MENU_CONTROLLED_DASHBOARD_ROUTES: readonly string[] = [
   "/sse",
   "/audit-target",
   "/status",
+  "/recovery",
   "/settings",
   "/license",
 ]

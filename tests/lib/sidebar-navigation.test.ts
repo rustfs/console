@@ -58,6 +58,53 @@ test("identity management keeps user groups before users", () => {
   )
 })
 
+test("operations keeps recovery after running status", () => {
+  const group = groupNavigation(getVisibleNavigation(navs, all)).find((item) => item.label === "Operations")
+
+  assert.deepEqual(
+    group?.items.map((item) => item.to),
+    ["/status", "/recovery"],
+  )
+})
+
+test("recovery-only operators retain one entry in operations", () => {
+  assert.deepEqual(
+    groupNavigation(getVisibleNavigation(navs, allow("/recovery"))).map((group) => ({
+      label: group.label,
+      links: group.items.map((item) => [item.label, item.to]),
+    })),
+    [{ label: "Operations", links: [["Recovery & Integrity", "/recovery"]] }],
+  )
+})
+
+test("status access does not reveal recovery navigation", () => {
+  assert.deepEqual(
+    groupNavigation(getVisibleNavigation(navs, allow("/status"))).map((group) => ({
+      label: group.label,
+      links: group.items.map((item) => item.to),
+    })),
+    [{ label: "Operations", links: ["/status"] }],
+  )
+})
+
+test("operations landing selection follows the visible menu order", () => {
+  assert.equal(
+    getFirstAccessibleDashboardRoute({ isAdmin: false, canAccessPath: allow("/status", "/recovery", "/settings") }),
+    "/status",
+  )
+  assert.equal(
+    getFirstAccessibleDashboardRoute({ isAdmin: false, canAccessPath: allow("/recovery", "/settings") }),
+    "/recovery",
+  )
+})
+
+test("recovery navigation stays active only within its route boundary", () => {
+  const recovery = navs.find((item) => item.to === "/recovery")
+  assert.ok(recovery)
+  assert.equal(isNavigationItemActive(recovery, "/recovery/"), true)
+  assert.equal(isNavigationItemActive(recovery, "/recovery-archive"), false)
+})
+
 test("administration contains the license after system settings", () => {
   const group = groupNavigation(getVisibleNavigation(navs, all)).find((item) => item.label === "Administration")
 

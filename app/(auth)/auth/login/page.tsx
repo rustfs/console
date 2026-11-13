@@ -38,6 +38,7 @@ function LoginPageContent() {
     sessionToken: "",
   })
   const loginPendingRef = useRef(false)
+  const expirationWarningShownRef = useRef(false)
   const [submitting, setSubmitting] = useState(false)
   const [oidcProviders, setOidcProviders] = useState<OidcProvider[]>([])
   // The pending second-factor exchange. The long-term credentials it needs stay
@@ -56,11 +57,12 @@ function LoginPageContent() {
   }, [isAuthenticated, router])
 
   useEffect(() => {
-    if (searchParams.get("unauthorized") === "true") {
+    if (!isAuthenticated && searchParams.get("unauthorized") === "true" && !expirationWarningShownRef.current) {
+      expirationWarningShownRef.current = true
       message.warning(t("Your session has expired. Please log in again."))
       router.replace("/auth/login")
     }
-  }, [searchParams, message, t, router])
+  }, [isAuthenticated, searchParams, message, t, router])
 
   // Fetch OIDC providers after the first paint path has had a chance to settle.
   useEffect(() => {

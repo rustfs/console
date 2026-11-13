@@ -110,3 +110,66 @@ test("ApiClient exposes structured service codes without losing the safe message
     status: 404,
   })
 })
+
+for (const format of ["json", "nested-json", "xml"]) {
+  for (const [status, code] of [
+    [403, "InvalidAccessKeyId"],
+    [403, "ExpiredToken"],
+    [400, "ExpiredToken"],
+  ] as const) {
+    for (const suppress403Redirect of [false, true]) {
+      test(`ApiClient expires ${format} ${status} ${code} with suppression=${suppress403Redirect}`, async () => {
+        const { ApiClient } = await loadApiClient()
+        const handled: string[] = []
+        const payload = { Code: code, Message: "Session expired" }
+        const response =
+          format === "xml"
+            ? new Response(`<Error><Code>${code}</Code><Message>Session expired</Message></Error>`, { status })
+            : Response.json(format === "nested-json" ? { error: payload } : payload, { status })
+        const client = new ApiClient(
+          { fetch: async () => response },
+          {
+            errorHandler: {
+              handle401: async () => {
+                handled.push("session")
+              },
+              handle403: async () => {
+                handled.push("permission")
+              },
+              handleServerError: async () => {},
+              handleByStatus: async () => {},
+            },
+          },
+        )
+        await assert.rejects(client.get("https://console.test/access-keys", { suppress403Redirect }), { status, code })
+        assert.deepEqual(handled, ["session"])
+      })
+    }
+  }
+}
+
+for (const suppress403Redirect of [false, true]) {
+  test(`ApiClient preserves ordinary permission handling with suppression=${suppress403Redirect}`, async () => {
+    const { ApiClient } = await loadApiClient()
+    const handled: string[] = []
+    const client = new ApiClient(
+      { fetch: async () => Response.json({ Code: "AccessDenied" }, { status: 403 }) },
+      {
+        errorHandler: {
+          handle401: async () => {
+            handled.push("session")
+          },
+          handle403: async () => {
+            handled.push("permission")
+          },
+          handleServerError: async () => {},
+          handleByStatus: async () => {},
+        },
+      },
+    )
+    await assert.rejects(client.get("https://console.test/accountinfo", { suppress403Redirect }), {
+      code: "AccessDenied",
+    })
+    assert.deepEqual(handled, suppress403Redirect ? [] : ["permission"])
+  })
+}

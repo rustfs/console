@@ -138,16 +138,21 @@ test("recovery codes retain every typed character, support deletion and stay sep
   assert.equal(inputs.get("login-mfa-code")!.value, "")
 })
 
-async function loginPage(t: TestContext) {
+async function loginPage(
+  t: TestContext,
+  options: { unauthorized?: boolean; isAuthenticated?: boolean; strict?: boolean } = {},
+) {
   let props: LoginFormProps
   const deferred = Promise.withResolvers<{ status: "mfa-required"; challenge: string }>()
   const attempts: unknown[] = []
   const verifications: unknown[] = []
   const errors: unknown[] = []
-  const router = { replace: () => {} }
-  const params = new URLSearchParams()
+  const routes: string[] = []
+  const warnings: string[] = []
+  const router = { replace: (path: string) => routes.push(path) }
+  const params = new URLSearchParams(options.unauthorized ? "unauthorized=true" : "")
   const api = {
-    isAuthenticated: false,
+    isAuthenticated: options.isAuthenticated ?? false,
     login: async (credentials: unknown) => {
       attempts.push(credentials)
       return deferred.promise
@@ -156,8 +161,13 @@ async function loginPage(t: TestContext) {
       verifications.push(args)
     },
   }
-  const feedback = { error: (text: string) => errors.push(text), success: () => {}, warning: () => {} }
-  await mount(t, React.createElement(LoginPage), {
+  const feedback = {
+    error: (text: string) => errors.push(text),
+    success: () => {},
+    warning: (text: string) => warnings.push(text),
+  }
+  const page = React.createElement(LoginPage)
+  await mount(t, options.strict ? React.createElement(React.StrictMode, null, page) : page, {
     LoginForm: (value: LoginFormProps) => {
       props = value
       return null
@@ -177,8 +187,22 @@ async function loginPage(t: TestContext) {
     attempts,
     verifications,
     errors,
+    routes,
+    warnings,
   }
 }
+
+test("session expiration warns once even when login effects are replayed", async (t) => {
+  const ui = await loginPage(t, { unauthorized: true, strict: true })
+  assert.deepEqual(ui.warnings, ["Your session has expired. Please log in again."])
+  assert.deepEqual(ui.routes, ["/auth/login"])
+})
+
+test("a recovered session ignores an obsolete unauthorized query instead of returning to login", async (t) => {
+  const ui = await loginPage(t, { unauthorized: true, isAuthenticated: true })
+  assert.deepEqual(ui.warnings, [])
+  assert.deepEqual(ui.routes, ["/"])
+})
 
 const submitEvent = { preventDefault() {} } as React.FormEvent
 

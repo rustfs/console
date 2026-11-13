@@ -2,6 +2,7 @@ import { joinURL } from "ufo"
 import type { IApiErrorHandler } from "@/types/api"
 import { redactRequestOptionsForLog } from "./api-request-log"
 import { parseApiErrorDetails } from "./error-handler"
+import { isSessionError } from "./auth-session"
 import { logger } from "./logger"
 
 type ApiRequestInit = RequestInit & { body?: BodyInit | null; aws?: Record<string, unknown> }
@@ -104,58 +105,14 @@ export class ApiClient {
 
       logger.log("[request] response:", response)
 
-      if (response.status === 401) {
-        if (this.errorHandler) {
-          await this.errorHandler.handle401(url)
-        }
-        throw await createHttpError(response)
-      }
-      if (response.status === 403) {
-        // If suppress403Redirect is true, throw error instead of triggering global handler
-        // This allows components to handle permission errors gracefully
-        if (requestOptions.suppress403Redirect) {
-          throw await createHttpError(response)
-        }
-
-        try {
-          const cloned = response.clone()
-          let codeText = ""
-          try {
-            const data = (await cloned.json()) as Record<string, unknown>
-            let code: string | undefined = (data?.code as string | undefined) || (data?.Code as string | undefined)
-            if (data && typeof data === "object" && "error" in data) {
-              const errObj = (data as { error?: unknown }).error
-              if (errObj && typeof errObj === "object") {
-                const e = errObj as { code?: unknown }
-                if (typeof e.code === "string") code = code ?? e.code
-              }
-            }
-            codeText = typeof code === "string" ? code : ""
-          } catch {
-            codeText = ""
-          }
-
-          const normalizedCode = codeText.toLowerCase()
-          const isUnauthorizedAccess = normalizedCode === "unauthorizedaccess"
-          const isInvalidAccessKey = normalizedCode === "invalidaccesskeyid"
-
-          if (this.errorHandler) {
-            if (isUnauthorizedAccess || isInvalidAccessKey) {
-              await this.errorHandler.handle401(url)
-            } else {
-              await this.errorHandler.handle403(url)
-            }
-          }
-        } catch {
-          if (this.errorHandler) {
-            await this.errorHandler.handle403(url)
-          }
-        }
-        throw await createHttpError(response)
-      }
-
       if (!response.ok) {
-        throw await createHttpError(response)
+        const error = await createHttpError(response)
+        if (response.status === 401 || isSessionError(error.code)) {
+          await this.errorHandler?.handle401(url)
+        } else if (response.status === 403 && !requestOptions.suppress403Redirect) {
+          await this.errorHandler?.handle403(url)
+        }
+        throw error
       }
 
       if (response.status === 204 || response.headers.get("content-length") === "0" || !response.body) {

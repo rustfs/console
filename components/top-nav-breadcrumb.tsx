@@ -48,10 +48,12 @@ export function TopNavBreadcrumb() {
           <React.Fragment key={i}>
             {i > 0 && <BreadcrumbSeparator />}
             <BreadcrumbItem className="min-w-0">
-              {item.href ? (
+              {i === items.length - 1 ? (
+                <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
+              ) : item.href ? (
                 <BreadcrumbLink className="truncate" render={<Link href={item.href}>{item.label}</Link>} />
               ) : (
-                <BreadcrumbPage className="truncate">{item.label}</BreadcrumbPage>
+                <span className="truncate font-normal text-foreground">{item.label}</span>
               )}
             </BreadcrumbItem>
           </React.Fragment>

@@ -78,6 +78,11 @@ export default [
     icon: "ri:refresh-line",
   },
   {
+    label: "Recovery & Integrity",
+    to: "/recovery",
+    icon: "ri:shield-check-line",
+  },
+  {
     label: "Pool Decommission",
     to: "/pool-decommission",
     icon: "ri:delete-bin-5-line",

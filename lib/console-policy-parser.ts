@@ -121,6 +121,7 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
   ],
   [CONSOLE_SCOPES.VIEW_USER_GROUPS]: ["admin:ListGroups", "admin:AddUserToGroup", "admin:GetGroup", "admin:*"],
   [CONSOLE_SCOPES.VIEW_PERFORMANCE]: ["admin:ServerInfo", "admin:OBDInfo", "admin:ServerTrace", "admin:*"],
+  [CONSOLE_SCOPES.VIEW_RECOVERY]: ["admin:Heal", "admin:DescribeBatchJob", "admin:ServerInfo"],
   [CONSOLE_SCOPES.VIEW_REBALANCE]: ["admin:Rebalance", "admin:ServerInfo", "admin:*"],
   [CONSOLE_SCOPES.VIEW_POOL_DECOMMISSION]: ["admin:Decommission", "admin:ServerInfo", "admin:*"],
   [CONSOLE_SCOPES.VIEW_IMPORT_EXPORT]: ["admin:ConfigUpdate", "admin:*"],
@@ -154,9 +155,12 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
 }
 
 function matchesImpliedConsoleAction(policyActions: string[] | undefined, action: string): boolean {
+  // Recovery is navigation-only: backend grants imply its page scope, never the reverse.
   return Object.entries(IMPLIED_SCOPES).some(
     ([scope, impliedActions]) =>
-      matchAction(policyActions, scope) && impliedActions.some((implied) => matchAction([implied], action)),
+      scope !== CONSOLE_SCOPES.VIEW_RECOVERY &&
+      matchAction(policyActions, scope) &&
+      impliedActions.some((implied) => matchAction([implied], action)),
   )
 }
 

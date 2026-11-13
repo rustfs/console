@@ -18,6 +18,7 @@ export const MENU_CONTROLLED_DASHBOARD_ROUTES: readonly string[] = [
   "/user-groups",
   "/import-export",
   "/status",
+  "/recovery",
   "/events",
   "/replication",
   "/lifecycle",

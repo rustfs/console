@@ -145,6 +145,7 @@ function isAccessDeniedError(error: unknown): boolean {
 interface ObjectListProps {
   bucket: string
   heading?: React.ReactNode
+  navigation?: React.ReactNode
   path: string
   onOpenInfo: (bucket: string, key: string) => void
   onUploadClick: () => void
@@ -157,6 +158,7 @@ interface ObjectListProps {
 export function ObjectList({
   bucket,
   heading,
+  navigation,
   path,
   onOpenInfo,
   onUploadClick,
@@ -937,7 +939,7 @@ export function ObjectList({
   useObjectListPagination({ loadMoreRef, nextToken, loading, loadMoreError, loadNextBatch })
 
   return (
-    <div className="space-y-8">
+    <div className="min-w-0 space-y-8">
       <PageHeader
         actions={
           <>
@@ -964,6 +966,8 @@ export function ObjectList({
       >
         {heading ?? <h1>{bucket}</h1>}
       </PageHeader>
+
+      {navigation}
 
       <DataTable
         caption={t("Objects")}

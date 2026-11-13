@@ -2322,5 +2322,14 @@
   "Suspend versioning for bucket {bucket}?": "Sospendere il controllo delle versioni per il bucket {bucket}?",
   "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "Una volta abilitato, il controllo delle versioni non può essere disabilitato né ripristinato allo stato non configurato. Può solo essere sospeso. Le versioni esistenti vengono conservate.",
   "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "La sospensione del controllo delle versioni interrompe la creazione di nuove versioni per le scritture future. Gli ID delle versioni esistenti vengono conservati, ma le scritture future possono sovrascrivere gli oggetti con ID versione null.",
-  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "Il blocco degli oggetti non può essere disabilitato dopo la creazione del bucket e abilita automaticamente il controllo delle versioni."
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "Il blocco degli oggetti non può essere disabilitato dopo la creazione del bucket e abilita automaticamente il controllo delle versioni.",
+  "Data Management": "Gestione dei dati",
+  "Cluster Management": "Gestione del cluster",
+  "Security and Compliance": "Sicurezza e conformità",
+  "Administration": "Centro di amministrazione",
+  "Pool Management": "Gestione dei pool di archiviazione",
+  "Bucket navigation": "Navigazione del bucket",
+  "Main navigation": "Navigazione principale",
+  "Encryption & Keys": "Crittografia e chiavi",
+  "Decommission": "Dismissione"
 }

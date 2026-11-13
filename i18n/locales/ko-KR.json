@@ -2322,5 +2322,14 @@
   "Suspend versioning for bucket {bucket}?": "버킷 {bucket}의 버전 관리를 일시 중지하시겠습니까?",
   "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "버전 관리는 한 번 활성화하면 비활성화하거나 미설정 상태로 되돌릴 수 없습니다. 일시 중지만 가능합니다. 기존 버전은 유지됩니다.",
   "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "버전 관리를 일시 중지하면 이후 쓰기 작업에서 새 버전이 생성되지 않습니다. 기존 버전 ID는 유지되지만 이후 쓰기 작업에서 버전 ID가 null인 객체를 덮어쓸 수 있습니다.",
-  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "객체 잠금은 버킷 생성 후 비활성화할 수 없으며 버전 관리를 자동으로 활성화합니다."
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "객체 잠금은 버킷 생성 후 비활성화할 수 없으며 버전 관리를 자동으로 활성화합니다.",
+  "Data Management": "데이터 관리",
+  "Cluster Management": "클러스터 관리",
+  "Security and Compliance": "보안 및 규정 준수",
+  "Administration": "관리 센터",
+  "Pool Management": "스토리지 풀 관리",
+  "Bucket navigation": "버킷 탐색",
+  "Main navigation": "주 탐색",
+  "Encryption & Keys": "암호화 및 키",
+  "Decommission": "사용 중지"
 }

@@ -2322,5 +2322,14 @@
   "Suspend versioning for bucket {bucket}?": "هل تريد تعليق التحكم في الإصدارات للحاوية {bucket}؟",
   "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "بعد تفعيل التحكم في الإصدارات، لا يمكن تعطيله أو إعادته إلى حالة غير مهيأة. يمكن تعليقه فقط. يتم الاحتفاظ بالإصدارات الموجودة.",
   "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "يؤدي تعليق التحكم في الإصدارات إلى إيقاف إنشاء إصدارات جديدة لعمليات الكتابة المستقبلية. يتم الاحتفاظ بمعرّفات الإصدارات الموجودة، لكن عمليات الكتابة المستقبلية قد تستبدل الكائنات التي يكون معرّف إصدارها null.",
-  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "لا يمكن تعطيل قفل الكائن بعد إنشاء الحاوية، وهو يفعّل التحكم في الإصدارات تلقائياً."
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "لا يمكن تعطيل قفل الكائن بعد إنشاء الحاوية، وهو يفعّل التحكم في الإصدارات تلقائياً.",
+  "Data Management": "إدارة البيانات",
+  "Cluster Management": "إدارة العناقيد",
+  "Security and Compliance": "الأمان والامتثال",
+  "Administration": "مركز الإدارة",
+  "Pool Management": "إدارة مجمعات التخزين",
+  "Bucket navigation": "التنقل في الحاوية",
+  "Main navigation": "التنقل الرئيسي",
+  "Encryption & Keys": "التشفير والمفاتيح",
+  "Decommission": "إخراج من الخدمة"
 }

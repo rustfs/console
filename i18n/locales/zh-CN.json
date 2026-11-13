@@ -2245,7 +2245,7 @@
   "Secret Key must be at least 8 bytes": "Secret Key 至少需要 8 个字节",
   "At least 8 bytes. This is also your S3 secret key.": "至少 8 个字节。这也是您的 S3 Secret Key。",
   "Identity": "身份与权限",
-  "Operations": "运行管理",
+  "Operations": "运维",
   "Resources": "资源",
   "Bucket size distribution": "桶容量占比",
   "Other buckets": "其他桶",
@@ -2322,5 +2322,14 @@
   "Suspend versioning for bucket {bucket}?": "确认暂停存储桶 {bucket} 的版本控制？",
   "Once enabled, versioning cannot be disabled or reset to an unconfigured state. It can only be suspended. Existing versions are preserved.": "版本控制一旦启用，就无法禁用或恢复为未配置状态，只能暂停。现有版本会予以保留。",
   "Suspending versioning stops creating new versions for future writes. Existing version IDs are preserved, but future writes can overwrite objects with a null version ID.": "暂停版本控制后，后续写入将不再创建新版本。现有版本 ID 会予以保留，但后续写入可能覆盖版本 ID 为 null 的对象。",
-  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "对象锁在存储桶创建后无法禁用，并会自动启用版本控制。"
+  "Object Lock cannot be disabled after bucket creation and automatically enables versioning.": "对象锁在存储桶创建后无法禁用，并会自动启用版本控制。",
+  "Data Management": "数据管理",
+  "Cluster Management": "集群管理",
+  "Security and Compliance": "安全合规",
+  "Administration": "管理中心",
+  "Pool Management": "存储池管理",
+  "Bucket navigation": "存储桶导航",
+  "Main navigation": "主导航",
+  "Encryption & Keys": "加密与密钥",
+  "Decommission": "退役"
 }

@@ -1031,7 +1031,7 @@ export default function SSEPage() {
             </p>
           }
         >
-          <h1 className="text-2xl font-bold">{t("Server-Side Encryption (SSE) Configuration")}</h1>
+          <h1 className="text-2xl font-bold">{t("Encryption & Keys")}</h1>
         </PageHeader>
 
         <div className="grid items-start gap-8 lg:grid-cols-[13rem_minmax(0,1fr)]">

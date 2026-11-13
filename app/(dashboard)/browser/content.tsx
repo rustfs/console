@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import { Page } from "@/components/page"
 import { PageHeader } from "@/components/page-header"
+import { BucketNavigation } from "@/components/buckets/navigation"
 import { ObjectPathLinks } from "@/components/object/path-links"
 import { ObjectList } from "@/components/object/list"
 import { ObjectView } from "@/components/object/view"
@@ -200,12 +201,18 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
 
   return (
     <Page>
-      {!isObjectList ? <PageHeader>{heading}</PageHeader> : null}
+      {!isObjectList ? (
+        <div className="flex min-w-0 flex-col gap-5">
+          <PageHeader>{heading}</PageHeader>
+          <BucketNavigation bucketName={bucketName} />
+        </div>
+      ) : null}
 
       <div className="flex flex-col gap-4">
         {isObjectList ? (
           <ObjectList
             heading={heading}
+            navigation={<BucketNavigation bucketName={bucketName} />}
             bucket={bucketName}
             path={prefix}
             onOpenInfo={handleOpenInfo}

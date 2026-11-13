@@ -6,6 +6,14 @@ import { useTranslation } from "react-i18next"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -24,11 +32,12 @@ import {
 } from "@/components/ui/sidebar"
 import { RiArrowRightSLine, RiExternalLinkLine } from "@remixicon/react"
 import { getIconComponent } from "@/lib/icon-map"
-import navs from "@/config/navs"
+import navs, { footerNavs } from "@/config/navs"
 import type { NavItem } from "@/types/app-config"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useFirstAccessibleDashboardRoute } from "@/hooks/use-first-accessible-dashboard-route"
 import { canAccessDashboardRoute } from "@/lib/dashboard-route-meta"
+import { getVisibleNavigation, groupNavigation, isExternalNav, isNavigationItemActive } from "@/lib/sidebar-navigation"
 import { SidebarVersion } from "@/components/sidebars/version"
 import { useDirection } from "@/components/ui/direction"
 import { getThemeManifest } from "@/lib/theme/manifest"
@@ -41,103 +50,141 @@ const APP_NAME = theme.brand.name
 function NavIcon({ name }: { name?: string }) {
   const Icon = getIconComponent(name)
   if (!Icon) return null
-  // Icon from static map lookup; rule flags dynamic lookup as "component during render"
   return (
     // eslint-disable-next-line react-hooks/static-components -- icon from static map
     <Icon className="size-4 shrink-0" aria-hidden />
   )
 }
 
-function hasChildren(item: NavItem) {
-  return Array.isArray(item.children) && item.children.length > 0
+function NavigationLink({ item, sub = false }: { item: NavItem; sub?: boolean }) {
+  const { t } = useTranslation()
+  const pathname = usePathname()
+  const { setOpenMobile } = useSidebar()
+  const external = isExternalNav(item)
+  const active = isNavigationItemActive(item, pathname)
+  const content = (
+    <>
+      <NavIcon name={item.icon} />
+      <span className="flex-1 truncate">{t(item.label)}</span>
+      {external ? <RiExternalLinkLine className="size-3.5 text-muted-foreground" aria-hidden /> : null}
+    </>
+  )
+  const link = external ? (
+    <a
+      href={withUtm(item.to ?? "/", "sidebar")}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={t(item.label)}
+      className="flex w-full items-center gap-3"
+    >
+      {content}
+    </a>
+  ) : (
+    <Link
+      href={item.to ?? "/"}
+      aria-current={active ? "page" : undefined}
+      title={t(item.label)}
+      onNavigate={() => setOpenMobile(false)}
+      className="flex w-full items-center gap-3"
+    >
+      {content}
+    </Link>
+  )
+  return sub ? (
+    <SidebarMenuSubButton size="sm" className="min-h-11 md:min-h-0" isActive={active} render={link} />
+  ) : (
+    <SidebarMenuButton isActive={active} tooltip={t(item.label)} render={link} />
+  )
 }
 
-function isExternal(item: NavItem) {
-  return Boolean(item.target) || /^https?:/i.test(item.to ?? "")
-}
+function NavigationGroup({ item }: { item: NavItem }) {
+  const { t } = useTranslation()
+  const pathname = usePathname()
+  const { state, isMobile, setOpenMobile } = useSidebar()
+  const active = isNavigationItemActive(item, pathname)
+  const label = t(item.label)
 
-function normalizedTo(item: NavItem) {
-  return item.to ?? "/"
+  if (state === "collapsed" && !isMobile) {
+    return (
+      <SidebarMenuItem>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <SidebarMenuButton isActive={active} tooltip={label} aria-label={label}>
+                <NavIcon name={item.icon} />
+                <span>{label}</span>
+              </SidebarMenuButton>
+            }
+          />
+          <DropdownMenuContent side="inline-end" align="start" className="min-w-48">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>{label}</DropdownMenuLabel>
+              {item.children?.map((child) => (
+                <DropdownMenuItem
+                  key={child.to}
+                  render={
+                    <Link
+                      href={child.to!}
+                      aria-current={isNavigationItemActive(child, pathname) ? "page" : undefined}
+                      onNavigate={() => setOpenMobile(false)}
+                    >
+                      <NavIcon name={child.icon} />
+                      {t(child.label)}
+                    </Link>
+                  }
+                />
+              ))}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    )
+  }
+
+  return (
+    <Collapsible
+      key={`${item.label}-${active}`}
+      defaultOpen={active}
+      className="group/collapsible"
+      render={<SidebarMenuItem />}
+    >
+      <CollapsibleTrigger
+        render={
+          <SidebarMenuButton isActive={active} tooltip={label} className="gap-3">
+            <NavIcon name={item.icon} />
+            <span className="flex-1 truncate">{label}</span>
+            <RiArrowRightSLine
+              className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 rtl:rotate-180"
+              aria-hidden
+            />
+          </SidebarMenuButton>
+        }
+      />
+      <CollapsibleContent>
+        <SidebarMenuSub className="border-l-0 border-s rtl:-translate-x-px">
+          {item.children?.map((child) => (
+            <SidebarMenuSubItem key={child.to}>
+              <NavigationLink item={child} sub />
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      </CollapsibleContent>
+    </Collapsible>
+  )
 }
 
 export function AppSidebar() {
   const { t } = useTranslation()
-  const pathname = usePathname()
-  const { state } = useSidebar()
-  const isCollapsed = state === "collapsed"
+  const { state, isMobile, setOpenMobile } = useSidebar()
+  const isCollapsed = state === "collapsed" && !isMobile
   const dir = useDirection()
-  const brandInitial = APP_NAME.charAt(0).toUpperCase() ?? "R"
-
   const { isAdmin, canAccessPath, hasResolvedAdmin, hasFetchedPolicy } = usePermissions()
   const { route: homeRoute } = useFirstAccessibleDashboardRoute()
-  const isPermissionsReady = hasResolvedAdmin && (isAdmin || hasFetchedPolicy)
+  if (!hasResolvedAdmin || (!isAdmin && !hasFetchedPolicy)) return null
 
-  if (!isPermissionsReady) {
-    return null
-  }
-
-  const visibleNavs = navs.flatMap((nav) => {
-    if (nav.type === "divider") {
-      return [nav]
-    }
-
-    let visibleChildren: NavItem[] = []
-    if (nav.children?.length) {
-      visibleChildren = nav.children.filter((child) => {
-        if (!child.to || isExternal(child)) return true
-        if (!canAccessDashboardRoute(child.to, { isAdmin, canAccessPath })) return false
-        return true
-      })
-      if (visibleChildren.length === 0 && !nav.to) return []
-    } else {
-      if (nav.to && !isExternal(nav) && !canAccessDashboardRoute(nav.to, { isAdmin, canAccessPath })) return []
-    }
-
-    const navItem = { ...nav }
-    if (visibleChildren.length > 0) {
-      navItem.children = visibleChildren
-    } else {
-      delete navItem.children
-    }
-
-    return [navItem]
-  })
-
-  const navGroups: { label: string; items: NavItem[] }[] = []
-  let current: NavItem[] = []
-  let groupLabel = ""
-
-  for (let index = 0; index < visibleNavs.length; index++) {
-    const nav = visibleNavs[index]
-    if (!nav) continue
-
-    if (nav.type === "divider") {
-      if (current.length) navGroups.push({ label: groupLabel, items: current })
-      current = []
-      groupLabel = nav.label === "divider" ? "" : nav.label
-      continue
-    }
-
-    current.push(nav)
-  }
-
-  if (current.length > 0) {
-    navGroups.push({ label: groupLabel, items: current })
-  }
-
-  const isRouteActive = (item: NavItem): boolean => {
-    if (hasChildren(item)) {
-      return item.children!.some((child) => isRouteActive(child))
-    }
-    if (!item.to || isExternal(item)) return false
-    // Root path "/" must match exactly; otherwise "/browser" etc. would match via startsWith("/")
-    if (item.to === "/") {
-      return pathname === "/"
-    }
-    return pathname.startsWith(item.to)
-  }
-
-  const getLabel = (item: NavItem) => t(item.label)
+  const canAccess = (path: string) => canAccessDashboardRoute(path, { isAdmin, canAccessPath })
+  const groups = groupNavigation(getVisibleNavigation(navs, canAccess))
+  const footer = getVisibleNavigation(footerNavs, canAccess)
 
   return (
     <Sidebar
@@ -146,12 +193,12 @@ export function AppSidebar() {
       className="workspace-navigation **:data-[sidebar=menu-button]:text-start! **:data-[sidebar=menu-sub-button]:text-start!"
     >
       <SidebarHeader>
-        <Link href={homeRoute ?? "/"} className="flex items-center gap-3">
+        <Link href={homeRoute ?? "/"} onNavigate={() => setOpenMobile(false)} className="flex items-center gap-3">
           {isCollapsed && theme.id === "default" ? (
             <ThemeLogo compact alt={APP_NAME} width={32} height={32} className="size-8 shrink-0" />
           ) : isCollapsed ? (
             <div className="flex size-8 items-center justify-center rounded-none bg-primary text-sm font-semibold text-primary-foreground">
-              <span>{brandInitial}</span>
+              <span>{APP_NAME.charAt(0).toUpperCase()}</span>
             </div>
           ) : (
             <div className="flex min-w-0 items-baseline gap-2 px-3 py-4">
@@ -160,126 +207,44 @@ export function AppSidebar() {
           )}
         </Link>
       </SidebarHeader>
-
       <SidebarContent>
         <ScrollArea className="flex-1 pe-1">
-          <div className="flex flex-col gap-3 pb-4">
-            {navGroups.map((group, groupIndex) => (
-              <SidebarGroup key={groupIndex} className="gap-1 py-0">
-                {group.label ? <SidebarGroupLabel>{t(group.label)}</SidebarGroupLabel> : null}
+          <nav className="flex flex-col gap-3 pb-4" aria-label={t("Main navigation")}>
+            {groups.map((group) => (
+              <SidebarGroup key={group.label} className="gap-1 py-0">
+                {group.label && !isCollapsed ? (
+                  <SidebarGroupLabel className="h-auto min-h-6 py-1 whitespace-normal">
+                    {t(group.label)}
+                  </SidebarGroupLabel>
+                ) : null}
                 <SidebarGroupContent>
                   <SidebarMenu className="gap-0">
-                    {group.items.map((item) => (
-                      <Collapsible
-                        key={item.label}
-                        defaultOpen={hasChildren(item) && isRouteActive(item)}
-                        className="group/collapsible"
-                        render={
-                          hasChildren(item) ? (
-                            <SidebarMenuItem>
-                              <CollapsibleTrigger
-                                render={
-                                  <SidebarMenuButton
-                                    isActive={isRouteActive(item)}
-                                    tooltip={getLabel(item)}
-                                    className="gap-3"
-                                  >
-                                    <NavIcon name={item.icon} />
-                                    <span className="flex-1 truncate">{getLabel(item)}</span>
-                                    <RiArrowRightSLine
-                                      className="size-4 shrink-0 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
-                                      aria-hidden
-                                    />
-                                  </SidebarMenuButton>
-                                }
-                              />
-                              <CollapsibleContent>
-                                <SidebarMenuSub className="border-l-0 border-s rtl:-translate-x-px">
-                                  {item.children!.map((child) => (
-                                    <SidebarMenuSubItem key={child.label}>
-                                      {isExternal(child) ? (
-                                        <SidebarMenuSubButton
-                                          size="sm"
-                                          render={
-                                            <a
-                                              href={withUtm(normalizedTo(child), "sidebar")}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
-                                              className="flex w-full items-center gap-2"
-                                            >
-                                              <NavIcon name={child.icon} />
-                                              <span className="truncate">{getLabel(child)}</span>
-                                              <RiExternalLinkLine
-                                                className="ms-auto size-3 text-muted-foreground"
-                                                aria-hidden
-                                              />
-                                            </a>
-                                          }
-                                        />
-                                      ) : (
-                                        <SidebarMenuSubButton
-                                          size="sm"
-                                          isActive={isRouteActive(child)}
-                                          render={
-                                            <Link href={normalizedTo(child)} className="flex w-full items-center gap-2">
-                                              <NavIcon name={child.icon} />
-                                              <span className="truncate">{getLabel(child)}</span>
-                                            </Link>
-                                          }
-                                        />
-                                      )}
-                                    </SidebarMenuSubItem>
-                                  ))}
-                                </SidebarMenuSub>
-                              </CollapsibleContent>
-                            </SidebarMenuItem>
-                          ) : (
-                            <SidebarMenuItem>
-                              {isExternal(item) ? (
-                                <SidebarMenuButton
-                                  tooltip={getLabel(item)}
-                                  render={
-                                    <a
-                                      href={withUtm(normalizedTo(item), "sidebar")}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex w-full items-center gap-3"
-                                    >
-                                      <NavIcon name={item.icon} />
-                                      <span className="flex-1 truncate">{getLabel(item)}</span>
-                                      <RiExternalLinkLine className="size-3.5 text-muted-foreground" aria-hidden />
-                                    </a>
-                                  }
-                                />
-                              ) : (
-                                <SidebarMenuButton
-                                  isActive={isRouteActive(item)}
-                                  tooltip={getLabel(item)}
-                                  render={
-                                    <Link href={normalizedTo(item)} className="flex w-full items-center gap-3">
-                                      <NavIcon name={item.icon} />
-                                      <span className="flex-1 truncate">{getLabel(item)}</span>
-                                    </Link>
-                                  }
-                                />
-                              )}
-                            </SidebarMenuItem>
-                          )
-                        }
-                      />
-                    ))}
+                    {group.items.map((item) =>
+                      item.children?.length ? (
+                        <NavigationGroup key={item.label} item={item} />
+                      ) : (
+                        <SidebarMenuItem key={item.key ?? item.to}>
+                          <NavigationLink item={item} />
+                        </SidebarMenuItem>
+                      ),
+                    )}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>
             ))}
-          </div>
+          </nav>
         </ScrollArea>
       </SidebarContent>
-
       <SidebarFooter className="mt-auto px-2 pb-2">
+        <SidebarMenu>
+          {footer.map((item) => (
+            <SidebarMenuItem key={item.to}>
+              <NavigationLink item={item} />
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
         <SidebarVersion appName={APP_NAME} />
       </SidebarFooter>
-
       <SidebarRail />
     </Sidebar>
   )

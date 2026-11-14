@@ -1,5 +1,7 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
+import { tableCatalogPermissionContext } from "./permission-context"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -59,6 +61,7 @@ export function TableDialog({
 }: TableDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
   const { createTable } = useTableCatalog(catalogPrefix)
   const [name, setName] = React.useState("")
   const [schema, setSchema] = React.useState(DEFAULT_SCHEMA)
@@ -68,6 +71,9 @@ export function TableDialog({
   const [saveError, setSaveError] = React.useState("")
   const [submitting, setSubmitting] = React.useState(false)
   const submittingRef = React.useRef(false)
+  const permissionContext = tableCatalogPermissionContext(bucket, namespace, name.trim().toLowerCase())
+  useActionChecks(name.trim() ? [{ action: "admin:CreateTable", context: permissionContext }] : [])
+  const canCreateTarget = Boolean(name.trim()) && canAction("admin:CreateTable", permissionContext)
 
   const reset = React.useCallback(() => {
     setName("")
@@ -132,6 +138,8 @@ export function TableDialog({
     setSubmitting(true)
     setSaveError("")
     try {
+      if (!(await checkAction("admin:CreateTable", tableCatalogPermissionContext(bucket, namespace, tableName))))
+        throw new Error(t("Access Denied"))
       await createTable(bucket, namespace, payload)
       message.success(t("Table created"))
       onSuccess?.()
@@ -271,7 +279,7 @@ export function TableDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               {t("Cancel")}
             </Button>
-            <Button type="submit" disabled={submitting || !canCreate}>
+            <Button type="submit" disabled={submitting || !canCreate || !canCreateTarget}>
               {submitting ? <Spinner className="size-4" aria-hidden /> : null}
               {submitting ? t("Creating…") : t("Create table")}
             </Button>

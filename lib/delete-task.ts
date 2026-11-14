@@ -1,4 +1,6 @@
 import { isForceCleanupTarget } from "./permission-capabilities"
+import type { ConsoleCapability } from "./permission-capabilities"
+import type { PermissionResourceContext } from "./permission-resources"
 import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
@@ -39,6 +41,7 @@ export type AnyDeleteTask = DeleteTask | FolderDeleteTask
 export interface DeleteTaskConfig {
   maxRetries?: number
   retryDelay?: number
+  checkCapability?: (capability: ConsoleCapability, context: PermissionResourceContext) => Promise<boolean>
 }
 
 export interface DeleteTaskHelpers {
@@ -89,6 +92,16 @@ function attachForceDeleteHeader(command: DeleteObjectCommand) {
 export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskConfig = {}): DeleteTaskHelpers {
   const maxRetries = config.maxRetries ?? 3
   const retryDelay = config.retryDelay ?? 1000
+  const checkDeletion = async (
+    capability: ConsoleCapability,
+    context: PermissionResourceContext,
+    signal: AbortSignal,
+  ) => {
+    if (config.checkCapability && !(await config.checkCapability(capability, context))) {
+      throw new Error("Access Denied")
+    }
+    signal.throwIfAborted()
+  }
 
   const perform: TaskHandler<DeleteTask>["perform"] = async (task) => {
     const { key, bucketName, prefix, versionId, deleteAllVersions } = task
@@ -99,6 +112,7 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
       // The recursive extension also covers child keys. A file selection must
       // delete only the versions listed for this exact key, including markers.
       const objectKey = (prefix ?? "") + key
+      await checkDeletion("objects.version.list", { bucket: bucketName, prefix: objectKey }, abortController.signal)
       const versions: { Key: string; VersionId: string }[] = []
       let keyMarker: string | undefined
       let versionIdMarker: string | undefined
@@ -126,6 +140,15 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
         keyMarker = data.NextKeyMarker
         versionIdMarker = data.NextVersionIdMarker
       }
+      await Promise.all(
+        versions.map((version) =>
+          checkDeletion(
+            "objects.version.delete",
+            { bucket: bucketName, objectKey: version.Key, versionId: version.VersionId },
+            abortController.signal,
+          ),
+        ),
+      )
       for (let offset = 0; offset < versions.length; offset += 1000) {
         const result = await s3Client.send(
           new DeleteObjectsCommand({
@@ -140,6 +163,11 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
       return
     }
 
+    await checkDeletion(
+      versionId ? "objects.version.delete" : "objects.delete",
+      { bucket: bucketName, objectKey: (prefix ?? "") + key, versionId },
+      abortController.signal,
+    )
     const command = new DeleteObjectCommand({
       Bucket: bucketName,
       Key: (prefix ?? "") + key,
@@ -159,6 +187,7 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
       if (!isForceCleanupTarget({ bucket: bucketName, objectKey: prefix })) {
         throw new Error("Force cleanup requires a non-root folder prefix")
       }
+      await checkDeletion("objects.forceCleanup", { bucket: bucketName, objectKey: prefix }, abortController.signal)
       const command = new DeleteObjectCommand({ Bucket: bucketName, Key: prefix })
       attachForceDeleteHeader(command)
       await s3Client.send(command, { abortSignal: abortController.signal })
@@ -181,6 +210,11 @@ export function createDeleteTaskHelpers(s3Client: S3Client, config: DeleteTaskCo
         const objectsToDelete = (data.Contents ?? []).filter((item) => item.Key).map((item) => ({ Key: item.Key! }))
 
         if (objectsToDelete.length > 0) {
+          await Promise.all(
+            objectsToDelete.map((object) =>
+              checkDeletion("objects.delete", { bucket: bucketName, objectKey: object.Key }, abortController.signal),
+            ),
+          )
           const command = new DeleteObjectsCommand({
             Bucket: bucketName,
             Delete: { Objects: objectsToDelete, Quiet: true },

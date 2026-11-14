@@ -163,6 +163,7 @@ async function mountBucket(
     useSSE: () => ({ getKeyList }),
     usePermissions: () => ({
       canCapability: (capability: string) => capability === "bucket.versioning.edit" && canEdit,
+      checkCapability: async (capability: string) => capability === "bucket.versioning.edit" && canEdit,
     }),
     SectionNavigation: () => null,
     OnDemandMigrationSettingsRow: () => null,

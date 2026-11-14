@@ -40,7 +40,14 @@ function BrowserBucketsPage() {
   const router = useRouter()
   const message = useMessage()
   const dialog = useDialog()
-  const { canCapability, userInfo, isLoading: accountInfoLoading, hasFetchedPolicy, fetchUserPolicy } = usePermissions()
+  const {
+    canCapability,
+    mayCapability,
+    userInfo,
+    isLoading: accountInfoLoading,
+    hasFetchedPolicy,
+    fetchUserPolicy,
+  } = usePermissions()
   const { listBuckets, deleteBucket, getBucketPolicyStatus } = useBucket()
 
   const [formVisible, setFormVisible] = useState(false)
@@ -51,7 +58,7 @@ function BrowserBucketsPage() {
   const [policyLoading, setPolicyLoading] = useState(false)
   const fetchIdRef = useRef(0)
 
-  const canCreateBucket = canCapability("bucket.create")
+  const canCreateBucket = mayCapability("bucket.create")
 
   const loadPolicyStatus = useCallback(
     async (fetchId: number, bucketNames: string[]) => {

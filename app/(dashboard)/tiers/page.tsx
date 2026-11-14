@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
@@ -52,6 +53,9 @@ export default function TiersPage() {
   const message = useMessage()
   const dialog = useDialog()
   const { listTiers, removeTiers } = useTiers()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:SetTier" }])
+  const canManageAction = canAction("admin:SetTier")
 
   const [data, setData] = useState<TierRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -101,6 +105,7 @@ export default function TiersPage() {
       deleting.current = true
       const name = getConfig(row)?.name || ""
       try {
+        if (!(await checkAction("admin:SetTier"))) throw new Error(t("Access Denied"))
         await removeTiers(name)
         if (!mounted.current) return
         message.success(t("Delete Success"))
@@ -114,11 +119,12 @@ export default function TiersPage() {
         deleting.current = false
       }
     },
-    [removeTiers, message, t, loadTiers],
+    [checkAction, removeTiers, message, t, loadTiers],
   )
 
   const confirmDelete = useCallback(
     (row: TierRow) => {
+      if (!canManageAction) return
       dialog.error({
         title: t("Warning"),
         content: `${getConfig(row)?.name}: ${t("Are you sure you want to delete this tier?")}`,
@@ -129,7 +135,7 @@ export default function TiersPage() {
         },
       })
     },
-    [dialog, t, deleteTier],
+    [canManageAction, dialog, t, deleteTier],
   )
 
   const columns: ColumnDef<TierRow>[] = useMemo(
@@ -181,6 +187,7 @@ export default function TiersPage() {
             <Button
               variant="outline"
               size="sm"
+              disabled={!canManageAction}
               onClick={() => {
                 const cfg = getConfig(row.original)
                 setSelectedTierName(cfg?.name || "")
@@ -193,6 +200,7 @@ export default function TiersPage() {
             <Button
               variant="outline"
               size="sm"
+              disabled={!canManageAction}
               onClick={() => {
                 const cfg = getConfig(row.original)
                 setSelectedTierName(cfg?.name || "")
@@ -205,6 +213,7 @@ export default function TiersPage() {
             <Button
               variant="outline"
               size="sm"
+              disabled={!canManageAction}
               ref={(element) => {
                 if (getConfig(row.original)?.name === deletionTarget.current) deletionTrigger.current = element
               }}
@@ -221,7 +230,7 @@ export default function TiersPage() {
         ),
       },
     ],
-    [t, confirmDelete],
+    [canManageAction, t, confirmDelete],
   )
 
   const { table } = useDataTable<TierRow>({
@@ -236,7 +245,7 @@ export default function TiersPage() {
         count={!loading && !loadError ? data.length : undefined}
         actions={
           <>
-            <Button onClick={() => setNewFormOpen(true)}>
+            <Button onClick={() => setNewFormOpen(true)} disabled={!canManageAction}>
               <RiAddLine className="size-4" aria-hidden />
               <span>{t("Add Tier")}</span>
             </Button>

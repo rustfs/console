@@ -14,10 +14,12 @@ function redactLogValue(value: unknown, key?: string): unknown {
   )
 }
 
-export function redactRequestOptionsForLog<T extends object>(options: T): unknown {
+export function redactRequestOptionsForLog<T extends object>(options: T, suppressBody = false): unknown {
   const request = options as T & { body?: unknown }
   let body = request.body
-  if (typeof body === "string") {
+  if (suppressBody && body !== undefined) {
+    body = "[REDACTED]"
+  } else if (typeof body === "string") {
     try {
       const parsedBody = JSON.parse(body) as unknown
       body = parsedBody && typeof parsedBody === "object" ? JSON.stringify(redactLogValue(parsedBody)) : "[REDACTED]"

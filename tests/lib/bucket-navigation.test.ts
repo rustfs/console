@@ -12,6 +12,7 @@ import {
 } from "../../lib/bucket-navigation"
 
 const allowAll = () => true
+const allowEvents = (path: string) => path.split("?")[0] === "/events"
 
 test("the default bucket entry opens objects and falls back to an allowed rule page", () => {
   assert.equal(getBucketEntryRoute(allowAll), "/browser")
@@ -25,6 +26,13 @@ test("the default bucket entry opens objects and falls back to an allowed rule p
     getBucketEntryRoute(() => false),
     null,
   )
+})
+
+test("bucket navigation evaluates the known bucket rather than a global page scope", () => {
+  const permission = (path: string) =>
+    new URL(path, "https://fixture.invalid").searchParams.get("bucket") === "allowed-bucket"
+  assert.ok(getBucketNavigationItems("allowed-bucket", permission).length > 0)
+  assert.deepEqual(getBucketNavigationItems("denied-bucket", permission), [])
 })
 
 test("bucket navigation preserves the selected bucket in every destination", () => {
@@ -42,10 +50,9 @@ test("bucket navigation preserves the selected bucket in every destination", () 
 })
 
 test("rule-only permission keeps its bucket destination without exposing objects or settings", () => {
-  assert.deepEqual(
-    getBucketNavigationItems("logs", (path) => path === "/events"),
-    [{ route: "/events", label: "Events", href: "/events?bucket=logs" }],
-  )
+  assert.deepEqual(getBucketNavigationItems("logs", allowEvents), [
+    { route: "/events", label: "Events", href: "/events?bucket=logs" },
+  ])
 })
 
 test("an unselected bucket or an account with no allowed destination has no local navigation", () => {
@@ -173,7 +180,7 @@ test("local navigation stays hidden until the selected bucket and permissions ar
 })
 
 test("the rendered navigation keeps a rule-only account in its permitted bucket workspace", async () => {
-  await render({ canAccessPath: (path) => path === "/events" }, (document) => {
+  await render({ canAccessPath: allowEvents }, (document) => {
     assert.deepEqual(
       [...document.querySelectorAll("a")].map((link) => link.getAttribute("href")),
       ["/events?bucket=photos"],
@@ -182,7 +189,7 @@ test("the rendered navigation keeps a rule-only account in its permitted bucket 
 })
 
 test("bucket headers retain the bucket identity and rule actions with an accessible return destination", async () => {
-  for (const canAccessPath of [allowAll, (path: string) => path === "/events"]) {
+  for (const canAccessPath of [allowAll, allowEvents]) {
     await render({ headerTitle: "Events", canAccessPath }, (document) => {
       assert.deepEqual(
         [...document.querySelectorAll("h1")].map((heading) => heading.textContent),

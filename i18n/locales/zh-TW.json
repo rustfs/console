@@ -2331,5 +2331,6 @@
   "Bucket navigation": "儲存貯體導覽",
   "Main navigation": "主要導覽",
   "Encryption & Keys": "加密與金鑰",
-  "Decommission": "除役"
+  "Decommission": "除役",
+  "Unable to check permissions. Refresh and try again.": "無法檢查權限，請重新整理後再試。"
 }

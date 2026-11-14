@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import { useState, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import {
@@ -39,6 +40,10 @@ export default function ImportExportPage() {
   const { t } = useTranslation()
   const message = useMessage()
   const { isLoading, exportIamConfig, importIamConfig } = useImportExport()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:ExportIAM" }, { action: "admin:ImportIAM" }])
+  const canExport = canAction("admin:ExportIAM")
+  const canImport = canAction("admin:ImportIAM")
 
   const [activeTab, setActiveTab] = useState<"export" | "import">("export")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -100,6 +105,10 @@ export default function ImportExportPage() {
 
   const handleExportIam = async () => {
     try {
+      if (!(await checkAction("admin:ExportIAM"))) {
+        message.error(t("Access Denied"))
+        return
+      }
       await exportIamConfig()
     } catch (error) {
       console.error("Export failed:", error)
@@ -109,6 +118,10 @@ export default function ImportExportPage() {
   const handleImportIam = async () => {
     if (!selectedFile) return
     try {
+      if (!(await checkAction("admin:ImportIAM"))) {
+        message.error(t("Access Denied"))
+        return
+      }
       await importIamConfig(selectedFile)
       message.success(t("Import Success"))
       clearSelectedFile()
@@ -177,7 +190,7 @@ export default function ImportExportPage() {
                   variant="default"
                   size="lg"
                   className="w-full sm:w-auto"
-                  disabled={isLoading}
+                  disabled={!canExport || isLoading}
                   onClick={handleExportIam}
                 >
                   <RiDownload2Line className="size-4" aria-hidden />
@@ -195,7 +208,12 @@ export default function ImportExportPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <UploadZone accept=".zip" disabled={isLoading} className="border-dashed" onChange={handleFileSelect}>
+                  <UploadZone
+                    accept=".zip"
+                    disabled={!canImport || isLoading}
+                    className="border-dashed"
+                    onChange={handleFileSelect}
+                  >
                     <p className="text-base font-medium">{t("Click or drag ZIP file to this area to upload")}</p>
                     <p className="text-sm text-muted-foreground">
                       {t("Only ZIP files are supported, and file size should not exceed 10MB")}
@@ -238,7 +256,7 @@ export default function ImportExportPage() {
                   variant="default"
                   size="lg"
                   className="w-full sm:w-auto"
-                  disabled={isLoading || !selectedFile}
+                  disabled={!canImport || isLoading || !selectedFile}
                   onClick={handleImportIam}
                 >
                   <RiUpload2Line className="size-4" aria-hidden />

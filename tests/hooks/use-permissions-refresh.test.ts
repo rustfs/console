@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client"
 import { Window } from "happy-dom"
 import ts from "typescript"
 import type { usePermissions as UsePermissions } from "../../hooks/use-permissions"
+import type { PermissionRequest, PermissionResult } from "../../lib/effective-permissions"
 
 const mocksKey = Symbol.for("browser-permission-refresh")
 const mockExports: Record<string, string[]> = {
@@ -75,10 +76,15 @@ const policy = JSON.stringify({
 })
 const accountInfo = (objects = 1) => ({ policy, buckets: [{ name: "test-bucket", objects, size: objects * 100 }] })
 type Credentials = { AccessKeyId: string; SecretAccessKey: string; SessionToken: string }
-type Api = { get: (path: string) => Promise<unknown> }
+type Api = {
+  get: (path: string) => Promise<unknown>
+  post?: (path: string, body: unknown) => Promise<unknown>
+  resolveUrl?: (path: string) => string
+}
 
-function makeApi(isAdmin = false) {
+function makeApi(isAdmin = false, effective?: (check: PermissionRequest) => PermissionResult) {
   const requests: ReturnType<typeof Promise.withResolvers<unknown>>[] = []
+  const permissionRequests: PermissionRequest[] = []
   const api: Api = {
     get(path) {
       if (path === "/is-admin" || path === "/account/info") return Promise.resolve({ is_admin: isAdmin })
@@ -88,10 +94,26 @@ function makeApi(isAdmin = false) {
       return request.promise
     },
   }
-  return { api, requests }
+  if (effective) {
+    api.resolveUrl = (path) => `https://console.test/rustfs/admin/v3${path}`
+    api.post = async (_path, body) => {
+      const { checks } = body as { checks: PermissionRequest[] }
+      permissionRequests.push(...checks)
+      return { results: checks.map((check) => ({ id: check.id, ...effective(check) })) }
+    }
+  }
+  return { api, requests, permissionRequests }
 }
 
-async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: boolean; isAdmin?: boolean } = {}) {
+async function mountBrowser(
+  t: TestContext,
+  options: {
+    deniedPolicyStatus?: boolean
+    isAdmin?: boolean
+    search?: string
+    effective?: (check: PermissionRequest) => PermissionResult
+  } = {},
+) {
   const browser = new Window()
   const globals = { window: browser, document: browser.document, IS_REACT_ACT_ENVIRONMENT: true }
   const previousDescriptors = Object.keys(globals).map(
@@ -99,11 +121,12 @@ async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: bool
   )
   for (const [key, value] of Object.entries(globals))
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  const initial = makeApi(options.isAdmin)
+  const initial = makeApi(options.isAdmin, options.effective)
   let api = initial.api
   let credentials: Credentials | undefined = { AccessKeyId: "first", SecretAccessKey: "secret", SessionToken: "token" }
   let isAdmin = false
   let pathname = "/browser"
+  let searchParams = new URLSearchParams(options.search)
   let apiReady = true
   let s3Ready = true
   let mounts = 0
@@ -134,7 +157,7 @@ async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: bool
     useS3Ready: () => ({ isReady: s3Ready }),
     useRouter: () => router,
     usePathname: () => pathname,
-    useSearchParams: () => new URLSearchParams(),
+    useSearchParams: () => searchParams,
     useTranslation: () => ({ t: (key: string) => key }),
     useBucket: () => ({ listBuckets, getBucketPolicyStatus }),
     useObject: () => ({}),
@@ -144,6 +167,8 @@ async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: bool
     PageHeader: ({ children, actions }: { children: ReactNode; actions: ReactNode }) =>
       createElement("header", null, children, actions),
     DataTable: ({ table }: { table: { data: unknown[] } }) => createElement("output", null, JSON.stringify(table.data)),
+    BrowserContent: ({ bucketName }: { bucketName: string }) =>
+      createElement("article", { "data-scoped-bucket": bucketName }, bucketName),
     Page: function Page({ children }: { children: ReactNode }) {
       useEffect(() => {
         mounts += 1
@@ -173,7 +198,9 @@ async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: bool
           createElement(
             DashboardAuthGuard,
             null,
-            pathname === "/browser" ? createElement(BrowserPage) : createElement("div", null, "Other page"),
+            pathname.replace(/\/$/, "") === "/browser"
+              ? createElement(BrowserPage)
+              : createElement("div", null, "Other page"),
           ),
         ),
       ),
@@ -195,6 +222,7 @@ async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: bool
     listBuckets,
     getBucketPolicyStatus,
     requests: initial.requests,
+    permissionRequests: initial.permissionRequests,
     get mounts() {
       return mounts
     },
@@ -217,7 +245,9 @@ async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: bool
       await act(async () => button.click())
     },
     async navigate(path: string) {
-      pathname = path
+      const url = new URL(path, "https://console.test")
+      pathname = url.pathname
+      searchParams = url.searchParams
       await render()
     },
     async changeIdentity(next: Credentials | undefined, nextApi: Api = api) {
@@ -232,6 +262,59 @@ async function mountBrowser(t: TestContext, options: { deniedPolicyStatus?: bool
     },
   }
 }
+
+test("the bucket query route consults that bucket before mounting callers without an identity scope", async (t) => {
+  const mounted = await mountBrowser(t, {
+    search: "bucket=alice-data&key=allowed%2F",
+    effective: ({ action, bucket, prefix }) => ({
+      decision: action === "s3:ListBucket" && bucket === "alice-data" && prefix === "allowed/" ? "allowed" : "denied",
+    }),
+  })
+  await mounted.resolve(0, { policy: "" })
+  assert.ok(mounted.container.querySelector('[data-scoped-bucket="alice-data"]'))
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+  assert.ok(
+    mounted.permissionRequests.some(
+      ({ action, bucket, prefix }) => action === "s3:ListBucket" && bucket === "alice-data" && prefix === "allowed/",
+    ),
+  )
+})
+
+test("a known directory remains accessible with only a bucket-policy upload hint", async (t) => {
+  const mounted = await mountBrowser(t, {
+    search: "bucket=alice-data&key=incoming%2F",
+    effective: ({ action, bucket }) =>
+      action === "s3:PutObject" && bucket === "alice-data"
+        ? { decision: "unknown", potential: true }
+        : { decision: "denied" },
+  })
+  await mounted.resolve(0, { policy: "" })
+  assert.ok(mounted.container.querySelector('[data-scoped-bucket="alice-data"]'))
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+  assert.equal(
+    await mounted.permissions.checkCapability("objects.upload", {
+      bucket: "alice-data",
+      objectKey: "incoming/file.txt",
+    }),
+    false,
+  )
+})
+
+test("an exact-object query route checks object read permission rather than bucket listing", async (t) => {
+  const mounted = await mountBrowser(t, {
+    search: "bucket=alice-data&key=private%2Ffile.txt",
+    effective: ({ action, bucket, object }) => ({
+      decision:
+        action === "s3:GetObject" && bucket === "alice-data" && object === "private/file.txt" ? "allowed" : "denied",
+    }),
+  })
+  await mounted.resolve(0, { policy: "" })
+  assert.ok(mounted.container.querySelector('[data-scoped-bucket="alice-data"]'))
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+  assert.ok(
+    mounted.permissionRequests.some(({ action, object }) => action === "s3:GetObject" && object === "private/file.txt"),
+  )
+})
 
 for (const deniedPolicyStatus of [false, true]) {
   test(`Browser stays mounted during permission refresh when bucket policy status ${deniedPolicyStatus ? "is denied" : "succeeds"}`, async (t) => {

@@ -7,6 +7,7 @@ export interface ConsoleStatement {
   NotAction?: string[]
   Resource?: string[]
   NotResource?: string[]
+  Condition?: Record<string, unknown>
 }
 
 export interface ConsolePolicy {
@@ -47,7 +48,11 @@ function matchAction(policyActions: string[] | undefined, requestAction: string)
   }
 
   const normalizedRequestAction = normalizeAction(requestAction)
-  return policyActions.some((pattern) => resourceMatch(normalizeAction(pattern), normalizedRequestAction))
+  return policyActions.some(
+    (pattern) =>
+      (pattern === "s3:GetObjectVersion" && normalizedRequestAction === "s3:GetObject") ||
+      resourceMatch(normalizeAction(pattern), normalizedRequestAction),
+  )
 }
 
 /**
@@ -123,7 +128,7 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
   [CONSOLE_SCOPES.VIEW_PERFORMANCE]: ["admin:ServerInfo", "admin:OBDInfo", "admin:ServerTrace", "admin:*"],
   [CONSOLE_SCOPES.VIEW_REBALANCE]: ["admin:Rebalance", "admin:ServerInfo", "admin:*"],
   [CONSOLE_SCOPES.VIEW_POOL_DECOMMISSION]: ["admin:Decommission", "admin:ServerInfo", "admin:*"],
-  [CONSOLE_SCOPES.VIEW_IMPORT_EXPORT]: ["admin:ConfigUpdate", "admin:*"],
+  [CONSOLE_SCOPES.VIEW_IMPORT_EXPORT]: ["admin:ExportIAM", "admin:ImportIAM", "admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_SITE_REPLICATION]: [
     "admin:SiteReplicationInfo",
     "admin:SiteReplicationAdd",
@@ -145,9 +150,28 @@ const IMPLIED_SCOPES: Record<string, string[]> = {
     "s3:*",
   ],
   [CONSOLE_SCOPES.VIEW_BUCKET_LIFECYCLE]: ["s3:GetBucketLifecycle", "s3:PutBucketLifecycle", "s3:*"],
-  [CONSOLE_SCOPES.VIEW_TIERED_STORAGE]: ["admin:ConfigUpdate", "admin:*"],
-  [CONSOLE_SCOPES.VIEW_EVENT_DESTINATIONS]: ["admin:ConfigUpdate", "admin:*"],
-  [CONSOLE_SCOPES.VIEW_SSE_SETTINGS]: ["admin:ConfigUpdate", "admin:*", "kms:*"],
+  [CONSOLE_SCOPES.VIEW_TIERED_STORAGE]: ["admin:ListTier", "admin:SetTier", "admin:ConfigUpdate", "admin:*"],
+  [CONSOLE_SCOPES.VIEW_EVENT_DESTINATIONS]: [
+    "admin:GetBucketTarget",
+    "admin:SetBucketTarget",
+    "admin:ConfigUpdate",
+    "admin:*",
+  ],
+  [CONSOLE_SCOPES.VIEW_SSE_SETTINGS]: [
+    "admin:ConfigUpdate",
+    "admin:*",
+    "kms:ListKeys",
+    "kms:DescribeKey",
+    "kms:Configure",
+    "kms:ServiceControl",
+    "kms:DeleteKey",
+    "kms:EnableKey",
+    "kms:DisableKey",
+    "kms:RotateKey",
+    "kms:ClearCache",
+    "kms:Rekey",
+    "kms:*",
+  ],
   [CONSOLE_SCOPES.VIEW_OIDC_SETTINGS]: ["admin:ServerInfo", "admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_SETTINGS]: ["admin:ServerInfo", "admin:ConfigUpdate", "admin:*"],
   [CONSOLE_SCOPES.VIEW_LICENSE]: ["admin:ServerInfo", "admin:*"],
@@ -174,7 +198,7 @@ function shouldIgnoreConsoleResourceCheck(statement: ConsoleStatement, action: s
 }
 
 function matchStatementResource(statement: ConsoleStatement, requestResource: string, action: string): boolean {
-  if (isAdminAction(action)) {
+  if (isAdminAction(action) && !TABLE_RESOURCE_ACTIONS.has(action)) {
     return true
   }
 
@@ -206,6 +230,40 @@ function matchStatementResource(statement: ConsoleStatement, requestResource: st
     statement.NotResource.some((pattern) => resourceMatch(pattern, requestResource))
 
   return !notResourceMatched
+}
+
+const TABLE_RESOURCE_ACTIONS = new Set([
+  "admin:GetTableBucket",
+  "admin:SetTableBucket",
+  "admin:GetTableNamespace",
+  "admin:SetTableNamespace",
+  "admin:UpdateTableNamespaceProperties",
+  "admin:DeleteTableNamespace",
+  "admin:GetTable",
+  "admin:SetTable",
+  "admin:CreateTable",
+  "admin:ClaimTableLocation",
+  "admin:RegisterTable",
+  "admin:CommitTable",
+  "admin:DeleteTable",
+  "admin:GetTableLifecycle",
+  "admin:SetTableLifecycle",
+  "admin:GetTableCredentials",
+  "admin:RunTableMaintenance",
+  "admin:GetTableMetadataLocation",
+  "admin:SetTableMetadataLocation",
+  "admin:GetTableMetadata",
+  "admin:SetTableMetadata",
+])
+
+/** Scope inference is an entry-point hint, not a grant for an actual operation. */
+export function hasConsoleActionPotential(policy: ConsolePolicy | null | undefined, action: string): boolean {
+  if (!policy) return false
+  if (policy.Statement.some((statement) => !statement.Condition && statementDeniesActionGlobally(statement, action)))
+    return false
+  return policy.Statement.some(
+    (statement) => statement.Effect === "Allow" && matchesRequestedAction(statement.Action, action),
+  )
 }
 
 function matchesRequestedAction(policyActions: string[] | undefined, action: string): boolean {
@@ -255,6 +313,7 @@ function getImpliedCapabilities(scope: string): string[] {
 
 function statementDeniesActionGlobally(statement: ConsoleStatement, action: string): boolean {
   if (statement.Effect !== "Deny") return false
+  if (statement.Condition) return false
 
   const actionDenied =
     statement.NotAction && statement.NotAction.length > 0
@@ -297,6 +356,9 @@ export function hasConsolePermission(
   // Check Deny statements first
   const denied = statements.some((s) => {
     if (s.Effect !== "Deny") return false
+    // Legacy servers do not expose the request facts needed to evaluate conditions.
+    // Conditional denies must not suppress unrelated page entry points.
+    if (s.Condition && isConsoleScope(action)) return false
 
     // If NotAction is present, deny applies to all actions EXCEPT those in NotAction
     if (s.NotAction && s.NotAction.length > 0) {
@@ -320,6 +382,7 @@ export function hasConsolePermission(
   // Check Allow statements
   const allowed = statements.some((s) => {
     if (s.Effect !== "Allow") return false
+    if (s.Condition && !isConsoleScope(action)) return false
     // Force deletion requires an explicit grant, even with S3 or Console wildcards.
     if (action === "s3:ForceDeleteObject" && !s.Action?.includes(action)) return false
 

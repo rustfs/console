@@ -2331,5 +2331,6 @@
   "Bucket navigation": "Navegación del balde",
   "Main navigation": "Navegación principal",
   "Encryption & Keys": "Cifrado y claves",
-  "Decommission": "Retirada"
+  "Decommission": "Retirada",
+  "Unable to check permissions. Refresh and try again.": "No se pudieron comprobar los permisos. Actualiza la página e inténtalo de nuevo."
 }

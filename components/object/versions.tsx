@@ -10,7 +10,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useObject } from "@/hooks/use-object"
-import { usePermissions } from "@/hooks/use-permissions"
+import { useCapabilityChecks, usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { copyToClipboard } from "@/lib/clipboard"
@@ -51,17 +51,38 @@ export function ObjectVersions({
   const message = useMessage()
   const dialog = useDialog()
   const { listObjectVersions, deleteObject, restoreObjectVersion } = useObject(bucketName)
-  const { canCapability } = usePermissions()
+  const { canCapability, checkCapability } = usePermissions()
   const client = useS3()
 
   const [versions, setVersions] = React.useState<VersionRow[]>([])
   const [loading, setLoading] = React.useState(false)
   const [deletingVersionId, setDeletingVersionId] = React.useState<string | null>(null)
+  useCapabilityChecks(
+    visible && objectKey
+      ? [
+          { capability: "objects.version.list", context: { bucket: bucketName, prefix: objectKey } },
+          ...versions.flatMap((version) => {
+            const context = { bucket: bucketName, objectKey, versionId: version.VersionId }
+            return [
+              { capability: "objects.version.preview" as const, context },
+              { capability: "objects.version.download" as const, context },
+              { capability: "objects.version.delete" as const, context },
+              { capability: "objects.version.restore" as const, context },
+            ]
+          }),
+        ]
+      : [],
+  )
 
   const fetchVersions = React.useCallback(async () => {
     if (!objectKey) return
     setLoading(true)
     try {
+      if (!(await checkCapability("objects.version.list", { bucket: bucketName, prefix: objectKey }))) {
+        message.error(t("Access Denied"))
+        setVersions([])
+        return
+      }
       const response = await listObjectVersions(objectKey)
       setVersions((response as { Versions?: VersionRow[] }).Versions ?? [])
     } catch {
@@ -70,7 +91,7 @@ export function ObjectVersions({
     } finally {
       setLoading(false)
     }
-  }, [objectKey, listObjectVersions, message, t])
+  }, [objectKey, bucketName, checkCapability, listObjectVersions, message, t])
 
   React.useEffect(() => {
     if (visible) fetchVersions()
@@ -106,6 +127,16 @@ export function ObjectVersions({
     async (row: VersionRow) => {
       const versionId = row.VersionId ?? ""
       try {
+        if (
+          !(await checkCapability("objects.version.download", {
+            bucket: bucketName,
+            objectKey,
+            versionId,
+          }))
+        ) {
+          message.error(t("Access Denied"))
+          return
+        }
         const filename = objectKey.split("/").pop() ?? ""
         const url = await getSignedUrlWithVersion(objectKey, versionId, 3600, getAttachmentContentDisposition(filename))
         downloadUrl(url, filename)
@@ -114,7 +145,7 @@ export function ObjectVersions({
         message.error((err as Error)?.message ?? t("Download Failed"))
       }
     },
-    [getSignedUrlWithVersion, objectKey, message, t],
+    [bucketName, checkCapability, getSignedUrlWithVersion, objectKey, message, t],
   )
 
   const deleteVersion = React.useCallback(
@@ -123,6 +154,10 @@ export function ObjectVersions({
       if (!versionId) return
       setDeletingVersionId(versionId)
       try {
+        if (!(await checkCapability("objects.version.delete", { bucket: bucketName, objectKey, versionId }))) {
+          message.error(t("Access Denied"))
+          return
+        }
         await deleteObject(objectKey, versionId)
         message.success(t("Delete Success"))
         await fetchVersions()
@@ -133,7 +168,7 @@ export function ObjectVersions({
         setDeletingVersionId(null)
       }
     },
-    [deleteObject, objectKey, message, t, fetchVersions, onRefreshParent],
+    [bucketName, checkCapability, deleteObject, objectKey, message, t, fetchVersions, onRefreshParent],
   )
 
   const restoreVersion = React.useCallback(
@@ -148,6 +183,10 @@ export function ObjectVersions({
         negativeText: t("Cancel"),
         onPositiveClick: async () => {
           try {
+            if (!(await checkCapability("objects.version.restore", { bucket: bucketName, objectKey, versionId }))) {
+              message.error(t("Access Denied"))
+              return false
+            }
             await restoreObjectVersion(objectKey, versionId)
             message.success(t("Restore Success"))
             await fetchVersions()
@@ -159,7 +198,7 @@ export function ObjectVersions({
         },
       })
     },
-    [dialog, fetchVersions, message, objectKey, onRefreshParent, restoreObjectVersion, t],
+    [bucketName, checkCapability, dialog, fetchVersions, message, objectKey, onRefreshParent, restoreObjectVersion, t],
   )
 
   const versionStats = React.useMemo(
@@ -226,11 +265,12 @@ export function ObjectVersions({
           const objectContext = {
             bucket: bucketName,
             objectKey,
+            versionId: row.original.VersionId,
           }
 
           return (
             <div className="flex flex-wrap gap-2">
-              {canCapability("objects.version.view", objectContext) ? (
+              {canCapability("objects.version.preview", objectContext) ? (
                 <Button variant="outline" size="sm" onClick={() => onPreview(row.original.VersionId ?? "")}>
                   <RiEyeLine className="size-4" aria-hidden />
                   {t("Preview")}
@@ -242,13 +282,13 @@ export function ObjectVersions({
                   {t("Restore")}
                 </Button>
               ) : null}
-              {canCapability("objects.download", objectContext) ? (
+              {canCapability("objects.version.download", objectContext) ? (
                 <Button variant="outline" size="sm" onClick={() => downloadVersion(row.original)}>
                   <RiDownloadCloud2Line className="size-4" aria-hidden />
                   {t("Download")}
                 </Button>
               ) : null}
-              {canCapability("objects.delete", objectContext) ? (
+              {canCapability("objects.version.delete", objectContext) ? (
                 <Button
                   variant="destructive"
                   size="sm"

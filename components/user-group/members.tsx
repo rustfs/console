@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiAddLine } from "@remixicon/react"
@@ -26,6 +27,9 @@ interface UserGroupMembersProps {
 export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:AddUserToGroup" }])
+  const canManageAction = canAction("admin:AddUserToGroup")
   const { updateGroupMembers } = useGroups()
 
   const [editStatus, setEditStatus] = React.useState(false)
@@ -85,6 +89,7 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
   }, [editStatus])
 
   const startEditing = () => {
+    if (!canManageAction) return
     setMembers([...(group?.members ?? [])])
     setEditStatus(true)
   }
@@ -107,6 +112,7 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
 
     setSubmitting(true)
     try {
+      if (!(await checkAction("admin:AddUserToGroup"))) throw new Error(t("Access Denied"))
       if (addedMembers.length) {
         await updateGroupMembers({
           group: targetName,
@@ -129,9 +135,9 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
       message.success(t("Edit Success"))
       setEditStatus(false)
       onSearch()
-    } catch {
+    } catch (error) {
       if (activeGroupRef.current === targetName) {
-        message.error(t("Edit Failed"))
+        message.error((error as Error).message || t("Edit Failed"))
         setEditStatus(false)
         onSearch()
       }
@@ -159,6 +165,7 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
             variant="outline"
             className="inline-flex items-center gap-2"
             onClick={startEditing}
+            disabled={!canManageAction}
           >
             <RiAddLine className="size-4" aria-hidden />
             {t("Edit User")}
@@ -196,7 +203,7 @@ export function UserGroupMembers({ group, onSearch }: UserGroupMembersProps) {
             <Button type="button" variant="outline" onClick={cancelEditing} disabled={submitting}>
               {t("Cancel")}
             </Button>
-            <Button type="button" onClick={changeMembers} disabled={submitting}>
+            <Button type="button" onClick={changeMembers} disabled={!canManageAction || submitting}>
               {submitting ? <Spinner className="size-4" /> : null}
               {t("Save")}
             </Button>

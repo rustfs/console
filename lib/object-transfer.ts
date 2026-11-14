@@ -11,6 +11,7 @@ import {
   type S3Client,
 } from "@aws-sdk/client-s3"
 import { encodeObjectCopySource } from "./object-rename"
+import type { ActionPermissionCheck } from "./effective-permissions"
 
 export interface ObjectTransferRequest {
   mode: "copy" | "move"
@@ -24,6 +25,37 @@ export interface ObjectTransferProgress {
   phase: "preparing" | "copying" | "deleting"
   copiedBytes: number
   totalBytes: number
+}
+
+export type ObjectTransferAuthorization = (checks: ActionPermissionCheck[]) => Promise<boolean>
+
+async function requireTransferPermission(
+  authorize: ObjectTransferAuthorization | undefined,
+  checks: ActionPermissionCheck[],
+) {
+  if (authorize && !(await authorize(checks))) {
+    throw new ObjectTransferError("You do not have permission to transfer this object to the destination.")
+  }
+}
+
+function sourceReadCheck(request: ObjectTransferRequest, versionId?: string): ActionPermissionCheck {
+  return {
+    action: versionId !== undefined ? "s3:GetObjectVersion" : "s3:GetObject",
+    context: { bucket: request.sourceBucket, objectKey: request.sourceKey, versionId, authType: "REST-HEADER" },
+  }
+}
+
+function sourceDeleteCheck(request: ObjectTransferRequest, etag: string): ActionPermissionCheck {
+  return {
+    action: "s3:DeleteObject",
+    context: {
+      bucket: request.sourceBucket,
+      objectKey: request.sourceKey,
+      ifMatch: etag,
+      ifNoneMatch: null,
+      authType: "REST-HEADER",
+    },
+  }
 }
 
 export class ObjectTransferError extends Error {
@@ -62,16 +94,67 @@ async function copyMultipartObject(
   request: ObjectTransferRequest,
   source: HeadObjectCommandOutput,
   report: (copiedBytes: number) => void,
+  authorize?: ObjectTransferAuthorization,
 ) {
   const target = { Bucket: request.targetBucket, Key: request.targetKey }
   const totalBytes = source.ContentLength!
   const partSize = Math.max(MIN_COPY_PART_SIZE, Math.ceil(totalBytes / 10000))
   if (partSize > SINGLE_COPY_LIMIT) throw new Error("The object is too large for multipart copy.")
 
+  await requireTransferPermission(authorize, [
+    {
+      action: source.VersionId !== undefined ? "s3:GetObjectVersionTagging" : "s3:GetObjectTagging",
+      context: {
+        bucket: request.sourceBucket,
+        objectKey: request.sourceKey,
+        versionId: source.VersionId,
+        authType: "REST-HEADER",
+      },
+    },
+  ])
   const tags = await client.send(
     new GetObjectTaggingCommand({ Bucket: request.sourceBucket, Key: request.sourceKey, VersionId: source.VersionId }),
   )
   if (!tags.TagSet) throw new Error("The source object tags could not be read.")
+
+  const tagMap = new Map(tags.TagSet.map((tag) => [tag.Key!, tag.Value ?? ""]))
+  const putContext = {
+    bucket: request.targetBucket,
+    objectKey: request.targetKey,
+    authType: "REST-HEADER" as const,
+    ifMatch: null,
+  }
+  const createCheck: ActionPermissionCheck = {
+    action: "s3:PutObject",
+    context: {
+      ...putContext,
+      operation: "CreateMultipartUpload",
+      copySource: null,
+      ifNoneMatch: null,
+      requestTags: Object.fromEntries(tagMap),
+    },
+  }
+  const partCheck: ActionPermissionCheck = {
+    action: "s3:PutObject",
+    context: {
+      ...putContext,
+      operation: "UploadPartCopy",
+      copySource: { bucket: request.sourceBucket, objectKey: request.sourceKey, versionId: source.VersionId },
+      ifNoneMatch: null,
+      requestTags: {},
+    },
+  }
+  const completeCheck: ActionPermissionCheck = {
+    action: "s3:PutObject",
+    context: {
+      ...putContext,
+      operation: "CompleteMultipartUpload",
+      copySource: null,
+      ifNoneMatch: "*",
+      requestTags: {},
+    },
+  }
+  await requireTransferPermission(authorize, [createCheck, partCheck, completeCheck])
 
   const created = await client.send(
     new CreateMultipartUploadCommand({
@@ -84,9 +167,7 @@ async function copyMultipartObject(
       ContentType: source.ContentType,
       Expires: source.Expires,
       WebsiteRedirectLocation: source.WebsiteRedirectLocation,
-      Tagging: tags.TagSet.map((tag) => `${encodeURIComponent(tag.Key!)}=${encodeURIComponent(tag.Value ?? "")}`).join(
-        "&",
-      ),
+      Tagging: [...tagMap].map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join("&"),
     }),
   )
   if (!created.UploadId) throw new Error("The multipart upload could not be confirmed.")
@@ -97,6 +178,7 @@ async function copyMultipartObject(
     for (let start = 0; start < totalBytes; start += partSize) {
       const end = Math.min(start + partSize, totalBytes) - 1
       const PartNumber = parts.length + 1
+      await requireTransferPermission(authorize, [sourceReadCheck(request, source.VersionId), partCheck])
       const result = await client.send(
         new UploadPartCopyCommand({
           ...upload,
@@ -111,6 +193,7 @@ async function copyMultipartObject(
       report(end + 1)
     }
 
+    await requireTransferPermission(authorize, [completeCheck])
     const result = await client.send(
       new CompleteMultipartUploadCommand({ ...upload, MultipartUpload: { Parts: parts }, IfNoneMatch: "*" }),
     )
@@ -145,6 +228,7 @@ export async function transferObject(
   client: S3Client,
   request: ObjectTransferRequest,
   onProgress?: (progress: ObjectTransferProgress) => void,
+  authorize?: ObjectTransferAuthorization,
 ): Promise<void> {
   const validation = validateObjectTransfer(request)
   if (validation) throw new ObjectTransferError(validation.message)
@@ -154,16 +238,34 @@ export async function transferObject(
   const sourceLocation = { Bucket: request.sourceBucket, Key: request.sourceKey }
   let source: HeadObjectCommandOutput
   try {
+    await requireTransferPermission(authorize, [sourceReadCheck(request)])
     source = await client.send(new HeadObjectCommand(sourceLocation))
     if (!source.ETag || !Number.isSafeInteger(source.ContentLength) || source.ContentLength! < 0) {
       throw new Error("The source object information could not be confirmed.")
     }
     const report = (copiedBytes: number) =>
       onProgress?.({ phase: "copying", copiedBytes, totalBytes: source.ContentLength! })
+    const sourceChecks = [sourceReadCheck(request, source.VersionId)]
+    if (request.mode === "move") sourceChecks.push(sourceDeleteCheck(request, source.ETag))
+    await requireTransferPermission(authorize, sourceChecks)
     report(0)
     if (source.ContentLength! > SINGLE_COPY_LIMIT) {
-      await copyMultipartObject(client, request, source, report)
+      await copyMultipartObject(client, request, source, report, authorize)
     } else {
+      await requireTransferPermission(authorize, [
+        {
+          action: "s3:PutObject",
+          context: {
+            bucket: request.targetBucket,
+            objectKey: request.targetKey,
+            authType: "REST-HEADER",
+            operation: "CopyObject",
+            copySource: { bucket: request.sourceBucket, objectKey: request.sourceKey, versionId: source.VersionId },
+            ifMatch: null,
+            ifNoneMatch: "*",
+          },
+        },
+      ])
       const result = await client.send(
         new CopyObjectCommand({
           Bucket: request.targetBucket,
@@ -196,11 +298,13 @@ export async function transferObject(
   if (request.mode !== "move") return
   onProgress?.({ phase: "deleting", copiedBytes: source.ContentLength!, totalBytes: source.ContentLength! })
   try {
+    await requireTransferPermission(authorize, [sourceReadCheck(request)])
     const current = await client.send(new HeadObjectCommand(sourceLocation))
     if (!sourceIsUnchanged(source, current)) {
       throw new Error("The source changed after copying.")
     }
     // Keep historical versions; IfMatch is checked atomically by the server.
+    await requireTransferPermission(authorize, [sourceDeleteCheck(request, source.ETag!)])
     const result = await client.send(new DeleteObjectCommand({ ...sourceLocation, IfMatch: source.ETag }))
     if (result.$metadata?.httpStatusCode !== 204) throw new Error("Source deletion could not be confirmed.")
   } catch (error) {

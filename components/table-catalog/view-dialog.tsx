@@ -1,5 +1,7 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
+import { tableCatalogPermissionContext } from "./permission-context"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -131,6 +133,7 @@ export function ViewDialog({
 }: ViewDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
   const { createView, loadView, replaceView } = useTableCatalog(catalogPrefix)
   const [name, setName] = React.useState("")
   const [schema, setSchema] = React.useState(DEFAULT_SCHEMA)
@@ -154,6 +157,16 @@ export function ViewDialog({
   const [reloadVersion, setReloadVersion] = React.useState(0)
 
   const editing = mode === "edit"
+  const targetAction = editing ? "admin:CommitTable" : "admin:CreateTable"
+  const targetName = editing ? identifier?.name : name.trim().toLowerCase()
+  const permissionContext = tableCatalogPermissionContext(
+    bucket,
+    identifier?.namespace ?? namespace,
+    targetName,
+    "views",
+  )
+  useActionChecks(targetName ? [{ action: targetAction, context: permissionContext }] : [])
+  const canSubmitTarget = Boolean(targetName) && canAction(targetAction, permissionContext)
 
   const reset = React.useCallback(() => {
     setName(identifier?.name ?? "")
@@ -285,6 +298,13 @@ export function ViewDialog({
     setSubmitting(true)
     setSaveError("")
     try {
+      if (
+        !(await checkAction(
+          targetAction,
+          tableCatalogPermissionContext(bucket, identifier?.namespace ?? namespace, viewName, "views"),
+        ))
+      )
+        throw new Error(t("Access Denied"))
       if (!editing) {
         const payload: CreateViewPayload = {
           name: viewName,
@@ -579,7 +599,13 @@ export function ViewDialog({
             </Button>
             <Button
               type="submit"
-              disabled={loading || submitting || !canSubmit || (editing && (!originalMetadata || Boolean(loadError)))}
+              disabled={
+                loading ||
+                submitting ||
+                !canSubmit ||
+                !canSubmitTarget ||
+                (editing && (!originalMetadata || Boolean(loadError)))
+              }
             >
               {submitting ? <Spinner className="size-4" aria-hidden /> : null}
               {submitting ? (editing ? t("Saving…") : t("Creating…")) : editing ? t("Save changes") : t("Create view")}

@@ -18,16 +18,17 @@ test("SSE status and key reads fail closed with persistent recovery states", () 
   assert.match(source, /statusError \|\| keysError \|\| loadingKeys \|\| loadingStatus/)
   assert.match(
     source,
-    /disabled=\{\s*Boolean\(activeMutation\) \|\|\s*loadingKeys \|\|\s*loadingStatus \|\|\s*Boolean\(keysError\)/,
+    /disabled=\{\s*!canConfigureKms \|\|\s*Boolean\(activeMutation\) \|\|\s*loadingKeys \|\|\s*loadingStatus \|\|\s*Boolean\(keysError\)/,
   )
 })
 
 test("SSE mutations use one synchronous lock and block unresolved configuration writes", () => {
   assert.match(source, /mutationRef = React\.useRef<string \| null>\(null\)/)
   assert.match(source, /beginMutation/)
+  assert.match(source, /if \(mutationRef\.current\) return false/)
   assert.match(source, /if \(statusError \|\| loadingStatus\)/)
   assert.match(source, /const mutationLocked = Boolean\(activeMutation \|\| statusError \|\| loadingStatus\)/)
-  assert.match(source, /const formDisabled =\s+mutationLocked/)
+  assert.match(source, /const formDisabled =\s+!canConfigureKms \|\|\s+mutationLocked/)
   assert.match(source, /Boolean\(configBaselineConflict\)/)
   assert.match(source, /disabled=\{formDisabled\}/)
 })

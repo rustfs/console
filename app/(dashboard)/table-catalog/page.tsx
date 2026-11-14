@@ -39,7 +39,8 @@ import {
   type TableIdentifier,
   type ViewIdentifier,
 } from "@/hooks/use-table-catalog"
-import { usePermissions } from "@/hooks/use-permissions"
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
+import { tableCatalogPermissionContext } from "@/components/table-catalog/permission-context"
 import { NamespaceDialog } from "@/components/table-catalog/namespace-dialog"
 import { TableDialog } from "@/components/table-catalog/table-dialog"
 import { TableDetailDialog } from "@/components/table-catalog/table-detail-dialog"
@@ -110,7 +111,7 @@ export default function TableCatalogPage() {
     listViews,
     dropView,
   } = useTableCatalog(catalogRequestPrefix)
-  const { isAdmin, hasPermission } = usePermissions()
+  const { canAction, checkAction } = usePermissions()
 
   const [bucketNames, setBucketNames] = React.useState<string[]>([])
   const [bucketSearch, setBucketSearch] = React.useState("")
@@ -158,16 +159,41 @@ export default function TableCatalogPage() {
     catalogRequestPrefixRef.current = catalogRequestPrefix
   }, [catalogRequestPrefix])
 
-  const canEnableBucket = isAdmin || hasPermission("admin:SetTableBucket")
-  const canCreateNamespace = isAdmin || hasPermission("admin:SetTableNamespace")
-  const canUpdateNamespace = isAdmin || hasPermission("admin:UpdateTableNamespaceProperties")
-  const canDeleteNamespace = isAdmin || hasPermission("admin:DeleteTableNamespace")
-  const canCreateTable = isAdmin || hasPermission("admin:CreateTable")
-  const canCommitTable = isAdmin || hasPermission("admin:CommitTable")
-  const canDeleteTable = isAdmin || hasPermission("admin:DeleteTable")
-  const canCreateView = isAdmin || hasPermission("admin:CreateTable")
-  const canReplaceView = isAdmin || hasPermission("admin:CommitTable")
-  const canDeleteView = isAdmin || hasPermission("admin:DeleteTable")
+  const bucketContext = tableCatalogPermissionContext(selectedBucket)
+  const namespaceContext = tableCatalogPermissionContext(selectedBucket, namespaceDialogNamespace?.namespace)
+  const currentTable = commitIdentifier ?? detailIdentifier
+  const currentView = viewDialogIdentifier ?? viewDetailIdentifier
+  const tableContext = tableCatalogPermissionContext(selectedBucket, currentTable?.namespace, currentTable?.name)
+  const viewContext = tableCatalogPermissionContext(selectedBucket, currentView?.namespace, currentView?.name, "views")
+  useActionChecks([
+    { action: "admin:SetTableBucket", context: bucketContext },
+    ...namespaces.flatMap(({ namespace }) => [
+      {
+        action: "admin:UpdateTableNamespaceProperties",
+        context: tableCatalogPermissionContext(selectedBucket, namespace),
+      },
+      { action: "admin:DeleteTableNamespace", context: tableCatalogPermissionContext(selectedBucket, namespace) },
+    ]),
+    ...tables.flatMap(({ namespace, name }) => [
+      { action: "admin:CommitTable", context: tableCatalogPermissionContext(selectedBucket, namespace, name) },
+      { action: "admin:DeleteTable", context: tableCatalogPermissionContext(selectedBucket, namespace, name) },
+    ]),
+    ...views.flatMap(({ namespace, name }) => [
+      { action: "admin:CommitTable", context: tableCatalogPermissionContext(selectedBucket, namespace, name, "views") },
+      { action: "admin:DeleteTable", context: tableCatalogPermissionContext(selectedBucket, namespace, name, "views") },
+    ]),
+  ])
+  const canEnableBucket = Boolean(selectedBucket) && canAction("admin:SetTableBucket", bucketContext)
+  // Creation names are entered in the dialogs; those dialogs authorize the exact target before saving.
+  const canCreateNamespace = Boolean(selectedBucket)
+  const canCreateTable = Boolean(selectedBucket)
+  const canCreateView = Boolean(selectedBucket)
+  const canUpdateNamespace =
+    Boolean(namespaceDialogNamespace) && canAction("admin:UpdateTableNamespaceProperties", namespaceContext)
+  const canCommitTable = Boolean(currentTable) && canAction("admin:CommitTable", tableContext)
+  const canDeleteTable = Boolean(currentTable) && canAction("admin:DeleteTable", tableContext)
+  const canReplaceView = Boolean(currentView) && canAction("admin:CommitTable", viewContext)
+  const canDeleteView = Boolean(currentView) && canAction("admin:DeleteTable", viewContext)
 
   const selectedInfo = selectedBucket ? bucketInfo[selectedBucket] : undefined
   const selectedBucketEnabled = Boolean(selectedInfo?.enabled)
@@ -462,6 +488,8 @@ export default function TableCatalogPage() {
       negativeText: t("Cancel"),
       onPositiveClick: async () => {
         try {
+          if (!(await checkAction("admin:SetTableBucket", tableCatalogPermissionContext(selectedBucket))))
+            throw new Error(t("Access Denied"))
           const info = await enableTableBucket(selectedBucket)
           setBucketInfo((current) => ({ ...current, [selectedBucket]: info }))
           message.success(t("Table bucket enabled"))
@@ -479,7 +507,11 @@ export default function TableCatalogPage() {
       bucket: selectedBucket,
       canManage: canEnableBucket,
       info: selectedInfo,
-      disable: disableTableBucket,
+      disable: async (bucket) => {
+        if (!(await checkAction("admin:SetTableBucket", tableCatalogPermissionContext(bucket))))
+          throw new Error(t("Access Denied"))
+        return disableTableBucket(bucket)
+      },
       onDisabled: (bucket, info) => setBucketInfo((current) => ({ ...current, [bucket]: info })),
       dialog,
       message,
@@ -489,7 +521,11 @@ export default function TableCatalogPage() {
 
   const handleDeleteNamespace = React.useCallback(
     (row: NamespaceSummary) => {
-      if (!canDeleteNamespace || !selectedBucket) return
+      if (
+        !selectedBucket ||
+        !canAction("admin:DeleteTableNamespace", tableCatalogPermissionContext(selectedBucket, row.namespace))
+      )
+        return
       const label = displayNamespace(row.namespace)
       dialog.error({
         title: t("Drop namespace"),
@@ -498,6 +534,13 @@ export default function TableCatalogPage() {
         negativeText: t("Cancel"),
         onPositiveClick: async () => {
           try {
+            if (
+              !(await checkAction(
+                "admin:DeleteTableNamespace",
+                tableCatalogPermissionContext(selectedBucket, row.namespace),
+              ))
+            )
+              throw new Error(t("Access Denied"))
             await dropNamespace(selectedBucket, row.namespace)
             message.success(t("Namespace dropped"))
             await loadWorkspace()
@@ -509,7 +552,7 @@ export default function TableCatalogPage() {
         },
       })
     },
-    [canDeleteNamespace, dialog, dropNamespace, loadWorkspace, message, selectedBucket, t],
+    [canAction, checkAction, dialog, dropNamespace, loadWorkspace, message, selectedBucket, t],
   )
 
   const handleEditNamespace = React.useCallback((row: NamespaceSummary) => {
@@ -523,7 +566,14 @@ export default function TableCatalogPage() {
   }, [])
 
   const handleDeleteTable = (identifier: TableIdentifier) => {
-    if (!canDeleteTable || !selectedBucket) return
+    if (
+      !selectedBucket ||
+      !canAction(
+        "admin:DeleteTable",
+        tableCatalogPermissionContext(selectedBucket, identifier.namespace, identifier.name),
+      )
+    )
+      return
     const label = `${selectedBucket} / ${displayNamespace(identifier.namespace)} / ${identifier.name}`
     dialog.error({
       title: t("Drop table"),
@@ -532,6 +582,13 @@ export default function TableCatalogPage() {
       negativeText: t("Cancel"),
       onPositiveClick: async () => {
         try {
+          if (
+            !(await checkAction(
+              "admin:DeleteTable",
+              tableCatalogPermissionContext(selectedBucket, identifier.namespace, identifier.name),
+            ))
+          )
+            throw new Error(t("Access Denied"))
           await dropTable(selectedBucket, identifier.namespace, identifier.name)
           setDetailIdentifier(null)
           message.success(t("Table dropped"))
@@ -552,7 +609,14 @@ export default function TableCatalogPage() {
 
   const handleDeleteView = React.useCallback(
     (identifier: ViewIdentifier) => {
-      if (!canDeleteView || !selectedBucket) return
+      if (
+        !selectedBucket ||
+        !canAction(
+          "admin:DeleteTable",
+          tableCatalogPermissionContext(selectedBucket, identifier.namespace, identifier.name, "views"),
+        )
+      )
+        return
       const label = `${selectedBucket} / ${displayNamespace(identifier.namespace)} / ${identifier.name}`
       dialog.error({
         title: t("Drop view"),
@@ -561,6 +625,13 @@ export default function TableCatalogPage() {
         negativeText: t("Cancel"),
         onPositiveClick: async () => {
           try {
+            if (
+              !(await checkAction(
+                "admin:DeleteTable",
+                tableCatalogPermissionContext(selectedBucket, identifier.namespace, identifier.name, "views"),
+              ))
+            )
+              throw new Error(t("Access Denied"))
             await dropView(selectedBucket, identifier.namespace, identifier.name)
             setViewDetailIdentifier(null)
             message.success(t("View dropped"))
@@ -573,7 +644,7 @@ export default function TableCatalogPage() {
         },
       })
     },
-    [canDeleteView, dialog, dropView, loadViews, message, selectedBucket, t],
+    [canAction, checkAction, dialog, dropView, loadViews, message, selectedBucket, t],
   )
 
   const openCreateView = React.useCallback(() => {
@@ -683,7 +754,12 @@ export default function TableCatalogPage() {
               variant="ghost"
               size="sm"
               onClick={() => handleEditNamespace(row.original)}
-              disabled={!canUpdateNamespace}
+              disabled={
+                !canAction(
+                  "admin:UpdateTableNamespaceProperties",
+                  tableCatalogPermissionContext(selectedBucket, row.original.namespace),
+                )
+              }
             >
               <RiEditLine className="size-4" aria-hidden />
               {t("Edit")}
@@ -692,8 +768,20 @@ export default function TableCatalogPage() {
               variant="outline"
               size="sm"
               onClick={() => handleDeleteNamespace(row.original)}
-              disabled={!canDeleteNamespace}
-              title={!canDeleteNamespace ? t("You do not have permission to manage namespaces.") : undefined}
+              disabled={
+                !canAction(
+                  "admin:DeleteTableNamespace",
+                  tableCatalogPermissionContext(selectedBucket, row.original.namespace),
+                )
+              }
+              title={
+                !canAction(
+                  "admin:DeleteTableNamespace",
+                  tableCatalogPermissionContext(selectedBucket, row.original.namespace),
+                )
+                  ? t("You do not have permission to manage namespaces.")
+                  : undefined
+              }
             >
               <RiDeleteBin5Line className="size-4" aria-hidden />
               {t("Drop")}
@@ -702,7 +790,7 @@ export default function TableCatalogPage() {
         ),
       },
     ],
-    [canDeleteNamespace, canUpdateNamespace, handleDeleteNamespace, handleEditNamespace, t],
+    [canAction, selectedBucket, handleDeleteNamespace, handleEditNamespace, t],
   )
 
   const viewColumns = React.useMemo<ColumnDef<ViewIdentifier>[]>(
@@ -744,8 +832,20 @@ export default function TableCatalogPage() {
               variant="ghost"
               size="sm"
               onClick={() => handleDeleteView(row.original)}
-              disabled={!canDeleteView}
-              title={!canDeleteView ? t("You do not have permission to delete views.") : undefined}
+              disabled={
+                !canAction(
+                  "admin:DeleteTable",
+                  tableCatalogPermissionContext(selectedBucket, row.original.namespace, row.original.name, "views"),
+                )
+              }
+              title={
+                !canAction(
+                  "admin:DeleteTable",
+                  tableCatalogPermissionContext(selectedBucket, row.original.namespace, row.original.name, "views"),
+                )
+                  ? t("You do not have permission to delete views.")
+                  : undefined
+              }
             >
               <RiDeleteBin5Line className="size-4" aria-hidden />
               {t("Drop")}
@@ -754,7 +854,7 @@ export default function TableCatalogPage() {
         ),
       },
     ],
-    [canDeleteView, handleDeleteView, t],
+    [canAction, selectedBucket, handleDeleteView, t],
   )
 
   const { table: tableTable } = useDataTable<TableIdentifier>({

@@ -27,7 +27,7 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
-  const { canCapability } = usePermissions()
+  const { canCapability, checkCapability } = usePermissions()
   const { getBucketLifecycleConfiguration, deleteBucketLifecycle, putBucketLifecycleConfiguration } = useBucket()
   const lifecycleContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
   const canEditLifecycle = canCapability("bucket.lifecycle.edit", lifecycleContext)
@@ -77,6 +77,8 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
       setMutatingRuleId(mutationKey)
 
       try {
+        if (!(await checkCapability("bucket.lifecycle.edit", { bucket: bucketName })))
+          throw new Error(t("Permission required"))
         const current = await getBucketLifecycleConfiguration(bucketName)
         const currentRules = (current?.Rules ?? []).map((rule) => rule as LifecycleRule)
         const remaining = removeMatchingBucketRule(currentRules, row)
@@ -100,6 +102,7 @@ export function BucketLifecycleTab({ bucketName, hideTitle = false, renderHeader
     [
       bucketName,
       canEditLifecycle,
+      checkCapability,
       deleteBucketLifecycle,
       getBucketLifecycleConfiguration,
       loadData,

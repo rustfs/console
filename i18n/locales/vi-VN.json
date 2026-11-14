@@ -2331,5 +2331,6 @@
   "Bucket navigation": "Điều hướng thùng chứa",
   "Main navigation": "Điều hướng chính",
   "Encryption & Keys": "Mã hóa và khóa",
-  "Decommission": "Ngừng sử dụng"
+  "Decommission": "Ngừng sử dụng",
+  "Unable to check permissions. Refresh and try again.": "Không thể kiểm tra quyền. Hãy làm mới trang và thử lại."
 }

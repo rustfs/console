@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiRefreshLine } from "@remixicon/react"
@@ -45,6 +46,9 @@ interface RekeyCardProps {
 export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "kms:Rekey" }])
+  const canRekey = canAction("kms:Rekey")
   const { startRekey, getRekeyStatus, cancelRekey } = useSSE()
 
   const [snapshot, setSnapshot] = React.useState<KmsRekeyJobSnapshot | null>(null)
@@ -99,6 +103,7 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
     setConfirmStartOpen(false)
     setStartingSweep(true)
     try {
+      if (!(await checkAction("kms:Rekey"))) throw new Error(t("Access Denied"))
       const result = await startRekey(buildRekeyStartRequest(bucketsInput, prefixInput))
       requestRef.current++
       setSnapshot(result)
@@ -122,6 +127,7 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
   const handleCancelSweep = async () => {
     setCancellingSweep(true)
     try {
+      if (!(await checkAction("kms:Rekey"))) throw new Error(t("Access Denied"))
       const result = await cancelRekey()
       requestRef.current++
       setSnapshot(result)
@@ -155,7 +161,7 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={loadingSnapshot || startingSweep || cancellingSweep}
+                disabled={!canRekey || loadingSnapshot || startingSweep || cancellingSweep}
                 onClick={() => void refreshSnapshot()}
               >
                 {loadingSnapshot ? <Spinner className="size-4" /> : <RiRefreshLine className="size-4" aria-hidden />}
@@ -186,7 +192,7 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
                       autoComplete="off"
                       placeholder={t("Leave blank to sweep all buckets")}
                       spellCheck={false}
-                      disabled={isSweepRunning || startingSweep}
+                      disabled={!canRekey || isSweepRunning || startingSweep}
                     />
                   </FieldContent>
                   <FieldDescription>
@@ -204,7 +210,7 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
                       autoComplete="off"
                       placeholder={t("Optional prefix such as photos/")}
                       spellCheck={false}
-                      disabled={isSweepRunning || startingSweep}
+                      disabled={!canRekey || isSweepRunning || startingSweep}
                     />
                   </FieldContent>
                   <FieldDescription>{t("Only objects whose keys start with this prefix are swept.")}</FieldDescription>
@@ -213,14 +219,21 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
 
               <div className="flex flex-wrap items-center justify-end gap-2">
                 {isSweepRunning ? (
-                  <Button size="sm" variant="outline" disabled={cancellingSweep} onClick={handleCancelSweep}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={!canRekey || cancellingSweep}
+                    onClick={handleCancelSweep}
+                  >
                     {cancellingSweep ? <Spinner className="size-4" /> : null}
                     {t("Cancel Sweep")}
                   </Button>
                 ) : null}
                 <Button
                   size="sm"
-                  disabled={loadingSnapshot || isSweepRunning || startingSweep || Boolean(statusErrorMessage)}
+                  disabled={
+                    !canRekey || loadingSnapshot || isSweepRunning || startingSweep || Boolean(statusErrorMessage)
+                  }
                   onClick={() => setConfirmStartOpen(true)}
                 >
                   {startingSweep ? <Spinner className="size-4" /> : null}
@@ -324,7 +337,9 @@ export function RekeyCard({ rewrapSupported }: RekeyCardProps) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("Cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleStartSweep}>{t("Start Rekey Sweep")}</AlertDialogAction>
+            <AlertDialogAction disabled={!canRekey || startingSweep || cancellingSweep} onClick={handleStartSweep}>
+              {t("Start Rekey Sweep")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

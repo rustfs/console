@@ -6,6 +6,7 @@ import { RiDownloadLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { Item, ItemContent, ItemHeader, ItemTitle } from "@/components/ui/item"
 import { useObject } from "@/hooks/use-object"
+import { useCapabilityChecks, usePermissions } from "@/hooks/use-permissions"
 import { useMessage } from "@/lib/feedback/message"
 import { downloadUrl } from "@/lib/export-file"
 import { getAttachmentContentDisposition } from "@/lib/content-disposition"
@@ -21,6 +22,10 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const objectApi = useObject(bucketName)
+  const { canCapability, checkCapability } = usePermissions()
+  const context = { bucket: bucketName, objectKey }
+  const canDownload = canCapability("objects.download", context)
+  useCapabilityChecks(objectKey ? [{ capability: "objects.download", context }] : [])
   const [object, setObject] = React.useState<Record<string, unknown> | null>(null)
 
   React.useEffect(() => {
@@ -35,10 +40,14 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
   }, [objectKey, objectApi])
 
   const download = async () => {
-    if (!object?.Key) return
+    if (!canDownload || !objectKey) return
     try {
-      const filename = (object.Key as string).split("/").pop() ?? ""
-      const url = await objectApi.getSignedUrl(object.Key as string, 3600, getAttachmentContentDisposition(filename))
+      if (!(await checkCapability("objects.download", context))) {
+        message.error(t("Access Denied"))
+        return
+      }
+      const filename = objectKey.split("/").pop() ?? ""
+      const url = await objectApi.getSignedUrl(objectKey, 3600, getAttachmentContentDisposition(filename))
       downloadUrl(url, filename)
       message.success(t("Download ready"))
     } catch (err) {
@@ -51,10 +60,12 @@ export function ObjectView({ bucketName, objectKey }: ObjectViewProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" onClick={download}>
-          <RiDownloadLine className="size-4" aria-hidden />
-          {t("Download")}
-        </Button>
+        {canDownload ? (
+          <Button variant="outline" size="sm" onClick={download}>
+            <RiDownloadLine className="size-4" aria-hidden />
+            {t("Download")}
+          </Button>
+        ) : null}
       </div>
 
       <Item variant="outline" className="flex-col items-stretch gap-4">

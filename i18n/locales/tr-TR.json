@@ -2331,5 +2331,6 @@
   "Bucket navigation": "Kova gezintisi",
   "Main navigation": "Ana gezinti",
   "Encryption & Keys": "Şifreleme ve Anahtarlar",
-  "Decommission": "Devreden çıkar"
+  "Decommission": "Devreden çıkar",
+  "Unable to check permissions. Refresh and try again.": "İzinler kontrol edilemedi. Sayfayı yenileyip tekrar deneyin."
 }

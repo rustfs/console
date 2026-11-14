@@ -83,7 +83,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     getBucketVersioning,
     getBucketQuota,
   } = bucketApi
-  const { canCapability } = usePermissions()
+  const { canCapability, checkCapability, fetchUserPolicy } = usePermissions()
   const { getKeyList } = useSSE()
   const bucketContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
   const canPutBucketPolicy = canCapability("bucket.policy.put", bucketContext)
@@ -334,6 +334,12 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     setPolicyFormError("")
     if (!beginMutation("policy")) return
     try {
+      if (
+        !(await checkCapability(policyFormPolicy === "private" ? "bucket.policy.delete" : "bucket.policy.put", {
+          bucket: bucketName,
+        }))
+      )
+        throw new Error(t("Permission required"))
       if (policyFormPolicy === "private" && !canDeleteBucketPolicy) {
         message.error(t("Edit Failed"))
         return
@@ -354,6 +360,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
       }
       message.success(t("Edit Success"))
       setShowPolicyModal(false)
+      await fetchUserPolicy()
       await fetchData()
     } catch (err) {
       message.error(`${t("Edit Failed")}: ${(err as Error).message}`)
@@ -424,6 +431,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     if (encryptFormType === "SSE-KMS" && (kmsKeyLoading || kmsKeyError)) return
     if (!beginMutation("encryption")) return
     try {
+      if (!(await checkCapability("bucket.encryption.edit", { bucket: bucketName })))
+        throw new Error(t("Permission required"))
       if (encryptFormType === "disabled") {
         await bucketApi.deleteBucketEncryption(bucketName)
       } else if (encryptFormType === "SSE-KMS") {
@@ -472,6 +481,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     if (!beginMutation("cors")) return
 
     try {
+      if (!(await checkCapability("bucket.cors.edit", { bucket: bucketName })))
+        throw new Error(t("Permission required"))
       if (!corsFormEnabled) {
         if (corsConfig?.CORSRules?.length) {
           await bucketApi.deleteBucketCors(bucketName)
@@ -516,6 +527,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     }
     if (!beginMutation("tagging")) return
     try {
+      if (!(await checkCapability("bucket.tag.edit", { bucket: bucketName }))) throw new Error(t("Permission required"))
       const latestResponse = await getBucketTagging(bucketName).catch((error: unknown) => {
         if (isMissingBucketConfiguration(error, "tagging")) return null
         throw error
@@ -554,6 +566,7 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     if (deleteTagIndex === null) return
     if (!beginMutation("tagging")) return
     try {
+      if (!(await checkCapability("bucket.tag.edit", { bucket: bucketName }))) throw new Error(t("Permission required"))
       const target = tags[deleteTagIndex]
       if (!target) throw new Error(t("Configuration changed. Refresh and try again."))
       const latestResponse = await getBucketTagging(bucketName)
@@ -596,6 +609,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     const next = pendingVersioning ? "Enabled" : "Suspended"
     setVersioningError("")
     try {
+      if (!(await checkCapability("bucket.versioning.edit", { bucket: bucketName })))
+        throw new Error(t("Permission required"))
       await bucketApi.putBucketVersioning(bucketName, next)
       if (requestVersion !== requestVersionRef.current) return
       setVersioning(next)
@@ -641,6 +656,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     setQuotaFormError("")
     if (!beginMutation("quota")) return
     try {
+      if (!(await checkCapability("bucket.quota.edit", { bucket: bucketName })))
+        throw new Error(t("Permission required"))
       if (!quotaFormEnabled) {
         await bucketApi.deleteBucketQuota(bucketName)
       } else {
@@ -685,6 +702,8 @@ export function BucketInfo({ bucketName }: BucketInfoProps) {
     setRetentionFormError("")
     if (!beginMutation("retention")) return
     try {
+      if (!(await checkCapability("bucket.objectLock.edit", { bucket: bucketName })))
+        throw new Error(t("Permission required"))
       await bucketApi.putObjectLockConfiguration(bucketName, {
         ObjectLockEnabled: "Enabled",
         Rule: {

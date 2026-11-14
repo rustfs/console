@@ -19,7 +19,7 @@ export function getBucketNavigationItems(bucketName: string, canAccessPath: (pat
   if (!bucketName) return []
 
   const query = new URLSearchParams({ bucket: bucketName }).toString()
-  return BUCKET_NAVIGATION_ITEMS.filter((item) => canAccessPath(item.route)).map((item) => ({
+  return BUCKET_NAVIGATION_ITEMS.filter((item) => canAccessPath(`${item.route}?${query}`)).map((item) => ({
     ...item,
     href: `${item.route}?${query}`,
   }))

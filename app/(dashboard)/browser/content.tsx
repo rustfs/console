@@ -36,7 +36,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   const router = useRouter()
   const searchParams = useSearchParams()
   const message = useMessage()
-  const { canCapability } = usePermissions()
+  const { canCapability, mayCapability, checkCapability, retryPermissions } = usePermissions()
   const { headBucket } = useBucket()
 
   const isObjectList = keyPath.endsWith("/") || keyPath === ""
@@ -50,7 +50,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   const [previewObject, setPreviewObject] = React.useState<Record<string, unknown> | null>(null)
   const [previewBucketName, setPreviewBucketName] = React.useState("")
   const objectApi = useObject(bucketName)
-  const canUploadObjects = canCapability("objects.upload", { bucket: bucketName, prefix })
+  const canUploadObjects = mayCapability("objects.upload", { bucket: bucketName, prefix })
 
   React.useEffect(() => {
     if (!bucketName) return
@@ -86,18 +86,30 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
   }
 
   const handleRefresh = () => {
+    retryPermissions()
     setRefreshTrigger((n) => n + 1)
   }
 
   const handleOpenPreview = React.useCallback(
     async ({ key, data }: { key?: string; data?: Record<string, unknown> }) => {
       if (!key) return
+      const versionId = typeof data?.SelectedVersionId === "string" ? data.SelectedVersionId : undefined
+      if (
+        !(await checkCapability(versionId ? "objects.version.preview" : "objects.preview", {
+          bucket: bucketName,
+          objectKey: key,
+          versionId,
+        }))
+      ) {
+        message.error(t("Access Denied"))
+        return
+      }
       const info = data ?? (await objectApi.getObjectInfo(key))
       setPreviewObject(createObjectPreviewInfo(key, info))
       setPreviewBucketName(bucketName)
       setShowPreview(true)
     },
-    [objectApi, bucketName],
+    [objectApi, bucketName, checkCapability, message, t],
   )
 
   const previewObjectKey = typeof previewObject?.Key === "string" ? previewObject.Key : ""
@@ -108,10 +120,21 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
     canCapability(previewVersionId ? "objects.version.download" : "objects.download", {
       bucket: bucketName,
       objectKey: previewObjectKey,
+      versionId: previewVersionId,
     })
   const downloadPreview = async () => {
     if (!canDownloadPreview || !previewObjectKey) return
     try {
+      if (
+        !(await checkCapability(previewVersionId ? "objects.version.download" : "objects.download", {
+          bucket: bucketName,
+          objectKey: previewObjectKey,
+          versionId: previewVersionId,
+        }))
+      ) {
+        message.error(t("Access Denied"))
+        return
+      }
       const filename = previewObjectKey.split("/").pop() ?? ""
       const url = await objectApi.getSignedUrl(
         previewObjectKey,

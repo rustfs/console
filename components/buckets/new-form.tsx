@@ -19,7 +19,7 @@ import {
 } from "@/components/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { useBucket } from "@/hooks/use-bucket"
-import { usePermissions } from "@/hooks/use-permissions"
+import { useCapabilityChecks, usePermissions } from "@/hooks/use-permissions"
 import { getOptionalBucketNameError } from "@/lib/bucket-name"
 import { getBytes } from "@/lib/functions"
 import { cn } from "@/lib/utils"
@@ -43,7 +43,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { createBucket, putBucketVersioning, putObjectLockConfiguration, putBucketQuota } = useBucket()
-  const { canCapability } = usePermissions()
+  const { canCapability, checkCapability } = usePermissions()
 
   const [objectKey, setObjectKey] = React.useState("")
   const [version, setVersion] = React.useState(false)
@@ -61,11 +61,21 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const nameError = getOptionalBucketNameError(objectKey)
   const parsedRetentionPeriod = Math.max(1, Number.parseInt(retentionPeriod, 10) || 1)
   const isSubmitDisabled = creating || !trimmedBucketName || !!nameError
-  const canCreateBucket = canCapability("bucket.create")
   const bucketContext = trimmedBucketName ? { bucket: trimmedBucketName } : {}
+  const canCreateBucket = !!trimmedBucketName && canCapability("bucket.create", bucketContext)
   const canEditVersioning = canCapability("bucket.versioning.edit", bucketContext)
   const canEditObjectLock = canCapability("bucket.objectLock.edit", bucketContext)
   const canEditQuota = canCapability("bucket.quota.edit", bucketContext)
+  useCapabilityChecks(
+    show && trimmedBucketName && !nameError
+      ? [
+          { capability: "bucket.create", context: bucketContext },
+          { capability: "bucket.versioning.edit", context: bucketContext },
+          { capability: "bucket.objectLock.edit", context: bucketContext },
+          { capability: "bucket.quota.edit", context: bucketContext },
+        ]
+      : [],
+  )
 
   const resetForm = () => {
     setObjectKey("")
@@ -96,6 +106,25 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
     setCreating(true)
 
     try {
+      if (!(await checkCapability("bucket.create", { bucket: bucketName }))) {
+        message.error(t("Access Denied"))
+        return
+      }
+      const setupChecks = await Promise.all([
+        canEditVersioning && version
+          ? checkCapability("bucket.versioning.edit", { bucket: bucketName })
+          : Promise.resolve(true),
+        canEditObjectLock && objectLock && retentionEnabled
+          ? checkCapability("bucket.objectLock.edit", { bucket: bucketName })
+          : Promise.resolve(true),
+        canEditQuota && quotaEnabled
+          ? checkCapability("bucket.quota.edit", { bucket: bucketName })
+          : Promise.resolve(true),
+      ])
+      if (!setupChecks.every(Boolean)) {
+        message.error(t("Access Denied"))
+        return
+      }
       await createBucket({
         Bucket: bucketName,
         ObjectLockEnabledForBucket: canEditObjectLock && objectLock,

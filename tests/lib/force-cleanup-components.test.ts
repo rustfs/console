@@ -47,6 +47,11 @@ const button = ({ children, render, actions, open, onOpenChange, ...props }: UiP
 }
 const mocks: Record<string, unknown> = {
   Button: button,
+  Input: (props: React.InputHTMLAttributes<HTMLInputElement>) =>
+    React.createElement("input", {
+      ...props,
+      onInput: (event) => props.onChange?.(event as unknown as React.ChangeEvent<HTMLInputElement>),
+    }),
   Link: ({ children }: UiProps) => React.createElement("a", null, children),
   AlertDialog: ({ open, children, onOpenChange }: UiProps) =>
     open
@@ -126,6 +131,7 @@ for (const name of [
   "AlertDialogFooter",
   "AlertDialogHeader",
   "DialogContent",
+  "DialogBody",
   "DialogDescription",
   "DialogFooter",
   "DialogHeader",
@@ -182,7 +188,18 @@ const fullKey = "parent/中文%2F+space /child/"
 const consequences =
   "Permanently delete all objects, versions, delete markers, and residual files in this folder. This cannot be undone."
 
-async function mount(t: TestContext, initialProps: ObjectListProps, versioning: string = "Suspended") {
+async function mount(
+  t: TestContext,
+  initialProps: ObjectListProps,
+  versioning: string = "Suspended",
+  options: {
+    selectedKeys?: string[]
+    deniedKeys?: string[]
+    allowRename?: boolean
+    deniedTarget?: string
+    allowAllVersions?: boolean
+  } = {},
+) {
   const browser = new Window()
   const globals = { window: browser, document: browser.document, IS_REACT_ACT_ENVIRONMENT: true }
   const descriptors = Object.keys(globals).map(
@@ -195,32 +212,69 @@ async function mount(t: TestContext, initialProps: ObjectListProps, versioning: 
   const folderTasks: unknown[][] = []
   const objectTasks: unknown[][] = []
   const errors: string[] = []
+  const renames: unknown[][] = []
+  const prefetched: {
+    capability: string
+    context?: { bucket?: string; objectKey?: string; prefix?: string; authType?: string }
+  }[][] = []
   let forceAllowed = true
-  const canCapability = (capability: string, target: { bucket?: string; objectKey?: string }) =>
+  let submissionAllowed = true
+  const canCapability = (
+    capability: string,
+    target: { bucket?: string; objectKey?: string; targetObjectKey?: string },
+  ) =>
     capability === "objects.forceCleanup"
       ? forceAllowed && isForceCleanupTarget(target)
-      : capability === "objects.delete"
+      : capability === "objects.version.list" || capability === "objects.version.delete"
+        ? options.allowAllVersions === true
+        : capability === "objects.rename"
+          ? options.allowRename === true && target.targetObjectKey !== options.deniedTarget
+          : capability === "objects.delete" && !options.deniedKeys?.includes(target.objectKey ?? "")
   const objectApi = {
     listObject: async () => ({
       CommonPrefixes: folders.map((Prefix) => ({ Prefix })),
       Contents: [{ Key: "file.txt" }, { Key: "literal-object/" }],
     }),
     getSignedUrl: async () => "",
-    renameObject: async () => {},
+    renameObject: async (...args: unknown[]) => {
+      renames.push(args)
+    },
   }
   const versioningApi = {
     getBucketVersioning: versioning === "unknown" ? () => new Promise(() => {}) : async () => ({ Status: versioning }),
   }
   const translate = (key: string) => key
   const tasks: never[] = []
-  const feedback = { error: (error: string) => errors.push(error), success() {}, warning() {} }
+  const feedback = {
+    error: (error: string) => errors.push(error),
+    success() {},
+    warning() {},
+    loading: () => ({ destroy() {} }),
+  }
   Object.assign(mocks, {
     useTranslation: () => ({ t: translate }),
     useMessage: () => feedback,
     useApi: () => ({}),
     useObject: () => objectApi,
     useBucket: () => versioningApi,
-    usePermissions: () => ({ canCapability }),
+    usePermissions: () => ({
+      canCapability,
+      mayCapability: (capability: string, target: { bucket?: string; objectKey?: string }) =>
+        capability === "objects.bulkDelete" ||
+        (capability === "objects.rename" && options.allowRename === true) ||
+        canCapability(capability, target),
+      checkCapability: async (
+        capability: string,
+        target: { bucket?: string; objectKey?: string; targetObjectKey?: string },
+      ) => submissionAllowed && canCapability(capability, target),
+    }),
+    useCapabilityChecks: (checks: (typeof prefetched)[number]) => {
+      prefetched.push(checks)
+    },
+    useDataTable: (table: MockTable) => ({
+      table: { ...table, getColumn: () => ({ setFilterValue() {} }), resetRowSelection() {} },
+      selectedRowIds: options.selectedKeys ?? [],
+    }),
     useAddDeleteKeys:
       () =>
       (...args: unknown[]) =>
@@ -273,6 +327,18 @@ async function mount(t: TestContext, initialProps: ObjectListProps, versioning: 
     folderTasks,
     objectTasks,
     errors,
+    renames,
+    prefetched,
+    denySubmission() {
+      submissionAllowed = false
+    },
+    async input(element: HappyElement | null, value: string) {
+      assert.ok(element)
+      await React.act(async () => {
+        ;(element as unknown as HTMLInputElement).value = value
+        element.dispatchEvent(new browser.Event("input", { bubbles: true }))
+      })
+    },
     async denyForceCleanup() {
       forceAllowed = false
       await render()
@@ -280,6 +346,105 @@ async function mount(t: TestContext, initialProps: ObjectListProps, versioning: 
   }
 }
 const props: ObjectListProps = { bucket, path: "", onOpenInfo() {}, onUploadClick() {}, onPreview() {} }
+
+test("object rows prefetch no force cleanup or unused version-list operations", async (t) => {
+  const ui = await mount(t, props, "Enabled")
+  const checks = ui.prefetched.flat()
+  assert.equal(
+    checks.some(({ capability }) => capability === "objects.version.list"),
+    false,
+  )
+  assert.equal(
+    checks.some(
+      ({ capability, context }) =>
+        capability === "objects.forceCleanup" &&
+        ["file.txt", "literal-object/", "/", "///"].includes(context?.objectKey ?? ""),
+    ),
+    false,
+  )
+  assert.ok(
+    checks.some(({ capability, context }) => capability === "objects.forceCleanup" && context?.objectKey === fullKey),
+  )
+})
+
+test("opening an all-version delete dialog requests selected version-list permissions on demand", async (t) => {
+  const ui = await mount(t, props, "Enabled", { allowAllVersions: true })
+  const row = await ui.openMenu("file.txt")
+  await ui.click(ui.findButton("Delete", row))
+  assert.ok(
+    ui.prefetched
+      .flat()
+      .some(({ capability, context }) => capability === "objects.version.list" && context?.prefix === "file.txt"),
+  )
+  assert.ok(ui.container.querySelector("#object-list-delete-all-versions"))
+})
+
+test("selected ZIP downloads pin header-auth checks separately from row signed downloads", async (t) => {
+  const ui = await mount(t, props, "Enabled", { selectedKeys: ["file.txt", fullKey] })
+  const checks = ui.prefetched.flat()
+  assert.ok(
+    checks.some(
+      ({ capability, context }) =>
+        capability === "objects.download" && context?.objectKey === "file.txt" && context.authType === "REST-HEADER",
+    ),
+  )
+  assert.ok(
+    checks.some(
+      ({ capability, context }) =>
+        capability === "objects.download" && context?.prefix === fullKey && context.authType === "REST-HEADER",
+    ),
+  )
+  assert.ok(
+    checks.some(({ capability, context }) => capability === "objects.bulkDelete" && context?.prefix === fullKey),
+  )
+})
+
+test("bulk deletion is unavailable when any explicitly selected object is denied", async (t) => {
+  const ui = await mount(t, props, "Suspended", {
+    selectedKeys: ["file.txt", "literal-object/"],
+    deniedKeys: ["file.txt"],
+  })
+  assert.equal(ui.findButton("Delete Selected"), null)
+  assert.deepEqual(ui.objectTasks, [])
+})
+
+test("an ordinary delete dialog rechecks permission before enqueueing its task", async (t) => {
+  const ui = await mount(t, props)
+  const row = await ui.openMenu("file.txt")
+  await ui.click(ui.findButton("Delete", row))
+  ui.denySubmission()
+  await ui.click(ui.findButton("Delete", ui.container.querySelector('[role="alertdialog"]')!))
+  assert.deepEqual(ui.objectTasks, [])
+  assert.deepEqual(ui.errors, ["Access Denied"])
+})
+
+test("an open ordinary delete dialog cannot target a changed bucket", async (t) => {
+  const ui = await mount(t, props)
+  const row = await ui.openMenu("file.txt")
+  await ui.click(ui.findButton("Delete", row))
+  await ui.render({ bucket: "different-bucket" })
+  const confirm = ui.findButton("Delete", ui.container.querySelector('[role="alertdialog"]')!)!
+  assert.equal((confirm as unknown as HTMLButtonElement).disabled, true)
+  await ui.click(confirm)
+  assert.deepEqual(ui.objectTasks, [])
+})
+
+test("ordinary delete permission alone does not expose deletion of all versions", async (t) => {
+  const ui = await mount(t, props, "Enabled")
+  const row = await ui.openMenu("file.txt")
+  await ui.click(ui.findButton("Delete", row))
+  assert.equal(ui.container.querySelector("#object-list-delete-all-versions"), null)
+})
+
+test("renaming rechecks the real destination and creates no copy when that key is denied", async (t) => {
+  const ui = await mount(t, props, "Suspended", { allowRename: true, deniedTarget: "protected.txt" })
+  const row = await ui.openMenu("file.txt")
+  await ui.click(ui.findButton("Rename", row))
+  await ui.input(ui.container.querySelector('[name="object-rename-name"]'), "protected.txt")
+  await ui.click(ui.findButton("Rename"))
+  assert.deepEqual(ui.renames, [])
+  assert.deepEqual(ui.errors, ["Access Denied"])
+})
 
 test("object refresh is available in the header and works without opening a menu", async (t) => {
   let refreshes = 0

@@ -19,6 +19,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useEventTarget } from "@/hooks/use-event-target"
 import { useMessage } from "@/lib/feedback/message"
 import {
@@ -51,6 +52,7 @@ export function EventsEditForm({
   const message = useMessage()
   const { getEventTargetArnList } = useEventTarget()
   const { putBucketNotifications, listBucketNotifications } = useBucket()
+  const { checkCapability } = usePermissions()
 
   const [resourceName, setResourceName] = useState("")
   const [prefix, setPrefix] = useState("")
@@ -167,6 +169,8 @@ export function EventsEditForm({
 
       if (!updated) throw new Error(t("Configuration changed. Refresh and try again."))
 
+      if (!(await checkCapability("bucket.events.edit", { bucket: bucketName })))
+        throw new Error(t("Permission required"))
       await putBucketNotifications(bucketName, updated)
       message.success(t("Update Success"))
       onOpenChange(false)

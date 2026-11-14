@@ -28,6 +28,8 @@ interface RequestOptions {
    * This allows components to handle permission errors gracefully
    */
   suppress403Redirect?: boolean
+  /** Redact the complete body, including user-supplied policy condition values. */
+  suppressBodyLogging?: boolean
   signal?: AbortSignal
 }
 
@@ -66,7 +68,7 @@ export class ApiClient {
 
   async request(url: string, options: RequestOptions = {}, parseJson: boolean = true) {
     url = this.config?.baseUrl && !/^https?:\/\//i.test(url) ? joinURL(this.config.baseUrl, url) : url
-    const { params, ...providedOptions } = options
+    const { params, suppressBodyLogging, ...providedOptions } = options
     const requestOptions: RequestOptions = {
       ...providedOptions,
       headers: { ...this.config?.headers, ...providedOptions.headers },
@@ -99,7 +101,7 @@ export class ApiClient {
 
     const executeRequest = async () => {
       logger.log("[request] url:", url)
-      logger.log("[request] options:", redactRequestOptionsForLog(requestOptions))
+      logger.log("[request] options:", redactRequestOptionsForLog(requestOptions, suppressBodyLogging))
 
       const response = await this.$api.fetch(url, requestOptions as ApiRequestInit)
 

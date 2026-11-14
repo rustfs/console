@@ -10,7 +10,7 @@ import type { useAuth as UseAuth } from "../../contexts/auth-context"
 
 const mocksKey = Symbol.for("oidc-logout-navigation")
 const mockExports: Record<string, string[]> = {
-  "next/navigation": ["useRouter", "usePathname"],
+  "next/navigation": ["useRouter", "usePathname", "useSearchParams"],
   "react-i18next": ["useTranslation"],
   "@/components/ui/button": ["Button"],
   "@/components/ui/spinner": ["Spinner"],
@@ -150,12 +150,14 @@ async function mountDashboard(
     configManager,
     useRouter: () => router,
     usePathname: () => "/browser/",
+    useSearchParams: () => new URLSearchParams(),
     useTranslation: () => ({ t: (key: string) => key }),
     usePermissions: () => ({
       isAdmin: false,
       hasFetchedPolicy: true,
       hasResolvedAdmin: true,
       canAccessPath: () => routeAllowed,
+      hasPendingChecks: () => false,
     }),
     Spinner: () => null,
     Button: ({ children, render }: { children: ReactNode; render?: ReactElement<{ children?: ReactNode }> }) =>

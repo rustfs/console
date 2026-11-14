@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
@@ -51,6 +52,9 @@ export default function EventsTargetPage() {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:SetBucketTarget" }])
+  const canManageAction = canAction("admin:SetBucketTarget")
   const { getEventsTargetList, deleteEventTarget, getEventTargetSubscriptions } = useEventTarget()
   const { getModuleSwitches } = useModuleSwitches()
 
@@ -133,6 +137,7 @@ export default function EventsTargetPage() {
       }
 
       try {
+        if (!(await checkAction("admin:SetBucketTarget"))) throw new Error(t("Access Denied"))
         await deleteEventTarget(`notify_${row.service}`, row.account_id)
         message.success(t("Delete Success"))
         loadData()
@@ -142,12 +147,12 @@ export default function EventsTargetPage() {
         message.error(msg)
       }
     },
-    [canManageDestinations, deleteEventTarget, loadData, message, t],
+    [checkAction, canManageDestinations, deleteEventTarget, loadData, message, t],
   )
 
   const confirmDelete = useCallback(
     (row: RowData) => {
-      if (!canManageDestinations) return
+      if (!canManageAction || !canManageDestinations) return
       if (!isConfigSource(row.source)) return
 
       dialog.error({
@@ -158,7 +163,7 @@ export default function EventsTargetPage() {
         onPositiveClick: () => deleteItem(row),
       })
     },
-    [canManageDestinations, deleteItem, dialog, t],
+    [canManageAction, canManageDestinations, deleteItem, dialog, t],
   )
 
   const toggleSubscriptions = useCallback(
@@ -247,7 +252,7 @@ export default function EventsTargetPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => confirmDelete(row.original)}
-                disabled={!canManageDestinations}
+                disabled={!canManageAction || !canManageDestinations}
               >
                 <RiDeleteBin5Line className="size-4" aria-hidden />
                 <span>{t("Delete")}</span>
@@ -258,7 +263,7 @@ export default function EventsTargetPage() {
           ),
       },
     ],
-    [canManageDestinations, confirmDelete, expandedRowId, t, toggleSubscriptions],
+    [canManageAction, canManageDestinations, confirmDelete, expandedRowId, t, toggleSubscriptions],
   )
 
   const { table } = useDataTable<RowData>({
@@ -321,7 +326,7 @@ export default function EventsTargetPage() {
         count={!loading && !loadFailed ? data.length : undefined}
         actions={
           <>
-            <Button onClick={() => setNewFormOpen(true)} disabled={!canManageDestinations}>
+            <Button onClick={() => setNewFormOpen(true)} disabled={!canManageAction || !canManageDestinations}>
               <RiAddLine className="size-4" aria-hidden />
               <span>{t("Add Event Destination")}</span>
             </Button>

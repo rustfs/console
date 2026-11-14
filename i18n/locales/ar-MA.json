@@ -2331,5 +2331,6 @@
   "Bucket navigation": "التنقل في الحاوية",
   "Main navigation": "التنقل الرئيسي",
   "Encryption & Keys": "التشفير والمفاتيح",
-  "Decommission": "إخراج من الخدمة"
+  "Decommission": "إخراج من الخدمة",
+  "Unable to check permissions. Refresh and try again.": "تعذر التحقق من الصلاحيات. حدّث الصفحة وحاول مرة أخرى."
 }

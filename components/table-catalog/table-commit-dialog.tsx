@@ -1,5 +1,7 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
+import { tableCatalogPermissionContext } from "./permission-context"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -76,7 +78,11 @@ export function TableCommitDialog({
 }: TableCommitDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
   const { loadTable, commitTable } = useTableCatalog(catalogPrefix)
+  const permissionContext = tableCatalogPermissionContext(bucket, identifier?.namespace, identifier?.name)
+  useActionChecks(identifier ? [{ action: "admin:CommitTable", context: permissionContext }] : [])
+  const canCommitTarget = Boolean(identifier) && canAction("admin:CommitTable", permissionContext)
   const [table, setTable] = React.useState<LoadedTable | null>(null)
   const [updates, setUpdates] = React.useState(DEFAULT_UPDATES)
   const [requirements, setRequirements] = React.useState("[]")
@@ -150,6 +156,13 @@ export function TableCommitDialog({
     const commitId = commitIdRef.current ?? newCommitId()
     commitIdRef.current = commitId
     try {
+      if (
+        !(await checkAction(
+          "admin:CommitTable",
+          tableCatalogPermissionContext(bucket, identifier.namespace, identifier.name),
+        ))
+      )
+        throw new Error(t("Access Denied"))
       const response = await commitTable(bucket, identifier.namespace, identifier.name, {
         identifier,
         commitId,
@@ -302,7 +315,7 @@ export function TableCommitDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               {t("Cancel")}
             </Button>
-            <Button type="submit" disabled={loading || submitting || !table || !canCommit}>
+            <Button type="submit" disabled={loading || submitting || !table || !canCommit || !canCommitTarget}>
               {submitting ? <Spinner className="size-4" aria-hidden /> : null}
               {submitting ? t("Committing…") : t("Commit table")}
             </Button>

@@ -74,7 +74,7 @@ test("batch policy dialog loads safely and cannot submit an empty selection", ()
   assert.match(source, /<form\s+className="contents"\s+onSubmit=/)
   assert.match(
     source,
-    /disabled=\{!checked\.length \|\| !checkedKeys\.length \|\| loading \|\| Boolean\(loadError\) \|\| submitting\}/,
+    /disabled=\{\s*!canManageAction\s*\|\|\s*!checked\.length\s*\|\|\s*!checkedKeys\.length\s*\|\|\s*loading\s*\|\|\s*Boolean\(loadError\)\s*\|\|\s*submitting\s*\}/,
   )
   assert.match(source, /<DialogFooter>/)
 })

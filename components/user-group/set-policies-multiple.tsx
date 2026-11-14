@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiRefreshLine } from "@remixicon/react"
@@ -34,6 +35,9 @@ export function UserGroupSetPoliciesMultiple({
 }: UserGroupSetPoliciesMultipleProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:AttachUserOrGroupPolicy" }])
+  const canManageAction = canAction("admin:AttachUserOrGroupPolicy")
   const { listPolicies, setUserOrGroupPolicy } = usePolicies()
 
   const [searchTerm, setSearchTerm] = React.useState("")
@@ -158,6 +162,7 @@ export function UserGroupSetPoliciesMultiple({
     if (!checked.length || !checkedKeys.length || loading || loadError || submitting) return
     setSubmitting(true)
     try {
+      if (!(await checkAction("admin:AttachUserOrGroupPolicy"))) throw new Error(t("Access Denied"))
       await Promise.all(
         checkedKeys.map((item) =>
           setUserOrGroupPolicy({
@@ -170,8 +175,8 @@ export function UserGroupSetPoliciesMultiple({
       message.success(t("Edit Success"))
       onOpenChange(false)
       onChangePoliciesSuccess()
-    } catch {
-      message.error(t("Edit Failed"))
+    } catch (error) {
+      message.error((error as Error).message || t("Edit Failed"))
     } finally {
       setSubmitting(false)
     }
@@ -233,7 +238,14 @@ export function UserGroupSetPoliciesMultiple({
             </Button>
             <Button
               type="submit"
-              disabled={!checked.length || !checkedKeys.length || loading || Boolean(loadError) || submitting}
+              disabled={
+                !canManageAction ||
+                !checked.length ||
+                !checkedKeys.length ||
+                loading ||
+                Boolean(loadError) ||
+                submitting
+              }
             >
               {submitting ? <Spinner className="size-4" /> : null}
               {t("Submit")}

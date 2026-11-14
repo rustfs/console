@@ -720,6 +720,7 @@ export default function PoolDecommissionPage() {
                           aria-pressed={isSelected}
                           className={cn(
                             "space-y-3 border p-3",
+                            selectionLocked && "cursor-default",
                             isSelected && "border-primary/40 bg-primary/5",
                             row.displayState === "failed" && "border-destructive/40 bg-destructive/5",
                           )}

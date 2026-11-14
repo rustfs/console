@@ -1,0 +1,14 @@
+{
+  "evidenceKey": "catalog-permission-review-305",
+  "sourceRevision": "ff3b4c34754bf5217eef54f8114abfd640054376",
+  "state": "Create Table dialog in analytics namespace, invalid HTTPS custom location; translated error is visible and Create is disabled. No creation submitted.",
+  "fixture": "Controlled local S3/admin responses; granted namespace-create/table-create permissions to exercise the form.",
+  "image": {
+    "file": "table-invalid-location-after.jpg",
+    "dimensions": [
+      1280,
+      720
+    ],
+    "sha256": "057aedc9d0c1b0da2b142b20dfee8ed4765fe3c57f2afdc028bb38be77d5b801"
+  }
+}

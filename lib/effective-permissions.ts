@@ -292,23 +292,29 @@ export class EffectivePermissionClient {
     }
     const batch: Array<[string, PendingCheck]> = []
     const encoder = new TextEncoder()
-    let bytes = encoder.encode(JSON.stringify({ checks: [] })).length
+    const envelopeBytes = encoder.encode(JSON.stringify({ checks: [] })).length
+    let bytes = envelopeBytes
+    let rejected = false
     for (const entry of this.pending.entries()) {
       const encoded = encoder.encode(JSON.stringify(permissionRequest(entry[1].check, String(batch.length)))).length
-      if (encoded > MAX_BATCH_BYTES) {
+      if (encoded + envelopeBytes > MAX_BATCH_BYTES) {
         this.pending.delete(entry[0])
         this.inFlight.delete(entry[0])
         this.cache.set(entry[0], UNKNOWN)
         if (!this.pins.has(entry[0])) this.idleKeys.add(entry[0])
         this.pruneIdle()
         entry[1].resolve(UNKNOWN)
+        rejected = true
         continue
       }
       if (batch.length === MAX_BATCH_SIZE || bytes + encoded + (batch.length ? 1 : 0) > MAX_BATCH_BYTES) break
       bytes += encoded + (batch.length ? 1 : 0)
       batch.push(entry)
     }
-    if (!batch.length) return
+    if (!batch.length) {
+      if (rejected) this.notify()
+      return
+    }
     for (const [key] of batch) this.pending.delete(key)
     const requests = batch.map(([, { check }], index) => permissionRequest(check, String(index)))
     const generation = this.generation

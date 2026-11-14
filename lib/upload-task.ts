@@ -57,21 +57,29 @@ export function createUploadTaskHelpers(s3Client: S3Client, config: UploadTaskCo
     task.progress = 0
     const abortController = new AbortController()
     task.abortController = abortController
-    if (
-      config.checkCapability &&
-      !(await config.checkCapability("objects.upload", {
-        bucket: task.bucketName,
-        objectKey: task.key,
-        requestTags: {},
-      }))
-    ) {
-      throw new Error("Access Denied")
+    const checkUpload = async (operation: NonNullable<PermissionResourceContext["operation"]>) => {
+      abortController.signal.throwIfAborted()
+      if (
+        config.checkCapability &&
+        !(await config.checkCapability("objects.upload", {
+          bucket: task.bucketName,
+          objectKey: task.key,
+          authType: "REST-HEADER",
+          operation,
+          requestTags: {},
+          copySource: null,
+          ifMatch: null,
+          ifNoneMatch: null,
+        }))
+      ) {
+        throw new Error("Access Denied")
+      }
+      abortController.signal.throwIfAborted()
     }
-    abortController.signal.throwIfAborted()
     if (task.file.size > chunkSize) {
-      await multipartUpload(task, s3Client, chunkSize, abortController)
+      await multipartUpload(task, s3Client, chunkSize, abortController, checkUpload)
     } else {
-      await putObject(task, s3Client, abortController)
+      await putObject(task, s3Client, abortController, checkUpload)
     }
   }
 
@@ -128,10 +136,16 @@ export function createUploadTaskHelpers(s3Client: S3Client, config: UploadTaskCo
   return { handler, createTasks }
 }
 
-async function putObject(task: UploadTask, s3Client: S3Client, abortController: AbortController) {
+async function putObject(
+  task: UploadTask,
+  s3Client: S3Client,
+  abortController: AbortController,
+  checkUpload: (operation: NonNullable<PermissionResourceContext["operation"]>) => Promise<void>,
+) {
   const { file, bucketName, key } = task
   const contentType = await getUploadContentType(file, key)
 
+  await checkUpload("PutObject")
   await s3Client.send(
     new PutObjectCommand({
       Bucket: bucketName,
@@ -149,6 +163,7 @@ async function multipartUpload(
   s3Client: S3Client,
   chunkSize: number,
   abortController: AbortController,
+  checkUpload: (operation: NonNullable<PermissionResourceContext["operation"]>) => Promise<void>,
 ) {
   const { file, bucketName, key } = task
 
@@ -158,6 +173,7 @@ async function multipartUpload(
 
   try {
     if (!uploadId) {
+      await checkUpload("CreateMultipartUpload")
       const createResponse = await s3Client.send(
         new CreateMultipartUploadCommand({
           Bucket: bucketName,
@@ -182,6 +198,7 @@ async function multipartUpload(
       const end = Math.min(start + chunkSize, file.size)
       const chunk = file.slice(start, end)
 
+      await checkUpload("UploadPart")
       const { ETag } = await s3Client.send(
         new UploadPartCommand({
           Bucket: bucketName,
@@ -198,6 +215,7 @@ async function multipartUpload(
       task.progress = Math.round((completedParts.length / totalChunks) * 100)
     }
 
+    await checkUpload("CompleteMultipartUpload")
     await s3Client.send(
       new CompleteMultipartUploadCommand({
         Bucket: bucketName,

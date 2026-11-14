@@ -34,6 +34,11 @@ interface NamespaceDialogProps {
   onSuccess?: () => void
 }
 
+function normalizeNamespaceInput(value: string): string[] {
+  const normalized = value.trim()
+  return normalized ? normalized.split(".").map((segment) => segment.trim()) : []
+}
+
 function parseProperties(value: string): Record<string, string> {
   if (!value.trim()) return {}
   const parsed: unknown = JSON.parse(value)
@@ -79,7 +84,7 @@ export function NamespaceDialog({
 
   const editing = Boolean(initialNamespace)
   const canSubmit = editing ? canUpdate : canCreate
-  const targetNamespace = initialNamespace?.namespace ?? namespace.trim().toLowerCase().split(".").filter(Boolean)
+  const targetNamespace = initialNamespace?.namespace ?? normalizeNamespaceInput(namespace)
   const targetAction = editing ? "admin:UpdateTableNamespaceProperties" : "admin:SetTableNamespace"
   const permissionContext = tableCatalogPermissionContext(bucket, targetNamespace)
   useActionChecks(targetNamespace.length ? [{ action: targetAction, context: permissionContext }] : [])
@@ -125,7 +130,7 @@ export function NamespaceDialog({
 
   const validate = () => {
     const value = namespace.trim()
-    const segments = value.split(".").map((segment) => segment.trim())
+    const segments = targetNamespace
     if (!value || segments.some((segment) => !isCatalogIdentifierValid(segment))) {
       setFieldError(t("Use lowercase letters, numbers, hyphens, or underscores; separate levels with dots."))
       document.getElementById("table-catalog-namespace")?.focus()

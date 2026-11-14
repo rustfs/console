@@ -179,6 +179,8 @@ export function capabilityCheckGroups(
         target = {
           bucket: context.bucket,
           objectKey: context.targetObjectKey,
+          operation: "CopyObject",
+          ifMatch: null,
           ifNoneMatch: "*",
           copySource: { bucket: context.bucket ?? "", objectKey: context.objectKey ?? "" },
         }
@@ -186,6 +188,9 @@ export function capabilityCheckGroups(
         target = {
           bucket: context.bucket,
           objectKey: context.objectKey,
+          operation: "CopyObject",
+          ifMatch: null,
+          ifNoneMatch: null,
           copySource: {
             bucket: context.bucket ?? "",
             objectKey: context.objectKey ?? "",

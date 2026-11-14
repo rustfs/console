@@ -69,6 +69,7 @@ const { default: SsePage } = await import(moduleUrl("app/(dashboard)/sse/page.ts
 const { TableCommitDialog } = await import(moduleUrl("components/table-catalog/table-commit-dialog.tsx"))
 const { ViewDialog } = await import(moduleUrl("components/table-catalog/view-dialog.tsx"))
 const { RekeyCard } = await import(moduleUrl("components/sse/rekey-card.tsx"))
+const { default: ImportExportPage } = await import(moduleUrl("app/(dashboard)/import-export/page.tsx"))
 
 async function mount(
   t: TestContext,
@@ -76,8 +77,9 @@ async function mount(
   props: Record<string, unknown>,
   options: {
     allowed?: (action: string, context?: Context) => boolean
-    freshAllowed?: (action: string, context?: Context) => boolean
+    freshAllowed?: (action: string, context?: Context) => boolean | Promise<boolean>
     rekeyState?: "idle" | "running"
+    importWait?: Promise<unknown>
   } = {},
 ) {
   const browser = new Window()
@@ -90,6 +92,7 @@ async function mount(
   const requests: { method: string; args: unknown[] }[] = []
   const checks: Check[] = []
   const inputs = new Map<string, (event: { target: { value: string } }) => void>()
+  let selectUploadFile: ((file: File | null) => void) | undefined
   const errors: string[] = []
   const translate = (value: string) => value
   const feedback = { success: () => {}, warning: () => {}, error: (value: string) => errors.push(value) }
@@ -101,6 +104,14 @@ async function mount(
     },
   }
   const api = {
+    isLoading: false,
+    importIamConfig: async (...args: unknown[]) => {
+      requests.push({ method: "importIamConfig", args })
+      await options.importWait
+    },
+    exportIamConfig: async (...args: unknown[]) => {
+      requests.push({ method: "exportIamConfig", args })
+    },
     getRekeyStatus: async () => ({ state: options.rekeyState ?? "idle", scanned: 0, updated: 0 }),
     startRekey: async (...args: unknown[]) => {
       requests.push({ method: "startRekey", args })
@@ -176,12 +187,22 @@ async function mount(
       if (name === "useActionChecks") return
       if (name === "useMessage") return feedback
       if (name === "useTranslation") return { t: translate }
-      if (["useGroups", "useTiers", "useTableCatalog", "useUsers", "usePolicies", "useSSE"].includes(name)) return api
+      if (
+        ["useGroups", "useTiers", "useTableCatalog", "useUsers", "usePolicies", "useSSE", "useImportExport"].includes(
+          name,
+        )
+      )
+        return api
       const value = (args[0] ?? {}) as Props
       if (name === "Button" || name === "AlertDialogAction" || name === "AlertDialogCancel")
         return React.createElement(
           "button",
-          { type: value.type ?? "button", disabled: value.disabled, onClick: value.onClick },
+          {
+            type: value.type ?? "button",
+            disabled: value.disabled,
+            onClick: value.onClick,
+            "aria-label": typeof value["aria-label"] === "string" ? value["aria-label"] : undefined,
+          },
           value.children,
         )
       if (name === "Input" || name === "Textarea") {
@@ -195,6 +216,10 @@ async function mount(
         })
       }
       if (name === "Dialog") return value.open ? passthrough(value) : null
+      if (name === "UploadZone") {
+        selectUploadFile = value.onChange as (file: File | null) => void
+        return React.createElement("div", { "data-upload-disabled": String(Boolean(value.disabled)) }, value.children)
+      }
       if (name === "UserSelector") return null
       if (name === "UserEditSecretKey")
         return React.createElement("input", { "data-permission-field": "secret", disabled: value.disabled })
@@ -213,7 +238,9 @@ async function mount(
     root.render(React.createElement(component, { open: true, onOpenChange: () => {}, onSuccess: () => {}, ...props })),
   )
   const button = (label: string) => {
-    const result = Array.from(container.querySelectorAll("button")).find((value) => value.textContent === label)
+    const result = Array.from(container.querySelectorAll("button")).find(
+      (value) => value.textContent === label || value.getAttribute("aria-label") === label,
+    )
     assert.ok(result, `expected button ${label}`)
     return result
   }
@@ -236,8 +263,16 @@ async function mount(
       assert.ok(inputs.has(id))
       await React.act(async () => inputs.get(id)!({ target: { value } }))
     },
-    click: async (label: string) => {
-      await React.act(async () => button(label).click())
+    chooseFile: async (file: File | null) => {
+      assert.ok(selectUploadFile)
+      await React.act(async () => selectUploadFile!(file))
+    },
+    click: async (label: string, twice = false) => {
+      const target = button(label)
+      await React.act(async () => {
+        target.click()
+        if (twice) target.click()
+      })
     },
   }
 }
@@ -421,4 +456,88 @@ test("rekey cancellation rechecks the cluster rekey action before mutation", asy
     ui.requests.some(({ method }) => method === "cancelRekey"),
     false,
   )
+})
+
+function deferred<T>() {
+  let resolve!: (value: T) => void
+  let reject!: (error: Error) => void
+  const promise = new Promise<T>((done, fail) => {
+    resolve = done
+    reject = fail
+  })
+  return { promise, resolve, reject }
+}
+
+test("IAM import synchronously locks permission checks and freezes the selected file", async (t) => {
+  const permission = deferred<boolean>()
+  const ui = await mount(t, ImportExportPage, {}, { freshAllowed: () => permission.promise })
+  const original = new File(["original"], "first.zip")
+  const replacement = new File(["replacement"], "replacement.zip")
+  await ui.chooseFile(original)
+  await ui.click("Import Now", true)
+  assert.equal(ui.checks.length, 1)
+  assert.equal(ui.button("Importing…").disabled, true)
+  assert.equal(ui.button("Remove").disabled, true)
+  assert.equal(ui.container.querySelector('[data-upload-disabled="true"]') !== null, true)
+  await ui.chooseFile(replacement)
+  assert.ok(ui.container.textContent.includes("first.zip"))
+  assert.equal(ui.container.textContent.includes("replacement.zip"), false)
+  await React.act(async () => permission.resolve(true))
+  const imports = ui.requests.filter(({ method }) => method === "importIamConfig")
+  assert.equal(imports.length, 1)
+  assert.equal(imports[0]?.args[0], original)
+  assert.equal(ui.button("Import Now").disabled, true)
+})
+
+test("denied import authorization releases the lock and preserves the file for retry", async (t) => {
+  const permission = deferred<boolean>()
+  let attempts = 0
+  const ui = await mount(t, ImportExportPage, {}, { freshAllowed: () => (attempts++ ? true : permission.promise) })
+  const file = new File(["fixture"], "retry.zip")
+  await ui.chooseFile(file)
+  await ui.click("Import Now", true)
+  await React.act(async () => permission.resolve(false))
+  assert.equal(
+    ui.requests.some(({ method }) => method === "importIamConfig"),
+    false,
+  )
+  assert.equal(ui.button("Import Now").disabled, false)
+  assert.ok(ui.container.textContent.includes("retry.zip"))
+  await ui.click("Import Now")
+  assert.equal(ui.requests.filter(({ method }) => method === "importIamConfig").length, 1)
+  assert.equal(ui.checks.length, 2)
+})
+
+test("a failed IAM import releases the pending state without losing the selected file", async (t) => {
+  const imported = deferred<unknown>()
+  const ui = await mount(t, ImportExportPage, {}, { importWait: imported.promise })
+  const original = new File(["fixture"], "failed.zip")
+  await ui.chooseFile(original)
+  await ui.click("Import Now", true)
+  assert.equal(ui.requests.filter(({ method }) => method === "importIamConfig").length, 1)
+  assert.equal(ui.button("Importing…").disabled, true)
+  await React.act(async () => imported.reject(new Error("import failed")))
+  assert.equal(ui.button("Import Now").disabled, false)
+  assert.ok(ui.container.textContent.includes("failed.zip"))
+  assert.equal(ui.button("Remove").disabled, false)
+})
+
+test("namespace whitespace normalization is identical for preview authorization and the actual write", async (t) => {
+  const expected = { bucket: "warehouse", objectKey: "namespaces/sales/quarter" }
+  const ui = await mount(
+    t,
+    NamespaceDialog,
+    { bucket: "warehouse", canCreate: true },
+    {
+      allowed: (action, context) => action === "admin:SetTableNamespace" && context?.objectKey === expected.objectKey,
+    },
+  )
+  await ui.change("table-catalog-namespace", " sales. quarter ")
+  assert.equal(ui.button("Create namespace").disabled, false)
+  await ui.click("Create namespace")
+  assert.deepEqual(ui.checks[0], { action: "admin:SetTableNamespace", context: expected })
+  assert.deepEqual(ui.requests.find(({ method }) => method === "createNamespace")?.args.slice(0, 2), [
+    "warehouse",
+    ["sales", "quarter"],
+  ])
 })

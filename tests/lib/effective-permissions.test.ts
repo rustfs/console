@@ -184,6 +184,34 @@ test("long UTF-8 object keys stay inside the server's body budget without losing
   )
 })
 
+test(
+  "a check that exceeds the budget only after JSON framing cannot block later checks",
+  { timeout: 1000 },
+  async () => {
+    const budget = 60 * 1024
+    const baseBytes = new TextEncoder().encode(
+      JSON.stringify(permissionRequest({ ...check, context: { ...check.context, objectKey: "" } }, "0")),
+    ).length
+    const oversized = { ...check, context: { ...check.context, objectKey: "x".repeat(budget - baseBytes) } }
+    assert.equal(new TextEncoder().encode(JSON.stringify(permissionRequest(oversized, "0"))).length, budget)
+    const requests: PermissionRequest[] = []
+    const client = new EffectivePermissionClient(
+      async (checks) => {
+        requests.push(...checks)
+        return response(checks)
+      },
+      () => {},
+    )
+    const results = await Promise.all([client.load(oversized), client.load(check)])
+    assert.deepEqual(
+      results.map((result) => result.decision),
+      ["unknown", "allowed"],
+    )
+    assert.equal(requests.length, 1)
+    assert.equal(client.hasPending(), false)
+  },
+)
+
 test("submission queries do not reuse a pending render-time allowance", async () => {
   const renderResponse = deferred<unknown>()
   const submitResponse = deferred<unknown>()
@@ -370,6 +398,8 @@ test("rename authorization targets the new key rather than its parent wildcard",
       bucket: "alice-data",
       objectKey: "/protected.txt",
       authType: "REST-HEADER",
+      operation: "CopyObject",
+      ifMatch: null,
       ifNoneMatch: "*",
       copySource: { bucket: "alice-data", objectKey: "source.txt" },
     },
@@ -383,6 +413,15 @@ test("an explicit null UUID copy source remains a versioned restore", () => {
     versionId: "00000000-0000-0000-0000-000000000000",
   })
   assert.equal(groups[0].checks[0].action, "s3:GetObjectVersion")
+  assert.deepEqual(groups[0].checks.find((check) => check.action === "s3:PutObject")?.context, {
+    bucket: "alice-data",
+    objectKey: "data.txt",
+    authType: "REST-HEADER",
+    operation: "CopyObject",
+    ifMatch: null,
+    ifNoneMatch: null,
+    copySource: { bucket: "alice-data", objectKey: "data.txt", versionId: "00000000-0000-0000-0000-000000000000" },
+  })
 })
 
 test("legacy null UUID preview and download use the current-object action omitted by the SDK", () => {

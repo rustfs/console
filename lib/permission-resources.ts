@@ -10,7 +10,13 @@ export interface PermissionResourceContext {
   legalHoldStatus?: "ON" | "OFF"
   requestTags?: Record<string, string>
   authType?: "REST-HEADER" | "REST-QUERY-STRING"
-  operation?: "PutObject" | "CopyObject" | "CreateMultipartUpload" | "UploadPartCopy" | "CompleteMultipartUpload"
+  operation?:
+    | "PutObject"
+    | "CopyObject"
+    | "CreateMultipartUpload"
+    | "UploadPart"
+    | "UploadPartCopy"
+    | "CompleteMultipartUpload"
   /** Undefined facts are unknown; null records a header the SDK will not send. */
   copySource?: { bucket: string; objectKey: string; versionId?: string } | null
   ifMatch?: string | null

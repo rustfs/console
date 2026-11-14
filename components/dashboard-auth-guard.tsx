@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Spinner } from "@/components/ui/spinner"
 import { Button } from "@/components/ui/button"
@@ -34,7 +34,14 @@ function DashboardAuthGuardContent({ children }: { children: React.ReactNode }) 
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const accessPath = `${pathname}${searchParams.size ? `?${searchParams}` : ""}`
-  const { isAuthenticated, getIsLoggingOut } = useAuth()
+  const { isAuthenticated, getIsLoggingOut, credentials } = useAuth()
+  const identity = JSON.stringify([
+    isAuthenticated,
+    credentials?.AccessKeyId,
+    credentials?.SecretAccessKey,
+    credentials?.SessionToken,
+  ])
+  const [allowedPage, setAllowedPage] = useState<{ path: string; identity: string } | null>(null)
   const { isReady: apiReady } = useApiReady()
   const { isReady: s3Ready } = useS3Ready()
   const {
@@ -83,12 +90,33 @@ function DashboardAuthGuardContent({ children }: { children: React.ReactNode }) 
 
   // Background refreshes must not unmount the page that requested them.
   const routeAllowed = canAccessDashboardRoute(accessPath, { isAdmin, canAccessPath })
+  const routePending = !routeAllowed && hasPendingChecks(accessPath)
+  const unavailable = permissionServiceStatus === "unavailable"
+  const ready = isReady && isAuthenticated && hasResolvedAdmin && (isAdmin || hasFetchedPolicy)
+  const preservePage =
+    ready &&
+    !routeAllowed &&
+    (routePending || unavailable) &&
+    allowedPage?.path === accessPath &&
+    allowedPage?.identity === identity
+  if (ready && routeAllowed && (allowedPage?.path !== accessPath || allowedPage?.identity !== identity)) {
+    setAllowedPage({ path: accessPath, identity })
+  } else if (
+    allowedPage &&
+    (!ready ||
+      allowedPage.path !== accessPath ||
+      allowedPage.identity !== identity ||
+      (!routeAllowed && !routePending && !unavailable))
+  ) {
+    setAllowedPage(null)
+  }
   if (
     isReady &&
     isAuthenticated &&
     hasResolvedAdmin &&
     hasFetchedPolicy &&
     !routeAllowed &&
+    !preservePage &&
     permissionServiceStatus === "unavailable"
   ) {
     return (
@@ -108,7 +136,7 @@ function DashboardAuthGuardContent({ children }: { children: React.ReactNode }) 
     !isAuthenticated ||
     !hasResolvedAdmin ||
     (!isAdmin && !hasFetchedPolicy) ||
-    (!routeAllowed && hasPendingChecks(accessPath))
+    (!routeAllowed && routePending && !preservePage)
   ) {
     return (
       <div className="flex min-h-64 flex-col items-center justify-center gap-3">
@@ -131,9 +159,21 @@ function DashboardAuthGuardContent({ children }: { children: React.ReactNode }) 
     )
   }
 
-  if (!routeAllowed) {
+  if (!routeAllowed && !preservePage) {
     return null
   }
 
-  return <>{children}</>
+  return (
+    <>
+      {preservePage && unavailable && (
+        <div role="alert" className="flex items-center justify-between gap-3 p-4 text-sm text-muted-foreground">
+          <p>{t("Unable to check permissions. Refresh and try again.")}</p>
+          <Button variant="outline" onClick={retryPermissions}>
+            {t("Refresh")}
+          </Button>
+        </div>
+      )}
+      {children}
+    </>
+  )
 }

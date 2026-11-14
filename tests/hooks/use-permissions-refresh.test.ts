@@ -82,7 +82,10 @@ type Api = {
   resolveUrl?: (path: string) => string
 }
 
-function makeApi(isAdmin = false, effective?: (check: PermissionRequest) => PermissionResult) {
+function makeApi(
+  isAdmin = false,
+  effective?: (check: PermissionRequest) => PermissionResult | Promise<PermissionResult>,
+) {
   const requests: ReturnType<typeof Promise.withResolvers<unknown>>[] = []
   const permissionRequests: PermissionRequest[] = []
   const api: Api = {
@@ -99,7 +102,9 @@ function makeApi(isAdmin = false, effective?: (check: PermissionRequest) => Perm
     api.post = async (_path, body) => {
       const { checks } = body as { checks: PermissionRequest[] }
       permissionRequests.push(...checks)
-      return { results: checks.map((check) => ({ id: check.id, ...effective(check) })) }
+      return {
+        results: await Promise.all(checks.map(async (check) => ({ id: check.id, ...(await effective(check)) }))),
+      }
     }
   }
   return { api, requests, permissionRequests }
@@ -111,7 +116,7 @@ async function mountBrowser(
     deniedPolicyStatus?: boolean
     isAdmin?: boolean
     search?: string
-    effective?: (check: PermissionRequest) => PermissionResult
+    effective?: (check: PermissionRequest) => PermissionResult | Promise<PermissionResult>
   } = {},
 ) {
   const browser = new Window()
@@ -299,6 +304,53 @@ test("a known directory remains accessible with only a bucket-policy upload hint
     false,
   )
 })
+
+for (const outcome of ["allowed", "denied", "identity change", "route change"] as const) {
+  test(`bucket-policy page state survives revalidation until ${outcome}`, async (t) => {
+    let waiting = false
+    let decision = "allowed"
+    const gate = Promise.withResolvers<void>()
+    const mounted = await mountBrowser(t, {
+      search: "bucket=alice-data",
+      effective: async ({ action, bucket }) => {
+        if (waiting) await gate.promise
+        return {
+          decision:
+            action === "s3:ListBucket" && bucket === "alice-data" ? (decision as "allowed" | "denied") : "denied",
+        }
+      },
+    })
+    await mounted.resolve(0, { policy: "" })
+    const page = mounted.container.querySelector('[data-scoped-bucket="alice-data"]')!
+    assert.ok(page)
+    page.setAttribute("data-selection", "report.txt")
+    waiting = true
+    await act(async () => {
+      void mounted.permissions.fetchUserPolicy()
+    })
+    await mounted.resolve(1, { policy: "" })
+    assert.equal(mounted.container.querySelector('[data-scoped-bucket="alice-data"]'), page)
+    assert.equal(page.getAttribute("data-selection"), "report.txt")
+    assert.equal(
+      mounted.permissions.canCapability("objects.delete", { bucket: "alice-data", objectKey: "report.txt" }),
+      false,
+    )
+    if (outcome === "identity change") {
+      await mounted.changeIdentity({ AccessKeyId: "other", SecretAccessKey: "secret", SessionToken: "other" })
+      assert.equal(mounted.container.contains(page), false)
+    } else if (outcome === "route change") {
+      await mounted.navigate("/browser?bucket=other-bucket")
+      assert.equal(mounted.container.contains(page), false)
+    }
+    if (outcome === "denied") decision = "denied"
+    await act(async () => gate.resolve())
+    if (outcome === "allowed") assert.equal(mounted.container.querySelector('[data-scoped-bucket="alice-data"]'), page)
+    if (outcome === "denied") {
+      assert.equal(mounted.container.contains(page), false)
+      assert.ok(mounted.router.replace.mock.calls.some((call) => call.arguments[0] === "/403/"))
+    }
+  })
+}
 
 test("an exact-object query route checks object read permission rather than bucket listing", async (t) => {
   const mounted = await mountBrowser(t, {

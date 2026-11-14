@@ -52,6 +52,10 @@
   [role="button"] {
     touch-action: manipulation !important;
   }
+  /* Tailwind v4 preflight gives buttons the default cursor; links already show a pointer. */
+  :is(button, [role="button"]):not(:disabled, [aria-disabled="true"]) {
+    cursor: pointer;
+  }
   [data-slot="tabs-list"] {
     min-height: 2.25rem;
   }

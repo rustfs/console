@@ -2331,5 +2331,7 @@
   "Bucket navigation": "儲存貯體導覽",
   "Main navigation": "主要導覽",
   "Encryption & Keys": "加密與金鑰",
-  "Decommission": "除役"
+  "Decommission": "除役",
+  "Unable to check permissions. Refresh and try again.": "無法檢查權限，請重新整理後再試。",
+  "Table location must be an S3 URI inside the selected table bucket.": "資料表位置必須是所選資料表儲存桶內的 S3 URI。"
 }

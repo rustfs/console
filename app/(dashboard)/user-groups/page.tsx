@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
@@ -28,6 +29,20 @@ export default function UserGroupsPage() {
   const message = useMessage()
   const dialog = useDialog()
   const { listGroup, getGroup, removeGroup } = useGroups()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([
+    { action: "admin:GetGroup" },
+    { action: "admin:AddUserToGroup" },
+    { action: "admin:RemoveUserFromGroup" },
+    { action: "admin:EnableGroup" },
+    { action: "admin:AttachUserOrGroupPolicy" },
+  ])
+  const canCreateGroup = canAction("admin:AddUserToGroup")
+  const canEditGroup =
+    canAction("admin:GetGroup") &&
+    (canAction("admin:AddUserToGroup") || canAction("admin:EnableGroup") || canAction("admin:AttachUserOrGroupPolicy"))
+  const canDeleteGroup = canAction("admin:GetGroup") && canAction("admin:RemoveUserFromGroup")
+  const canAssignPolicies = canAction("admin:AttachUserOrGroupPolicy")
 
   const [data, setData] = useState<GroupRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,14 +81,20 @@ export default function UserGroupsPage() {
     return data.filter((row) => row.name.toLowerCase().includes(term))
   }, [data, searchTerm])
 
-  const openEditItem = React.useCallback((row: GroupRow) => {
-    setEditRow(row)
-    setEditFormOpen(true)
-  }, [])
+  const openEditItem = React.useCallback(
+    (row: GroupRow) => {
+      if (!canEditGroup) return
+      setEditRow(row)
+      setEditFormOpen(true)
+    },
+    [canEditGroup],
+  )
 
   const deleteItem = React.useCallback(
     async (row: GroupRow) => {
       try {
+        if (!(await checkAction("admin:GetGroup")) || !(await checkAction("admin:RemoveUserFromGroup")))
+          throw new Error(t("Access Denied"))
         const info = (await getGroup(row.name)) as { members?: string[] }
         if (info?.members?.length) {
           message.error(t("Please remove members first"))
@@ -88,11 +109,12 @@ export default function UserGroupsPage() {
         message.error(msg)
       }
     },
-    [getGroup, removeGroup, message, t, getDataList],
+    [checkAction, getGroup, removeGroup, message, t, getDataList],
   )
 
   const confirmDelete = React.useCallback(
     (row: GroupRow) => {
+      if (!canDeleteGroup) return
       dialog.error({
         title: t("Confirm Delete"),
         content: row.name,
@@ -101,7 +123,7 @@ export default function UserGroupsPage() {
         onPositiveClick: () => deleteItem(row),
       })
     },
-    [dialog, t, deleteItem],
+    [canDeleteGroup, dialog, t, deleteItem],
   )
 
   const columns: ColumnDef<GroupRow>[] = React.useMemo(
@@ -120,11 +142,23 @@ export default function UserGroupsPage() {
         meta: { width: 200 },
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
-            <Button type="button" size="sm" variant="outline" onClick={() => openEditItem(row.original)}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => openEditItem(row.original)}
+              disabled={!canEditGroup}
+            >
               <RiEdit2Line className="size-4" aria-hidden />
               <span>{t("Edit")}</span>
             </Button>
-            <Button type="button" size="sm" variant="outline" onClick={() => confirmDelete(row.original)}>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => confirmDelete(row.original)}
+              disabled={!canDeleteGroup}
+            >
               <RiDeleteBin5Line className="size-4" aria-hidden />
               <span>{t("Delete")}</span>
             </Button>
@@ -132,7 +166,7 @@ export default function UserGroupsPage() {
         ),
       },
     ],
-    [t, openEditItem, confirmDelete],
+    [canEditGroup, canDeleteGroup, t, openEditItem, confirmDelete],
   )
 
   const { table, selectedRowIds } = useDataTable<GroupRow>({
@@ -154,7 +188,7 @@ export default function UserGroupsPage() {
         count={!loading && !loadError ? data.length : undefined}
         actions={
           <>
-            <Button type="button" onClick={() => setNewFormOpen(true)}>
+            <Button type="button" onClick={() => setNewFormOpen(true)} disabled={!canCreateGroup}>
               <RiAddLine className="size-4" aria-hidden />
               {t("Add User Group")}
             </Button>
@@ -179,7 +213,7 @@ export default function UserGroupsPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!selectedKeys.length}
+                  disabled={!canAssignPolicies || !selectedKeys.length}
                   onClick={() => setPoliciesDialogOpen(true)}
                 >
                   <RiGroup2Fill className="size-4" aria-hidden />

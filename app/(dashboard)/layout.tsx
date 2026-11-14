@@ -11,8 +11,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <ApiProvider>
       <S3Provider>
-        <TaskProvider>
-          <PermissionsProvider>
+        <PermissionsProvider>
+          <TaskProvider>
             <DashboardAuthGuard>
               <SidebarProvider defaultOpen style={{ "--sidebar-width": "14rem" } as React.CSSProperties}>
                 <AppSidebar />
@@ -30,8 +30,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </SidebarInset>
               </SidebarProvider>
             </DashboardAuthGuard>
-          </PermissionsProvider>
-        </TaskProvider>
+          </TaskProvider>
+        </PermissionsProvider>
       </S3Provider>
     </ApiProvider>
   )

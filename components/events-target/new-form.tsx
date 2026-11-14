@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import Image from "next/image"
 import { useTranslation } from "react-i18next"
@@ -26,6 +27,9 @@ interface EventsTargetNewFormProps {
 export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTargetNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:SetBucketTarget" }])
+  const canManageAction = canAction("admin:SetBucketTarget")
   const { updateEventTarget } = useEventTarget()
 
   const [type, setType] = React.useState<EventTargetType | "">("")
@@ -101,6 +105,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
 
     setSubmitting(true)
     try {
+      if (!(await checkAction("admin:SetBucketTarget"))) throw new Error(t("Access Denied"))
       if (!type) return
       const targetType = EVENT_TARGET_TYPE_MAPPING[type]
       const keyValues = Object.entries(config).map(([key, value]) => ({
@@ -239,7 +244,7 @@ export function EventsTargetNewForm({ open, onOpenChange, onSuccess }: EventsTar
           <Button variant="outline" onClick={handleCancel} disabled={submitting}>
             {t("Cancel")}
           </Button>
-          <Button onClick={handleSave} disabled={!type || submitting}>
+          <Button onClick={handleSave} disabled={!canManageAction || !type || submitting}>
             {submitting ? t("Saving…") : t("Save")}
           </Button>
         </DialogFooter>

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { useUsers } from "@/hooks/use-users"
-import { usePermissions } from "@/hooks/use-permissions"
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import { usePolicies } from "@/hooks/use-policies"
 import { useGroups } from "@/hooks/use-groups"
 import { useMessage } from "@/lib/feedback/message"
@@ -47,14 +47,28 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
   const { t } = useTranslation()
   const message = useMessage()
   const { getUser, changeUserStatus, createUser } = useUsers()
-  const { canCapability } = usePermissions()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([
+    { action: "admin:GetUser" },
+    { action: "admin:CreateUser" },
+    { action: "admin:EnableUser" },
+    { action: "admin:AddUserToGroup" },
+    { action: "admin:AttachUserOrGroupPolicy" },
+    { action: "admin:CreateServiceAccount" },
+    { action: "admin:UpdateServiceAccount" },
+    { action: "admin:RemoveServiceAccount" },
+  ])
   const { listPolicies, setUserOrGroupPolicy } = usePolicies()
   const { listGroup, updateGroupMembers } = useGroups()
-  const canEditAccount = canCapability("users.edit")
-  const canAssignGroups = canCapability("users.assignGroups")
-  const canEditPolicies = canCapability("users.policy.edit")
+  const canChangeSecret = canAction("admin:CreateUser")
+  const canChangeStatus = canAction("admin:EnableUser")
+  const canEditAccount = canAction("admin:GetUser") && (canChangeSecret || canChangeStatus)
+  const canAssignGroups = canAction("admin:AddUserToGroup")
+  const canEditPolicies = canAction("admin:AttachUserOrGroupPolicy")
   const canManageAccessKeys =
-    canCapability("accessKeys.create") || canCapability("accessKeys.edit") || canCapability("accessKeys.delete")
+    canAction("admin:CreateServiceAccount") ||
+    canAction("admin:UpdateServiceAccount") ||
+    canAction("admin:RemoveServiceAccount")
 
   const [user, setUser] = React.useState<{
     accessKey: string
@@ -199,7 +213,18 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
 
     setSubmitting(true)
     try {
-      if (canEditAccount && secretKey) {
+      if (secretKey && !(await checkAction("admin:CreateUser"))) throw new Error(t("Access Denied"))
+      if (user.status !== originalStatus && !(await checkAction("admin:EnableUser")))
+        throw new Error(t("Access Denied"))
+      if (canEditPolicies && !(await checkAction("admin:AttachUserOrGroupPolicy"))) throw new Error(t("Access Denied"))
+      if (
+        canAssignGroups &&
+        (originalMemberOf.some((group) => !user.memberOf.includes(group)) ||
+          user.memberOf.some((group) => !originalMemberOf.includes(group))) &&
+        !(await checkAction("admin:AddUserToGroup"))
+      )
+        throw new Error(t("Access Denied"))
+      if (canChangeSecret && secretKey) {
         await createUser(
           {
             accessKey: user.accessKey,
@@ -208,7 +233,7 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
           },
           { suppress403Redirect: true },
         )
-      } else if (canEditAccount && user.status !== originalStatus) {
+      } else if (canChangeStatus && user.status !== originalStatus) {
         await changeUserStatus(user.accessKey, { status: user.status })
       }
 
@@ -315,13 +340,13 @@ export function UserEditForm({ open, onOpenChange, row, onSuccess }: UserEditFor
                       id="edit-user-status"
                       checked={statusBoolean}
                       onCheckedChange={handleStatusChange}
-                      disabled={loading || submitting}
+                      disabled={!canChangeStatus || loading || submitting}
                     />
                   </div>
                   <UserEditSecretKey
                     value={secretKey}
                     error={errors.secretKey}
-                    disabled={loading || submitting}
+                    disabled={!canChangeSecret || loading || submitting}
                     onChange={setSecretKey}
                   />
                 </TabsContent>

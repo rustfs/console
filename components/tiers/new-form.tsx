@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -49,6 +50,9 @@ const FIELD_IDS: Record<FieldName, string> = {
 export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:SetTier" }])
+  const canManageAction = canAction("admin:SetTier")
   const { addTiers } = useTiers()
   const theme = getThemeManifest()
 
@@ -145,6 +149,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
     setSubmitting(true)
     setSaveError("")
     try {
+      if (!(await checkAction("admin:SetTier"))) throw new Error(t("Access Denied"))
       const payload = buildTierPayload(type, {
         name,
         endpoint,
@@ -503,7 +508,7 @@ export function TiersNewForm({ open, onOpenChange, onSuccess }: TiersNewFormProp
             <Button type="button" variant="outline" onClick={handleCancel} disabled={submitting}>
               {t("Cancel")}
             </Button>
-            <Button type="submit" disabled={!type || submitting}>
+            <Button type="submit" disabled={!canManageAction || !type || submitting}>
               {submitting ? <Spinner data-icon="inline-start" /> : null}
               {submitting ? t("Saving…") : t("Save")}
             </Button>

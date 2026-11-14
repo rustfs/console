@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { useTranslation } from "react-i18next"
@@ -35,6 +36,9 @@ export default function AuditTargetPage() {
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:SetBucketTarget" }])
+  const canManageAction = canAction("admin:SetBucketTarget")
   const { getAuditTargetList, deleteAuditTarget } = useAuditTarget()
   const { getModuleSwitches } = useModuleSwitches()
 
@@ -96,6 +100,7 @@ export default function AuditTargetPage() {
       }
 
       try {
+        if (!(await checkAction("admin:SetBucketTarget"))) throw new Error(t("Access Denied"))
         await deleteAuditTarget(`audit_${row.service}`, row.account_id)
         message.success(t("Delete Success"))
         loadData()
@@ -105,12 +110,12 @@ export default function AuditTargetPage() {
         message.error(msg)
       }
     },
-    [canManageTargets, deleteAuditTarget, loadData, message, t],
+    [checkAction, canManageTargets, deleteAuditTarget, loadData, message, t],
   )
 
   const confirmDelete = useCallback(
     (row: RowData) => {
-      if (!canManageTargets) return
+      if (!canManageAction || !canManageTargets) return
       if (!isConfigSource(row.source)) return
 
       dialog.error({
@@ -121,7 +126,7 @@ export default function AuditTargetPage() {
         onPositiveClick: () => deleteItem(row),
       })
     },
-    [canManageTargets, deleteItem, dialog, t],
+    [canManageAction, canManageTargets, deleteItem, dialog, t],
   )
 
   const columns: ColumnDef<RowData>[] = useMemo(
@@ -169,7 +174,7 @@ export default function AuditTargetPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => confirmDelete(row.original)}
-                disabled={!canManageTargets}
+                disabled={!canManageAction || !canManageTargets}
               >
                 <RiDeleteBin5Line className="size-4" aria-hidden />
                 <span>{t("Delete")}</span>
@@ -180,7 +185,7 @@ export default function AuditTargetPage() {
           ),
       },
     ],
-    [canManageTargets, confirmDelete, t],
+    [canManageAction, canManageTargets, confirmDelete, t],
   )
 
   const { table } = useDataTable<RowData>({
@@ -200,7 +205,7 @@ export default function AuditTargetPage() {
                 variant="outline"
                 className="h-11 w-full sm:h-8 sm:w-auto"
                 onClick={() => setNewFormOpen(true)}
-                disabled={!canManageTargets}
+                disabled={!canManageAction || !canManageTargets}
               >
                 <RiAddLine className="size-4" aria-hidden />
                 <span>{t("Add Audit Target")}</span>

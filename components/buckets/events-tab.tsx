@@ -30,7 +30,7 @@ export function BucketEventsTab({ bucketName, hideTitle = false, renderHeader }:
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
-  const { canCapability } = usePermissions()
+  const { canCapability, checkCapability } = usePermissions()
   const { listBucketNotifications, putBucketNotifications } = useBucket()
   const { getModuleSwitches } = useModuleSwitches()
   const eventsContext = React.useMemo(() => ({ bucket: bucketName }), [bucketName])
@@ -164,6 +164,8 @@ export function BucketEventsTab({ bucketName, hideTitle = false, renderHeader }:
           if (mutatingId) return
           setMutatingId(row.sourceId ?? row.id)
           try {
+            if (!(await checkCapability("bucket.events.edit", { bucket: bucketName })))
+              throw new Error(t("Permission required"))
             const currentResponse = await listBucketNotifications(bucketName)
             const currentNotifications = (currentResponse ?? {}) as unknown as Record<string, unknown[]>
             const configKey = getNotificationConfigKey(row.type)
@@ -190,6 +192,7 @@ export function BucketEventsTab({ bucketName, hideTitle = false, renderHeader }:
     [
       bucketName,
       canEditEvents,
+      checkCapability,
       canManageBucketEvents,
       dialog,
       listBucketNotifications,

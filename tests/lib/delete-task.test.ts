@@ -6,6 +6,135 @@ import { createDeleteTaskHelpers, type DeleteTask, type FolderDeleteTask } from 
 import { resolveBucketVersioningState, shouldDeleteAllVersions } from "../../lib/object-delete"
 import { TaskManager } from "../../lib/task-manager"
 
+test("ordinary deletion checks the exact leading-slash object before sending a mutation", async () => {
+  const commands: unknown[] = []
+  const checks: unknown[] = []
+  const client = {
+    send: async (command: unknown) => {
+      commands.push(command)
+      return {}
+    },
+  }
+  const { handler, createTasks } = createDeleteTaskHelpers(client as unknown as S3Client, {
+    checkCapability: async (capability, context) => {
+      checks.push({ capability, context })
+      return false
+    },
+  })
+  const [task] = createTasks(["/protected.txt"], "bucket")
+  await assert.rejects(handler.perform(task), /Access Denied/)
+  assert.deepEqual(checks, [
+    { capability: "objects.delete", context: { bucket: "bucket", objectKey: "/protected.txt", versionId: undefined } },
+  ])
+  assert.deepEqual(commands, [])
+})
+
+test("all-version deletion refuses to list versions when version-list permission is denied", async () => {
+  const commands: unknown[] = []
+  const client = {
+    send: async (command: unknown) => {
+      commands.push(command)
+      return {}
+    },
+  }
+  const { handler, createTasks } = createDeleteTaskHelpers(client as unknown as S3Client, {
+    checkCapability: async () => false,
+  })
+  const [task] = createTasks(["file.txt"], "bucket", undefined, { deleteAllVersions: true })
+  await assert.rejects(handler.perform(task), /Access Denied/)
+  assert.deepEqual(commands, [])
+})
+
+test("all-version deletion checks every returned version and marker before deleting any", async () => {
+  const commands: unknown[] = []
+  const checkedVersions: (string | undefined)[] = []
+  const client = {
+    send: async (command: unknown) => {
+      commands.push(command)
+      assert.ok(command instanceof ListObjectVersionsCommand)
+      return {
+        Versions: [{ Key: "file.txt", VersionId: "allowed" }],
+        DeleteMarkers: [{ Key: "file.txt", VersionId: "denied" }],
+      }
+    },
+  }
+  const { handler, createTasks } = createDeleteTaskHelpers(client as unknown as S3Client, {
+    checkCapability: async (capability, context) => {
+      if (capability === "objects.version.list") return true
+      checkedVersions.push(context.versionId)
+      return context.versionId !== "denied"
+    },
+  })
+  const [task] = createTasks(["file.txt"], "bucket", undefined, { deleteAllVersions: true })
+  await assert.rejects(handler.perform(task), /Access Denied/)
+  assert.deepEqual(checkedVersions, ["allowed", "denied"])
+  assert.equal(commands.length, 1)
+})
+
+test("recursive deletion checks each discovered child before issuing its batch", async () => {
+  const commands: unknown[] = []
+  const children: (string | undefined)[] = []
+  const client = {
+    send: async (command: unknown) => {
+      commands.push(command)
+      assert.ok(command instanceof ListObjectsV2Command)
+      return { Contents: [{ Key: "folder/allowed" }, { Key: "folder/protected" }] }
+    },
+  }
+  const { folderHandler, createFolderDeleteTask } = createDeleteTaskHelpers(client as unknown as S3Client, {
+    checkCapability: async (_capability, context) => {
+      children.push(context.objectKey)
+      return context.objectKey !== "folder/protected"
+    },
+  })
+  await assert.rejects(folderHandler.perform(createFolderDeleteTask("folder/", "bucket")), /Access Denied/)
+  assert.deepEqual(children, ["folder/allowed", "folder/protected"])
+  assert.equal(commands.length, 1)
+})
+
+test("force cleanup checks its explicit capability before sending the force-delete request", async () => {
+  const commands: unknown[] = []
+  const checks: string[] = []
+  const client = {
+    send: async (command: unknown) => {
+      commands.push(command)
+      return {}
+    },
+  }
+  const { folderHandler, createFolderDeleteTask } = createDeleteTaskHelpers(client as unknown as S3Client, {
+    checkCapability: async (capability) => {
+      checks.push(capability)
+      return false
+    },
+  })
+  await assert.rejects(
+    folderHandler.perform(createFolderDeleteTask("folder/", "bucket", { forceDelete: true })),
+    /Access Denied/,
+  )
+  assert.deepEqual(checks, ["objects.forceCleanup"])
+  assert.deepEqual(commands, [])
+})
+
+test("canceling a delete during its permission check prevents a later successful check from mutating", async () => {
+  const permission = Promise.withResolvers<boolean>()
+  const commands: unknown[] = []
+  const client = {
+    send: async (command: unknown) => {
+      commands.push(command)
+      return {}
+    },
+  }
+  const { handler, createTasks } = createDeleteTaskHelpers(client as unknown as S3Client, {
+    checkCapability: () => permission.promise,
+  })
+  const [task] = createTasks(["file.txt"], "bucket")
+  const pending = handler.perform(task)
+  task.abortController!.abort()
+  permission.resolve(true)
+  await assert.rejects(pending, { name: "AbortError" })
+  assert.deepEqual(commands, [])
+})
+
 async function waitForTaskStatus(task: DeleteTask | FolderDeleteTask, status: DeleteTask["status"]) {
   for (let attempt = 0; attempt < 200; attempt += 1) {
     if (task.status === status) return

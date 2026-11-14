@@ -67,7 +67,7 @@ test("isObjectRetentionDateInFuture rejects empty, invalid, and past dates", () 
   assert.equal(isObjectRetentionDateInFuture("2026-05-14T12:01:00.000Z", now), true)
 })
 
-test("shouldShowObjectRetentionAction requires retention permission and legal hold enabled", () => {
+test("shouldShowObjectRetentionAction requires retention permission independently of legal hold", () => {
   assert.equal(
     shouldShowObjectRetentionAction({
       canEditRetention: true,
@@ -80,7 +80,7 @@ test("shouldShowObjectRetentionAction requires retention permission and legal ho
       canEditRetention: true,
       legalHoldEnabled: false,
     }),
-    false,
+    true,
   )
   assert.equal(
     shouldShowObjectRetentionAction({

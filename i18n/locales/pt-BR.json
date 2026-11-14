@@ -2331,5 +2331,7 @@
   "Bucket navigation": "Navegação do balde",
   "Main navigation": "Navegação principal",
   "Encryption & Keys": "Criptografia e chaves",
-  "Decommission": "Descomissionar"
+  "Decommission": "Descomissionar",
+  "Unable to check permissions. Refresh and try again.": "Não foi possível verificar as permissões. Atualize a página e tente novamente.",
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
 }

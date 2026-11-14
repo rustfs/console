@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiRefreshLine, RiStopCircleLine } from "@remixicon/react"
@@ -40,6 +41,9 @@ function isTerminalState(state: string) {
 export function TiersTransitionJob({ open, onOpenChange, tierName }: TiersTransitionJobProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:SetTier" }])
+  const canManageTier = canAction("admin:SetTier")
   const { runManualTransition, getManualTransitionJob, cancelManualTransitionJob } = useTiers()
 
   const [bucket, setBucket] = React.useState("")
@@ -76,6 +80,7 @@ export function TiersTransitionJob({ open, onOpenChange, tierName }: TiersTransi
     setSubmitting(true)
     setError("")
     try {
+      if (!(await checkAction("admin:SetTier"))) throw new Error(t("Access Denied"))
       const limit = Number.parseInt(maxObjects, 10)
       const response = await runManualTransition({
         bucket: sourceBucket,
@@ -107,6 +112,7 @@ export function TiersTransitionJob({ open, onOpenChange, tierName }: TiersTransi
     setSubmitting(true)
     setError("")
     try {
+      if (!(await checkAction("admin:SetTier"))) throw new Error(t("Access Denied"))
       const response = await getManualTransitionJob(id)
       setJob(response)
       setJobId(getJobId(response) || id)
@@ -126,6 +132,7 @@ export function TiersTransitionJob({ open, onOpenChange, tierName }: TiersTransi
     setSubmitting(true)
     setError("")
     try {
+      if (!(await checkAction("admin:SetTier"))) throw new Error(t("Access Denied"))
       const response = await cancelManualTransitionJob(id)
       setJob(response)
       setJobId(getJobId(response) || id)
@@ -294,15 +301,25 @@ export function TiersTransitionJob({ open, onOpenChange, tierName }: TiersTransi
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
             {t("Close")}
           </Button>
-          <Button type="button" variant="outline" onClick={refreshJob} disabled={submitting || !jobId.trim()}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={refreshJob}
+            disabled={!canManageTier || submitting || !jobId.trim()}
+          >
             <RiRefreshLine className="size-4" aria-hidden />
             {t("Refresh Status")}
           </Button>
-          <Button type="button" variant="outline" onClick={cancelJob} disabled={submitting || !canCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={cancelJob}
+            disabled={!canManageTier || submitting || !canCancel}
+          >
             <RiStopCircleLine className="size-4" aria-hidden />
             {t("Cancel Job")}
           </Button>
-          <Button type="button" onClick={runJob} disabled={submitting}>
+          <Button type="button" onClick={runJob} disabled={!canManageTier || submitting}>
             {t("Start Job")}
           </Button>
         </DialogFooter>

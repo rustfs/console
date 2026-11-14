@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -34,6 +35,10 @@ interface TierDeletionDialogProps {
 export function TierDeletionDialog({ tierName, originalError, onClose, onDeleted }: TierDeletionDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:ListTier" }, { action: "admin:SetTier" }])
+  const canReadTier = canAction("admin:ListTier")
+  const canManageTier = canAction("admin:SetTier")
   const { checkTierDeletion, retryTierCleanup, removeTiers } = useTiers()
   const [check, setCheck] = React.useState<TierDeletionCheck | null>(null)
   const [error, setError] = React.useState("")
@@ -51,6 +56,7 @@ export function TierDeletionDialog({ tierName, originalError, onClose, onDeleted
     setError("")
     setCheck(null)
     try {
+      if (!(await checkAction("admin:ListTier"))) throw new Error(t("Access Denied"))
       const response = await checkTierDeletion(tierName)
       if (request !== generation.current) return
       const result = parseTierDeletionCheck(response, tierName)
@@ -70,7 +76,7 @@ export function TierDeletionDialog({ tierName, originalError, onClose, onDeleted
         setBusy(false)
       }
     }
-  }, [checkTierDeletion, tierName, t])
+  }, [checkAction, checkTierDeletion, tierName, t])
 
   React.useEffect(() => {
     pending.current = false
@@ -90,6 +96,7 @@ export function TierDeletionDialog({ tierName, originalError, onClose, onDeleted
     setError("")
     setRetryStatus("")
     try {
+      if (!(await checkAction("admin:SetTier"))) throw new Error(t("Access Denied"))
       const response = parseTierCleanupRetry(await retryTierCleanup(tierName), tierName)
       if (request !== generation.current) return
       if (response.status === "accepted") {
@@ -125,6 +132,7 @@ export function TierDeletionDialog({ tierName, originalError, onClose, onDeleted
     setBusy(true)
     setError("")
     try {
+      if (!(await checkAction("admin:SetTier"))) throw new Error(t("Access Denied"))
       await removeTiers(tierName)
       if (request !== generation.current) return
       message.success(t("Delete Success"))
@@ -218,16 +226,21 @@ export function TierDeletionDialog({ tierName, originalError, onClose, onDeleted
           <Button type="button" variant="outline" disabled={busy} onClick={onClose}>
             {t("Close")}
           </Button>
-          <Button type="button" variant="outline" disabled={busy} onClick={() => void runCheck()}>
+          <Button type="button" variant="outline" disabled={!canReadTier || busy} onClick={() => void runCheck()}>
             {t("Recheck")}
           </Button>
           {check?.reasons.includes("CLEANUP_PENDING") ? (
-            <Button type="button" disabled={busy} onClick={() => void retryCleanup()}>
+            <Button type="button" disabled={!canManageTier || busy} onClick={() => void retryCleanup()}>
               {t("Retry object cleanup")}
             </Button>
           ) : null}
           {canRetryTierDeletion(check) ? (
-            <Button type="button" variant="destructive" disabled={busy} onClick={() => void retryDelete()}>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={!canManageTier || busy}
+              onClick={() => void retryDelete()}
+            >
               {t("Retry deletion")}
             </Button>
           ) : null}

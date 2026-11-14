@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,9 @@ interface TiersChangeKeyProps {
 export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: TiersChangeKeyProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:SetTier" }])
+  const canManageAction = canAction("admin:SetTier")
   const { updateTiers } = useTiers()
 
   const [accessKey, setAccessKey] = React.useState("")
@@ -49,6 +53,7 @@ export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: Tier
     submittingRef.current = true
     setSubmitting(true)
     try {
+      if (!(await checkAction("admin:SetTier"))) throw new Error(t("Access Denied"))
       await updateTiers(tierName, {
         accessKey,
         secretKey,
@@ -116,7 +121,7 @@ export function TiersChangeKey({ open, onOpenChange, tierName, onSuccess }: Tier
           <Button variant="outline" onClick={closeModal} disabled={submitting}>
             {t("Cancel")}
           </Button>
-          <Button onClick={submitForm} disabled={submitting}>
+          <Button onClick={submitForm} disabled={!canManageAction || submitting}>
             {t("Submit")}
           </Button>
         </DialogFooter>

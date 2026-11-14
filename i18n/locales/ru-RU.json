@@ -2331,5 +2331,7 @@
   "Bucket navigation": "Навигация по бакету",
   "Main navigation": "Главная навигация",
   "Encryption & Keys": "Шифрование и ключи",
-  "Decommission": "Вывод из эксплуатации"
+  "Decommission": "Вывод из эксплуатации",
+  "Unable to check permissions. Refresh and try again.": "Не удалось проверить разрешения. Обновите страницу и повторите попытку.",
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
 }

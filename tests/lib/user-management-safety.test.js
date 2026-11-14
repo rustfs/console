@@ -13,7 +13,7 @@ test("group editor clears stale records and blocks writes until the current grou
   assert.match(source, /setGroup\(\{ name: targetName, members: \[\], status: "enabled" \}\)/)
   assert.match(source, /group\.name === row\?\.name/)
   assert.match(source, /const isCurrentGroup = loadedName === group\.name && group\.name === row\?\.name/)
-  assert.match(source, /disabled=\{loading \|\| Boolean\(loadError\) \|\| statusUpdating/)
+  assert.match(source, /disabled=\{!canChangeStatus \|\| loading \|\| Boolean\(loadError\) \|\| statusUpdating/)
   assert.match(source, /grid-rows-\[auto_minmax\(0,1fr\)_auto\]/)
   assert.match(source, /min-h-0[^\"]*overflow-y-auto overscroll-contain/)
 })

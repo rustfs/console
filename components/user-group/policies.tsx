@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiAddLine, RiArrowDownSLine, RiCheckLine, RiRefreshLine } from "@remixicon/react"
@@ -30,6 +31,9 @@ interface UserGroupPoliciesProps {
 export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:AttachUserOrGroupPolicy" }])
+  const canManageAction = canAction("admin:AttachUserOrGroupPolicy")
   const { listPolicies, setUserOrGroupPolicy } = usePolicies()
 
   const [searchTerm, setSearchTerm] = React.useState("")
@@ -141,6 +145,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
   }, [editStatus, group.name, listPolicies, loadVersion, t])
 
   const startEditing = () => {
+    if (!canManageAction) return
     setSelectedPolicies([...currentPolicies])
     setPolicySelectorOpen(false)
     setEditStatus(true)
@@ -163,6 +168,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
     const targetName = group.name
     setSubmitting(true)
     try {
+      if (!(await checkAction("admin:AttachUserOrGroupPolicy"))) throw new Error(t("Access Denied"))
       await setUserOrGroupPolicy({
         policyName: selectedPolicies,
         userOrGroup: targetName,
@@ -173,8 +179,8 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
       setEditStatus(false)
       setPolicySelectorOpen(false)
       onSearch()
-    } catch {
-      if (activeGroupRef.current === targetName) message.error(t("Edit Failed"))
+    } catch (error) {
+      if (activeGroupRef.current === targetName) message.error((error as Error).message || t("Edit Failed"))
     } finally {
       if (activeGroupRef.current === targetName) setSubmitting(false)
     }
@@ -198,6 +204,7 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
             variant="outline"
             className="inline-flex items-center gap-2"
             onClick={startEditing}
+            disabled={!canManageAction}
           >
             <RiAddLine className="size-4" aria-hidden />
             {t("Edit Policy")}
@@ -304,7 +311,11 @@ export function UserGroupPolicies({ group, onSearch }: UserGroupPoliciesProps) {
             <Button type="button" variant="outline" onClick={cancelEditing} disabled={submitting}>
               {t("Cancel")}
             </Button>
-            <Button type="button" onClick={changePolicies} disabled={loading || Boolean(loadError) || submitting}>
+            <Button
+              type="button"
+              onClick={changePolicies}
+              disabled={!canManageAction || loading || Boolean(loadError) || submitting}
+            >
               {submitting ? <Spinner className="size-4" /> : null}
               {t("Save")}
             </Button>

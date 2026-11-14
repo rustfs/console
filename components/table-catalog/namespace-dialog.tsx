@@ -1,5 +1,7 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
+import { tableCatalogPermissionContext } from "./permission-context"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -32,6 +34,11 @@ interface NamespaceDialogProps {
   onSuccess?: () => void
 }
 
+function normalizeNamespaceInput(value: string): string[] {
+  const normalized = value.trim()
+  return normalized ? normalized.split(".").map((segment) => segment.trim()) : []
+}
+
 function parseProperties(value: string): Record<string, string> {
   if (!value.trim()) return {}
   const parsed: unknown = JSON.parse(value)
@@ -61,6 +68,7 @@ export function NamespaceDialog({
 }: NamespaceDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
   const { createNamespace, getNamespace, updateNamespaceProperties } = useTableCatalog(catalogPrefix)
   const [namespace, setNamespace] = React.useState("")
   const [properties, setProperties] = React.useState("")
@@ -76,6 +84,11 @@ export function NamespaceDialog({
 
   const editing = Boolean(initialNamespace)
   const canSubmit = editing ? canUpdate : canCreate
+  const targetNamespace = initialNamespace?.namespace ?? normalizeNamespaceInput(namespace)
+  const targetAction = editing ? "admin:UpdateTableNamespaceProperties" : "admin:SetTableNamespace"
+  const permissionContext = tableCatalogPermissionContext(bucket, editing ? targetNamespace : [])
+  useActionChecks(targetNamespace.length ? [{ action: targetAction, context: permissionContext }] : [])
+  const canSubmitTarget = targetNamespace.length > 0 && canAction(targetAction, permissionContext)
 
   const reset = React.useCallback(() => {
     setNamespace(initialNamespace ? displayNamespace(initialNamespace.namespace) : "")
@@ -117,7 +130,7 @@ export function NamespaceDialog({
 
   const validate = () => {
     const value = namespace.trim()
-    const segments = value.split(".").map((segment) => segment.trim())
+    const segments = targetNamespace
     if (!value || segments.some((segment) => !isCatalogIdentifierValid(segment))) {
       setFieldError(t("Use lowercase letters, numbers, hyphens, or underscores; separate levels with dots."))
       document.getElementById("table-catalog-namespace")?.focus()
@@ -156,6 +169,8 @@ export function NamespaceDialog({
     setSubmitting(true)
     setSaveError("")
     try {
+      if (!(await checkAction(targetAction, tableCatalogPermissionContext(bucket, editing ? segments : []))))
+        throw new Error(t("Access Denied"))
       if (editing) {
         const removals = Object.keys(originalProperties).filter((key) => !(key in parsedProperties))
         await updateNamespaceProperties(bucket, segments, { removals, updates: parsedProperties })
@@ -318,7 +333,10 @@ export function NamespaceDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               {t("Cancel")}
             </Button>
-            <Button type="submit" disabled={submitting || loading || !canSubmit || (editing && Boolean(loadError))}>
+            <Button
+              type="submit"
+              disabled={submitting || loading || !canSubmit || !canSubmitTarget || (editing && Boolean(loadError))}
+            >
               {submitting ? <Spinner className="size-4" aria-hidden /> : null}
               {submitting
                 ? editing

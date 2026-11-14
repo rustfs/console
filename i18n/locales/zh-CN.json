@@ -2331,5 +2331,7 @@
   "Bucket navigation": "存储桶导航",
   "Main navigation": "主导航",
   "Encryption & Keys": "加密与密钥",
-  "Decommission": "退役"
+  "Decommission": "退役",
+  "Unable to check permissions. Refresh and try again.": "无法检查权限，请刷新后重试。",
+  "Table location must be an S3 URI inside the selected table bucket.": "表位置必须是所选表存储桶内的 S3 URI。"
 }

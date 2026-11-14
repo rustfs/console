@@ -19,6 +19,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldContent, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useEventTarget } from "@/hooks/use-event-target"
 import { useMessage } from "@/lib/feedback/message"
 import { EVENT_OPTIONS, toS3Events } from "@/lib/events"
@@ -37,6 +38,7 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
   const message = useMessage()
   const { getEventTargetArnList } = useEventTarget()
   const { putBucketNotifications, listBucketNotifications } = useBucket()
+  const { checkCapability } = usePermissions()
 
   const [resourceName, setResourceName] = useState("")
   const [prefix, setPrefix] = useState("")
@@ -116,6 +118,8 @@ export function EventsNewForm({ open, onOpenChange, bucketName, onSuccess, disab
     setSubmitting(true)
     setSaveError("")
     try {
+      if (!(await checkCapability("bucket.events.edit", { bucket: bucketName })))
+        throw new Error(t("Permission required"))
       const uniqueS3Events = toS3Events(events)
 
       if (!uniqueS3Events.length) {

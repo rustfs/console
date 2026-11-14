@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Field, FieldContent, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useTiers, type TierRow } from "@/hooks/use-tiers"
 import { useMessage } from "@/lib/feedback/message"
 import { randomUUID } from "@/lib/functions"
@@ -51,6 +52,7 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
   const { t } = useTranslation()
   const message = useMessage()
   const { putBucketLifecycleConfiguration, getBucketVersioning, getBucketLifecycleConfiguration } = useBucket()
+  const { checkCapability } = usePermissions()
   const { listTiers } = useTiers()
 
   const [activeTab, setActiveTab] = useState<"expire" | "transition">("expire")
@@ -275,6 +277,8 @@ export function LifecycleNewForm({ open, onOpenChange, bucketName, onSuccess }: 
       }
       const payload = { Rules: [...existingRules, ...newRules] }
 
+      if (!(await checkCapability("bucket.lifecycle.edit", { bucket: bucketName })))
+        throw new Error(t("Permission required"))
       await putBucketLifecycleConfiguration(bucketName, payload)
       message.success(t("Create Success"))
       onSuccess?.()

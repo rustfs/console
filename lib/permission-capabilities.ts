@@ -1,4 +1,5 @@
 import { hasConsolePermission, type ConsolePolicy } from "./console-policy-parser"
+import type { ActionPermissionCheck, PermissionDecision, PermissionResult } from "./effective-permissions"
 import {
   toAllBucketsArn,
   toBucketArn,
@@ -40,6 +41,9 @@ export type ConsoleCapability =
   | "objects.legalHold.edit"
   | "objects.retention.edit"
   | "objects.version.view"
+  | "objects.version.list"
+  | "objects.version.preview"
+  | "objects.version.delete"
   | "objects.version.download"
   | "objects.version.restore"
   | "objects.share"
@@ -67,7 +71,7 @@ interface CapabilityRequirement {
 }
 
 const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]> = {
-  "bucket.create": [{ actions: ["s3:CreateBucket"], resource: "allBuckets" }],
+  "bucket.create": [{ actions: ["s3:CreateBucket"], resource: "bucket" }],
   "bucket.delete": [{ actions: ["s3:DeleteBucket"], resource: "bucket" }],
   "bucket.policy.put": [{ actions: ["s3:PutBucketPolicy"], resource: "bucket" }],
   "bucket.policy.delete": [{ actions: ["s3:DeleteBucketPolicy"], resource: "bucket" }],
@@ -102,8 +106,11 @@ const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]
   "objects.legalHold.edit": [{ actions: ["s3:PutObjectLegalHold"], resource: "object" }],
   "objects.retention.edit": [{ actions: ["s3:PutObjectRetention"], resource: "object" }],
   "objects.version.view": [{ actions: ["s3:GetObject"], resource: "object" }],
+  "objects.version.list": [{ actions: ["s3:ListBucketVersions"], resource: "bucket" }],
+  "objects.version.preview": [{ actions: ["s3:GetObjectVersion"], resource: "exactObject" }],
+  "objects.version.delete": [{ actions: ["s3:DeleteObjectVersion"], resource: "exactObject" }],
   "objects.version.download": [{ actions: ["s3:GetObjectVersion"], resource: "exactObject" }],
-  "objects.version.restore": [{ actions: ["s3:GetObject", "s3:PutObject"], resource: "object" }],
+  "objects.version.restore": [{ actions: ["s3:GetObjectVersion", "s3:PutObject"], resource: "exactObject" }],
   "objects.share": [{ actions: ["s3:GetObject"], resource: "object" }],
   "accessKeys.create": [{ actions: ["admin:CreateServiceAccount"], resource: "none" }],
   "accessKeys.edit": [{ actions: ["admin:UpdateServiceAccount"], resource: "none" }],
@@ -112,16 +119,12 @@ const CAPABILITY_REQUIREMENTS: Record<ConsoleCapability, CapabilityRequirement[]
   "users.create": [{ actions: ["admin:CreateUser"], resource: "none" }],
   "users.edit": [
     { actions: ["admin:GetUser"], resource: "none" },
-    { actions: ["admin:CreateUser", "admin:EnableUser", "admin:DisableUser"], mode: "any", resource: "none" },
+    { actions: ["admin:CreateUser", "admin:EnableUser"], mode: "any", resource: "none" },
   ],
   "users.delete": [{ actions: ["admin:DeleteUser"], resource: "none" }],
   "users.bulkDelete": [{ actions: ["admin:DeleteUser"], resource: "none" }],
-  "users.assignGroups": [
-    { actions: ["admin:AddUserToGroup", "admin:RemoveUserFromGroup"], mode: "any", resource: "none" },
-  ],
-  "users.policy.edit": [
-    { actions: ["admin:AttachUserOrGroupPolicy", "admin:UpdatePolicyAssociation"], mode: "any", resource: "none" },
-  ],
+  "users.assignGroups": [{ actions: ["admin:AddUserToGroup"], resource: "none" }],
+  "users.policy.edit": [{ actions: ["admin:AttachUserOrGroupPolicy"], resource: "none" }],
   "policies.create": [{ actions: ["admin:CreatePolicy"], resource: "none" }],
   "policies.edit": [{ actions: ["admin:CreatePolicy"], resource: "none" }],
   "policies.delete": [{ actions: ["admin:DeletePolicy"], resource: "none" }],
@@ -148,6 +151,100 @@ function resolveResource(resource: ResourceTarget, context: PermissionResourceCo
   }
 }
 
+export interface CapabilityCheck {
+  capability: ConsoleCapability
+  context?: PermissionResourceContext
+}
+
+export interface CapabilityCheckGroup {
+  mode: RequirementMode
+  checks: ActionPermissionCheck[]
+}
+
+/** Map a UI operation to actual authorization targets; never submit an ARN wildcard as an object. */
+export function capabilityCheckGroups(
+  capability: ConsoleCapability,
+  context: PermissionResourceContext = {},
+): CapabilityCheckGroup[] {
+  if (capability === "objects.forceCleanup" && !isForceCleanupTarget(context)) return []
+  return CAPABILITY_REQUIREMENTS[capability].map((requirement) => ({
+    mode: requirement.mode ?? "all",
+    checks: requirement.actions.flatMap((configuredAction) => {
+      let action = configuredAction
+      let target = { ...context }
+      delete target.targetObjectKey
+      if (capability === "objects.version.list") {
+        target = { bucket: context.bucket, prefix: context.prefix ?? context.objectKey }
+      } else if (capability === "objects.rename" && action === "s3:PutObject") {
+        target = {
+          bucket: context.bucket,
+          objectKey: context.targetObjectKey,
+          operation: "CopyObject",
+          ifMatch: null,
+          ifNoneMatch: "*",
+          copySource: { bucket: context.bucket ?? "", objectKey: context.objectKey ?? "" },
+        }
+      } else if (capability === "objects.version.restore" && action === "s3:PutObject") {
+        target = {
+          bucket: context.bucket,
+          objectKey: context.objectKey,
+          operation: "CopyObject",
+          ifMatch: null,
+          ifNoneMatch: null,
+          copySource: {
+            bucket: context.bucket ?? "",
+            objectKey: context.objectKey ?? "",
+            ...(context.versionId !== undefined && { versionId: context.versionId }),
+          },
+        }
+      }
+      if (
+        (capability === "objects.version.preview" || capability === "objects.version.download") &&
+        context.versionId === "00000000-0000-0000-0000-000000000000" &&
+        action === "s3:GetObjectVersion"
+      ) {
+        action = "s3:GetObject"
+        delete target.versionId
+      }
+      if (action !== "s3:ListBucket" && action !== "s3:ListBucketVersions") delete target.prefix
+      if (action.startsWith("s3:")) {
+        const signedDownload =
+          capability === "objects.download" ||
+          capability === "objects.share" ||
+          capability === "objects.version.download"
+        target.authType = context.authType ?? (signedDownload ? "REST-QUERY-STRING" : "REST-HEADER")
+        if (
+          (capability === "objects.preview" || capability === "objects.version.preview") &&
+          context.authType === undefined
+        ) {
+          return [
+            { action, context: target },
+            { action, context: { ...target, authType: "REST-QUERY-STRING" as const } },
+          ]
+        }
+      }
+      return [{ action, context: target }]
+    }),
+  }))
+}
+
+export function capabilityDecision(
+  groups: CapabilityCheckGroup[],
+  result: (check: ActionPermissionCheck) => PermissionResult | undefined,
+): PermissionDecision {
+  const decisions = groups.map(({ mode, checks }) => {
+    const values = checks.map((check) => result(check)?.decision ?? "unknown")
+    if (mode === "any")
+      return values.includes("allowed") ? "allowed" : values.every((value) => value === "denied") ? "denied" : "unknown"
+    return values.includes("denied") ? "denied" : values.every((value) => value === "allowed") ? "allowed" : "unknown"
+  })
+  return decisions.includes("denied")
+    ? "denied"
+    : decisions.every((value) => value === "allowed")
+      ? "allowed"
+      : "unknown"
+}
+
 export function isForceCleanupTarget(context: PermissionResourceContext): boolean {
   return Boolean(context.bucket && context.objectKey?.endsWith("/") && /[^/]/.test(context.objectKey))
 }
@@ -164,13 +261,25 @@ export function hasConsoleCapability(
   if (!requirements) return false
 
   return requirements.every((requirement) => {
-    const resource = resolveResource(requirement.resource, context)
+    const actions = requirement.actions.map((action) =>
+      (capability === "objects.version.preview" || capability === "objects.version.download") &&
+      context.versionId === "00000000-0000-0000-0000-000000000000" &&
+      action === "s3:GetObjectVersion"
+        ? "s3:GetObject"
+        : action,
+    )
+    const resource =
+      capability === "objects.rename" && requirement.actions.includes("s3:PutObject") && context.targetObjectKey
+        ? toObjectArn(context.bucket ?? "", context.targetObjectKey)
+        : requirement.resource === "objectPattern" && context.objectKey && capability !== "objects.rename"
+          ? toObjectArn(context.bucket ?? "", context.objectKey)
+          : resolveResource(requirement.resource, context)
     const mode = requirement.mode ?? "all"
 
     if (mode === "any") {
-      return requirement.actions.some((action) => hasConsolePermission(policy, action, resource))
+      return actions.some((action) => hasConsolePermission(policy, action, resource))
     }
 
-    return requirement.actions.every((action) => hasConsolePermission(policy, action, resource))
+    return actions.every((action) => hasConsolePermission(policy, action, resource))
   })
 }

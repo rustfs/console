@@ -1,5 +1,7 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
+import { tableCatalogPermissionContext, tableWarehouseLocationPermissionContext } from "./permission-context"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -59,6 +61,7 @@ export function TableDialog({
 }: TableDialogProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
   const { createTable } = useTableCatalog(catalogPrefix)
   const [name, setName] = React.useState("")
   const [schema, setSchema] = React.useState(DEFAULT_SCHEMA)
@@ -68,6 +71,19 @@ export function TableDialog({
   const [saveError, setSaveError] = React.useState("")
   const [submitting, setSubmitting] = React.useState(false)
   const submittingRef = React.useRef(false)
+  const permissionContext = tableCatalogPermissionContext(bucket, namespace)
+  const locationValue = location.trim()
+  const locationContext = locationValue ? tableWarehouseLocationPermissionContext(bucket, locationValue) : null
+  const invalidLocation = Boolean(locationValue && !locationContext)
+  const locationError = invalidLocation ? t("Table location must be an S3 URI inside the selected table bucket.") : ""
+  useActionChecks([
+    ...(name.trim() ? [{ action: "admin:CreateTable", context: permissionContext }] : []),
+    ...(locationContext ? [{ action: "admin:ClaimTableLocation", context: locationContext }] : []),
+  ])
+  const canCreateTarget =
+    Boolean(name.trim()) &&
+    canAction("admin:CreateTable", permissionContext) &&
+    (!locationValue || Boolean(locationContext && canAction("admin:ClaimTableLocation", locationContext)))
 
   const reset = React.useCallback(() => {
     setName("")
@@ -132,6 +148,13 @@ export function TableDialog({
     setSubmitting(true)
     setSaveError("")
     try {
+      if (!(await checkAction("admin:CreateTable", tableCatalogPermissionContext(bucket, namespace))))
+        throw new Error(t("Access Denied"))
+      if (payload.location) {
+        const claimContext = tableWarehouseLocationPermissionContext(bucket, payload.location)
+        if (!claimContext) throw new Error(t("Table location must be an S3 URI inside the selected table bucket."))
+        if (!(await checkAction("admin:ClaimTableLocation", claimContext))) throw new Error(t("Access Denied"))
+      }
       await createTable(bucket, namespace, payload)
       message.success(t("Table created"))
       onSuccess?.()
@@ -244,7 +267,7 @@ export function TableDialog({
                 <FieldError id="table-catalog-table-schema-error">{schemaError}</FieldError>
               </Field>
 
-              <Field>
+              <Field data-invalid={invalidLocation}>
                 <FieldLabel htmlFor="table-catalog-table-location">{t("Location (optional)")}</FieldLabel>
                 <FieldContent>
                   <Input
@@ -256,13 +279,17 @@ export function TableDialog({
                     placeholder={`s3://${bucket}/tables/events`}
                     autoComplete="off"
                     spellCheck={false}
-                    aria-describedby="table-catalog-table-location-help"
+                    aria-invalid={invalidLocation}
+                    aria-describedby={
+                      invalidLocation ? "table-catalog-table-location-error" : "table-catalog-table-location-help"
+                    }
                     disabled={!canCreate || submitting}
                   />
                 </FieldContent>
                 <FieldDescription id="table-catalog-table-location-help">
                   {t("Leave blank to let RustFS place metadata and data inside this table bucket.")}
                 </FieldDescription>
+                <FieldError id="table-catalog-table-location-error">{locationError}</FieldError>
               </Field>
             </FieldGroup>
           </DialogBody>
@@ -271,7 +298,7 @@ export function TableDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
               {t("Cancel")}
             </Button>
-            <Button type="submit" disabled={submitting || !canCreate}>
+            <Button type="submit" disabled={submitting || !canCreate || !canCreateTarget}>
               {submitting ? <Spinner className="size-4" aria-hidden /> : null}
               {submitting ? t("Creating…") : t("Create table")}
             </Button>

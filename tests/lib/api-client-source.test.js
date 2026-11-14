@@ -33,6 +33,6 @@ test("ApiClient redacts credential fields before development logging", () => {
   assert.match(redactionSource, /SENSITIVE_LOG_KEY/)
   assert.match(redactionSource, /master\[_-\]\?key/)
   assert.match(redactionSource, /credential\|creds/)
-  assert.match(source, /redactRequestOptionsForLog\(requestOptions\)/)
+  assert.match(source, /redactRequestOptionsForLog\(requestOptions, suppressBodyLogging\)/)
   assert.match(redactionSource, /redactLogValue\(\{ \.\.\.options, body \}\)/)
 })

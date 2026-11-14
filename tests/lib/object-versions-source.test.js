@@ -1,6 +1,7 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import fs from "node:fs"
+import { capabilityCheckGroups } from "../../lib/permission-capabilities.ts"
 
 test("object versions restore copies a source version back to the current object key", () => {
   const hookSource = fs.readFileSync("hooks/use-object.ts", "utf8")
@@ -14,7 +15,15 @@ test("object versions restore copies a source version back to the current object
   assert.match(componentSource, /restoreObjectVersion\(objectKey, versionId\)/)
   assert.match(componentSource, /canCapability\("objects\.version\.restore", objectContext\)/)
   assert.match(componentSource, /!row\.original\.IsLatest/)
-  assert.match(permissionSource, /"objects\.version\.restore": \[\{ actions: \["s3:GetObject", "s3:PutObject"\]/)
+  assert.match(permissionSource, /"objects\.version\.restore": \[\{ actions: \["s3:GetObjectVersion", "s3:PutObject"\]/)
+  const checks = capabilityCheckGroups("objects.version.restore", {
+    bucket: "bucket",
+    objectKey: "file.txt",
+    versionId: "old-version",
+  }).flatMap((group) => group.checks)
+  assert.equal(checks[0].action, "s3:GetObjectVersion")
+  assert.equal(checks[0].context.versionId, "old-version")
+  assert.deepEqual(checks[1].context.copySource, { bucket: "bucket", objectKey: "file.txt", versionId: "old-version" })
 })
 
 test("object versions dialog is wide, sortable by date and size, and shows summary statistics", () => {

@@ -21,6 +21,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Field, FieldContent, FieldError, FieldLabel } from "@/components/ui/field"
 import { useBucket } from "@/hooks/use-bucket"
+import { usePermissions, useActionChecks } from "@/hooks/use-permissions"
 import { useRuntimeCapabilities } from "@/hooks/use-runtime-capabilities"
 import { useMessage } from "@/lib/feedback/message"
 import { getBytes, randomUUID } from "@/lib/functions"
@@ -47,6 +48,18 @@ interface ReplicationRulePayload extends Record<string, unknown> {
 export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }: ReplicationNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction, checkCapability } = usePermissions()
+  useActionChecks([
+    { action: "admin:GetBucketTarget" },
+    { action: "admin:SetBucketTarget" },
+    { action: "s3:GetReplicationConfiguration", context: { bucket: bucketName ?? undefined } },
+    { action: "s3:PutReplicationConfiguration", context: { bucket: bucketName ?? undefined } },
+  ])
+  const canManageReplication =
+    canAction("admin:GetBucketTarget") &&
+    canAction("admin:SetBucketTarget") &&
+    canAction("s3:GetReplicationConfiguration", { bucket: bucketName ?? undefined }) &&
+    canAction("s3:PutReplicationConfiguration", { bucket: bucketName ?? undefined })
   const { setRemoteReplicationTarget, listRemoteReplicationTargets, putBucketReplication, getBucketReplication } =
     useBucket()
   const { capabilities, isLoading: capabilitiesLoading, error: capabilitiesError } = useRuntimeCapabilities()
@@ -162,6 +175,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     "caCertPem",
   ].every(canEditTargetField)
   const controlsLocked =
+    !canManageReplication ||
     submitting ||
     capabilitiesLoading ||
     !capabilities ||
@@ -247,7 +261,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
   }
 
   const handleSave = async () => {
-    if (submitting || controlsLocked) return
+    if (submitting || controlsLocked || !canManageReplication) return
     if (!validate()) return
     if (!bucketName) {
       message.error(t("Bucket name is required"))
@@ -257,6 +271,11 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
     setSaveError("")
     let remoteTargetSaved = false
     try {
+      if (
+        !(await checkCapability("bucket.replication.edit", { bucket: bucketName })) ||
+        !(await checkAction("admin:SetBucketTarget"))
+      )
+        throw new Error(t("Permission required"))
       const tlsConfig = buildBucketReplicationTlsPayload(tls, tlsMode, caCertPem)
       const currentTargets = (await listRemoteReplicationTargets(bucketName)) as Record<string, unknown>[]
       const currentTarget = currentTargets.find((target) => {
@@ -950,7 +969,7 @@ export function ReplicationNewForm({ open, onOpenChange, bucketName, onSuccess }
             >
               {t("Cancel")}
             </Button>
-            <Button type="submit" className="w-full sm:w-auto" disabled={controlsLocked}>
+            <Button type="submit" className="w-full sm:w-auto" disabled={controlsLocked || !canManageReplication}>
               {submitting ? t("Saving…") : capabilitiesLoading ? t("Loading") : t("Save")}
             </Button>
           </DialogFooter>

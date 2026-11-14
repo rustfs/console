@@ -20,6 +20,7 @@ import {
 } from "../../lib/object-transfer"
 import type { ConsolePolicy } from "../../lib/console-policy-parser"
 import { hasConsoleCapability } from "../../lib/permission-capabilities"
+import type { ActionPermissionCheck } from "../../lib/effective-permissions"
 
 type TransferCommand =
   | AbortMultipartUploadCommand
@@ -79,6 +80,215 @@ function isTransferFailure(copied: boolean) {
     return true
   }
 }
+
+test("copy authorization pins the source version and uses the destination's actual copy headers", async () => {
+  const { client, commands } = createClient()
+  const checks: ActionPermissionCheck[] = []
+  await transferObject(client, request, undefined, async (batch) => {
+    checks.push(...batch)
+    return true
+  })
+  const read = checks.find((check) => check.action === "s3:GetObjectVersion")
+  assert.deepEqual(read?.context, {
+    bucket: request.sourceBucket,
+    objectKey: request.sourceKey,
+    versionId: source.VersionId,
+    authType: "REST-HEADER",
+  })
+  const put = checks.find((check) => check.action === "s3:PutObject")!
+  assert.deepEqual(put.context, {
+    bucket: request.targetBucket,
+    objectKey: request.targetKey,
+    authType: "REST-HEADER",
+    operation: "CopyObject",
+    copySource: { bucket: request.sourceBucket, objectKey: request.sourceKey, versionId: source.VersionId },
+    ifMatch: null,
+    ifNoneMatch: "*",
+  })
+  assert.equal(Object.hasOwn(put.context!, "requestTags"), false)
+  assert.equal(
+    commands.some((command) => command instanceof CopyObjectCommand),
+    true,
+  )
+})
+
+for (const deniedAction of ["s3:GetObject", "s3:GetObjectVersion", "s3:PutObject"]) {
+  test(`a fresh ${deniedAction} denial stops copy before any destination write`, async () => {
+    const { client, commands } = createClient()
+    await assert.rejects(
+      transferObject(client, request, undefined, async (checks) =>
+        checks.every((check) => check.action !== deniedAction),
+      ),
+      isTransferFailure(false),
+    )
+    assert.equal(
+      commands.some((command) => command instanceof CopyObjectCommand),
+      false,
+    )
+    assert.equal(
+      commands.some((command) => command instanceof CreateMultipartUploadCommand),
+      false,
+    )
+    assert.equal(
+      commands.filter((command) => command instanceof HeadObjectCommand).length,
+      deniedAction === "s3:GetObject" ? 0 : 1,
+    )
+  })
+}
+
+test("a move requires current-object conditional deletion before copying a pinned source version", async () => {
+  const { client, commands } = createClient()
+  const checks: ActionPermissionCheck[] = []
+  await assert.rejects(
+    transferObject(client, { ...request, mode: "move" }, undefined, async (batch) => {
+      checks.push(...batch)
+      return batch.every((check) => check.action !== "s3:DeleteObject")
+    }),
+    isTransferFailure(false),
+  )
+  assert.deepEqual(checks.find((check) => check.action === "s3:DeleteObject")?.context, {
+    bucket: request.sourceBucket,
+    objectKey: request.sourceKey,
+    ifMatch: source.ETag,
+    ifNoneMatch: null,
+    authType: "REST-HEADER",
+  })
+  assert.equal(
+    checks.some((check) => check.action === "s3:DeleteObjectVersion"),
+    false,
+  )
+  assert.deepEqual(
+    commands.map((command) => command.constructor.name),
+    ["HeadObjectCommand"],
+  )
+})
+
+test("revoking deletion permission after copy preserves the source and reports the copied destination", async () => {
+  const { client, commands } = createClient()
+  let deletionChecks = 0
+  await assert.rejects(
+    transferObject(client, { ...request, mode: "move" }, undefined, async (checks) => {
+      if (checks.some((check) => check.action === "s3:DeleteObject")) return ++deletionChecks === 1
+      return true
+    }),
+    isTransferFailure(true),
+  )
+  assert.equal(
+    commands.some((command) => command instanceof CopyObjectCommand),
+    true,
+  )
+  assert.equal(
+    commands.some((command) => command instanceof DeleteObjectCommand),
+    false,
+  )
+})
+
+test("multipart authorization describes each SDK phase and shares the encoded source tags", async () => {
+  const { client, commands } = createClient((command) => {
+    if (command instanceof HeadObjectCommand) return { ...source, ContentLength: singleCopyLimit + 1 }
+    if (command instanceof GetObjectTaggingCommand)
+      return {
+        TagSet: [
+          { Key: "empty", Value: "" },
+          { Key: "department", Value: "研发 & test" },
+        ],
+      }
+    return defaultResponse(command)
+  })
+  const checks: ActionPermissionCheck[] = []
+  await transferObject(client, request, undefined, async (batch) => {
+    checks.push(...batch)
+    return true
+  })
+  assert.equal(
+    checks.some(
+      (check) => check.action === "s3:GetObjectVersionTagging" && check.context?.versionId === source.VersionId,
+    ),
+    true,
+  )
+  const create = checks.find((check) => check.context?.operation === "CreateMultipartUpload")!
+  const part = checks.find((check) => check.context?.operation === "UploadPartCopy")!
+  const complete = checks.find((check) => check.context?.operation === "CompleteMultipartUpload")!
+  assert.deepEqual(create.context?.requestTags, { empty: "", department: "研发 & test" })
+  const sdkCreate = commands.find((command) => command instanceof CreateMultipartUploadCommand)!
+  assert.deepEqual(Object.fromEntries(new URLSearchParams(sdkCreate.input.Tagging)), create.context?.requestTags)
+  assert.equal(create.context?.copySource, null)
+  assert.equal(create.context?.ifNoneMatch, null)
+  assert.deepEqual(part.context?.copySource, {
+    bucket: request.sourceBucket,
+    objectKey: request.sourceKey,
+    versionId: source.VersionId,
+  })
+  assert.equal(part.context?.ifNoneMatch, null)
+  assert.deepEqual(part.context?.requestTags, {})
+  assert.equal(complete.context?.copySource, null)
+  assert.equal(complete.context?.ifNoneMatch, "*")
+  assert.deepEqual(complete.context?.requestTags, {})
+})
+
+for (const deniedPhase of ["CreateMultipartUpload", "UploadPartCopy", "CompleteMultipartUpload"]) {
+  test(`a planned ${deniedPhase} denial blocks all multipart destination writes`, async () => {
+    const { client, commands } = createClient((command) =>
+      command instanceof HeadObjectCommand
+        ? { ...source, ContentLength: singleCopyLimit + 1 }
+        : defaultResponse(command),
+    )
+    await assert.rejects(
+      transferObject(client, request, undefined, async (checks) =>
+        checks.every((check) => check.context?.operation !== deniedPhase),
+      ),
+      isTransferFailure(false),
+    )
+    assert.equal(
+      commands.some((command) => command instanceof CreateMultipartUploadCommand),
+      false,
+    )
+    assert.equal(
+      commands.some((command) => command instanceof UploadPartCopyCommand),
+      false,
+    )
+    assert.equal(
+      commands.some((command) => command instanceof CompleteMultipartUploadCommand),
+      false,
+    )
+  })
+}
+
+test("a tag-read denial stops multipart copy before reading tags or creating an upload", async () => {
+  const { client, commands } = createClient((command) =>
+    command instanceof HeadObjectCommand ? { ...source, ContentLength: singleCopyLimit + 1 } : defaultResponse(command),
+  )
+  await assert.rejects(
+    transferObject(client, request, undefined, async (checks) =>
+      checks.every((check) => check.action !== "s3:GetObjectVersionTagging"),
+    ),
+    isTransferFailure(false),
+  )
+  assert.deepEqual(
+    commands.map((command) => command.constructor.name),
+    ["HeadObjectCommand"],
+  )
+})
+
+test("a multipart phase permission revoked during copy aborts the unfinished upload", async () => {
+  const { client, commands } = createClient((command) =>
+    command instanceof HeadObjectCommand ? { ...source, ContentLength: singleCopyLimit + 1 } : defaultResponse(command),
+  )
+  let partChecks = 0
+  await assert.rejects(
+    transferObject(client, request, undefined, async (checks) => {
+      if (checks.some((check) => check.context?.operation === "UploadPartCopy")) return ++partChecks < 3
+      return true
+    }),
+    isTransferFailure(false),
+  )
+  assert.equal(commands.filter((command) => command instanceof UploadPartCopyCommand).length, 1)
+  assert.equal(commands.at(-1) instanceof AbortMultipartUploadCommand, true)
+  assert.equal(
+    commands.some((command) => command instanceof CompleteMultipartUploadCommand),
+    false,
+  )
+})
 
 for (const [description, values, field] of [
   ["an empty destination bucket", { targetBucket: "" }, "bucket"],

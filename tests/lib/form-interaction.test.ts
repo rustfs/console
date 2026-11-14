@@ -252,6 +252,7 @@ test("object lock and versioning change together, and a pending bucket creation 
   const closed: boolean[] = []
   const creates: unknown[] = []
   const versions: unknown[] = []
+  const permissionChecks: unknown[] = []
   const api = {
     createBucket: async (payload: unknown) => {
       creates.push(payload)
@@ -266,7 +267,13 @@ test("object lock and versioning change together, and a pending bucket creation 
     React.createElement(BucketNewForm, { show: true, onShowChange: (open: boolean) => closed.push(open) }),
     {
       useBucket: () => api,
-      usePermissions: () => ({ canCapability: () => true }),
+      usePermissions: () => ({
+        canCapability: () => true,
+        checkCapability: async (...args: unknown[]) => {
+          permissionChecks.push(args)
+          return true
+        },
+      }),
       useMessage: () => ({ error: () => {}, success: () => {} }),
       getOptionalBucketNameError: () => null,
       cn: (...values: unknown[]) => values.filter(Boolean).join(" "),
@@ -305,6 +312,10 @@ test("object lock and versioning change together, and a pending bucket creation 
   await React.act(async () => request.resolve())
   assert.deepEqual(creates, [{ Bucket: "research-archive", ObjectLockEnabledForBucket: true }])
   assert.deepEqual(versions, [["research-archive", "Enabled"]])
+  assert.deepEqual(permissionChecks, [
+    ["bucket.create", { bucket: "research-archive" }],
+    ["bucket.versioning.edit", { bucket: "research-archive" }],
+  ])
   assert.deepEqual(closed, [false])
 })
 

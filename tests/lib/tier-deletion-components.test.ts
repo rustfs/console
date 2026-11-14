@@ -21,6 +21,7 @@ const mocksKey = Symbol.for("tier-deletion-components")
 const passthrough = ({ children }: UiProps) => React.createElement("div", null, children)
 const mockExports: Record<string, string[]> = {
   "@/contexts/api-context": ["useApi"],
+  "@/hooks/use-permissions": ["usePermissions", "useActionChecks"],
   "react-i18next": ["useTranslation"],
   "@/lib/feedback/message": ["useMessage"],
   "@/lib/feedback/dialog": ["useDialog"],
@@ -103,6 +104,8 @@ async function mount(
     checkStatus?: number
     deleteStatus?: number
     deleteCode?: string
+    deniedActions?: string[]
+    freshDeniedActions?: string[]
   } = {},
 ) {
   const browser = new Window()
@@ -166,7 +169,13 @@ async function mount(
   })
   const feedback = { success: (value: string) => successes.push(value), error: (value: string) => errors.push(value) }
   const translate = (value: string) => value
+  const permissions = {
+    canAction: (action: string) => !options.deniedActions?.includes(action),
+    checkAction: async (action: string) => !options.freshDeniedActions?.includes(action),
+  }
   const mocks = {
+    usePermissions: () => permissions,
+    useActionChecks: () => {},
     useApi: () => api,
     useTranslation: () => ({ t: translate }),
     useMessage: () => feedback,
@@ -510,4 +519,36 @@ test("closing the diagnostic returns focus to the current row deletion button", 
   const button = Array.from(ui.container.querySelectorAll("button")).find((element) => element.textContent === "Delete")
   assert.ok(button)
   assert.equal(ui.container.ownerDocument.activeElement, button)
+})
+
+test("read-only tier access disables destructive row actions", async (t) => {
+  const ui = await mount(t, { page: true, deniedActions: ["admin:SetTier"] })
+  assert.equal(ui.isDisabled("Add Tier"), true)
+  assert.equal(ui.isDisabled("Delete"), true)
+  await ui.click("Delete")
+  assert.equal(
+    ui.calls.some(({ method }) => method === "DELETE"),
+    false,
+  )
+})
+
+test("cleanup permission is rechecked before a cached allowed button mutates the tier", async (t) => {
+  const ui = await mount(t, { check: blocked(), freshDeniedActions: ["admin:SetTier"] })
+  assert.equal(ui.isDisabled("Retry object cleanup"), false)
+  await ui.click("Retry object cleanup")
+  assert.equal(
+    ui.calls.some(({ path }) => path.endsWith("/cleanup-retry")),
+    false,
+  )
+  assert.ok(ui.text()?.includes("Access Denied"))
+})
+
+test("a fresh deletion denial prevents the final DELETE request", async (t) => {
+  const ui = await mount(t, { check: clear, freshDeniedActions: ["admin:SetTier"] })
+  await ui.click("Retry deletion")
+  assert.equal(
+    ui.calls.some(({ method }) => method === "DELETE"),
+    false,
+  )
+  assert.equal(ui.counts().deleted, 0)
 })

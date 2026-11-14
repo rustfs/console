@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { RiRefreshLine } from "@remixicon/react"
@@ -8,6 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/dialog"
+import { useMessage } from "@/lib/feedback/message"
 import { useGroups } from "@/hooks/use-groups"
 import { UserGroupMembers } from "./members"
 import { UserGroupPolicies } from "./policies"
@@ -28,6 +30,10 @@ interface UserGroupEditFormProps {
 
 export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGroupEditFormProps) {
   const { t } = useTranslation()
+  const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:EnableGroup" }])
+  const canChangeStatus = canAction("admin:EnableGroup")
   const { getGroup, updateGroupStatus } = useGroups()
 
   const [group, setGroup] = React.useState<GroupInfo>({
@@ -80,7 +86,7 @@ export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGr
   }, [getGroup, loadVersion, open, row?.name, t])
 
   const handleStatusToggle = async (checked: boolean) => {
-    if (!isCurrentGroup || loading || loadError || statusUpdating) return
+    if (!canChangeStatus || !isCurrentGroup || loading || loadError || statusUpdating) return
     const nextStatus = checked ? "enabled" : "disabled"
     if (nextStatus === group.status) return
     const targetName = group.name
@@ -89,11 +95,13 @@ export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGr
     setStatusUpdating(true)
 
     try {
+      if (!(await checkAction("admin:EnableGroup"))) throw new Error(t("Access Denied"))
       await updateGroupStatus(targetName, { ...group, status: nextStatus })
       if (activeNameRef.current !== targetName) return
       setGroup((current) => ({ ...current, status: nextStatus }))
       onSuccess()
-    } catch {
+    } catch (error) {
+      message.error((error as Error).message || t("Edit Failed"))
       if (activeNameRef.current === targetName) {
         setStatusBoolean(previousStatus === "enabled")
       }
@@ -148,7 +156,7 @@ export function UserGroupEditForm({ open, onOpenChange, row, onSuccess }: UserGr
                   id="user-group-status"
                   checked={statusBoolean}
                   onCheckedChange={handleStatusToggle}
-                  disabled={loading || Boolean(loadError) || statusUpdating || !isCurrentGroup}
+                  disabled={!canChangeStatus || loading || Boolean(loadError) || statusUpdating || !isCurrentGroup}
                 />
               </div>
 

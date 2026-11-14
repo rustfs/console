@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress"
 import { Spinner } from "@/components/ui/spinner"
 import { useS3 } from "@/contexts/s3-context"
 import { useBucket } from "@/hooks/use-bucket"
-import { usePermissions } from "@/hooks/use-permissions"
+import { useCapabilityChecks, usePermissions } from "@/hooks/use-permissions"
 import { buildBucketPath } from "@/lib/bucket-path"
 import { useMessage } from "@/lib/feedback/message"
 import {
@@ -52,7 +52,7 @@ export function ObjectTransferDialog({
   const client = useS3()
   const message = useMessage()
   const { listBuckets } = useBucket()
-  const { canCapability } = usePermissions()
+  const { mayCapability, checkAction } = usePermissions()
   const [targetBucket, setTargetBucket] = React.useState(bucket)
   const [targetKey, setTargetKey] = React.useState(objectKey)
   const [buckets, setBuckets] = React.useState<string[]>([bucket])
@@ -68,6 +68,15 @@ export function ObjectTransferDialog({
   const request: ObjectTransferRequest = { mode, sourceBucket: bucket, sourceKey: objectKey, targetBucket, targetKey }
   const submitting = progress !== null
   const action = mode === "copy" ? t("Copy") : t("Move")
+  const sourceCapability = mode === "copy" ? "objects.copy" : "objects.move"
+  const sourceContext = { bucket, objectKey }
+  const targetContext = { bucket: targetBucket, objectKey: targetKey }
+  const canTransfer =
+    mayCapability(sourceCapability, sourceContext) && mayCapability("objects.transferDestination", targetContext)
+  useCapabilityChecks([
+    { capability: sourceCapability, context: sourceContext },
+    { capability: "objects.transferDestination", context: targetContext },
+  ])
 
   React.useEffect(() => {
     let cancelled = false
@@ -104,17 +113,18 @@ export function ObjectTransferDialog({
       ;(nextValidation.field === "bucket" ? bucketRef : keyRef).current?.focus()
       return
     }
-    if (
-      !canCapability(mode === "copy" ? "objects.copy" : "objects.move", { bucket, objectKey }) ||
-      !canCapability("objects.transferDestination", { bucket: targetBucket, objectKey: targetKey })
-    ) {
+    if (!canTransfer) {
       setError(new ObjectTransferError("You do not have permission to transfer this object to the destination."))
       return
     }
 
     submittingRef.current = true
+    setProgress({ phase: "preparing", copiedBytes: 0, totalBytes: 0 })
     try {
-      await transferObject(client, request, setProgress)
+      await transferObject(client, request, setProgress, async (checks) => {
+        const allowed = await Promise.all(checks.map(({ action, context }) => checkAction(action, context)))
+        return allowed.every(Boolean)
+      })
       message.success(mode === "copy" ? t("Object copied") : t("Object moved"))
       onRefresh()
       onClose()
@@ -314,7 +324,7 @@ export function ObjectTransferDialog({
               {error?.copied ? t("Close") : t("Cancel")}
             </Button>
             {!error?.copied ? (
-              <Button type="submit" className="min-h-11 sm:min-h-0" disabled={submitting}>
+              <Button type="submit" className="min-h-11 sm:min-h-0" disabled={submitting || !canTransfer}>
                 {submitting ? <Spinner data-icon="inline-start" aria-hidden /> : null}
                 {action}
               </Button>

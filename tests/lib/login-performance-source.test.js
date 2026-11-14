@@ -29,9 +29,9 @@ test("dashboard layout owns dashboard providers before the auth guard", () => {
   }
 
   assert.ok(dashboardLayout.indexOf("<ApiProvider>") < dashboardLayout.indexOf("<S3Provider>"))
-  assert.ok(dashboardLayout.indexOf("<S3Provider>") < dashboardLayout.indexOf("<TaskProvider>"))
-  assert.ok(dashboardLayout.indexOf("<TaskProvider>") < dashboardLayout.indexOf("<PermissionsProvider>"))
-  assert.ok(dashboardLayout.indexOf("<PermissionsProvider>") < dashboardLayout.indexOf("<DashboardAuthGuard>"))
+  assert.ok(dashboardLayout.indexOf("<S3Provider>") < dashboardLayout.indexOf("<PermissionsProvider>"))
+  assert.ok(dashboardLayout.indexOf("<PermissionsProvider>") < dashboardLayout.indexOf("<TaskProvider>"))
+  assert.ok(dashboardLayout.indexOf("<TaskProvider>") < dashboardLayout.indexOf("<DashboardAuthGuard>"))
 })
 
 test("dashboard navigation does not recreate the API client", () => {

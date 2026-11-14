@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import Image from "next/image"
 import { useTranslation } from "react-i18next"
@@ -26,6 +27,9 @@ interface AuditTargetNewFormProps {
 export function AuditTargetNewForm({ open, onOpenChange, onSuccess }: AuditTargetNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:SetBucketTarget" }])
+  const canManageAction = canAction("admin:SetBucketTarget")
   const { updateAuditTarget } = useAuditTarget()
 
   const [type, setType] = React.useState<AuditTargetType | "">("")
@@ -101,6 +105,7 @@ export function AuditTargetNewForm({ open, onOpenChange, onSuccess }: AuditTarge
 
     setSubmitting(true)
     try {
+      if (!(await checkAction("admin:SetBucketTarget"))) throw new Error(t("Access Denied"))
       if (!type) return
       const targetType = AUDIT_TARGET_TYPE_MAPPING[type]
       const keyValues = Object.entries(config).map(([key, value]) => ({
@@ -238,7 +243,7 @@ export function AuditTargetNewForm({ open, onOpenChange, onSuccess }: AuditTarge
           <Button variant="outline" onClick={handleCancel} disabled={submitting}>
             {t("Cancel")}
           </Button>
-          <Button onClick={handleSave} disabled={!type || submitting}>
+          <Button onClick={handleSave} disabled={!canManageAction || !type || submitting}>
             {submitting ? t("Saving…") : t("Save")}
           </Button>
         </DialogFooter>

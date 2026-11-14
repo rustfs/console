@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
+import { useState, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import {
   RiDownload2Line,
@@ -39,10 +40,19 @@ export default function ImportExportPage() {
   const { t } = useTranslation()
   const message = useMessage()
   const { isLoading, exportIamConfig, importIamConfig } = useImportExport()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:ExportIAM" }, { action: "admin:ImportIAM" }])
+  const canExport = canAction("admin:ExportIAM")
+  const canImport = canAction("admin:ImportIAM")
 
   const [activeTab, setActiveTab] = useState<"export" | "import">("export")
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploadError, setUploadError] = useState("")
+  const [pendingOperation, setPendingOperation] = useState<"export" | "import" | null>(null)
+  const operationLock = useRef(false)
+  const isBusy = isLoading || pendingOperation !== null
+  const isExporting = pendingOperation === "export"
+  const isImporting = pendingOperation === "import"
 
   const tabs = useMemo(
     () => [
@@ -67,9 +77,14 @@ export default function ImportExportPage() {
 
   const MAX_SIZE = 10 * 1024 * 1024
 
-  const clearSelectedFile = () => {
+  const resetSelectedFile = () => {
     setSelectedFile(null)
     setUploadError("")
+  }
+
+  const clearSelectedFile = () => {
+    if (operationLock.current || isLoading) return
+    resetSelectedFile()
   }
 
   const validateFile = (file: File | null) => {
@@ -87,6 +102,7 @@ export default function ImportExportPage() {
   }
 
   const handleFileSelect = (file: File | null) => {
+    if (operationLock.current || isLoading) return
     if (!file) {
       clearSelectedFile()
       return
@@ -99,21 +115,41 @@ export default function ImportExportPage() {
   }
 
   const handleExportIam = async () => {
+    if (operationLock.current || isLoading) return
+    operationLock.current = true
+    setPendingOperation("export")
     try {
+      if (!(await checkAction("admin:ExportIAM"))) {
+        message.error(t("Access Denied"))
+        return
+      }
       await exportIamConfig()
     } catch (error) {
       console.error("Export failed:", error)
+    } finally {
+      operationLock.current = false
+      setPendingOperation(null)
     }
   }
 
   const handleImportIam = async () => {
-    if (!selectedFile) return
+    if (operationLock.current || isLoading || !selectedFile) return
+    const file = selectedFile
+    operationLock.current = true
+    setPendingOperation("import")
     try {
-      await importIamConfig(selectedFile)
+      if (!(await checkAction("admin:ImportIAM"))) {
+        message.error(t("Access Denied"))
+        return
+      }
+      await importIamConfig(file)
       message.success(t("Import Success"))
-      clearSelectedFile()
+      resetSelectedFile()
     } catch {
       // Error already handled in hook
+    } finally {
+      operationLock.current = false
+      setPendingOperation(null)
     }
   }
 
@@ -123,12 +159,14 @@ export default function ImportExportPage() {
         <h1 className="text-2xl font-bold">{t("Import/Export")}</h1>
       </PageHeader>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6" aria-busy={isBusy}>
         <TabsPrimitive.Root
           orientation="vertical"
           data-slot="tabs"
           value={activeTab}
-          onValueChange={(v) => setActiveTab(v as "export" | "import")}
+          onValueChange={(v) => {
+            if (!operationLock.current && !isLoading) setActiveTab(v as "export" | "import")
+          }}
           className="grid items-start gap-8 lg:grid-cols-[13rem_minmax(0,1fr)]"
         >
           <TabsList className="h-auto w-full flex-col items-stretch justify-start bg-transparent p-0">
@@ -136,6 +174,7 @@ export default function ImportExportPage() {
               <TabsTrigger
                 key={tab.key}
                 value={tab.key}
+                disabled={isBusy}
                 className="min-h-11 justify-start border-s-2 border-transparent px-4 capitalize data-active:border-brand data-active:bg-selection"
               >
                 {tab.label}
@@ -177,11 +216,11 @@ export default function ImportExportPage() {
                   variant="default"
                   size="lg"
                   className="w-full sm:w-auto"
-                  disabled={isLoading}
+                  disabled={!canExport || isBusy}
                   onClick={handleExportIam}
                 >
                   <RiDownload2Line className="size-4" aria-hidden />
-                  <span>{isLoading ? t("Exporting…") : t("Export Now")}</span>
+                  <span>{isExporting ? t("Exporting…") : t("Export Now")}</span>
                 </Button>
               </CardFooter>
             </Card>
@@ -195,7 +234,12 @@ export default function ImportExportPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <UploadZone accept=".zip" disabled={isLoading} className="border-dashed" onChange={handleFileSelect}>
+                  <UploadZone
+                    accept=".zip"
+                    disabled={!canImport || isBusy}
+                    className="border-dashed"
+                    onChange={handleFileSelect}
+                  >
                     <p className="text-base font-medium">{t("Click or drag ZIP file to this area to upload")}</p>
                     <p className="text-sm text-muted-foreground">
                       {t("Only ZIP files are supported, and file size should not exceed 10MB")}
@@ -219,6 +263,7 @@ export default function ImportExportPage() {
                         className="shrink-0 text-destructive"
                         aria-label={t("Remove")}
                         onClick={clearSelectedFile}
+                        disabled={isBusy}
                       >
                         <RiCloseLine className="size-4" aria-hidden />
                       </Button>
@@ -238,11 +283,11 @@ export default function ImportExportPage() {
                   variant="default"
                   size="lg"
                   className="w-full sm:w-auto"
-                  disabled={isLoading || !selectedFile}
+                  disabled={!canImport || isBusy || !selectedFile}
                   onClick={handleImportIam}
                 >
                   <RiUpload2Line className="size-4" aria-hidden />
-                  <span>{isLoading ? t("Importing…") : t("Import Now")}</span>
+                  <span>{isImporting ? t("Importing…") : t("Import Now")}</span>
                 </Button>
               </CardFooter>
             </Card>

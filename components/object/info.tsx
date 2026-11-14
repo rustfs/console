@@ -32,7 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CopyInput } from "@/components/copy-input"
 import { DateTimePicker } from "@/components/datetime-picker"
 import { useObject } from "@/hooks/use-object"
-import { usePermissions } from "@/hooks/use-permissions"
+import { useCapabilityChecks, usePermissions } from "@/hooks/use-permissions"
 import { useMessage } from "@/lib/feedback/message"
 import { useDialog } from "@/lib/feedback/dialog"
 import { downloadUrl } from "@/lib/export-file"
@@ -70,7 +70,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   const message = useMessage()
   const dialog = useDialog()
   const objectApi = useObject(bucketName)
-  const { canCapability } = usePermissions()
+  const { canCapability, mayCapability, checkCapability } = usePermissions()
   const client = useS3()
 
   const [object, setObject] = React.useState<Record<string, unknown> | null>(null)
@@ -111,14 +111,27 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   const canDownloadObject = canCapability("objects.download", objectPermissionContext)
   const canPreviewObject = canCapability("objects.preview", objectPermissionContext)
   const canViewObjectTags = canCapability("objects.tag.view", objectPermissionContext)
-  const canEditObjectTags = canCapability("objects.tag.edit", objectPermissionContext)
-  const canViewVersions = canCapability("objects.version.view", objectPermissionContext)
-  const canEditLegalHold = canCapability("objects.legalHold.edit", objectPermissionContext)
-  const canEditRetention = canCapability("objects.retention.edit", objectPermissionContext)
+  const canEditObjectTags = mayCapability("objects.tag.edit", objectPermissionContext)
+  const canViewVersions = canCapability("objects.version.list", { bucket: bucketName, prefix: resolvedObjectKey })
+  const canEditLegalHold = mayCapability("objects.legalHold.edit", objectPermissionContext)
+  const canEditRetention = mayCapability("objects.retention.edit", objectPermissionContext)
   const canShareObject = canCapability("objects.share", objectPermissionContext)
+  useCapabilityChecks(
+    resolvedObjectKey
+      ? [
+          { capability: "objects.download", context: objectPermissionContext },
+          { capability: "objects.preview", context: objectPermissionContext },
+          { capability: "objects.tag.view", context: objectPermissionContext },
+          { capability: "objects.tag.edit", context: objectPermissionContext },
+          { capability: "objects.version.list", context: { bucket: bucketName, prefix: resolvedObjectKey } },
+          { capability: "objects.legalHold.edit", context: objectPermissionContext },
+          { capability: "objects.retention.edit", context: objectPermissionContext },
+          { capability: "objects.share", context: objectPermissionContext },
+        ]
+      : [],
+  )
   const showRetentionAction = shouldShowObjectRetentionAction({
     canEditRetention,
-    legalHoldEnabled: lockStatus,
   })
 
   const formatDuration = (seconds: number) => {
@@ -273,10 +286,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }, [open, objectKey, message, t])
 
   const download = async () => {
-    if (!canDownloadObject || !object?.Key) return
+    if (!canDownloadObject || !resolvedObjectKey) return
     try {
-      const filename = (object.Key as string).split("/").pop() ?? ""
-      const url = await objectApi.getSignedUrl(object.Key as string, 3600, getAttachmentContentDisposition(filename))
+      if (!(await checkCapability("objects.download", objectPermissionContext))) {
+        message.error(t("Access Denied"))
+        return
+      }
+      const filename = resolvedObjectKey.split("/").pop() ?? ""
+      const url = await objectApi.getSignedUrl(resolvedObjectKey, 3600, getAttachmentContentDisposition(filename))
       downloadUrl(url, filename)
       message.success(t("Download ready"))
     } catch (err) {
@@ -289,6 +306,10 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     try {
       const key = resolvedObjectKey
       const version = versionId === "00000000-0000-0000-0000-000000000000" ? undefined : versionId
+      if (!(await checkCapability("objects.version.preview", { bucket: bucketName, objectKey: key, versionId }))) {
+        message.error(t("Access Denied"))
+        return
+      }
       const [head, signed] = await Promise.all([
         client.send(
           new HeadObjectCommand({
@@ -315,10 +336,16 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     }
   }
   const toggleLegalHold = async () => {
-    if (!canEditLegalHold || !object?.Key) return
+    if (!canEditLegalHold || !resolvedObjectKey) return
+    const enabled = !lockStatus
+    const legalHoldStatus = enabled ? "ON" : "OFF"
     try {
-      await objectApi.setLegalHold(object.Key as string, !lockStatus)
-      setLockStatus(!lockStatus)
+      if (!(await checkCapability("objects.legalHold.edit", { ...objectPermissionContext, legalHoldStatus }))) {
+        message.error(t("Access Denied"))
+        return
+      }
+      await objectApi.setLegalHold(resolvedObjectKey, enabled)
+      setLockStatus(enabled)
       message.success(t("Update Success"))
     } catch (err) {
       message.error((err as Error)?.message ?? t("Update Failed"))
@@ -326,14 +353,18 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
   }
 
   const generateTemporaryUrl = async () => {
-    if (!canShareObject || !object?.Key || isGeneratingUrl) return
+    if (!canShareObject || !resolvedObjectKey || isGeneratingUrl) return
     if (!validateExpiration()) {
       message.error(expirationError || t("Please enter a valid expiration time"))
       return
     }
     setIsGeneratingUrl(true)
     try {
-      const url = await objectApi.getSignedUrl(object.Key as string, totalExpirationSeconds)
+      if (!(await checkCapability("objects.share", objectPermissionContext))) {
+        message.error(t("Access Denied"))
+        return
+      }
+      const url = await objectApi.getSignedUrl(resolvedObjectKey, totalExpirationSeconds)
       setSignedUrl(url)
       message.success(t("URL generated successfully"))
     } catch (err) {
@@ -361,7 +392,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     updatingTagsRef.current = true
     setIsUpdatingTags(true)
     try {
-      const nextTags = [...tags, nextTag]
+      const requestTags = Object.fromEntries(
+        [...tags, nextTag].filter((tag) => tag.Key && tag.Value).map((tag) => [tag.Key, tag.Value]),
+      )
+      const nextTags = Object.entries(requestTags).map(([Key, Value]) => ({ Key, Value }))
+      if (!(await checkCapability("objects.tag.edit", { ...objectPermissionContext, requestTags }))) {
+        message.error(t("Access Denied"))
+        return
+      }
       await objectApi.putObjectTags(resolvedObjectKey, nextTags)
       setTags(nextTags)
       setTagFormValue({ Key: "", Value: "" })
@@ -390,7 +428,14 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     updatingTagsRef.current = true
     setIsUpdatingTags(true)
     try {
-      const nextTags = tags.filter((tag) => tag.Key !== tagKey)
+      const requestTags = Object.fromEntries(
+        tags.filter((tag) => tag.Key !== tagKey && tag.Key && tag.Value).map((tag) => [tag.Key, tag.Value]),
+      )
+      const nextTags = Object.entries(requestTags).map(([Key, Value]) => ({ Key, Value }))
+      if (!(await checkCapability("objects.tag.edit", { ...objectPermissionContext, requestTags }))) {
+        message.error(t("Access Denied"))
+        return
+      }
       await objectApi.putObjectTags(resolvedObjectKey, nextTags)
       setTags(nextTags)
       message.success(t("Delete Success"))
@@ -420,10 +465,21 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     updatingRetentionRef.current = true
     setIsUpdatingRetention(true)
     try {
-      await objectApi.putObjectRetention(resolvedObjectKey, {
+      const requestRetention = {
         Mode: retentionMode,
         RetainUntilDate: toObjectRetentionRequestValue(retainUntilDate),
-      })
+      }
+      if (
+        !(await checkCapability("objects.retention.edit", {
+          ...objectPermissionContext,
+          retentionMode: requestRetention.Mode,
+          retainUntilDate: requestRetention.RetainUntilDate,
+        }))
+      ) {
+        message.error(t("Access Denied"))
+        return
+      }
+      await objectApi.putObjectRetention(resolvedObjectKey, requestRetention)
       message.success(t("Update Success"))
       setShowRetentionView(false)
       fetchRetention(resolvedObjectKey)
@@ -449,9 +505,17 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
     updatingRetentionRef.current = true
     setIsUpdatingRetention(true)
     try {
-      await objectApi.putObjectRetention(resolvedObjectKey, {
-        Mode: "GOVERNANCE",
-      })
+      const requestRetention = { Mode: "GOVERNANCE" as const }
+      if (
+        !(await checkCapability("objects.retention.edit", {
+          ...objectPermissionContext,
+          retentionMode: requestRetention.Mode,
+        }))
+      ) {
+        message.error(t("Access Denied"))
+        return
+      }
+      await objectApi.putObjectRetention(resolvedObjectKey, requestRetention)
       message.success(t("Update Success"))
       fetchRetention(resolvedObjectKey)
     } catch (err) {
@@ -686,7 +750,7 @@ export function ObjectInfo({ bucketName, objectKey, open, onOpenChange, onPrevie
                       variant="default"
                       size="sm"
                       className="shrink-0"
-                      disabled={!canShareObject || !object?.Key || !isExpirationValid || isGeneratingUrl}
+                      disabled={!canShareObject || !resolvedObjectKey || !isExpirationValid || isGeneratingUrl}
                       onClick={generateTemporaryUrl}
                     >
                       {isGeneratingUrl ? <Spinner className="size-4" /> : null}

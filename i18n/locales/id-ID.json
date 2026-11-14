@@ -2331,5 +2331,7 @@
   "Bucket navigation": "Navigasi bucket",
   "Main navigation": "Navigasi utama",
   "Encryption & Keys": "Enkripsi & Kunci",
-  "Decommission": "Pensiunkan"
+  "Decommission": "Pensiunkan",
+  "Unable to check permissions. Refresh and try again.": "Izin tidak dapat diperiksa. Muat ulang halaman dan coba lagi.",
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
 }

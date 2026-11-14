@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import { SectionNavigation } from "@/components/section-navigation"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
@@ -131,6 +132,11 @@ function parseOptionalInteger(value: string) {
 export default function SSEPage() {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "kms:Configure" }, { action: "kms:ServiceControl" }, { action: "kms:ClearCache" }])
+  const canConfigureKms = canAction("kms:Configure")
+  const canControlKms = canAction("kms:ServiceControl")
+  const canClearKmsCache = canAction("kms:ClearCache")
   const {
     getKMSStatus,
     getDetailedStatus,
@@ -692,6 +698,7 @@ export default function SSEPage() {
       setConfigFormError(null)
       setConfigFormErrorField(null)
       try {
+        if (!(await checkAction("kms:Configure"))) throw new Error(t("Access Denied"))
         const response = statusKind === "NotConfigured" ? await configureKMS(payload) : await reconfigureKMS(payload)
 
         if (response.success) {
@@ -735,6 +742,7 @@ export default function SSEPage() {
     },
     [
       beginMutation,
+      checkAction,
       buildConfigPayload,
       configBaselineConflict,
       configureKMS,
@@ -767,6 +775,7 @@ export default function SSEPage() {
     if (statusError || loadingStatus || !beginMutation("clear-cache")) return
     setClearingCache(true)
     try {
+      if (!(await checkAction("kms:ClearCache"))) throw new Error(t("Access Denied"))
       const result = await clearCache()
       if (result?.success || result?.status === "success") {
         message.success(t("Cache cleared successfully"))
@@ -785,6 +794,7 @@ export default function SSEPage() {
     if (statusError || loadingStatus || !beginMutation("start-kms")) return
     setStartingKMS(true)
     try {
+      if (!(await checkAction("kms:ServiceControl"))) throw new Error(t("Access Denied"))
       const force = isRunning
       const res = await startKMS(force ? { force: true } : {})
       if (res?.success) {
@@ -815,6 +825,7 @@ export default function SSEPage() {
     if (statusError || loadingStatus || !beginMutation("stop-kms")) return
     setStoppingKMS(true)
     try {
+      if (!(await checkAction("kms:ServiceControl"))) throw new Error(t("Access Denied"))
       const res = await stopKMS()
       if (res?.success) {
         message.success(t("KMS service stopped successfully"))
@@ -837,12 +848,12 @@ export default function SSEPage() {
   }
 
   const requestStartKMS = () => {
-    if (statusError || loadingStatus || mutationLocked) return
+    if (!canControlKms || statusError || loadingStatus || mutationLocked) return
     setPendingServiceAction(isRunning ? "restart" : "start")
   }
 
   const requestStopKMS = () => {
-    if (statusError || loadingStatus || mutationLocked) return
+    if (!canControlKms || statusError || loadingStatus || mutationLocked) return
     setPendingServiceAction("stop")
   }
 
@@ -861,6 +872,7 @@ export default function SSEPage() {
     if (statusError || keysError || loadingKeys || loadingStatus || !beginMutation("create-key")) return
     setCreatingKey(true)
     try {
+      if (!(await checkAction("kms:Configure"))) throw new Error(t("Access Denied"))
       const tags: Record<string, string> = { created_by: "console" }
       if (createKeyName.trim()) {
         tags.name = createKeyName.trim()
@@ -920,6 +932,8 @@ export default function SSEPage() {
 
     setProcessingKeyAction(true)
     try {
+      if (!(await checkAction("kms:DeleteKey", { keyId: pendingKeyAction.key.key_id })))
+        throw new Error(t("Access Denied"))
       if (pendingKeyAction.type !== "cancelDeletion") {
         const latestStatus = await loadStatus(false)
         if (
@@ -1010,6 +1024,7 @@ export default function SSEPage() {
   const unsupportedKmsReadOnly = formState.backendType === "unsupported"
   const staticKmsReadOnly = hasConfiguration && formState.backendType === "static"
   const formDisabled =
+    !canConfigureKms ||
     mutationLocked ||
     loadingStatus ||
     submittingConfig ||
@@ -1017,7 +1032,8 @@ export default function SSEPage() {
     unsupportedKmsReadOnly ||
     staticKmsReadOnly
   const mutationInFlight = Boolean(activeMutation || submittingConfig || creatingKey || processingKeyAction)
-  const canSetCreatedKeyAsDefault = status?.backend_type !== "Static" && !isConfigDirty && !configBaselineConflict
+  const canSetCreatedKeyAsDefault =
+    canConfigureKms && status?.backend_type !== "Static" && !isConfigDirty && !configBaselineConflict
   const resetDisabled =
     mutationLocked || loadingStatus || submittingConfig || (!isConfigDirty && !configBaselineConflict)
 
@@ -1148,7 +1164,7 @@ export default function SSEPage() {
                       size="sm"
                       variant="default"
                       onClick={requestStartKMS}
-                      disabled={startingKMS || mutationLocked || loadingStatus}
+                      disabled={!canControlKms || startingKMS || mutationLocked || loadingStatus}
                     >
                       {startingKMS ? <Spinner className="size-4" /> : null}
                       {isRunning ? t("Restart KMS") : t("Start KMS")}
@@ -1166,14 +1182,14 @@ export default function SSEPage() {
                       />
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          disabled={!isRunning || clearingCache || mutationLocked}
+                          disabled={!canClearKmsCache || !isRunning || clearingCache || mutationLocked}
                           onClick={handleClearCache}
                         >
                           {clearingCache ? t("Clearing cache…") : t("Clear Cache")}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          disabled={!isRunning || stoppingKMS || mutationLocked}
+                          disabled={!canControlKms || !isRunning || stoppingKMS || mutationLocked}
                           onClick={requestStopKMS}
                           className="text-destructive focus:text-destructive"
                         >
@@ -1214,6 +1230,7 @@ export default function SSEPage() {
                         size="sm"
                         onClick={() => setCreateKeyOpen(true)}
                         disabled={
+                          !canConfigureKms ||
                           Boolean(activeMutation) ||
                           loadingKeys ||
                           loadingStatus ||
@@ -1295,6 +1312,7 @@ export default function SSEPage() {
                                   type="button"
                                   variant="outline"
                                   className="min-h-11 flex-1 sm:flex-none"
+                                  disabled={!canAction("kms:DescribeKey", { keyId: key.key_id })}
                                   onClick={() => setSelectedKeyId(key.key_id)}
                                 >
                                   {t("View Details")}
@@ -1304,7 +1322,12 @@ export default function SSEPage() {
                                     type="button"
                                     variant="outline"
                                     className="min-h-11 flex-1 sm:flex-none"
-                                    disabled={Boolean(activeMutation) || loadingStatus || Boolean(keysError)}
+                                    disabled={
+                                      !canAction("kms:DeleteKey", { keyId: key.key_id }) ||
+                                      Boolean(activeMutation) ||
+                                      loadingStatus ||
+                                      Boolean(keysError)
+                                    }
                                     onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}
                                   >
                                     {t("Cancel Deletion")}
@@ -1315,6 +1338,7 @@ export default function SSEPage() {
                                     variant="outline"
                                     className="min-h-11 flex-1 sm:flex-none"
                                     disabled={
+                                      !canAction("kms:DeleteKey", { keyId: key.key_id }) ||
                                       isDefaultKey ||
                                       Boolean(activeMutation) ||
                                       loadingStatus ||
@@ -1332,6 +1356,7 @@ export default function SSEPage() {
                                     variant="destructive"
                                     className="min-h-11 flex-1 sm:flex-none"
                                     disabled={
+                                      !canAction("kms:DeleteKey", { keyId: key.key_id }) ||
                                       isDefaultKey ||
                                       Boolean(activeMutation) ||
                                       loadingStatus ||
@@ -1395,13 +1420,17 @@ export default function SSEPage() {
                                           }
                                         />
                                         <DropdownMenuContent align="end">
-                                          <DropdownMenuItem onClick={() => setSelectedKeyId(key.key_id)}>
+                                          <DropdownMenuItem
+                                            disabled={!canAction("kms:DescribeKey", { keyId: key.key_id })}
+                                            onClick={() => setSelectedKeyId(key.key_id)}
+                                          >
                                             {t("View Details")}
                                           </DropdownMenuItem>
                                           {!isPendingDeletion && (
                                             <DropdownMenuItem
                                               onClick={() => setPendingKeyAction({ type: "scheduleDelete", key })}
                                               disabled={
+                                                !canAction("kms:DeleteKey", { keyId: key.key_id }) ||
                                                 isDefaultKey ||
                                                 Boolean(activeMutation) ||
                                                 loadingStatus ||
@@ -1417,7 +1446,10 @@ export default function SSEPage() {
                                               <DropdownMenuItem
                                                 onClick={() => setPendingKeyAction({ type: "cancelDeletion", key })}
                                                 disabled={
-                                                  Boolean(activeMutation) || loadingStatus || Boolean(keysError)
+                                                  !canAction("kms:DeleteKey", { keyId: key.key_id }) ||
+                                                  Boolean(activeMutation) ||
+                                                  loadingStatus ||
+                                                  Boolean(keysError)
                                                 }
                                               >
                                                 {t("Cancel Deletion")}
@@ -1426,6 +1458,7 @@ export default function SSEPage() {
                                               <DropdownMenuItem
                                                 onClick={() => setPendingKeyAction({ type: "forceDelete", key })}
                                                 disabled={
+                                                  !canAction("kms:DeleteKey", { keyId: key.key_id }) ||
                                                   isDefaultKey ||
                                                   Boolean(activeMutation) ||
                                                   loadingStatus ||
@@ -2165,7 +2198,9 @@ export default function SSEPage() {
             <Button
               type="button"
               onClick={handleCreateKey}
-              disabled={creatingKey || Boolean(activeMutation) || Boolean(statusError) || Boolean(keysError)}
+              disabled={
+                !canConfigureKms || creatingKey || Boolean(activeMutation) || Boolean(statusError) || Boolean(keysError)
+              }
             >
               {creatingKey ? <Spinner className="size-4" /> : null}
               {t("Create Key")}
@@ -2308,7 +2343,7 @@ export default function SSEPage() {
             <AlertDialogCancel disabled={startingKMS || stoppingKMS}>{t("Cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmServiceAction}
-              disabled={startingKMS || stoppingKMS || Boolean(activeMutation) || Boolean(statusError)}
+              disabled={!canControlKms || startingKMS || stoppingKMS || Boolean(activeMutation) || Boolean(statusError)}
               className={pendingServiceAction === "stop" ? DANGER_BUTTON_CLASS : undefined}
             >
               {startingKMS || stoppingKMS ? <Spinner className="size-4" /> : null}
@@ -2386,6 +2421,8 @@ export default function SSEPage() {
             <AlertDialogAction
               onClick={handleConfirmKeyAction}
               disabled={
+                !pendingKeyAction ||
+                !canAction("kms:DeleteKey", { keyId: pendingKeyAction?.key.key_id }) ||
                 processingKeyAction ||
                 Boolean(activeMutation) ||
                 Boolean(statusError) ||

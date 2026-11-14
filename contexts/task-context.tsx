@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { usePermissions } from "@/hooks/use-permissions"
 import { useSyncExternalStore } from "react"
 import { TaskManager, type TaskManagerApi } from "@/lib/task-manager"
 import { createUploadTaskHelpers, type UploadTask } from "@/lib/upload-task"
@@ -50,6 +51,7 @@ type ManagerState = {
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
   const client = useS3Optional()
+  const { checkCapability } = usePermissions()
   const [isTaskPanelOpen, setTaskPanelOpen] = React.useState(false)
   const [managerState, setManagerState] = React.useState<ManagerState>(null)
 
@@ -62,10 +64,12 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
       chunkSize: 16,
       maxRetries: 3,
       retryDelay: 1000,
+      checkCapability,
     })
     const deleteHelpers = createDeleteTaskHelpers(client, {
       maxRetries: 3,
       retryDelay: 1000,
+      checkCapability,
     })
     const manager = new TaskManager<AnyTask>({
       handlers: {
@@ -80,7 +84,7 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
     setManagerState({ manager, uploadHelpers, deleteHelpers })
 
     return () => manager.dispose()
-  }, [client])
+  }, [client, checkCapability])
 
   const taskManager = managerState?.manager ?? emptyManager
 

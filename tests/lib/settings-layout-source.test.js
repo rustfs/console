@@ -57,7 +57,7 @@ test("long settings dialogs keep headers and actions visible while the form scro
 
   for (const file of [files[0], files[2]]) {
     const source = fs.readFileSync(file, "utf8")
-    assert.match(source, /disabled=\{!type \|\| submitting\}/)
+    assert.match(source, /disabled=\{\s*!canManageAction \|\|\s*!type \|\|\s*submitting\}/)
     assert.doesNotMatch(source, /aria-disabled=\{submitting\}/)
   }
 })

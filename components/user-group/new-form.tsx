@@ -1,5 +1,6 @@
 "use client"
 
+import { useActionChecks, usePermissions } from "@/hooks/use-permissions"
 import * as React from "react"
 import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,9 @@ interface UserGroupNewFormProps {
 export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
+  const { canAction, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:AddUserToGroup" }])
+  const canManageAction = canAction("admin:AddUserToGroup")
   const { updateGroupMembers } = useGroups()
 
   const [group, setGroup] = React.useState("")
@@ -48,6 +52,7 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
     submittingRef.current = true
     setSubmitting(true)
     try {
+      if (!(await checkAction("admin:AddUserToGroup"))) throw new Error(t("Access Denied"))
       await updateGroupMembers({
         group: group.trim(),
         members,
@@ -57,8 +62,8 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
       message.success(t("Add success"))
       onOpenChange(false)
       onSuccess()
-    } catch {
-      message.error(t("Add failed"))
+    } catch (error) {
+      message.error((error as Error).message || t("Add failed"))
     } finally {
       submittingRef.current = false
       setSubmitting(false)
@@ -106,7 +111,7 @@ export function UserGroupNewForm({ open, onOpenChange, onSuccess }: UserGroupNew
           <Button variant="outline" onClick={closeModal} disabled={submitting}>
             {t("Cancel")}
           </Button>
-          <Button onClick={submitForm} disabled={submitting}>
+          <Button onClick={submitForm} disabled={!canManageAction || submitting}>
             {submitting && <Spinner className="me-2 size-4" />}
             {t("Submit")}
           </Button>

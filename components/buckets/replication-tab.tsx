@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { DataTable } from "@/components/data-table/data-table"
 import { useDataTable } from "@/hooks/use-data-table"
 import { useBucket } from "@/hooks/use-bucket"
-import { usePermissions } from "@/hooks/use-permissions"
+import { usePermissions, useActionChecks } from "@/hooks/use-permissions"
 import { useRuntimeCapabilities } from "@/hooks/use-runtime-capabilities"
 import { ReplicationNewForm } from "@/components/replication/new-form"
 import {
@@ -44,7 +44,8 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
   const { t } = useTranslation()
   const message = useMessage()
   const dialog = useDialog()
-  const { canCapability } = usePermissions()
+  const { canCapability, canAction, checkCapability, checkAction } = usePermissions()
+  useActionChecks([{ action: "admin:GetBucketTarget" }, { action: "admin:SetBucketTarget" }])
   const { capabilities, error: capabilitiesError } = useRuntimeCapabilities()
   const {
     getBucketReplication,
@@ -62,7 +63,11 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
     capabilitiesError ??
     t("Unable to load replication rules. Refresh before making changes.")
   const canEditReplication = canCapability("bucket.replication.edit", replicationContext) && replicationSupported
-  const canAddReplication = canEditReplication && remoteTargetsSupported
+  const canAddReplication =
+    canEditReplication &&
+    remoteTargetsSupported &&
+    canAction("admin:GetBucketTarget") &&
+    canAction("admin:SetBucketTarget")
 
   const [data, setData] = React.useState<ReplicationRule[]>([])
   const [targets, setTargets] = React.useState<RemoteReplicationTarget[]>([])
@@ -121,6 +126,8 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
       setMutatingRuleId(mutationKey)
 
       try {
+        if (!(await checkCapability("bucket.replication.edit", { bucket: bucketName })))
+          throw new Error(t("Permission required"))
         const currentConfig = await getBucketReplication(bucketName)
         const currentRules = (currentConfig?.ReplicationConfiguration?.Rules ?? []) as ReplicationRule[]
         const matches = rule.ID
@@ -142,6 +149,7 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
         }
         if (!role && targetArn && !remaining.some((item) => item.Destination?.Bucket === targetArn)) {
           try {
+            if (!(await checkAction("admin:SetBucketTarget"))) throw new Error(t("Permission required"))
             await deleteRemoteReplicationTarget(bucketName, targetArn)
           } catch (cleanupError) {
             console.error(cleanupError)
@@ -162,6 +170,8 @@ export function BucketReplicationTab({ bucketName, hideTitle = false, renderHead
     },
     [
       canEditReplication,
+      checkCapability,
+      checkAction,
       deleteBucketReplication,
       deleteRemoteReplicationTarget,
       bucketName,

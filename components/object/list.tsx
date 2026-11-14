@@ -59,8 +59,8 @@ import { useObject } from "@/hooks/use-object"
 import { useObjectListPagination } from "@/hooks/use-object-list-pagination"
 import { useBucket } from "@/hooks/use-bucket"
 import { useLocalStorage } from "@/hooks/use-local-storage"
-import { usePermissions } from "@/hooks/use-permissions"
-import { isForceCleanupTarget } from "@/lib/permission-capabilities"
+import { useCapabilityChecks, usePermissions } from "@/hooks/use-permissions"
+import { isForceCleanupTarget, type CapabilityCheck } from "@/lib/permission-capabilities"
 import { useApi } from "@/contexts/api-context"
 import { useMessage } from "@/lib/feedback/message"
 import { downloadUrl } from "@/lib/export-file"
@@ -172,7 +172,7 @@ export function ObjectList({
   const api = useApi()
   const { listObject, getSignedUrl, renameObject } = useObject(bucket)
   const { getBucketVersioning } = useBucket()
-  const { canCapability } = usePermissions()
+  const { canCapability, mayCapability, checkCapability } = usePermissions()
   const addDeleteKeys = useAddDeleteKeys()
   const addDeleteFolder = useAddDeleteFolder()
   const tasks = useTasks()
@@ -196,10 +196,20 @@ export function ObjectList({
   const [bucketVersioningState, setBucketVersioningState] = React.useState<BucketVersioningState>("unknown")
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [deleteDialogKeys, setDeleteDialogKeys] = React.useState<string[]>([])
+  const actionScope = `${bucket}\0${path}`
+  const actionScopeRef = React.useRef(actionScope)
+  React.useEffect(() => {
+    actionScopeRef.current = actionScope
+  }, [actionScope])
+  const [deleteDialogScope, setDeleteDialogScope] = React.useState(actionScope)
+  const deleteCheckRef = React.useRef(false)
+  const [checkingDelete, setCheckingDelete] = React.useState(false)
   const [deleteAllVersions, setDeleteAllVersions] = React.useState(false)
   const [forceCleanupTarget, setForceCleanupTarget] = React.useState<{ bucket: string; objectKey: string } | null>(null)
+  const [checkingForceCleanup, setCheckingForceCleanup] = React.useState(false)
   const [renameDialogOpen, setRenameDialogOpen] = React.useState(false)
   const [renameSourceKey, setRenameSourceKey] = React.useState("")
+  const [renameDialogScope, setRenameDialogScope] = React.useState(actionScope)
   const [renameName, setRenameName] = React.useState("")
   const [renameSubmitting, setRenameSubmitting] = React.useState(false)
   const [transfer, setTransfer] = React.useState<{ mode: "copy" | "move"; key: string } | null>(null)
@@ -235,8 +245,34 @@ export function ObjectList({
       }),
     [bucket, prefix, resolvedPageSize, includeDeleted],
   )
-  const canBulkDelete = canCapability("objects.bulkDelete", { bucket, prefix })
-  const canBulkDownload = canCapability("objects.download", { bucket, prefix })
+  const rowsByKey = React.useMemo(() => {
+    const rows = new Map<string, ObjectRow>()
+    for (const row of data) if (!rows.has(row.Key)) rows.set(row.Key, row)
+    return rows
+  }, [data])
+  useCapabilityChecks([
+    ...data.flatMap<CapabilityCheck>((row) => {
+      const context = { bucket, objectKey: row.Key, prefix }
+      if (row.type === "prefix") {
+        return isForceCleanupTarget(context) ? [{ capability: "objects.forceCleanup" as const, context }] : []
+      }
+      return [
+        { capability: "objects.preview" as const, context },
+        { capability: "objects.download" as const, context },
+        { capability: "objects.copy" as const, context },
+        { capability: "objects.move" as const, context },
+        { capability: "objects.delete" as const, context },
+      ]
+    }),
+    ...(deleteDialogOpen && bucketVersioningState === "enabled"
+      ? deleteDialogKeys
+          .filter((key) => rowsByKey.get(key)?.type !== "prefix")
+          .flatMap<CapabilityCheck>((key) => [
+            { capability: "objects.version.list", context: { bucket, prefix: key } },
+            { capability: "objects.version.delete", context: { bucket, objectKey: key } },
+          ])
+      : []),
+  ])
 
   const bucketPath = React.useCallback((p?: string | string[]) => buildBucketPath(bucket, p), [bucket])
   const requestIdRef = React.useRef(0)
@@ -494,6 +530,10 @@ export function ObjectList({
       if (!key) return
       const loadingMsg = message.loading(t("Getting URL"), { duration: 0 })
       try {
+        if (!(await checkCapability("objects.download", { bucket, objectKey: key }))) {
+          message.error(t("Access Denied"))
+          return
+        }
         const filename = key.split("/").pop() ?? ""
         const url = await getSignedUrl(key, 3600, getAttachmentContentDisposition(filename))
         downloadUrl(url, filename)
@@ -504,7 +544,7 @@ export function ObjectList({
         loadingMsg.destroy()
       }
     },
-    [message, t, getSignedUrl],
+    [bucket, checkCapability, message, t, getSignedUrl],
   )
 
   const getRenameValidationMessage = React.useCallback(
@@ -523,6 +563,17 @@ export function ObjectList({
 
   const renameValidation = renameSourceKey ? validateObjectRename(renameSourceKey, renameName) : "empty"
 
+  const openRenameDialog = React.useCallback(
+    (key: string, trigger: HTMLElement | null = null) => {
+      actionTriggerRef.current = trigger
+      setRenameSourceKey(key)
+      setRenameDialogScope(actionScope)
+      setRenameName(getObjectBaseName(key))
+      setRenameDialogOpen(true)
+    },
+    [actionScope],
+  )
+
   const openDeleteDialog = React.useCallback(
     (keys: string[], trigger: HTMLElement | null = null) => {
       if (bucketVersioningState === "unknown") {
@@ -532,10 +583,11 @@ export function ObjectList({
 
       actionTriggerRef.current = trigger
       setDeleteDialogKeys(keys)
+      setDeleteDialogScope(actionScope)
       setDeleteAllVersions(false)
       setDeleteDialogOpen(true)
     },
-    [bucketVersioningState, message, t],
+    [actionScope, bucketVersioningState, message, t],
   )
 
   const columns: ColumnDef<ObjectRow>[] = React.useMemo(
@@ -610,10 +662,12 @@ export function ObjectList({
           const isObject = row.original.type === "object"
           const canPreview = isObject && canCapability("objects.preview", { bucket, objectKey: key })
           const canDownload = isObject && canCapability("objects.download", { bucket, objectKey: key })
-          const canRename = isObject && canCapability("objects.rename", { bucket, objectKey: key, prefix })
+          const canRename = isObject && mayCapability("objects.rename", { bucket, objectKey: key, prefix })
           const canCopy = isObject && canCapability("objects.copy", { bucket, objectKey: key })
-          const canMove = isObject && canCapability("objects.move", { bucket, objectKey: key })
-          const canDelete = canCapability("objects.delete", { bucket, objectKey: key })
+          const canMove = isObject && mayCapability("objects.move", { bucket, objectKey: key })
+          const canDelete = isObject
+            ? canCapability("objects.delete", { bucket, objectKey: key })
+            : mayCapability("objects.bulkDelete", { bucket, prefix: key })
           const canForceCleanup =
             row.original.type === "prefix" && canCapability("objects.forceCleanup", { bucket, objectKey: key })
 
@@ -723,6 +777,8 @@ export function ObjectList({
       bucket,
       downloadFile,
       canCapability,
+      mayCapability,
+      openRenameDialog,
       onPreview,
       prefix,
       bucketVersioningState,
@@ -742,6 +798,40 @@ export function ObjectList({
   })
 
   const checkedKeys = selectedRowIds
+  useCapabilityChecks(
+    checkedKeys.flatMap<CapabilityCheck>((key) => {
+      if (rowsByKey.get(key)?.type === "prefix")
+        return [
+          { capability: "objects.download", context: { bucket, prefix: key, authType: "REST-HEADER" } },
+          { capability: "objects.bulkDelete", context: { bucket, prefix: key } },
+        ]
+      return [{ capability: "objects.download", context: { bucket, objectKey: key, authType: "REST-HEADER" } }]
+    }),
+  )
+  const canBulkDelete =
+    checkedKeys.length > 0 &&
+    checkedKeys.every((key) =>
+      rowsByKey.get(key)?.type === "prefix"
+        ? mayCapability("objects.bulkDelete", { bucket, prefix: key })
+        : canCapability("objects.delete", { bucket, objectKey: key }),
+    )
+  const canBulkDownload =
+    checkedKeys.length > 0 &&
+    checkedKeys.every((key) =>
+      rowsByKey.get(key)?.type === "prefix"
+        ? mayCapability("objects.download", { bucket, prefix: key, authType: "REST-HEADER" })
+        : canCapability("objects.download", { bucket, objectKey: key, authType: "REST-HEADER" }),
+    )
+  const canDeleteAllVersions =
+    deleteDialogOpen &&
+    bucketVersioningState === "enabled" &&
+    deleteDialogKeys.length > 0 &&
+    deleteDialogKeys.every((key) =>
+      rowsByKey.get(key)?.type === "prefix"
+        ? canCapability("objects.forceCleanup", { bucket, objectKey: key })
+        : canCapability("objects.version.list", { bucket, prefix: key }) &&
+          mayCapability("objects.version.delete", { bucket, objectKey: key }),
+    )
 
   const downloadMultiple = async () => {
     if (!checkedKeys.length) {
@@ -758,6 +848,17 @@ export function ObjectList({
     const loadingMsg = message.loading(t("Preparing download"), { duration: 0 })
 
     try {
+      const checks = await Promise.all(
+        selectedRows.map((row) =>
+          row.type === "prefix"
+            ? Promise.resolve(mayCapability("objects.download", { bucket, prefix: row.Key, authType: "REST-HEADER" }))
+            : checkCapability("objects.download", { bucket, objectKey: row.Key, authType: "REST-HEADER" }),
+        ),
+      )
+      if (!checks.every(Boolean)) {
+        message.error(t("Access Denied"))
+        return
+      }
       const payload = buildObjectZipDownloadPayload({
         bucket,
         basePrefix: prefix,
@@ -779,13 +880,6 @@ export function ObjectList({
     }
   }
 
-  const openRenameDialog = (key: string, trigger: HTMLElement | null = null) => {
-    actionTriggerRef.current = trigger
-    setRenameSourceKey(key)
-    setRenameName(getObjectBaseName(key))
-    setRenameDialogOpen(true)
-  }
-
   const handleRenameOpenChange = (open: boolean) => {
     if (renameSubmitting) return
     setRenameDialogOpen(open)
@@ -796,7 +890,7 @@ export function ObjectList({
   }
 
   const handleConfirmRename = async () => {
-    if (!renameSourceKey) return
+    if (!renameSourceKey || renameSubmitting || renameDialogScope !== actionScope) return
 
     const validation = validateObjectRename(renameSourceKey, renameName)
     if (validation) {
@@ -809,6 +903,13 @@ export function ObjectList({
     setRenameSubmitting(true)
 
     try {
+      if (
+        !(await checkCapability("objects.rename", { bucket, objectKey: renameSourceKey, targetObjectKey: targetKey }))
+      ) {
+        message.error(t("Access Denied"))
+        return
+      }
+      if (actionScopeRef.current !== renameDialogScope) return
       await renameObject(renameSourceKey, targetKey)
       message.success(t("Object renamed"))
       table.resetRowSelection()
@@ -825,23 +926,54 @@ export function ObjectList({
   }
 
   const handleConfirmDelete = async () => {
-    if (bucketVersioningState === "unknown") {
-      message.error(t("Failed to get data"))
-      return
-    }
+    if (deleteCheckRef.current) return
+    deleteCheckRef.current = true
+    setCheckingDelete(true)
+    try {
+      if (bucketVersioningState === "unknown") {
+        message.error(t("Failed to get data"))
+        return
+      }
 
-    const keys = [...deleteDialogKeys]
-    setDeleteDialogOpen(false)
-    if (!keys.length) return
+      if (deleteDialogScope !== actionScope) return
+      const keys = [...deleteDialogKeys]
+      if (!keys.length) return
+      const allVersions = shouldDeleteAllVersions(bucketVersioningState, deleteAllVersions)
+      if (allVersions && !canDeleteAllVersions) {
+        message.error(t("Access Denied"))
+        return
+      }
+      const checks = await Promise.all(
+        keys.map((key) => {
+          if (rowsByKey.get(key)?.type === "prefix") {
+            return allVersions
+              ? checkCapability("objects.forceCleanup", { bucket, objectKey: key })
+              : Promise.resolve(mayCapability("objects.bulkDelete", { bucket, prefix: key }))
+          }
+          return allVersions
+            ? checkCapability("objects.version.list", { bucket, prefix: key })
+            : checkCapability("objects.delete", { bucket, objectKey: key })
+        }),
+      )
+      if (!checks.every(Boolean)) {
+        message.error(t("Access Denied"))
+        return
+      }
+      if (actionScopeRef.current !== deleteDialogScope) return
+      setDeleteDialogOpen(false)
 
-    if (shouldDeleteAllVersions(bucketVersioningState, deleteAllVersions)) {
-      await handleDeleteAllVersions(keys)
-    } else {
-      await handleDelete(keys)
+      if (allVersions) {
+        await handleDeleteAllVersions(keys)
+      } else {
+        await handleDelete(keys)
+      }
+    } finally {
+      deleteCheckRef.current = false
+      setCheckingDelete(false)
     }
   }
 
-  const handleForceCleanup = () => {
+  const handleForceCleanup = async () => {
     if (
       !forceCleanupTarget ||
       forceCleanupTarget.bucket !== bucket ||
@@ -851,12 +983,20 @@ export function ObjectList({
       message.error(t("Access Denied"))
       return
     }
+    if (checkingForceCleanup) return
+    setCheckingForceCleanup(true)
     try {
+      if (!(await checkCapability("objects.forceCleanup", forceCleanupTarget))) {
+        message.error(t("Access Denied"))
+        return
+      }
       addDeleteFolder(forceCleanupTarget.objectKey, forceCleanupTarget.bucket, { forceDelete: true })
       message.success(t("Delete task created"))
       setForceCleanupTarget(null)
     } catch (err) {
       message.error((err as Error)?.message ?? t("Delete Failed"))
+    } finally {
+      setCheckingForceCleanup(false)
     }
   }
 
@@ -1127,7 +1267,7 @@ export function ObjectList({
         </div>
       ) : null}
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => !checkingDelete && setDeleteDialogOpen(open)}>
         <AlertDialogContent className="sm:max-w-md" finalFocus={returnFocusToAction}>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("Warning")}</AlertDialogTitle>
@@ -1138,7 +1278,7 @@ export function ObjectList({
                   <bdi>{deleteDialogKeys[0]}</bdi>
                 </span>
               ) : null}
-              {shouldShowDeleteAllVersions(bucketVersioningState) && (
+              {shouldShowDeleteAllVersions(bucketVersioningState) && canDeleteAllVersions && (
                 <label htmlFor="object-list-delete-all-versions" className="mt-4 flex items-center gap-2">
                   <Checkbox
                     id="object-list-delete-all-versions"
@@ -1151,14 +1291,17 @@ export function ObjectList({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel variant="outline" className="w-full sm:w-auto text-foreground">
+            <AlertDialogCancel variant="outline" className="w-full sm:w-auto text-foreground" disabled={checkingDelete}>
               {t("Cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               variant={"destructive"}
               className={cn("w-full sm:w-auto", DANGER_BUTTON_CLASS)}
-              onClick={handleConfirmDelete}
-              disabled={bucketVersioningState === "unknown"}
+              onClick={(event) => {
+                event.preventDefault()
+                void handleConfirmDelete()
+              }}
+              disabled={bucketVersioningState === "unknown" || checkingDelete || deleteDialogScope !== actionScope}
             >
               {t("Delete")}
             </AlertDialogAction>
@@ -1169,7 +1312,7 @@ export function ObjectList({
       <AlertDialog
         open={forceCleanupTarget !== null}
         onOpenChange={(open) => {
-          if (!open) setForceCleanupTarget(null)
+          if (!open && !checkingForceCleanup) setForceCleanupTarget(null)
         }}
       >
         <AlertDialogContent
@@ -1190,14 +1333,22 @@ export function ObjectList({
             </span>
           </AlertDialogDescription>
           <AlertDialogFooter>
-            <AlertDialogCancel variant="outline" className="min-h-11 w-full sm:min-h-8 sm:w-auto text-foreground">
+            <AlertDialogCancel
+              variant="outline"
+              className="min-h-11 w-full sm:min-h-8 sm:w-auto text-foreground"
+              disabled={checkingForceCleanup}
+            >
               {t("Cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               variant={"destructive"}
               className={cn("min-h-11 w-full sm:min-h-8 sm:w-auto", DANGER_BUTTON_CLASS)}
-              onClick={handleForceCleanup}
+              onClick={(event) => {
+                event.preventDefault()
+                void handleForceCleanup()
+              }}
               disabled={
+                checkingForceCleanup ||
                 !forceCleanupTarget ||
                 forceCleanupTarget.bucket !== bucket ||
                 !canCapability("objects.forceCleanup", forceCleanupTarget)
@@ -1244,7 +1395,10 @@ export function ObjectList({
             <Button variant="outline" disabled={renameSubmitting} onClick={() => handleRenameOpenChange(false)}>
               {t("Cancel")}
             </Button>
-            <Button disabled={Boolean(renameValidation) || renameSubmitting} onClick={handleConfirmRename}>
+            <Button
+              disabled={Boolean(renameValidation) || renameSubmitting || renameDialogScope !== actionScope}
+              onClick={handleConfirmRename}
+            >
               {t("Rename")}
             </Button>
           </DialogFooter>

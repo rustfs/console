@@ -1,8 +1,31 @@
 import test from "node:test"
 import assert from "node:assert/strict"
 import { redactRequestOptionsForLog } from "../../lib/api-request-log"
+import { logger } from "../../lib/logger"
 
 const loadApiClient = () => import(new URL("../../lib/api-client.ts", import.meta.url).href)
+
+test("permission bodies reach the transport while user tag values stay out of logs", async (t) => {
+  const { ApiClient } = await loadApiClient()
+  const logged: unknown[][] = []
+  t.mock.method(logger, "log", (...args: unknown[]) => logged.push(args))
+  let sent: RequestInit | undefined
+  const client = new ApiClient({
+    fetch: async (_input: string | Request, options?: RequestInit) => {
+      sent = options
+      return Response.json({ results: [] })
+    },
+  })
+  await client.post(
+    "https://console.test/account/permissions",
+    { checks: [{ requestTags: { owner: "private-owner" } }] },
+    { suppressBodyLogging: true },
+  )
+  assert.match(String(sent?.body), /private-owner/)
+  assert.equal(Object.hasOwn(sent ?? {}, "suppressBodyLogging"), false)
+  assert.doesNotMatch(JSON.stringify(logged), /private-owner/)
+  assert.match(JSON.stringify(logged), /\[REDACTED\]/)
+})
 
 test("ApiClient does not mutate request options and preserves existing query parameters", async () => {
   const { ApiClient } = await loadApiClient()

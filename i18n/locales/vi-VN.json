@@ -2332,5 +2332,6 @@
   "Main navigation": "Điều hướng chính",
   "Encryption & Keys": "Mã hóa và khóa",
   "Decommission": "Ngừng sử dụng",
-  "Unable to check permissions. Refresh and try again.": "Không thể kiểm tra quyền. Hãy làm mới trang và thử lại."
+  "Unable to check permissions. Refresh and try again.": "Không thể kiểm tra quyền. Hãy làm mới trang và thử lại.",
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
 }

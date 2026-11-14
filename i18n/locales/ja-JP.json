@@ -2332,5 +2332,6 @@
   "Main navigation": "メインナビゲーション",
   "Encryption & Keys": "暗号化とキー",
   "Decommission": "廃止",
-  "Unable to check permissions. Refresh and try again.": "権限を確認できません。更新してもう一度お試しください。"
+  "Unable to check permissions. Refresh and try again.": "権限を確認できません。更新してもう一度お試しください。",
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
 }

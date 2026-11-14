@@ -2332,5 +2332,6 @@
   "Main navigation": "Hauptnavigation",
   "Encryption & Keys": "Verschlüsselung & Schlüssel",
   "Decommission": "Stilllegen",
-  "Unable to check permissions. Refresh and try again.": "Berechtigungen konnten nicht geprüft werden. Aktualisieren Sie die Seite und versuchen Sie es erneut."
+  "Unable to check permissions. Refresh and try again.": "Berechtigungen konnten nicht geprüft werden. Aktualisieren Sie die Seite und versuchen Sie es erneut.",
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
 }

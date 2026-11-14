@@ -86,7 +86,7 @@ export function NamespaceDialog({
   const canSubmit = editing ? canUpdate : canCreate
   const targetNamespace = initialNamespace?.namespace ?? normalizeNamespaceInput(namespace)
   const targetAction = editing ? "admin:UpdateTableNamespaceProperties" : "admin:SetTableNamespace"
-  const permissionContext = tableCatalogPermissionContext(bucket, targetNamespace)
+  const permissionContext = tableCatalogPermissionContext(bucket, editing ? targetNamespace : [])
   useActionChecks(targetNamespace.length ? [{ action: targetAction, context: permissionContext }] : [])
   const canSubmitTarget = targetNamespace.length > 0 && canAction(targetAction, permissionContext)
 
@@ -169,7 +169,7 @@ export function NamespaceDialog({
     setSubmitting(true)
     setSaveError("")
     try {
-      if (!(await checkAction(targetAction, tableCatalogPermissionContext(bucket, segments))))
+      if (!(await checkAction(targetAction, tableCatalogPermissionContext(bucket, editing ? segments : []))))
         throw new Error(t("Access Denied"))
       if (editing) {
         const removals = Object.keys(originalProperties).filter((key) => !(key in parsedProperties))

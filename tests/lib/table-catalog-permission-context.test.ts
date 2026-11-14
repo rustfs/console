@@ -1,6 +1,9 @@
 import test from "node:test"
 import assert from "node:assert/strict"
-import { tableCatalogPermissionContext } from "../../components/table-catalog/permission-context"
+import {
+  tableCatalogPermissionContext,
+  tableWarehouseLocationPermissionContext,
+} from "../../components/table-catalog/permission-context"
 
 test("a table action uses the same namespace and table resource as the backend", () => {
   assert.deepEqual(tableCatalogPermissionContext("warehouse", ["sales", "quarter"], "orders"), {
@@ -23,6 +26,37 @@ test("a dotted namespace segment remains distinct from multiple namespace segmen
   )
 })
 
-test("bucket configuration actions have no invented object scope", () => {
-  assert.deepEqual(tableCatalogPermissionContext("warehouse"), { bucket: "warehouse" })
+test("bucket configuration actions explicitly declare the known warehouse root", () => {
+  assert.deepEqual(tableCatalogPermissionContext("warehouse"), { bucket: "warehouse", objectKey: "" })
 })
+
+test("parent namespace scopes preserve names equal to table or view path markers", () => {
+  assert.deepEqual(tableCatalogPermissionContext("warehouse", ["sales", "tables", "orders"]), {
+    bucket: "warehouse",
+    objectKey: "namespaces/sales/tables/orders",
+  })
+  assert.deepEqual(tableCatalogPermissionContext("warehouse", ["sales", "views", "orders"]), {
+    bucket: "warehouse",
+    objectKey: "namespaces/sales/views/orders",
+  })
+})
+
+test("warehouse claim scopes use the raw S3 prefix without URL decoding", () => {
+  assert.deepEqual(tableWarehouseLocationPermissionContext("warehouse", "s3://warehouse/data%2F2026/path/"), {
+    bucket: "warehouse",
+    objectKey: "data%2F2026/path",
+  })
+})
+
+for (const location of [
+  "https://warehouse/data",
+  "s3://other/data",
+  "s3://warehouse/",
+  "s3://warehouse/a//b",
+  "s3://warehouse/a/../b",
+  "s3://warehouse/a\\b",
+]) {
+  test(`invalid warehouse location cannot produce an authorization scope: ${location}`, () => {
+    assert.equal(tableWarehouseLocationPermissionContext("warehouse", location), null)
+  })
+}

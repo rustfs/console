@@ -301,8 +301,8 @@ test("revoked tier credentials write permission prevents the update request", as
   assert.equal(ui.checks[0]?.action, "admin:SetTier")
 })
 
-test("a restricted table grant enables only the named table target", async (t) => {
-  const context = { bucket: "warehouse", objectKey: "namespaces/sales/quarter/tables/allowed" }
+test("a namespace-scoped create grant authorizes table creation on its actual parent resource", async (t) => {
+  const context = { bucket: "warehouse", objectKey: "namespaces/sales/quarter" }
   const ui = await mount(
     t,
     TableDialog,
@@ -311,9 +311,7 @@ test("a restricted table grant enables only the named table target", async (t) =
       allowed: (action, target) => action === "admin:CreateTable" && target?.objectKey === context.objectKey,
     },
   )
-  await ui.change("table-catalog-table-name", "denied")
-  assert.equal(ui.button("Create table").disabled, true)
-  await ui.change("table-catalog-table-name", "allowed")
+  await ui.change("table-catalog-table-name", "orders")
   assert.equal(ui.button("Create table").disabled, false)
   await ui.click("Create table")
   assert.deepEqual(ui.checks[0], { action: "admin:CreateTable", context })
@@ -333,13 +331,13 @@ test("a fresh table denial prevents an allowed cached create button from calling
   assert.equal(ui.errors[0], "Access Denied")
 })
 
-test("namespace creation checks its hierarchical catalog resource", async (t) => {
+test("namespace creation authorizes the warehouse root rather than the new namespace name", async (t) => {
   const ui = await mount(t, NamespaceDialog, { bucket: "warehouse", canCreate: true })
   await ui.change("table-catalog-namespace", "sales.quarter")
   await ui.click("Create namespace")
   assert.deepEqual(ui.checks[0], {
     action: "admin:SetTableNamespace",
-    context: { bucket: "warehouse", objectKey: "namespaces/sales/quarter" },
+    context: { bucket: "warehouse", objectKey: "" },
   })
   assert.equal(ui.requests[0]?.method, "createNamespace")
 })
@@ -406,7 +404,7 @@ test("table commits recheck the actual namespace and table before changing metad
   )
 })
 
-test("view creation checks the view catalog resource instead of a table resource", async (t) => {
+test("view creation uses the same parent namespace authorization as table creation", async (t) => {
   const ui = await mount(
     t,
     ViewDialog,
@@ -417,7 +415,7 @@ test("view creation checks the view catalog resource instead of a table resource
   await ui.click("Create view")
   assert.deepEqual(ui.checks[0], {
     action: "admin:CreateTable",
-    context: { bucket: "warehouse", objectKey: "namespaces/sales/views/revenue" },
+    context: { bucket: "warehouse", objectKey: "namespaces/sales" },
   })
   assert.equal(
     ui.requests.some(({ method }) => method === "createView"),
@@ -522,8 +520,8 @@ test("a failed IAM import releases the pending state without losing the selected
   assert.equal(ui.button("Remove").disabled, false)
 })
 
-test("namespace whitespace normalization is identical for preview authorization and the actual write", async (t) => {
-  const expected = { bucket: "warehouse", objectKey: "namespaces/sales/quarter" }
+test("namespace creation retains normalized segments while querying the warehouse authorization root", async (t) => {
+  const expected = { bucket: "warehouse", objectKey: "" }
   const ui = await mount(
     t,
     NamespaceDialog,
@@ -540,4 +538,87 @@ test("namespace whitespace normalization is identical for preview authorization 
     "warehouse",
     ["sales", "quarter"],
   ])
+})
+
+test("namespace updates keep their exact namespace resource rather than inheriting creation root access", async (t) => {
+  const expected = { bucket: "warehouse", objectKey: "namespaces/sales/quarter" }
+  const ui = await mount(
+    t,
+    NamespaceDialog,
+    { bucket: "warehouse", initialNamespace: { namespace: ["sales", "quarter"] }, canUpdate: true },
+    {
+      allowed: (action, context) =>
+        action === "admin:UpdateTableNamespaceProperties" && context?.objectKey === expected.objectKey,
+    },
+  )
+  assert.equal(ui.button("Save changes").disabled, false)
+  await ui.click("Save changes")
+  assert.deepEqual(ui.checks[0], { action: "admin:UpdateTableNamespaceProperties", context: expected })
+  assert.equal(ui.requests[0]?.method, "updateNamespaceProperties")
+})
+
+test("table creation outside the granted parent namespace stays unavailable", async (t) => {
+  const ui = await mount(
+    t,
+    TableDialog,
+    { bucket: "warehouse", namespace: ["private"], canCreate: true },
+    {
+      allowed: (action, context) => action === "admin:CreateTable" && context?.objectKey === "namespaces/sales",
+    },
+  )
+  await ui.change("table-catalog-table-name", "orders")
+  assert.equal(ui.button("Create table").disabled, true)
+  assert.equal(ui.requests.length, 0)
+})
+
+test("an explicit custom table location requires its separate claim permission", async (t) => {
+  const ui = await mount(
+    t,
+    TableDialog,
+    { bucket: "warehouse", namespace: ["sales"], canCreate: true },
+    {
+      allowed: (action) => action !== "admin:ClaimTableLocation",
+    },
+  )
+  await ui.change("table-catalog-table-name", "orders")
+  assert.equal(ui.button("Create table").disabled, false)
+  await ui.change("table-catalog-table-location", "s3://warehouse/custom/data/")
+  assert.equal(ui.button("Create table").disabled, true)
+})
+
+test("a revoked custom location claim prevents table creation after parent authorization succeeds", async (t) => {
+  const ui = await mount(
+    t,
+    TableDialog,
+    { bucket: "warehouse", namespace: ["sales"], canCreate: true },
+    {
+      freshAllowed: (action) => action !== "admin:ClaimTableLocation",
+    },
+  )
+  await ui.change("table-catalog-table-name", "orders")
+  await ui.change("table-catalog-table-location", "s3://warehouse/custom%2Fraw/data/")
+  await ui.click("Create table")
+  assert.deepEqual(ui.checks, [
+    { action: "admin:CreateTable", context: { bucket: "warehouse", objectKey: "namespaces/sales" } },
+    { action: "admin:ClaimTableLocation", context: { bucket: "warehouse", objectKey: "custom%2Fraw/data" } },
+  ])
+  assert.equal(
+    ui.requests.some(({ method }) => method === "createTable"),
+    false,
+  )
+})
+
+test("custom table locations authorize the raw prefix and preserve the original location in the payload", async (t) => {
+  const ui = await mount(t, TableDialog, { bucket: "warehouse", namespace: ["sales"], canCreate: true })
+  await ui.change("table-catalog-table-name", "orders")
+  await ui.change("table-catalog-table-location", " s3://warehouse/custom%2Fraw/data/ ")
+  await ui.click("Create table")
+  assert.deepEqual(ui.checks[1], {
+    action: "admin:ClaimTableLocation",
+    context: { bucket: "warehouse", objectKey: "custom%2Fraw/data" },
+  })
+  const payload = ui.requests.find(({ method }) => method === "createTable")?.args[2] as
+    | { location?: string }
+    | undefined
+  assert.equal(payload?.location, "s3://warehouse/custom%2Fraw/data/")
 })

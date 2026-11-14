@@ -2332,5 +2332,6 @@
   "Main navigation": "Navegación principal",
   "Encryption & Keys": "Cifrado y claves",
   "Decommission": "Retirada",
-  "Unable to check permissions. Refresh and try again.": "No se pudieron comprobar los permisos. Actualiza la página e inténtalo de nuevo."
+  "Unable to check permissions. Refresh and try again.": "No se pudieron comprobar los permisos. Actualiza la página e inténtalo de nuevo.",
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
 }

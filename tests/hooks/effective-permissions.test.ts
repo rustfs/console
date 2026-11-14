@@ -48,6 +48,7 @@ const readPolicy = JSON.stringify({
 async function mount(
   t: TestContext,
   decision: (request: PermissionRequest) => { decision: string; potential?: boolean },
+  identityPolicy = readPolicy,
 ) {
   const browser = new Window()
   const globals = { window: browser, document: browser.document, IS_REACT_ACT_ENVIRONMENT: true }
@@ -58,7 +59,7 @@ async function mount(
   const api = {
     resolveUrl: (path: string) => `https://fixture.invalid${path}`,
     async get(path: string) {
-      return path === "/accountinfo" ? { policy: readPolicy } : { is_admin: false }
+      return path === "/accountinfo" ? { policy: identityPolicy } : { is_admin: false }
     },
     async post(_path: string, body: { checks: PermissionRequest[] }, options: { suppressBodyLogging?: boolean }) {
       assert.equal(options.suppressBodyLogging, true)
@@ -113,6 +114,26 @@ test("a bucket-policy allowance enables an exact operation absent from the ident
   assert.equal(allowed, true)
   assert.equal(mounted.permissions.canCapability("objects.upload", target), true)
   assert.ok(mounted.requests.some(({ action, object }) => action === "s3:PutObject" && object === "/file.txt"))
+})
+
+test("an explicitly empty warehouse object retains the bucket ARN on a legacy server", async (t) => {
+  const mounted = await mount(
+    t,
+    () => {
+      throw Object.assign(new Error("Unsupported"), { status: 404 })
+    },
+    JSON.stringify({
+      Version: "2012-10-17",
+      Statement: [{ Effect: "Allow", Action: ["admin:GetTableNamespace"], Resource: ["arn:aws:s3:::alice-data"] }],
+    }),
+  )
+  let allowed = false
+  await act(async () => {
+    allowed = await mounted.permissions.checkAction("admin:GetTableNamespace", { bucket: "alice-data", objectKey: "" })
+  })
+  assert.equal(allowed, true)
+  assert.equal(mounted.permissions.canAction("admin:GetTableNamespace", { bucket: "alice-data", objectKey: "" }), true)
+  assert.ok(mounted.requests.some((request) => request.object === ""))
 })
 
 test("a server-side session or condition denial overrides a broad identity projection", async (t) => {

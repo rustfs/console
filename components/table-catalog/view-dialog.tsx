@@ -162,7 +162,7 @@ export function ViewDialog({
   const permissionContext = tableCatalogPermissionContext(
     bucket,
     identifier?.namespace ?? namespace,
-    targetName,
+    editing ? targetName : undefined,
     "views",
   )
   useActionChecks(targetName ? [{ action: targetAction, context: permissionContext }] : [])
@@ -301,7 +301,12 @@ export function ViewDialog({
       if (
         !(await checkAction(
           targetAction,
-          tableCatalogPermissionContext(bucket, identifier?.namespace ?? namespace, viewName, "views"),
+          tableCatalogPermissionContext(
+            bucket,
+            identifier?.namespace ?? namespace,
+            editing ? viewName : undefined,
+            "views",
+          ),
         ))
       )
         throw new Error(t("Access Denied"))

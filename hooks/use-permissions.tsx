@@ -240,7 +240,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       const resource = context.keyId
         ? context.keyId
         : context.bucket
-          ? `arn:aws:s3:::${context.bucket}${context.objectKey === undefined ? "" : `/${context.objectKey}`}`
+          ? `arn:aws:s3:::${context.bucket}${context.objectKey ? `/${context.objectKey}` : ""}`
           : "*"
       return hasConsolePermission(snapshot.userPolicy ?? undefined, action, resource)
     },
@@ -257,9 +257,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
         if (isAdmin) return true
         const resource =
           context.keyId ??
-          (context.bucket
-            ? `arn:aws:s3:::${context.bucket}${context.objectKey === undefined ? "" : `/${context.objectKey}`}`
-            : "*")
+          (context.bucket ? `arn:aws:s3:::${context.bucket}${context.objectKey ? `/${context.objectKey}` : ""}` : "*")
         return hasConsolePermission(userPolicy ?? undefined, action, resource)
       }
       return permissionClient.peek(check)?.decision === "allowed"

@@ -2332,5 +2332,6 @@
   "Main navigation": "Main navigation",
   "Encryption & Keys": "Encryption & Keys",
   "Decommission": "Decommission",
-  "Unable to check permissions. Refresh and try again.": "Unable to check permissions. Refresh and try again."
+  "Unable to check permissions. Refresh and try again.": "Unable to check permissions. Refresh and try again.",
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
 }

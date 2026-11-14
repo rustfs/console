@@ -2332,5 +2332,6 @@
   "Main navigation": "Ana gezinti",
   "Encryption & Keys": "Şifreleme ve Anahtarlar",
   "Decommission": "Devreden çıkar",
-  "Unable to check permissions. Refresh and try again.": "İzinler kontrol edilemedi. Sayfayı yenileyip tekrar deneyin."
+  "Unable to check permissions. Refresh and try again.": "İzinler kontrol edilemedi. Sayfayı yenileyip tekrar deneyin.",
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
 }

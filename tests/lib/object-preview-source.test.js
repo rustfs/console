@@ -114,6 +114,26 @@ test("object preview dialog provides a keyboard-operable expand and collapse alt
   assert.match(source, /"--preview-dialog-width": "min\(56rem, calc\(100vw - 2rem\)\)"/)
 })
 
+test("object preview dialog places Expand next to Close instead of underneath it", () => {
+  const source = fs.readFileSync("components/object/preview-modal.tsx", "utf8")
+
+  assert.match(
+    source,
+    /<div className="absolute end-4 top-4 flex items-center gap-1">\s*<Button[\s\S]*?t\("Expand"\)[\s\S]*?<\/Button>\s*<DialogClose/,
+  )
+  assert.doesNotMatch(source, /<DialogHeader[^>]*>\s*<DialogTitle[^>]*>\{t\("Preview"\)\}<\/DialogTitle>\s*<Button/)
+})
+
+test("object preview reserves enough mobile header space for both touch controls", () => {
+  const source = fs.readFileSync("components/object/preview-modal.tsx", "utf8")
+  const headerClasses = source.match(/<DialogHeader className="([^"]+)"/)?.[1] ?? ""
+  const endPadding = Number(headerClasses.match(/(?:^|\s)pe-(\d+)(?:\s|$)/)?.[1]) * 4
+
+  // Two 44px touch targets, their 4px gap, and the 16px end offset must fit beside the title.
+  assert.ok(endPadding >= 44 * 2 + 4 + 16)
+  assert.match(source, /<DialogTitle className="[^"]*min-w-0[^"]*\[overflow-wrap:anywhere\][^"]*"/)
+})
+
 test("object preview dialog keeps compact preview modes at a compact default height", () => {
   const source = fs.readFileSync("components/object/preview-modal.tsx", "utf8")
 

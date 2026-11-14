@@ -9,6 +9,10 @@
  * That token is a near-white on the light-theme red (4.6:1) and a near-black on
  * the lightened dark-theme red (6.9:1), so the label clears WCAG AA in both
  * themes. Override the fill or the label, never the two independently.
+ *
+ * The `dark:` fills repeat the solid fill because the `destructive` variant sets
+ * its own `dark:bg-destructive/20`, which would otherwise win in the dark theme
+ * and put the near-black label on a dark, mostly transparent fill.
  */
 export const DANGER_BUTTON_CLASS =
-  "bg-destructive text-destructive-foreground hover:bg-destructive/95 focus-visible:border-destructive/40 focus-visible:ring-destructive/30"
+  "bg-destructive text-destructive-foreground hover:bg-destructive/95 focus-visible:border-destructive/40 focus-visible:ring-destructive/30 dark:bg-destructive dark:hover:bg-destructive/95"

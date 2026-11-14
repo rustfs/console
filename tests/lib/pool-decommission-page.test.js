@@ -48,3 +48,12 @@ test("pool decommission page gates start, cancel, and clear by decommission stat
   assert.match(source, /dialog\.warning\(/)
   assert.match(source, /dialog\.error\(/)
 })
+
+test("locked mobile pool cards keep a default cursor without disabling task actions", () => {
+  const source = fs.readFileSync("app/(dashboard)/pool-decommission/page.tsx", "utf8")
+  const card = source.match(/<div\s+key=\{row\.pool\.id\}\s+role="button"([\s\S]*?)>/)?.[1] ?? ""
+
+  assert.match(card, /selectionLocked && "cursor-default"/)
+  assert.doesNotMatch(card, /aria-disabled=/)
+  assert.match(card, /tabIndex=\{selectionLocked \? undefined : 0\}/)
+})

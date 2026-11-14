@@ -457,8 +457,8 @@ export function ObjectPreviewModal({ show, onShowChange, onDownload, object }: O
           } as React.CSSProperties
         }
       >
-        <DialogHeader className="pe-24 sm:pe-24">
-          <DialogTitle>{t("Preview")}</DialogTitle>
+        <DialogHeader className="min-w-0 pe-28 sm:pe-24">
+          <DialogTitle className="min-w-0 [overflow-wrap:anywhere]">{t("Preview")}</DialogTitle>
         </DialogHeader>
         <div className="absolute end-4 top-4 flex items-center gap-1">
           <Button

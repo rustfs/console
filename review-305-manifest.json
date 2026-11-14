@@ -1,0 +1,26 @@
+{
+  "evidenceKey": "effective-permissions-review-305",
+  "beforeRevision": "824f8718d7e7260778d90d9fadde7198f1e7507e",
+  "afterRevision": "d9adb67a0b4097173f41324477dcba57129bb7a0",
+  "state": "Same bucket-policy-only identity and bucket; report.txt selected; permission responses delayed by 15 seconds during refresh.",
+  "observed": "Before unmounts the browser into a spinner; after retains the selected object and disables operation entries until permission checks finish.",
+  "environment": "Running Next.js apps with controlled S3/admin fixture responses; not a live RustFS/OIDC integration.",
+  "images": {
+    "before": {
+      "file": "refresh-before-bucket-policy-pending.jpg",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "sha256": "1ba3c1f48e6b39c0f95da4f09a13808c403fa0e9081267ff294f5f66c5f6b337"
+    },
+    "after": {
+      "file": "refresh-after-bucket-policy-pending.jpg",
+      "dimensions": [
+        1280,
+        720
+      ],
+      "sha256": "8c54276520203d14dccb10db959cb1bb938f00cf556f6ce7f135a8930a4a7b6e"
+    }
+  }
+}

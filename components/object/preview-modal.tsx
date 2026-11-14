@@ -457,34 +457,26 @@ export function ObjectPreviewModal({ show, onShowChange, onDownload, object }: O
           } as React.CSSProperties
         }
       >
-        <DialogHeader className="flex-row items-start justify-between gap-2 pe-12 [@media(hover:hover)_and_(pointer:fine)]:pe-8">
+        <DialogHeader className="pe-24 sm:pe-24">
           <DialogTitle>{t("Preview")}</DialogTitle>
+        </DialogHeader>
+        <div className="absolute end-4 top-4 flex items-center gap-1">
           <Button
             type="button"
             variant="ghost"
             size="icon-sm"
-            className="shrink-0"
             aria-label={isDialogExpanded ? t("Collapse") : t("Expand")}
             title={isDialogExpanded ? t("Collapse") : t("Expand")}
             onClick={() => setIsDialogExpanded((expanded) => !expanded)}
           >
             {isDialogExpanded ? <RiFullscreenExitLine aria-hidden /> : <RiFullscreenLine aria-hidden />}
           </Button>
-        </DialogHeader>
-        <DialogClose
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="absolute end-2 top-2"
-              aria-label={t("Close")}
-              title={t("Close")}
-            />
-          }
-        >
-          <RiCloseLine aria-hidden />
-        </DialogClose>
+          <DialogClose
+            render={<Button type="button" variant="ghost" size="icon-sm" aria-label={t("Close")} title={t("Close")} />}
+          >
+            <RiCloseLine aria-hidden />
+          </DialogClose>
+        </div>
         <div className="flex min-h-0 min-w-0 flex-col overflow-hidden border p-4">{renderPreview()}</div>
       </DialogContent>
     </Dialog>

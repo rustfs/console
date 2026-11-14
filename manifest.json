@@ -1,0 +1,340 @@
+{
+  "evidenceKey": "effective-permissions-298",
+  "capturedOn": "2026-11-14",
+  "beforeRevision": "d74c90eea2d948bd444f05040f1e3378dcd1cb43",
+  "afterRevision": "9b42155a02d55f48d7f14be3f8e832ef47ba5b0d",
+  "environment": "Running Next.js Console with controlled localhost S3/admin fixtures; not live RustFS or OIDC integration.",
+  "desktopViewport": [
+    1280,
+    720
+  ],
+  "mobileViewport": [
+    390,
+    844
+  ],
+  "limits": [
+    "Bucket CORS and encryption fixture reads report unavailable; captures show their closed error state.",
+    "KMS fixture health is unknown.",
+    "Native-panel captures that did not apply viewport changes are excluded."
+  ],
+  "pairs": [
+    {
+      "key": "browser-desktop",
+      "images": {
+        "before": {
+          "file": "browser-desktop-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "45c9bef0c9afd5ab448ab513aceed665f816decdbd48387bd93ae79341d6fc15"
+        },
+        "after": {
+          "file": "browser-desktop-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "22a42e7597d5674bbdac5d8c5d2de193deda4a04845b14edee4b8a119e8a8f03"
+        }
+      }
+    },
+    {
+      "key": "browser-actions-desktop",
+      "images": {
+        "before": {
+          "file": "browser-actions-desktop-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "371e9509ba2303bfb90f64cbd98f8701d41e64ce1fb84c6a0c495f6351302316"
+        },
+        "after": {
+          "file": "browser-actions-desktop-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "02ade3cafe1ded463d5f5009ef9f5a91a8a85fa0da00a8c9ae797f87c0388180"
+        }
+      }
+    },
+    {
+      "key": "browser-mobile",
+      "images": {
+        "before": {
+          "file": "browser-mobile-before.jpg",
+          "dimensions": [
+            390,
+            844
+          ],
+          "sha256": "1b72e99c3619c696e96fd5547c69476a58b2ecaf83ad8a13e8abc7bd45830929"
+        },
+        "after": {
+          "file": "browser-mobile-after.jpg",
+          "dimensions": [
+            390,
+            844
+          ],
+          "sha256": "2bb872b75a62649166d422ded50de5347f91ad6dc85364135c24a9cd0c312e75"
+        }
+      }
+    },
+    {
+      "key": "groups",
+      "images": {
+        "before": {
+          "file": "groups-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "c9e43da1be649464585464a09e94e7abadeeeea32cf52121769fba6d4767ee1b"
+        },
+        "after": {
+          "file": "groups-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "b43572c09ab965d15ae0415d712605ba6a711eb6daf6744b314a29f01ae3cfe9"
+        }
+      }
+    },
+    {
+      "key": "tiers",
+      "images": {
+        "before": {
+          "file": "tiers-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "fcafee7912aab604b264469d85a0e4c9d1ab153eb4c00264e5725a1ca52a9156"
+        },
+        "after": {
+          "file": "tiers-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "a0cf09537166b5d11d1041203629af03ca9bdd686308557a477d53540c583459"
+        }
+      }
+    },
+    {
+      "key": "events-target",
+      "images": {
+        "before": {
+          "file": "events-target-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "ac794f823c059434d42caaf583a8d0cda0e3259d4219e1b145b67cd4e821cfff"
+        },
+        "after": {
+          "file": "events-target-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "380a66420e96ca33643fd8a90b203cb66c274f1b554fe8db0924a6e9987080b9"
+        }
+      }
+    },
+    {
+      "key": "audit-target",
+      "images": {
+        "before": {
+          "file": "audit-target-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "d74627ea3ad2cd2aea1a86aea9569e361c149c77767928248832b53e4c1f8645"
+        },
+        "after": {
+          "file": "audit-target-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "35fb8fd56341ef4adc2e1938c28fa12480ad1cc556b8711afd22680e24d5ae1e"
+        }
+      }
+    },
+    {
+      "key": "tables",
+      "images": {
+        "before": {
+          "file": "tables-before.jpg",
+          "dimensions": [
+            1280,
+            850
+          ],
+          "sha256": "0eeca00bad77576f455852856c67341d7e295c73cf64c9bc6bd239e2dfe88129"
+        },
+        "after": {
+          "file": "tables-after.jpg",
+          "dimensions": [
+            1280,
+            850
+          ],
+          "sha256": "d3bb318e1fe0c1f4f2de0e77ef82f32646016d336e5fb1a163df27e3b96fdc2f"
+        }
+      }
+    },
+    {
+      "key": "kms",
+      "images": {
+        "before": {
+          "file": "kms-before.jpg",
+          "dimensions": [
+            1280,
+            2095
+          ],
+          "sha256": "dd08920ed61d239ab151f84fccb080df5b0d8e518493523a39b7ea0ad6f86d62"
+        },
+        "after": {
+          "file": "kms-after.jpg",
+          "dimensions": [
+            1280,
+            2095
+          ],
+          "sha256": "41d5c61ba61e76fda7a4cea4250ac696925060b0122bec2d1e7c7fa9cc6e884e"
+        }
+      }
+    },
+    {
+      "key": "bucket-settings",
+      "images": {
+        "before": {
+          "file": "bucket-settings-before.jpg",
+          "dimensions": [
+            1280,
+            1904
+          ],
+          "sha256": "55d33dede1961733847fe7dee676af50411878fc84c5f4332a2268fc50bd4c08"
+        },
+        "after": {
+          "file": "bucket-settings-after.jpg",
+          "dimensions": [
+            1280,
+            1993
+          ],
+          "sha256": "4e92a020696e79b1d5af0c7d2ccf708fe0af2cd2bbc8daf47c0abac383451d61"
+        }
+      }
+    },
+    {
+      "key": "replication",
+      "images": {
+        "before": {
+          "file": "replication-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "288a764945a5c0162afc5a991a6e69b614f23c5ad4184a69121a898b28931791"
+        },
+        "after": {
+          "file": "replication-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "9466bdebf6bd7bbd3b3a9c645d8f9e89b9abba4c742b9aaf22aa57cf2e3fa656"
+        }
+      }
+    },
+    {
+      "key": "events",
+      "images": {
+        "before": {
+          "file": "events-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "aecdcfab10074b782e47268d87fb3667a5259441025b555ab0c9b887c98d6c0d"
+        },
+        "after": {
+          "file": "events-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "a736735cb35de7f4af034192052f24ed597dab0ff95bd1858c6c706c3bc1807f"
+        }
+      }
+    },
+    {
+      "key": "lifecycle",
+      "images": {
+        "before": {
+          "file": "lifecycle-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "2f7764ca78812d42d266de5822af3af7a90074cd480dcb7856708642a4bb535f"
+        },
+        "after": {
+          "file": "lifecycle-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "bc27558291bc2a66d81dbd48ddb0356574006f3b91bfb35e540b9b45d67ec600"
+        }
+      }
+    },
+    {
+      "key": "import",
+      "images": {
+        "before": {
+          "file": "import-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "1877768dc776298b4525e4366685d953e269c5715380a5aaa98452abf6e3b1ce"
+        },
+        "after": {
+          "file": "import-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "bd80c7f658585265742e7967c88b78b3088eee4d05da122d7ed4b29b34f4f2fe"
+        }
+      }
+    },
+    {
+      "key": "user-edit",
+      "images": {
+        "before": {
+          "file": "user-edit-before.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "95dbb398b97a828e45022b0d779740529d55c66b6d828207b492a838371283d3"
+        },
+        "after": {
+          "file": "user-edit-after.jpg",
+          "dimensions": [
+            1280,
+            720
+          ],
+          "sha256": "d9647dcac292a820e4d8780de3fe0f22c5cf209600330c70ad6ec1dbfc1bf8bf"
+        }
+      }
+    }
+  ],
+  "finalRevision": "824f8718d7e7260778d90d9fadde7198f1e7507e",
+  "finalBaseRevision": "f1efd4a40dce66776a79737e17a40fcec39ed2db",
+  "sourceNote": "Captures precede rebasing onto the upstream session fix. git range-diff confirms the policy-control patch is unchanged; full gates also pass on finalRevision."
+}

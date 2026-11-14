@@ -7,47 +7,10 @@ import { useAuth } from "@/contexts/auth-context"
 import { addApiPrefixMiddleware } from "@/lib/api-prefix-middleware"
 import { addDeleteReplicationMiddleware } from "@/lib/bucket-replication-delete"
 import { configManager } from "@/lib/config"
-import { getServiceErrorMessage, getXmlErrorCode, getXmlErrorMessage } from "@/lib/error-handler"
+import { addS3ErrorMiddleware } from "@/lib/s3-error-middleware"
 import { scheduleMicrotask } from "@/lib/schedule-microtask"
 import type { SiteConfig } from "@/types/config"
-
-interface S3Response {
-  response?: { body?: string }
-  [key: string]: unknown
-}
-
-type StreamCollector = (streamBody: unknown) => Promise<Uint8Array>
-
-const readResponseBodyText = async (
-  body: unknown,
-  streamCollector: StreamCollector | undefined,
-): Promise<string | null> => {
-  if (typeof body === "string") {
-    return body
-  }
-
-  if (body instanceof Uint8Array) {
-    return new TextDecoder("utf-8").decode(body)
-  }
-
-  if (!body || !streamCollector) {
-    return null
-  }
-
-  const bytes = await streamCollector(body)
-  return new TextDecoder("utf-8").decode(bytes)
-}
-
-const createS3ServiceError = (message: string, statusCode: number, code?: string | null) => {
-  const error = new Error(message) as Error & {
-    Code?: string
-    $metadata?: { httpStatusCode?: number }
-  }
-  error.name = code ?? "S3ServiceError"
-  if (code) error.Code = code
-  error.$metadata = { httpStatusCode: statusCode }
-  return error
-}
+import { isSameSession, type SessionCredentials } from "@/lib/auth-session"
 
 interface S3ContextValue {
   client: S3Client | null
@@ -60,8 +23,8 @@ const S3Context = createContext<S3ContextValue>({
 })
 
 export function S3Provider({ children }: { children: React.ReactNode }) {
-  const { credentials, isAuthenticated, logout, getIsLoggingOut } = useAuth()
-  const [s3Client, setS3Client] = useState<S3Client | null>(null)
+  const { credentials, isAuthenticated, expireSession } = useAuth()
+  const [s3Client, setS3Client] = useState<{ client: S3Client; credentials: SessionCredentials } | null>(null)
   const [isReady, setIsReady] = useState(false)
   const router = useRouter()
 
@@ -97,109 +60,26 @@ export function S3Provider({ children }: { children: React.ReactNode }) {
 
       addDeleteReplicationMiddleware(client)
 
-      /* eslint-disable @typescript-eslint/no-explicit-any -- AWS SDK middleware types are complex */
-      client.middlewareStack.addRelativeTo(
-        ((next: any) => async (args: any) => {
-          const result = await next(args)
-          const response = result?.response
-          const statusCode = response?.statusCode
+      addS3ErrorMiddleware(client, () => {
+        if (expireSession(credentials)) router.replace("/auth/login/?unauthorized=true")
+      })
 
-          if (typeof statusCode === "number" && statusCode >= 300) {
-            const streamCollector = client.config.streamCollector as StreamCollector | undefined
-            const bodyText = await readResponseBodyText(response.body, streamCollector)
-            const errorCode = bodyText ? getXmlErrorCode(bodyText) : null
-            const errorMessage = bodyText ? (getXmlErrorMessage(bodyText) ?? bodyText.trim()) : null
-
-            if (errorMessage) {
-              throw createS3ServiceError(errorMessage, statusCode, errorCode)
-            }
-          }
-
-          return result
-        }) as any,
-        {
-          name: "normalizeXmlErrorResponse",
-          relation: "after",
-          toMiddleware: "deserializerMiddleware",
-          override: true,
-        },
-      )
-      client.middlewareStack.add(
-        ((next: any) => async (args: any) => {
-          try {
-            const response = (await next(args)) as S3Response
-
-            if (response.response?.body && typeof response.response.body === "string") {
-              const body = response.response.body.trim()
-              if (body.match(/^<\?xml[^>]*\?><[^>]*><\/[^>]*>$/)) {
-                const tagName = body.match(/<([^>]*)><\/\1>/)?.[1]
-                if (tagName) {
-                  const propertyName = tagName.replace(/(?:^|_)([a-z])/g, (_, letter: string) => letter.toUpperCase())
-                  return {
-                    response: response.response,
-                    [propertyName]: null,
-                  }
-                }
-              }
-            }
-
-            return response
-          } catch (error: unknown) {
-            const err = error as {
-              $metadata?: { httpStatusCode?: number }
-              Code?: string
-              name?: string
-              message?: string
-            }
-            if (err?.$metadata?.httpStatusCode === 401) {
-              if (!getIsLoggingOut()) {
-                logout()
-                router.replace("/auth/login/")
-              }
-              return { response: { statusCode: 401, headers: {} } }
-            }
-            if (err?.$metadata?.httpStatusCode === 403) {
-              const codeText = (err?.Code || err?.name || "").toLowerCase()
-              const isUnauthorizedAccess = codeText === "unauthorizedaccess"
-              const isInvalidAccessKey = codeText === "invalidaccesskeyid"
-              if (isUnauthorizedAccess || isInvalidAccessKey) {
-                if (!getIsLoggingOut()) {
-                  logout()
-                  router.replace("/auth/login/")
-                }
-                return { response: { statusCode: 401, headers: {} } }
-              }
-            }
-
-            const serviceErrorMessage = getServiceErrorMessage(error)
-            if (serviceErrorMessage && error instanceof Error) {
-              error.message = serviceErrorMessage
-            }
-            throw error
-          }
-        }) as any,
-        { step: "deserialize", name: "handleXmlResponse" },
-      )
-      /* eslint-enable @typescript-eslint/no-explicit-any */
-
-      setS3Client(client)
+      setS3Client({ client, credentials })
       setIsReady(true)
     })
 
     return () => {
       cancelled = true
     }
-  }, [
-    isAuthenticated,
-    credentials?.AccessKeyId,
-    credentials?.SecretAccessKey,
-    credentials?.SessionToken,
-    logout,
-    getIsLoggingOut,
-    router,
-  ])
+  }, [isAuthenticated, credentials, expireSession, router])
 
-  return <S3Context.Provider value={{ client: s3Client, isReady }}>{children}</S3Context.Provider>
+  const currentClient =
+    isAuthenticated && s3Client && isSameSession(credentials, s3Client.credentials) ? s3Client.client : null
+  return (
+    <S3Context.Provider value={{ client: currentClient, isReady: isReady && (!isAuthenticated || !!currentClient) }}>
+      {children}
+    </S3Context.Provider>
+  )
 }
 
 export function useS3() {

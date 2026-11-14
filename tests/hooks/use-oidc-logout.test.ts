@@ -67,10 +67,12 @@ overrides["@/contexts/s3-context"] = moduleUrl("contexts/s3-context.tsx")
 const { AuthProvider, useAuth } = (await import(
   overrides["@/contexts/auth-context"]
 )) as typeof import("../../contexts/auth-context")
-const { ApiProvider } = (await import(
+const { ApiProvider, useApiReady } = (await import(
   overrides["@/contexts/api-context"]
 )) as typeof import("../../contexts/api-context")
-const { S3Provider } = (await import(overrides["@/contexts/s3-context"])) as typeof import("../../contexts/s3-context")
+const { S3Provider, useS3Ready } = (await import(
+  overrides["@/contexts/s3-context"]
+)) as typeof import("../../contexts/s3-context")
 const { DashboardAuthGuard } = (await import(
   moduleUrl("components/dashboard-auth-guard.tsx")
 )) as typeof import("../../components/dashboard-auth-guard")
@@ -92,7 +94,12 @@ const credentials = {
 
 async function mountDashboard(
   t: TestContext,
-  options: { token?: string | null; onCredentials?: (auth: Auth) => void } = {},
+  options: {
+    token?: string | null
+    expiration?: string
+    expectAuthenticated?: boolean
+    onCredentials?: (auth: Auth) => void
+  } = {},
 ) {
   const browser = new Window({ url: "https://console.example.test/browser/" })
   const globals = {
@@ -105,6 +112,14 @@ async function mountDashboard(
   for (const [key, value] of Object.entries(globals)) {
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
   }
+  const timers: { callback: () => void; delay: number; cancelled: boolean }[] = []
+  t.mock.method(browser, "setTimeout", (callback: () => void, delay: number) => {
+    timers.push({ callback, delay, cancelled: false })
+    return timers.length
+  })
+  t.mock.method(browser, "clearTimeout", (id: number) => {
+    if (timers[id - 1]) timers[id - 1].cancelled = true
+  })
   const navigate = t.mock.fn<(url: string) => void>()
   const replaceDocument = t.mock.fn<(url: string) => void>()
   Object.defineProperty(browser, "location", {
@@ -118,7 +133,10 @@ async function mountDashboard(
       replace: replaceDocument,
     },
   })
-  browser.localStorage.setItem("auth.credentials", JSON.stringify(credentials))
+  browser.localStorage.setItem(
+    "auth.credentials",
+    JSON.stringify({ ...credentials, Expiration: options.expiration ?? credentials.Expiration }),
+  )
   browser.localStorage.setItem("auth.isAdmin", "true")
   const token = options.token === undefined ? "test-logout-token" : options.token
   if (token !== null) browser.localStorage.setItem("auth.oidcSession", JSON.stringify({ logoutToken: token }))
@@ -155,14 +173,33 @@ async function mountDashboard(
     S3Client: class {
       config = {}
       middlewareStack = {
-        addRelativeTo() {},
-        add(middleware: Middleware) {
-          s3Handlers.push(middleware)
+        addRelativeTo(middleware: Middleware, options: { name: string }) {
+          if (options.name === "handleXmlResponse") s3Handlers.push(middleware)
         },
       }
     },
   })
   let auth: Auth
+  const clientSnapshots: {
+    session?: string
+    apiReady: boolean
+    s3Ready: boolean
+    apiExists: boolean
+    s3Exists: boolean
+  }[] = []
+  function ClientProbe() {
+    const auth = useAuth()
+    const api = useApiReady()
+    const s3 = useS3Ready()
+    clientSnapshots.push({
+      session: auth.credentials?.AccessKeyId,
+      apiReady: api.isReady,
+      s3Ready: s3.isReady,
+      apiExists: !!api.api,
+      s3Exists: !!s3.client,
+    })
+    return null
+  }
   function Probe() {
     const value = useAuth()
     auth = value
@@ -187,6 +224,7 @@ async function mountDashboard(
             createElement(
               S3Provider,
               null,
+              createElement(ClientProbe),
               createElement(DashboardAuthGuard, null, createElement("main", null, "Dashboard")),
             ),
           ),
@@ -203,11 +241,23 @@ async function mountDashboard(
     }
   })
   await render()
-  assert.ok(container.querySelector("main"), "starts with the authenticated dashboard mounted")
-  assert.equal(apiHandlers.length, 1)
-  assert.equal(s3Handlers.length, 1)
+  assert.equal(!!container.querySelector("main"), options.expectAuthenticated ?? true)
+  assert.equal(apiHandlers.length, options.expectAuthenticated === false ? 0 : 1)
+  assert.equal(s3Handlers.length, options.expectAuthenticated === false ? 0 : 1)
   return {
     browser,
+    clientSnapshots,
+    timers,
+    async fireTimer(index = timers.length - 1) {
+      await act(async () => timers[index].callback())
+    },
+    get latestApiHandler() {
+      return apiHandlers.at(-1)!
+    },
+    latestS3Error: (error: unknown) =>
+      s3Handlers.at(-1)!(async () => {
+        throw error
+      })({}),
     container,
     router,
     configManager,
@@ -349,14 +399,17 @@ test("permission changes cannot redirect to forbidden while logout config is pen
 })
 
 const apiFailures = [
-  { status: 401, path: "/buckets", target: "/auth/login/" },
-  { status: 403, path: "/accountinfo", target: "/auth/login/" },
+  { status: 401, path: "/buckets", target: "/auth/login/?unauthorized=true" },
+  { status: 403, path: "/accountinfo", target: "/403/" },
+  { status: 403, path: "/is-admin", target: "/403/" },
+  { status: 403, path: "/version", target: "/403/" },
   { status: 403, path: "/buckets", target: "/403/" },
 ]
 const s3Failures = [
   { $metadata: { httpStatusCode: 401 } },
   { $metadata: { httpStatusCode: 403 }, Code: "UnauthorizedAccess" },
   { $metadata: { httpStatusCode: 403 }, Code: "InvalidAccessKeyId" },
+  { $metadata: { httpStatusCode: 400 }, Code: "ExpiredToken" },
 ]
 
 for (const phase of ["config pending", "navigation started"]) {
@@ -367,7 +420,7 @@ for (const phase of ["config pending", "navigation started"]) {
     await act(async () => {
       for (const { status, path } of apiFailures) await mounted.apiHandler.handleByStatus(status, path)
       for (const error of s3Failures) {
-        assert.deepEqual(await mounted.s3Error(error), { response: { statusCode: 401, headers: {} } })
+        await assert.rejects(mounted.s3Error(error), (caught) => caught === error)
       }
     })
     assert.equal(mounted.router.replace.mock.callCount(), 0)
@@ -394,8 +447,8 @@ for (const { status, path, target } of apiFailures) {
 for (const error of s3Failures) {
   test(`S3 ${error.Code ?? "401"} still logs out outside federated logout`, async (t) => {
     const mounted = await mountDashboard(t)
-    await act(async () => mounted.s3Error(error))
-    assert.equal(mounted.router.replace.mock.calls[0].arguments[0], "/auth/login/")
+    await act(async () => assert.rejects(mounted.s3Error(error), (caught) => caught === error))
+    assert.equal(mounted.router.replace.mock.calls[0].arguments[0], "/auth/login/?unauthorized=true")
     assert.equal(mounted.auth.isAuthenticated, false)
   })
 }
@@ -443,7 +496,7 @@ test("a session received from another tab can log out with its own OIDC token", 
 })
 
 for (const service of ["API", "S3"]) {
-  test(`a cross-tab session restores ${service} authentication handling before child effects run`, async (t) => {
+  test(`old ${service} callbacks cannot erase a cross-tab session before child effects run`, async (t) => {
     let failure: Promise<unknown> | undefined
     const mounted = await mountDashboard(t, {
       onCredentials: (auth) => {
@@ -451,15 +504,15 @@ for (const service of ["API", "S3"]) {
         failure =
           service === "API"
             ? mounted.apiHandler.handle401()
-            : mounted.s3Error({ $metadata: { httpStatusCode: 403 }, Code: "UnauthorizedAccess" })
+            : mounted.s3Error({ $metadata: { httpStatusCode: 403 }, Code: "UnauthorizedAccess" }).catch(() => undefined)
       },
     })
     await mounted.logout()
     await mounted.syncStorage("auth.credentials", JSON.stringify({ ...credentials, AccessKeyId: "other-tab" }))
     await act(async () => failure)
     assert.ok(failure, "the new authenticated session runs its child effect")
-    assert.equal(mounted.router.replace.mock.calls[0]?.arguments[0], "/auth/login/")
-    assert.equal(mounted.auth.isAuthenticated, false)
+    assert.equal(mounted.router.replace.mock.callCount(), 0)
+    assert.equal(mounted.auth.isAuthenticated, true)
   })
 }
 
@@ -521,4 +574,224 @@ test("restoring an old logged-out document preserves a newer session and reloads
     [["/auth/login"]],
   )
   assert.equal(mounted.router.replace.mock.callCount(), 0)
+})
+
+for (const phase of ["before storage event", "after storage event"]) {
+  test(`old API and S3 callbacks preserve a replacement session ${phase}`, async (t) => {
+    const mounted = await mountDashboard(t)
+    const replacement = { ...credentials, AccessKeyId: "replacement", SessionToken: "replacement-token" }
+    const serialized = JSON.stringify(replacement)
+    mounted.browser.localStorage.setItem("auth.credentials", serialized)
+    mounted.browser.localStorage.setItem("auth.isAdmin", "true")
+    mounted.browser.localStorage.setItem("auth.oidcSession", JSON.stringify({ logoutToken: "replacement-logout" }))
+    if (phase === "after storage event") await mounted.syncStorage("auth.credentials", serialized)
+    await act(async () => {
+      for (const { status, path } of apiFailures) await mounted.apiHandler.handleByStatus(status, path)
+      for (const error of s3Failures) await assert.rejects(mounted.s3Error(error), (caught) => caught === error)
+    })
+    assert.equal(mounted.router.replace.mock.callCount(), 0)
+    assert.equal(mounted.browser.localStorage.getItem("auth.credentials"), serialized)
+    assert.equal(mounted.browser.localStorage.getItem("auth.isAdmin"), "true")
+    assert.equal(
+      mounted.browser.localStorage.getItem("auth.oidcSession"),
+      JSON.stringify({ logoutToken: "replacement-logout" }),
+    )
+  })
+}
+
+test("reusing an access key with a new session token protects the replacement session", async (t) => {
+  const mounted = await mountDashboard(t)
+  const serialized = JSON.stringify({ ...credentials, SessionToken: "replacement-token" })
+  mounted.browser.localStorage.setItem("auth.credentials", serialized)
+  await act(async () => mounted.apiHandler.handle401())
+  assert.equal(mounted.browser.localStorage.getItem("auth.credentials"), serialized)
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+})
+
+test("logout followed by login in the same React batch persists the new session immediately", async (t) => {
+  const mounted = await mountDashboard(t)
+  const replacement = { ...credentials, AccessKeyId: "replacement" }
+  await act(async () => {
+    mounted.auth.logout()
+    assert.equal(mounted.browser.localStorage.getItem("auth.credentials"), null)
+    await mounted.auth.loginWithStsCredentials(replacement)
+    assert.equal(mounted.browser.localStorage.getItem("auth.credentials"), JSON.stringify(replacement))
+  })
+  await act(async () => mounted.apiHandler.handle401())
+  assert.equal(mounted.auth.credentials?.AccessKeyId, "replacement")
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+})
+
+test("a queued old storage event reloads the latest session instead of its obsolete payload", async (t) => {
+  const mounted = await mountDashboard(t)
+  const replacement = { ...credentials, AccessKeyId: "replacement" }
+  mounted.browser.localStorage.setItem("auth.credentials", JSON.stringify(replacement))
+  await act(async () =>
+    mounted.browser.dispatchEvent(
+      new mounted.browser.StorageEvent("storage", {
+        key: "auth.credentials",
+        newValue: JSON.stringify(credentials),
+      }),
+    ),
+  )
+  assert.equal(mounted.auth.credentials?.AccessKeyId, "replacement")
+})
+
+for (const service of ["API", "S3"]) {
+  test(`new ${service} callbacks still expire a replacement session`, async (t) => {
+    const mounted = await mountDashboard(t)
+    await mounted.syncStorage("auth.credentials", JSON.stringify({ ...credentials, AccessKeyId: "replacement" }))
+    await act(async () => {
+      if (service === "API") await mounted.latestApiHandler.handle401()
+      else {
+        const error = { Code: "ExpiredToken", $metadata: { httpStatusCode: 400 } }
+        await assert.rejects(mounted.latestS3Error(error), (caught) => caught === error)
+      }
+    })
+    assert.equal(mounted.auth.isAuthenticated, false)
+    assert.equal(mounted.router.replace.mock.calls[0].arguments[0], "/auth/login/?unauthorized=true")
+  })
+}
+
+test("the expiration timer logs out an idle tab exactly at expiration", async (t) => {
+  const start = Date.parse("2026-11-14T00:00:00Z")
+  let now = start
+  t.mock.method(Date, "now", () => now)
+  const mounted = await mountDashboard(t, { expiration: new Date(start + 60_000).toISOString() })
+  assert.equal(mounted.timers[0].delay, 60_000)
+  now += 60_000
+  await mounted.fireTimer(0)
+  assert.equal(mounted.auth.isAuthenticated, false)
+  assert.equal(mounted.browser.localStorage.getItem("auth.credentials"), null)
+  assert.equal(mounted.navigate.mock.callCount(), 0, "automatic expiration does not start IdP logout")
+  assert.equal(mounted.router.replace.mock.calls[0].arguments[0], "/auth/login/?unauthorized=true")
+})
+
+test("an early expiration callback reschedules instead of logging out", async (t) => {
+  const start = Date.parse("2026-11-14T00:00:00Z")
+  t.mock.method(Date, "now", () => start)
+  const mounted = await mountDashboard(t, { expiration: new Date(start + 60_000).toISOString() })
+  await mounted.fireTimer(0)
+  assert.equal(mounted.auth.isAuthenticated, true)
+  assert.equal(mounted.timers.at(-1)?.delay, 60_000)
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+})
+
+test("long-lived sessions use a bounded timeout instead of overflowing browser timers", async (t) => {
+  const mounted = await mountDashboard(t)
+  assert.equal(mounted.timers[0].delay, 2 ** 31 - 1)
+})
+
+for (const phase of ["before storage event", "after storage event"]) {
+  test(`an old timer preserves a new session ${phase}`, async (t) => {
+    const start = Date.parse("2026-11-14T00:00:00Z")
+    let now = start
+    t.mock.method(Date, "now", () => now)
+    const mounted = await mountDashboard(t, { expiration: new Date(start + 60_000).toISOString() })
+    const replacement = { ...credentials, AccessKeyId: "replacement" }
+    mounted.browser.localStorage.setItem("auth.credentials", JSON.stringify(replacement))
+    if (phase === "after storage event") await mounted.syncStorage("auth.credentials", JSON.stringify(replacement))
+    now += 60_000
+    await mounted.fireTimer(0)
+    assert.equal(mounted.browser.localStorage.getItem("auth.credentials"), JSON.stringify(replacement))
+    assert.equal(mounted.router.replace.mock.callCount(), 0)
+    if (phase === "after storage event") assert.equal(mounted.timers[0].cancelled, true)
+  })
+}
+
+for (const event of ["visibilitychange", "pageshow"]) {
+  test(`${event} rechecks expiration after browser suspension`, async (t) => {
+    const start = Date.parse("2026-11-14T00:00:00Z")
+    let now = start
+    t.mock.method(Date, "now", () => now)
+    const mounted = await mountDashboard(t, { expiration: new Date(start + 60_000).toISOString() })
+    now += 90_000
+    await act(async () => {
+      if (event === "visibilitychange") {
+        Object.defineProperty(mounted.browser.document, "visibilityState", { configurable: true, value: "visible" })
+        mounted.browser.document.dispatchEvent(new mounted.browser.Event(event))
+      } else mounted.browser.dispatchEvent(new mounted.browser.Event(event))
+    })
+    assert.equal(mounted.auth.isAuthenticated, false)
+    assert.equal(mounted.router.replace.mock.calls[0].arguments[0], "/auth/login/?unauthorized=true")
+  })
+}
+
+test("a timer cannot interrupt pending federated logout even after local expiration", async (t) => {
+  const start = Date.parse("2026-11-14T00:00:00Z")
+  let now = start
+  t.mock.method(Date, "now", () => now)
+  const mounted = await mountDashboard(t, { expiration: new Date(start + 60_000).toISOString() })
+  const pending = await pendingLogout(mounted)
+  now += 60_000
+  await mounted.fireTimer(0)
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+  assert.notEqual(mounted.browser.localStorage.getItem("auth.credentials"), null)
+  await pending.finish()
+  assert.deepEqual(
+    mounted.navigate.mock.calls.map((call) => call.arguments),
+    [[logoutUrl]],
+  )
+})
+
+test("replacement credentials never expose old clients while new configuration is pending", async (t) => {
+  const mounted = await mountDashboard(t)
+  const pending = Promise.withResolvers<typeof config>()
+  mounted.configManager.loadConfig.mock.mockImplementation(() => pending.promise)
+  await mounted.syncStorage("auth.credentials", JSON.stringify({ ...credentials, AccessKeyId: "replacement" }))
+  const snapshots = mounted.clientSnapshots.filter((snapshot) => snapshot.session === "replacement")
+  assert.ok(snapshots.length > 0)
+  assert.ok(
+    snapshots.every((snapshot) => !snapshot.apiExists && !snapshot.s3Exists && !snapshot.apiReady && !snapshot.s3Ready),
+  )
+  await act(async () => pending.resolve(config))
+  const ready = mounted.clientSnapshots.at(-1)!
+  assert.equal(ready.session, "replacement")
+  assert.equal(ready.apiReady && ready.s3Ready && ready.apiExists && ready.s3Exists, true)
+})
+
+test("an existing session still expires when the browser refuses localStorage", async (t) => {
+  const mounted = await mountDashboard(t)
+  for (const method of ["getItem", "setItem", "removeItem"] as const) {
+    t.mock.method(mounted.browser.localStorage, method, () => {
+      throw new Error("Storage denied")
+    })
+  }
+  assert.equal(mounted.auth.isAuthenticated, true)
+  await act(async () => mounted.latestApiHandler.handle401())
+  assert.equal(mounted.auth.isAuthenticated, false)
+  assert.equal(mounted.router.replace.mock.calls[0].arguments[0], "/auth/login/?unauthorized=true")
+})
+
+test("a quota failure rejects login without creating an untracked in-memory session", async (t) => {
+  const mounted = await mountDashboard(t)
+  t.mock.method(mounted.browser.localStorage, "setItem", () => {
+    throw new Error("Quota exceeded")
+  })
+  await act(async () =>
+    assert.rejects(mounted.auth.loginWithStsCredentials({ ...credentials, AccessKeyId: "replacement" }), {
+      message: "Unable to save the session in browser storage",
+    }),
+  )
+  assert.equal(mounted.auth.credentials?.AccessKeyId, credentials.AccessKeyId)
+  assert.equal(mounted.browser.localStorage.getItem("auth.credentials"), JSON.stringify(credentials))
+  await act(async () => mounted.latestApiHandler.handle401())
+  assert.equal(mounted.auth.isAuthenticated, false)
+})
+
+test("a failed login cannot release pending OIDC logout protection", async (t) => {
+  const mounted = await mountDashboard(t)
+  const pending = await pendingLogout(mounted)
+  t.mock.method(mounted.browser.localStorage, "setItem", () => {
+    throw new Error("Quota exceeded")
+  })
+  await act(async () =>
+    assert.rejects(mounted.auth.loginWithStsCredentials({ ...credentials, AccessKeyId: "replacement" })),
+  )
+  assert.equal(mounted.auth.getIsLoggingOut(), true)
+  await pending.finish()
+  assert.deepEqual(
+    mounted.navigate.mock.calls.map((call) => call.arguments),
+    [[logoutUrl]],
+  )
 })

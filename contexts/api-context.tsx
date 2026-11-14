@@ -8,6 +8,7 @@ import { ApiErrorHandler } from "@/lib/api-error-handler"
 import { useAuth } from "@/contexts/auth-context"
 import { configManager } from "@/lib/config"
 import { scheduleMicrotask } from "@/lib/schedule-microtask"
+import { isSameSession, type SessionCredentials } from "@/lib/auth-session"
 
 interface ApiContextValue {
   api: ApiClient | null
@@ -17,8 +18,8 @@ interface ApiContextValue {
 const ApiContext = createContext<ApiContextValue>({ api: null, isReady: false })
 
 export function ApiProvider({ children }: { children: React.ReactNode }) {
-  const { credentials, isAuthenticated, logout, getIsLoggingOut } = useAuth()
-  const [apiClient, setApiClient] = useState<ApiClient | null>(null)
+  const { credentials, isAuthenticated, expireSession, isCurrentSession, getIsLoggingOut } = useAuth()
+  const [apiClient, setApiClient] = useState<{ client: ApiClient; credentials: SessionCredentials } | null>(null)
   const [isReady, setIsReady] = useState(false)
   const router = useRouter()
   const pathname = usePathname()
@@ -58,19 +59,10 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
 
       const errorHandler = new ApiErrorHandler({
         onUnauthorized: async () => {
-          if (getIsLoggingOut()) return
-          logout()
-          router.replace("/auth/login/")
+          if (expireSession(credentials)) router.replace("/auth/login/?unauthorized=true")
         },
-        onForbidden: async (url) => {
-          if (getIsLoggingOut()) return
-          // If the forbidden error happens on the accountinfo endpoint, it means the session is invalid
-          // or the user has no permissions at all. In this case, we should log out.
-          if (url?.includes("/is-admin") || url?.includes("/accountinfo") || url?.includes("/version")) {
-            logout()
-            router.replace("/auth/login/")
-            return
-          }
+        onForbidden: async () => {
+          if (getIsLoggingOut() || !isCurrentSession(credentials)) return
 
           if (pathnameRef.current === "/403/") return
           router.replace("/403/")
@@ -83,24 +75,22 @@ export function ApiProvider({ children }: { children: React.ReactNode }) {
         errorHandler,
       })
 
-      setApiClient(client)
+      setApiClient({ client, credentials })
       setIsReady(true)
     })
 
     return () => {
       cancelled = true
     }
-  }, [
-    isAuthenticated,
-    credentials?.AccessKeyId,
-    credentials?.SecretAccessKey,
-    credentials?.SessionToken,
-    logout,
-    getIsLoggingOut,
-    router,
-  ])
+  }, [isAuthenticated, credentials, expireSession, isCurrentSession, getIsLoggingOut, router])
 
-  return <ApiContext.Provider value={{ api: apiClient, isReady }}>{children}</ApiContext.Provider>
+  const currentClient =
+    isAuthenticated && apiClient && isSameSession(credentials, apiClient.credentials) ? apiClient.client : null
+  return (
+    <ApiContext.Provider value={{ api: currentClient, isReady: isReady && (!isAuthenticated || !!currentClient) }}>
+      {children}
+    </ApiContext.Provider>
+  )
 }
 
 export function useApi() {

@@ -15,16 +15,10 @@ import type { SiteConfig } from "@/types/config"
 import { getLoginRoute } from "@/lib/routes"
 import { configManager } from "@/lib/config"
 import { useLocalStorage } from "@/hooks/use-local-storage"
+import { isSameSession, isValidCredentials, type SessionCredentials as Credentials } from "@/lib/auth-session"
 import { buildOidcLogoutUrl, type OidcLogoutSession } from "@/lib/oidc"
 import { isMfaRequiredError } from "@/lib/mfa"
 import { fetchMfaChallenge } from "@/lib/mfa-challenge"
-
-interface Credentials {
-  AccessKeyId?: string
-  SecretAccessKey?: string
-  SessionToken?: string
-  Expiration?: string
-}
 
 /**
  * Result of a first login attempt.
@@ -51,6 +45,8 @@ interface AuthContextValue {
   logoutAndRedirect: () => void
   logoutWithOidcRedirect: () => Promise<boolean>
   getIsLoggingOut: () => boolean
+  isCurrentSession: (credentials: Credentials) => boolean
+  expireSession: (credentials: Credentials) => boolean
   setIsAdmin: (value: boolean) => void
   getIsAdmin: () => boolean
   credentials: Credentials | undefined
@@ -59,19 +55,6 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
-
-function isValidCredentials(credentials: Credentials | undefined): boolean {
-  if (
-    !credentials?.AccessKeyId ||
-    !credentials?.SecretAccessKey ||
-    !credentials?.SessionToken ||
-    !credentials?.Expiration
-  ) {
-    return false
-  }
-  const isExpired = (exp: string) => (exp ? new Date(exp) < new Date() : false)
-  return !isExpired(credentials.Expiration)
-}
 
 /**
  * Whether these credentials are a static key pair we can sign a probe with.
@@ -94,7 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Old API/S3 callbacks must see this flag before React commits the cleared credentials.
   const loggingOutRef = useRef(false)
   const getIsLoggingOut = useCallback(() => loggingOutRef.current, [])
-  const [store, setStore] = useLocalStorage<Credentials | undefined>("auth.credentials", undefined)
+  const [store, setStore, getStoredCredentials] = useLocalStorage<Credentials | undefined>(
+    "auth.credentials",
+    undefined,
+    true,
+  )
   const [isAdminStore, setIsAdminStore] = useLocalStorage<boolean | undefined>("auth.isAdmin", undefined)
   const [oidcSessionStore, setOidcSessionStore] = useLocalStorage<OidcLogoutSession | undefined>(
     "auth.oidcSession",
@@ -103,8 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setCredentials = useCallback(
     (credentials: Credentials) => {
-      loggingOutRef.current = false
       setStore(credentials)
+      loggingOutRef.current = false
     },
     [setStore],
   )
@@ -235,6 +222,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setOidcSessionStore(undefined)
   }, [setStore, setIsAdminStore, setOidcSessionStore])
 
+  const isCurrentSession = useCallback(
+    (expected: Credentials) => {
+      return isSameSession(getStoredCredentials(), expected)
+    },
+    [getStoredCredentials],
+  )
+
+  const expireSession = useCallback(
+    (expected: Credentials) => {
+      if (loggingOutRef.current || !isCurrentSession(expected)) return false
+      logout()
+      return true
+    },
+    [isCurrentSession, logout],
+  )
+
+  useEffect(() => {
+    if (!store?.Expiration) return
+    const expiration = Date.parse(store.Expiration)
+    let timer: number | undefined
+    const checkExpiration = () => {
+      window.clearTimeout(timer)
+      if (!isCurrentSession(store) || loggingOutRef.current) return
+      const remaining = expiration - Date.now()
+      if (!Number.isFinite(remaining) || remaining <= 0) {
+        expireSession(store)
+        return
+      }
+      // Browsers clamp larger delays to 1 ms; recheck long-lived sessions in bounded steps.
+      timer = window.setTimeout(checkExpiration, Math.min(remaining, 2 ** 31 - 1))
+    }
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") checkExpiration()
+    }
+    checkExpiration()
+    document.addEventListener("visibilitychange", handleVisibility)
+    window.addEventListener("pageshow", checkExpiration)
+    return () => {
+      window.clearTimeout(timer)
+      document.removeEventListener("visibilitychange", handleVisibility)
+      window.removeEventListener("pageshow", checkExpiration)
+    }
+  }, [store, isCurrentSession, expireSession])
+
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (!event.persisted || !loggingOutRef.current) return
@@ -293,6 +324,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logoutAndRedirect,
       logoutWithOidcRedirect,
       getIsLoggingOut,
+      isCurrentSession,
+      expireSession,
       setIsAdmin,
       getIsAdmin,
       credentials,
@@ -307,6 +340,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logoutAndRedirect,
       logoutWithOidcRedirect,
       getIsLoggingOut,
+      isCurrentSession,
+      expireSession,
       setIsAdmin,
       getIsAdmin,
       credentials,

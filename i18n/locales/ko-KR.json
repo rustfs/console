@@ -5,6 +5,7 @@
   "Last completed scan on this node": "이 노드에서 마지막으로 완료된 스캔",
   "Deferred": "연기됨",
   "Superseded": "대체됨",
+  "Scanner lock lost": "스캐너 잠금 상실",
   "Object limit reached": "객체 수 한도 도달",
   "Directory limit reached": "디렉터리 수 한도 도달",
   "Measured size": "집계된 크기",

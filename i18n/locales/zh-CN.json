@@ -5,6 +5,7 @@
   "Last completed scan on this node": "本节点最近一次完成扫描",
   "Deferred": "已推迟",
   "Superseded": "已被取代",
+  "Scanner lock lost": "扫描器已失去锁",
   "Object limit reached": "已达到对象数上限",
   "Directory limit reached": "已达到目录数上限",
   "Measured size": "已统计容量",

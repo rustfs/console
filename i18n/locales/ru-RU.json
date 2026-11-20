@@ -5,6 +5,7 @@
   "Last completed scan on this node": "Последнее завершённое сканирование на этом узле",
   "Deferred": "Отложено",
   "Superseded": "Заменено",
+  "Scanner lock lost": "Блокировка сканера потеряна",
   "Object limit reached": "Достигнут лимит объектов",
   "Directory limit reached": "Достигнут лимит каталогов",
   "Measured size": "Измеренный объём",

@@ -5,6 +5,7 @@
   "Last completed scan on this node": "آخر فحص اكتمل على هذه العقدة",
   "Deferred": "مؤجل",
   "Superseded": "تم استبداله",
+  "Scanner lock lost": "فُقد قفل الماسح",
   "Object limit reached": "تم بلوغ الحد الأقصى للكائنات",
   "Directory limit reached": "تم بلوغ الحد الأقصى للأدلة",
   "Measured size": "الحجم المقاس",

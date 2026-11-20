@@ -785,6 +785,8 @@ test("known attempt outcomes and budget reasons use localized keys, unknown prot
     partial: "Partial scan",
     deferred: "Deferred",
     superseded: "Superseded",
+    lock_lost: "Scanner lock lost",
+    cancelled: "Canceled",
     future: "Unknown",
   })) {
     assert.deepEqual(scannerAttemptLabels(result), [key])

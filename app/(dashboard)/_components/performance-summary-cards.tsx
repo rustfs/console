@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
 
 export interface SummaryMetric {
   label: string
@@ -11,12 +12,30 @@ export interface SummaryMetric {
   href?: string
 }
 
-export function PerformanceSummaryCards({ metrics, title }: { metrics: SummaryMetric[]; title: string }) {
+export function PerformanceSummaryCards({
+  metrics,
+  title,
+  detail,
+  previous,
+}: {
+  metrics: SummaryMetric[]
+  title: string
+  detail?: string
+  previous?: { label: string; description: string; time: string; displayTime: string }
+}) {
   return (
     <section aria-labelledby="inventory-title" className="space-y-4">
       <h2 id="inventory-title" className="text-sm font-medium text-muted-foreground">
         {title}
       </h2>
+      {previous && (
+        <p role="status" className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <Badge variant="outline">{previous.label}</Badge>
+          <span>
+            {previous.description} · <time dateTime={previous.time}>{previous.displayTime}</time>
+          </span>
+        </p>
+      )}
       <dl className="grid grid-cols-2 gap-6">
         {metrics.map((metric) => {
           return (
@@ -43,6 +62,7 @@ export function PerformanceSummaryCards({ metrics, title }: { metrics: SummaryMe
           )
         })}
       </dl>
+      {detail && <p className="text-xs text-muted-foreground">{detail}</p>}
     </section>
   )
 }

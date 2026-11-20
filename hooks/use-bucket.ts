@@ -16,7 +16,6 @@ import {
   GetObjectLockConfigurationCommand,
   GetObjectRetentionCommand,
   HeadBucketCommand,
-  ListBucketsCommand,
   type ListBucketsCommandOutput,
   PutBucketCorsCommand,
   PutBucketEncryptionCommand,
@@ -39,6 +38,7 @@ import {
 } from "@aws-sdk/client-s3"
 import { useS3 } from "@/contexts/s3-context"
 import { useApi } from "@/contexts/api-context"
+import { listAllBuckets } from "@/lib/list-all-buckets"
 import { getBucketNameError } from "@/lib/bucket-name"
 
 const BUCKETS_CACHE_DURATION = 10000
@@ -82,14 +82,17 @@ export function useBucket() {
         return listBucketsPromise
       }
 
-      listBucketsPromise = client.send(new ListBucketsCommand({})) as Promise<ListBucketsCommandOutput>
+      const request = listAllBuckets((command) => client.send(command))
+      listBucketsPromise = request
       try {
-        const result = await listBucketsPromise
-        listBucketsCache = result
-        listBucketsCacheTime = Date.now()
+        const result = await request
+        if (listBucketsClient === client && listBucketsPromise === request) {
+          listBucketsCache = result
+          listBucketsCacheTime = Date.now()
+        }
         return result
       } finally {
-        listBucketsPromise = null
+        if (listBucketsPromise === request) listBucketsPromise = null
       }
     },
     [client],

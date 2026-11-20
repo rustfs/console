@@ -178,7 +178,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       },
     )
     try {
-      const info = (await api.get("/accountinfo")) as Record<string, unknown>
+      const info = (await api.get("/accountinfo", { suppress403Redirect: true })) as Record<string, unknown>
       if (requestEpoch !== requestEpochRef.current) return
       setUserInfo(info)
       const policyStr = info?.policy as string
@@ -191,6 +191,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
     } catch (e) {
       if (requestEpoch !== requestEpochRef.current) return
       console.error("Failed to fetch user policy", e)
+      setUserInfo(null)
       setUserPolicy(null)
     } finally {
       if (requestEpoch === requestEpochRef.current) {

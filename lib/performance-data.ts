@@ -60,7 +60,17 @@ export interface ServerInfo {
   network?: Record<string, string>
 }
 
+export interface Inventory {
+  currentBuckets?: number
+  measuredBuckets?: number
+  measuredObjects?: number
+  measuredBytes?: number
+  snapshotAt?: string
+  converged?: boolean
+}
+
 export interface SystemInfo {
+  inventory?: Inventory
   buckets?: { count?: number }
   objects?: { count?: number }
   servers?: ServerInfo[]
@@ -107,7 +117,18 @@ export interface StorageInfo {
   }
 }
 
+export interface ClusterScanner {
+  state: "scanning" | "idle" | "unknown"
+  nodesTotal?: number
+  nodesResponded?: number
+  sampledAt?: string
+  current?: { cycle?: number; startedAt?: string; objectsScanned?: number; leader?: string }
+  lastAttempt?: { cycle?: number; result: string; partialReason?: string; durationSeconds?: number }
+  lastSuccessAt?: string
+}
+
 export interface MetricsInfo {
+  clusterScanner?: ClusterScanner
   aggregated?: {
     scanner?: {
       current_cycle?: number
@@ -232,8 +253,25 @@ function unwrapInfoRecord(value: unknown): JsonRecord {
 function normalizeCountInfo(value: unknown): { count?: number } | undefined {
   const record = asRecord(value)
   if (record.error ?? record.Error) return undefined
-  const count = asNonNegativeNumber(record.count ?? record.Count)
+  const count = asCount(asNumber(record.count ?? record.Count))
   return count === undefined ? undefined : { count }
+}
+
+function asCount(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : undefined
+}
+
+function normalizeInventory(value: unknown): Inventory | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined
+  const inventory = asRecord(value)
+  return {
+    currentBuckets: asCount(inventory.current_buckets),
+    measuredBuckets: asCount(inventory.measured_buckets),
+    measuredObjects: asCount(inventory.measured_objects),
+    measuredBytes: asNonNegativeNumber(inventory.measured_bytes),
+    snapshotAt: asTimestamp(inventory.snapshot_at),
+    converged: asBoolean(inventory.converged),
+  }
 }
 
 export function normalizeSystemInfo(value: unknown): SystemInfo {
@@ -243,6 +281,7 @@ export function normalizeSystemInfo(value: unknown): SystemInfo {
   const discovery = asRecord(
     response.admin_discovery ?? response.adminDiscovery ?? source.admin_discovery ?? source.adminDiscovery,
   )
+  const inventory = normalizeInventory(response.inventory)
   const clusterSnapshotPath = asSafeAdminPath(discovery.clusterSnapshot ?? discovery.cluster_snapshot)
   const buckets = normalizeCountInfo(source.buckets ?? source.Buckets)
   const objects = normalizeCountInfo(source.objects ?? source.Objects)
@@ -261,6 +300,7 @@ export function normalizeSystemInfo(value: unknown): SystemInfo {
   )
 
   return {
+    ...(inventory ? { inventory } : {}),
     ...(buckets ? { buckets } : {}),
     ...(objects ? { objects } : {}),
     ...(servers ? { servers } : {}),
@@ -638,11 +678,60 @@ export function normalizeDataUsageInfo(value: unknown): DataUsageInfo {
   }
 }
 
+function normalizeClusterScanner(value: unknown): ClusterScanner | undefined {
+  const scanner = asRecord(value)
+  const state = scanner.state
+  if (state !== "scanning" && state !== "idle" && state !== "unknown") return undefined
+  const nodesTotal = asCount(scanner.nodes_total)
+  const nodesResponded = asCount(scanner.nodes_responded)
+  const sampledAt = asTimestamp(scanner.sampled_at)
+  const validSample =
+    sampledAt &&
+    nodesTotal !== undefined &&
+    nodesTotal > 0 &&
+    nodesResponded !== undefined &&
+    nodesResponded > 0 &&
+    nodesResponded <= nodesTotal
+  const observedState = validSample && (state !== "idle" || nodesResponded === nodesTotal) ? state : "unknown"
+  const current = asRecord(scanner.current)
+  const attempt = asRecord(scanner.last_attempt)
+  const result = asSafeText(attempt.result)
+  return {
+    state: observedState,
+    nodesTotal,
+    nodesResponded,
+    sampledAt,
+    ...(observedState === "scanning" && Object.keys(current).length
+      ? {
+          current: {
+            cycle: asCount(current.cycle),
+            startedAt: asTimestamp(current.started_at),
+            objectsScanned: asCount(current.objects_scanned),
+            leader: asSafeText(current.leader),
+          },
+        }
+      : {}),
+    ...(result
+      ? {
+          lastAttempt: {
+            cycle: asCount(attempt.cycle),
+            result,
+            partialReason: asSafeText(attempt.partial_reason),
+            durationSeconds: asNonNegativeNumber(attempt.duration_seconds),
+          },
+        }
+      : {}),
+    lastSuccessAt: asTimestamp(scanner.last_success_at),
+  }
+}
+
 export function normalizeMetricsInfo(value: unknown): MetricsInfo {
+  const clusterScanner = normalizeClusterScanner(asRecord(value).cluster_scanner)
+  if (clusterScanner) return { clusterScanner }
   const source = unwrapInfoRecord(value)
   const aggregated = asRecord(source.aggregated ?? source.Aggregated)
   const scanner = asRecord(aggregated.scanner ?? aggregated.Scanner)
-  const currentCycle = asNonNegativeNumber(scanner.current_cycle ?? scanner.currentCycle)
+  const currentCycle = asCount(asNumber(scanner.current_cycle ?? scanner.currentCycle))
   const currentCycleActive = asBoolean(scanner.current_cycle_active ?? scanner.currentCycleActive)
   const currentStarted = asTimestamp(scanner.current_started ?? scanner.currentStarted)
   const cycleCompleteTimes = asArray<unknown>(scanner.cycle_complete_times ?? scanner.cycleCompleteTimes).flatMap(
@@ -668,9 +757,39 @@ export function normalizeMetricsInfo(value: unknown): MetricsInfo {
   }
 }
 
-export function isScannerCycleActive(metricsInfo: MetricsInfo): boolean {
-  const scanner = metricsInfo.aggregated?.scanner
-  return scanner?.current_cycle_active ?? (scanner?.current_cycle ?? 0) > 0
+/** Legacy samples describe only the responding node. A cycle number is not an activity flag. */
+export function localScannerView(metricsInfo: MetricsInfo) {
+  const node = metricsInfo.aggregated?.scanner
+  if (!node || metricsInfo.clusterScanner) return undefined
+  const completedAt = node.cycle_complete_times?.reduce<string | undefined>(
+    (last, at) => (!last || Date.parse(at) > Date.parse(last) ? at : last),
+    undefined,
+  )
+  return {
+    state: node.current_cycle_active === undefined ? "unknown" : node.current_cycle_active ? "scanning" : "idle",
+    cycle: node.current_cycle_active || (node.current_cycle ?? 0) > 0 ? node.current_cycle : undefined,
+    completedAt,
+  } as const
+}
+
+const scannerResultLabels = new Map([
+  ["success", "Completed Status"],
+  ["error", "Failed Status"],
+  ["partial", "Partial scan"],
+  ["deferred", "Deferred"],
+  ["superseded", "Superseded"],
+])
+const scannerReasonLabels = new Map([
+  ["runtime", "Time limit reached"],
+  ["objects", "Object limit reached"],
+  ["directories", "Directory limit reached"],
+])
+
+export function scannerAttemptLabels(result: string, reason?: string) {
+  return [
+    scannerResultLabels.get(result) ?? "Unknown",
+    ...(reason ? [scannerReasonLabels.get(reason) ?? "Unknown"] : []),
+  ]
 }
 
 export function summarizeServerStates(

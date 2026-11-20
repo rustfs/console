@@ -9,15 +9,26 @@ export function BucketUsageOverview({
   names,
   usage,
   unavailable,
+  usageAvailable = true,
+  usageLoading = false,
 }: {
   names: string[]
-  usage: Map<string, { objectsCount: number; sizeBytes: number }>
+  usage: Map<string, { objectsCount: number; sizeBytes: number } | null>
+  usageLoading?: boolean
+  usageAvailable?: boolean
   unavailable: boolean
 }) {
   const { t, i18n } = useTranslation()
-  const summary = unavailable ? undefined : summarizeBucketUsage(names, usage)
+  const summary = !unavailable && usageAvailable ? summarizeBucketUsage(names, usage) : undefined
+  const hasValues = summary && (summary.measuredBuckets > 0 || names.length === 0)
+  const measurementReported = summary && (names.length === 0 || names.some((name) => usage.has(name)))
+  const coverage = measurementReported
+    ? `${t("Measured buckets")} · ${formatInteger(summary.measuredBuckets)} / ${formatInteger(names.length)}`
+    : usageLoading
+      ? t("Loading…")
+      : t("Usage unavailable")
   const distribution =
-    summary && summary.sizeBytes > 0
+    summary && summary.measuredBuckets === names.length && summary.sizeBytes !== undefined && summary.sizeBytes > 0
       ? names
           .map((name) => ({ name, size: usage.get(name)!.sizeBytes }))
           .filter((bucket) => bucket.size > 0)
@@ -39,7 +50,7 @@ export function BucketUsageOverview({
   }
   const percent = new Intl.NumberFormat(i18n.language, { style: "percent", maximumFractionDigits: 1 })
   const share = (size: number) => {
-    const ratio = size / summary!.sizeBytes
+    const ratio = size / summary!.sizeBytes!
     if (ratio < 0.001) return `<${percent.format(0.001)}`
     if (ratio > 0.999 && ratio < 1) return `>${percent.format(0.999)}`
     return percent.format(ratio)
@@ -50,26 +61,33 @@ export function BucketUsageOverview({
       className="bucket-overview grid gap-6 border-b pb-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-end"
       aria-label={t("Storage Usage Statistics")}
     >
-      <dl className="grid grid-cols-[1.6fr_1fr_1fr] items-end gap-5">
-        <div className="min-w-0">
-          <dt className="text-xs text-muted-foreground">{t("Size")}</dt>
-          <dd className="mt-2 break-words font-heading text-4xl font-semibold tracking-tight tabular-nums lg:text-5xl">
-            {summary ? niceBytes(String(summary.sizeBytes)) : t("Unknown")}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-muted-foreground">{t("Objects")}</dt>
-          <dd className="mt-2 font-heading text-2xl font-medium tabular-nums">
-            {summary ? formatInteger(summary.objectsCount) : "—"}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-muted-foreground">{t("Buckets")}</dt>
-          <dd className="mt-2 font-heading text-2xl font-medium tabular-nums">
-            {unavailable ? "—" : formatInteger(names.length)}
-          </dd>
-        </div>
-      </dl>
+      <div className="min-w-0">
+        <dl className="grid grid-cols-2 items-end gap-5 sm:grid-cols-[1.6fr_1fr_1fr]">
+          <div className="min-w-0">
+            <dt className="text-xs text-muted-foreground">{t("Measured size")}</dt>
+            <dd className="mt-2 break-words font-heading text-4xl font-semibold tracking-tight tabular-nums lg:text-5xl">
+              {hasValues && summary.sizeBytes !== undefined ? niceBytes(String(summary.sizeBytes)) : t("Unknown")}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">{t("Measured objects")}</dt>
+            <dd className="mt-2 font-heading text-2xl font-medium tabular-nums">
+              {hasValues && summary.objectsCount !== undefined ? formatInteger(summary.objectsCount) : "—"}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs text-muted-foreground">{t("Visible buckets")}</dt>
+            <dd className="mt-2 font-heading text-2xl font-medium tabular-nums">
+              {unavailable ? "—" : formatInteger(names.length)}
+            </dd>
+          </div>
+        </dl>
+        {!unavailable && (
+          <p className="mt-3 text-xs text-muted-foreground" role="status">
+            {coverage}
+          </p>
+        )}
+      </div>
       {segments.length ? (
         <div className="min-w-0 space-y-3">
           <h2 className="text-xs text-muted-foreground">{t("Bucket size distribution")}</h2>

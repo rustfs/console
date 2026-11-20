@@ -29,6 +29,7 @@ import type { ColumnDef } from "@tanstack/react-table"
 interface BucketRow {
   Name: string
   CreationDate: string
+  Unmeasured?: boolean
   Count?: number
   Size?: string
   SizeBytes?: number
@@ -148,7 +149,7 @@ function BrowserBucketsPage() {
     () =>
       data.map((row) => {
         const usage = bucketUsage.get(row.Name)
-        if (!usage) return row
+        if (!usage) return { ...row, Unmeasured: usage === null }
 
         return {
           ...row,
@@ -201,7 +202,7 @@ function BrowserBucketsPage() {
         ) : usageLoading ? (
           <Spinner className="size-3 text-muted-foreground" />
         ) : (
-          "--"
+          t(row.original.Unmeasured ? "Not measured" : "Unavailable")
         ),
     },
     {
@@ -211,7 +212,12 @@ function BrowserBucketsPage() {
       // use numeric bytes for sorting via accessorFn, but display the formatted string
       accessorFn: (row) => (typeof row.SizeBytes === "number" ? row.SizeBytes : undefined),
       cell: ({ row }) =>
-        row.original.Size ?? (usageLoading ? <Spinner className="size-3 text-muted-foreground" /> : "--"),
+        row.original.Size ??
+        (usageLoading ? (
+          <Spinner className="size-3 text-muted-foreground" />
+        ) : (
+          t(row.original.Unmeasured ? "Not measured" : "Unavailable")
+        )),
     },
   )
 
@@ -323,7 +329,9 @@ function BrowserBucketsPage() {
       <BucketUsageOverview
         names={data.map((bucket) => bucket.Name)}
         usage={bucketUsage}
-        unavailable={pending || usageLoading || loadError}
+        unavailable={pending || loadError}
+        usageLoading={usageLoading}
+        usageAvailable={!usageLoading && Array.isArray(userInfo?.buckets)}
       />
 
       <DataTable

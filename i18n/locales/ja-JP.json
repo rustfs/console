@@ -5,6 +5,7 @@
   "Last completed scan on this node": "このノードで最後に完了したスキャン",
   "Deferred": "延期",
   "Superseded": "置き換え済み",
+  "Scanner lock lost": "スキャナーのロックを喪失",
   "Object limit reached": "オブジェクト数の上限に到達",
   "Directory limit reached": "ディレクトリ数の上限に到達",
   "Measured size": "計測済みサイズ",

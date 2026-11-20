@@ -5,6 +5,7 @@
   "Last completed scan on this node": "Pemindaian terakhir yang selesai pada simpul ini",
   "Deferred": "Ditunda",
   "Superseded": "Digantikan",
+  "Scanner lock lost": "Kunci pemindai hilang",
   "Object limit reached": "Batas objek tercapai",
   "Directory limit reached": "Batas direktori tercapai",
   "Measured size": "Ukuran terukur",

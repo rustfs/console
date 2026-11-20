@@ -5,6 +5,7 @@
   "Last completed scan on this node": "Lần quét hoàn tất gần nhất trên nút này",
   "Deferred": "Đã hoãn",
   "Superseded": "Đã được thay thế",
+  "Scanner lock lost": "Đã mất khóa trình quét",
   "Object limit reached": "Đã đạt giới hạn đối tượng",
   "Directory limit reached": "Đã đạt giới hạn thư mục",
   "Measured size": "Dung lượng đã đo",

@@ -5,6 +5,7 @@
   "Last completed scan on this node": "Bu düğümde tamamlanan son tarama",
   "Deferred": "Ertelendi",
   "Superseded": "Yerine yenisi geçti",
+  "Scanner lock lost": "Tarayıcı kilidi kaybedildi",
   "Object limit reached": "Nesne sınırına ulaşıldı",
   "Directory limit reached": "Dizin sınırına ulaşıldı",
   "Measured size": "Ölçülen boyut",

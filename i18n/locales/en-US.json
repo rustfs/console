@@ -5,6 +5,7 @@
   "Last completed scan on this node": "Last completed scan on this node",
   "Deferred": "Deferred",
   "Superseded": "Superseded",
+  "Scanner lock lost": "Scanner lock lost",
   "Object limit reached": "Object limit reached",
   "Directory limit reached": "Directory limit reached",
   "Measured size": "Measured size",

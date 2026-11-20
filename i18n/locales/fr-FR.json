@@ -5,6 +5,7 @@
   "Last completed scan on this node": "Dernière analyse terminée sur ce nœud",
   "Deferred": "Différée",
   "Superseded": "Remplacée",
+  "Scanner lock lost": "Verrou du scanner perdu",
   "Object limit reached": "Limite d’objets atteinte",
   "Directory limit reached": "Limite de répertoires atteinte",
   "Measured size": "Taille mesurée",

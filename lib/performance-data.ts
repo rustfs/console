@@ -778,6 +778,8 @@ const scannerResultLabels = new Map([
   ["partial", "Partial scan"],
   ["deferred", "Deferred"],
   ["superseded", "Superseded"],
+  ["lock_lost", "Scanner lock lost"],
+  ["cancelled", "Canceled"],
 ])
 const scannerReasonLabels = new Map([
   ["runtime", "Time limit reached"],

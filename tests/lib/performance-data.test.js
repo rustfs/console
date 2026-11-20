@@ -4,7 +4,8 @@ import assert from "node:assert/strict"
 import {
   buildRunningStatusView,
   formatRelativeTime,
-  isScannerCycleActive,
+  localScannerView,
+  scannerAttemptLabels,
   normalizeClusterDiagnostics,
   normalizeDataUsageInfo,
   normalizeMetricsInfo,
@@ -247,19 +248,19 @@ test("normalizeMetricsInfo rejects missing and invalid scanner timestamps", () =
   )
 })
 
-test("normalizeMetricsInfo keeps explicit scanner activity and legacy cycle fallback", () => {
+test("legacy activity is local and requires an explicit activity bit", () => {
   const activeFirstCycle = normalizeMetricsInfo({
     aggregated: { scanner: { current_cycle: 0, current_cycle_active: true } },
   })
   assert.equal(activeFirstCycle.aggregated?.scanner?.current_cycle, 0)
   assert.equal(activeFirstCycle.aggregated?.scanner?.current_cycle_active, true)
-  assert.equal(isScannerCycleActive(activeFirstCycle), true)
+  assert.equal(localScannerView(activeFirstCycle).state, "scanning")
 
   const explicitIdle = normalizeMetricsInfo({
     aggregated: { scanner: { current_cycle: 3, current_cycle_active: false } },
   })
   assert.equal(explicitIdle.aggregated?.scanner?.current_cycle_active, false)
-  assert.equal(isScannerCycleActive(explicitIdle), false)
+  assert.equal(localScannerView(explicitIdle).state, "idle")
 
   const activityOnly = normalizeMetricsInfo({ aggregated: { scanner: { current_cycle_active: false } } })
   assert.equal(activityOnly.aggregated?.scanner?.current_cycle_active, false)
@@ -268,10 +269,16 @@ test("normalizeMetricsInfo keeps explicit scanner activity and legacy cycle fall
     aggregated: { scanner: { currentCycle: 0, currentCycleActive: true } },
   })
   assert.equal(camelCaseActivity.aggregated?.scanner?.current_cycle_active, true)
-  assert.equal(isScannerCycleActive(camelCaseActivity), true)
+  assert.equal(localScannerView(camelCaseActivity).state, "scanning")
 
-  assert.equal(isScannerCycleActive(normalizeMetricsInfo({ aggregated: { scanner: { current_cycle: 3 } } })), true)
-  assert.equal(isScannerCycleActive(normalizeMetricsInfo({ aggregated: { scanner: { current_cycle: 0 } } })), false)
+  assert.equal(
+    localScannerView(normalizeMetricsInfo({ aggregated: { scanner: { current_cycle: 3 } } })).state,
+    "unknown",
+  )
+  assert.equal(
+    localScannerView(normalizeMetricsInfo({ aggregated: { scanner: { current_cycle: 0 } } })).state,
+    "unknown",
+  )
 })
 
 test("formatRelativeTime follows the active locale and advances with the clock", () => {
@@ -699,4 +706,102 @@ test("older v3 responses without topology or unknown disks keep an indeterminate
   assert.equal(view.topology.expectedDrives, undefined)
   assert.equal(view.topology.reportedDrives, 2)
   assert.equal(view.topology.incomplete, false)
+})
+
+test("optional inventory keeps current namespace and measured usage distinct, including zero", () => {
+  const inventory = normalizeSystemInfo({
+    info: { buckets: { count: 1 } },
+    inventory: {
+      current_buckets: 2,
+      measured_buckets: 1,
+      measured_objects: 300000,
+      measured_bytes: 0,
+      snapshot_at: "2026-11-20T01:02:03Z",
+      converged: false,
+    },
+  }).inventory
+  assert.deepEqual(inventory, {
+    currentBuckets: 2,
+    measuredBuckets: 1,
+    measuredObjects: 300000,
+    measuredBytes: 0,
+    snapshotAt: "2026-11-20T01:02:03Z",
+    converged: false,
+  })
+  assert.equal(normalizeSystemInfo({ info: { buckets: { count: 1 } } }).inventory, undefined)
+  assert.equal(
+    normalizeSystemInfo({ inventory: { current_buckets: null, measured_objects: -1 } }).inventory.currentBuckets,
+    undefined,
+  )
+})
+
+test("a remote active scanner remains visible when only some peers respond", () => {
+  const scanner = {
+    state: "scanning",
+    nodes_total: 4,
+    nodes_responded: 2,
+    sampled_at: "2026-11-20T08:20:55Z",
+    current: { cycle: 40, started_at: "2026-11-20T08:00:00Z", leader: "node-3", objects_scanned: 301363 },
+    last_attempt: { cycle: 39, result: "partial", partial_reason: "runtime", duration_seconds: 1801.22 },
+  }
+  const actual = normalizeMetricsInfo({
+    cluster_scanner: scanner,
+    aggregated: { scanner: { current_cycle_active: false } },
+  }).clusterScanner
+  assert.equal(actual.state, "scanning")
+  assert.equal(actual.current.leader, "node-3")
+  assert.equal(actual.current.objectsScanned, 301363)
+  assert.equal(actual.lastAttempt.partialReason, "runtime")
+  assert.equal(actual.lastSuccessAt, undefined)
+})
+
+test("idle requires a full cluster sample and local metrics cannot supply it", () => {
+  const sample = { state: "idle", nodes_total: 4, nodes_responded: 4, sampled_at: "2026-11-20T08:20:55Z" }
+  assert.equal(normalizeMetricsInfo({ cluster_scanner: sample }).clusterScanner.state, "idle")
+  for (const invalid of [{ nodes_responded: 3 }, { nodes_responded: 0 }, { sampled_at: "invalid" }]) {
+    assert.equal(normalizeMetricsInfo({ cluster_scanner: { ...sample, ...invalid } }).clusterScanner.state, "unknown")
+  }
+  assert.equal(
+    normalizeMetricsInfo({ aggregated: { scanner: { current_cycle: 40, current_cycle_active: false } } })
+      .clusterScanner,
+    undefined,
+  )
+})
+
+test("legacy history is scoped to the node and cannot establish cluster activity", () => {
+  const sample = normalizeMetricsInfo({
+    aggregated: {
+      scanner: { current_cycle: 4, cycle_complete_times: ["2026-11-20T09:00:00Z", "2026-11-20T07:00:00Z"] },
+    },
+  })
+  assert.equal(sample.clusterScanner, undefined)
+  assert.deepEqual(localScannerView(sample), { state: "unknown", cycle: 4, completedAt: "2026-11-20T09:00:00Z" })
+  assert.equal(localScannerView(normalizeMetricsInfo({})), undefined)
+})
+test("known attempt outcomes and budget reasons use localized keys, unknown protocol extensions remain unknown", () => {
+  for (const [result, key] of Object.entries({
+    success: "Completed Status",
+    error: "Failed Status",
+    partial: "Partial scan",
+    deferred: "Deferred",
+    superseded: "Superseded",
+    future: "Unknown",
+  })) {
+    assert.deepEqual(scannerAttemptLabels(result), [key])
+  }
+  for (const [reason, key] of Object.entries({
+    runtime: "Time limit reached",
+    objects: "Object limit reached",
+    directories: "Directory limit reached",
+    future: "Unknown",
+  })) {
+    assert.deepEqual(scannerAttemptLabels("partial", reason), ["Partial scan", key])
+  }
+})
+
+test("legacy inventory preserves exact counts and withholds fractional or unsafe counts", () => {
+  const info = (count) => normalizeSystemInfo({ info: { objects: { count } } }).objects?.count
+  assert.equal(info("3"), 3)
+  assert.equal(info(1.25), undefined)
+  assert.equal(info(Number.MAX_SAFE_INTEGER + 1), undefined)
 })

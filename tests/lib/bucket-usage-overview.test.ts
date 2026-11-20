@@ -28,7 +28,7 @@ const { BucketUsageOverview } = await import(moduleUrl(source))
 async function render(
   entries: [string, number][],
   check: (document: Window["document"]) => void,
-  options: { names?: string[]; unavailable?: boolean } = {},
+  options: { names?: string[]; unavailable?: boolean; usageAvailable?: boolean } = {},
 ) {
   const browser = new Window()
   try {
@@ -37,6 +37,7 @@ async function render(
         names: options.names ?? entries.map(([name]) => name),
         usage: new Map(entries.map(([name, sizeBytes]) => [name, { sizeBytes, objectsCount: 1 }])),
         unavailable: options.unavailable ?? false,
+        usageAvailable: options.usageAvailable ?? true,
       }),
     )
     check(browser.document)
@@ -146,4 +147,37 @@ test("empty, missing and loading statistics do not fabricate a distribution", as
       options,
     )
   }
+})
+
+test("partial account usage shows the measured subtotal and separate visible count", async () => {
+  await render(
+    [["known", 307200000]],
+    (document) => {
+      assert.deepEqual(
+        [...document.querySelectorAll("dt")].map((label) => label.textContent),
+        ["Measured size", "Measured objects", "Visible buckets"],
+      )
+      assert.deepEqual(
+        [...document.querySelectorAll("dd")].map((value) => value.textContent),
+        ["293.0 MiB", "1", "2"],
+      )
+      assert.equal(document.querySelector('[role="status"]')?.textContent, "Measured buckets · 1 / 2")
+      assert.equal(document.querySelector("ul"), null)
+    },
+    { names: ["known", "new"] },
+  )
+})
+
+test("an unavailable account response still shows the visible namespace", async () => {
+  await render(
+    [],
+    (document) => {
+      assert.deepEqual(
+        [...document.querySelectorAll("dd")].map((item) => item.textContent),
+        ["Unknown", "—", "2"],
+      )
+      assert.equal(document.querySelector('[role="status"]')?.textContent, "Usage unavailable")
+    },
+    { names: ["known", "restricted"], usageAvailable: false },
+  )
 })

@@ -34,7 +34,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 function hasSystemSnapshot(value: SystemInfo) {
-  return Boolean(value.buckets || value.objects || value.servers || value.backend)
+  return Boolean(value.inventory || value.buckets || value.objects || value.servers || value.backend)
 }
 
 function hasUsageSnapshot(value: DataUsageInfo) {
@@ -50,7 +50,7 @@ function hasStorageSnapshot(value: StorageInfo) {
 }
 
 function hasMetricsSnapshot(value: MetricsInfo) {
-  return value.aggregated?.scanner !== undefined
+  return value.clusterScanner !== undefined || value.aggregated?.scanner !== undefined
 }
 
 export function usePerformanceData() {
@@ -124,7 +124,7 @@ export function usePerformanceData() {
     setRefreshing(true)
     try {
       const [systemResult, usageResult, storageResult, metricsResult] = await Promise.allSettled([
-        getSystemInfo(controller.signal),
+        getSystemInfo(controller.signal, { includeInventory: true }),
         getDataUsageInfo(controller.signal),
         getStorageInfo(controller.signal),
         getSystemMetrics(controller.signal),
@@ -185,6 +185,7 @@ export function usePerformanceData() {
           setMetricsUpdatedAt(new Date())
           optionalSourceRefreshed = true
         } else {
+          setMetricsInfo({})
           nextSourceErrors.metrics = "Get Data Failed"
         }
       } else {

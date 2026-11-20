@@ -9,10 +9,11 @@ import { usePermissions } from "@/hooks/use-permissions"
 import {
   buildRunningStatusView,
   formatRelativeTime,
-  isScannerCycleActive,
   resolveUsageFreshness,
+  localScannerView,
+  scannerAttemptLabels,
 } from "@/lib/performance-data"
-import { formatDuration } from "@/lib/functions"
+import { formatDateTimeWithOffset, formatDuration, niceBytes } from "@/lib/functions"
 import { cn } from "@/lib/utils"
 import {
   RiArchiveDrawerFill,
@@ -22,7 +23,6 @@ import {
   RiSecurePaymentFill,
   RiStackLine,
 } from "@remixicon/react"
-import dayjs from "dayjs"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 import { PerformanceBackendCard } from "../_components/performance-backend-card"
@@ -48,8 +48,8 @@ export default function PerformancePage() {
     error,
     sourceErrors,
     lastUpdatedAt,
-    metricsUpdatedAt,
     usageUpdatedAt,
+    metricsUpdatedAt,
     refetch,
   } = usePerformanceData()
   const browserHref = canAccessPath("/browser") ? "/browser" : undefined
@@ -66,61 +66,102 @@ export default function PerformancePage() {
     return Math.min(100, Math.max(0, (totalUsedCapacity / totalCapacity) * 100))
   }, [totalCapacity, totalUsedCapacity])
 
-  const summaryMetrics = useMemo(
-    () => [
-      {
-        label: t("Buckets"),
-        display:
-          systemInfo.buckets?.count === undefined ? t("Unknown") : numberFormatter.format(systemInfo.buckets.count),
-        icon: RiArchiveLine,
-        caption: null as string | null,
-        href: browserHref,
-      },
-      {
-        label: t("Objects"),
-        display:
-          systemInfo.objects?.count === undefined ? t("Unknown") : numberFormatter.format(systemInfo.objects.count),
-        icon: RiStackLine,
-        caption: null as string | null,
-        href: browserHref,
-      },
-    ],
-    [browserHref, numberFormatter, systemInfo.buckets, systemInfo.objects, t],
-  )
+  const inventory = systemInfo.inventory
+  const count = (value: number | undefined) => (value === undefined ? t("Unknown") : numberFormatter.format(value))
+  const coverage = (measured: number | undefined, total: number | undefined) =>
+    measured !== undefined && total !== undefined && measured <= total
+      ? `${count(measured)} / ${count(total)}`
+      : t("Unknown")
+  const summaryMetrics = inventory
+    ? [
+        {
+          label: t("Current buckets"),
+          display: count(inventory.currentBuckets),
+          icon: RiArchiveLine,
+          caption: null,
+          href: browserHref,
+        },
+        {
+          label: t("Measured buckets"),
+          display: coverage(inventory.measuredBuckets, inventory.currentBuckets),
+          icon: RiArchiveLine,
+          caption: null,
+        },
+        { label: t("Measured objects"), display: count(inventory.measuredObjects), icon: RiStackLine, caption: null },
+        {
+          label: t("Measured size"),
+          display: inventory.measuredBytes === undefined ? t("Unknown") : niceBytes(String(inventory.measuredBytes)),
+          icon: RiStackLine,
+          caption: null,
+        },
+      ]
+    : [
+        {
+          label: t("Reported buckets"),
+          display: count(systemInfo.buckets?.count),
+          icon: RiArchiveLine,
+          caption: null,
+          href: browserHref,
+        },
+        { label: t("Reported objects"), display: count(systemInfo.objects?.count), icon: RiStackLine, caption: null },
+      ]
 
-  const scannerStartedAt = metricsInfo.aggregated?.scanner?.current_started
-  const scannerCompleteTimes = metricsInfo.aggregated?.scanner?.cycle_complete_times ?? []
-  const scannerCompletedAt = scannerCompleteTimes.at(-1)
-  const scannerActive = isScannerCycleActive(metricsInfo)
-  const scannerStatus = scannerActive ? t("Scanning") : scannerCompletedAt ? t("Idle") : t("Never run")
-  const scannerDuration = useMemo(() => {
-    if (!scannerStartedAt) return undefined
-    const started = dayjs(scannerStartedAt)
-    if (!started.isValid()) return undefined
-    if (scannerActive) return Math.max(0, dayjs(metricsUpdatedAt ?? undefined).diff(started, "second"))
-    if (!scannerCompletedAt) return undefined
-    const completed = dayjs(scannerCompletedAt)
-    return completed.isValid() && completed.isAfter(started)
-      ? Math.max(0, completed.diff(started, "second"))
+  const scanner = metricsInfo.clusterScanner
+  const localScanner = sourceErrors.metrics ? undefined : localScannerView(metricsInfo)
+  const current = !sourceErrors.metrics ? scanner?.current : undefined
+  const state = sourceErrors.metrics ? "unknown" : scanner?.state
+  const lastAttempt = scanner?.lastAttempt
+  const sinceStart =
+    current?.startedAt && scanner?.sampledAt
+      ? (Date.parse(scanner.sampledAt) - Date.parse(current.startedAt)) / 1000
       : undefined
-  }, [metricsUpdatedAt, scannerActive, scannerCompletedAt, scannerStartedAt])
-
-  const usageStats = useMemo(
-    () => [
-      {
-        label: t("Last Completed Scan"),
-        value: scannerCompletedAt
-          ? (formatRelativeTime(scannerCompletedAt, i18n.resolvedLanguage, metricsUpdatedAt?.getTime()) ?? t("Unknown"))
-          : t("Unknown"),
-      },
-      {
-        label: t("Scanner Status"),
-        value: scannerStatus,
-      },
-      { label: t("Scan Duration"), value: formatDuration(scannerDuration, t) },
-    ],
-    [i18n.resolvedLanguage, metricsUpdatedAt, scannerCompletedAt, scannerDuration, scannerStatus, t],
-  )
+  const scannerLabel = { scanning: t("Scanning"), idle: t("Idle"), unknown: t("Unknown") }
+  const lastAttemptDescription =
+    lastAttempt &&
+    [
+      lastAttempt.cycle === undefined ? undefined : "#" + count(lastAttempt.cycle),
+      ...scannerAttemptLabels(lastAttempt.result, lastAttempt.partialReason).map((key) => t(key)),
+      lastAttempt.durationSeconds === undefined ? undefined : formatDuration(lastAttempt.durationSeconds, t),
+    ]
+      .filter(Boolean)
+      .join(" · ")
+  const usageStats = [
+    { label: t("Cluster scanner status"), value: state ? scannerLabel[state] : t("Not reported") },
+    { label: t("Scanner status on this node"), value: localScanner && scannerLabel[localScanner.state] },
+    {
+      label: t("Cycle reported by this node"),
+      value: localScanner?.cycle === undefined ? undefined : count(localScanner.cycle),
+    },
+    {
+      label: t("Last completed scan on this node"),
+      value: localScanner?.completedAt && formatDateTimeWithOffset(localScanner.completedAt),
+    },
+    {
+      label: t("Last successful update"),
+      value:
+        sourceErrors.metrics && metricsUpdatedAt
+          ? t("Stale") + " · " + formatDateTimeWithOffset(metricsUpdatedAt)
+          : undefined,
+    },
+    { label: t("Responding nodes"), value: scanner && coverage(scanner.nodesResponded, scanner.nodesTotal) },
+    { label: t("Sample time"), value: scanner?.sampledAt && formatDateTimeWithOffset(scanner.sampledAt) },
+    { label: t("Current cycle"), value: current?.cycle === undefined ? undefined : count(current.cycle) },
+    { label: t("Scanner leader"), value: current?.leader },
+    { label: t("Started"), value: current?.startedAt && formatDateTimeWithOffset(current.startedAt) },
+    {
+      label: t("Scan Duration"),
+      value: sinceStart !== undefined && sinceStart >= 0 ? formatDuration(sinceStart, t) : undefined,
+    },
+    {
+      label: t("Objects scanned"),
+      value: current?.objectsScanned === undefined ? undefined : count(current.objectsScanned),
+    },
+    { label: t("Last scan attempt"), value: lastAttemptDescription },
+    {
+      label: t("Last successful scan"),
+      value: scanner?.lastSuccessAt ? formatDateTimeWithOffset(scanner.lastSuccessAt) : t("Not reported"),
+    },
+  ].filter((stat): stat is { label: string; value: string } => stat.value !== undefined)
 
   const runningStatus = useMemo(
     () => buildRunningStatusView(systemInfo, diagnosticsInfo),
@@ -298,7 +339,31 @@ export default function PerformancePage() {
               usageFreshness={diagnosticsInfo ? usageFreshness : undefined}
               t={t}
             />
-            <PerformanceSummaryCards metrics={summaryMetrics} title={t("Inventory")} />
+            <PerformanceSummaryCards
+              metrics={summaryMetrics}
+              title={t("Inventory")}
+              previous={
+                sourceErrors.system && lastUpdatedAt
+                  ? {
+                      label: t("Stale"),
+                      description: t("Last successful update"),
+                      time: lastUpdatedAt.toISOString(),
+                      displayTime: formatDateTimeWithOffset(lastUpdatedAt),
+                    }
+                  : undefined
+              }
+              detail={
+                inventory
+                  ? [
+                      inventory.snapshotAt &&
+                        t("Snapshot time") + " · " + formatDateTimeWithOffset(inventory.snapshotAt),
+                      inventory.converged === false && t("Usage has not converged"),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")
+                  : t("Snapshot coverage and time were not reported")
+              }
+            />
           </aside>
         </div>
 

@@ -7,8 +7,9 @@ export function useSystem() {
   const api = useApi()
 
   const getSystemInfo = useCallback(
-    async (signal?: AbortSignal, options?: { suppress403Redirect?: boolean }) => {
+    async (signal?: AbortSignal, options?: { suppress403Redirect?: boolean; includeInventory?: boolean }) => {
       return api.get("/info", {
+        ...(options?.includeInventory ? { params: { include: "inventory" } } : {}),
         ...(signal ? { signal, dedupe: false } : {}),
         ...(options?.suppress403Redirect ? { suppress403Redirect: true } : {}),
       })
@@ -54,6 +55,7 @@ export function useSystem() {
         params: {
           n: "1",
           types: "1",
+          scope: "cluster",
         },
         signal,
         dedupe: signal ? false : undefined,

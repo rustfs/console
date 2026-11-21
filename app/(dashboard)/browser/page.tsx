@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { RiAddLine, RiRefreshLine, RiArchiveLine, RiSettings5Line, RiDeleteBin5Line } from "@remixicon/react"
+import { RiAddLine, RiRefreshLine, RiSettings5Line, RiDeleteBin5Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { Page } from "@/components/page"
@@ -23,7 +22,8 @@ import { formatDateTime } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { getAccountBucketUsage, getAccountBucketScanStatus } from "@/lib/account-bucket-usage"
 import type { AccountBucketScanStatus } from "@/lib/account-bucket-usage"
-import { BucketUsageValue, BucketUsageStatus, BucketScanNotice } from "@/components/buckets/usage-value"
+import { BucketUsageValue, BucketScanNotice } from "@/components/buckets/usage-value"
+import { BucketNameCell, type BucketNameRow } from "@/components/buckets/name-cell"
 import { loadBucketPolicyStatuses } from "@/lib/bucket-policy-status"
 import { BrowserContent } from "./content"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -37,6 +37,8 @@ interface BucketRow {
   SizeBytes?: number
   IsPublic?: boolean
 }
+
+type BucketViewRow = BucketRow & BucketNameRow
 
 function BrowserBucketsPage() {
   const { t } = useTranslation()
@@ -153,10 +155,12 @@ function BrowserBucketsPage() {
       data.map((row) => {
         const usage = bucketUsage.get(row.Name)
         const ScanStatus = scanStatuses.get(row.Name)
-        if (!usage) return { ...row, ScanStatus, Unmeasured: usage === null }
+        const BucketHref = `/browser?bucket=${encodeURIComponent(row.Name)}`
+        if (!usage) return { ...row, BucketHref, ScanStatus, Unmeasured: usage === null }
 
         return {
           ...row,
+          BucketHref,
           ScanStatus,
           Count: usage.objectsCount,
           SizeBytes: usage.sizeBytes,
@@ -174,22 +178,11 @@ function BrowserBucketsPage() {
 
   const objectApi = useObject("")
 
-  const baseColumns: ColumnDef<BucketRow>[] = [
+  const baseColumns: ColumnDef<BucketViewRow>[] = [
     {
       header: () => t("Bucket"),
       accessorKey: "Name",
-      cell: ({ row }) => (
-        <div className="min-w-0">
-          <Link
-            href={`/browser?bucket=${encodeURIComponent(row.original.Name)}`}
-            className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
-          >
-            <RiArchiveLine className="size-4 shrink-0" aria-hidden />
-            <span className="min-w-0 truncate">{row.original.Name}</span>
-          </Link>
-          <BucketUsageStatus bucketName={row.original.Name} status={row.original.ScanStatus} />
-        </div>
-      ),
+      cell: BucketNameCell,
     },
     {
       header: () => t("Creation Date"),
@@ -271,7 +264,7 @@ function BrowserBucketsPage() {
     ),
   })
 
-  const { table } = useDataTable<BucketRow>({
+  const { table } = useDataTable<BucketViewRow>({
     data: filteredData,
     columns: baseColumns,
     manualPagination: true,

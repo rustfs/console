@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { Spinner } from "@/components/ui/spinner"
 import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
@@ -42,7 +43,7 @@ export function BucketUsageStatus({ bucketName, status }: { bucketName: string; 
   const { t } = useTranslation()
   const progress = status?.progress
   const timestamp = (milliseconds: number) => formatDateTime(new Date(milliseconds).toISOString())
-  if (!progress && !status?.updatedAt) return null
+  const liveRegion = useRef<HTMLSpanElement>(null)
 
   const stage = progress
     ? t(
@@ -55,33 +56,52 @@ export function BucketUsageStatus({ bucketName, status }: { bucketName: string; 
       )
     : undefined
 
+  const announcement = progress
+    ? [
+        t("Scan progress for {bucket}", { bucket: bucketName }),
+        stage,
+        progress && t("Checkpoint: {time}", { time: timestamp(progress.updatedAt) }),
+        typeof progress?.objectsCount === "number" &&
+          `${t("Object Count")}: ${t("{value} scanned", { value: formatInteger(progress.objectsCount) })}`,
+        typeof progress?.sizeBytes === "number" &&
+          `${t("Size")}: ${t("{value} scanned", { value: niceBytes(String(progress.sizeBytes)) })}`,
+        status?.updatedAt && t("Last complete scan: {time}", { time: timestamp(status.updatedAt) }),
+      ]
+        .filter(Boolean)
+        .join(". ")
+    : ""
+
+  useEffect(() => {
+    // Register the empty live region before publishing its first message.
+    const timer = setTimeout(() => {
+      if (liveRegion.current && liveRegion.current.textContent !== announcement) {
+        liveRegion.current.textContent = announcement
+      }
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [announcement])
+
   return (
-    <div
-      className="mt-1 grid max-w-72 gap-0.5 whitespace-normal text-xs text-muted-foreground"
-      role={progress ? "status" : undefined}
-      aria-live={progress ? "polite" : undefined}
-      aria-atomic={progress ? true : undefined}
-    >
-      {progress && <span className="sr-only">{t("Scan progress for {bucket}", { bucket: bucketName })}: </span>}
-      {progress && (
-        <>
-          <span>{stage}</span>
-          <time dateTime={new Date(progress.updatedAt).toISOString()}>
-            {t("Checkpoint: {time}", { time: timestamp(progress.updatedAt) })}
-          </time>
-          <span className="sr-only">
-            {typeof progress.objectsCount === "number"
-              ? t("{value} scanned", { value: formatInteger(progress.objectsCount) })
-              : undefined}
-          </span>
-        </>
+    <>
+      <span ref={liveRegion} role="status" aria-live="polite" aria-atomic="true" className="sr-only" />
+      {(progress || status?.updatedAt) && (
+        <div className="mt-1 grid max-w-72 gap-0.5 whitespace-normal text-xs text-muted-foreground">
+          {progress && (
+            <>
+              <span>{stage}</span>
+              <time dateTime={new Date(progress.updatedAt).toISOString()}>
+                {t("Checkpoint: {time}", { time: timestamp(progress.updatedAt) })}
+              </time>
+            </>
+          )}
+          {status?.updatedAt && (
+            <time dateTime={new Date(status.updatedAt).toISOString()}>
+              {t("Last complete scan: {time}", { time: timestamp(status.updatedAt) })}
+            </time>
+          )}
+        </div>
       )}
-      {status?.updatedAt && (
-        <time dateTime={new Date(status.updatedAt).toISOString()}>
-          {t("Last complete scan: {time}", { time: timestamp(status.updatedAt) })}
-        </time>
-      )}
-    </div>
+    </>
   )
 }
 

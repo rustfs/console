@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { useTranslation } from "react-i18next"
-import { RiArchiveLine, RiRefreshLine } from "@remixicon/react"
+import { RiRefreshLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { PageHeader } from "@/components/page-header"
@@ -16,7 +15,8 @@ import { formatDateTime } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { getAccountBucketUsage, getAccountBucketScanStatus } from "@/lib/account-bucket-usage"
 import type { AccountBucketScanStatus } from "@/lib/account-bucket-usage"
-import { BucketUsageValue, BucketUsageStatus, BucketScanNotice } from "@/components/buckets/usage-value"
+import { BucketUsageValue, BucketScanNotice } from "@/components/buckets/usage-value"
+import { BucketNameCell, type BucketNameRow } from "@/components/buckets/name-cell"
 import { loadBucketPolicyStatuses } from "@/lib/bucket-policy-status"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -29,6 +29,8 @@ export interface BucketListRow {
   SizeBytes?: number
   IsPublic?: boolean
 }
+
+type BucketListViewRow = BucketListRow & BucketNameRow
 
 interface BucketListProps {
   title: React.ReactNode
@@ -130,16 +132,18 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
       data.map((row) => {
         const usage = bucketUsage.get(row.Name)
         const ScanStatus = scanStatuses.get(row.Name)
-        if (!usage) return { ...row, ScanStatus, Unmeasured: usage === null }
+        const BucketHref = getBucketHref(row.Name)
+        if (!usage) return { ...row, BucketHref, ScanStatus, Unmeasured: usage === null }
 
         return {
           ...row,
+          BucketHref,
           ScanStatus,
           Count: usage.objectsCount,
           SizeBytes: usage.sizeBytes,
         }
       }),
-    [bucketUsage, scanStatuses, data],
+    [bucketUsage, scanStatuses, data, getBucketHref],
   )
   const filteredData = React.useMemo(
     () =>
@@ -149,23 +153,12 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
     [rowsWithUsage, searchTerm],
   )
 
-  const columns: ColumnDef<BucketListRow>[] = React.useMemo(
+  const columns: ColumnDef<BucketListViewRow>[] = React.useMemo(
     () => [
       {
         header: () => t("Bucket"),
         accessorKey: "Name",
-        cell: ({ row }) => (
-          <div className="min-w-0">
-            <Link
-              href={getBucketHref(row.original.Name)}
-              className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
-            >
-              <RiArchiveLine className="size-4 shrink-0" aria-hidden />
-              <span className="min-w-0 truncate">{row.original.Name}</span>
-            </Link>
-            <BucketUsageStatus bucketName={row.original.Name} status={row.original.ScanStatus} />
-          </div>
-        ),
+        cell: BucketNameCell,
       },
       {
         header: () => t("Creation Date"),
@@ -216,10 +209,10 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         },
       },
     ],
-    [getBucketHref, policyLoading, t, usageLoading],
+    [policyLoading, t, usageLoading],
   )
 
-  const { table } = useDataTable<BucketListRow>({
+  const { table } = useDataTable<BucketListViewRow>({
     data: filteredData,
     columns,
     manualPagination: true,

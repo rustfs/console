@@ -56,7 +56,10 @@ function moduleUrl(path: string, overrides: Record<string, string> = {}) {
 }
 
 const permissionsUrl = moduleUrl("hooks/use-permissions.tsx")
-const overrides = { "@/hooks/use-permissions": permissionsUrl }
+const overrides = {
+  "@/hooks/use-permissions": permissionsUrl,
+  "@/components/buckets/usage-value": moduleUrl("components/buckets/usage-value.tsx"),
+}
 const { PermissionsProvider, usePermissions } = (await import(
   permissionsUrl
 )) as typeof import("../../hooks/use-permissions")
@@ -66,6 +69,9 @@ const { DashboardAuthGuard } = (await import(
 const { default: BrowserPage } = (await import(
   moduleUrl("app/(dashboard)/browser/page.tsx", overrides)
 )) as typeof import("../../app/(dashboard)/browser/page")
+const { BucketList } = (await import(
+  moduleUrl("components/buckets/list.tsx", overrides)
+)) as typeof import("../../components/buckets/list")
 const { useFirstAccessibleDashboardRoute } = (await import(
   moduleUrl("hooks/use-first-accessible-dashboard-route.ts", overrides)
 )) as typeof import("../../hooks/use-first-accessible-dashboard-route")
@@ -80,6 +86,15 @@ type Api = {
   get: (path: string) => Promise<unknown>
   post?: (path: string, body: unknown) => Promise<unknown>
   resolveUrl?: (path: string) => string
+}
+type UsageRow = { Name: string; Count?: number; SizeBytes?: number }
+type UsageTable = {
+  data: UsageRow[]
+  columns: {
+    accessorKey?: string
+    id?: string
+    cell?: (context: { row: { original: UsageRow } }) => ReactNode
+  }[]
 }
 
 function makeApi(
@@ -113,6 +128,7 @@ function makeApi(
 async function mountBrowser(
   t: TestContext,
   options: {
+    surface?: "Browser" | "BucketList"
     deniedPolicyStatus?: boolean
     isAdmin?: boolean
     search?: string
@@ -163,15 +179,46 @@ async function mountBrowser(
     useRouter: () => router,
     usePathname: () => pathname,
     useSearchParams: () => searchParams,
-    useTranslation: () => ({ t: (key: string) => key }),
+    useTranslation: () => ({
+      t: (key: string, values: Record<string, unknown> = {}) =>
+        Object.entries(values).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, String(value)), key),
+    }),
     useBucket: () => ({ listBuckets, getBucketPolicyStatus }),
     useObject: () => ({}),
-    useDataTable: (table: { data: unknown[] }) => ({ table }),
+    useDataTable: (table: UsageTable) => ({ table }),
     Button: ({ children, onClick }: { children: ReactNode; onClick: () => void }) =>
       createElement("button", { onClick }, children),
     PageHeader: ({ children, actions }: { children: ReactNode; actions: ReactNode }) =>
       createElement("header", null, children, actions),
-    DataTable: ({ table }: { table: { data: unknown[] } }) => createElement("output", null, JSON.stringify(table.data)),
+    DataTable: ({ table }: { table: UsageTable }) =>
+      createElement(
+        "div",
+        null,
+        createElement("output", null, JSON.stringify(table.data)),
+        createElement(
+          "table",
+          null,
+          createElement(
+            "tbody",
+            null,
+            table.data.map((row) =>
+              createElement(
+                "tr",
+                { key: row.Name, "data-bucket": row.Name },
+                table.columns
+                  .filter((column) => ["Name", "Count", "SizeBytes"].includes(column.accessorKey ?? column.id ?? ""))
+                  .map((column) =>
+                    createElement(
+                      "td",
+                      { key: column.accessorKey ?? column.id, "data-metric": column.accessorKey ?? column.id },
+                      column.cell?.({ row: { original: row } }),
+                    ),
+                  ),
+              ),
+            ),
+          ),
+        ),
+      ),
     BrowserContent: ({ bucketName }: { bucketName: string }) =>
       createElement("article", { "data-scoped-bucket": bucketName }, bucketName),
     Page: function Page({ children }: { children: ReactNode }) {
@@ -204,7 +251,13 @@ async function mountBrowser(
             DashboardAuthGuard,
             null,
             pathname.replace(/\/$/, "") === "/browser"
-              ? createElement(BrowserPage)
+              ? options.surface === "BucketList"
+                ? createElement(BucketList, {
+                    title: "Buckets",
+                    emptyDescription: "No buckets",
+                    getBucketHref: (name) => `/browser?bucket=${name}`,
+                  })
+                : createElement(BrowserPage)
               : createElement("div", null, "Other page"),
           ),
         ),
@@ -407,6 +460,78 @@ test("manual refresh and returning to Browser still force fresh buckets and acco
   )
   assert.deepEqual([mounted.mounts, mounted.unmounts, mounted.requests.length], [2, 1, 4])
 })
+
+for (const surface of ["Browser", "BucketList"] as const) {
+  for (const hasCompleteUsage of [false, true]) {
+    test(`${surface} ${hasCompleteUsage ? "retains complete usage alongside" : "shows only"} replaceable scanner progress`, async (t) => {
+      const mounted = await mountBrowser(t, { surface })
+      const info = (objects: number, size: number) => ({
+        policy,
+        buckets: [
+          {
+            name: "test-bucket",
+            ...(hasCompleteUsage
+              ? { objects: 90, size: 900, usage_value_state: "carried", usage_updated_at: 1700000000000 }
+              : {}),
+            scan_progress: {
+              stage: "scanning",
+              updated_at: 1800000000000,
+              objects,
+              size,
+              sources_observed: 1,
+              sources_total: 2,
+            },
+          },
+        ],
+      })
+      const assertSample = (objects: number, size: number) => {
+        const row = JSON.parse(mounted.container.querySelector("output")!.textContent)[0]
+        const name = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="Name"]')!
+        const count = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="Count"]')!
+        const capacity = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="SizeBytes"]')!
+        const status = name.querySelector('[role="status"]')!
+        assert.ok(status, "the Name cell contains the shared scanner status")
+        assert.deepEqual(
+          Array.from(count.querySelectorAll(".tabular-nums > span"), (span) => span.textContent),
+          hasCompleteUsage ? ["90", `${objects} scanned`] : [`${objects} scanned`],
+        )
+        assert.deepEqual(
+          Array.from(capacity.querySelectorAll(".tabular-nums > span"), (span) => span.textContent),
+          hasCompleteUsage ? ["900.0 B", `${size}.0 B scanned`] : [`${size}.0 B scanned`],
+        )
+        assert.match(status.textContent, /Scan in progress/)
+        assert.match(status.textContent, /Checkpoint:/)
+        assert.equal(status.querySelector(".sr-only")?.textContent, "Scan progress for test-bucket: ")
+        assert.equal(status.getAttribute("aria-live"), "polite")
+        assert.equal(status.hasAttribute("aria-label"), false)
+        assert.equal(mounted.container.querySelectorAll('[data-bucket="test-bucket"] [role="status"]').length, 1)
+        assert.deepEqual(mounted.container.textContent.match(/Scanned usage is not the bucket total\./g), [
+          "Scanned usage is not the bucket total.",
+        ])
+        if (hasCompleteUsage) {
+          assert.deepEqual([row.Count, row.SizeBytes], [90, 900])
+          assert.match(status.textContent, /Last complete scan:/)
+        } else {
+          assert.equal(Object.hasOwn(row, "Count"), false)
+          assert.equal(Object.hasOwn(row, "SizeBytes"), false)
+          assert.doesNotMatch(status.textContent, /Last complete scan:/)
+        }
+      }
+
+      const first = info(7, 71)
+      const next = info(9, 91)
+      await mounted.resolve(0, first)
+      if (surface === "Browser") await mounted.resolve(1, first)
+      assertSample(7, 71)
+      for (const response of [first, next, next]) {
+        const requestIndex = mounted.requests.length
+        await mounted.refresh()
+        await mounted.resolve(requestIndex, response)
+        assertSample(response.buckets[0].scan_progress.objects, response.buckets[0].scan_progress.size)
+      }
+    })
+  }
+}
 
 test("the first denied policy never mounts Browser and redirects to forbidden", async (t) => {
   const mounted = await mountBrowser(t)

@@ -1,0 +1,89 @@
+{
+  "evidence_key": "bucket-scan-progress-58",
+  "kind": "running Next.js application with controlled local S3 and Admin API responses",
+  "backend_acceptance": false,
+  "before_source": "45ca4e06eff0d71eae1e4746ef9e8cde0bcbb85e",
+  "before_routes": ["/browser/"],
+  "after_routes": ["/browser/", "/buckets/"],
+  "viewports": {
+    "desktop": {
+      "width": 1280
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844
+    }
+  },
+  "scenarios": [
+    "first traversal with partial usage",
+    "enumerating without numeric usage",
+    "retained complete usage plus separate progress",
+    "missing source coverage",
+    "completed traversal without quota certification",
+    "confirmed empty usage",
+    "unknown usage",
+    "confirmed empty bucket list",
+    "failed accountinfo read"
+  ],
+  "checks": [
+    "English and Chinese interpolation using runtime i18next configuration",
+    "light to dark to light theme switching",
+    "mobile document width remains 390 CSS pixels",
+    "horizontal table scroll exposes numeric columns without body overflow",
+    "screen reader tree retains bucket, stage, measurement time and observed count",
+    "manual refresh in both lists"
+  ],
+  "source_files_sha256": {
+    "components/buckets/usage-value.tsx": "45a49b1819d7b5cf5c7ffe36dcc727b34718eb47c7f55b95e65ee07b31589c4e",
+    "components/buckets/list.tsx": "e5dd93ab09fec343c01140f3109e322be17d0c7a52d9f7a5d6b1abce023e4fc0",
+    "app/(dashboard)/browser/page.tsx": "5f6470b4c2ba788abd441e4c7d303ab0da2d8299f5f000afe9b9516657232653",
+    "lib/account-bucket-usage.js": "9a42e49dca29952cbff245655ba3d9e00ac4fb07a5e0939a34d85d93e056e6a2"
+  },
+  "artifacts": [
+    {
+      "file": "before-desktop.jpg",
+      "sha256": "fe16a338384b64e116321cdff9e35cd90fecf1e316d9efd073781872f386a070",
+      "bytes": 109164
+    },
+    {
+      "file": "before-mobile.jpg",
+      "sha256": "1ec70cd08d9daad7bf7d887222ba49b7f210ce7a1419c98c9af8eca8f1d48e3d",
+      "bytes": 41503
+    },
+    {
+      "file": "after-desktop.jpg",
+      "sha256": "dbd2fd0167b4ab45f6cfa7f9de53d3d020364dc8bed847489ec507b93d4f08d3",
+      "bytes": 129331
+    },
+    {
+      "file": "after-desktop-zh-dark.jpg",
+      "sha256": "ee7de5c246075acfc24e91a62f038a993d806da627e4ce7c6013d412532e213e",
+      "bytes": 111407
+    },
+    {
+      "file": "after-mobile.jpg",
+      "sha256": "86db72a2ba63ce39778ba2090f98c2ebd10df2959d93889261f5ac453836040c",
+      "bytes": 55822
+    },
+    {
+      "file": "after-mobile-scrolled.jpg",
+      "sha256": "4a390e3ff426689e9de346a4ea59c63e2992ec8e5c194684b1ef31f51747d1d1",
+      "bytes": 39063
+    },
+    {
+      "file": "after-settings-desktop.jpg",
+      "sha256": "a2a7d6f6583d6069eb944ea64ee598190227d338b6c52504d891c70c20892052",
+      "bytes": 101212
+    },
+    {
+      "file": "after-empty.jpg",
+      "sha256": "af191ce408f624b39c81f2e0c70ae7ac2a02ac608562e6643b0c68cb9fda9e77",
+      "bytes": 44302
+    },
+    {
+      "file": "after-error.jpg",
+      "sha256": "1f3fe722d14db6fa8c2aa8c64a90c13716e3e7c4265d77ee8391ad4a4bbff7b7",
+      "bytes": 73348
+    }
+  ]
+}

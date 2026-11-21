@@ -19,9 +19,11 @@ import { useObject } from "@/hooks/use-object"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
-import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
+import { formatDateTime } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
-import { getAccountBucketUsage } from "@/lib/account-bucket-usage"
+import { getAccountBucketUsage, getAccountBucketScanStatus } from "@/lib/account-bucket-usage"
+import type { AccountBucketScanStatus } from "@/lib/account-bucket-usage"
+import { BucketUsageValue, BucketUsageStatus, BucketScanNotice } from "@/components/buckets/usage-value"
 import { loadBucketPolicyStatuses } from "@/lib/bucket-policy-status"
 import { BrowserContent } from "./content"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -31,7 +33,7 @@ interface BucketRow {
   CreationDate: string
   Unmeasured?: boolean
   Count?: number
-  Size?: string
+  ScanStatus?: AccountBucketScanStatus
   SizeBytes?: number
   IsPublic?: boolean
 }
@@ -145,20 +147,22 @@ function BrowserBucketsPage() {
 
   const usageLoading = accountInfoLoading || !hasFetchedPolicy
   const bucketUsage = useMemo(() => getAccountBucketUsage(userInfo), [userInfo])
+  const scanStatuses = useMemo(() => getAccountBucketScanStatus(userInfo), [userInfo])
   const rowsWithUsage = useMemo(
     () =>
       data.map((row) => {
         const usage = bucketUsage.get(row.Name)
-        if (!usage) return { ...row, Unmeasured: usage === null }
+        const ScanStatus = scanStatuses.get(row.Name)
+        if (!usage) return { ...row, ScanStatus, Unmeasured: usage === null }
 
         return {
           ...row,
+          ScanStatus,
           Count: usage.objectsCount,
-          Size: niceBytes(String(usage.sizeBytes)),
           SizeBytes: usage.sizeBytes,
         }
       }),
-    [bucketUsage, data],
+    [bucketUsage, scanStatuses, data],
   )
   const filteredData = useMemo(
     () =>
@@ -175,13 +179,16 @@ function BrowserBucketsPage() {
       header: () => t("Bucket"),
       accessorKey: "Name",
       cell: ({ row }) => (
-        <Link
-          href={`/browser?bucket=${encodeURIComponent(row.original.Name)}`}
-          className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
-        >
-          <RiArchiveLine className="size-4 shrink-0" aria-hidden />
-          <span className="min-w-0 truncate">{row.original.Name}</span>
-        </Link>
+        <div className="min-w-0">
+          <Link
+            href={`/browser?bucket=${encodeURIComponent(row.original.Name)}`}
+            className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+          >
+            <RiArchiveLine className="size-4 shrink-0" aria-hidden />
+            <span className="min-w-0 truncate">{row.original.Name}</span>
+          </Link>
+          <BucketUsageStatus bucketName={row.original.Name} status={row.original.ScanStatus} />
+        </div>
       ),
     },
     {
@@ -196,14 +203,15 @@ function BrowserBucketsPage() {
       header: () => t("Object Count"),
       accessorKey: "Count",
       meta: { align: "end" },
-      cell: ({ row }) =>
-        typeof row.original.Count === "number" ? (
-          formatInteger(row.original.Count)
-        ) : usageLoading ? (
-          <Spinner className="size-3 text-muted-foreground" />
-        ) : (
-          t(row.original.Unmeasured ? "Not measured" : "Unavailable")
-        ),
+      cell: ({ row }) => (
+        <BucketUsageValue
+          value={row.original.Count}
+          kind="objects"
+          status={row.original.ScanStatus}
+          loading={usageLoading}
+          unmeasured={row.original.Unmeasured}
+        />
+      ),
     },
     {
       header: () => t("Size"),
@@ -211,13 +219,15 @@ function BrowserBucketsPage() {
       meta: { align: "end" },
       // use numeric bytes for sorting via accessorFn, but display the formatted string
       accessorFn: (row) => (typeof row.SizeBytes === "number" ? row.SizeBytes : undefined),
-      cell: ({ row }) =>
-        row.original.Size ??
-        (usageLoading ? (
-          <Spinner className="size-3 text-muted-foreground" />
-        ) : (
-          t(row.original.Unmeasured ? "Not measured" : "Unavailable")
-        )),
+      cell: ({ row }) => (
+        <BucketUsageValue
+          value={row.original.SizeBytes}
+          kind="size"
+          status={row.original.ScanStatus}
+          loading={usageLoading}
+          unmeasured={row.original.Unmeasured}
+        />
+      ),
     },
   )
 
@@ -333,6 +343,8 @@ function BrowserBucketsPage() {
         usageLoading={usageLoading}
         usageAvailable={!usageLoading && Array.isArray(userInfo?.buckets)}
       />
+
+      <BucketScanNotice statuses={scanStatuses} />
 
       <DataTable
         toolbar={

@@ -2364,5 +2364,14 @@
   "Encryption & Keys": "Verschlüsselung & Schlüssel",
   "Decommission": "Stilllegen",
   "Unable to check permissions. Refresh and try again.": "Berechtigungen konnten nicht geprüft werden. Aktualisieren Sie die Seite und versuchen Sie es erneut.",
-  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket.",
+  "Enumerating objects": "Objekte werden aufgelistet",
+  "Scan in progress": "Scan läuft",
+  "Waiting for scanner sources": "Warten auf weitere Scanquellen",
+  "Traversal complete": "Durchlauf abgeschlossen",
+  "Scanned usage is not the bucket total.": "Die gescannten Werte sind nicht die Gesamtsumme des Buckets.",
+  "{value} scanned": "{value} gescannt",
+  "Last complete scan: {time}": "Letzter vollständiger Scan: {time}",
+  "Checkpoint: {time}": "Prüfpunkt: {time}",
+  "Scan progress for {bucket}": "Scan progress for {bucket}"
 }

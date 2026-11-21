@@ -2364,5 +2364,14 @@
   "Encryption & Keys": "暗号化とキー",
   "Decommission": "廃止",
   "Unable to check permissions. Refresh and try again.": "権限を確認できません。更新してもう一度お試しください。",
-  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket.",
+  "Enumerating objects": "オブジェクトを列挙中",
+  "Scan in progress": "スキャン中",
+  "Waiting for scanner sources": "他のスキャン元を待機中",
+  "Traversal complete": "走査完了",
+  "Scanned usage is not the bucket total.": "スキャン済みの統計はバケット全体の値ではありません。",
+  "{value} scanned": "スキャン済み {value}",
+  "Last complete scan: {time}": "前回の完全な統計：{time}",
+  "Checkpoint: {time}": "進捗保存時刻：{time}",
+  "Scan progress for {bucket}": "Scan progress for {bucket}"
 }

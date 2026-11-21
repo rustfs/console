@@ -2364,5 +2364,14 @@
   "Encryption & Keys": "加密与密钥",
   "Decommission": "退役",
   "Unable to check permissions. Refresh and try again.": "无法检查权限，请刷新后重试。",
-  "Table location must be an S3 URI inside the selected table bucket.": "表位置必须是所选表存储桶内的 S3 URI。"
+  "Table location must be an S3 URI inside the selected table bucket.": "表位置必须是所选表存储桶内的 S3 URI。",
+  "Enumerating objects": "正在枚举对象",
+  "Scan in progress": "正在扫描",
+  "Waiting for scanner sources": "等待其他扫描来源",
+  "Traversal complete": "遍历完成",
+  "Scanned usage is not the bucket total.": "已扫描统计不代表桶的总量。",
+  "{value} scanned": "已扫描 {value}",
+  "Last complete scan: {time}": "上次完整统计：{time}",
+  "Checkpoint: {time}": "进度保存时间：{time}",
+  "Scan progress for {bucket}": "{bucket} 的扫描进度"
 }

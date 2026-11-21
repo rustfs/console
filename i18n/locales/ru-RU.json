@@ -2364,5 +2364,14 @@
   "Encryption & Keys": "Шифрование и ключи",
   "Decommission": "Вывод из эксплуатации",
   "Unable to check permissions. Refresh and try again.": "Не удалось проверить разрешения. Обновите страницу и повторите попытку.",
-  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket.",
+  "Enumerating objects": "Перечисление объектов",
+  "Scan in progress": "Сканирование выполняется",
+  "Waiting for scanner sources": "Ожидание других источников",
+  "Traversal complete": "Обход завершён",
+  "Scanned usage is not the bucket total.": "Просканированные данные не являются итогом бакета.",
+  "{value} scanned": "Просканировано: {value}",
+  "Last complete scan: {time}": "Последнее полное сканирование: {time}",
+  "Checkpoint: {time}": "Контрольная точка: {time}",
+  "Scan progress for {bucket}": "Scan progress for {bucket}"
 }

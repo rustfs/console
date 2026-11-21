@@ -2364,5 +2364,14 @@
   "Encryption & Keys": "Şifreleme ve Anahtarlar",
   "Decommission": "Devreden çıkar",
   "Unable to check permissions. Refresh and try again.": "İzinler kontrol edilemedi. Sayfayı yenileyip tekrar deneyin.",
-  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket.",
+  "Enumerating objects": "Nesneler listeleniyor",
+  "Scan in progress": "Tarama sürüyor",
+  "Waiting for scanner sources": "Diğer tarama kaynakları bekleniyor",
+  "Traversal complete": "Dolaşım tamamlandı",
+  "Scanned usage is not the bucket total.": "Taranan veriler bucket toplamı değildir.",
+  "{value} scanned": "{value} tarandı",
+  "Last complete scan: {time}": "Son tam tarama: {time}",
+  "Checkpoint: {time}": "Kontrol noktası: {time}",
+  "Scan progress for {bucket}": "Scan progress for {bucket}"
 }

@@ -2364,5 +2364,14 @@
   "Encryption & Keys": "Enkripsi & Kunci",
   "Decommission": "Pensiunkan",
   "Unable to check permissions. Refresh and try again.": "Izin tidak dapat diperiksa. Muat ulang halaman dan coba lagi.",
-  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket.",
+  "Enumerating objects": "Mendaftar objek",
+  "Scan in progress": "Pemindaian berlangsung",
+  "Waiting for scanner sources": "Menunggu sumber pemindaian lain",
+  "Traversal complete": "Penelusuran selesai",
+  "Scanned usage is not the bucket total.": "Data yang dipindai bukan total bucket.",
+  "{value} scanned": "{value} dipindai",
+  "Last complete scan: {time}": "Pemindaian lengkap terakhir: {time}",
+  "Checkpoint: {time}": "Titik pemeriksaan: {time}",
+  "Scan progress for {bucket}": "Scan progress for {bucket}"
 }

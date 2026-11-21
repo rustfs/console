@@ -2364,5 +2364,14 @@
   "Encryption & Keys": "암호화 및 키",
   "Decommission": "사용 중지",
   "Unable to check permissions. Refresh and try again.": "권한을 확인할 수 없습니다. 새로고침한 후 다시 시도하세요.",
-  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket."
+  "Table location must be an S3 URI inside the selected table bucket.": "Table location must be an S3 URI inside the selected table bucket.",
+  "Enumerating objects": "객체 열거 중",
+  "Scan in progress": "스캔 진행 중",
+  "Waiting for scanner sources": "다른 스캔 소스 대기 중",
+  "Traversal complete": "순회 완료",
+  "Scanned usage is not the bucket total.": "스캔된 통계는 버킷의 전체 값이 아닙니다.",
+  "{value} scanned": "스캔됨: {value}",
+  "Last complete scan: {time}": "마지막 전체 스캔: {time}",
+  "Checkpoint: {time}": "진행 저장 시간: {time}",
+  "Scan progress for {bucket}": "Scan progress for {bucket}"
 }

@@ -7,6 +7,7 @@ import ts from "typescript"
 
 const moduleUrl = (source: string) => `data:text/javascript,${encodeURIComponent(source)}`
 const imports: Record<string, string> = {
+  react: import.meta.resolve("react"),
   "react/jsx-runtime": import.meta.resolve("react/jsx-runtime"),
   "react-i18next": moduleUrl(
     `import { createInstance } from "${import.meta.resolve("i18next")}"; const instance = createInstance(); await instance.init({lng:"en", resources:{en:{translation:${readFileSync(new URL("../../i18n/locales/en-US.json", import.meta.url), "utf8")}}}, interpolation:{escapeValue:false,prefix:"{",suffix:"}"}}); export const useTranslation = () => ({t:instance.t.bind(instance)});`,
@@ -73,7 +74,7 @@ test("enumeration cannot render an empty bucket and waiting sources remain expli
 })
 
 test("loading, missing measurement, failed coverage and confirmed empty usage stay distinct", () => {
-  assert.match(render({ loading: true }), /role="status"/)
+  assert.match(render({ loading: true }), /aria-label="Loading"/)
   assert.match(render({ unmeasured: true }), /Not measured/)
   assert.match(render({}), /Unavailable/)
   assert.match(render({ value: 0 }), />0<\/span>/)
@@ -88,8 +89,26 @@ test("capacity and completed traversal stay diagnostic and announce each bucket 
   assert.equal(size.match(/aria-live/g)?.length, 1)
   const count = render({ bucketName: "bucket", status })
   assert.match(count, /aria-live="polite"/)
-  assert.match(count, /class="sr-only">Scan progress for bucket: /)
   assert.doesNotMatch(count, /aria-label/)
+})
+
+test("server rendering registers one empty live span before any announcement content", () => {
+  for (const status of [
+    undefined,
+    { updatedAt: 1700000000000 },
+    { progress },
+    { updatedAt: 1700000000000, progress },
+    { progress: { ...progress, stage: "enumerating", objectsCount: undefined, sizeBytes: undefined } },
+  ]) {
+    const html = renderToStaticMarkup(React.createElement(BucketUsageStatus, { bucketName: "bucket", status }))
+    const live = html.match(/<span\b[^>]*role="status"[^>]*>(.*?)<\/span>/s)
+    assert.equal(live?.[1], "", "the live span starts empty even when a scan sample already exists")
+    assert.match(live![0], /class="sr-only"/)
+    assert.match(live![0], /aria-live="polite"/)
+    assert.match(live![0], /aria-atomic="true"/)
+    assert.doesNotMatch(live![0], /aria-label/)
+    assert.equal(html.match(/role="status"/g)?.length, 1)
+  }
 })
 
 test("complete measurement and checkpoint retain their separate date values", () => {

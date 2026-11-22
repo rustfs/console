@@ -85,5 +85,60 @@
       "sha256": "1f3fe722d14db6fa8c2aa8c64a90c13716e3e7c4265d77ee8391ad4a4bbff7b7",
       "bytes": 73348
     }
-  ]
+  ],
+  "announcement_follow_up": {
+    "evidence_key": "bucket-scan-announcements-59",
+    "base_source": "600b045ac80fec4eef46ddd4f76377b4e94743f5",
+    "before_source": "2b6af45ef694dcba46ee61dbc7f24f5e67479b98",
+    "before_source_has_same_tree_as_base": true,
+    "before_images": ["after-desktop.jpg", "after-settings-desktop.jpg"],
+    "routes": ["/browser/", "/buckets/"],
+    "locale": "English",
+    "viewports": {
+      "desktop": {
+        "width": 1280,
+        "height": 844
+      },
+      "mobile": {
+        "width": 390,
+        "height": 844
+      }
+    },
+    "checks": [
+      "Both routes retain all seven live-region DOM node IDs across a real refresh",
+      "ARIA content contains bucket, phase, checkpoint, count, bytes and original complete-stat time",
+      "Mobile document width remains 390 CSS pixels",
+      "Existing Chinese and updated English announcements inspected in the accessibility tree"
+    ],
+    "browser_node_ids": {
+      "browser_before": [60, 72, 83, 95, 107, 119, 133],
+      "browser_after": [60, 72, 83, 95, 107, 119, 133],
+      "settings_before": [58, 69, 79, 90, 101, 112, 125],
+      "settings_after": [58, 69, 79, 90, 101, 112, 125]
+    },
+    "limits": "Controlled local backend responses; no vm-lab deployment or scanner acceptance. DOM and accessibility-tree checks do not verify synthesized screen-reader audio. Initial missing fixture endpoint was corrected before these captures.",
+    "source_files_sha256": {
+      "components/buckets/name-cell.tsx": "e728e41870d1f578a348be5deae94fc042d6bd09ede971dfac2e9108d6abe5bb",
+      "components/buckets/usage-value.tsx": "9bf9c56a24d7ea0e7d56572f37bc9fdae5592896f475fa07615a7812c4d1903f",
+      "components/buckets/list.tsx": "32c33c7c03f6186d17a67775a468c3a4bbfd883417c3a1d6767ee898c3941398",
+      "app/(dashboard)/browser/page.tsx": "84bcf81e1b71ec86fe7b35b5b655da6d1072e7931ab1bcf727fcad24b4743984"
+    },
+    "artifacts": [
+      {
+        "file": "announcement-desktop.jpg",
+        "sha256": "4af54741b3b696ca808fe1f5dae7a3ac6fcce1d335fef182d5f92bad8cc4eecb",
+        "bytes": 127278
+      },
+      {
+        "file": "announcement-mobile.jpg",
+        "sha256": "f66d0934031a500c3346af8865feb52a9eda208607bc4a6a420aa07a00a8edc4",
+        "bytes": 58808
+      },
+      {
+        "file": "announcement-settings-desktop.jpg",
+        "sha256": "2cd9758c04eabe77a22b2bde94d87af134c705d9c95b608632ed91daba4f620f",
+        "bytes": 107511
+      }
+    ]
+  }
 }

@@ -1,0 +1,134 @@
+{
+  "date": "2026-11-23",
+  "scope": "Bucket usage overview status",
+  "evidence": "Controlled props rendered by the actual React component in a local Next.js 16.4.6 dev server. Before uses the component from base commit b329436. These are UI fixtures, not live cluster or scanner acceptance. Temporary preview routes are removed from the final change.",
+  "checks": [
+    "DOM state matches each named scenario",
+    "Viewport width and document width match on mobile",
+    "Chinese translations loaded through changeLocale",
+    "Light and dark root classes confirmed",
+    "No browser errors or warnings"
+  ],
+  "captures": [
+    {
+      "file": "before-desktop-en.jpg",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "locale": "en-US",
+      "theme": "light",
+      "state": "pending",
+      "version": "before",
+      "sha256": "b17b62f443a7dfeea5d84e0eb29606280b44c22bbde8f55ca8bba9a39b1ab763"
+    },
+    {
+      "file": "after-desktop-en.jpg",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "locale": "en-US",
+      "theme": "light",
+      "state": "pending",
+      "version": "after",
+      "sha256": "bcc87e07b671325f949e4697508d6a93e0b8b5f2636f58ff3271a64843ab3f45"
+    },
+    {
+      "file": "after-mobile-en.jpg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "locale": "en-US",
+      "theme": "light",
+      "state": "pending",
+      "version": "after",
+      "sha256": "3214930ac9dd335d7fa2ae22439ba0f004a8cb25320e366a8c2aff858ba129c1"
+    },
+    {
+      "file": "after-mobile-zh.jpg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "locale": "zh-CN",
+      "theme": "light",
+      "state": "pending",
+      "version": "after",
+      "sha256": "1b5ad25086693eccfa802013dad17a7e957b1f358592d659d65d5075ebfe805a"
+    },
+    {
+      "file": "after-mobile-zh-dark.jpg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "locale": "zh-CN",
+      "theme": "dark",
+      "state": "pending",
+      "version": "after",
+      "sha256": "d67a86d211e60bf0cd3eb955be46f88e49a5ed525649824447adb198c9e911c7"
+    },
+    {
+      "file": "after-desktop-zh-dark.jpg",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "locale": "zh-CN",
+      "theme": "dark",
+      "state": "pending",
+      "version": "after",
+      "sha256": "ff5c544aad694d70ece4252a255364c7549efdb1de2ef95a86caa4e90d32e600"
+    },
+    {
+      "file": "after-loading-mobile-en.jpg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "locale": "en-US",
+      "theme": "light",
+      "state": "loading",
+      "version": "after",
+      "sha256": "d934f2a34d9c0599e847450f974624f1778f788058b7dd92971cb9f7bdec0d4e"
+    },
+    {
+      "file": "after-error-mobile-en.jpg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "locale": "en-US",
+      "theme": "light",
+      "state": "error",
+      "version": "after",
+      "sha256": "0510bb41d538c8fd8d863911f5918ef296bfd425ca029d34bdafa8934b8b0574"
+    },
+    {
+      "file": "after-empty-mobile-en.jpg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "locale": "en-US",
+      "theme": "light",
+      "state": "empty",
+      "version": "after",
+      "sha256": "dd38d525554408316497cefb1007fa60f29d1ad4febb7b7223e904b40966b709"
+    },
+    {
+      "file": "after-complete-mobile-en.jpg",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "locale": "en-US",
+      "theme": "light",
+      "state": "complete",
+      "version": "after",
+      "sha256": "b93a3f969fb41fe7731d22f9c459ce9f036ef4b1338c3ac590b375a3e2277537"
+    }
+  ]
+}

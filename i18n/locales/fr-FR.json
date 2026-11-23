@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "Statistiques en attente",
+  "Statistics unavailable": "Statistiques indisponibles",
   "Cluster scanner status": "État de l’analyse du cluster",
   "Scanner status on this node": "État de l’analyse sur ce nœud",
   "Cycle reported by this node": "Cycle signalé par ce nœud",

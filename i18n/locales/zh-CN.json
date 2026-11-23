@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "待统计",
+  "Statistics unavailable": "统计不可用",
   "Cluster scanner status": "集群扫描器状态",
   "Scanner status on this node": "本节点扫描器状态",
   "Cycle reported by this node": "本节点上报的扫描周期",

@@ -320,7 +320,7 @@ function BrowserBucketsPage() {
         names={data.map((bucket) => bucket.Name)}
         usage={bucketUsage}
         unavailable={pending || loadError}
-        usageLoading={usageLoading}
+        usageLoading={pending || usageLoading}
         usageAvailable={!usageLoading && Array.isArray(userInfo?.buckets)}
       />
 

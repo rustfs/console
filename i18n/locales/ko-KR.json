@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "통계 대기 중",
+  "Statistics unavailable": "통계를 사용할 수 없음",
   "Cluster scanner status": "클러스터 스캐너 상태",
   "Scanner status on this node": "이 노드의 스캐너 상태",
   "Cycle reported by this node": "이 노드가 보고한 주기",

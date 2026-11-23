@@ -22,6 +22,11 @@ export function BucketUsageOverview({
   const summary = !unavailable && usageAvailable ? summarizeBucketUsage(names, usage) : undefined
   const hasValues = summary && (summary.measuredBuckets > 0 || names.length === 0)
   const measurementReported = summary && (names.length === 0 || names.some((name) => usage.has(name)))
+  const statisticsState = usageLoading
+    ? t("Loading…")
+    : measurementReported
+      ? t("Statistics pending")
+      : t("Statistics unavailable")
   const coverage = measurementReported
     ? `${t("Measured buckets")} · ${formatInteger(summary.measuredBuckets)} / ${formatInteger(names.length)}`
     : usageLoading
@@ -62,27 +67,39 @@ export function BucketUsageOverview({
       aria-label={t("Storage Usage Statistics")}
     >
       <div className="min-w-0">
-        <dl className="grid grid-cols-2 items-end gap-5 sm:grid-cols-[1.6fr_1fr_1fr]">
-          <div className="min-w-0">
-            <dt className="text-xs text-muted-foreground">{t("Measured size")}</dt>
-            <dd className="mt-2 break-words font-heading text-4xl font-semibold tracking-tight tabular-nums lg:text-5xl">
-              {hasValues && summary.sizeBytes !== undefined ? niceBytes(String(summary.sizeBytes)) : t("Unknown")}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">{t("Measured objects")}</dt>
-            <dd className="mt-2 font-heading text-2xl font-medium tabular-nums">
-              {hasValues && summary.objectsCount !== undefined ? formatInteger(summary.objectsCount) : "—"}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-xs text-muted-foreground">{t("Visible buckets")}</dt>
-            <dd className="mt-2 font-heading text-2xl font-medium tabular-nums">
-              {unavailable ? "—" : formatInteger(names.length)}
-            </dd>
-          </div>
-        </dl>
-        {!unavailable && (
+        <div className="grid grid-cols-2 items-end gap-5 sm:grid-cols-[minmax(0,2.6fr)_minmax(0,1fr)]">
+          {hasValues ? (
+            <dl className="col-span-2 grid grid-cols-2 items-end gap-5 sm:col-span-1 sm:grid-cols-[1.6fr_1fr]">
+              {summary.sizeBytes !== undefined && (
+                <div className="min-w-0">
+                  <dt className="text-xs text-muted-foreground">{t("Measured size")}</dt>
+                  <dd className="mt-2 break-words font-heading text-4xl font-semibold tracking-tight tabular-nums lg:text-5xl">
+                    {niceBytes(String(summary.sizeBytes))}
+                  </dd>
+                </div>
+              )}
+              {summary.objectsCount !== undefined && (
+                <div>
+                  <dt className="text-xs text-muted-foreground">{t("Measured objects")}</dt>
+                  <dd className="mt-2 font-heading text-2xl font-medium tabular-nums">
+                    {formatInteger(summary.objectsCount)}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          ) : (
+            <p className="col-span-2 text-lg font-medium sm:col-span-1" role="status">
+              {statisticsState}
+            </p>
+          )}
+          {!unavailable && (
+            <dl>
+              <dt className="text-xs text-muted-foreground">{t("Visible buckets")}</dt>
+              <dd className="mt-2 font-heading text-2xl font-medium tabular-nums">{formatInteger(names.length)}</dd>
+            </dl>
+          )}
+        </div>
+        {hasValues && (
           <p className="mt-3 text-xs text-muted-foreground" role="status">
             {coverage}
           </p>

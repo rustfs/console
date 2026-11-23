@@ -40,12 +40,12 @@ test("navigation groups follow the six approved product domains", () => {
   )
 })
 
-test("data management keeps event destinations before S3 Tables", () => {
-  const group = groupNavigation(getVisibleNavigation(navs, all)).find((item) => item.label === "Data Management")
+test("operations includes event destinations and tiered storage", () => {
+  const group = groupNavigation(getVisibleNavigation(navs, all)).find((item) => item.label === "Operations")
 
   assert.deepEqual(
     group?.items.map((item) => item.to),
-    ["/browser", "/tiers", "/events-target", "/table-catalog"],
+    ["/status", "/events-target", "/tiers"],
   )
 })
 
@@ -152,6 +152,18 @@ test("all menu destinations participate in permission-aware landing selection", 
     assert.equal(MENU_CONTROLLED_DASHBOARD_ROUTES.includes(path), true, path)
     assert.equal(getFirstAccessibleDashboardRoute({ isAdmin: false, canAccessPath: allow(path) }), path)
   }
+})
+
+test("landing selection follows operations navigation order when multiple routes are permitted", () => {
+  const permittedRoutes = new Set(["/status", "/events-target", "/tiers"])
+
+  assert.equal(
+    getFirstAccessibleDashboardRoute({
+      isAdmin: false,
+      canAccessPath: (path) => permittedRoutes.has(path),
+    }),
+    "/status",
+  )
 })
 
 test("bucket-only rule permissions remain valid landing destinations", () => {

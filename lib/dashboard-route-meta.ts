@@ -15,8 +15,6 @@ export const MENU_CONTROLLED_DASHBOARD_ROUTES: readonly string[] = [
   "/replication",
   "/events",
   "/lifecycle",
-  "/tiers",
-  "/events-target",
   "/table-catalog",
   "/access-keys",
   "/policies",
@@ -30,6 +28,8 @@ export const MENU_CONTROLLED_DASHBOARD_ROUTES: readonly string[] = [
   "/sse",
   "/audit-target",
   "/status",
+  "/events-target",
+  "/tiers",
   "/settings",
   "/license",
 ]

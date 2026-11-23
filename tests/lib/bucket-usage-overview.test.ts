@@ -28,16 +28,26 @@ const { BucketUsageOverview } = await import(moduleUrl(source))
 async function render(
   entries: [string, number][],
   check: (document: Window["document"]) => void,
-  options: { names?: string[]; unavailable?: boolean; usageAvailable?: boolean } = {},
+  options: {
+    names?: string[]
+    unavailable?: boolean
+    usageAvailable?: boolean
+    usageLoading?: boolean
+    unmeasured?: string[]
+  } = {},
 ) {
   const browser = new Window()
   try {
     browser.document.body.innerHTML = renderToStaticMarkup(
       React.createElement(BucketUsageOverview, {
         names: options.names ?? entries.map(([name]) => name),
-        usage: new Map(entries.map(([name, sizeBytes]) => [name, { sizeBytes, objectsCount: 1 }])),
+        usage: new Map<string, { sizeBytes: number; objectsCount: number } | null>([
+          ...entries.map(([name, sizeBytes]) => [name, { sizeBytes, objectsCount: 1 }] as const),
+          ...(options.unmeasured ?? []).map((name) => [name, null] as const),
+        ]),
         unavailable: options.unavailable ?? false,
         usageAvailable: options.usageAvailable ?? true,
+        usageLoading: options.usageLoading ?? false,
       }),
     )
     check(browser.document)
@@ -164,7 +174,7 @@ test("partial account usage shows the measured subtotal and separate visible cou
       assert.equal(document.querySelector('[role="status"]')?.textContent, "Measured buckets · 1 / 2")
       assert.equal(document.querySelector("ul"), null)
     },
-    { names: ["known", "new"] },
+    { names: ["known", "new"], unmeasured: ["new"] },
   )
 })
 
@@ -174,10 +184,74 @@ test("an unavailable account response still shows the visible namespace", async 
     (document) => {
       assert.deepEqual(
         [...document.querySelectorAll("dd")].map((item) => item.textContent),
-        ["Unknown", "—", "2"],
+        ["2"],
       )
-      assert.equal(document.querySelector('[role="status"]')?.textContent, "Usage unavailable")
+      assert.equal(document.querySelector('[role="status"]')?.textContent, "Statistics unavailable")
     },
     { names: ["known", "restricted"], usageAvailable: false },
+  )
+})
+
+test("unmeasured usage is replaced by one short status without placeholders or explanatory text", async () => {
+  await render(
+    [],
+    (document) => {
+      assert.deepEqual(
+        [...document.querySelectorAll("dd")].map((item) => item.textContent),
+        ["1"],
+      )
+      assert.equal(document.querySelector('[role="status"]')?.textContent, "Statistics pending")
+      assert.equal(document.body.textContent.includes("Unknown"), false)
+      assert.equal(document.body.textContent.includes("—"), false)
+      assert.equal(document.querySelectorAll("p").length, 1)
+    },
+    { names: ["new"], unmeasured: ["new"] },
+  )
+})
+
+test("request loading and failure cannot be mistaken for an active background scan", async () => {
+  for (const [usageLoading, expected] of [
+    [true, "Loading…"],
+    [false, "Statistics unavailable"],
+  ] as const) {
+    await render(
+      [],
+      (document) => {
+        assert.equal(document.querySelector('[role="status"]')?.textContent, expected)
+        assert.equal(document.body.textContent.includes("Statistics pending"), false)
+        assert.equal(document.body.textContent.includes("—"), false)
+      },
+      {
+        names: ["new"],
+        usageAvailable: false,
+        usageLoading,
+        unmeasured: ["new"],
+      },
+    )
+  }
+})
+
+test("a known empty namespace keeps measured zero values instead of a pending state", async () => {
+  await render(
+    [],
+    (document) => {
+      assert.deepEqual(
+        [...document.querySelectorAll("dd")].map((item) => item.textContent),
+        ["0 B", "0", "0"],
+      )
+      assert.equal(document.querySelector('[role="status"]')?.textContent, "Measured buckets · 0 / 0")
+    },
+    { names: [] },
+  )
+})
+
+test("refreshing the bucket list keeps a loading state while the namespace is temporarily unavailable", async () => {
+  await render(
+    [],
+    (document) => {
+      assert.equal(document.querySelector('[role="status"]')?.textContent, "Loading…")
+      assert.equal(document.querySelector("dd"), null)
+    },
+    { names: ["existing"], unavailable: true, usageLoading: true, usageAvailable: true },
   )
 })

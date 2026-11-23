@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "في انتظار الإحصاءات",
+  "Statistics unavailable": "الإحصاءات غير متاحة",
   "Cluster scanner status": "حالة ماسح العنقود",
   "Scanner status on this node": "حالة الماسح على هذه العقدة",
   "Cycle reported by this node": "الدورة التي أبلغت عنها هذه العقدة",

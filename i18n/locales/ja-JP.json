@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "統計待ち",
+  "Statistics unavailable": "統計を取得できません",
   "Cluster scanner status": "クラスターのスキャナー状態",
   "Scanner status on this node": "このノードのスキャナー状態",
   "Cycle reported by this node": "このノードが報告したサイクル",

@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "待統計",
+  "Statistics unavailable": "統計無法取得",
   "Cluster scanner status": "叢集掃描器狀態",
   "Scanner status on this node": "本節點掃描器狀態",
   "Cycle reported by this node": "本節點回報的掃描週期",

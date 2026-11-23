@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "Chờ thống kê",
+  "Statistics unavailable": "Không có thống kê",
   "Cluster scanner status": "Trạng thái trình quét của cụm",
   "Scanner status on this node": "Trạng thái trình quét trên nút này",
   "Cycle reported by this node": "Chu kỳ do nút này báo cáo",

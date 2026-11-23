@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "Menunggu statistik",
+  "Statistics unavailable": "Statistik tidak tersedia",
   "Cluster scanner status": "Status pemindai klaster",
   "Scanner status on this node": "Status pemindai pada simpul ini",
   "Cycle reported by this node": "Siklus yang dilaporkan simpul ini",

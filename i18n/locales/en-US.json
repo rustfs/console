@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "Awaiting statistics",
+  "Statistics unavailable": "Statistics unavailable",
   "Cluster scanner status": "Cluster scanner status",
   "Scanner status on this node": "Scanner status on this node",
   "Cycle reported by this node": "Cycle reported by this node",

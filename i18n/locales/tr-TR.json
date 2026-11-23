@@ -1,4 +1,6 @@
 {
+  "Statistics pending": "İstatistikler bekleniyor",
+  "Statistics unavailable": "İstatistikler kullanılamıyor",
   "Cluster scanner status": "Küme tarayıcısının durumu",
   "Scanner status on this node": "Bu düğümdeki tarayıcının durumu",
   "Cycle reported by this node": "Bu düğümün bildirdiği döngü",

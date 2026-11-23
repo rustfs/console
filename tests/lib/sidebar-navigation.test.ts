@@ -40,12 +40,12 @@ test("navigation groups follow the six approved product domains", () => {
   )
 })
 
-test("data management keeps event destinations before S3 Tables", () => {
-  const group = groupNavigation(getVisibleNavigation(navs, all)).find((item) => item.label === "Data Management")
+test("operations includes event destinations and tiered storage", () => {
+  const group = groupNavigation(getVisibleNavigation(navs, all)).find((item) => item.label === "Operations")
 
   assert.deepEqual(
     group?.items.map((item) => item.to),
-    ["/browser", "/tiers", "/events-target", "/table-catalog"],
+    ["/status", "/events-target", "/tiers"],
   )
 })
 

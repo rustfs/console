@@ -16,16 +16,6 @@ export default [
     icon: "ri:box-3-line",
   },
   {
-    label: "Tiered Storage",
-    to: "/tiers",
-    icon: "ri:stack-line",
-  },
-  {
-    label: "Event Destinations",
-    to: "/events-target",
-    icon: "ri:bookmark-3-line",
-  },
-  {
     label: "S3 Tables",
     to: "/table-catalog",
     icon: "ri:table-line",
@@ -103,6 +93,16 @@ export default [
     label: "Running Status",
     to: "/status",
     icon: "ri:bar-chart-box-line",
+  },
+  {
+    label: "Event Destinations",
+    to: "/events-target",
+    icon: "ri:bookmark-3-line",
+  },
+  {
+    label: "Tiered Storage",
+    to: "/tiers",
+    icon: "ri:stack-line",
   },
   {
     label: "Administration",

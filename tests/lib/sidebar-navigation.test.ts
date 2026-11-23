@@ -154,6 +154,18 @@ test("all menu destinations participate in permission-aware landing selection", 
   }
 })
 
+test("landing selection follows operations navigation order when multiple routes are permitted", () => {
+  const permittedRoutes = new Set(["/status", "/events-target", "/tiers"])
+
+  assert.equal(
+    getFirstAccessibleDashboardRoute({
+      isAdmin: false,
+      canAccessPath: (path) => permittedRoutes.has(path),
+    }),
+    "/status",
+  )
+})
+
 test("bucket-only rule permissions remain valid landing destinations", () => {
   for (const path of ["/events", "/replication", "/lifecycle"]) {
     assert.equal(getFirstAccessibleDashboardRoute({ isAdmin: false, canAccessPath: allow(path) }), path)

@@ -339,6 +339,9 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       if (permissionClient.status === "unsupported") {
         const snapshot = legacyPolicy.current
         if (snapshot.client !== permissionClient) return false
+        if (capability === "bucket.create") {
+          return snapshot.isAdmin || hasConsoleActionPotential(snapshot.userPolicy, "s3:CreateBucket")
+        }
         if (capability === "objects.forceCleanup")
           return snapshot.isOwner || hasConsoleCapability(snapshot.userPolicy, capability, context)
         return snapshot.isAdmin || hasConsoleCapability(snapshot.userPolicy, capability, context)

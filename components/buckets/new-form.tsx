@@ -43,7 +43,7 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const { t } = useTranslation()
   const message = useMessage()
   const { createBucket, putBucketVersioning, putObjectLockConfiguration, putBucketQuota } = useBucket()
-  const { canCapability, checkCapability } = usePermissions()
+  const { canCapability, mayCapability, checkCapability } = usePermissions()
 
   const [objectKey, setObjectKey] = React.useState("")
   const [version, setVersion] = React.useState(false)
@@ -62,7 +62,11 @@ export function BucketNewForm({ show, onShowChange }: BucketNewFormProps) {
   const parsedRetentionPeriod = Math.max(1, Number.parseInt(retentionPeriod, 10) || 1)
   const isSubmitDisabled = creating || !trimmedBucketName || !!nameError
   const bucketContext = trimmedBucketName ? { bucket: trimmedBucketName } : {}
-  const canCreateBucket = !!trimmedBucketName && canCapability("bucket.create", bucketContext)
+  // Bucket names are user input. On legacy servers the browser cannot
+  // evaluate resource variables such as ${aws:userid}, so discoverability
+  // uses the action-potential check and the actual CreateBucket request remains
+  // the authorization boundary.
+  const canCreateBucket = !!trimmedBucketName && mayCapability("bucket.create", bucketContext)
   const canEditVersioning = canCapability("bucket.versioning.edit", bucketContext)
   const canEditObjectLock = canCapability("bucket.objectLock.edit", bucketContext)
   const canEditQuota = canCapability("bucket.quota.edit", bucketContext)

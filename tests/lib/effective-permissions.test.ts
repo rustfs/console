@@ -306,6 +306,17 @@ for (const status of [401, 403, 500]) {
   })
 }
 
+test("HTTP 426 selects legacy compatibility for older permission endpoints", async () => {
+  const client = new EffectivePermissionClient(
+    async () => {
+      throw Object.assign(new Error("upgrade required"), { status: 426 })
+    },
+    () => {},
+  )
+  await client.load(check)
+  assert.equal(client.status, "unsupported")
+})
+
 test("an absent endpoint selects explicit legacy compatibility", async () => {
   const client = new EffectivePermissionClient(
     async () => {

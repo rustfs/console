@@ -269,6 +269,7 @@ test("object lock and versioning change together, and a pending bucket creation 
       useBucket: () => api,
       usePermissions: () => ({
         canCapability: () => true,
+        mayCapability: () => true,
         checkCapability: async (...args: unknown[]) => {
           permissionChecks.push(args)
           return true
@@ -323,7 +324,7 @@ test("enabling bucket retention explains lifecycle expiration limits", async (t)
   const switches = new Map<string, { onCheckedChange: (value: boolean) => void }>()
   const { container } = await mount(t, React.createElement(BucketNewForm, { show: true, onShowChange: () => {} }), {
     useBucket: () => ({}),
-    usePermissions: () => ({ canCapability: () => true }),
+    usePermissions: () => ({ canCapability: () => true, mayCapability: () => true }),
     useMessage: () => ({ error: () => {}, success: () => {} }),
     getOptionalBucketNameError: () => null,
     cn: (...values: unknown[]) => values.filter(Boolean).join(" "),

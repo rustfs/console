@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { useTranslation } from "react-i18next"
-import { RiRefreshLine } from "@remixicon/react"
+import { RiArchiveLine, RiRefreshLine } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { PageHeader } from "@/components/page-header"
@@ -11,12 +12,9 @@ import { useDataTable } from "@/hooks/use-data-table"
 import { useBucket } from "@/hooks/use-bucket"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Spinner } from "@/components/ui/spinner"
-import { formatDateTime } from "@/lib/functions"
+import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
-import { getAccountBucketUsage, getAccountBucketScanStatus } from "@/lib/account-bucket-usage"
-import type { AccountBucketScanStatus } from "@/lib/account-bucket-usage"
-import { BucketUsageValue, BucketScanNotice } from "@/components/buckets/usage-value"
-import { BucketNameCell, type BucketNameRow } from "@/components/buckets/name-cell"
+import { getAccountBucketUsage } from "@/lib/account-bucket-usage"
 import { loadBucketPolicyStatuses } from "@/lib/bucket-policy-status"
 import type { ColumnDef } from "@tanstack/react-table"
 
@@ -25,12 +23,10 @@ export interface BucketListRow {
   CreationDate: string
   Unmeasured?: boolean
   Count?: number
-  ScanStatus?: AccountBucketScanStatus
+  Size?: string
   SizeBytes?: number
   IsPublic?: boolean
 }
-
-type BucketListViewRow = BucketListRow & BucketNameRow
 
 interface BucketListProps {
   title: React.ReactNode
@@ -126,24 +122,20 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
 
   const usageLoading = accountInfoLoading || !hasFetchedPolicy
   const bucketUsage = React.useMemo(() => getAccountBucketUsage(userInfo), [userInfo])
-  const scanStatuses = React.useMemo(() => getAccountBucketScanStatus(userInfo), [userInfo])
   const rowsWithUsage = React.useMemo(
     () =>
       data.map((row) => {
         const usage = bucketUsage.get(row.Name)
-        const ScanStatus = scanStatuses.get(row.Name)
-        const BucketHref = getBucketHref(row.Name)
-        if (!usage) return { ...row, BucketHref, ScanStatus, Unmeasured: usage === null }
+        if (!usage) return { ...row, Unmeasured: usage === null }
 
         return {
           ...row,
-          BucketHref,
-          ScanStatus,
           Count: usage.objectsCount,
+          Size: niceBytes(String(usage.sizeBytes)),
           SizeBytes: usage.sizeBytes,
         }
       }),
-    [bucketUsage, scanStatuses, data, getBucketHref],
+    [bucketUsage, data],
   )
   const filteredData = React.useMemo(
     () =>
@@ -153,12 +145,20 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
     [rowsWithUsage, searchTerm],
   )
 
-  const columns: ColumnDef<BucketListViewRow>[] = React.useMemo(
+  const columns: ColumnDef<BucketListRow>[] = React.useMemo(
     () => [
       {
         header: () => t("Bucket"),
         accessorKey: "Name",
-        cell: BucketNameCell,
+        cell: ({ row }) => (
+          <Link
+            href={getBucketHref(row.original.Name)}
+            className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+          >
+            <RiArchiveLine className="size-4 shrink-0" aria-hidden />
+            <span className="min-w-0 truncate">{row.original.Name}</span>
+          </Link>
+        ),
       },
       {
         header: () => t("Creation Date"),
@@ -169,30 +169,27 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         header: () => t("Object Count"),
         accessorKey: "Count",
         meta: { align: "end" },
-        cell: ({ row }) => (
-          <BucketUsageValue
-            value={row.original.Count}
-            kind="objects"
-            status={row.original.ScanStatus}
-            loading={usageLoading}
-            unmeasured={row.original.Unmeasured}
-          />
-        ),
+        cell: ({ row }) =>
+          typeof row.original.Count === "number" ? (
+            formatInteger(row.original.Count)
+          ) : usageLoading ? (
+            <Spinner className="size-3 text-muted-foreground" />
+          ) : (
+            t(row.original.Unmeasured ? "Not measured" : "Unavailable")
+          ),
       },
       {
         header: () => t("Size"),
         id: "SizeBytes",
         meta: { align: "end" },
         accessorFn: (row) => (typeof row.SizeBytes === "number" ? row.SizeBytes : undefined),
-        cell: ({ row }) => (
-          <BucketUsageValue
-            value={row.original.SizeBytes}
-            kind="size"
-            status={row.original.ScanStatus}
-            loading={usageLoading}
-            unmeasured={row.original.Unmeasured}
-          />
-        ),
+        cell: ({ row }) =>
+          row.original.Size ??
+          (usageLoading ? (
+            <Spinner className="size-3 text-muted-foreground" />
+          ) : (
+            t(row.original.Unmeasured ? "Not measured" : "Unavailable")
+          )),
       },
       {
         header: () => t("Access Policy"),
@@ -209,10 +206,10 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         },
       },
     ],
-    [policyLoading, t, usageLoading],
+    [getBucketHref, policyLoading, t, usageLoading],
   )
 
-  const { table } = useDataTable<BucketListViewRow>({
+  const { table } = useDataTable<BucketListRow>({
     data: filteredData,
     columns,
     manualPagination: true,
@@ -234,8 +231,6 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
       >
         {title}
       </PageHeader>
-
-      <BucketScanNotice statuses={scanStatuses} />
 
       <DataTable
         toolbar={

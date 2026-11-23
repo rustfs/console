@@ -1,9 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { RiAddLine, RiRefreshLine, RiSettings5Line, RiDeleteBin5Line } from "@remixicon/react"
+import { RiAddLine, RiRefreshLine, RiArchiveLine, RiSettings5Line, RiDeleteBin5Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { Page } from "@/components/page"
@@ -18,12 +19,9 @@ import { useObject } from "@/hooks/use-object"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
-import { formatDateTime } from "@/lib/functions"
+import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
-import { getAccountBucketUsage, getAccountBucketScanStatus } from "@/lib/account-bucket-usage"
-import type { AccountBucketScanStatus } from "@/lib/account-bucket-usage"
-import { BucketUsageValue, BucketScanNotice } from "@/components/buckets/usage-value"
-import { BucketNameCell, type BucketNameRow } from "@/components/buckets/name-cell"
+import { getAccountBucketUsage } from "@/lib/account-bucket-usage"
 import { loadBucketPolicyStatuses } from "@/lib/bucket-policy-status"
 import { BrowserContent } from "./content"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -33,12 +31,10 @@ interface BucketRow {
   CreationDate: string
   Unmeasured?: boolean
   Count?: number
-  ScanStatus?: AccountBucketScanStatus
+  Size?: string
   SizeBytes?: number
   IsPublic?: boolean
 }
-
-type BucketViewRow = BucketRow & BucketNameRow
 
 function BrowserBucketsPage() {
   const { t } = useTranslation()
@@ -149,24 +145,20 @@ function BrowserBucketsPage() {
 
   const usageLoading = accountInfoLoading || !hasFetchedPolicy
   const bucketUsage = useMemo(() => getAccountBucketUsage(userInfo), [userInfo])
-  const scanStatuses = useMemo(() => getAccountBucketScanStatus(userInfo), [userInfo])
   const rowsWithUsage = useMemo(
     () =>
       data.map((row) => {
         const usage = bucketUsage.get(row.Name)
-        const ScanStatus = scanStatuses.get(row.Name)
-        const BucketHref = `/browser?bucket=${encodeURIComponent(row.Name)}`
-        if (!usage) return { ...row, BucketHref, ScanStatus, Unmeasured: usage === null }
+        if (!usage) return { ...row, Unmeasured: usage === null }
 
         return {
           ...row,
-          BucketHref,
-          ScanStatus,
           Count: usage.objectsCount,
+          Size: niceBytes(String(usage.sizeBytes)),
           SizeBytes: usage.sizeBytes,
         }
       }),
-    [bucketUsage, scanStatuses, data],
+    [bucketUsage, data],
   )
   const filteredData = useMemo(
     () =>
@@ -178,11 +170,19 @@ function BrowserBucketsPage() {
 
   const objectApi = useObject("")
 
-  const baseColumns: ColumnDef<BucketViewRow>[] = [
+  const baseColumns: ColumnDef<BucketRow>[] = [
     {
       header: () => t("Bucket"),
       accessorKey: "Name",
-      cell: BucketNameCell,
+      cell: ({ row }) => (
+        <Link
+          href={`/browser?bucket=${encodeURIComponent(row.original.Name)}`}
+          className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+        >
+          <RiArchiveLine className="size-4 shrink-0" aria-hidden />
+          <span className="min-w-0 truncate">{row.original.Name}</span>
+        </Link>
+      ),
     },
     {
       header: () => t("Creation Date"),
@@ -196,15 +196,14 @@ function BrowserBucketsPage() {
       header: () => t("Object Count"),
       accessorKey: "Count",
       meta: { align: "end" },
-      cell: ({ row }) => (
-        <BucketUsageValue
-          value={row.original.Count}
-          kind="objects"
-          status={row.original.ScanStatus}
-          loading={usageLoading}
-          unmeasured={row.original.Unmeasured}
-        />
-      ),
+      cell: ({ row }) =>
+        typeof row.original.Count === "number" ? (
+          formatInteger(row.original.Count)
+        ) : usageLoading ? (
+          <Spinner className="size-3 text-muted-foreground" />
+        ) : (
+          t(row.original.Unmeasured ? "Not measured" : "Unavailable")
+        ),
     },
     {
       header: () => t("Size"),
@@ -212,15 +211,13 @@ function BrowserBucketsPage() {
       meta: { align: "end" },
       // use numeric bytes for sorting via accessorFn, but display the formatted string
       accessorFn: (row) => (typeof row.SizeBytes === "number" ? row.SizeBytes : undefined),
-      cell: ({ row }) => (
-        <BucketUsageValue
-          value={row.original.SizeBytes}
-          kind="size"
-          status={row.original.ScanStatus}
-          loading={usageLoading}
-          unmeasured={row.original.Unmeasured}
-        />
-      ),
+      cell: ({ row }) =>
+        row.original.Size ??
+        (usageLoading ? (
+          <Spinner className="size-3 text-muted-foreground" />
+        ) : (
+          t(row.original.Unmeasured ? "Not measured" : "Unavailable")
+        )),
     },
   )
 
@@ -264,7 +261,7 @@ function BrowserBucketsPage() {
     ),
   })
 
-  const { table } = useDataTable<BucketViewRow>({
+  const { table } = useDataTable<BucketRow>({
     data: filteredData,
     columns: baseColumns,
     manualPagination: true,
@@ -336,8 +333,6 @@ function BrowserBucketsPage() {
         usageLoading={usageLoading}
         usageAvailable={!usageLoading && Array.isArray(userInfo?.buckets)}
       />
-
-      <BucketScanNotice statuses={scanStatuses} />
 
       <DataTable
         toolbar={

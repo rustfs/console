@@ -8,7 +8,6 @@ import { flexRender, type CellContext } from "@tanstack/react-table"
 import ts from "typescript"
 import type { usePermissions as UsePermissions } from "../../hooks/use-permissions"
 import type { PermissionRequest, PermissionResult } from "../../lib/effective-permissions"
-import { formatDateTime } from "../../lib/functions"
 
 const mocksKey = Symbol.for("browser-permission-refresh")
 const mockExports: Record<string, string[]> = {
@@ -58,13 +57,8 @@ function moduleUrl(path: string, overrides: Record<string, string> = {}) {
 }
 
 const permissionsUrl = moduleUrl("hooks/use-permissions.tsx")
-const usageValueUrl = moduleUrl("components/buckets/usage-value.tsx")
 const overrides = {
   "@/hooks/use-permissions": permissionsUrl,
-  "@/components/buckets/usage-value": usageValueUrl,
-  "@/components/buckets/name-cell": moduleUrl("components/buckets/name-cell.tsx", {
-    "@/components/buckets/usage-value": usageValueUrl,
-  }),
 }
 const { PermissionsProvider, usePermissions } = (await import(
   permissionsUrl
@@ -473,225 +467,43 @@ test("manual refresh and returning to Browser still force fresh buckets and acco
 })
 
 for (const surface of ["Browser", "BucketList"] as const) {
-  for (const hasCompleteUsage of [false, true]) {
-    test(`${surface} ${hasCompleteUsage ? "retains complete usage alongside" : "shows only"} replaceable scanner progress`, async (t) => {
-      t.mock.timers.enable({ apis: ["setTimeout"] })
-      const mounted = await mountBrowser(t, { surface })
-      const info = (objects: number, size: number) => ({
-        policy,
-        buckets: [
-          {
-            name: "test-bucket",
-            ...(hasCompleteUsage
-              ? { objects: 90, size: 900, usage_value_state: "carried", usage_updated_at: 1700000000000 }
-              : {}),
-            scan_progress: {
-              stage: "scanning",
-              updated_at: 1800000000000,
-              objects,
-              size,
-              sources_observed: 1,
-              sources_total: 2,
-            },
-          },
-        ],
-      })
-      let liveStatus: ReturnType<typeof mounted.container.querySelector> = null
-      const assertSample = (objects: number, size: number) => {
-        const row = JSON.parse(mounted.container.querySelector("output")!.textContent)[0]
-        const name = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="Name"]')!
-        const count = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="Count"]')!
-        const capacity = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="SizeBytes"]')!
-        const status = name.querySelector('[role="status"]')!
-        assert.ok(status, "the Name cell contains the shared scanner status")
-        if (liveStatus) assert.ok(status === liveStatus, "refresh must update the existing live-region node")
-        liveStatus = status
-        assert.deepEqual(
-          Array.from(count.querySelectorAll(".tabular-nums > span"), (span) => span.textContent),
-          hasCompleteUsage ? ["90", `${objects} scanned`] : [`${objects} scanned`],
-        )
-        assert.deepEqual(
-          Array.from(capacity.querySelectorAll(".tabular-nums > span"), (span) => span.textContent),
-          hasCompleteUsage ? ["900.0 B", `${size}.0 B scanned`] : [`${size}.0 B scanned`],
-        )
-        assert.ok(status.classList.contains("sr-only"), "announcements stay separate from the visible status")
-        assert.equal(
-          status.textContent,
-          `Scan progress for test-bucket. Scan in progress. Checkpoint: ${formatDateTime(1800000000000)}. Object Count: ${objects} scanned. Size: ${size}.0 B scanned${hasCompleteUsage ? `. Last complete scan: ${formatDateTime(1700000000000)}` : ""}`,
-        )
-        assert.deepEqual(
-          Array.from(name.querySelectorAll("time"), (time) => time.dateTime),
-          [1800000000000, ...(hasCompleteUsage ? [1700000000000] : [])].map((time) => new Date(time).toISOString()),
-        )
-        assert.ok(
-          Array.from(name.querySelectorAll("span")).some(
-            (span) => span.textContent === "Scan in progress" && !span.closest(".sr-only"),
-          ),
-          "the stage also remains visible outside the live span",
-        )
-        assert.equal(
-          name.querySelector("a")?.getAttribute("href"),
-          surface === "Browser" ? "/browser?bucket=test-bucket" : "/custom-buckets/test-bucket",
-        )
-        assert.equal(status.getAttribute("aria-live"), "polite")
-        assert.equal(status.getAttribute("aria-atomic"), "true")
-        assert.equal(status.hasAttribute("aria-label"), false)
-        assert.equal(mounted.container.querySelectorAll('[data-bucket="test-bucket"] [role="status"]').length, 1)
-        assert.deepEqual(mounted.container.textContent.match(/Scanned usage is not the bucket total\./g), [
-          "Scanned usage is not the bucket total.",
-        ])
-        if (hasCompleteUsage) {
-          assert.deepEqual([row.Count, row.SizeBytes], [90, 900])
-          assert.match(status.textContent, /Last complete scan:/)
-        } else {
-          assert.equal(Object.hasOwn(row, "Count"), false)
-          assert.equal(Object.hasOwn(row, "SizeBytes"), false)
-          assert.doesNotMatch(status.textContent, /Last complete scan:/)
-        }
-      }
-
-      const first = info(7, 71)
-      const next = info(9, 91)
-      await mounted.resolve(0, first)
-      const registeredStatus = mounted.container.querySelector('[data-metric="Name"] [role="status"]')!
-      assert.ok(registeredStatus, "the initial render registers a live region")
-      assert.equal(registeredStatus.textContent, "", "the live region registers before its first announcement")
-      let mutations = 0
-      const observer = new mounted.browser.MutationObserver((records) => {
-        mutations += records.length
-      })
-      observer.observe(registeredStatus, { childList: true, characterData: true, subtree: true })
-      t.after(() => observer.disconnect())
-      const takeMutations = () => {
-        const count = mutations + observer.takeRecords().length
-        mutations = 0
-        return count
-      }
-      if (surface === "Browser") {
-        await mounted.resolve(1, first)
-        assert.ok(
-          mounted.container.querySelector('[data-metric="Name"] [role="status"]') === registeredStatus,
-          "the initial loading transition retains the empty live region",
-        )
-      }
-      await mounted.flushAnnouncements()
-      assert.ok(takeMutations() > 0, "the first announcement is a later mutation of the registered node")
-      assertSample(7, 71)
-      let previous = first
-      for (const response of [first, next, next]) {
-        const requestIndex = mounted.requests.length
-        const previousAnnouncement: string = registeredStatus.textContent
-        await mounted.refresh()
-        assert.ok(
-          mounted.container.querySelector('[data-metric="Name"] [role="status"]') === registeredStatus,
-          "the loading state keeps the same live-region node",
-        )
-        assert.equal(registeredStatus.textContent, previousAnnouncement)
-        await mounted.resolve(requestIndex, structuredClone(response))
-        assert.equal(registeredStatus.textContent, previousAnnouncement, "new content waits for the next task")
-        await mounted.flushAnnouncements()
-        assertSample(response.buckets[0].scan_progress.objects, response.buckets[0].scan_progress.size)
-        if (response === previous) assert.equal(takeMutations(), 0, "an identical response must not announce again")
-        else assert.ok(takeMutations() > 0, "a changed response updates the existing announcement")
-        previous = response
-      }
-    })
-  }
-
-  test(`${surface} clears and restores its registered announcement without publishing superseded samples`, async (t) => {
-    t.mock.timers.enable({ apis: ["setTimeout"] })
-    const bucketName = "bucket &prefix=other/路径"
-    const mounted = await mountBrowser(t, { surface, bucketName })
-    const idle = {
-      policy,
-      buckets: [
-        { name: bucketName, objects: 90, size: 900, usage_value_state: "carried", usage_updated_at: 1700000000000 },
-      ],
-    }
-    const sample = (objects: number, size: number) => ({
+  test(`${surface} renders complete bucket statistics without scanner details`, async (t) => {
+    const mounted = await mountBrowser(t, { surface })
+    const info = {
       policy,
       buckets: [
         {
-          ...idle.buckets[0],
+          name: "test-bucket",
+          objects: 90,
+          size: 900,
           scan_progress: {
             stage: "scanning",
             updated_at: 1800000000000,
-            objects,
-            size,
+            objects: 7,
+            size: 71,
             sources_observed: 1,
             sources_total: 2,
           },
         },
       ],
-    })
-    await mounted.resolve(0, idle)
-    const liveStatus = mounted.container.querySelector('[data-metric="Name"] [role="status"]')!
-    assert.ok(liveStatus)
-    assert.equal(liveStatus.textContent, "")
-    if (surface === "Browser") await mounted.resolve(1, idle)
-    await mounted.flushAnnouncements()
-    assert.equal(liveStatus.textContent, "", "old complete measurements alone do not announce active progress")
-    const link = mounted.container.querySelector('[data-metric="Name"] a')!
-    assert.equal(link.textContent, bucketName)
-    assert.equal(
-      link.getAttribute("href"),
-      surface === "Browser"
-        ? `/browser?bucket=${encodeURIComponent(bucketName)}`
-        : `/custom-buckets/${encodeURIComponent(bucketName)}`,
-    )
-    const replace = async (response: unknown) => {
-      const index = mounted.requests.length
-      await mounted.refresh()
-      await mounted.resolve(index, response)
-      assert.ok(
-        mounted.container.querySelector('[data-metric="Name"] [role="status"]') === liveStatus,
-        "loading and progress disappearance must not replace the live span",
-      )
     }
+    await mounted.resolve(0, info)
+    if (surface === "Browser") await mounted.resolve(1, info)
 
-    const first = sample(7, 71)
-    await replace(first)
-    assert.equal(liveStatus.textContent, "", "restored content is deferred after the empty node is registered")
-    await mounted.flushAnnouncements()
-    const firstAnnouncement = liveStatus.textContent
-    assert.match(firstAnnouncement, /Object Count: 7 scanned/)
-    assert.match(firstAnnouncement, /Size: 71.0 B scanned/)
-    await replace(idle)
-    assert.equal(liveStatus.textContent, firstAnnouncement, "clearing also happens in the next task")
-    await mounted.flushAnnouncements()
-    assert.equal(liveStatus.textContent, "")
-    assert.match(mounted.container.querySelector('[data-metric="Name"] time')!.textContent, /Last complete scan:.*2023/)
-    assert.doesNotMatch(mounted.container.textContent, /Scan in progress|Scanned usage is not the bucket total/)
+    const row = JSON.parse(mounted.container.querySelector("output")!.textContent)[0]
+    const name = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="Name"]')!
+    const count = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="Count"]')!
+    const capacity = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="SizeBytes"]')!
 
-    await replace(first)
-    assert.equal(liveStatus.textContent, "")
-    await mounted.flushAnnouncements()
-    assert.equal(liveStatus.textContent, firstAnnouncement, "the same sample can announce after a real clear")
-    await replace(sample(9, 91))
-    await replace(sample(11, 111))
-    assert.equal(liveStatus.textContent, firstAnnouncement, "pending writes remain deferred across rapid responses")
-    await mounted.flushAnnouncements()
-    assert.match(liveStatus.textContent, /Object Count: 11 scanned/)
-    assert.match(liveStatus.textContent, /Size: 111.0 B scanned/)
-    assert.doesNotMatch(liveStatus.textContent, /Object Count: (7|9) scanned/)
-
-    await replace(sample(13, 131))
-    await replace(idle)
-    await mounted.flushAnnouncements()
-    assert.equal(liveStatus.textContent, "", "removing progress cancels a pending announcement")
-    assert.deepEqual(
-      Array.from(
-        mounted.container.querySelectorAll('[data-metric="Count"] .tabular-nums > span'),
-        (span) => span.textContent,
-      ),
-      ["90"],
-    )
-    assert.deepEqual(
-      Array.from(
-        mounted.container.querySelectorAll('[data-metric="SizeBytes"] .tabular-nums > span'),
-        (span) => span.textContent,
-      ),
-      ["900.0 B"],
+    assert.deepEqual([row.Count, row.SizeBytes], [90, 900])
+    assert.equal(name.textContent, "test-bucket")
+    assert.equal(count.textContent, "90")
+    assert.equal(capacity.textContent, "900.0 B")
+    assert.equal(name.querySelector('[role="status"]'), null)
+    assert.doesNotMatch(mounted.container.textContent, /scanned|Scan progress|Checkpoint|Last complete scan/)
+    assert.equal(
+      name.querySelector("a")?.getAttribute("href"),
+      surface === "Browser" ? "/browser?bucket=test-bucket" : "/custom-buckets/test-bucket",
     )
   })
 }

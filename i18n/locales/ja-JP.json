@@ -1,4 +1,7 @@
 {
+  "Initial statistics": "初回統計 · 未完了",
+  "Scanned size": "スキャン済みサイズ",
+  "Scanned objects": "スキャン済みオブジェクト",
   "Statistics pending": "統計待ち",
   "Statistics unavailable": "統計を取得できません",
   "Cluster scanner status": "クラスターのスキャナー状態",

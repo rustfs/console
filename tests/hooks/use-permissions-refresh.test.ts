@@ -107,7 +107,7 @@ function makeApi(
   const api: Api = {
     get(path) {
       if (path === "/is-admin" || path === "/account/info") return Promise.resolve({ is_admin: isAdmin })
-      assert.equal(path, "/accountinfo")
+      assert.equal(path, "/accountinfo?view=snapshot")
       const request = Promise.withResolvers<unknown>()
       requests.push(request)
       return request.promise

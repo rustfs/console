@@ -3,6 +3,8 @@ import assert from "node:assert/strict"
 import {
   getAccountBucketScanStatus,
   getAccountBucketUsage,
+  getAccountBucketInitialUsage,
+  getAccountBucketDisplayUsage,
   summarizeBucketUsage,
 } from "../../lib/account-bucket-usage.js"
 
@@ -14,6 +16,59 @@ const progress = {
   sources_observed: 1,
   sources_total: 2,
 }
+
+test("only an explicit initial scan can supply display usage without a full measurement", () => {
+  const response = {
+    buckets: [
+      { name: "initial", initial_scan: true, scan_progress: progress },
+      { name: "legacy", scan_progress: progress },
+      { name: "recovery", initial_scan: false, scan_progress: progress },
+    ],
+  }
+  assert.equal(getAccountBucketInitialUsage(response).size, 1)
+  assert.deepEqual(getAccountBucketDisplayUsage(response).get("initial"), {
+    objectsCount: 7,
+    sizeBytes: 71,
+    initial: true,
+  })
+  assert.equal(getAccountBucketDisplayUsage(response).get("legacy"), null)
+  assert.equal(getAccountBucketDisplayUsage(response).get("recovery"), null)
+  assert.equal(summarizeBucketUsage(["initial"], getAccountBucketUsage(response)).measuredBuckets, 0)
+})
+
+test("complete statistics always win and malformed complete fields cannot fall back to progress", () => {
+  const response = {
+    buckets: [
+      { name: "complete", objects: 90, size: 900, initial_scan: true, scan_progress: progress },
+      { name: "malformed", objects: "90", size: 900, initial_scan: true, scan_progress: progress },
+    ],
+  }
+  assert.equal(getAccountBucketInitialUsage(response).size, 0)
+  assert.deepEqual(getAccountBucketDisplayUsage(response).get("complete"), { objectsCount: 90, sizeBytes: 900 })
+  assert.equal(getAccountBucketDisplayUsage(response).has("malformed"), false)
+})
+
+test("initial enumeration and failed requests remain unmeasured", () => {
+  const response = {
+    buckets: [
+      {
+        name: "initial",
+        initial_scan: true,
+        scan_progress: { ...progress, stage: "enumerating", objects: null, size: null },
+      },
+    ],
+  }
+  assert.equal(getAccountBucketInitialUsage(response).size, 0)
+  assert.equal(getAccountBucketDisplayUsage(response).get("initial"), null)
+  assert.equal(getAccountBucketInitialUsage(null).size, 0)
+})
+
+test("initial progress replaces a sample and never adds cycle work", () => {
+  for (const objects of [7, 7, 9, 9]) {
+    const response = { buckets: [{ name: "initial", initial_scan: true, scan_progress: { ...progress, objects } }] }
+    assert.equal(getAccountBucketDisplayUsage(response).get("initial")?.objectsCount, objects)
+  }
+})
 
 test("partial scanner usage is visible separately and cannot enter bucket or overview totals", () => {
   const response = {

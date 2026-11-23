@@ -178,7 +178,10 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       },
     )
     try {
-      const info = (await api.get("/accountinfo", { suppress403Redirect: true })) as Record<string, unknown>
+      const info = (await api.get("/accountinfo?view=snapshot", { suppress403Redirect: true })) as Record<
+        string,
+        unknown
+      >
       if (requestEpoch !== requestEpochRef.current) return
       setUserInfo(info)
       const policyStr = info?.policy as string

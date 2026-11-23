@@ -1,4 +1,7 @@
 {
+  "Initial statistics": "الإحصاءات الأولية · غير مكتملة",
+  "Scanned size": "الحجم الذي تم فحصه",
+  "Scanned objects": "الكائنات التي تم فحصها",
   "Statistics pending": "في انتظار الإحصاءات",
   "Statistics unavailable": "الإحصاءات غير متاحة",
   "Cluster scanner status": "حالة ماسح العنقود",

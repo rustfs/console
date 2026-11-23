@@ -8,7 +8,7 @@ for (const file of bucketPages) {
   test(`${file} uses accountinfo as the bucket statistics source`, async () => {
     const source = await readFile(file, "utf8")
 
-    assert.match(source, /getAccountBucketUsage\(userInfo\)/)
+    assert.match(source, /getAccountBucketDisplayUsage\(userInfo\)/)
     assert.match(source, /fetchUserPolicy\(\)/)
     if (file.includes("app/(dashboard)/browser/page.tsx")) {
       assert.match(source, /useEffect\(\(\) => \{\s*fetchBuckets\(\{ force: true \}\)/)

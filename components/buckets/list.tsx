@@ -13,7 +13,7 @@ import { usePermissions } from "@/hooks/use-permissions"
 import { Spinner } from "@/components/ui/spinner"
 import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
-import { getAccountBucketUsage } from "@/lib/account-bucket-usage"
+import { getAccountBucketDisplayUsage } from "@/lib/account-bucket-usage"
 import { BucketNameCell, type BucketNameRow } from "@/components/buckets/name-cell"
 import { loadBucketPolicyStatuses } from "@/lib/bucket-policy-status"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -27,7 +27,7 @@ export interface BucketListRow {
   IsPublic?: boolean
 }
 
-type BucketListViewRow = BucketListRow & BucketNameRow
+type BucketListViewRow = BucketListRow & BucketNameRow & { InitialUsage?: boolean }
 
 interface BucketListProps {
   title: React.ReactNode
@@ -122,7 +122,14 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
   }, [fetchBuckets])
 
   const usageLoading = accountInfoLoading || !hasFetchedPolicy
-  const bucketUsage = React.useMemo(() => getAccountBucketUsage(userInfo), [userInfo])
+  const bucketUsage = React.useMemo(() => getAccountBucketDisplayUsage(userInfo), [userInfo])
+  React.useEffect(() => {
+    if (!hasFetchedPolicy || data.length === 0) return
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void fetchUserPolicy()
+    }, 30000)
+    return () => window.clearInterval(timer)
+  }, [hasFetchedPolicy, data.length, fetchUserPolicy])
   const rowsWithUsage = React.useMemo(
     () =>
       data.map((row) => {
@@ -136,6 +143,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
           Count: usage.objectsCount,
           Size: niceBytes(String(usage.sizeBytes)),
           SizeBytes: usage.sizeBytes,
+          InitialUsage: usage.initial,
         }
       }),
     [bucketUsage, data, getBucketHref],
@@ -166,7 +174,12 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         meta: { align: "end" },
         cell: ({ row }) =>
           typeof row.original.Count === "number" ? (
-            formatInteger(row.original.Count)
+            <span>
+              {formatInteger(row.original.Count)}
+              {row.original.InitialUsage && (
+                <span className="ms-2 text-xs text-muted-foreground">{t("Initial statistics")}</span>
+              )}
+            </span>
           ) : usageLoading ? (
             <Spinner className="size-3 text-muted-foreground" />
           ) : (

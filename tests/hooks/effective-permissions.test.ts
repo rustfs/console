@@ -59,7 +59,7 @@ async function mount(
   const api = {
     resolveUrl: (path: string) => `https://fixture.invalid${path}`,
     async get(path: string) {
-      return path === "/accountinfo" ? { policy: identityPolicy } : { is_admin: false }
+      return path === "/accountinfo?view=snapshot" ? { policy: identityPolicy } : { is_admin: false }
     },
     async post(_path: string, body: { checks: PermissionRequest[] }, options: { suppressBodyLogging?: boolean }) {
       assert.equal(options.suppressBodyLogging, true)

@@ -1,4 +1,7 @@
 {
+  "Initial statistics": "首次统计 · 未完成",
+  "Scanned size": "已扫描容量",
+  "Scanned objects": "已扫描对象数",
   "Statistics pending": "待统计",
   "Statistics unavailable": "统计不可用",
   "Cluster scanner status": "集群扫描器状态",

@@ -44,6 +44,7 @@ function isTextualContentType(contentType: string): boolean {
     mime.startsWith("text/") ||
     mime === "application/json" ||
     mime === "application/ld+json" ||
+    mime === "application/sql" ||
     mime === "application/xml" ||
     mime.endsWith("+xml") ||
     mime === "application/javascript" ||

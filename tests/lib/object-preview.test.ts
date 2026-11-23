@@ -86,6 +86,13 @@ test("existing text MIME and extension previews retain their size limit", () => 
   assert.equal(isSafeTextPreview("text/plain", "fred", MAX_TEXT_PREVIEW_BYTES + 1), false)
 })
 
+test("SQL MIME types and extensions use the bounded text preview", () => {
+  assert.equal(isSafeTextPreview("application/sql", "schema.sql", 20), true)
+  assert.equal(isSafeTextPreview("text/x-sql", "schema.sql", 20), true)
+  assert.equal(isSafeTextPreview("application/octet-stream", "schema.sql", 20), true)
+  assert.equal(getObjectPreviewMode({ ...previewOptions, contentType: "application/sql", canRenderText: true }), "text")
+})
+
 test("extensionless UTF-8 text is decoded completely, including non-ASCII content", async () => {
   const text = "this is a text file\n中文日志\t🙂\r\n"
   assert.equal(await readObjectPreviewText(new Response(text)), text)

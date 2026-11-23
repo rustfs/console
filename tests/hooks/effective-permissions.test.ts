@@ -136,6 +136,53 @@ test("an explicitly empty warehouse object retains the bucket ARN on a legacy se
   assert.ok(mounted.requests.some((request) => request.object === ""))
 })
 
+test("legacy bucket creation uses action potential when a resource variable cannot be resolved", async (t) => {
+  const mounted = await mount(
+    t,
+    () => {
+      throw Object.assign(new Error("Unsupported"), { status: 426 })
+    },
+    JSON.stringify({
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Allow",
+          Action: ["s3:CreateBucket"],
+          Resource: ["arn:aws:s3:::${aws:userid}", "arn:aws:s3:::${aws:userid}-*"],
+        },
+      ],
+    }),
+  )
+  await act(async () => {
+    await mounted.permissions.loadAction({ action: "s3:CreateBucket", context: { bucket: "fixture-alice-project" } })
+    assert.equal(mounted.permissions.mayCapability("bucket.create", { bucket: "fixture-alice-project" }), true)
+  })
+  let allowed = false
+  await act(async () => {
+    allowed = await mounted.permissions.checkCapability("bucket.create", { bucket: "fixture-alice-project" })
+  })
+  assert.equal(allowed, true)
+  assert.equal(mounted.permissions.mayCapability("bucket.create", { bucket: "other-user-project" }), true)
+})
+
+test("legacy bucket creation remains unavailable when the action is absent", async (t) => {
+  const mounted = await mount(
+    t,
+    () => {
+      throw Object.assign(new Error("Unsupported"), { status: 426 })
+    },
+    JSON.stringify({
+      Version: "2012-10-17",
+      Statement: [{ Effect: "Allow", Action: ["s3:ListBucket"], Resource: ["arn:aws:s3:::${aws:userid}-*"] }],
+    }),
+  )
+  await act(async () => {
+    await mounted.permissions.loadAction({ action: "s3:CreateBucket", context: { bucket: "fixture-alice-project" } })
+  })
+  assert.equal(mounted.permissions.mayCapability("bucket.create", { bucket: "fixture-alice-project" }), false)
+  assert.equal(await mounted.permissions.checkCapability("bucket.create", { bucket: "fixture-alice-project" }), false)
+})
+
 test("a server-side session or condition denial overrides a broad identity projection", async (t) => {
   const mounted = await mount(t, () => ({ decision: "denied" }))
   let allowed = true

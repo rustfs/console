@@ -330,7 +330,7 @@ export class EffectivePermissionClient {
       const status = error && typeof error === "object" && "status" in error ? error.status : undefined
       if (this.active && generation === this.generation)
         this.status =
-          !this.supportedEndpoint && [404, 405, 501].includes(Number(status)) ? "unsupported" : "unavailable"
+          !this.supportedEndpoint && [404, 405, 426, 501].includes(Number(status)) ? "unsupported" : "unavailable"
       failed = true
       results = requests.map(() => UNKNOWN)
     }

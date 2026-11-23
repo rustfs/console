@@ -11,15 +11,20 @@ export function BucketUsageOverview({
   unavailable,
   usageAvailable = true,
   usageLoading = false,
+  initialUsage = new Map(),
 }: {
   names: string[]
   usage: Map<string, { objectsCount: number; sizeBytes: number } | null>
   usageLoading?: boolean
   usageAvailable?: boolean
   unavailable: boolean
+  initialUsage?: ReadonlyMap<string, { objectsCount: number; sizeBytes: number }>
 }) {
   const { t, i18n } = useTranslation()
-  const summary = !unavailable && usageAvailable ? summarizeBucketUsage(names, usage) : undefined
+  const complete = !unavailable && usageAvailable ? summarizeBucketUsage(names, usage) : undefined
+  const initial = complete && complete.measuredBuckets === 0 ? summarizeBucketUsage(names, initialUsage) : undefined
+  const showingInitial = initial && initial.measuredBuckets > 0
+  const summary = showingInitial ? initial : complete
   const hasValues = summary && (summary.measuredBuckets > 0 || names.length === 0)
   const measurementReported = summary && (names.length === 0 || names.some((name) => usage.has(name)))
   const statisticsState = usageLoading
@@ -33,7 +38,11 @@ export function BucketUsageOverview({
       ? t("Loading…")
       : t("Usage unavailable")
   const distribution =
-    summary && summary.measuredBuckets === names.length && summary.sizeBytes !== undefined && summary.sizeBytes > 0
+    !showingInitial &&
+    summary &&
+    summary.measuredBuckets === names.length &&
+    summary.sizeBytes !== undefined &&
+    summary.sizeBytes > 0
       ? names
           .map((name) => ({ name, size: usage.get(name)!.sizeBytes }))
           .filter((bucket) => bucket.size > 0)
@@ -72,7 +81,9 @@ export function BucketUsageOverview({
             <dl className="col-span-2 grid grid-cols-2 items-end gap-5 sm:col-span-1 sm:grid-cols-[1.6fr_1fr]">
               {summary.sizeBytes !== undefined && (
                 <div className="min-w-0">
-                  <dt className="text-xs text-muted-foreground">{t("Measured size")}</dt>
+                  <dt className="text-xs text-muted-foreground">
+                    {t(showingInitial ? "Scanned size" : "Measured size")}
+                  </dt>
                   <dd className="mt-2 break-words font-heading text-4xl font-semibold tracking-tight tabular-nums lg:text-5xl">
                     {niceBytes(String(summary.sizeBytes))}
                   </dd>
@@ -80,7 +91,9 @@ export function BucketUsageOverview({
               )}
               {summary.objectsCount !== undefined && (
                 <div>
-                  <dt className="text-xs text-muted-foreground">{t("Measured objects")}</dt>
+                  <dt className="text-xs text-muted-foreground">
+                    {t(showingInitial ? "Scanned objects" : "Measured objects")}
+                  </dt>
                   <dd className="mt-2 font-heading text-2xl font-medium tabular-nums">
                     {formatInteger(summary.objectsCount)}
                   </dd>
@@ -101,7 +114,7 @@ export function BucketUsageOverview({
         </div>
         {hasValues && (
           <p className="mt-3 text-xs text-muted-foreground" role="status">
-            {coverage}
+            {showingInitial ? t("Initial statistics") : coverage}
           </p>
         )}
       </div>

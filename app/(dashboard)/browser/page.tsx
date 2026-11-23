@@ -20,7 +20,11 @@ import { useDialog } from "@/lib/feedback/dialog"
 import { useMessage } from "@/lib/feedback/message"
 import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
-import { getAccountBucketUsage } from "@/lib/account-bucket-usage"
+import {
+  getAccountBucketUsage,
+  getAccountBucketDisplayUsage,
+  getAccountBucketInitialUsage,
+} from "@/lib/account-bucket-usage"
 import { BucketNameCell, type BucketNameRow } from "@/components/buckets/name-cell"
 import { loadBucketPolicyStatuses } from "@/lib/bucket-policy-status"
 import { BrowserContent } from "./content"
@@ -35,7 +39,7 @@ interface BucketRow {
   IsPublic?: boolean
 }
 
-type BucketViewRow = BucketRow & BucketNameRow
+type BucketViewRow = BucketRow & BucketNameRow & { InitialUsage?: boolean }
 
 function BrowserBucketsPage() {
   const { t } = useTranslation()
@@ -146,10 +150,19 @@ function BrowserBucketsPage() {
 
   const usageLoading = accountInfoLoading || !hasFetchedPolicy
   const bucketUsage = useMemo(() => getAccountBucketUsage(userInfo), [userInfo])
+  const displayUsage = useMemo(() => getAccountBucketDisplayUsage(userInfo), [userInfo])
+  const initialUsage = useMemo(() => getAccountBucketInitialUsage(userInfo), [userInfo])
+  useEffect(() => {
+    if (!hasFetchedPolicy || data.length === 0) return
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void fetchUserPolicy()
+    }, 30000)
+    return () => window.clearInterval(timer)
+  }, [hasFetchedPolicy, data.length, fetchUserPolicy])
   const rowsWithUsage = useMemo(
     () =>
       data.map((row) => {
-        const usage = bucketUsage.get(row.Name)
+        const usage = displayUsage.get(row.Name)
         const BucketHref = `/browser?bucket=${encodeURIComponent(row.Name)}`
         if (!usage) return { ...row, BucketHref }
 
@@ -159,9 +172,10 @@ function BrowserBucketsPage() {
           Count: usage.objectsCount,
           Size: niceBytes(String(usage.sizeBytes)),
           SizeBytes: usage.sizeBytes,
+          InitialUsage: usage.initial,
         }
       }),
-    [bucketUsage, data],
+    [displayUsage, data],
   )
   const filteredData = useMemo(
     () =>
@@ -193,7 +207,12 @@ function BrowserBucketsPage() {
       meta: { align: "end" },
       cell: ({ row }) =>
         typeof row.original.Count === "number" ? (
-          formatInteger(row.original.Count)
+          <span>
+            {formatInteger(row.original.Count)}
+            {row.original.InitialUsage && (
+              <span className="ms-2 text-xs text-muted-foreground">{t("Initial statistics")}</span>
+            )}
+          </span>
         ) : usageLoading ? (
           <Spinner className="size-3 text-muted-foreground" />
         ) : (
@@ -319,9 +338,10 @@ function BrowserBucketsPage() {
       <BucketUsageOverview
         names={data.map((bucket) => bucket.Name)}
         usage={bucketUsage}
+        initialUsage={initialUsage}
         unavailable={pending || loadError}
         usageLoading={pending || usageLoading}
-        usageAvailable={!usageLoading && Array.isArray(userInfo?.buckets)}
+        usageAvailable={Array.isArray(userInfo?.buckets)}
       />
 
       <DataTable

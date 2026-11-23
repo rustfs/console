@@ -1,4 +1,7 @@
 {
+  "Initial statistics": "Thống kê đầu tiên · Chưa hoàn tất",
+  "Scanned size": "Dung lượng đã quét",
+  "Scanned objects": "Đối tượng đã quét",
   "Statistics pending": "Chờ thống kê",
   "Statistics unavailable": "Không có thống kê",
   "Cluster scanner status": "Trạng thái trình quét của cụm",

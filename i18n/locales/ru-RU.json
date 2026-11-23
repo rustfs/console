@@ -1,4 +1,7 @@
 {
+  "Initial statistics": "Первичная статистика · Неполная",
+  "Scanned size": "Просканированный объём",
+  "Scanned objects": "Просканированные объекты",
   "Statistics pending": "Статистика ожидается",
   "Statistics unavailable": "Статистика недоступна",
   "Cluster scanner status": "Состояние сканера кластера",

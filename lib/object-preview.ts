@@ -17,13 +17,15 @@ const SAFE_TEXT_MIMES = [
   "application/jsonl",
   "application/ndjson",
   "application/x-ndjson",
+  "application/sql",
   "application/xml",
   "text/plain",
+  "text/x-sql",
   "text/xml",
   "text/csv",
   "text/markdown",
 ]
-const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".jsonl", ".ndjson", ".xml", ".csv", ".md", ".yml", ".yaml"]
+const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".jsonl", ".ndjson", ".sql", ".xml", ".csv", ".md", ".yml", ".yaml"]
 const GENERIC_CONTENT_TYPES = ["", "application/octet-stream", "binary/octet-stream"]
 
 interface ObjectPreviewOptions {

@@ -65,6 +65,12 @@ test("getUploadContentType infers markdown MIME type and charset when browser ty
   assert.equal(await getUploadContentType(file, "readme.md"), "text/markdown; charset=utf-8")
 })
 
+test("getUploadContentType adds utf-8 charset for SQL uploads", async () => {
+  const file = uploadBlob(["SELECT 1;"], "schema.sql")
+
+  assert.equal(await getUploadContentType(file, "schema.sql"), "application/sql; charset=utf-8")
+})
+
 test("getUploadContentType falls back to octet-stream for unknown empty MIME types", async () => {
   const file = uploadBlob(["content"], "archive.unknownext")
 

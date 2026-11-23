@@ -95,6 +95,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   const [hasResolvedAdmin, setHasResolvedAdmin] = useState(false)
   const [hasFetchedPolicy, setHasFetchedPolicy] = useState(false)
   const requestEpochRef = useRef(0)
+  const userPolicyRequestRef = useRef(0)
   const [permissionRevision, setPermissionRevision] = useState(0)
   const identityKey = JSON.stringify([
     isAuthenticated,
@@ -166,15 +167,20 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
   const fetchUserPolicy = useCallback(async () => {
     if (!api) return
     const requestEpoch = requestEpochRef.current
+    const requestId = userPolicyRequestRef.current + 1
+    userPolicyRequestRef.current = requestId
+    // Same-identity refreshes may overlap; only the newest request can publish.
+    const isCurrentRequest = () =>
+      requestEpoch === requestEpochRef.current && requestId === userPolicyRequestRef.current
 
     setIsLoading(true)
     // /is-admin includes IAM administrators; /account/info reports caller.is_owner.
     const ownerRequest = api.get("/account/info", { suppress403Redirect: true }).then(
       (info) => {
-        if (requestEpoch === requestEpochRef.current) setIsOwner((info as { is_admin?: unknown })?.is_admin === true)
+        if (isCurrentRequest()) setIsOwner((info as { is_admin?: unknown })?.is_admin === true)
       },
       () => {
-        if (requestEpoch === requestEpochRef.current) setIsOwner(false)
+        if (isCurrentRequest()) setIsOwner(false)
       },
     )
     try {
@@ -182,7 +188,7 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
         string,
         unknown
       >
-      if (requestEpoch !== requestEpochRef.current) return
+      if (!isCurrentRequest()) return
       setUserInfo(info)
       const policyStr = info?.policy as string
       if (policyStr) {
@@ -192,12 +198,12 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
       }
       permissionClient.invalidate()
     } catch (e) {
-      if (requestEpoch !== requestEpochRef.current) return
+      if (!isCurrentRequest()) return
       console.error("Failed to fetch user policy", e)
       setUserInfo(null)
       setUserPolicy(null)
     } finally {
-      if (requestEpoch === requestEpochRef.current) {
+      if (isCurrentRequest()) {
         setIsLoading(false)
         setHasFetchedPolicy(true)
       }

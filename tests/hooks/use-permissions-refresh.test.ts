@@ -101,12 +101,20 @@ type UsageTable = {
 function makeApi(
   isAdmin = false,
   effective?: (check: PermissionRequest) => PermissionResult | Promise<PermissionResult>,
+  deferOwners = false,
 ) {
   const requests: ReturnType<typeof Promise.withResolvers<unknown>>[] = []
+  const ownerRequests: ReturnType<typeof Promise.withResolvers<unknown>>[] = []
   const permissionRequests: PermissionRequest[] = []
   const api: Api = {
     get(path) {
-      if (path === "/is-admin" || path === "/account/info") return Promise.resolve({ is_admin: isAdmin })
+      if (path === "/is-admin") return Promise.resolve({ is_admin: isAdmin })
+      if (path === "/account/info") {
+        const request = Promise.withResolvers<unknown>()
+        ownerRequests.push(request)
+        if (!deferOwners) request.resolve({ is_admin: isAdmin })
+        return request.promise
+      }
       assert.equal(path, "/accountinfo?view=snapshot")
       const request = Promise.withResolvers<unknown>()
       requests.push(request)
@@ -123,7 +131,7 @@ function makeApi(
       }
     }
   }
-  return { api, requests, permissionRequests }
+  return { api, requests, ownerRequests, permissionRequests }
 }
 
 async function mountBrowser(
@@ -135,6 +143,7 @@ async function mountBrowser(
     isAdmin?: boolean
     search?: string
     effective?: (check: PermissionRequest) => PermissionResult | Promise<PermissionResult>
+    deferOwners?: boolean
   } = {},
 ) {
   const browser = new Window()
@@ -144,7 +153,24 @@ async function mountBrowser(
   )
   for (const [key, value] of Object.entries(globals))
     Object.defineProperty(globalThis, key, { configurable: true, writable: true, value })
-  const initial = makeApi(options.isAdmin, options.effective)
+  const initial = makeApi(options.isAdmin, options.effective, options.deferOwners)
+  const pollTimers = new Map<ReturnType<Window["setInterval"]>, () => void>()
+  const setInterval = browser.setInterval.bind(browser)
+  const clearInterval = browser.clearInterval.bind(browser)
+  t.mock.method(
+    browser,
+    "setInterval",
+    (callback: Parameters<Window["setInterval"]>[0], delay?: number, ...args: unknown[]) => {
+      if (delay !== 30000) return setInterval(callback, delay, ...args)
+      const timer = setInterval(() => {}, delay)
+      pollTimers.set(timer, () => callback(...args))
+      return timer
+    },
+  )
+  t.mock.method(browser, "clearInterval", (timer: ReturnType<Window["setInterval"]>) => {
+    pollTimers.delete(timer)
+    clearInterval(timer)
+  })
   let api = initial.api
   let credentials: Credentials | undefined = { AccessKeyId: "first", SecretAccessKey: "secret", SessionToken: "token" }
   let isAdmin = false
@@ -283,6 +309,7 @@ async function mountBrowser(
     listBuckets,
     getBucketPolicyStatus,
     requests: initial.requests,
+    ownerRequests: initial.ownerRequests,
     permissionRequests: initial.permissionRequests,
     get mounts() {
       return mounts
@@ -299,6 +326,16 @@ async function mountBrowser(
     async resolve(index: number, info: unknown = accountInfo()) {
       assert.ok(initial.requests[index], `accountinfo request ${index} exists`)
       await act(async () => initial.requests[index].resolve(info))
+    },
+    async resolveOwner(index: number, owner: boolean) {
+      assert.ok(initial.ownerRequests[index], `owner request ${index} exists`)
+      await act(async () => initial.ownerRequests[index].resolve({ is_admin: owner }))
+    },
+    async poll() {
+      assert.equal(pollTimers.size, 1, "one active bucket usage polling timer")
+      await act(async () => {
+        for (const callback of pollTimers.values()) callback()
+      })
     },
     async refresh() {
       const button = Array.from(container.querySelectorAll("button")).find((button) => button.textContent === "Refresh")
@@ -466,6 +503,78 @@ test("manual refresh and returning to Browser still force fresh buckets and acco
   )
   assert.deepEqual([mounted.mounts, mounted.unmounts, mounted.requests.length], [2, 1, 4])
 })
+
+for (const surface of ["Browser", "BucketList"] as const) {
+  for (const olderOutcome of ["success", "failure"] as const) {
+    test(`${surface} ignores an older polling ${olderOutcome} after a newer manual refresh completes`, async (t) => {
+      const errors = t.mock.method(console, "error", () => {})
+      const mounted = await mountBrowser(t, { surface })
+      await mounted.resolve(0)
+      if (surface === "Browser") await mounted.resolve(1)
+      const older = mounted.requests.length
+      await mounted.poll()
+      await mounted.refresh()
+      assert.equal(mounted.requests.length, older + 2)
+      const latest = accountInfo(90)
+      await mounted.resolve(older + 1, latest)
+      const revision = mounted.permissions.permissionVersion
+      if (olderOutcome === "success") await mounted.resolve(older, accountInfo(7))
+      else await act(async () => mounted.requests[older].reject(new Error("Older polling request failed")))
+
+      assert.equal(mounted.permissions.userInfo, latest)
+      assert.equal(mounted.permissions.permissionVersion, revision)
+      assert.equal(mounted.permissions.isLoading, false)
+      assert.equal(mounted.permissions.hasFetchedPolicy, true)
+      assert.equal(JSON.parse(mounted.container.querySelector("output")!.textContent)[0].Count, 90)
+      assert.equal(mounted.unmounts, 0)
+      assert.equal(errors.mock.callCount(), 0)
+    })
+  }
+}
+
+for (const olderOutcome of ["success", "failure"] as const) {
+  test(`an older ${olderOutcome} cannot clear loading or publish while the latest refresh is pending`, async (t) => {
+    const errors = t.mock.method(console, "error", () => {})
+    const mounted = await mountBrowser(t)
+    await mounted.resolve(0)
+    await mounted.resolve(1)
+    const previous = mounted.permissions.userInfo
+    const older = mounted.requests.length
+    await mounted.poll()
+    await mounted.refresh()
+    if (olderOutcome === "success") await mounted.resolve(older, accountInfo(7))
+    else await act(async () => mounted.requests[older].reject(new Error("Older polling request failed")))
+
+    assert.equal(mounted.permissions.userInfo, previous)
+    assert.equal(mounted.permissions.isLoading, true)
+    assert.equal(mounted.permissions.hasFetchedPolicy, true)
+    assert.equal(errors.mock.callCount(), 0)
+    await mounted.resolve(older + 1, accountInfo(90))
+    assert.equal(mounted.permissions.isLoading, false)
+    assert.equal(JSON.parse(mounted.container.querySelector("output")!.textContent)[0].Count, 90)
+  })
+}
+
+for (const olderOutcome of ["grant", "deny", "failure"] as const) {
+  test(`an older owner ${olderOutcome} cannot replace the latest same-identity owner result`, async (t) => {
+    const mounted = await mountBrowser(t, { deferOwners: true })
+    await mounted.resolve(0)
+    await mounted.resolve(1)
+    const older = mounted.requests.length
+    await mounted.poll()
+    await mounted.refresh()
+    await mounted.resolve(older + 1, accountInfo(90))
+    const latestOwner = olderOutcome !== "grant"
+    await mounted.resolveOwner(older + 1, latestOwner)
+    const context = { bucket: "test-bucket", objectKey: "unfinished/" }
+    assert.equal(mounted.permissions.canCapability("objects.forceCleanup", context), latestOwner)
+
+    if (olderOutcome === "failure")
+      await act(async () => mounted.ownerRequests[older].reject(new Error("Older owner request failed")))
+    else await mounted.resolveOwner(older, olderOutcome === "grant")
+    assert.equal(mounted.permissions.canCapability("objects.forceCleanup", context), latestOwner)
+  })
+}
 
 for (const surface of ["Browser", "BucketList"] as const) {
   test(`${surface} renders complete bucket statistics without scanner details`, async (t) => {

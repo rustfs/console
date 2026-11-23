@@ -59,6 +59,7 @@ function moduleUrl(path: string, overrides: Record<string, string> = {}) {
 const permissionsUrl = moduleUrl("hooks/use-permissions.tsx")
 const overrides = {
   "@/hooks/use-permissions": permissionsUrl,
+  "@/components/buckets/name-cell": moduleUrl("components/buckets/name-cell.tsx"),
 }
 const { PermissionsProvider, usePermissions } = (await import(
   permissionsUrl
@@ -505,6 +506,12 @@ for (const surface of ["Browser", "BucketList"] as const) {
       name.querySelector("a")?.getAttribute("href"),
       surface === "Browser" ? "/browser?bucket=test-bucket" : "/custom-buckets/test-bucket",
     )
+
+    const link = name.querySelector("a")
+    const requestIndex = mounted.requests.length
+    await mounted.refresh()
+    await mounted.resolve(requestIndex, info)
+    assert.equal(name.querySelector("a"), link)
   })
 
   test(`${surface} renders missing bucket statistics as placeholders`, async (t) => {

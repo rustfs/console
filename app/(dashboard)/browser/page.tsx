@@ -1,10 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslation } from "react-i18next"
-import { RiAddLine, RiRefreshLine, RiArchiveLine, RiSettings5Line, RiDeleteBin5Line } from "@remixicon/react"
+import { RiAddLine, RiRefreshLine, RiSettings5Line, RiDeleteBin5Line } from "@remixicon/react"
 import { Button } from "@/components/ui/button"
 import { SearchInput } from "@/components/search-input"
 import { Page } from "@/components/page"
@@ -22,6 +21,7 @@ import { useMessage } from "@/lib/feedback/message"
 import { formatDateTime, formatInteger, niceBytes } from "@/lib/functions"
 import { normalizeDateToIso } from "@/lib/safe-date"
 import { getAccountBucketUsage } from "@/lib/account-bucket-usage"
+import { BucketNameCell, type BucketNameRow } from "@/components/buckets/name-cell"
 import { loadBucketPolicyStatuses } from "@/lib/bucket-policy-status"
 import { BrowserContent } from "./content"
 import type { ColumnDef } from "@tanstack/react-table"
@@ -34,6 +34,8 @@ interface BucketRow {
   SizeBytes?: number
   IsPublic?: boolean
 }
+
+type BucketViewRow = BucketRow & BucketNameRow
 
 function BrowserBucketsPage() {
   const { t } = useTranslation()
@@ -148,10 +150,12 @@ function BrowserBucketsPage() {
     () =>
       data.map((row) => {
         const usage = bucketUsage.get(row.Name)
-        if (!usage) return { ...row }
+        const BucketHref = `/browser?bucket=${encodeURIComponent(row.Name)}`
+        if (!usage) return { ...row, BucketHref }
 
         return {
           ...row,
+          BucketHref,
           Count: usage.objectsCount,
           Size: niceBytes(String(usage.sizeBytes)),
           SizeBytes: usage.sizeBytes,
@@ -169,19 +173,11 @@ function BrowserBucketsPage() {
 
   const objectApi = useObject("")
 
-  const baseColumns: ColumnDef<BucketRow>[] = [
+  const baseColumns: ColumnDef<BucketViewRow>[] = [
     {
       header: () => t("Bucket"),
       accessorKey: "Name",
-      cell: ({ row }) => (
-        <Link
-          href={`/browser?bucket=${encodeURIComponent(row.original.Name)}`}
-          className="flex min-w-0 max-w-full items-center gap-2 text-primary hover:underline focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
-        >
-          <RiArchiveLine className="size-4 shrink-0" aria-hidden />
-          <span className="min-w-0 truncate">{row.original.Name}</span>
-        </Link>
-      ),
+      cell: BucketNameCell,
     },
     {
       header: () => t("Creation Date"),
@@ -255,7 +251,7 @@ function BrowserBucketsPage() {
     ),
   })
 
-  const { table } = useDataTable<BucketRow>({
+  const { table } = useDataTable<BucketViewRow>({
     data: filteredData,
     columns: baseColumns,
     manualPagination: true,

@@ -189,19 +189,27 @@ export function PermissionsProvider({ children }: { children: React.ReactNode })
         unknown
       >
       if (!isCurrentRequest()) return
-      setUserInfo(info)
-      const policyStr = info?.policy as string
-      if (policyStr) {
-        setUserPolicy(JSON.parse(policyStr) as ConsolePolicy)
-      } else {
-        setUserPolicy(null)
+      const policyStr = info?.policy
+      if (policyStr !== undefined && policyStr !== null && typeof policyStr !== "string") {
+        throw new SyntaxError("Account policy must be a JSON string")
       }
+      const nextPolicy = policyStr ? (JSON.parse(policyStr) as ConsolePolicy) : null
+      setUserInfo(info)
+      setUserPolicy(nextPolicy)
       permissionClient.invalidate()
     } catch (e) {
       if (!isCurrentRequest()) return
       console.error("Failed to fetch user policy", e)
-      setUserInfo(null)
-      setUserPolicy(null)
+      const status = e && typeof e === "object" && "status" in e ? e.status : undefined
+      const temporaryFailure =
+        !(e instanceof SyntaxError) &&
+        (status === undefined || (typeof status === "number" && status >= 500 && status < 600))
+      // Transient failures retain this identity's last successful snapshot.
+      if (!temporaryFailure) {
+        setUserInfo(null)
+        setUserPolicy(null)
+        permissionClient.invalidate()
+      }
     } finally {
       if (isCurrentRequest()) {
         setIsLoading(false)

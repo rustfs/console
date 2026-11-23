@@ -82,6 +82,11 @@ const policy = JSON.stringify({
   Statement: [{ Effect: "Allow", Action: ["console:Browser"], Resource: ["*"] }],
 })
 const accountInfo = (objects = 1) => ({ policy, buckets: [{ name: "test-bucket", objects, size: objects * 100 }] })
+const temporaryFailures = [
+  ["network", () => new TypeError("Network unavailable")],
+  ["HTTP 500", () => Object.assign(new Error("Server error"), { status: 500 })],
+  ["HTTP 503", () => Object.assign(new Error("Service unavailable"), { status: 503 })],
+] as const
 type Credentials = { AccessKeyId: string; SecretAccessKey: string; SessionToken: string }
 type Api = {
   get: (path: string) => Promise<unknown>
@@ -648,15 +653,28 @@ test("the first denied policy never mounts Browser and redirects to forbidden", 
   )
 })
 
-for (const fails of [false, true]) {
-  test(`a refresh ${fails ? "failure" : "revoking Browser permission"} removes Browser and redirects to forbidden`, async (t) => {
+for (const failure of ["revoked policy", "HTTP 401", "HTTP 403", "malformed policy", "invalid policy type"] as const) {
+  test(`a refresh with ${failure} clears permission data and removes Browser`, async (t) => {
     const mounted = await mountBrowser(t)
     await mounted.resolve(0)
-    if (fails) {
+    if (failure === "HTTP 401" || failure === "HTTP 403") {
       const errors = t.mock.method(console, "error", () => {})
-      await act(async () => mounted.requests[1].reject(new Error("Policy unavailable")))
+      await act(async () =>
+        mounted.requests[1].reject(
+          Object.assign(new Error("Access denied"), { status: failure === "HTTP 401" ? 401 : 403 }),
+        ),
+      )
+      assert.equal(errors.mock.callCount(), 1)
+    } else if (failure === "malformed policy" || failure === "invalid policy type") {
+      const errors = t.mock.method(console, "error", () => {})
+      await mounted.resolve(1, {
+        ...accountInfo(90),
+        policy: failure === "malformed policy" ? "{" : { toString: "invalid" },
+      })
       assert.equal(errors.mock.callCount(), 1)
     } else await mounted.resolve(1, { policy: "" })
+    if (failure !== "revoked policy") assert.equal(mounted.permissions.userInfo, null)
+    assert.equal(mounted.permissions.userPolicy, null)
     assert.equal(mounted.container.querySelector("main"), null)
     assert.equal(mounted.unmounts, 1)
     assert.equal(mounted.firstRoute.route, "/403/")
@@ -666,6 +684,105 @@ for (const fails of [false, true]) {
     )
   })
 }
+
+for (const status of [401, 403]) {
+  test(`HTTP ${status} revalidates cached bucket-only access instead of retaining a stale grant`, async (t) => {
+    t.mock.method(console, "error", () => {})
+    let allowed = true
+    const mounted = await mountBrowser(t, {
+      search: "bucket=alice-data",
+      effective: ({ action, bucket }) => ({
+        decision: allowed && action === "s3:ListBucket" && bucket === "alice-data" ? "allowed" : "denied",
+      }),
+    })
+    await mounted.resolve(0, { policy: "" })
+    assert.ok(mounted.container.querySelector('[data-scoped-bucket="alice-data"]'))
+    allowed = false
+    const request = mounted.requests.length
+    await act(async () => {
+      void mounted.permissions.fetchUserPolicy()
+    })
+    await act(async () => mounted.requests[request].reject(Object.assign(new Error("Access denied"), { status })))
+    assert.equal(mounted.permissions.userInfo, null)
+    assert.equal(mounted.container.querySelector('[data-scoped-bucket="alice-data"]'), null)
+    assert.ok(mounted.router.replace.mock.calls.some((call) => call.arguments[0] === "/403/"))
+  })
+}
+
+for (const surface of ["Browser", "BucketList"] as const) {
+  for (const [failure, makeError] of temporaryFailures) {
+    test(`${surface} retains completed usage and permission after a ${failure} polling failure`, async (t) => {
+      const errors = t.mock.method(console, "error", () => {})
+      const mounted = await mountBrowser(t, { surface })
+      const complete = accountInfo(90)
+      await mounted.resolve(0, complete)
+      if (surface === "Browser") await mounted.resolve(1, complete)
+      const previousPolicy = mounted.permissions.userPolicy
+      const revision = mounted.permissions.permissionVersion
+      const page = mounted.container.querySelector("main")
+      const request = mounted.requests.length
+      await mounted.poll()
+      await act(async () => mounted.requests[request].reject(makeError()))
+
+      assert.equal(mounted.permissions.userInfo, complete)
+      assert.equal(mounted.permissions.userPolicy, previousPolicy)
+      assert.equal(mounted.permissions.permissionVersion, revision)
+      assert.equal(mounted.permissions.isLoading, false)
+      assert.equal(mounted.permissions.hasFetchedPolicy, true)
+      assert.equal(mounted.container.querySelector("main"), page)
+      assert.equal(JSON.parse(mounted.container.querySelector("output")!.textContent)[0].Count, 90)
+      assert.equal(mounted.router.replace.mock.callCount(), 0)
+      assert.equal(errors.mock.callCount(), 1)
+
+      await mounted.refresh()
+      await mounted.resolve(request + 1, accountInfo(120))
+      assert.equal(JSON.parse(mounted.container.querySelector("output")!.textContent)[0].Count, 120)
+    })
+  }
+}
+
+for (const [failure, makeError] of temporaryFailures) {
+  test(`an initial ${failure} account request remains unknown without fabricating a prior result`, async (t) => {
+    t.mock.method(console, "error", () => {})
+    const mounted = await mountBrowser(t)
+    await act(async () => mounted.requests[0].reject(makeError()))
+    assert.equal(mounted.permissions.userInfo, null)
+    assert.equal(mounted.permissions.userPolicy, null)
+    assert.equal(mounted.permissions.isLoading, false)
+    assert.equal(mounted.permissions.hasFetchedPolicy, true)
+    assert.equal(mounted.container.querySelector("main"), null)
+  })
+}
+
+test("a temporary failure for a new identity never restores the previous identity's complete usage", async (t) => {
+  t.mock.method(console, "error", () => {})
+  const mounted = await mountBrowser(t)
+  await mounted.resolve(0, accountInfo(90))
+  await mounted.resolve(1, accountInfo(90))
+  const request = mounted.requests.length
+  await mounted.changeIdentity({ AccessKeyId: "second", SecretAccessKey: "secret", SessionToken: "token" })
+  await act(async () => mounted.requests[request].reject(new TypeError("Network unavailable")))
+  assert.equal(mounted.permissions.userInfo, null)
+  assert.equal(mounted.permissions.userPolicy, null)
+  assert.equal(mounted.permissions.canAccessPath("/browser"), false)
+  assert.equal(mounted.container.querySelector("main"), null)
+})
+
+test("a newer transient failure retains the last complete value and still rejects an older in-flight result", async (t) => {
+  t.mock.method(console, "error", () => {})
+  const mounted = await mountBrowser(t)
+  const complete = accountInfo(90)
+  await mounted.resolve(0, complete)
+  await mounted.resolve(1, complete)
+  const older = mounted.requests.length
+  await mounted.poll()
+  await mounted.refresh()
+  await act(async () => mounted.requests[older + 1].reject(Object.assign(new Error("Unavailable"), { status: 503 })))
+  await mounted.resolve(older, accountInfo(7))
+  assert.equal(mounted.permissions.userInfo, complete)
+  assert.equal(JSON.parse(mounted.container.querySelector("output")!.textContent)[0].Count, 90)
+  assert.equal(mounted.router.replace.mock.callCount(), 0)
+})
 
 for (const change of ["access key", "secret", "session token", "api", "logout"] as const) {
   test(`${change} discards an old in-flight policy refresh`, async (t) => {

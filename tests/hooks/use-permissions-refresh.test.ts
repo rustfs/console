@@ -506,6 +506,20 @@ for (const surface of ["Browser", "BucketList"] as const) {
       surface === "Browser" ? "/browser?bucket=test-bucket" : "/custom-buckets/test-bucket",
     )
   })
+
+  test(`${surface} renders missing bucket statistics as placeholders`, async (t) => {
+    const mounted = await mountBrowser(t, { surface })
+    const info = { policy, buckets: [{ name: "test-bucket" }] }
+    await mounted.resolve(0, info)
+    if (surface === "Browser") await mounted.resolve(1, info)
+
+    const count = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="Count"]')!
+    const capacity = mounted.container.querySelector('[data-bucket="test-bucket"] [data-metric="SizeBytes"]')!
+
+    assert.equal(count.textContent, "--")
+    assert.equal(capacity.textContent, "--")
+    assert.doesNotMatch(mounted.container.textContent, /Not measured|Unavailable/)
+  })
 }
 
 test("the first denied policy never mounts Browser and redirects to forbidden", async (t) => {

@@ -21,7 +21,6 @@ import type { ColumnDef } from "@tanstack/react-table"
 export interface BucketListRow {
   Name: string
   CreationDate: string
-  Unmeasured?: boolean
   Count?: number
   Size?: string
   SizeBytes?: number
@@ -126,7 +125,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
     () =>
       data.map((row) => {
         const usage = bucketUsage.get(row.Name)
-        if (!usage) return { ...row, Unmeasured: usage === null }
+        if (!usage) return { ...row }
 
         return {
           ...row,
@@ -175,7 +174,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
           ) : usageLoading ? (
             <Spinner className="size-3 text-muted-foreground" />
           ) : (
-            t(row.original.Unmeasured ? "Not measured" : "Unavailable")
+            "--"
           ),
       },
       {
@@ -184,12 +183,7 @@ export function BucketList({ title, emptyDescription, getBucketHref }: BucketLis
         meta: { align: "end" },
         accessorFn: (row) => (typeof row.SizeBytes === "number" ? row.SizeBytes : undefined),
         cell: ({ row }) =>
-          row.original.Size ??
-          (usageLoading ? (
-            <Spinner className="size-3 text-muted-foreground" />
-          ) : (
-            t(row.original.Unmeasured ? "Not measured" : "Unavailable")
-          )),
+          row.original.Size ?? (usageLoading ? <Spinner className="size-3 text-muted-foreground" /> : "--"),
       },
       {
         header: () => t("Access Policy"),

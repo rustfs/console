@@ -21,7 +21,7 @@ import {
 import { useAuth } from "@/contexts/auth-context"
 import { usePermissions } from "@/hooks/use-permissions"
 import { useSidebar } from "@/components/ui/sidebar"
-import { resolveAccountDisplayName } from "@/lib/account-display"
+import { resolveAccountAvatarUrl, resolveAccountMenuName } from "@/lib/account-display"
 import { getThemeManifest } from "@/lib/theme/manifest"
 
 function resolveAvatarPath(path: string): string {
@@ -54,8 +54,25 @@ export function UserDropdown() {
   const { state } = useSidebar()
   const isCollapsed = state === "collapsed"
   const theme = getThemeManifest()
+  const accountIdentity = userInfo as {
+    account_name?: string
+    username?: string
+    email?: string
+    display_name?: string
+    picture?: string
+  } | null
+  const identity = {
+    access_key: accountIdentity?.account_name ?? "",
+    username: accountIdentity?.username,
+    email: accountIdentity?.email,
+    display_name: accountIdentity?.display_name,
+    picture: accountIdentity?.picture,
+  }
+  const accountName = resolveAccountMenuName(identity)
+  const identityAvatar = resolveAccountAvatarUrl(identity)
   const baseAvatarPath = theme.assets.userAvatar ?? "/img/userAvatar.png"
-  const preferredAvatarPath = resolvedTheme === "dark" ? withDarkVariant(baseAvatarPath) : baseAvatarPath
+  const preferredAvatarPath =
+    identityAvatar ?? (resolvedTheme === "dark" ? withDarkVariant(baseAvatarPath) : baseAvatarPath)
   const [avatar, setAvatar] = useState(() => resolveAvatarPath(preferredAvatarPath))
 
   useEffect(() => {
@@ -69,12 +86,6 @@ export function UserDropdown() {
     }
   }
 
-  const accountIdentity = userInfo as { account_name?: string; username?: string; email?: string } | null
-  const accountName = resolveAccountDisplayName({
-    access_key: accountIdentity?.account_name ?? "",
-    username: accountIdentity?.username,
-    email: accountIdentity?.email,
-  })
   const roleLabel = isAdmin ? t("Administrator") : t("User")
 
   return (
@@ -88,6 +99,7 @@ export function UserDropdown() {
                 alt=""
                 width={24}
                 height={24}
+                referrerPolicy="no-referrer"
                 className="size-6 rounded-full object-cover"
                 onError={() => {
                   const fallback = resolveAvatarPath(baseAvatarPath)

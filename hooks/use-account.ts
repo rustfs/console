@@ -38,6 +38,10 @@ export interface AccountInfo {
   access_key: string
   username?: string
   email?: string
+  /** Full name from the OIDC identity provider; display only. */
+  display_name?: string
+  /** Avatar URL from the OIDC identity provider; display only. */
+  picture?: string
   identity_type: IdentityType
   session_access_key?: string
   is_admin: boolean

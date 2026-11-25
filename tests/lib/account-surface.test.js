@@ -37,8 +37,11 @@ test("the profile page distinguishes a failed read from an empty profile", () =>
 test("the user menu prefers OIDC profile metadata without adding another account request", () => {
   const source = read("components/user/dropdown.tsx")
 
-  assert.match(source, /account_name\?: string; username\?: string; email\?: string/)
-  assert.match(source, /resolveAccountDisplayName\(\{/)
+  for (const field of ["account_name", "username", "email", "display_name", "picture"]) {
+    assert.match(source, new RegExp(`${field}\\?: string`))
+  }
+  assert.match(source, /resolveAccountMenuName\(identity\)/)
+  assert.match(source, /resolveAccountAvatarUrl\(identity\)/)
   assert.doesNotMatch(source, /getAccountInfo\(\)/)
 })
 

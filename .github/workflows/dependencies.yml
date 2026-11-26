@@ -2,43 +2,52 @@ name: 📦 Dependencies Management
 
 on:
   schedule:
-    # 每周一凌晨 2 点检查依赖更新
+    # 每周一凌晨 2 点执行只读安全审计与依赖更新检查
     - cron: "0 2 * * 1"
   workflow_dispatch:
     inputs:
       update_type:
-        description: "Type of update to perform"
+        description: "Dependency update mode (manual confirmation required for patch/latest)"
         required: true
-        default: "patch"
+        default: "check-only"
         type: choice
         options:
+          - check-only
           - patch
-          - minor
-          - major
-          - all
+          - latest
+
+permissions: {}
 
 env:
   NODE_VERSION: "22"
 
 jobs:
   # ============================================================================
-  # 依赖安全扫描
+  # 依赖安全扫描 (只读)
   # ============================================================================
   security-audit:
     name: 🔒 Security Audit
     runs-on: sm-standard-2
+    permissions:
+      contents: read
+
+    outputs:
+      create-security-issue: ${{ steps.audit.outputs.create-security-issue }}
+      security-summary: ${{ steps.audit.outputs.security-summary }}
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PNPM
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           cache: true
 
       - name: 📦 Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -46,109 +55,128 @@ jobs:
         run: pnpm ci
 
       - name: 🔒 Run security audit
+        id: audit
         run: |
-          echo "## 🔒 Security Audit Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          set -euo pipefail
+          echo "## 🔒 Security Audit Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
-          # 运行安全审计
-          if pnpm audit --json > audit-report.json 2>/dev/null; then
-            # 解析审计结果
-            vulnerabilities=$(node -e "
-              const audit = require('./audit-report.json');
-              const meta = audit.metadata?.vulnerabilities;
-              if (meta) {
-                const total = meta.total || 0;
+          echo "create-security-issue=false" >> "$GITHUB_OUTPUT"
+          echo "security-summary=" >> "$GITHUB_OUTPUT"
+
+          pnpm audit --json > audit-report.json 2>/dev/null || true
+
+          if [ -s audit-report.json ]; then
+            vulnerabilities=$(node -e '
+              const fs = require("node:fs");
+              try {
+                const audit = JSON.parse(fs.readFileSync("./audit-report.json", "utf8"));
+                const meta = audit.metadata?.vulnerabilities || {};
                 const critical = meta.critical || 0;
                 const high = meta.high || 0;
                 const moderate = meta.moderate || 0;
                 const low = meta.low || 0;
-                console.log(JSON.stringify({total, critical, high, moderate, low}));
-              } else {
-                console.log(JSON.stringify({total: 0, critical: 0, high: 0, moderate: 0, low: 0}));
+                const total = meta.total ?? (critical + high + moderate + low);
+                console.log(JSON.stringify({ total, critical, high, moderate, low }));
+              } catch {
+                console.log(JSON.stringify({ total: 0, critical: 0, high: 0, moderate: 0, low: 0 }));
               }
-            ")
+            ')
 
-            echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
-            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| Critical | $(echo $vulnerabilities | jq -r '.critical') |" >> $GITHUB_STEP_SUMMARY
-            echo "| High | $(echo $vulnerabilities | jq -r '.high') |" >> $GITHUB_STEP_SUMMARY
-            echo "| Moderate | $(echo $vulnerabilities | jq -r '.moderate') |" >> $GITHUB_STEP_SUMMARY
-            echo "| Low | $(echo $vulnerabilities | jq -r '.low') |" >> $GITHUB_STEP_SUMMARY
-            echo "| **Total** | **$(echo $vulnerabilities | jq -r '.total')** |" >> $GITHUB_STEP_SUMMARY
+            critical=$(echo "$vulnerabilities" | jq -r '.critical')
+            high=$(echo "$vulnerabilities" | jq -r '.high')
+            moderate=$(echo "$vulnerabilities" | jq -r '.moderate')
+            low=$(echo "$vulnerabilities" | jq -r '.low')
+            total_vulns=$(echo "$vulnerabilities" | jq -r '.total')
 
-            total_vulns=$(echo $vulnerabilities | jq -r '.total')
+            echo "| Severity | Count |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Critical | $critical |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| High | $high |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Moderate | $moderate |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Low | $low |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| **Total** | **$total_vulns** |" >> "$GITHUB_STEP_SUMMARY"
+
             if [ "$total_vulns" -gt 0 ]; then
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "⚠️ **Action Required**: $total_vulns security vulnerabilities found!" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "Run \`pnpm audit --fix\` to automatically fix vulnerabilities." >> $GITHUB_STEP_SUMMARY
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "⚠️ **Action Required**: $total_vulns security vulnerabilities found!" >> "$GITHUB_STEP_SUMMARY"
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "Review the audit report and update affected packages manually." >> "$GITHUB_STEP_SUMMARY"
 
-              # 如果有高危或严重漏洞，创建 issue
-              critical=$(echo $vulnerabilities | jq -r '.critical')
-              high=$(echo $vulnerabilities | jq -r '.high')
               if [ "$critical" -gt 0 ] || [ "$high" -gt 0 ]; then
-                echo "create_security_issue=true" >> $GITHUB_ENV
-                echo "security_summary=Found $critical critical and $high high severity vulnerabilities" >> $GITHUB_ENV
+                echo "create-security-issue=true" >> "$GITHUB_OUTPUT"
+                echo "security-summary=Found $critical critical and $high high severity vulnerabilities" >> "$GITHUB_OUTPUT"
               fi
             else
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "✅ No security vulnerabilities found!" >> $GITHUB_STEP_SUMMARY
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "✅ No security vulnerabilities found!" >> "$GITHUB_STEP_SUMMARY"
             fi
           else
-            echo "✅ No security vulnerabilities found!" >> $GITHUB_STEP_SUMMARY
+            echo "✅ No security vulnerabilities found!" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: 📤 Upload audit report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: security-audit-report
           path: audit-report.json
           retention-days: 30
+          if-no-files-found: ignore
 
+  # ============================================================================
+  # 隔离上报高危安全告警 Issue
+  # ============================================================================
+  report-security-issue:
+    name: 🚨 Report Security Issue
+    runs-on: sm-standard-2
+    needs: security-audit
+    if: needs.security-audit.outputs.create-security-issue == 'true'
+    permissions:
+      issues: write
+
+    steps:
       - name: 🚨 Create security issue
-        if: env.create_security_issue == 'true'
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SECURITY_SUMMARY: ${{ needs.security-audit.outputs.security-summary }}
         with:
           script: |
-            const title = '🔒 Security Vulnerabilities Detected'
-            const body = `
-            ## 🚨 Security Alert
+            const summary = process.env.SECURITY_SUMMARY || "High or critical vulnerabilities detected"
+            const runUrl = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`
+            const title = "🔒 Security Vulnerabilities Detected"
+            const body = [
+              "## 🚨 Security Alert",
+              "",
+              "Our automated security scan has detected vulnerabilities in the project dependencies.",
+              "",
+              `**Summary**: ${summary}`,
+              "",
+              "## 🔧 Recommended Actions",
+              "",
+              "1. Review the security audit report artifact from the workflow run",
+              "2. Update affected packages locally and verify with `pnpm run test:run` and `pnpm run build`",
+              "3. Open a reviewed pull request with the updated `package.json` and `pnpm-lock.yaml`",
+              "",
+              `**Workflow Run**: [#${process.env.GITHUB_RUN_NUMBER}](${runUrl})`,
+            ].join("\n")
 
-            Our automated security scan has detected vulnerabilities in the project dependencies.
-
-            **Summary**: ${{ env.security_summary }}
-
-            ## 🔧 Recommended Actions
-
-            1. Review the security audit report
-            2. Run \`pnpm audit fix\` to automatically fix vulnerabilities (or use the detected package manager)
-            3. For vulnerabilities that cannot be auto-fixed, consider:
-               - Updating to a secure version manually
-               - Finding alternative packages
-               - Implementing workarounds
-
-            ## 📊 Full Report
-
-            See the attached audit report for detailed information about each vulnerability.
-
-            **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            `
-
-            github.rest.issues.create({
+            await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: title,
-              body: body,
-              labels: ['security', 'dependencies', 'high-priority']
+              title,
+              body,
+              labels: ["security", "dependencies", "high-priority"],
             })
 
   # ============================================================================
-  # 依赖更新检查
+  # 依赖更新检查 (只读)
   # ============================================================================
   check-updates:
     name: 📋 Check for Updates
     runs-on: sm-standard-2
     needs: security-audit
+    permissions:
+      contents: read
 
     outputs:
       has-updates: ${{ steps.check.outputs.has-updates }}
@@ -156,15 +184,17 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PNPM
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           cache: true
 
       - name: 📦 Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -174,247 +204,178 @@ jobs:
       - name: 📋 Check for outdated packages
         id: check
         run: |
-          echo "## 📋 Dependency Update Check" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          set -euo pipefail
+          echo "## 📋 Dependency Update Check" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
-          # 检查过期的包
-          if pnpm outdated --json > outdated.json 2>/dev/null; then
-            if [ -s outdated.json ]; then
-              echo "has-updates=true" >> $GITHUB_OUTPUT
+          pnpm outdated --json > outdated.json 2>/dev/null || true
 
-              # 生成更新摘要
-              update_count=$(node -e "
-                const outdated = require('./outdated.json');
-                console.log(Object.keys(outdated).length);
-              ")
+          update_count=$(node -e '
+            const fs = require("node:fs");
+            try {
+              const raw = fs.readFileSync("./outdated.json", "utf8").trim();
+              const outdated = raw ? JSON.parse(raw) : {};
+              console.log(Object.keys(outdated).length);
+            } catch {
+              console.log(0);
+            }
+          ')
 
-              echo "update-summary=Found $update_count packages that can be updated" >> $GITHUB_OUTPUT
+          if [ "$update_count" -gt 0 ]; then
+            echo "has-updates=true" >> "$GITHUB_OUTPUT"
+            echo "update-summary=Found $update_count packages that can be updated" >> "$GITHUB_OUTPUT"
 
-              echo "### 📦 Outdated Packages ($update_count)" >> $GITHUB_STEP_SUMMARY
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "| Package | Current | Wanted | Latest | Type |" >> $GITHUB_STEP_SUMMARY
-              echo "|---------|---------|--------|--------|------|" >> $GITHUB_STEP_SUMMARY
+            echo "### 📦 Outdated Packages ($update_count)" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Package | Current | Wanted | Latest | Type |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|---------|---------|--------|--------|------|" >> "$GITHUB_STEP_SUMMARY"
 
-              node -e "
-                const outdated = require('./outdated.json');
-                Object.entries(outdated).forEach(([pkg, info]) => {
-                  const updateType = info.wanted !== info.current ? 'wanted' : 'latest';
-                  console.log(\`| \${pkg} | \${info.current} | \${info.wanted} | \${info.latest} | \${updateType} |\`);
-                });
-              " >> $GITHUB_STEP_SUMMARY
+            node -e '
+              const fs = require("node:fs");
+              const outdated = JSON.parse(fs.readFileSync("./outdated.json", "utf8"));
+              Object.entries(outdated).forEach(([pkg, info]) => {
+                const updateType = info.wanted !== info.current ? "wanted" : "latest";
+                console.log(`| ${pkg} | ${info.current} | ${info.wanted} | ${info.latest} | ${updateType} |`);
+              });
+            ' >> "$GITHUB_STEP_SUMMARY"
 
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "🔄 Updates are available! Consider running the dependency update workflow." >> $GITHUB_STEP_SUMMARY
-            else
-              echo "has-updates=false" >> $GITHUB_OUTPUT
-              echo "update-summary=All packages are up to date" >> $GITHUB_OUTPUT
-              echo "✅ All packages are up to date!" >> $GITHUB_STEP_SUMMARY
-            fi
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "🔄 Updates are available. Trigger this workflow manually with \`patch\` or \`latest\` to prepare a verified update patch artifact for review." >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "has-updates=false" >> $GITHUB_OUTPUT
-            echo "update-summary=All packages are up to date" >> $GITHUB_OUTPUT
-            echo "✅ All packages are up to date!" >> $GITHUB_STEP_SUMMARY
+            echo "has-updates=false" >> "$GITHUB_OUTPUT"
+            echo "update-summary=All packages are up to date" >> "$GITHUB_OUTPUT"
+            echo "✅ All packages are up to date!" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: 📤 Upload outdated report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: outdated-packages-report
           path: outdated.json
           retention-days: 7
+          if-no-files-found: ignore
 
   # ============================================================================
-  # 自动依赖更新
+  # 人工确认更新演练 (仅手动触发，无仓库写权限，输出可审阅补丁制品)
   # ============================================================================
-  auto-update:
-    name: 🔄 Auto Update Dependencies
+  prepare-update:
+    name: 🔄 Prepare Dependency Update Patch
     runs-on: sm-standard-2
     needs: [security-audit, check-updates]
-    if: needs.check-updates.outputs.has-updates == 'true'
+    if: github.event_name == 'workflow_dispatch' && inputs.update_type != 'check-only'
+    permissions:
+      contents: read
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Setup PNPM
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           cache: true
 
       - name: 📦 Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 📥 Install dependencies
         run: pnpm ci
 
-      - name: 🔄 Update dependencies
+      - name: 🔄 Update dependencies with pinned pnpm
+        env:
+          UPDATE_TYPE: ${{ inputs.update_type }}
         run: |
-          echo "## 🔄 Updating Dependencies" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          set -euo pipefail
+          echo "## 🔄 Preparing Dependency Updates ($UPDATE_TYPE)" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
-          update_type="${{ github.event.inputs.update_type || 'patch' }}"
-
-          case $update_type in
+          case "$UPDATE_TYPE" in
             "patch")
-              echo "Updating patch versions..." >> $GITHUB_STEP_SUMMARY
+              echo "Updating dependencies within declared semver ranges via \`pnpm update\`..." >> "$GITHUB_STEP_SUMMARY"
               pnpm update
               ;;
-            "minor")
-              echo "Updating minor versions..." >> $GITHUB_STEP_SUMMARY
-              pnpm dlx npm-check-updates -u -p pnpm --target minor
-              pnpm install
+            "latest")
+              echo "Updating dependencies to latest versions via \`pnpm update --latest\`..." >> "$GITHUB_STEP_SUMMARY"
+              pnpm update --latest
               ;;
-            "major")
-              echo "Updating major versions..." >> $GITHUB_STEP_SUMMARY
-              pnpm dlx npm-check-updates -u -p pnpm --target major
-              pnpm install
-              ;;
-            "all")
-              echo "Updating all versions..." >> $GITHUB_STEP_SUMMARY
-              pnpm dlx npm-check-updates -u -p pnpm
-              pnpm install
+            *)
+              echo "Unsupported update_type: $UPDATE_TYPE" >&2
+              exit 1
               ;;
           esac
 
-      - name: 🧪 Run tests after update
+      - name: 🧪 Verify updated dependencies
         run: |
-          echo "## 🧪 Testing Updated Dependencies" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          set -euo pipefail
+          echo "## 🧪 Verifying Updated Dependencies" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
-          # 安装测试依赖
-          pnpm add -D vitest jsdom @vitest/ui c8
-
-          # 运行测试
-          if pnpm vitest run tests/utils/config-helpers*.test.ts --reporter=verbose; then
-            echo "✅ All tests passed with updated dependencies!" >> $GITHUB_STEP_SUMMARY
-            echo "test_status=passed" >> $GITHUB_ENV
+          if pnpm run test:run && pnpm run type-check; then
+            echo "✅ Tests and type-check passed with updated dependencies!" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "❌ Tests failed with updated dependencies!" >> $GITHUB_STEP_SUMMARY
-            echo "test_status=failed" >> $GITHUB_ENV
+            echo "❌ Verification failed with updated dependencies!" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
           fi
 
-      - name: 🔍 Check for changes
+      - name: 🔍 Export reviewable update patch
         id: changes
         run: |
-          if [[ -n $(git status --porcelain) ]]; then
-            echo "changes=true" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          if [[ -n "$(git status --porcelain -- package.json pnpm-lock.yaml)" ]]; then
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+            git diff -- package.json pnpm-lock.yaml > dependency-update.patch
 
-            # 生成变更摘要
-            echo "## 📝 Changes Made" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Modified Files:" >> $GITHUB_STEP_SUMMARY
-            git status --porcelain | while read status file; do
-              echo "- $file" >> $GITHUB_STEP_SUMMARY
-            done
-
-            # 检查 package.json 的变更
-            if git diff --name-only | grep -q "package.json\|pnpm-lock.yaml"; then
-              echo "" >> $GITHUB_STEP_SUMMARY
-              echo "### Package Changes:" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`diff" >> $GITHUB_STEP_SUMMARY
-              git diff package.json | head -50 >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-            fi
+            echo "## 📝 Reviewable Update Patch Generated" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Download the \`dependency-update-patch\` artifact, review the diff, and apply it locally with \`git apply dependency-update.patch\` before opening a pull request." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "### Package Changes:" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`diff" >> "$GITHUB_STEP_SUMMARY"
+            git diff package.json | awk 'NR <= 50' >> "$GITHUB_STEP_SUMMARY"
+            echo "\`\`\`" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "changes=false" >> $GITHUB_OUTPUT
-            echo "No changes detected." >> $GITHUB_STEP_SUMMARY
+            echo "changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: 🔧 Create Pull Request
-        if: steps.changes.outputs.changes == 'true' && env.test_status == 'passed'
-        uses: peter-evans/create-pull-request@v8
+      - name: 📤 Upload reviewable update patch
+        if: steps.changes.outputs.changes == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "🔄 chore: update dependencies (${{ github.event.inputs.update_type || 'patch' }})"
-          title: "🔄 Dependency Updates (${{ github.event.inputs.update_type || 'patch' }})"
-          body: |
-            ## 🔄 Automated Dependency Update
-
-            This PR contains automated dependency updates.
-
-            ### 📋 Update Summary
-            - **Update Type**: ${{ github.event.inputs.update_type || 'patch' }}
-            - **Status**: ${{ needs.check-updates.outputs.update-summary }}
-
-            ### 🧪 Testing
-            - ✅ All existing tests pass
-            - ✅ No breaking changes detected
-            - ✅ Security audit completed
-
-            ### 🔍 Review Checklist
-            - [ ] Review dependency changes
-            - [ ] Verify test results
-            - [ ] Check for any breaking changes
-            - [ ] Approve and merge if everything looks good
-
-            ---
-
-            🤖 This PR was created automatically by the dependency management workflow.
-
-            **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-          branch: automated/dependency-updates-${{ github.run_number }}
-          labels: |
-            dependencies
-            automated
-            ${{ github.event.inputs.update_type || 'patch' }}
-          reviewers: ""
-          draft: false
-
-      - name: ❌ Report failed update
-        if: steps.changes.outputs.changes == 'true' && env.test_status == 'failed'
-        uses: actions/github-script@v9
-        with:
-          script: |
-            const title = '❌ Dependency Update Failed'
-            const body = `
-            ## ❌ Automated Dependency Update Failed
-
-            The automated dependency update process failed because tests did not pass with the updated dependencies.
-
-            ### 📋 Details
-            - **Update Type**: ${{ github.event.inputs.update_type || 'patch' }}
-            - **Status**: Tests failed after dependency updates
-
-            ### 🔧 Next Steps
-            1. Review the test failures in the workflow logs
-            2. Manually investigate compatibility issues
-            3. Update dependencies individually if needed
-            4. Fix any breaking changes introduced by updates
-
-            **Workflow Run**: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            `
-
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: title,
-              body: body,
-              labels: ['dependencies', 'failed-update', 'needs-investigation']
-            })
+          name: dependency-update-patch
+          path: |
+            dependency-update.patch
+            package.json
+            pnpm-lock.yaml
+          retention-days: 14
 
   # ============================================================================
-  # 依赖分析报告
+  # 依赖分析报告 (只读)
   # ============================================================================
   dependency-analysis:
     name: 📊 Dependency Analysis
     runs-on: sm-standard-2
     needs: [security-audit, check-updates]
+    permissions:
+      contents: read
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PNPM
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           cache: true
 
       - name: 📦 Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -423,43 +384,45 @@ jobs:
 
       - name: 📊 Generate dependency report
         run: |
-          echo "# 📊 Dependency Analysis Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          set -euo pipefail
+          echo "# 📊 Dependency Analysis Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
           # 依赖统计
-          total_deps=$(pnpm list --depth=0 --json | jq '.dependencies | length')
-          dev_deps=$(pnpm list --depth=0 --dev --json | jq '.dependencies | length // 0')
-          prod_deps=$((total_deps - dev_deps))
+          dep_json=$(pnpm list --depth=0 --json)
+          prod_deps=$(echo "$dep_json" | jq '.[0].dependencies // {} | length')
+          dev_deps=$(echo "$dep_json" | jq '.[0].devDependencies // {} | length')
+          total_deps=$((prod_deps + dev_deps))
 
-          echo "## 📈 Dependency Statistics" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Category | Count |" >> $GITHUB_STEP_SUMMARY
-          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Production Dependencies | $prod_deps |" >> $GITHUB_STEP_SUMMARY
-          echo "| Development Dependencies | $dev_deps |" >> $GITHUB_STEP_SUMMARY
-          echo "| **Total Dependencies** | **$total_deps** |" >> $GITHUB_STEP_SUMMARY
+          echo "## 📈 Dependency Statistics" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Category | Count |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|----------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Production Dependencies | $prod_deps |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Development Dependencies | $dev_deps |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Total Dependencies** | **$total_deps** |" >> "$GITHUB_STEP_SUMMARY"
 
           # 包大小分析
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📦 Package Size Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## 📦 Package Size Analysis" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
 
           if command -v du &> /dev/null; then
             node_modules_size=$(du -sh node_modules 2>/dev/null | cut -f1 || echo "N/A")
-            echo "- **node_modules size**: $node_modules_size" >> $GITHUB_STEP_SUMMARY
+            echo "- **node_modules size**: $node_modules_size" >> "$GITHUB_STEP_SUMMARY"
           fi
 
           # 许可证分析
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📜 License Analysis" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "License information for production dependencies:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## 📜 License Analysis" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "License information for production dependencies:" >> "$GITHUB_STEP_SUMMARY"
 
           # 这里可以添加许可证检查逻辑
-          echo "- Most packages use MIT license (detailed analysis available on request)" >> $GITHUB_STEP_SUMMARY
+          echo "- Most packages use MIT license (detailed analysis available on request)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: 📤 Upload analysis report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dependency-analysis-report
           path: |

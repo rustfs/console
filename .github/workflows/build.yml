@@ -9,10 +9,7 @@ on:
     types: [published]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+permissions: {}
 
 concurrency:
   group: "pages"
@@ -24,19 +21,21 @@ env:
 jobs:
   build:
     permissions:
-      contents: write
+      contents: read
     runs-on: sm-standard-2
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PNPM
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           cache: true
 
       - name: Setup Node
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -47,6 +46,9 @@ jobs:
         run: pnpm build
 
       - name: Zip files
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: |
           set -euo pipefail
           mkdir -p artifacts
@@ -55,18 +57,40 @@ jobs:
             cd ./out
             zip -r ../artifacts/rustfs-console-latest.zip .
           )
-          if [ "${{ github.event_name }}" = "release" ]; then
-            mkdir -p ./artifacts/${{ github.event.release.tag_name }}
+          if [ "$EVENT_NAME" = "release" ]; then
+            if [[ -z "$RELEASE_TAG" || "$RELEASE_TAG" == *"/"* || "$RELEASE_TAG" == *".."* ]]; then
+              echo "Invalid release tag: $RELEASE_TAG" >&2
+              exit 1
+            fi
+            mkdir -p "./artifacts/$RELEASE_TAG"
             (
               cd ./out
-              zip -r ../artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip .
+              zip -r "../artifacts/$RELEASE_TAG/rustfs-console-$RELEASE_TAG.zip" .
             )
           fi
 
-      - uses: actions/upload-artifact@v7
-        name: Upload artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           path: ./artifacts/rustfs-console-latest.zip
+
+      - name: Upload publish artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: console-publish-artifacts
+          path: ./artifacts
+          retention-days: 1
+
+  upload-r2:
+    needs: build
+    permissions: {}
+    runs-on: sm-standard-2
+    steps:
+      - name: Download publish artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: console-publish-artifacts
+          path: ./artifacts
 
       - name: Setup AWS CLI
         shell: bash
@@ -130,8 +154,22 @@ jobs:
 
           echo "✅ Upload completed successfully"
 
-      - name: Upload release asset `versioned`
-        if: ${{ github.event_name == 'release' }}
-        uses: softprops/action-gh-release@v3
+  upload-release-asset:
+    needs: build
+    if: ${{ github.event_name == 'release' }}
+    permissions:
+      contents: write
+    runs-on: sm-standard-2
+    steps:
+      - name: Download publish artifacts
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          files: ./artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip
+          name: console-publish-artifacts
+          path: ./artifacts
+
+      - name: Upload release asset `versioned`
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: artifacts/${{ github.event.release.tag_name }}/rustfs-console-${{ github.event.release.tag_name }}.zip
+          fail_on_unmatched_files: true

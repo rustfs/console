@@ -16,8 +16,7 @@ on:
 env:
   NODE_VERSION: "22"
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   # ============================================================================
@@ -27,6 +26,8 @@ jobs:
     name: 🔍 Pre-Release Validation
     runs-on: sm-standard-2
     timeout-minutes: 20
+    permissions:
+      contents: read
 
     outputs:
       version: ${{ steps.version.outputs.version }}
@@ -34,17 +35,18 @@ jobs:
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup PNPM
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           cache: true
 
       - name: 📦 Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -53,14 +55,22 @@ jobs:
 
       - name: 🏷️ Extract version
         id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.version }}"
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            VERSION="$INPUT_VERSION"
           else
             VERSION=${GITHUB_REF#refs/tags/}
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Version: $VERSION" >> $GITHUB_STEP_SUMMARY
+          if [[ -z "$VERSION" || ! "$VERSION" =~ ^v?[0-9A-Za-z._-]+$ || "$VERSION" == *".."* ]]; then
+            echo "Invalid release version: $VERSION" >&2
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION" >> "$GITHUB_STEP_SUMMARY"
 
       - name: 🧪 Run full test suite
         run: |
@@ -97,18 +107,22 @@ jobs:
     runs-on: sm-standard-2
     needs: pre-release-validation
     if: needs.pre-release-validation.outputs.should-deploy == 'true'
+    permissions:
+      contents: read
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Setup PNPM
-        uses: pnpm/action-setup@v6
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
         with:
           cache: true
 
       - name: 📦 Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -116,16 +130,20 @@ jobs:
         run: pnpm ci
 
       - name: 🏗️ Build for production
+        env:
+          RELEASE_VERSION: ${{ needs.pre-release-validation.outputs.version }}
         run: |
           pnpm run build
-          echo "## 🏗️ Build Information" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: ${{ needs.pre-release-validation.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Node.js**: ${{ env.NODE_VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Build Time**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏗️ Build Information" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Version**: $RELEASE_VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Node.js**: $NODE_VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Build Time**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Commit**: $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
 
       - name: 📦 Create zip artifacts
+        env:
+          RELEASE_VERSION: ${{ needs.pre-release-validation.outputs.version }}
         run: |
           set -euo pipefail
           if [[ ! -s out/index.html ]]; then
@@ -138,14 +156,14 @@ jobs:
             cd ./out
             zip -r ../artifacts/rustfs-console-latest.zip .
           )
-          mkdir -p artifacts/${{ needs.pre-release-validation.outputs.version }}
+          mkdir -p "artifacts/$RELEASE_VERSION"
           (
             cd ./out
-            zip -r ../artifacts/${{ needs.pre-release-validation.outputs.version }}/rustfs-console-${{ needs.pre-release-validation.outputs.version }}.zip .
+            zip -r "../artifacts/$RELEASE_VERSION/rustfs-console-$RELEASE_VERSION.zip" .
           )
 
       - name: 📤 Upload build artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-build-${{ needs.pre-release-validation.outputs.version }}
           path: |
@@ -176,35 +194,41 @@ jobs:
     runs-on: sm-standard-2
     needs: [pre-release-validation, build-release]
     if: needs.pre-release-validation.outputs.should-deploy == 'true' && github.event_name == 'push'
+    permissions:
+      contents: write
 
     steps:
       - name: 📥 Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: 📥 Download release artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: release-build-${{ needs.pre-release-validation.outputs.version }}
           path: release-assets
 
       - name: 📝 Generate changelog
         id: changelog
+        env:
+          RELEASE_VERSION: ${{ needs.pre-release-validation.outputs.version }}
         run: |
-          echo "## 🎉 What's New in ${{ needs.pre-release-validation.outputs.version }}" > CHANGELOG.md
+          echo "## 🎉 What's New in $RELEASE_VERSION" > CHANGELOG.md
           echo "" >> CHANGELOG.md
           PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -n "$PREVIOUS_TAG" ]; then
             echo "### 🔄 Changes since $PREVIOUS_TAG" >> CHANGELOG.md
             echo "" >> CHANGELOG.md
-            git log --pretty=format:"- %s (%h)" $PREVIOUS_TAG..HEAD >> CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" "$PREVIOUS_TAG..HEAD" >> CHANGELOG.md
           else
             echo "### 🎉 Initial Release" >> CHANGELOG.md
             echo "" >> CHANGELOG.md
           fi
+
       - name: 🏷️ Create release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           tag_name: ${{ needs.pre-release-validation.outputs.version }}
           name: Release ${{ needs.pre-release-validation.outputs.version }}
@@ -222,21 +246,24 @@ jobs:
     runs-on: sm-standard-2
     needs: [pre-release-validation, create-release]
     if: always() && needs.pre-release-validation.outputs.should-deploy == 'true'
+    permissions: {}
 
     steps:
       - name: 📢 Success notification
         if: needs.create-release.result == 'success'
+        env:
+          RELEASE_VERSION: ${{ needs.pre-release-validation.outputs.version }}
         run: |
-          echo "# 🎉 Release Successful!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📋 Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: ${{ needs.pre-release-validation.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ✅ Released Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "# 🎉 Release Successful!" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "## 📋 Release Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Version**: $RELEASE_VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Status**: ✅ Released Successfully" >> "$GITHUB_STEP_SUMMARY"
 
       - name: 📢 Failure notification
         if: needs.create-release.result == 'failure'
         run: |
-          echo "# ❌ Release Failed!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Release creation failed. Please check the logs and retry." >> $GITHUB_STEP_SUMMARY
+          echo "# ❌ Release Failed!" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Release creation failed. Please check the logs and retry." >> "$GITHUB_STEP_SUMMARY"

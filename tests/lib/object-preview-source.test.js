@@ -6,6 +6,7 @@ import { getObjectPreviewMode } from "../../lib/object-preview.ts"
 const previewOptions = {
   hasPreviewUrl: true,
   contentType: "application/octet-stream",
+  objectKey: "object",
   objectSize: 20,
   canRenderText: false,
   canRenderImage: false,
@@ -148,7 +149,9 @@ test("object preview renderers fill the resizable dialog body", () => {
   const parquetSource = fs.readFileSync("components/object/parquet-viewer.tsx", "utf8")
 
   assert.match(previewSource, /<iframe[^>]*className="min-h-0 w-full flex-1"/)
-  assert.match(previewSource, /<video[^>]*className="min-h-0 w-full flex-1 bg-black object-contain"/)
+  assert.match(previewSource, /const VIDEO_PREVIEW_CLASS = "min-h-0 w-full flex-1 bg-black object-contain"/)
+  assert.match(previewSource, /<video[^>]*className=\{VIDEO_PREVIEW_CLASS\}/)
+  assert.match(previewSource, /<HlsPreview[^>]*className=\{VIDEO_PREVIEW_CLASS\}/)
   assert.doesNotMatch(previewSource, /h-\[70vh\]/)
   assert.match(pdfSource, /relative flex min-h-0 w-full flex-1/)
   assert.doesNotMatch(pdfSource, /h-\[70vh\]/)

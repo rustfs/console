@@ -11,6 +11,7 @@ import {
 const previewOptions = {
   hasPreviewUrl: true,
   contentType: "application/octet-stream",
+  objectKey: "object",
   objectSize: 20,
   canRenderText: false,
   canRenderImage: false,
@@ -18,6 +19,20 @@ const previewOptions = {
   canRenderParquet: false,
   canRenderTiff: false,
 }
+
+for (const contentType of ["audio/x-mpegurl", "audio/mpegurl", " Application/Vnd.Apple.MpegURL; charset=utf-8 "]) {
+  test(`HLS MIME ${contentType} selects the HLS player without a manifest extension`, () => {
+    assert.equal(getObjectPreviewMode({ ...previewOptions, contentType }), "hls")
+  })
+}
+
+test("an uppercase .m3u8 key selects the HLS player with generic metadata", () => {
+  assert.equal(getObjectPreviewMode({ ...previewOptions, objectKey: "folder/index.M3U8" }), "hls")
+})
+
+test("an HLS manifest still requires a preview URL", () => {
+  assert.equal(getObjectPreviewMode({ ...previewOptions, objectKey: "index.m3u8", hasPreviewUrl: false }), "download")
+})
 
 test("preview metadata keeps the selected key when a HEAD response has no object key", () => {
   assert.equal(createObjectPreviewInfo("folder/fred", { ContentLength: 20 }).Key, "folder/fred")

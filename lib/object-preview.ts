@@ -4,6 +4,7 @@ export type ObjectPreviewMode =
   | "image"
   | "audio"
   | "video"
+  | "hls"
   | "pdf"
   | "parquet"
   | "sandbox"
@@ -27,10 +28,12 @@ const SAFE_TEXT_MIMES = [
 ]
 const SAFE_TEXT_EXTENSIONS = [".txt", ".json", ".jsonl", ".ndjson", ".sql", ".xml", ".csv", ".md", ".yml", ".yaml"]
 const GENERIC_CONTENT_TYPES = ["", "application/octet-stream", "binary/octet-stream"]
+const HLS_CONTENT_TYPES = ["audio/x-mpegurl", "audio/mpegurl", "application/vnd.apple.mpegurl"]
 
 interface ObjectPreviewOptions {
   hasPreviewUrl: boolean
   contentType: string
+  objectKey: string
   objectSize: number
   canRenderText: boolean
   canRenderImage: boolean
@@ -100,6 +103,7 @@ export async function readObjectPreviewText(response: Response): Promise<string 
 export function getObjectPreviewMode({
   hasPreviewUrl,
   contentType,
+  objectKey,
   objectSize,
   canRenderText,
   canRenderImage,
@@ -109,6 +113,7 @@ export function getObjectPreviewMode({
 }: ObjectPreviewOptions): ObjectPreviewMode {
   if (!hasPreviewUrl) return "download"
   const normalizedContentType = normalizePreviewContentType(contentType)
+  if (objectKey.toLowerCase().endsWith(".m3u8") || HLS_CONTENT_TYPES.includes(normalizedContentType)) return "hls"
   if (normalizedContentType.startsWith("audio/")) return "audio"
   if (normalizedContentType.startsWith("video/")) return "video"
   if (canRenderParquet) return "parquet"

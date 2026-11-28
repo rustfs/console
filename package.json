@@ -31,6 +31,7 @@
     "date-fns": "^4.4.0",
     "dayjs": "^1.11.21",
     "embla-carousel-react": "^8.6.0",
+    "hls.js": "^1.7.4",
     "hyparquet": "^1.26.0",
     "hyparquet-compressors": "^1.1.1",
     "i18next": "^26.3.1",

@@ -272,6 +272,7 @@ export function BrowserContent({ bucketName, keyPath = "", preview = false, prev
         onShowChange={handlePreviewModalChange}
         onDownload={canDownloadPreview ? downloadPreview : undefined}
         object={previewObject}
+        bucketName={previewBucketName}
       />
     </Page>
   )

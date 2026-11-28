@@ -10,6 +10,7 @@ import { RiCloseLine, RiFullscreenExitLine, RiFullscreenLine } from "@remixicon/
 import { PdfViewer } from "@/components/object/pdf-viewer"
 import { ParquetViewer } from "@/components/object/parquet-viewer"
 import { TiffViewer } from "@/components/object/tiff-viewer"
+import { HlsPreview } from "@/components/object/hls-preview"
 import {
   getObjectPreviewMode,
   isSafeTextPreview,
@@ -23,9 +24,11 @@ const SAFE_IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp",
 
 const PARQUET_MIMES = ["application/vnd.apache.parquet", "application/x-parquet", "application/parquet"]
 const PARQUET_EXTENSIONS = [".parquet", ".pq"]
+const VIDEO_PREVIEW_CLASS = "min-h-0 w-full flex-1 bg-black object-contain"
 
 interface ObjectPreviewModalProps {
   show: boolean
+  bucketName: string
   onShowChange: (show: boolean) => void
   onDownload?: () => Promise<void>
   object: {
@@ -96,7 +99,7 @@ function requestFullscreen(element: FullscreenElement): Promise<void> {
   return Promise.resolve()
 }
 
-export function ObjectPreviewModal({ show, onShowChange, onDownload, object }: ObjectPreviewModalProps) {
+export function ObjectPreviewModal({ show, bucketName, onShowChange, onDownload, object }: ObjectPreviewModalProps) {
   const { t } = useTranslation()
   const [audioLoadError, setAudioLoadError] = React.useState(false)
   const [videoLoadError, setVideoLoadError] = React.useState(false)
@@ -127,6 +130,7 @@ export function ObjectPreviewModal({ show, onShowChange, onDownload, object }: O
   const initialPreviewMode = getObjectPreviewMode({
     hasPreviewUrl,
     contentType,
+    objectKey,
     objectSize,
     canRenderText,
     canRenderImage,
@@ -391,6 +395,16 @@ export function ObjectPreviewModal({ show, onShowChange, onDownload, object }: O
             onError={() => setAudioLoadError(true)}
           />
         )
+      case "hls":
+        return show ? (
+          <HlsPreview
+            key={previewUrl}
+            bucketName={bucketName}
+            objectKey={objectKey}
+            url={previewUrl}
+            className={VIDEO_PREVIEW_CLASS}
+          />
+        ) : null
       case "video":
         return videoLoadError ? (
           <div className="my-auto text-center text-sm text-destructive" role="alert">
@@ -402,7 +416,7 @@ export function ObjectPreviewModal({ show, onShowChange, onDownload, object }: O
             playsInline
             preload="metadata"
             src={previewUrl}
-            className="min-h-0 w-full flex-1 bg-black object-contain"
+            className={VIDEO_PREVIEW_CLASS}
             aria-label={objectKey || t("Preview")}
             onError={() => setVideoLoadError(true)}
           />
